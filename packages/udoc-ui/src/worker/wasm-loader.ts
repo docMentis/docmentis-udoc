@@ -25,8 +25,8 @@ export interface WasmCandidate {
 export interface WasmLocateOptions {
     /**
      * Directory the host serves the artifacts from, laid out as
-     * `@docmentis/udoc-wasm`'s `dist/`: `wasm/udoc_bg.wasm` and `fonts/`.
-     * Tried first.
+     * `@docmentis/udoc-wasm`'s `dist/`: `wasm/udoc_bg.wasm` and `fonts/`. A
+     * URL, or a path such as `"/udoc-wasm/"`, which is the page's. Tried first.
      */
     baseUrl?: string | URL;
     /**
@@ -67,6 +67,8 @@ export async function resolveWasmCandidates(options: WasmLocateOptions = {}): Pr
 
 /** The artifacts in directory `base`, laid out as `@docmentis/udoc-wasm`'s `dist/`. */
 function laidOutAt(base: string | URL): WasmCandidate {
-    const dir = new URL(base).href;
+    // A path is resolved here, against the page: the worker it goes to starts
+    // from a blob, against which nothing relative resolves.
+    const dir = new URL(base, globalThis.document?.baseURI ?? globalThis.location?.href).href;
     return { wasmUrl: new URL("wasm/udoc_bg.wasm", dir).href, fonts: dir };
 }
