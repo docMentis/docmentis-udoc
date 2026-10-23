@@ -1,61 +1,44 @@
 # @docmentis/udoc-node
 
-Embed the docMentis udoc engine in a Node application: open a PDF, DOCX, PPTX,
-XLSX, CSV, TSV, PSV, image or `.udoc` package, export its pages to PNG, and
-save it back — to its own format or as a `.udoc` package. Each open document
-is a session on a worker thread of its own, so rendering never blocks your
-event loop.
+**Document processing for Node.js, powered by the udoc engine.**
+
+Use docMentis document capabilities programmatically in Node.js applications and services. Open documents, render pages, export images, and save document content without embedding a browser-based viewer.
+
+## When to use it
+
+- **Backend document workflows.** Inspect and process documents inside your existing Node.js application.
+- **Rendering and previews.** Export document pages as images for thumbnails, previews, or other workflows.
+- **Document operations.** Read and save supported document formats, including udoc document packages.
+- **Custom integrations.** Build document functionality into your own services and automation tools.
+
+## Quick start
 
 ```sh
-npm install @docmentis/udoc-node    # Node.js 22.18 or later
+npm install @docmentis/udoc-node
 ```
 
 ```ts
 import { readFile, writeFile } from "node:fs/promises";
 import { UDocNode } from "@docmentis/udoc-node";
 
-const udoc = await UDocNode.create({ license: "…", domain: "example.com" });
+const udoc = await UDocNode.create({ license: "YOUR_LICENSE", domain: "example.com" });
 const session = await udoc.open(await readFile("report.docx"));
 try {
-    const pages = await session.pageCount();
-    for (let index = 0; index < pages; index++) {
-        await writeFile(`page-${index + 1}.png`, await session.exportPageToBytes(index, { png: { scale: 2 } }));
-    }
-    await writeFile("report.udoc", await session.saveToPackage());
+    const png = await session.exportPageToBytes(0, { png: { scale: 2 } });
+    await writeFile("page-1.png", png);
 } finally {
     await session.close();
 }
 ```
 
-A document a
-[udoc-server](https://www.npmjs.com/package/@docmentis/udoc-server) keeps
-opens without downloading it: each part is fetched the first time the document
-needs it.
+A commercial license is shown for illustration; the runtime also supports online-authorized free use. See the API documentation for session management, supported formats, and licensing options. Requires a supported Node.js version.
 
-```ts
-const session = await udoc.openRemote("https://docs.example.com/documents/<id>/package");
-```
+## Related packages
 
-Every failure rejects with a `UDocError`, whose `code` is what to branch on.
+Use [`@docmentis/udoc-cli`](https://www.npmjs.com/package/@docmentis/udoc-cli) for ready-made commands, or [`@docmentis/udoc-server`](https://www.npmjs.com/package/@docmentis/udoc-server) to expose document operations and collaboration through a hosted service.
 
-Without a license, usage is metered: every `open` or `openRemote` needs a
-permit from the docMentis service, and a refusal rejects with `invalidLicense`,
-`permitRefused` or `cannotVerify`. A license is checked against the `domain` it
-was issued for.
+## Licensing
 
-`session.entitlements.features` lists what the session may use. A call that
-needs a feature it lacks — the sync calls need `collaboration` — rejects with
-`notEntitled`.
+The Node.js integration is open source under **MIT OR Apache-2.0**. The underlying [`@docmentis/udoc-wasm`](https://www.npmjs.com/package/@docmentis/udoc-wasm) runtime is proprietary and separately licensed. Free use requires online authorization; commercial licensing is available for offline use.
 
-## Documentation
-
-The [API reference](https://www.docmentis.com/docs/api/udoc-node) has every
-call, and the
-[architecture](https://github.com/docMentis/docmentis-udoc/blob/main/docs/design/node-hosts.md)
-says how the hosts run the engine.
-
-## License
-
-MIT OR Apache-2.0, at your option. That covers this package, not the
-`@docmentis/udoc-wasm` engine it runs on, which is proprietary, under its own
-license.
+[Source and documentation](https://github.com/docMentis/docmentis-udoc)
