@@ -18,7 +18,10 @@
 //      `tsc --watch` recompiles it, and `node --watch` restarts it on each
 //      recompile. `node --watch` starts only once that watcher's first
 //      compile is in: started on the `dist/` already there, it would restart
-//      the server the moment that compile rewrote it.
+//      the server the moment that compile rewrote it. udoc-server is built
+//      on udoc-node, whose `tsc --watch` runs first, for the same reason:
+//      the server's watcher compiles against udoc-node's `dist/`, which a
+//      fresh clone doesn't have until that watcher's first compile is in.
 //
 // All of them share this one terminal, so none may clear it. By default the
 // `tsc --watch`es clear the screen and scrollback whenever they start
@@ -86,26 +89,31 @@ const UI_PACKAGES = ["@docmentis/udoc-ui", "@docmentis/udoc-editor", "@docmentis
 inTurn(
     UI_PACKAGES.map((workspace) => ["run", "build", "--workspace", workspace]),
     () => {
-        // 2 and 3. Watch the UI packages' and the server's source -> dist, serve
-        //    the demo, and run the server once its first compile is in. If any of
-        //    them exits, tear the others down too.
+        // 2 and 3. Watch the UI packages', udoc-node's and the server's source ->
+        //    dist, serve the demo, and run the server once its first compile is
+        //    in, which waits on udoc-node's. If any of them exits, tear the
+        //    others down too.
         for (const workspace of UI_PACKAGES) {
             supervise(npm("run", "dev", "--workspace", workspace, "--", "--preserveWatchOutput"));
         }
         supervise(npm("run", "dev", "--workspace", "@docmentis/udoc-demo", "--", "--clearScreen", "false"));
         supervise(
-            tscWatch("@docmentis/udoc-server", () =>
+            tscWatch("@docmentis/udoc-node", () =>
                 supervise(
-                    spawn(
-                        process.execPath,
-                        [
-                            "--watch",
-                            "--watch-preserve-output",
-                            root("packages/udoc-server/dist/main.js"),
-                            "--data-dir",
-                            root("target/udoc-data"),
-                        ],
-                        { stdio: "inherit" },
+                    tscWatch("@docmentis/udoc-server", () =>
+                        supervise(
+                            spawn(
+                                process.execPath,
+                                [
+                                    "--watch",
+                                    "--watch-preserve-output",
+                                    root("packages/udoc-server/dist/main.js"),
+                                    "--data-dir",
+                                    root("target/udoc-data"),
+                                ],
+                                { stdio: "inherit" },
+                            ),
+                        ),
                     ),
                 ),
             ),
