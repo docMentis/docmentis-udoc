@@ -53,11 +53,21 @@ export class OptionsModal {
 
         this.el = h(
             "div",
-            { class: "options-overlay", onclick: (e: Event) => { if (e.target === this.el) this.close(); } },
+            {
+                class: "options-overlay",
+                onclick: (e: Event) => {
+                    if (e.target === this.el) this.close();
+                },
+            },
             h(
                 "div",
                 { class: "options-modal", role: "dialog" },
-                h("div", { class: "options-modal-head" }, h("span", { class: "options-modal-title" }, "Options"), closeBtn),
+                h(
+                    "div",
+                    { class: "options-modal-head" },
+                    h("span", { class: "options-modal-title" }, "Options"),
+                    closeBtn,
+                ),
                 body,
             ),
         );

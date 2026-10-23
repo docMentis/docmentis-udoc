@@ -339,34 +339,131 @@ export interface CommandDef<K extends string = MessageKey> {
  * (undo / redo) are fully wired.
  */
 export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
-    undo: { id: "undo", label: "command.undo", icon: ICON_UNDO, group: "history", run: { kind: "history", op: "undo" }, enabledWhen: (c) => c.canUndo },
-    redo: { id: "redo", label: "command.redo", icon: ICON_REDO, group: "history", run: { kind: "history", op: "redo" }, enabledWhen: (c) => c.canRedo },
+    undo: {
+        id: "undo",
+        label: "command.undo",
+        icon: ICON_UNDO,
+        group: "history",
+        run: { kind: "history", op: "undo" },
+        enabledWhen: (c) => c.canUndo,
+    },
+    redo: {
+        id: "redo",
+        label: "command.redo",
+        icon: ICON_REDO,
+        group: "history",
+        run: { kind: "history", op: "redo" },
+        enabledWhen: (c) => c.canRedo,
+    },
 
     // Annotate tab — the text markups, each marking what a drag selects (or the
     // text already selected), then returning to select.
-    annotateHighlight: { id: "annotateHighlight", label: "command.annotateHighlight", icon: ICON_TEXT_HIGHLIGHT, group: "markup", run: { kind: "markup", tool: "highlight" }, enabledWhen: whenReady },
-    annotateUnderline: { id: "annotateUnderline", label: "command.annotateUnderline", icon: ICON_SUBTOOL_UNDERLINE, group: "markup", run: { kind: "markup", tool: "underline" }, enabledWhen: whenReady },
-    annotateStrikeOut: { id: "annotateStrikeOut", label: "command.annotateStrikeOut", icon: ICON_SUBTOOL_STRIKETHROUGH, group: "markup", run: { kind: "markup", tool: "strikeOut" }, enabledWhen: whenReady },
-    annotateSquiggly: { id: "annotateSquiggly", label: "command.annotateSquiggly", icon: ICON_SUBTOOL_SQUIGGLY, group: "markup", run: { kind: "markup", tool: "squiggly" }, enabledWhen: whenReady },
+    annotateHighlight: {
+        id: "annotateHighlight",
+        label: "command.annotateHighlight",
+        icon: ICON_TEXT_HIGHLIGHT,
+        group: "markup",
+        run: { kind: "markup", tool: "highlight" },
+        enabledWhen: whenReady,
+    },
+    annotateUnderline: {
+        id: "annotateUnderline",
+        label: "command.annotateUnderline",
+        icon: ICON_SUBTOOL_UNDERLINE,
+        group: "markup",
+        run: { kind: "markup", tool: "underline" },
+        enabledWhen: whenReady,
+    },
+    annotateStrikeOut: {
+        id: "annotateStrikeOut",
+        label: "command.annotateStrikeOut",
+        icon: ICON_SUBTOOL_STRIKETHROUGH,
+        group: "markup",
+        run: { kind: "markup", tool: "strikeOut" },
+        enabledWhen: whenReady,
+    },
+    annotateSquiggly: {
+        id: "annotateSquiggly",
+        label: "command.annotateSquiggly",
+        icon: ICON_SUBTOOL_SQUIGGLY,
+        group: "markup",
+        run: { kind: "markup", tool: "squiggly" },
+        enabledWhen: whenReady,
+    },
 
     // A sticky note, dropped with a click, and a text box, dragged out or
     // dropped with one: the text of each is typed in the popup it opens beside
     // it. A stamp, picked from the standard ones, is dropped with a click.
-    annotateNote: { id: "annotateNote", label: "command.annotateNote", icon: ICON_SUBTOOL_NOTE, group: "comment", run: { kind: "arm", tool: { kind: "annotation", tool: "note" } }, enabledWhen: whenReady },
-    annotateTextBox: { id: "annotateTextBox", label: "command.annotateTextBox", icon: ICON_SUBTOOL_TEXTBOX, group: "comment", run: { kind: "arm", tool: { kind: "annotation", tool: "textBox" } }, enabledWhen: whenReady },
-    annotateStamp: { id: "annotateStamp", label: "command.annotateStamp", icon: ICON_SUBTOOL_STAMP, group: "comment", run: { kind: "armPicker", options: STAMP_OPTIONS }, enabledWhen: whenReady },
+    annotateNote: {
+        id: "annotateNote",
+        label: "command.annotateNote",
+        icon: ICON_SUBTOOL_NOTE,
+        group: "comment",
+        run: { kind: "arm", tool: { kind: "annotation", tool: "note" } },
+        enabledWhen: whenReady,
+    },
+    annotateTextBox: {
+        id: "annotateTextBox",
+        label: "command.annotateTextBox",
+        icon: ICON_SUBTOOL_TEXTBOX,
+        group: "comment",
+        run: { kind: "arm", tool: { kind: "annotation", tool: "textBox" } },
+        enabledWhen: whenReady,
+    },
+    annotateStamp: {
+        id: "annotateStamp",
+        label: "command.annotateStamp",
+        icon: ICON_SUBTOOL_STAMP,
+        group: "comment",
+        run: { kind: "armPicker", options: STAMP_OPTIONS },
+        enabledWhen: whenReady,
+    },
 
     // The tools that draw a PDF annotation. The Pen stays armed
     // stroke after stroke (a signature, a scribble), so it arms sticky; a shape
     // is placed once, like an Insert-tab shape.
-    annotatePen: { id: "annotatePen", label: "command.annotatePen", icon: ICON_SUBTOOL_FREEHAND, group: "draw", run: { kind: "arm", tool: { kind: "annotation", tool: "pen" }, sticky: true }, enabledWhen: whenReady },
-    annotateShape: { id: "annotateShape", label: "command.annotateShape", icon: ICON_SHAPES, group: "draw", run: { kind: "armPicker", options: ANNOTATION_SHAPE_OPTIONS }, enabledWhen: whenReady },
+    annotatePen: {
+        id: "annotatePen",
+        label: "command.annotatePen",
+        icon: ICON_SUBTOOL_FREEHAND,
+        group: "draw",
+        run: { kind: "arm", tool: { kind: "annotation", tool: "pen" }, sticky: true },
+        enabledWhen: whenReady,
+    },
+    annotateShape: {
+        id: "annotateShape",
+        label: "command.annotateShape",
+        icon: ICON_SHAPES,
+        group: "draw",
+        run: { kind: "armPicker", options: ANNOTATION_SHAPE_OPTIONS },
+        enabledWhen: whenReady,
+    },
 
     // The Annotate tab's Format group — the style of the armed annotation tool,
     // else of the selected annotations. Each control is live when what it acts
     // on takes the entry it edits (see `annotationFormat`).
-    annotationColor: { id: "annotationColor", label: "command.annotationColor", icon: ICON_STROKE, group: "format", run: { kind: "annotationPaint", channel: "color" }, enabledWhen: (c) => c.annotation?.color !== undefined },
-    annotationFill: { id: "annotationFill", label: "command.annotationFill", icon: ICON_FILL, group: "format", run: { kind: "annotationPaint", channel: "fill" }, enabledWhen: (c) => c.annotation?.fill !== undefined },
-    annotationOpacity: { id: "annotationOpacity", label: "command.annotationOpacity", icon: ICON_OPACITY, group: "format", run: { kind: "menu", menu: ANNOTATION_OPACITY_MENU }, enabledWhen: (c) => c.annotation?.opacity !== undefined },
+    annotationColor: {
+        id: "annotationColor",
+        label: "command.annotationColor",
+        icon: ICON_STROKE,
+        group: "format",
+        run: { kind: "annotationPaint", channel: "color" },
+        enabledWhen: (c) => c.annotation?.color !== undefined,
+    },
+    annotationFill: {
+        id: "annotationFill",
+        label: "command.annotationFill",
+        icon: ICON_FILL,
+        group: "format",
+        run: { kind: "annotationPaint", channel: "fill" },
+        enabledWhen: (c) => c.annotation?.fill !== undefined,
+    },
+    annotationOpacity: {
+        id: "annotationOpacity",
+        label: "command.annotationOpacity",
+        icon: ICON_OPACITY,
+        group: "format",
+        run: { kind: "menu", menu: ANNOTATION_OPACITY_MENU },
+        enabledWhen: (c) => c.annotation?.opacity !== undefined,
+    },
 };
-

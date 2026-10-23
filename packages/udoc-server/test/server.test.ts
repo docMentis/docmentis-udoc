@@ -804,7 +804,9 @@ test("a collaboration sends each edit on to the others, keeps it as the edit log
     // says it has one to replay.
     await until(async () => (await kept(directory, id))["crdt.loro"] === '["alex 1","robin 1"]');
     assert.equal(
-        text(inflateRawSync(new Uint8Array(await (await request("GET", `/documents/${id}/package/crdt`)).arrayBuffer()))),
+        text(
+            inflateRawSync(new Uint8Array(await (await request("GET", `/documents/${id}/package/crdt`)).arrayBuffer())),
+        ),
         '["alex 1","robin 1"]',
     );
     assert.deepEqual(await (await request("GET", `/documents/${id}/package`)).json(), {
@@ -847,10 +849,7 @@ test("a client's opaque parts are kept before its patch, served by route, and ne
     assert.equal(await body(await request("GET", `/documents/${id}/package/images/0-2a`)), "image part");
     assert.equal(await body(await request("GET", `/documents/${id}/package/blobs/e7e7e7`)), "image pixels");
     assert.equal(await body(await request("GET", `/documents/${id}/package/blobs/${IMAGE_BLOB}`)), "image blob");
-    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/package/images/0-2b`)), [
-        404,
-        "notFound",
-    ]);
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/package/images/0-2b`)), [404, "notFound"]);
 });
 
 test("a collaboration holds its session while anyone is connected, and its log outlives both", async (t) => {

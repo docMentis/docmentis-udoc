@@ -41,14 +41,14 @@ The `--udoc-color-` prefix is dropped in the tables.
 
 ### Surface: the planes
 
-| Role | Light | Dark | Paints |
-| --- | --- | --- | --- |
-| `surface-container-lowest` | `#e0e0e0` | `#121212` | Nothing yet: a well sunk below the canvas |
-| `surface` | `#e6e6e6` | `#181818` | The canvas, via `--udoc-canvas-background`; the slide picker's preview well |
-| `surface-container-low` | `#ececec` | `#1e1e1e` | Nothing yet: a frame below the chrome, such as the toolbar stepping down from the ribbon |
-| `surface-container` | `#f3f3f3` | `#252525` | The chrome around the canvas, via the [region tokens](#component-tokens): toolbar, ribbon, side panels, status bar |
-| `surface-container-high` | `#f9f9f9` | `#2c2c2c` | Cards and text boxes inside a panel; the chrome floating over the canvas: floating toolbar, comment popup, annotation bar, page controls |
-| `surface-container-highest` | `#ffffff` | `#333333` | Menus, tooltips, dialogs |
+| Role                        | Light     | Dark      | Paints                                                                                                                                   |
+| --------------------------- | --------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `surface-container-lowest`  | `#e0e0e0` | `#121212` | Nothing yet: a well sunk below the canvas                                                                                                |
+| `surface`                   | `#e6e6e6` | `#181818` | The canvas, via `--udoc-canvas-background`; the slide picker's preview well                                                              |
+| `surface-container-low`     | `#ececec` | `#1e1e1e` | Nothing yet: a frame below the chrome, such as the toolbar stepping down from the ribbon                                                 |
+| `surface-container`         | `#f3f3f3` | `#252525` | The chrome around the canvas, via the [region tokens](#component-tokens): toolbar, ribbon, side panels, status bar                       |
+| `surface-container-high`    | `#f9f9f9` | `#2c2c2c` | Cards and text boxes inside a panel; the chrome floating over the canvas: floating toolbar, comment popup, annotation bar, page controls |
+| `surface-container-highest` | `#ffffff` | `#333333` | Menus, tooltips, dialogs                                                                                                                 |
 
 The ladder is M3's `surface` and its five containers, ordered the way M3 orders
 them in its dark theme, in both of our themes: each rung is a height, and a
@@ -60,9 +60,9 @@ In light, the rungs between the canvas and the top sit about 6 levels apart, so
 
 ### Content: text and icons
 
-| Role | Light | Dark | Paints |
-| --- | --- | --- | --- |
-| `on-surface` | `#1f1f1f` | `#e8e8e8` | Text and icons on every surface |
+| Role                 | Light     | Dark      | Paints                                                                                                                                                                                    |
+| -------------------- | --------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `on-surface`         | `#1f1f1f` | `#e8e8e8` | Text and icons on every surface                                                                                                                                                           |
 | `on-surface-variant` | `#5f5f5f` | `#a8a8a8` | Secondary content: labels and section titles, metadata (comment author and date, page labels, the page total), placeholders, carets and close glyphs, unselected tabs, guide-band numbers |
 
 One ink pair serves every rung. The rungs are neutrals a few steps apart, and
@@ -73,34 +73,34 @@ alike.
 
 ### Outline: lines
 
-| Role | Light | Dark | Paints |
-| --- | --- | --- | --- |
-| `outline` | `#7f7f7f` | `#808080` | Field outlines (at least 3:1 on every rung); the guide band's marker color |
+| Role              | Light     | Dark      | Paints                                                                         |
+| ----------------- | --------- | --------- | ------------------------------------------------------------------------------ |
+| `outline`         | `#7f7f7f` | `#808080` | Field outlines (at least 3:1 on every rung); the guide band's marker color     |
 | `outline-variant` | `#cccccc` | `#444444` | Dividers, panel / menu / dialog frames, the page border, guide-band grid marks |
 
 ### Primary: the one hue
 
-| Role | Light | Dark | Paints |
-| --- | --- | --- | --- |
-| `primary` | `#2b2b2b` | `#e0e0e0` | Focus ring, the [selected overlay](#states), indicator bars (active panel tab, page insert line), switch track, filled button, checkbox `accent-color` |
-| `on-primary` | `#ffffff` | `#1b1b1b` | Text and icons on a `primary` fill |
+| Role         | Light     | Dark      | Paints                                                                                                                                                 |
+| ------------ | --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `primary`    | `#2b2b2b` | `#e0e0e0` | Focus ring, the [selected overlay](#states), indicator bars (active panel tab, page insert line), switch track, filled button, checkbox `accent-color` |
+| `on-primary` | `#ffffff` | `#1b1b1b` | Text and icons on a `primary` fill                                                                                                                     |
 
 The default is the strongest ink of each theme, near-black and near-white. A host
 brands the UI by setting this pair.
 
 ### Error
 
-| Role | Light | Dark | Paints |
-| --- | --- | --- | --- |
-| `error` | `#c62828` | `#f28b82` | Destructive actions, invalid input, error text |
+| Role       | Light     | Dark      | Paints                                                                  |
+| ---------- | --------- | --------- | ----------------------------------------------------------------------- |
+| `error`    | `#c62828` | `#f28b82` | Destructive actions, invalid input, error text                          |
 | `on-error` | `#ffffff` | `#5c1410` | Text and icons on an `error` fill, such as a destructive confirm button |
 
 ### Inverse
 
-| Role | Light | Dark | Paints |
-| --- | --- | --- | --- |
-| `inverse-surface` | `#2e2e2e` | `#e8e8e8` | A plane that must stand out from all the others: the perf HUD, transient messages |
-| `inverse-on-surface` | `#f2f2f2` | `#1f1f1f` | Text and icons on it |
+| Role                 | Light     | Dark      | Paints                                                                            |
+| -------------------- | --------- | --------- | --------------------------------------------------------------------------------- |
+| `inverse-surface`    | `#2e2e2e` | `#e8e8e8` | A plane that must stand out from all the others: the perf HUD, transient messages |
+| `inverse-on-surface` | `#f2f2f2` | `#1f1f1f` | Text and icons on it                                                              |
 
 Tooltips are not inverse. A tooltip is the topmost floating plane, so it takes
 `surface-container-highest` with an `outline-variant` frame and a shadow. The
@@ -108,8 +108,8 @@ tooltips today are OS-drawn `title` attributes.
 
 ### Utility
 
-| Role | Light | Dark | Paints |
-| --- | --- | --- | --- |
+| Role    | Light            | Dark             | Paints         |
+| ------- | ---------------- | ---------------- | -------------- |
 | `scrim` | `rgba(0,0,0,.5)` | `rgba(0,0,0,.7)` | Modal backdrop |
 
 ### Not in the set
@@ -139,13 +139,13 @@ is not a role.
 **Regions** are the fixed chrome around the canvas, the parts a host lines up
 with its own app. Each has one fill token that defaults to the region's rung:
 
-| Token | Default | Painted by |
-| --- | --- | --- |
-| `--udoc-toolbar-background` | `surface-container` | `.udoc-toolbar` |
-| `--udoc-ribbon-background` | `surface-container` | `.udoc-ribbon` and its selected tab |
-| `--udoc-panel-background` | `surface-container` | `.udoc-left-panel` and its tab strip, `.udoc-right-panel` |
-| `--udoc-status-bar-background` | `surface-container` | `.udoc-status-bar` |
-| `--udoc-canvas-background` | `surface` | The canvas host, guide bands, scrollbar gutters and the selected sheet tab; pushed to the engine as the page-gap color |
+| Token                          | Default             | Painted by                                                                                                             |
+| ------------------------------ | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `--udoc-toolbar-background`    | `surface-container` | `.udoc-toolbar`                                                                                                        |
+| `--udoc-ribbon-background`     | `surface-container` | `.udoc-ribbon` and its selected tab                                                                                    |
+| `--udoc-panel-background`      | `surface-container` | `.udoc-left-panel` and its tab strip, `.udoc-right-panel`                                                              |
+| `--udoc-status-bar-background` | `surface-container` | `.udoc-status-bar`                                                                                                     |
+| `--udoc-canvas-background`     | `surface`           | The canvas host, guide bands, scrollbar gutters and the selected sheet tab; pushed to the engine as the page-gap color |
 
 A region token covers the fill only. The region's content keeps the roles' ink,
 outlines and states, so the token picks a tone within its theme's ladder (the
@@ -166,14 +166,14 @@ anything a page holds, in both themes, whatever the host's `primary` is; a
 near-black selection would vanish into black text. Their defaults are literal
 hues, not roles:
 
-| Token | Light | Dark | Marks |
-| --- | --- | --- | --- |
-| `--udoc-canvas-selection` | `#0078d7` | `#0078d7` | Selection outline and handles; its tint is this color at 15% (box, cell) and 30% (text) |
-| `--udoc-canvas-hover` | `#7c3aed` | `#7c3aed` | The hovered annotation's outline, a hue apart from the selection |
-| `--udoc-canvas-marquee` (+ `-fill`) | `#334155` | `#94a3b8` | Marquee |
-| `--udoc-canvas-marquee-crossing` (+ `-fill`) | `#1d4ed8` | `#60a5fa` | Crossing marquee |
-| `--udoc-canvas-marquee-enclose` (+ `-fill`) | `#15803d` | `#4ade80` | Enclosing marquee |
-| `--udoc-canvas-search` / `-search-active` | `rgba(255,235,59,.35)` / `rgba(255,152,0,.5)` | same | Search hits, the current one |
+| Token                                        | Light                                         | Dark      | Marks                                                                                   |
+| -------------------------------------------- | --------------------------------------------- | --------- | --------------------------------------------------------------------------------------- |
+| `--udoc-canvas-selection`                    | `#0078d7`                                     | `#0078d7` | Selection outline and handles; its tint is this color at 15% (box, cell) and 30% (text) |
+| `--udoc-canvas-hover`                        | `#7c3aed`                                     | `#7c3aed` | The hovered annotation's outline, a hue apart from the selection                        |
+| `--udoc-canvas-marquee` (+ `-fill`)          | `#334155`                                     | `#94a3b8` | Marquee                                                                                 |
+| `--udoc-canvas-marquee-crossing` (+ `-fill`) | `#1d4ed8`                                     | `#60a5fa` | Crossing marquee                                                                        |
+| `--udoc-canvas-marquee-enclose` (+ `-fill`)  | `#15803d`                                     | `#4ade80` | Enclosing marquee                                                                       |
+| `--udoc-canvas-search` / `-search-active`    | `rgba(255,235,59,.35)` / `rgba(255,152,0,.5)` | same      | Search hits, the current one                                                            |
 
 A new mark, such as a link highlight, joins this group as `--udoc-canvas-<mark>`.
 
@@ -181,23 +181,37 @@ A new mark, such as a link highlight, joins this group as `--udoc-canvas-<mark>`
 
 ```css
 :where(.udoc-ui-root) {
-    --udoc-state-hover-opacity:    6%;
-    --udoc-state-pressed-opacity:  12%;
+    --udoc-state-hover-opacity: 6%;
+    --udoc-state-pressed-opacity: 12%;
     --udoc-state-selected-opacity: 14%;
     --udoc-state-disabled-opacity: 38%;
 
-    --udoc-state-hover:    color-mix(in srgb, currentColor var(--udoc-state-hover-opacity), transparent);
-    --udoc-state-pressed:  color-mix(in srgb, currentColor var(--udoc-state-pressed-opacity), transparent);
-    --udoc-state-selected: color-mix(in srgb, var(--udoc-color-primary) var(--udoc-state-selected-opacity), transparent);
+    --udoc-state-hover: color-mix(in srgb, currentColor var(--udoc-state-hover-opacity), transparent);
+    --udoc-state-pressed: color-mix(in srgb, currentColor var(--udoc-state-pressed-opacity), transparent);
+    --udoc-state-selected: color-mix(
+        in srgb,
+        var(--udoc-color-primary) var(--udoc-state-selected-opacity),
+        transparent
+    );
 }
 
 /* the fill slot: what the control is */
-.udoc-btn--selected             { background-color: var(--udoc-state-selected); }
+.udoc-btn--selected {
+    background-color: var(--udoc-state-selected);
+}
 /* the overlay slot: what the pointer is doing, painted over any fill */
-.udoc-btn:hover:not(:disabled)  { background-image: linear-gradient(var(--udoc-state-hover) 0 0); }
-.udoc-btn:active:not(:disabled) { background-image: linear-gradient(var(--udoc-state-pressed) 0 0); }
-.udoc-btn:focus-visible         { outline: 2px solid var(--udoc-color-primary); }
-.udoc-btn:disabled              { opacity: var(--udoc-state-disabled-opacity); }
+.udoc-btn:hover:not(:disabled) {
+    background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+}
+.udoc-btn:active:not(:disabled) {
+    background-image: linear-gradient(var(--udoc-state-pressed) 0 0);
+}
+.udoc-btn:focus-visible {
+    outline: 2px solid var(--udoc-color-primary);
+}
+.udoc-btn:disabled {
+    opacity: var(--udoc-state-disabled-opacity);
+}
 ```
 
 - **Hover and pressed** are the control's own ink (`currentColor`) at an opacity.
@@ -238,12 +252,12 @@ different from its neighbours. Shadow and tone agree: a plane on
 `surface-container` casts none, one on `surface-container-high` casts level 2,
 and one on `surface-container-highest` casts level 3 (menus) or 4 (dialogs).
 
-| Token | Light | Dark | Who |
-| --- | --- | --- | --- |
-| `--udoc-elevation-1` | `0 1px 3px` α.1 | α.3 | Thumbnail, skip link, switch handle |
-| `--udoc-elevation-2` | `0 2px 8px` α.15 | α.4 | Page, floating toolbar, comment popup |
-| `--udoc-elevation-3` | `0 4px 16px` α.2 | α.5 | Every menu, via `--udoc-menu-shadow` |
-| `--udoc-elevation-4` | `0 8px 32px` α.3 | α.6 | Dialogs |
+| Token                | Light            | Dark | Who                                   |
+| -------------------- | ---------------- | ---- | ------------------------------------- |
+| `--udoc-elevation-1` | `0 1px 3px` α.1  | α.3  | Thumbnail, skip link, switch handle   |
+| `--udoc-elevation-2` | `0 2px 8px` α.15 | α.4  | Page, floating toolbar, comment popup |
+| `--udoc-elevation-3` | `0 4px 16px` α.2 | α.5  | Every menu, via `--udoc-menu-shadow`  |
+| `--udoc-elevation-4` | `0 8px 32px` α.3 | α.6  | Dialogs                               |
 
 Shadows deepen in dark because a dark plane lifts less by tone. Drawers are not a
 rung: `--udoc-elevation-drawer-start` and `-end` cast sideways (`±4px 0 20px`),
@@ -273,20 +287,20 @@ the stylesheet order:
 ```css
 :where(.udoc-ui-root) {
     color-scheme: light dark;
-    --udoc-color-surface:                   #e6e6e6;
-    --udoc-color-surface-container:         #f3f3f3;
+    --udoc-color-surface: #e6e6e6;
+    --udoc-color-surface-container: #f3f3f3;
     --udoc-color-surface-container-highest: #ffffff;
-    --udoc-color-on-surface:                #1f1f1f;
+    --udoc-color-on-surface: #1f1f1f;
     /* … every role */
     --udoc-toolbar-background: var(--udoc-color-surface-container);
-    --udoc-canvas-background:  var(--udoc-color-surface);
+    --udoc-canvas-background: var(--udoc-color-surface);
     /* … every component token */
 }
 :where(.udoc-ui-root.udoc-ui-dark) {
-    --udoc-color-surface:                   #181818;
-    --udoc-color-surface-container:         #252525;
+    --udoc-color-surface: #181818;
+    --udoc-color-surface-container: #252525;
     --udoc-color-surface-container-highest: #333333;
-    --udoc-color-on-surface:                #e8e8e8;
+    --udoc-color-on-surface: #e8e8e8;
     /* … every role, and the canvas marks that differ */
 }
 ```
@@ -312,11 +326,19 @@ A host sets any role or component token on `.udoc-ui-root`:
 
 ```css
 /* brand: the one hue, per theme */
-.udoc-ui-root                  { --udoc-color-primary: #0f766e; --udoc-color-on-primary: #ffffff; }
-.udoc-ui-root.udoc-ui-dark { --udoc-color-primary: #5eead4; --udoc-color-on-primary: #04312c; }
+.udoc-ui-root {
+    --udoc-color-primary: #0f766e;
+    --udoc-color-on-primary: #ffffff;
+}
+.udoc-ui-root.udoc-ui-dark {
+    --udoc-color-primary: #5eead4;
+    --udoc-color-on-primary: #04312c;
+}
 
 /* a region a step apart */
-.udoc-ui-root                  { --udoc-ribbon-background: #fafafa; }
+.udoc-ui-root {
+    --udoc-ribbon-background: #fafafa;
+}
 ```
 
 How many values a token needs depends only on how many themes the host runs:
@@ -344,6 +366,7 @@ colors.
 surface ladder in its dark theme, and the disabled opacity of 38%.
 
 **Not taken:**
+
 - the seed and tonal palettes, and with them the tinted neutrals
 - M3's light-theme order for the ladder, where higher containers are darker
 - the secondary, tertiary and hue-container roles

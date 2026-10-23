@@ -44,7 +44,10 @@ export function checkpointEntries(version: number): Record<string, string> {
 }
 
 /** `entries` as a zip, each deflated as the engine's saver writes it — or, not `compress`, stored. */
-export async function packageZip(entries: Record<string, string> = PACKAGE_ENTRIES, compress = true): Promise<Uint8Array> {
+export async function packageZip(
+    entries: Record<string, string> = PACKAGE_ENTRIES,
+    compress = true,
+): Promise<Uint8Array> {
     const zip = new ZipFile();
     for (const [name, text] of Object.entries(entries)) zip.addBuffer(Buffer.from(text), name, { compress });
     zip.end();

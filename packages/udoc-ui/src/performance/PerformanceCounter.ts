@@ -16,13 +16,7 @@
  * `reconcile` (relayout + page load/decode), `record` (building the draw-op
  * scene), `rasterize` (CPU raster), and `composite` (un-premultiply + blit).
  */
-export type PerfEvent =
-    | "open"
-    | "repaint"
-    | "reconcile"
-    | "record"
-    | "rasterize"
-    | "composite";
+export type PerfEvent = "open" | "repaint" | "reconcile" | "record" | "rasterize" | "composite";
 
 /** Aggregated timing for one event type over the current window. */
 export interface PerfEventStats {

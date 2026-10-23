@@ -234,10 +234,7 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
         (root ?? container).appendChild(devModal.el);
         devModal.mount(store);
 
-        rovingTabindex = setupRovingTabindex(
-            el,
-            ".udoc-btn, input",
-        );
+        rovingTabindex = setupRovingTabindex(el, ".udoc-btn, input");
         // The mode slot holds an extension's control, mounted after the
         // toolbar and rebuilt on its own schedule: refresh the roving set
         // whenever the slot's content changes, so its buttons join it.

@@ -28,7 +28,10 @@ export const SAMPLE_CATEGORIES: SampleCategory[] = [
         label: "PDF",
         description: "NASA documents are public-domain.",
         documents: [
-            { name: "Hubble Fact Sheet: Mission Operations", path: asset("pdf/nasa-hubble-fact-sheet-mission-operations.pdf") },
+            {
+                name: "Hubble Fact Sheet: Mission Operations",
+                path: asset("pdf/nasa-hubble-fact-sheet-mission-operations.pdf"),
+            },
             { name: "Hubble Focus: Black Holes", path: asset("pdf/nasa-hubble-focus-black-holes-ebook.pdf") },
             { name: "Earth Art", path: asset("pdf/nasa-earth-art.pdf") },
         ],

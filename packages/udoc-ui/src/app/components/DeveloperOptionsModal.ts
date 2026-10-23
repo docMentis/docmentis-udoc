@@ -20,8 +20,7 @@ const OPTION_ROWS: OptionRow[] = [
     {
         key: "repaintArea",
         label: "Show Repaint Area",
-        description:
-            "Outline the part of the canvas the latest frame actually repainted — the engine's dirty rect.",
+        description: "Outline the part of the canvas the latest frame actually repainted — the engine's dirty rect.",
     },
 ];
 

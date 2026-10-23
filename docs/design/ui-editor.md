@@ -57,7 +57,7 @@ bitmaps and cached them), the UI uses **one canvas pinned to the viewport**. The
 scene and repaints only invalidated regions — every keystroke and scroll frame
 is an incremental render. Scrolling is **synthetic**: wheel/touch is intercepted
 and turned into a document-space viewport translate, never native DOM scroll.
-Zoom is *faithful* (`1.0` == 100%: one document inch per inch of the screen);
+Zoom is _faithful_ (`1.0` == 100%: one document inch per inch of the screen);
 the Rust viewer works in device px with an explicit dpi, and the worker declares
 it as `dpi × devicePixelRatio`, where `dpi` is the screen's CSS px per physical
 inch — the doc type's default unless the host calibrated it so 100% shows a page
@@ -93,7 +93,7 @@ frame clock; Rust owns what/how to paint). The main thread keeps only a thin
 `WorkerClient` that forwards viewport/input over `postMessage`. Tiles are
 `put_image_data`'d straight onto the OffscreenCanvas inside the worker — they
 never cross the boundary, so there is no per-frame pixel copy. Scroll/zoom
-*state* stays in the shell's pure reducer; Rust receives the clamped values.
+_state_ stays in the shell's pure reducer; Rust receives the clamped values.
 
 - **Worker-only.** `OffscreenCanvas` 2D is broadly supported (Chrome 2018,
   Firefox 105, Safari 16.4). `WorkerClient.create` throws an `unsupported`
@@ -143,7 +143,7 @@ The manager is a **registry**, not a slot: `setOverlay(id, source)` /
 `removeOverlay(id)`, any number at once, stacked in registration order. The
 built-in chrome registers through the same public surface under `udoc:` ids,
 so a host can remove or replace a built-in exactly like its own overlay. The
-boundary is what's *in* the registry: optional chrome is; anything the UI
+boundary is what's _in_ the registry: optional chrome is; anything the UI
 requires to function (selection, caret) is not. The first such layer
 is the **selection overlay** (`SelectionLayer`): it holds the worker's
 page-anchored selection geometry — re-sent only when the selection or
@@ -167,7 +167,7 @@ Edit mode's built-ins, registered by udoc-editor's extension
   more / delete — and "more" opens a per-page popup with the page's size and
   rotation (rotate and size are UI-only until the engine grows those
   commands). Hidden when the page is shorter on screen than the rail.
-- `udoc:page-insert` — insert lives *between* pages: an invisible strip
+- `udoc:page-insert` — insert lives _between_ pages: an invisible strip
   filling each gap (plus above the first and below the last page) reveals a
   divider + "+" on hover. The strip above page N inserts before N — i.e.
   after N−1 — so there is no before/after question.
@@ -175,7 +175,7 @@ Edit mode's built-ins, registered by udoc-editor's extension
 Spacing is split across the two layers. The page **gaps** are the layout's
 (a `PageGap`, across a spread and down from one to the next) — page-fixed
 (`Pt`), so they scale with zoom and the inter-page strip stays a constant
-*document* size; the host scales its in-gap chrome (divider + "+") with zoom to
+_document_ size; the host scales its in-gap chrome (divider + "+") with zoom to
 match. The controls keep their own gap: a host's `pageGap` applies wherever they
 aren't showing, and they show only in continuous scrolling over a single-page
 layout, where no facing page sits where the rail goes. The **content padding** is the camera's
@@ -187,7 +187,7 @@ zoom/density change.
 Because the gap is page-fixed, **page positions are zoom-independent**: the
 content extent no longer changes with zoom, and a zoom keeps the content point
 at the viewport's top fixed with no re-anchoring (the old top-edge anchoring is
-gone). The camera still *derives* its zoom in fit modes and clamps scroll, so
+gone). The camera still _derives_ its zoom in fit modes and clamps scroll, so
 the per-frame report carries the authoritative scroll/zoom and the shell adopts
 them — but only from frames whose echoed viewport `seq` matches the latest sent,
 so a stale mid-burst frame can't yank the view back.

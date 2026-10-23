@@ -118,9 +118,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 // Drop a now-disabled panel if it was the one open (e.g. the
                 // Thumbnails tab when switching into a spreadsheet).
                 activePanel:
-                    state.activePanel !== null && disabledPanels.has(state.activePanel)
-                        ? null
-                        : state.activePanel,
+                    state.activePanel !== null && disabledPanels.has(state.activePanel) ? null : state.activePanel,
                 // Awaiting the first fitted frame — the scrollbar holds off until
                 // then (zoom is still the open default here; see UIState).
                 viewSettled: false,
@@ -188,7 +186,6 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 pageIndex: 0,
                 page: 1,
             };
-
 
         case "DOC_RELAYOUT": {
             // Same document, new layout: refresh page count + content size and

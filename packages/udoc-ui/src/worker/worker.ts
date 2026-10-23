@@ -11,11 +11,7 @@
 // is typed locally rather than pulling in conflicting WebWorker globals. Every
 // API the worker actually touches lives in the DOM lib.
 
-import {
-    NoOpPerformanceCounter,
-    PerformanceCounter,
-    type IPerformanceCounter,
-} from "../performance/index.js";
+import { NoOpPerformanceCounter, PerformanceCounter, type IPerformanceCounter } from "../performance/index.js";
 import { EMPTY_SELECTION_CAPABILITIES, cssPxPerPt } from "../geometry.js";
 import type { DocumentLayout, Fit, Peer, PeerPointer, SelectionGeometry, Viewport } from "../geometry.js";
 import { createCanvasText } from "../fonts/canvas-text.js";
@@ -253,8 +249,7 @@ function emitBrandingRect(s: WasmSession): void {
     const r = s.brandingRect();
     scope.postMessage({
         type: "brandingRect",
-        rect:
-            r.length === 4 ? { x: r[0]!, y: r[1]!, width: r[2]!, height: r[3]! } : null,
+        rect: r.length === 4 ? { x: r[0]!, y: r[1]!, width: r[2]!, height: r[3]! } : null,
     });
 }
 
@@ -393,9 +388,15 @@ function emitChangedSelection(): void {
 /** The current selection state, read from the session. */
 function readSelection(geometry?: SelectionGeometry): SelectionReportBody {
     return {
-        geometry:
-            geometry ??
-            session?.selectionGeometry() ?? { objects: [], annotations: [], cells: [], text: [], caret: null, headers: null },
+        geometry: geometry ??
+            session?.selectionGeometry() ?? {
+                objects: [],
+                annotations: [],
+                cells: [],
+                text: [],
+                caret: null,
+                headers: null,
+            },
         peers: session?.peerSelectionGeometry() ?? [],
         capabilities: session?.selectionCapabilities() ?? EMPTY_SELECTION_CAPABILITIES,
         properties: session?.selectionProperties() ?? null,
@@ -1417,7 +1418,10 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "selectionGeometry": {
                 // A pure read — the local selection's geometry now, after every
                 // select sent before it.
-                reply(id, safeRead(() => session?.selectionGeometry(), EMPTY_SELECTION_GEOMETRY));
+                reply(
+                    id,
+                    safeRead(() => session?.selectionGeometry(), EMPTY_SELECTION_GEOMETRY),
+                );
                 break;
             }
             case "selectedAnnotations": {
@@ -1487,7 +1491,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // A pure read — the current selection as the tagged UDocSelection
                 // (or null), so a host can see the selection whatever the
                 // doc type.
-                reply(id, session ? session.selection() ?? null : null);
+                reply(id, session ? (session.selection() ?? null) : null);
                 break;
             }
             case "copy": {
@@ -1787,7 +1791,14 @@ function safeRead<T>(fn: () => T | undefined, fallback: T): T {
 
 /** The geometry of an empty selection — what a geometry read answers with no
  *  document open. */
-const EMPTY_SELECTION_GEOMETRY: SelectionGeometry = { objects: [], annotations: [], cells: [], text: [], caret: null, headers: null };
+const EMPTY_SELECTION_GEOMETRY: SelectionGeometry = {
+    objects: [],
+    annotations: [],
+    cells: [],
+    text: [],
+    caret: null,
+    headers: null,
+};
 
 /** The annotations the selection holds and their page, or `null` when it holds
  *  none — or their page's annotations aren't loaded, which a selection on a
@@ -2059,12 +2070,7 @@ function applyViewport(s: WasmSession, v: Viewport): void {
     }
 }
 
-function reply(
-    id: number | undefined,
-    result: unknown,
-    error?: unknown,
-    transfer?: Transferable[],
-): void {
+function reply(id: number | undefined, result: unknown, error?: unknown, transfer?: Transferable[]): void {
     if (id === undefined) return;
     if (error !== undefined) {
         // An `Error` loses its class crossing to the main thread, so the

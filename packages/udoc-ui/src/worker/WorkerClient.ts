@@ -1022,8 +1022,7 @@ export class WorkerClient {
          * — loaded on first read; one with no fonts with no PDF open. A read: a
          * free text names its font by an entry's id.
          */
-        fontInfoList: (): Promise<FontInfoList> =>
-            this.#send({ type: "fontInfoList" }) as Promise<FontInfoList>,
+        fontInfoList: (): Promise<FontInfoList> => this.#send({ type: "fontInfoList" }) as Promise<FontInfoList>,
 
         /**
          * The document's interactive form — its terminal fields, each naming
@@ -1108,8 +1107,7 @@ export class WorkerClient {
          * {@link portable.selectObjects}. Lets a host act on the current
          * selection by id (e.g. adopt a peer's selection).
          */
-        selectedObjectIds: (): Promise<string[]> =>
-            this.#send({ type: "selectedObjects" }) as Promise<string[]>,
+        selectedObjectIds: (): Promise<string[]> => this.#send({ type: "selectedObjects" }) as Promise<string[]>,
 
         /**
          * The annotations the selection holds, their values with their page's

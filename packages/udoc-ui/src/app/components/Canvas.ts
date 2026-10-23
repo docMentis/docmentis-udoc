@@ -1261,9 +1261,13 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // handlers translate a band press into the matching select call. Active
         // only while a spreadsheet's header bands show and the select pointer is
         // live (view or edit), matching the cell gesture's gate.
-        let bandGesture:
-            | { axis: "column" | "row"; anchorX: number; anchorY: number; pointerId: number; extend: boolean }
-            | null = null;
+        let bandGesture: {
+            axis: "column" | "row";
+            anchorX: number;
+            anchorY: number;
+            pointerId: number;
+            extend: boolean;
+        } | null = null;
         const headerSelectActive = (): boolean => {
             const st = s.getState();
             return bandKind(st) === "header" && st.pointerMode.kind === "select";
@@ -1283,18 +1287,16 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // pointer drags past the slop — so a press-release near an edge still
         // selects the header (see endResize), never swallowed by the resize. The
         // guide only appears once `moved` flips on the first real drag.
-        let resizeGesture:
-            | {
-                  axis: "column" | "row";
-                  index: number;
-                  start: number;
-                  pointerId: number;
-                  pressX: number;
-                  pressY: number;
-                  shift: boolean;
-                  moved: boolean;
-              }
-            | null = null;
+        let resizeGesture: {
+            axis: "column" | "row";
+            index: number;
+            start: number;
+            pointerId: number;
+            pressX: number;
+            pressY: number;
+            shift: boolean;
+            moved: boolean;
+        } | null = null;
         const headerResizeActive = (): boolean => {
             const st = s.getState();
             return bandKind(st) === "header" && st.mode !== VIEW_MODE;
@@ -1327,7 +1329,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         const dispatchBand = (p: { x: number; y: number }): void => {
             const g = bandGesture;
             if (!g) return;
-            if (g.axis === "column") client.selectSheetColumns({ x: g.anchorX, y: 0 }, { x: p.x, y: 0 }, { extend: g.extend });
+            if (g.axis === "column")
+                client.selectSheetColumns({ x: g.anchorX, y: 0 }, { x: p.x, y: 0 }, { extend: g.extend });
             else client.selectSheetRows({ x: 0, y: g.anchorY }, { x: 0, y: p.y }, { extend: g.extend });
         };
         const onBandDown = (axis: "column" | "row") => (ev: PointerEvent) => {
@@ -1397,7 +1400,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
                 // select the whole column / row it fell in, so selection keeps
                 // working near edges. `select` is false on a cancel.
                 if (select && headerSelectActive()) {
-                    if (g.axis === "column") client.selectSheetColumns({ x: g.pressX, y: 0 }, { x: g.pressX, y: 0 }, { extend: g.shift });
+                    if (g.axis === "column")
+                        client.selectSheetColumns({ x: g.pressX, y: 0 }, { x: g.pressX, y: 0 }, { extend: g.shift });
                     else client.selectSheetRows({ x: 0, y: g.pressY }, { x: 0, y: g.pressY }, { extend: g.shift });
                 }
                 return true;
@@ -1714,8 +1718,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             // — or a free text's annotation box with the caret in its text, which
             // reads the same way; flow text has the caret / text with no box.
             const g = state.local;
-            inObjectText =
-                (g.objects.length > 0 || g.annotations.length > 0) && (g.text.length > 0 || g.caret != null);
+            inObjectText = (g.objects.length > 0 || g.annotations.length > 0) && (g.text.length > 0 || g.caret != null);
             editingText = g.caret != null || g.text.length > 0;
             annotationSelected = g.annotations.length > 0;
             copyable = state.capabilities.copyable;
@@ -2237,7 +2240,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         if (!annotating()) return false;
         if (annotationSelected && selection.hitLocal(x, y)) return true;
         const hit = hitAt(x, y);
-        return hit !== "none" && "portable" in hit && "annotation" in hit.portable && hit.portable.annotation.text != null;
+        return (
+            hit !== "none" && "portable" in hit && "annotation" in hit.portable && hit.portable.annotation.text != null
+        );
     }
 
     /**

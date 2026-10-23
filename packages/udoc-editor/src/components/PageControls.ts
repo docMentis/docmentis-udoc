@@ -222,13 +222,7 @@ export function pageInserts(options: PageInsertsOptions): OverlaySource {
     // Anchored by the strip's top-left (integer-friendly — a -50% centering
     // translate of a fractional width would land the layer on a half pixel
     // and blur it; the manager snaps the wrapper to the device grid).
-    const stripItem = (
-        insertIndex: number,
-        left: number,
-        top: number,
-        width: number,
-        height: number,
-    ): OverlayItem => ({
+    const stripItem = (insertIndex: number, left: number, top: number, width: number, height: number): OverlayItem => ({
         key: `gap:${insertIndex}`,
         x: left,
         y: top,

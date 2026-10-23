@@ -57,8 +57,7 @@ function drawn(
 
 /** The editor state the Format controls read: what is armed, and what is selected. */
 function state(
-    partial: Pick<UIState, "pointerMode" | "selectedAnnotations"> &
-        Partial<Pick<UIState, "commentPopup" | "comments">>,
+    partial: Pick<UIState, "pointerMode" | "selectedAnnotations"> & Partial<Pick<UIState, "commentPopup" | "comments">>,
 ): UIState {
     return { annotationStyles: {}, commentPopup: null, comments: new Map(), ...partial } as UIState;
 }
@@ -216,14 +215,27 @@ test("the comment popup shows a lone markup annotation, save a sound and a free 
         selectedComment(
             state({
                 pointerMode: { kind: "select" },
-                selectedAnnotations: { page: "p", index: 2, annotations, richContents: annotations.map(() => "<body/>") },
+                selectedAnnotations: {
+                    page: "p",
+                    index: 2,
+                    annotations,
+                    richContents: annotations.map(() => "<body/>"),
+                },
             }),
         );
     assert.deepEqual(selecting([note]), {
         page: "p",
         index: 2,
         annotation: note,
-        thread: { page: "p", index: 2, annotation: note, richContents: "<body/>", reviews: [], marked: false, replies: [] },
+        thread: {
+            page: "p",
+            index: 2,
+            annotation: note,
+            richContents: "<body/>",
+            reviews: [],
+            marked: false,
+            replies: [],
+        },
     });
     assert.equal(selecting([square])?.annotation, square, "a square is a comment too");
     assert.equal(selecting([note, square]), null, "two at once have no one popup");
@@ -313,7 +325,10 @@ function note(
 
 /** `annotation` made a caret, keeping its markup entries. */
 const caretOf = (annotation: Annotation): Annotation =>
-    ({ ...annotation, kind: { caret: { markup: markupOf(annotation), rectDifferences: null, symbol: null } } }) as unknown as Annotation;
+    ({
+        ...annotation,
+        kind: { caret: { markup: markupOf(annotation), rectDifferences: null, symbol: null } },
+    }) as unknown as Annotation;
 
 /** The ids of `threads`, each with its replies', as nested arrays. */
 const shape = (threads: readonly Comment[]): unknown[] =>
@@ -329,8 +344,14 @@ test("a page's comments thread as Acrobat lists them: replies under what they an
     const annotations: Annotation[] = [
         note("editor", "PDF Association", "D:20240429120000+2'00'"),
         // A reviewer's states: Completed, then — answering that one — Accepted.
-        note("completed", "PDF Association", "D:20240429120000+2'00'", "editor", { state: "Completed", model: "Review" }),
-        note("accepted", "PDF Association", "D:20240429120000+2'00'", "completed", { state: "Accepted", model: "Review" }),
+        note("completed", "PDF Association", "D:20240429120000+2'00'", "editor", {
+            state: "Completed",
+            model: "Review",
+        }),
+        note("accepted", "PDF Association", "D:20240429120000+2'00'", "completed", {
+            state: "Accepted",
+            model: "Review",
+        }),
         note("nothing", "Walter", "D:20240501000000Z", "editor", { state: "None", model: "Review" }),
         note("marked", "Walter", "D:20240501000000Z", "editor", { state: "Marked", model: "Marked" }),
         // Replies, listed out of the order they were made — one written in UT
@@ -348,7 +369,12 @@ test("a page's comments thread as Acrobat lists them: replies under what they an
         note("loop-b", "Walter", "D:20240505000000Z", "loop-a"),
         link,
     ];
-    const page: PageComments = { page: "p", index: 4, annotations, richContents: annotations.map((a) => `<body>${a.id}</body>`) };
+    const page: PageComments = {
+        page: "p",
+        index: 4,
+        annotations,
+        richContents: annotations.map((a) => `<body>${a.id}</body>`),
+    };
     const threads = commentThreads(page);
 
     assert.deepEqual(shape(threads), [
@@ -359,7 +385,11 @@ test("a page's comments thread as Acrobat lists them: replies under what they an
         "loop-b",
     ]);
     const [editor] = threads;
-    assert.deepEqual(editor?.reviews, [{ author: "PDF Association", state: "Accepted" }], "the last of the chain; None isn't shown");
+    assert.deepEqual(
+        editor?.reviews,
+        [{ author: "PDF Association", state: "Accepted" }],
+        "the last of the chain; None isn't shown",
+    );
     assert.equal(editor?.marked, true);
     assert.equal(editor?.richContents, "<body>editor</body>");
     assert.equal(threads[1]?.marked, false);

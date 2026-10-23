@@ -83,9 +83,7 @@ function matchPreset(width: number, height: number): Preset | null {
     const near = (a: number, b: number) => Math.abs(a - b) <= MATCH_TOLERANCE;
     return (
         PRESETS.find(
-            (p) =>
-                (near(p.width, width) && near(p.height, height)) ||
-                (near(p.width, height) && near(p.height, width)),
+            (p) => (near(p.width, width) && near(p.height, height)) || (near(p.width, height) && near(p.height, width)),
         ) ?? null
     );
 }

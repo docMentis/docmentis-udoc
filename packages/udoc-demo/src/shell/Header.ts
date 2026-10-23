@@ -59,12 +59,24 @@ export class Header {
         );
         const npm = h(
             "a",
-            { class: "icon-btn link", href: "https://www.npmjs.com/org/docmentis", target: "_blank", rel: "noopener", title: "npm" },
+            {
+                class: "icon-btn link",
+                href: "https://www.npmjs.com/org/docmentis",
+                target: "_blank",
+                rel: "noopener",
+                title: "npm",
+            },
             svg(ICONS.npm),
         );
         const github = h(
             "a",
-            { class: "icon-btn link", href: "https://github.com/docMentis", target: "_blank", rel: "noopener", title: "GitHub" },
+            {
+                class: "icon-btn link",
+                href: "https://github.com/docMentis",
+                target: "_blank",
+                rel: "noopener",
+                title: "GitHub",
+            },
             svg(ICONS.github),
         );
 

@@ -39,15 +39,15 @@ DPR`); the wasm call takes explicit pixel `width`/`height`, not a scale.
 ## Render priority — the editor divergence
 
 In the viewer, viewport page-renders and thumbnails share one main-thread work
-queue, so thumbnails simply sort *after* page items (`sortQueue`, page items by
+queue, so thumbnails simply sort _after_ page items (`sortQueue`, page items by
 distance to `pageFocus`, thumbnails by `thumbnailFocus`, page-before-thumbnail).
 
 The editor's viewport is **not** request-driven — it is an autonomous
-`render_frame()` loop on the worker thread. A thumbnail render is a *synchronous*
+`render_frame()` loop on the worker thread. A thumbnail render is a _synchronous_
 wasm call on that same thread, so it competes with live painting directly.
 Priority control is therefore a **yield gate**, not a queue sort:
 
-- Thumbnail renders run only while the viewport is *settled*. We reuse the
+- Thumbnail renders run only while the viewport is _settled_. We reuse the
   compose-ahead discipline already in `shell.ts` (`viewportSig` + idle
   scheduling): while scroll/zoom/edit are in flight the signature changes and
   thumbnail work defers; it resumes when the view stops. Thumbnails share the
@@ -62,7 +62,7 @@ A `WorkerClient`-owned `Map` keyed `docGen:page:scale.toFixed(4)` (mirroring the
 viewer's `makeRenderKey`), holding the decoded `ImageBitmap` plus `lastAccess`
 for LRU eviction. Thumbnails are small, so the cap is **count-based** (the
 viewer uses 500). The key includes `docGeneration` (bumped per open) and is
-invalidated per-page on edits — an edit to slide *N* drops *N*'s entry so the
+invalidated per-page on edits — an edit to slide _N_ drops _N_'s entry so the
 strip re-renders just that one, leaving the rest cached.
 
 ## Virtual scrolling — incremental, not pre-sized
@@ -72,12 +72,12 @@ page list the moment it opens: `getAllPageInfo` returns every page's
 size/rotation in one call, dispatched as a complete `pageInfos` array. The
 editor has **no such list** — page count grows as compose-ahead advances
 (`DOC_RELAYOUT` keeps bumping `pageCount`) and page sizes change under edits.
-So the editor must *not* reuse the viewport's virtual scrolling (which leans on
+So the editor must _not_ reuse the viewport's virtual scrolling (which leans on
 a worker-authoritative `contentSize` streamed per frame); it builds its own
 incremental model:
 
 - **Extent grows with composition.** The strip's scroll height and scrollbar
-  are sized from the *composed prefix* (`state.pageCount`), not a known total,
+  are sized from the _composed prefix_ (`state.pageCount`), not a known total,
   and grow in lockstep with the same `DOC_RELAYOUT`/compose-ahead signal that
   grows the main viewport's scrollbar. There is no final page count to allocate
   against — space appears as pages compose.
@@ -85,7 +85,7 @@ incremental model:
   placeholder aspect (a uniform-slide guess); its real ratio arrives lazily from
   the doc-type-agnostic `pageSize(index)` (the engine's `page_metrics`, so a
   slide sizes like a PDF page) when the item enters the window (cached), and a
-  size that *changes* under an edit re-measures that item and adjusts the
+  size that _changes_ under an edit re-measures that item and adjusts the
   running extent and the offsets below it.
 - **Only the visible window is mounted and rendered.** Item elements exist only
   for the visible range (+ a small overscan) over a spacer sized to the running
@@ -105,7 +105,7 @@ spread math. What the panel still owns:
 
 - **Viewport → strip.** Subscribe to `state.page`; on change, move the active
   highlight and `scrollIntoView({ block: "nearest" })` the active item. Because
-  that scrolls the *panel* container (not the document viewport), it can't loop
+  that scrolls the _panel_ container (not the document viewport), it can't loop
   back into a viewport scroll — the same natural guard the viewer relies on.
 - **Strip → viewport.** Click and keyboard (↑/↓, Home/End, Enter/Space) dispatch
   `NAVIGATE_TO_PAGE`; the shell already forwards the request seq to

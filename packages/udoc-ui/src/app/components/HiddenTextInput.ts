@@ -114,8 +114,7 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
         // a real control (a toolbar field, a panel input, a ribbon button) is
         // respected.
         const target = ev.relatedTarget;
-        const withinCanvas =
-            target == null || (target instanceof Node && el.parentElement?.contains(target) === true);
+        const withinCanvas = target == null || (target instanceof Node && el.parentElement?.contains(target) === true);
         if (focused && withinCanvas) {
             requestAnimationFrame(() => {
                 if (focused) reclaim();

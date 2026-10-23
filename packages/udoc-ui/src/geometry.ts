@@ -532,9 +532,7 @@ function consensusPoints(consensus: Consensus<number>): number | null {
  * is open. Any other doc type (or no selection) reflects
  * {@link EMPTY_SELECTION_TEXT_FORMAT}.
  */
-export function selectionTextFormat(
-    properties: UDocSelectionProperties | null,
-): SelectionTextFormat {
+export function selectionTextFormat(properties: UDocSelectionProperties | null): SelectionTextFormat {
     const text =
         properties && "presentation" in properties
             ? properties.presentation.text
@@ -606,7 +604,10 @@ function consensusPaint<T>(consensus: Consensus<T>, reduce: (value: T) => PaintD
 
 /** An `#rrggbb` string from 0–255 channel values (clamped and rounded). */
 function rgbHex(r: number, g: number, b: number): string {
-    const byte = (v: number) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+    const byte = (v: number) =>
+        Math.max(0, Math.min(255, Math.round(v)))
+            .toString(16)
+            .padStart(2, "0");
     return `#${byte(r)}${byte(g)}${byte(b)}`;
 }
 

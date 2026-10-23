@@ -653,10 +653,17 @@ export function createRibbon(
             if (def.run.kind === "annotationPaint") {
                 const channel = def.run.channel;
                 const dd = createDropdownButton(
-                    { icon: paintSwatch(def.icon, annotationDisplay(commandContext(store.getState()), channel)), label },
+                    {
+                        icon: paintSwatch(def.icon, annotationDisplay(commandContext(store.getState()), channel)),
+                        label,
+                    },
                     {
                         menuLabel: i18n.t("ribbon.paintOptions", { label }),
-                        onOpen: () => buildPaintPanel(dd.menu, annotationPanelConfig(channel, () => dd.controller.close())),
+                        onOpen: () =>
+                            buildPaintPanel(
+                                dd.menu,
+                                annotationPanelConfig(channel, () => dd.controller.close()),
+                            ),
                     },
                 );
                 dd.trigger.dataset.command = def.id;

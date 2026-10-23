@@ -40,15 +40,15 @@ it drives — the facade's `UDocSession`, one document's engine and editor
 
 Three things make the document the right unit:
 
-* **The calls are synchronous and CPU-bound.** Composing and rasterizing a page holds
+- **The calls are synchronous and CPU-bound.** Composing and rasterizing a page holds
   the thread for as long as it takes. On the embedder's own thread that would stall
   its event loop — every request a server is serving — for the length of a render.
-* **A trap poisons the instance.** `panic = "abort"` makes a panic a wasm trap, and
+- **A trap poisons the instance.** `panic = "abort"` makes a panic a wasm trap, and
   a trap can leave a `WasmSession` borrowed for good, so the instance is finished. An
   instance per document means a document that brings the engine down takes nothing
   else with it: the trap rejects every call in flight, the session ends, its thread
   is terminated.
-* **A session is already one document.** One session, one permit, one document
+- **A session is already one document.** One session, one permit, one document
   (Wasm Licensing), so an
   instance per session is an instance per document anyway.
 
@@ -61,11 +61,11 @@ flight does, so a script that forgets `close()` still exits.
 
 A Node host has no page, so what the browser reads from `location` it declares:
 
-| field | from a Node host |
-| --- | --- |
-| `domain` | declared (`UDOC_DOMAIN` for the CLI and server), `"unknown"` if not. A license is checked against its domain list, so a licensed host must declare one the key covers. |
-| `wrapper` | `udoc-node`, or `udoc-cli` / `udoc-server` when they are the embedder. Paired with its version so the two cannot disagree. |
-| `distinctId` | the host's, if it has one; none otherwise, and usage attributes to the domain. |
+| field        | from a Node host                                                                                                                                                       |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain`     | declared (`UDOC_DOMAIN` for the CLI and server), `"unknown"` if not. A license is checked against its domain list, so a licensed host must declare one the key covers. |
+| `wrapper`    | `udoc-node`, or `udoc-cli` / `udoc-server` when they are the embedder. Paired with its version so the two cannot disagree.                                             |
+| `distinctId` | the host's, if it has one; none otherwise, and usage attributes to the domain.                                                                                         |
 
 Free usage spends a permit per session opened, metered by client IP because a Node
 host sends no browser `Origin`. A server opens a session for every upload and again
@@ -135,17 +135,17 @@ serves both, and an unknown key or a value out of range is an error naming the f
 and the key, never a silent default. The license stays in the environment, so the file
 can be committed or baked into an image.
 
-| request | answer |
-| --- | --- |
-| `POST /documents?format=` (the bytes) | `201 { id }`, the document kept · a license refusal `503` with its code · unreadable `422`, `malformed` or `unsupported` · a udoc package `422 cannotImportPackage` · too large `413` · a `format` that isn't one `400` |
-| `GET /documents/:id/original` | the upload, byte for byte — read from the store, with no session opened |
-| `GET /documents/:id/layout/page-count` | `{ pageCount }` — a resource of its own, because the first ask composes the whole document |
-| `GET /documents/:id/layout/pages/:index.png?scale=` | the composed page as a PNG · no such page `404 notFound` |
-| `GET /documents/:id/package` · `…/package/:kinds/:partId` · `…/package/blobs/:key` · `…/package/crdt` | the latest checkpoint's description, one part — its, an opaque part an edit brought, or an earlier checkpoint's — one blob, the edit log — read from the store, with no session opened ([Node Streaming](node-streaming.md)) |
-| `GET /documents/:id/collaboration`, upgraded to a WebSocket | edit the document with every other client connected to it ([Node Collaboration](node-collaboration.md)) · a refusal takes the upgrade and closes it with a code · without the upgrade `426 upgradeRequired` |
-| `GET /documents/:id/file.:format?strategy=` | a copy saved in the document's session as `format` — one of its own (`pdf`, `pptx`, …) by `strategy`, `rewrite` if absent, `delta` or `incremental`, or `udoc` for a package, which takes none (Core Save — Copy) · a format or strategy it can't be saved by `400 invalidRequest`, or a save not built `422 unsupported` · a strategy that isn't one, or one for `udoc`, `400` |
-| `POST /documents/:id/checkpoints` | `201 { version }`, the session saved as the next baseline and kept as the latest, no session reopened (Core Save — Checkpoint) · checkpoints of one document taken in turn |
-| `DELETE /documents/:id` | `204`, what was kept forgotten, its collaboration ended and its session closed |
+| request                                                                                               | answer                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /documents?format=` (the bytes)                                                                 | `201 { id }`, the document kept · a license refusal `503` with its code · unreadable `422`, `malformed` or `unsupported` · a udoc package `422 cannotImportPackage` · too large `413` · a `format` that isn't one `400`                                                                                                                                                         |
+| `GET /documents/:id/original`                                                                         | the upload, byte for byte — read from the store, with no session opened                                                                                                                                                                                                                                                                                                         |
+| `GET /documents/:id/layout/page-count`                                                                | `{ pageCount }` — a resource of its own, because the first ask composes the whole document                                                                                                                                                                                                                                                                                      |
+| `GET /documents/:id/layout/pages/:index.png?scale=`                                                   | the composed page as a PNG · no such page `404 notFound`                                                                                                                                                                                                                                                                                                                        |
+| `GET /documents/:id/package` · `…/package/:kinds/:partId` · `…/package/blobs/:key` · `…/package/crdt` | the latest checkpoint's description, one part — its, an opaque part an edit brought, or an earlier checkpoint's — one blob, the edit log — read from the store, with no session opened ([Node Streaming](node-streaming.md))                                                                                                                                                    |
+| `GET /documents/:id/collaboration`, upgraded to a WebSocket                                           | edit the document with every other client connected to it ([Node Collaboration](node-collaboration.md)) · a refusal takes the upgrade and closes it with a code · without the upgrade `426 upgradeRequired`                                                                                                                                                                     |
+| `GET /documents/:id/file.:format?strategy=`                                                           | a copy saved in the document's session as `format` — one of its own (`pdf`, `pptx`, …) by `strategy`, `rewrite` if absent, `delta` or `incremental`, or `udoc` for a package, which takes none (Core Save — Copy) · a format or strategy it can't be saved by `400 invalidRequest`, or a save not built `422 unsupported` · a strategy that isn't one, or one for `udoc`, `400` |
+| `POST /documents/:id/checkpoints`                                                                     | `201 { version }`, the session saved as the next baseline and kept as the latest, no session reopened (Core Save — Checkpoint) · checkpoints of one document taken in turn                                                                                                                                                                                                      |
+| `DELETE /documents/:id`                                                                               | `204`, what was kept forgotten, its collaboration ended and its session closed                                                                                                                                                                                                                                                                                                  |
 
 The server doesn't listen: it answers the requests and upgrades its host hands it.
 `handleRequest` and `handleUpgrade` take one whose path, beneath the `basePath`
@@ -197,6 +197,6 @@ has.
 
 **Not built:**
 
-* A host font from the CLI or the server. Neither takes a font file or a Google Fonts
+- A host font from the CLI or the server. Neither takes a font file or a Google Fonts
   setting, so each offers only the package's fonts and the Google catalog.
-* Planes past the first, export to other formats, authentication.
+- Planes past the first, export to other formats, authentication.

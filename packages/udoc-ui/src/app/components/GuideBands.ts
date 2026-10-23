@@ -100,12 +100,7 @@ export class GuideBands {
      *  is in flight — see {@link setContentShift}. `0` when settled. */
     #shiftX = 0;
 
-    constructor(
-        root: HTMLElement,
-        corner: HTMLCanvasElement,
-        top: HTMLCanvasElement,
-        left: HTMLCanvasElement,
-    ) {
+    constructor(root: HTMLElement, corner: HTMLCanvasElement, top: HTMLCanvasElement, left: HTMLCanvasElement) {
         this.#root = root;
         this.#corner = corner;
         this.#top = top;
@@ -116,7 +111,13 @@ export class GuideBands {
      *  future markers' color, labels, the selected-header highlight, and the
      *  structural grid the ticks / separators / edges all share) and redraw. */
     setColors(band: RgbColor, marker: RgbColor, text: RgbColor, highlight: RgbColor, grid: RgbColor): void {
-        this.#colors = { band: css(band), marker: css(marker), text: css(text), highlight: css(highlight), grid: css(grid) };
+        this.#colors = {
+            band: css(band),
+            marker: css(marker),
+            text: css(text),
+            highlight: css(highlight),
+            grid: css(grid),
+        };
         this.#draw();
     }
 
@@ -385,14 +386,7 @@ function labelSize(bandThickness: number): number {
     return Math.min(13, Math.max(8, bandThickness * 0.55));
 }
 
-function stroke(
-    ctx: CanvasRenderingContext2D,
-    color: string,
-    x0: number,
-    y0: number,
-    x1: number,
-    y1: number,
-): void {
+function stroke(ctx: CanvasRenderingContext2D, color: string, x0: number, y0: number, x1: number, y1: number): void {
     ctx.strokeStyle = color;
     ctx.lineWidth = 1;
     ctx.beginPath();

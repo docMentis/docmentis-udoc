@@ -66,8 +66,18 @@ export class Sidebar {
         const actions = h(
             "div",
             { class: "sidebar-actions" },
-            h("button", { class: "demo-btn", type: "button", onclick: () => handlers.onOpenFile() }, svg(ICONS.openFile), "Open File"),
-            h("button", { class: "demo-btn", type: "button", onclick: () => handlers.onOpenUrl() }, svg(ICONS.openUrl), "Open URL"),
+            h(
+                "button",
+                { class: "demo-btn", type: "button", onclick: () => handlers.onOpenFile() },
+                svg(ICONS.openFile),
+                "Open File",
+            ),
+            h(
+                "button",
+                { class: "demo-btn", type: "button", onclick: () => handlers.onOpenUrl() },
+                svg(ICONS.openUrl),
+                "Open URL",
+            ),
         );
 
         const list = h("div", { class: "document-list" });

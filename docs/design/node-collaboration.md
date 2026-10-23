@@ -46,13 +46,13 @@ the upgrade it is `426 upgradeRequired`.
 
 Each message is a binary frame: one byte saying what it is, then the engine's bytes.
 
-| kind | sent by | payload | what the receiver does |
-|---|---|---|---|
-| `join` (1) | a client, first | its version vector | answers `join` with its own version vector, then `patch` — the edits the client lacks — and `presence`, every peer's |
-| `join` (1) | the server | its version vector | sends `patch`: the edits the server lacks, preceded by `opaque parts` when they name any |
-| `patch` (2) | either | a patch | merges it; the server also sends it on to every other client and keeps the log |
-| `presence` (3) | either | a presence | merges it; the server also sends it on. Never kept. |
-| `opaque parts` (4) | a client, before the `patch` whose edits name them | the content of opaque parts — an inserted picture's image (Core Editor Opaque Part) | keeps each part and blob beside the package, before it merges the `patch` that follows. Never sent on. |
+| kind               | sent by                                            | payload                                                                             | what the receiver does                                                                                               |
+| ------------------ | -------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `join` (1)         | a client, first                                    | its version vector                                                                  | answers `join` with its own version vector, then `patch` — the edits the client lacks — and `presence`, every peer's |
+| `join` (1)         | the server                                         | its version vector                                                                  | sends `patch`: the edits the server lacks, preceded by `opaque parts` when they name any                             |
+| `patch` (2)        | either                                             | a patch                                                                             | merges it; the server also sends it on to every other client and keeps the log                                       |
+| `presence` (3)     | either                                             | a presence                                                                          | merges it; the server also sends it on. Never kept.                                                                  |
+| `opaque parts` (4) | a client, before the `patch` whose edits name them | the content of opaque parts — an inserted picture's image (Core Editor Opaque Part) | keeps each part and blob beside the package, before it merges the `patch` that follows. Never sent on.               |
 
 The join is also the recovery: a client that reconnects joins with its version
 vector, and each side sends what the other lacks, so a dropped connection loses
@@ -69,22 +69,21 @@ the withdrawal of its presence before it closes, so the others drop it at once;
 one that vanishes without leaving drops out within 40 s. The server merges a
 presence and sends it on as it does any other, a withdrawal included.
 
-A close code is WebSocket's own where it defines the meaning, and the server's from
-4000. Each says whether a joined client should rejoin; a code it doesn't know, it
+A close code is WebSocket's own where it defines the meaning, and the server's from 4000. Each says whether a joined client should rejoin; a code it doesn't know, it
 doesn't. A client whose join was never answered has nothing to rejoin: whatever
 closed it — the server unreachable, a refusal — ends it.
 
-| close code | why | rejoin? |
-|---|---|---|
-| 1001 | the server is closing — its collaborations end once their logs are kept, and a client arriving meanwhile is closed at once | yes |
-| 1002 | a message before `join`, a second `join`, or an unknown kind | no |
-| 1003 | a message that isn't a binary frame | no |
-| 1006 | never sent: the connection was lost without a close | yes |
-| 1008 | a payload the engine couldn't merge | no |
-| 1011 | the document's session ended | yes |
-| 4000 | no such document — deleted, or never kept | no |
-| 4001 | a license refusal | no |
-| 4002 | the document couldn't be opened | no |
+| close code | why                                                                                                                        | rejoin? |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 1001       | the server is closing — its collaborations end once their logs are kept, and a client arriving meanwhile is closed at once | yes     |
+| 1002       | a message before `join`, a second `join`, or an unknown kind                                                               | no      |
+| 1003       | a message that isn't a binary frame                                                                                        | no      |
+| 1006       | never sent: the connection was lost without a close                                                                        | yes     |
+| 1008       | a payload the engine couldn't merge                                                                                        | no      |
+| 1011       | the document's session ended                                                                                               | yes     |
+| 4000       | no such document — deleted, or never kept                                                                                  | no      |
+| 4001       | a license refusal                                                                                                          | no      |
+| 4002       | the document couldn't be opened                                                                                            | no      |
 
 There is no REST fallback. WebSocket over TLS passes nearly everywhere, and a fallback
 would have to keep the join, ordering and presence identical over polling — where no
@@ -113,11 +112,11 @@ URL open in two browsers edits one document.
 
 **Not built:**
 
-* A connection heartbeat. A connection that drops without closing holds the session
+- A connection heartbeat. A connection that drops without closing holds the session
   until TCP gives up on it: the presence refresh keeps a client present to the
   others, and the server reads no deadline from it.
-* Bounding the log. It is rewritten whole after each batch of merges, so a write grows
+- Bounding the log. It is rewritten whole after each batch of merges, so a write grows
   with the document's history, and a checkpoint trims none of it: `ShallowSnapshot`
   trimming and `?version=` come later. A client's first patch carries the baseline it materialized, so a
   document opened in a collaboration gains a log even before anyone edits it.
-* Authentication.
+- Authentication.

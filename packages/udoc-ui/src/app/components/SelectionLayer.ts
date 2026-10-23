@@ -199,7 +199,7 @@ const RESIZE_CURSORS = ["ew-resize", "nwse-resize", "ns-resize", "nesw-resize"];
 
 /** Map a screen-space direction angle (radians, y-down) to a resize cursor. */
 function cursorForAngle(angle: number): string {
-    const deg = (((angle * 180) / Math.PI) % 180 + 180) % 180;
+    const deg = ((((angle * 180) / Math.PI) % 180) + 180) % 180;
     return RESIZE_CURSORS[Math.round(deg / 45) % 4]!;
 }
 
@@ -508,7 +508,12 @@ export class SelectionLayer {
      * anchor.
      */
     handleAt(x: number, y: number): { handle: ResizeHandle; place: SelectionPlacement } | null {
-        if (!this.#showsChrome() || this.selectionPage() === null || !this.allows("scaleEachObject", "resizeAnnotations", "scaleEachShape")) return null;
+        if (
+            !this.#showsChrome() ||
+            this.selectionPage() === null ||
+            !this.allows("scaleEachObject", "resizeAnnotations", "scaleEachShape")
+        )
+            return null;
         const byPage = this.#pageMap();
         let nearest: { handle: ResizeHandle; place: SelectionPlacement } | null = null;
         let nearestDistance = Infinity;
@@ -589,7 +594,12 @@ export class SelectionLayer {
             const inv = invert(lv);
             if (!inv) continue;
             const local = applyPoint(inv, x, y);
-            if (local.x >= place.x && local.x <= place.x + place.width && local.y >= place.y && local.y <= place.y + place.height) {
+            if (
+                local.x >= place.x &&
+                local.x <= place.x + place.width &&
+                local.y >= place.y &&
+                local.y <= place.y + place.height
+            ) {
                 return true;
             }
         }
@@ -617,7 +627,12 @@ export class SelectionLayer {
             const inv = invert(lv);
             if (!inv) continue;
             const local = applyPoint(inv, x, y);
-            if (local.x < place.x || local.x > place.x + place.width || local.y < place.y || local.y > place.y + place.height) {
+            if (
+                local.x < place.x ||
+                local.x > place.x + place.width ||
+                local.y < place.y ||
+                local.y > place.y + place.height
+            ) {
                 continue; // outside this box
             }
             // One local unit spans this many CSS px along each projected axis;
@@ -1229,13 +1244,9 @@ function boxClass(spec: BoxSpec): string {
         case "text":
             return "udoc-ui__selection-text";
         case "cell":
-            return spec.peer
-                ? "udoc-ui__selection-cell udoc-ui__selection-cell--peer"
-                : "udoc-ui__selection-cell";
+            return spec.peer ? "udoc-ui__selection-cell udoc-ui__selection-cell--peer" : "udoc-ui__selection-cell";
         default:
-            return spec.peer
-                ? "udoc-ui__selection-box udoc-ui__selection-box--peer"
-                : "udoc-ui__selection-box";
+            return spec.peer ? "udoc-ui__selection-box udoc-ui__selection-box--peer" : "udoc-ui__selection-box";
     }
 }
 
@@ -1390,4 +1401,3 @@ function clipHalf(poly: ClipPt[], axis: "x" | "y", bound: number, atLeast: boole
     }
     return out;
 }
-

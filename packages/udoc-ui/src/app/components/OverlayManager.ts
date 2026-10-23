@@ -138,11 +138,7 @@ export class OverlayManager {
         // shared definition every overlay host uses. So a page-anchored control (a
         // pill, an insert strip, a host's own chrome) scrolled over the logo is cut
         // at its edge instead of painting on top of it.
-        this.#lastClipKey = applyContentClip(
-            this.#container,
-            { branding: frame.branding },
-            this.#lastClipKey,
-        );
+        this.#lastClipKey = applyContentClip(this.#container, { branding: frame.branding }, this.#lastClipKey);
 
         // Wrappers are composited layers (will-change: transform), so a
         // fractional translate shifts the rasterized layer by a subpixel on

@@ -75,14 +75,7 @@ import { createReducer } from "./reducer.js";
 import { LEFT_PANEL_TABS, RIGHT_PANEL_TABS, VIEW_MODE, initialState, renderZoom } from "./state.js";
 import { arrangementFor, defaultTab, profileFor } from "./profiles.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
-import type {
-    AnnotationTool,
-    UIState,
-    MarkupTool,
-    PanelTab,
-    ThemeMode,
-    ViewControlsPlacement,
-} from "./state.js";
+import type { AnnotationTool, UIState, MarkupTool, PanelTab, ThemeMode, ViewControlsPlacement } from "./state.js";
 import type { ShapePoint } from "./shapes.js";
 import {
     annotationFor,
@@ -472,7 +465,6 @@ export function mountUIShell(
     const passwordModal = createPasswordModal(i18n);
     passwordModal.mount(layout);
 
-
     // --- slot scaffold (mirrors the viewer shell) ------------------------
     const toolbarSlot = document.createElement("div");
     toolbarSlot.className = "udoc-slot udoc-toolbar-slot";
@@ -791,9 +783,7 @@ export function mountUIShell(
     // the Format colour styles the tool rather than the selection.
     const annotationBar = createAnnotationBar(i18n, {
         box: () =>
-            store.getState().pointerMode.kind === "select" && annotationBoxes.length === 1
-                ? annotationBoxes[0]!
-                : null,
+            store.getState().pointerMode.kind === "select" && annotationBoxes.length === 1 ? annotationBoxes[0]! : null,
         selectedId: () => selectedAnnotation(store.getState())?.annotation.id,
         pageToViewport: (page) => canvas.pageToViewport(page),
         commentable: () => {
@@ -1035,8 +1025,7 @@ export function mountUIShell(
     // docs/design/ui-color-system.md (Engine read-back).
     const colorProbe = document.createElement("div");
     colorProbe.setAttribute("aria-hidden", "true");
-    colorProbe.style.cssText =
-        "position:absolute;width:0;height:0;visibility:hidden;pointer-events:none";
+    colorProbe.style.cssText = "position:absolute;width:0;height:0;visibility:hidden;pointer-events:none";
     layout.appendChild(colorProbe);
     /** Resolve a color expression (e.g. `var(--udoc-canvas-background)`) to RGB. */
     function resolveColor(expr: string): RgbColor | null {
@@ -1160,9 +1149,7 @@ export function mountUIShell(
         return (
             target != null &&
             !target.classList.contains("udoc-ui__text-input") &&
-            (target.tagName === "INPUT" ||
-                target.tagName === "TEXTAREA" ||
-                target.isContentEditable === true)
+            (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable === true)
         );
     };
 
@@ -1681,7 +1668,6 @@ export function mountUIShell(
         if (sheet === undefined) return;
         await commit(() => client.execute(Command.resizeRows(sheet, index, index, points)));
     }
-
 
     // Execute an arbitrary UDocCommand — the generic write seam a host drives
     // with commands it builds. Same committing-edit path, so any selection change
@@ -2231,7 +2217,8 @@ export function mountUIShell(
 
     async function requestRemoteCopy(strategy?: SaveStrategy): Promise<Uint8Array> {
         const format = store.getState().sourceFormat;
-        if (format === null) throw new Error("requestRemoteCopy: the open document records no source format to copy as");
+        if (format === null)
+            throw new Error("requestRemoteCopy: the open document records no source format to copy as");
         return remoteCopy(remotePackageOf("requestRemoteCopy"), format, strategy);
     }
 
@@ -2325,9 +2312,7 @@ export function mountUIShell(
                 currentPage: page,
                 pageNoun: profileFor(store.getState().docType).pageNoun,
                 onPrint: (chosen) =>
-                    void printPages(chosen).catch((error: unknown) =>
-                        console.error("udoc: printing failed", error),
-                    ),
+                    void printPages(chosen).catch((error: unknown) => console.error("udoc: printing failed", error)),
             });
             return;
         }
@@ -2545,7 +2530,11 @@ export function mountUIShell(
 
     function joinLocalCollaboration(id: string, name: string): void {
         const service = localCollaborationService(id);
-        join((events) => service.openChannel(events), name, () => service.hold());
+        join(
+            (events) => service.openChannel(events),
+            name,
+            () => service.hold(),
+        );
     }
 
     /**
@@ -2644,9 +2633,15 @@ export function mountUIShell(
      *  extension's own. */
     function runMenuAction(action: MenuAction): void {
         switch (action.kind) {
-            case "extension": extension?.menuAction(action.action); break;
-            case "annotationStyle": void restyleAnnotations(action.change); break;
-            case "copy": clipboard.copy(); break;
+            case "extension":
+                extension?.menuAction(action.action);
+                break;
+            case "annotationStyle":
+                void restyleAnnotations(action.change);
+                break;
+            case "copy":
+                clipboard.copy();
+                break;
         }
     }
 
@@ -2662,8 +2657,7 @@ export function mountUIShell(
         onHistory: (op) => void history(op),
         onPauseCollaboration: pauseCollaboration,
         onResumeCollaboration: resumeCollaboration,
-        onDownload: () =>
-            void download().catch((error: unknown) => console.error("udoc: the download failed", error)),
+        onDownload: () => void download().catch((error: unknown) => console.error("udoc: the download failed", error)),
         onPrint: () => void print().catch((error: unknown) => console.error("udoc: printing failed", error)),
     });
 
@@ -2849,7 +2843,10 @@ export function mountUIShell(
         setFit: (fit) => {
             store.dispatch({ type: "SET_DEFAULT_FIT", fit });
             if (store.getState().status !== "ready") return;
-            store.dispatch({ type: "SET_FIT", fit: fit ?? defaultFitForDocType(store.getState().docType ?? undefined) });
+            store.dispatch({
+                type: "SET_FIT",
+                fit: fit ?? defaultFitForDocType(store.getState().docType ?? undefined),
+            });
         },
         setZoom: (zoom) => store.dispatch({ type: "SET_ZOOM", zoom }),
         zoomIn: () => store.dispatch({ type: "ZOOM_IN" }),

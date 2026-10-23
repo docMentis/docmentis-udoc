@@ -138,10 +138,26 @@ export const LINE_WEIGHTS: readonly number[] = [0.25, 0.5, 0.75, 1, 1.5, 2, 2.5,
 
 /** The dash presets offered by the stroke Dashes fly-out, with a line preview. */
 const DASH_OPTIONS: ReadonlyArray<{ dash: LineDash; label: MessageKey; icon: string }> = [
-    { dash: "solid", label: "paint.solid", icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>` },
-    { dash: "dash", label: "paint.dashed", icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 3"><line x1="3" y1="12" x2="21" y2="12"/></svg>` },
-    { dash: "dot", label: "paint.dotted", icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 3"><line x1="3" y1="12" x2="21" y2="12"/></svg>` },
-    { dash: "dashDot", label: "paint.dashDot", icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 3 1 3"><line x1="3" y1="12" x2="21" y2="12"/></svg>` },
+    {
+        dash: "solid",
+        label: "paint.solid",
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>`,
+    },
+    {
+        dash: "dash",
+        label: "paint.dashed",
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 3"><line x1="3" y1="12" x2="21" y2="12"/></svg>`,
+    },
+    {
+        dash: "dot",
+        label: "paint.dotted",
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 3"><line x1="3" y1="12" x2="21" y2="12"/></svg>`,
+    },
+    {
+        dash: "dashDot",
+        label: "paint.dashDot",
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 3 1 3"><line x1="3" y1="12" x2="21" y2="12"/></svg>`,
+    },
 ];
 
 /** The line endings the stroke Start / End fly-outs offer, with their glyph

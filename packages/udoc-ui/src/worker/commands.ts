@@ -64,8 +64,7 @@ export const Command = {
 
     /** Add the standard font `font` to the document's font list as the font
      *  `id`, which the host minted — before a free text names it in its `/DA`. */
-    addStandardFont: (id: string, font: StandardFont): UDocCommand =>
-        portable({ addStandardFont: { id, font } }),
+    addStandardFont: (id: string, font: StandardFont): UDocCommand => portable({ addStandardFont: { id, font } }),
 
     /** Set the text of annotation `id` on `pageId` from `richContents` (XHTML):
      *  its `/RC` and `/Contents` together, modified at `modified` (a PDF date).

@@ -94,9 +94,7 @@ function manualClock() {
         },
         waiting: () => timers.size,
         fireNext(): void {
-            const [id, timer] = [...timers].reduce((soonest, entry) =>
-                entry[1].ms < soonest[1].ms ? entry : soonest,
-            );
+            const [id, timer] = [...timers].reduce((soonest, entry) => (entry[1].ms < soonest[1].ms ? entry : soonest));
             timers.delete(id);
             timer.callback();
         },

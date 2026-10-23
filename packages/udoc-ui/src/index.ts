@@ -65,13 +65,7 @@ export type {
 // host crafts from the declared type. The inner enums (`PortableCommand`,
 // `PresentationCommand`, `ShapeCommand`) and the `Affine` field are re-exported
 // for hosts that build commands directly.
-export type {
-    UDocCommand,
-    PortableCommand,
-    PresentationCommand,
-    ShapeCommand,
-    Affine,
-} from "@docmentis/udoc-wasm";
+export type { UDocCommand, PortableCommand, PresentationCommand, ShapeCommand, Affine } from "@docmentis/udoc-wasm";
 
 // HTML overlay layer — page-anchored DOM chrome over the Rust-painted canvas.
 // A registry: `UDocBase.setOverlay(id, source)` renders any number of

@@ -22,35 +22,35 @@ GET /documents/{documentId}/package/batch?p={route}&p={route}…
 GET /documents/{documentId}/package/crdt               the edit log, once the document has been edited, deflated
 ```
 
-* **`{kinds}`** is the part's kind in kebab-case, plural: `Page` → `pages`,
+- **`{kinds}`** is the part's kind in kebab-case, plural: `Page` → `pages`,
   `SoftMask` → `soft-masks`, `SlideLayout` → `slide-layouts`. A kind already plural
   stays as it is (`Settings` → `settings`, `Styles` → `styles`), and so does a `…Data`
   kind (`FontData` → `font-data`); `Numbering` → `numberings`.
-* **`{partId}`** is the id's key, `replica-counter` in hex (`0-1a`). A part the
+- **`{partId}`** is the id's key, `replica-counter` in hex (`0-1a`). A part the
   document has one of is addressed the same way, at id zero: `package/styles/0-0`,
   `package/catalog/0-0`.
-* **Kinds live under `package`**, so no kind collides with the document's other
+- **Kinds live under `package`**, so no kind collides with the document's other
   resources — `layout`, `original`, `file.*` — and a word-processing root is simply
   `package/documents/0-0`.
-* **A part's body is the part**, as its model serializes it, deflated: the server
+- **A part's body is the part**, as its model serializes it, deflated: the server
   serves it, it does not reshape it. A blob is its bytes, and the edit log its
   bytes, deflated the same way — raw DEFLATE (RFC 1951), which the engine inflates.
   Deflated, a body is a fraction of its JSON, and a browser's developer tools show
   none of the document's content in it: out of sight at a glance, not from anyone
   who inflates it. The package's own description stays JSON, and carries what an
   open needs and no more.
-* **The edit log is the package's `crdt` entity**, kept by the server apart from the
+- **The edit log is the package's `crdt` entity**, kept by the server apart from the
   package and served beside its parts; the description carries `baselineFrontier`
   exactly when there is one ([Node Collaboration](node-collaboration.md#the-edit-log)).
   No kind's route collides with it: a kind's is a plural.
-* **`batch`** names up to 64 parts or blobs, each `p` its route under `package`
+- **`batch`** names up to 64 parts or blobs, each `p` its route under `package`
   (`pages/0-1a`, `blobs/<key>`). Its body is each entry in turn: a 4-byte big-endian
   length and that many bytes, deflated as the route's own body is — or the length
   `0xffffffff` alone for one the package doesn't have, which fails that entry alone.
   A closure round asks for its parts in one, and the blobs they name in another
   (Core Model). No kind's route
   collides with it: a kind's is a plural, and a part's has an id.
-* **A part an edit brought** — an inserted picture's image, an opaque part whose id
+- **A part an edit brought** — an inserted picture's image, an opaque part whose id
   the edit log carries but not its content (Core Editor Opaque Part) — is
   served on the same route as a part the package has.
 

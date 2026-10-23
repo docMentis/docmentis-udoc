@@ -48,13 +48,7 @@ function bounds(p0: ShapePoint, p1: ShapePoint) {
 
 function rectangleSegments(p0: ShapePoint, p1: ShapePoint): Segment[] {
     const { x0, y0, x1, y1 } = bounds(p0, p1);
-    return [
-        { moveTo: pt(x0, y0) },
-        { lineTo: pt(x1, y0) },
-        { lineTo: pt(x1, y1) },
-        { lineTo: pt(x0, y1) },
-        "close",
-    ];
+    return [{ moveTo: pt(x0, y0) }, { lineTo: pt(x1, y0) }, { lineTo: pt(x1, y1) }, { lineTo: pt(x0, y1) }, "close"];
 }
 
 function ellipseSegments(p0: ShapePoint, p1: ShapePoint): Segment[] {
