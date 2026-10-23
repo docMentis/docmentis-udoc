@@ -426,7 +426,7 @@ export class UDocSession {
         return this.#call((id) => ({ id, type: "presence" }));
     }
 
-    /** Take in a peer's {@link presence}, each peer's latest winning. */
+    /** Take in a peer's {@link UDocSession.presence}, each peer's latest winning. */
     mergePresence(presence: Uint8Array): Promise<void> {
         return this.#call((id) => ({ id, type: "mergePresence", presence }));
     }
