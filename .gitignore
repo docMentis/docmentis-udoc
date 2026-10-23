@@ -10,8 +10,10 @@ packages/udoc-docs/.vitepress/cache/
 # Node / npm workspace
 node_modules
 
-# Claude Code agent runtime state (scheduled-task locks, etc.)
-.claude/
+# Claude Code agent runtime state (scheduled-task locks, etc.), but not the
+# repo's skills
+.claude/*
+!.claude/skills/
 
 # Editor-local settings
 .vscode/

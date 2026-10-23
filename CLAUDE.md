@@ -55,7 +55,9 @@ udoc-ui's generated engine version and the CDN URLs the docs write out.
   `.github/workflows/release.yml` publishes it
   ([`docs/design/releasing.md`](docs/design/releasing.md)). Never
   `npm publish` by hand. A change a package's users will notice gets a line
-  under `## [Unreleased]` in `CHANGELOG.md`, under the package's heading.
+  under `## [Unreleased]` in `CHANGELOG.md`, under the package's heading; the
+  `changelog` skill (`.claude/skills/changelog/`) collects what's missing before
+  a release, the engine's changes included.
 - Everything Prettier formats is formatted: the pre-commit hook
   (`.githooks/pre-commit`, turned on by `npm install`) rejects a commit whose
   staged files `prettier --check` fails. `npm run format` fixes them.
