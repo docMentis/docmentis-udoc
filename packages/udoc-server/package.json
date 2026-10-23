@@ -1,7 +1,7 @@
 {
     "name": "@docmentis/udoc-server",
     "version": "0.8.0",
-    "description": "A document server on the docMentis udoc engine: keeps PDF, Word, PowerPoint and Excel documents, serves their pages and files over HTTP, and lets clients edit them together over WebSocket.",
+    "description": "Self-hosted document server for remote access, rendering, and collaboration.",
     "keywords": [
         "document-server",
         "server",

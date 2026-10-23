@@ -1,7 +1,7 @@
 {
     "name": "@docmentis/udoc-cli",
     "version": "0.8.0",
-    "description": "The udoc command: count the pages of PDF, Word, PowerPoint and Excel documents, render them to PNG and save them, with the docMentis udoc engine.",
+    "description": "Inspect, render, and export documents from the command line.",
     "keywords": [
         "cli",
         "command-line",

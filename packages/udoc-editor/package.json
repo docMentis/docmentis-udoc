@@ -1,7 +1,7 @@
 {
     "name": "@docmentis/udoc-editor",
     "version": "0.8.0",
-    "description": "Document editor for the web: edit PDF, Word, PowerPoint and Excel files in the page, alone or together in real time, on the docMentis udoc engine. Works with any framework, or none.",
+    "description": "Embeddable document editor with rich editing and real-time collaboration for the web.",
     "keywords": [
         "document-editor",
         "pdf-editor",

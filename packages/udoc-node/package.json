@@ -1,7 +1,7 @@
 {
     "name": "@docmentis/udoc-node",
     "version": "0.8.0",
-    "description": "Open, render and save PDF, Word, PowerPoint and Excel documents in Node.js with the docMentis udoc engine, each document on a worker thread of its own.",
+    "description": "Read, render, and process documents programmatically in Node.js.",
     "keywords": [
         "document",
         "pdf",

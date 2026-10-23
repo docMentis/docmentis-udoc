@@ -1,7 +1,7 @@
 {
     "name": "@docmentis/udoc-viewer",
     "version": "0.8.0",
-    "description": "Document viewer for the web: PDF, Word, PowerPoint, Excel, CSV and images, rendered in a worker by the docMentis udoc engine. Works with any framework, or none.",
+    "description": "Embeddable, high-fidelity document viewer for PDF, Word, PowerPoint, Excel, and more.",
     "keywords": [
         "document-viewer",
         "pdf-viewer",

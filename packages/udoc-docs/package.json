@@ -1,7 +1,7 @@
 {
     "name": "@docmentis/udoc-docs",
     "version": "0.1.0",
-    "description": "The udoc developer docs site: the guides, and the API reference generated from the published packages' declarations.",
+    "description": "Developer guides and API documentation for the docMentis udoc ecosystem.",
     "license": "MIT OR Apache-2.0",
     "private": true,
     "type": "module",
