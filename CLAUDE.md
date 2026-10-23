@@ -16,7 +16,9 @@ are developed and released from the private `../docmentis-udoc-engine`. The
 packages here depend on an exact `@docmentis/udoc-wasm` version from npm;
 when that checkout sits beside this repo, `npm install` links its local build
 in place (`scripts/link-engine.mjs`), and `just build-wasm` there refreshes
-what the packages here see.
+what the packages here see. `npm run update-engine` moves the pin to the
+latest engine release (`-- <version>` for another), with the lockfile,
+udoc-ui's generated engine version and the CDN URLs the docs write out.
 
 ## Conventions
 
