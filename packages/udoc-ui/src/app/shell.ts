@@ -97,7 +97,7 @@ import type { AnnotationStyleChange, Comment } from "./annotations.js";
 import { fillKind, toggled, widgetAlternateNames, widgetFills } from "./forms.js";
 import type { FillKind } from "./forms.js";
 import { follow, textLinkFollows, textLinkUrl } from "./destinations.js";
-import { readSource, signaturelessFormat, sourceName } from "./source.js";
+import { mediaType, readSource, signaturelessFormat, sourceName } from "./source.js";
 import type { OpenSource } from "./source.js";
 import { uiStyles } from "./styles.js";
 import { createPageAnnotations } from "./page-annotations.js";
@@ -2245,7 +2245,7 @@ export function mountUIShell(
         // Named before the save, which another open could overtake.
         const name = filename ?? sourceFilename ?? `document.${format}`;
         const bytes = await savedCopy(format);
-        const url = URL.createObjectURL(new Blob([bytes]));
+        const url = URL.createObjectURL(new Blob([bytes], { type: mediaType(format) }));
         const link = document.createElement("a");
         link.href = url;
         link.download = name;

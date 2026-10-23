@@ -81,6 +81,35 @@ export function signaturelessFormat(name: string | undefined): FileFormat | unde
     }
 }
 
+/**
+ * The media type of a file in `format`, for a download of it: what lets the
+ * browser give a name without an extension the right one, where an untyped
+ * Blob is sniffed — a PDF's as text, saved `.txt`.
+ */
+export function mediaType(format: FileFormat): string {
+    return MEDIA_TYPES[format];
+}
+
+const MEDIA_TYPES: Record<FileFormat, string> = {
+    pdf: "application/pdf",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    csv: "text/csv",
+    tsv: "text/tab-separated-values",
+    // A PSV has no media type of its own.
+    psv: "text/plain",
+    jpg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    bmp: "image/bmp",
+    tiff: "image/tiff",
+    webp: "image/webp",
+    svg: "image/svg+xml",
+    emf: "image/emf",
+    wmf: "image/wmf",
+};
+
 /** Read `stream` whole, reporting each chunk against `total` (`0` unknown). */
 async function readStream(
     stream: ReadableStream<Uint8Array>,
