@@ -46,10 +46,7 @@ export const SAMPLE_CATEGORIES: SampleCategory[] = [
         type: "pptx",
         label: "PPTX",
         description: "Editable presentations.",
-        documents: [
-            { name: "James Webb Space Telescope", path: asset("pptx/james-webb-space-telescope.pptx") },
-            { name: "Slide Transition Demo", path: asset("pptx/transition-demo.pptx") },
-        ],
+        documents: [{ name: "James Webb Space Telescope", path: asset("pptx/james-webb-space-telescope.pptx") }],
     },
     {
         type: "xlsx",
