@@ -6,6 +6,10 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-23
+
+Built on `@docmentis/udoc-wasm` 0.8.2.
+
 ### udoc-viewer
 
 The viewer is rebuilt on the docMentis engine's new architecture: each
