@@ -10,7 +10,7 @@ import { resolveWasmCandidates } from "./wasm-loader.js";
 import type { WasmCandidate, WasmLocateOptions } from "./wasm-loader.js";
 
 /**
- * Options for {@link startLocalCollaborationService}: the license the service's
+ * Options for `startLocalCollaborationService`: the license the service's
  * session is started under, and where to find the WASM — as a client's are —
  * and the name of the document's file.
  */

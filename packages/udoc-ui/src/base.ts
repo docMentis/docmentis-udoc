@@ -351,7 +351,9 @@ export interface UDocEvents {
     "annotation:clicked": { pageIndex: number; annotation: Annotation; clientX: number; clientY: number };
 }
 
-type EventHandler<E, K extends keyof E> = (payload: E[K]) => void;
+/** A handler for event `K` of the event map `E`, as {@link UDocBase.on} takes
+ *  it: called with that event's payload. */
+export type EventHandler<E, K extends keyof E> = (payload: E[K]) => void;
 
 type Viewport = UDocEvents["viewport:changed"];
 
@@ -402,7 +404,7 @@ export async function createAs<T>(
  * `open` / `close` / `destroy`. `E` is the package's event map, the common one
  * and any of its own.
  *
- * Internally it spins up a render worker (a {@link WorkerClient} on this thread
+ * Internally it spins up a render worker (a `WorkerClient` on this thread
  * talking to a worker that owns the OffscreenCanvas and the WASM), then mounts
  * the shell (store / reducer / effects / toolbar / canvas). None of that is
  * exposed.
@@ -507,11 +509,11 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Open the document the local collaboration service `id` keeps
-     * ({@link UDocBase.startLocalCollaborationService}): its package, with
-     * every edit the service has merged. The doc type and source format are
-     * then {@link docType} and {@link sourceFormat}, and a failure rejects, as
-     * for {@link open}.
+     * Open the document the local collaboration service `id` keeps (the id
+     * the class's static `startLocalCollaborationService` resolves with): its
+     * package, with every edit the service has merged. The doc type and source
+     * format are then {@link docType} and {@link sourceFormat}, and a failure
+     * rejects, as for {@link open}.
      */
     openLocal(id: string): Promise<void> {
         return this.shell.openLocal(id);

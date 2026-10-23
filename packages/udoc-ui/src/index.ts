@@ -1,7 +1,7 @@
 // Public API shared by the docMentis packages built on this one: the class
 // each package's own extends, and the types its calls take and return.
 export { UDocBase } from "./base.js";
-export type { OpenOptions, RenderPageOptions, UDocEvents, UDocOptions } from "./base.js";
+export type { EventHandler, OpenOptions, RenderPageOptions, UDocEvents, UDocOptions } from "./base.js";
 // A PDF's annotations, as the page-annotation calls and events hand them to a
 // host and take them back (generated from the Rust serde), and the partial one
 // `patchPageAnnotation` merges in.
@@ -10,7 +10,7 @@ export type { AnnotationPatch } from "./app/annotation-patch.js";
 export type { LocalCollaborationServiceOptions } from "./worker/LocalCollaborationService.js";
 export type { PrintOptions, PrintQuality } from "./app/print.js";
 export type { RemoteCheckpointResponse } from "./app/remote.js";
-export type { PanelTab, ThemeMode } from "./app/state.js";
+export type { LeftPanelTab, PanelTab, RightPanelTab, ThemeMode } from "./app/state.js";
 // The chrome's words: `Messages` keys the `translations` option.
 export type { Messages } from "./app/i18n/index.js";
 // The error every failure is reported as.
@@ -59,6 +59,11 @@ export type {
     SearchQuad,
     UDocSearchScope,
 } from "@docmentis/udoc-wasm";
+
+// A selection, tagged by doc type (generated from the Rust serde):
+// `UDocBase.setSelection` takes one, `selection` and `searchMatchSelection`
+// give one.
+export type { UDocSelection } from "@docmentis/udoc-wasm";
 
 // Command write contract (generated from the Rust serde). `UDocCommand` is the
 // doc-type-tagged argument to `UDocBase.execute` — the generic write seam a

@@ -109,6 +109,7 @@ export const DEFAULT_ZOOM_STEPS = [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 
 export type LeftPanelTab = "thumbnail" | "outline" | "layers" | "attachments";
 /** Tabs that live in the right side panel. */
 export type RightPanelTab = "search" | "comments";
+/** A side panel's tab, left or right. */
 export type PanelTab = LeftPanelTab | RightPanelTab;
 
 /** Canonical render order for the left-panel tab strip. */
