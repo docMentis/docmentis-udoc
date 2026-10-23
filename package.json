@@ -9,6 +9,7 @@
         "packages/*"
     ],
     "scripts": {
+        "prepare": "node scripts/install-hooks.mjs",
         "postinstall": "node scripts/link-engine.mjs",
         "link-engine": "node scripts/link-engine.mjs",
         "build": "npm run build -w @docmentis/udoc-node && npm run build -w @docmentis/udoc-cli && npm run build -w @docmentis/udoc-server && npm run build -w @docmentis/udoc-ui && npm run build -w @docmentis/udoc-editor && npm run build -w @docmentis/udoc-viewer && npm run build -w @docmentis/udoc-demo",

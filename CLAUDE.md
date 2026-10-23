@@ -24,6 +24,9 @@ what the packages here see.
   imports the editor; `eslint.config.mjs` enforces both.
 - Every package except `udoc-demo` is published, with its own copy of
   `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`.
+- Everything Prettier formats is formatted: the pre-commit hook
+  (`.githooks/pre-commit`, turned on by `npm install`) rejects a commit whose
+  staged files `prettier --check` fails. `npm run format` fixes them.
 
 ## Design docs
 

@@ -1,0 +1,18 @@
+#!/bin/sh
+# Pre-commit hook: every staged file Prettier formats must already be
+# formatted. `npm install` turns it on (scripts/install-hooks.mjs points
+# core.hooksPath here).
+
+# The staged files that still exist — added, copied, modified or renamed.
+if [ -z "$(git diff --cached --name-only --diff-filter=ACMR)" ]; then
+    exit 0
+fi
+
+# Files Prettier can't parse (fonts, images, documents) are skipped, and
+# .prettierignore applies.
+if ! git diff --cached --name-only -z --diff-filter=ACMR | xargs -0 npx --no-install prettier --check --ignore-unknown; then
+    echo ""
+    echo "ERROR: Staged files aren't formatted. Run 'npm run format' (or 'npx prettier --write <file>'), then add them again."
+    echo ""
+    exit 1
+fi
