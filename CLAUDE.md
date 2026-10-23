@@ -39,6 +39,13 @@ udoc-ui's generated engine version and the CDN URLs the docs write out.
   docs package's typecheck compiles them against the built packages. A guide
   folder gets no `index.md`: the site's proxy needs a rule for each folder
   page, and has them only for the reference's.
+- `examples/` holds an app per framework or bundler, each with the viewer and
+  the editor side by side. They aren't workspaces, and install the packages
+  from npm. `npm run examples` (`scripts/examples.mjs`) packs udoc-ui, the
+  viewer and the editor, installs them in a copy of each example outside the
+  repo, builds it and opens it in headless Chromium; the Examples workflow runs
+  it on every pull request. A change to how the packages load (the engine, its
+  fonts, the workers, a new bare import) runs it before it lands.
 - Every package except `udoc-demo` and `udoc-docs` is published, with its own
   copy of `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`, and a
   `repository` naming this repo, which npm's provenance checks.
@@ -89,5 +96,6 @@ npm run lint
 npm run format:check
 npm run dev               # the demo, with the UI packages and udoc-server rebuilding
 npm run docs              # the docs site, its API reference from the built packages
+npm run examples          # each example, built and opened in a browser
 npm run release -- patch  # cut a release, which CI publishes
 ```

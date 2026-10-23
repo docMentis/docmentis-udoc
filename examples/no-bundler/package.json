@@ -1,0 +1,9 @@
+{
+    "name": "udoc-example-no-bundler",
+    "private": true,
+    "description": "No build step: index.html maps the packages to jsDelivr with an import map. Serve this folder with any static server.",
+    "dependencies": {
+        "@docmentis/udoc-editor": "latest",
+        "@docmentis/udoc-viewer": "latest"
+    }
+}

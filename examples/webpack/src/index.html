@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>docMentis udoc with webpack</title>
+        <style>
+            html,
+            body {
+                margin: 0;
+                height: 100%;
+            }
+
+            /* The viewer and the editor side by side, each filling its half. A
+               viewer fills the element it is given, so the element needs a height. */
+            .panes {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                height: 100vh;
+            }
+
+            .pane {
+                min-width: 0;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="panes">
+            <div id="viewer" class="pane"></div>
+            <div id="editor" class="pane"></div>
+        </main>
+    </body>
+</html>

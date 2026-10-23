@@ -39,6 +39,7 @@ docmentis-udoc/
 │   ├── udoc-server/    # Document server (@docmentis/udoc-server)
 │   ├── udoc-demo/      # Demo application (not published)
 │   └── udoc-docs/      # Docs site: guides and API reference (not published)
+├── examples/           # An app per framework or bundler, with the viewer and the editor
 ├── docs/design/        # Architecture and design documents
 ├── scripts/            # Repo scripts: engine linking, releases
 └── .github/            # CI, release and docs workflows
@@ -50,6 +51,7 @@ docmentis-udoc/
 npm run build          # Build all packages
 npm run dev            # Run the demo app
 npm run docs           # Run the docs site
+npm run examples       # Build each example and open it in a browser (npx playwright install chromium first)
 npm run typecheck      # Type-check every package
 npm test               # Run the tests
 npm run lint           # Lint
@@ -112,6 +114,7 @@ The TypeScript packages in this repository are open source (MIT OR Apache-2.0). 
 - **Documentation** — READMEs, guides in `packages/udoc-docs/guide/`, doc comments
 - **UI enhancements** — toolbar, panels, navigation
 - **Translations** — the UI's languages, in `packages/udoc-ui/src/app/i18n/`
+- **Framework examples** — new or improved examples in `examples/`
 - **Accessibility** — keyboard navigation, screen reader support, ARIA attributes
 - **Performance** — optimizations in the TypeScript layer
 - **Node.js hosts** — udoc-node, the `udoc` command and udoc-server

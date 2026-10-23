@@ -1,4 +1,10 @@
 **/dist/
+# The examples' builds
+examples/*/out/
+examples/*/.next/
+examples/*/.nuxt/
+examples/*/.output/
+examples/*/.angular/
 **/node_modules/
 package-lock.json
 target/

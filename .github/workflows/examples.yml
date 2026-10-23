@@ -1,0 +1,51 @@
+# Build each example in examples/ against the packages this commit builds,
+# installed from their packed tarballs as an app installs them, and open it in
+# headless Chromium (scripts/examples.mjs): an example a job, so that one
+# framework's failure doesn't hide another's, and a new example needs no
+# change here.
+name: Examples
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: examples-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    list:
+        runs-on: ubuntu-latest
+        outputs:
+            examples: ${{ steps.list.outputs.examples }}
+        steps:
+            - uses: actions/checkout@v7
+            - id: list
+              run: echo "examples=$(ls -d examples/*/ | xargs -n1 basename | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
+
+    example:
+        needs: list
+        name: ${{ matrix.example }}
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                example: ${{ fromJSON(needs.list.outputs.examples) }}
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci
+            # What an example installs, each built on the one before.
+            - run: |
+                  npm run build -w @docmentis/udoc-ui
+                  npm run build -w @docmentis/udoc-editor
+                  npm run build -w @docmentis/udoc-viewer
+            - run: npx playwright install --with-deps chromium
+            - run: npm run examples -- ${{ matrix.example }}

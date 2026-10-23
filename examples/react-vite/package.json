@@ -1,0 +1,23 @@
+{
+    "name": "udoc-example-react-vite",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@docmentis/udoc-editor": "latest",
+        "@docmentis/udoc-viewer": "latest",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1"
+    },
+    "devDependencies": {
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "@vitejs/plugin-react": "^6.1.2",
+        "typescript": "~6.0.3",
+        "vite": "^8.3.5"
+    }
+}

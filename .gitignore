@@ -18,3 +18,14 @@ node_modules
 
 # macOS Finder folder metadata
 .DS_Store
+
+# The examples' installs and builds (each is an app of its own, outside the
+# workspaces, and installs from npm rather than a lockfile kept here)
+examples/*/package-lock.json
+examples/*/dist/
+examples/*/out/
+examples/*/.next/
+examples/*/next-env.d.ts
+examples/*/.nuxt/
+examples/*/.output/
+examples/*/.angular/

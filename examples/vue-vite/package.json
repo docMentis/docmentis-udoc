@@ -1,0 +1,21 @@
+{
+    "name": "udoc-example-vue-vite",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vue-tsc && vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@docmentis/udoc-editor": "latest",
+        "@docmentis/udoc-viewer": "latest",
+        "vue": "^3.5.44"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^6.0.10",
+        "typescript": "~6.0.3",
+        "vite": "^8.3.5",
+        "vue-tsc": "^3.3.13"
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "name": "udoc-example-webpack",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "webpack serve --mode development",
+        "build": "webpack --mode production"
+    },
+    "dependencies": {
+        "@docmentis/udoc-editor": "latest",
+        "@docmentis/udoc-viewer": "latest"
+    },
+    "devDependencies": {
+        "copy-webpack-plugin": "^14.0.0",
+        "html-webpack-plugin": "^5.6.8",
+        "ts-loader": "^9.6.2",
+        "typescript": "~6.0.3",
+        "webpack": "^5.112.2",
+        "webpack-cli": "^7.2.3",
+        "webpack-dev-server": "^6.1.0"
+    }
+}

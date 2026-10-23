@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>docMentis udoc without a bundler</title>
+        <!-- The packages are plain ES modules, so a page with no build step maps
+             them to a CDN. Keep the versions in step: udoc-ui at the viewer's and
+             the editor's version, and udoc-wasm at the version udoc-ui depends on. -->
+        <script type="importmap">
+            {
+                "imports": {
+                    "@docmentis/udoc-viewer": "https://cdn.jsdelivr.net/npm/@docmentis/udoc-viewer@0.8.0/dist/index.js",
+                    "@docmentis/udoc-editor": "https://cdn.jsdelivr.net/npm/@docmentis/udoc-editor@0.8.0/dist/index.js",
+                    "@docmentis/udoc-ui": "https://cdn.jsdelivr.net/npm/@docmentis/udoc-ui@0.8.0/dist/index.js",
+                    "@docmentis/udoc-ui/internal": "https://cdn.jsdelivr.net/npm/@docmentis/udoc-ui@0.8.0/dist/internal.js",
+                    "@docmentis/udoc-wasm/error": "https://cdn.jsdelivr.net/npm/@docmentis/udoc-wasm@0.8.2/dist/error.js",
+                    "@docmentis/udoc-wasm/font-fulfill": "https://cdn.jsdelivr.net/npm/@docmentis/udoc-wasm@0.8.2/dist/font-fulfill.js",
+                    "@docmentis/udoc-wasm/meta-url": "https://cdn.jsdelivr.net/npm/@docmentis/udoc-wasm@0.8.2/dist/meta-url.js"
+                }
+            }
+        </script>
+        <style>
+            html,
+            body {
+                margin: 0;
+                height: 100%;
+            }
+
+            /* The viewer and the editor side by side, each filling its half. A
+               viewer fills the element it is given, so the element needs a height. */
+            .panes {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                height: 100vh;
+            }
+
+            .pane {
+                min-width: 0;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <main class="panes">
+            <div id="viewer" class="pane"></div>
+            <div id="editor" class="pane"></div>
+        </main>
+        <script type="module">
+            import { UDocEditor } from "@docmentis/udoc-editor";
+            import { UDocViewer } from "@docmentis/udoc-viewer";
+
+            UDocViewer.create(document.getElementById("viewer"))
+                .then((viewer) => viewer.open("sample.pdf"))
+                .catch((error) => console.error("The viewer didn't open the document:", error));
+
+            UDocEditor.create(document.getElementById("editor"))
+                .then((editor) => editor.open("sample.docx"))
+                .catch((error) => console.error("The editor didn't open the document:", error));
+        </script>
+    </body>
+</html>

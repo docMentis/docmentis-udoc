@@ -1,0 +1,21 @@
+{
+    "name": "udoc-example-nextjs-webpack",
+    "private": true,
+    "scripts": {
+        "dev": "next dev --webpack",
+        "build": "next build --webpack"
+    },
+    "dependencies": {
+        "@docmentis/udoc-editor": "latest",
+        "@docmentis/udoc-viewer": "latest",
+        "next": "^16.4.3",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.18.0",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "typescript": "~6.0.3"
+    }
+}

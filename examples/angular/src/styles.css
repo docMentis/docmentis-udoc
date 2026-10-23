@@ -1,0 +1,23 @@
+html,
+body {
+    margin: 0;
+    height: 100%;
+}
+
+/* The viewer and the editor side by side, each filling its half. A viewer
+   fills the element it is given, so the element needs a height. */
+.panes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 100vh;
+}
+
+.pane {
+    min-width: 0;
+    height: 100%;
+}
+
+/* The components are the panes. */
+.pane {
+    display: block;
+}
