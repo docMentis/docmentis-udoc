@@ -1,14 +1,32 @@
 # Build each example in examples/ against the packages this commit builds,
 # installed from their packed tarballs as an app installs them, and open it in
-# headless Chromium (scripts/examples.mjs): an example a job, so that one
+# headless Chrome (scripts/examples.mjs): an example a job, so that one
 # framework's failure doesn't hide another's, and a new example needs no
 # change here.
+#
+# On a change to what they test: the browser packages, the examples, the
+# script, or the lockfile. And nightly, since the examples install each
+# framework's latest release in their range, and one can break them with no
+# change here; and by hand.
 name: Examples
 
 on:
     push:
         branches: [main]
+        paths: &tested
+            - "packages/udoc-ui/**"
+            - "packages/udoc-viewer/**"
+            - "packages/udoc-editor/**"
+            - "examples/**"
+            - "scripts/examples.mjs"
+            - "scripts/packages.mjs"
+            - "package-lock.json"
+            - ".github/workflows/examples.yml"
     pull_request:
+        paths: *tested
+    schedule:
+        - cron: "0 7 * * *"
+    workflow_dispatch:
 
 permissions:
     contents: read
@@ -47,5 +65,4 @@ jobs:
                   npm run build -w @docmentis/udoc-ui
                   npm run build -w @docmentis/udoc-editor
                   npm run build -w @docmentis/udoc-viewer
-            - run: npx playwright install --with-deps chromium
             - run: npm run examples -- ${{ matrix.example }}

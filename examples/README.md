@@ -35,18 +35,19 @@ server for its folder.
 From the repo root, after `npm run build`:
 
 ```sh
-npx playwright install chromium   # once
 npm run examples                  # every example, or name some: npm run examples -- react-vite angular
 ```
 
 `scripts/examples.mjs` packs udoc-ui, the viewer and the editor as this
 checkout builds them, and for each example installs them in a copy outside the
 repo, as an app installs them from npm. It builds the copy for production,
-serves it and opens it in headless Chromium. An example passes when the viewer
+serves it and opens it in headless Chrome, or Playwright's Chromium where
+there's no Chrome (`npx playwright install chromium` fetches it). An example passes when the viewer
 and the editor each show a rendered page, with no console error, no uncaught
 error, no failed request, and the engine's binary fetched from the app rather
 than from its fallback on the CDN, which would hide a bundler that didn't emit
-it. The Examples workflow runs it for each example on every pull request.
+it. The Examples workflow runs it for each example on a pull request or a push
+that changes the browser packages or the examples, and nightly.
 
 A new example is a folder here with a `package.json` whose `build` script
 writes a static site: `dist/`, or a folder `SITE` in `scripts/examples.mjs`

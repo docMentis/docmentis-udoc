@@ -51,7 +51,7 @@ docmentis-udoc/
 npm run build          # Build all packages
 npm run dev            # Run the demo app
 npm run docs           # Run the docs site
-npm run examples       # Build each example and open it in a browser (npx playwright install chromium first)
+npm run examples       # Build each example and open it in Chrome
 npm run typecheck      # Type-check every package
 npm test               # Run the tests
 npm run lint           # Lint

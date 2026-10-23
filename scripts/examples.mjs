@@ -15,7 +15,8 @@
 // after `npm run build`, and by .github/workflows/examples.yml, an example a
 // job. A run here packs the dist/ as built, so with an engine checkout linked
 // in (scripts/link-engine.mjs) the workers carry that checkout's glue. The
-// browser is Playwright's Chromium: `npx playwright install chromium` once.
+// browser is the machine's Chrome, which CI's runners have, or else
+// Playwright's Chromium, which `npx playwright install chromium` fetches.
 import { execFileSync } from "node:child_process";
 import {
     cpSync,
@@ -122,6 +123,8 @@ function serve(dir) {
         let file = normalize(join(dir, path));
         if (file !== dir && !file.startsWith(dir + sep)) return void response.writeHead(403).end();
         if (existsSync(file) && statSync(file).isDirectory()) file = join(file, "index.html");
+        // Chrome asks every page for an icon; a site that has none isn't wrong.
+        if (!existsSync(file) && path === "/favicon.ico") return void response.writeHead(204).end();
         if (!existsSync(file)) return void response.writeHead(404).end();
         response.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" });
         createReadStream(file).pipe(response);
@@ -183,7 +186,8 @@ async function check(browser, url) {
         else elsewhere.add(from.hostname);
     });
     page.on("console", (message) => {
-        if (message.type() === "error") problems.push(`console error: ${message.text()}`);
+        const where = message.location().url;
+        if (message.type() === "error") problems.push(`console error: ${message.text()}${where ? ` (${where})` : ""}`);
     });
     page.on("pageerror", (error) => problems.push(`uncaught: ${error.message}`));
     page.on("requestfailed", (request) => problems.push(`failed: ${request.url()} (${request.failure()?.errorText})`));
@@ -216,8 +220,9 @@ for (const name of names) {
 const work = mkdtempSync(join(tmpdir(), "udoc-examples-"));
 const tarballs = pack(work);
 const browser = await chromium
-    .launch()
-    .catch((error) => die(`${error.message}\nRun \`npx playwright install chromium\`.`));
+    .launch({ channel: "chrome" })
+    .catch(() => chromium.launch())
+    .catch((error) => die(`${error.message}\nInstall Chrome, or run \`npx playwright install chromium\`.`));
 const failed = [];
 for (const name of names) {
     console.log(`[examples] ${name}`);

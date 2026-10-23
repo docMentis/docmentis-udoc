@@ -43,8 +43,8 @@ udoc-ui's generated engine version and the CDN URLs the docs write out.
   the editor side by side. They aren't workspaces, and install the packages
   from npm. `npm run examples` (`scripts/examples.mjs`) packs udoc-ui, the
   viewer and the editor, installs them in a copy of each example outside the
-  repo, builds it and opens it in headless Chromium; the Examples workflow runs
-  it on every pull request. A change to how the packages load (the engine, its
+  repo, builds it and opens it in headless Chrome; the Examples workflow runs
+  it on a change to the browser packages or the examples, and nightly. A change to how the packages load (the engine, its
   fonts, the workers, a new bare import) runs it before it lands.
 - Every package except `udoc-demo` and `udoc-docs` is published, with its own
   copy of `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`, and a
