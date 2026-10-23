@@ -9,9 +9,9 @@ export type { EditorMode } from "./mode.js";
 // `translations` option, and `createI18n` builds the `i18n` a host hands
 // `pageActions` / `pageInserts`.
 export { createI18n } from "./i18n/index.js";
-export type { I18n, Messages } from "./i18n/index.js";
+export type { I18n, MessageKey, Messages } from "./i18n/index.js";
 // The page controls — the rail beside each page and the insert strip between
 // them, registered under `udoc:page-actions` / `udoc:page-insert` — for a host
 // that registers them its own way.
 export { pageActions, pageInserts } from "./components/PageControls.js";
-export type { PageActionsCallbacks, PageInsertsOptions } from "./components/PageControls.js";
+export type { PageActionsCallbacks, PageInsertsOptions, PageSizeInfo } from "./components/PageControls.js";

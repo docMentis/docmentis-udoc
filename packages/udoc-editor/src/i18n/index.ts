@@ -23,7 +23,7 @@ export type { Messages } from "./messages.js";
 /** A key into {@link Messages}. */
 export type MessageKey = keyof Messages;
 
-/** The editor's words: udoc-ui's {@link ui.I18n} over {@link Messages}. */
+/** The editor's words: udoc-ui's `I18n` over {@link Messages}. */
 export type I18n = ui.I18n<MessageKey>;
 
 /** Edit mode's packs, by language tag as `Intl` writes it — one for each of udoc-ui's. */
