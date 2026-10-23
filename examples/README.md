@@ -32,7 +32,8 @@ server for its folder.
 
 ## How they're tested
 
-From the repo root, after `npm run build`:
+From the repo root, after `npm run build`, and not a `npm run dev` since, whose
+`tsc` rewrites the packages' bundled workers (the run checks):
 
 ```sh
 npm run examples                  # every example, or name some: npm run examples -- react-vite angular
