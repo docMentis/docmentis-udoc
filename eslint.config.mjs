@@ -37,9 +37,9 @@ export default tseslint.config(
     },
 
     // udoc-ui is what the viewer and the editor are built on, so it reaches
-    // neither, and the viewer never reaches the editor: viewer licensees must
-    // not receive it. Their package.json files don't list them, but workspace
-    // hoisting would resolve the import anyway.
+    // neither, and the viewer never reaches the editor, whose edit mode is its
+    // own. Their package.json files don't list them, but workspace hoisting
+    // would resolve the import anyway.
     {
         files: ["packages/udoc-ui/**/*.ts"],
         rules: {
@@ -70,7 +70,7 @@ export default tseslint.config(
                     patterns: [
                         {
                             group: ["@docmentis/udoc-editor", "@docmentis/udoc-editor/*"],
-                            message: "The viewer never contains the editor.",
+                            message: "The viewer never imports the editor.",
                         },
                     ],
                 },

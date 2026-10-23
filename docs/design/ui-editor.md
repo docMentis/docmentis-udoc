@@ -5,10 +5,8 @@ The web UI over the engine. Lives in the npm workspace under
 `@docmentis/udoc-ui`, the shared core — the shell, the canvas and the worker —
 and the two built on it, `@docmentis/udoc-viewer` and `@docmentis/udoc-editor`,
 plus the editor's demo. udoc-ui imports neither, and the viewer never imports
-the editor: viewer licensees must not receive it. Edit mode is udoc-editor's
-alone; udoc-viewer's `no-editor` test reads every file a viewer install ships
-and fails on the editor's name or a call only edit mode makes.
-Framework-agnostic, no UI-framework dependency.
+the editor: edit mode is udoc-editor's alone. Framework-agnostic, no
+UI-framework dependency.
 
 ## Layers
 

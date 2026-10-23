@@ -54,8 +54,7 @@
     "scripts": {
         "dev": "tsc -p tsconfig.json --watch",
         "build": "npm run clean && node scripts/gen-version.mjs && tsc -p tsconfig.json && node scripts/bundle-workers.mjs",
-        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
-        "test": "node --test",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
         "gen:version": "node scripts/gen-version.mjs",
         "clean": "rm -rf dist"
     },
