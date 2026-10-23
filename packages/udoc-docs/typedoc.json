@@ -16,7 +16,21 @@
     // and methods together; statics first, so a class opens with `create`. The
     // plugin lists each package's exports alphabetically.
     "sort": ["static-first", "source-order"],
-    "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme", "./scripts/typedoc-plugin.mjs"],
+    "plugin": [
+        "typedoc-plugin-markdown",
+        "typedoc-vitepress-theme",
+        "typedoc-plugin-missing-exports",
+        "./scripts/typedoc-plugin.mjs"
+    ],
+    // The engine's types the API uses but doesn't export — its document model —
+    // documented in the module that uses them, so every one in a signature
+    // links somewhere (the plugin keeps only the engine's, and only what a
+    // page links to). TypeScript's own libraries and Node's types stay out:
+    // they are the only externals. (Not the default `**/node_modules/**`,
+    // which in CI would take the engine with them.)
+    "internalModule": "Engine types",
+    "excludeExternals": true,
+    "externalPattern": ["**/node_modules/typescript/**", "**/node_modules/@types/**"],
     "name": "API reference",
     "out": "api",
     "docsRoot": ".",
@@ -26,7 +40,6 @@
     "excludeProtected": true,
     "disableSources": true,
     "excludeScopesInPaths": true,
-    "useCodeBlocks": true,
     "hidePageHeader": true,
     "validation": {
         "notExported": true,

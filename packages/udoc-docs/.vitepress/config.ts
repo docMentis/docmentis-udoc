@@ -2,11 +2,24 @@ import { readFileSync } from "node:fs";
 import { defineConfig } from "vitepress";
 import type { DefaultTheme } from "vitepress";
 
+// An "Engine types" section is one entry, its index page: its hundreds of
+// types are reached from the pages that use them, and every page carries the
+// whole sidebar.
+function collapseEngineTypes(items: DefaultTheme.SidebarItem[]): DefaultTheme.SidebarItem[] {
+    return items.map((item) => {
+        if (item.text === "Engine types") {
+            const { items: _items, collapsed: _collapsed, ...entry } = item;
+            return entry;
+        }
+        return item.items ? { ...item, items: collapseEngineTypes(item.items) } : item;
+    });
+}
+
 // The API reference's sidebar, which TypeDoc writes beside the pages it
 // generates (`npm run api`).
-const apiSidebar = JSON.parse(
-    readFileSync(new URL("../api/typedoc-sidebar.json", import.meta.url), "utf8"),
-) as DefaultTheme.SidebarItem[];
+const apiSidebar = collapseEngineTypes(
+    JSON.parse(readFileSync(new URL("../api/typedoc-sidebar.json", import.meta.url), "utf8")),
+);
 
 export default defineConfig({
     title: "docMentis udoc",
