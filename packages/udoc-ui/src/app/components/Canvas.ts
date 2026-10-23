@@ -1240,6 +1240,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         el.addEventListener("pointerup", onPointerUp);
         el.addEventListener("pointercancel", onPointerCancel);
         el.addEventListener("pointerleave", onPointerLeave);
+        el.addEventListener("gotpointercapture", onGotCapture);
+        el.addEventListener("lostpointercapture", onLostCapture);
         cleanups.push(() => {
             el.removeEventListener("pointerdown", onClickPress, true);
             el.removeEventListener("pointerup", onClickRelease, true);
@@ -1248,6 +1250,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             el.removeEventListener("pointerup", onPointerUp);
             el.removeEventListener("pointercancel", onPointerCancel);
             el.removeEventListener("pointerleave", onPointerLeave);
+            el.removeEventListener("gotpointercapture", onGotCapture);
+            el.removeEventListener("lostpointercapture", onLostCapture);
         });
 
         // Right-click: the context menu over the document (edit mode only).
@@ -3474,6 +3478,22 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         if (g.kind === "ink" || g.kind === "place") renderSketch();
         applyModeCursor();
         if (el.hasPointerCapture(ev.pointerId)) el.releasePointerCapture(ev.pointerId);
+    }
+
+    /**
+     * A gesture captures the pointer on the host, and while it holds it the
+     * browser draws the **host's** cursor, not the canvas's under the pointer —
+     * the I-beam a text drag started under, the move / resize / rotate cursor of
+     * an object drag, pan's grabbing hand would all fall back to the arrow. So the
+     * host wears the canvas's cursor for as long as it holds the capture. A guide
+     * band captures on itself and keeps its own.
+     */
+    function onGotCapture(ev: PointerEvent): void {
+        if (ev.target === el) el.style.cursor = canvas.style.cursor;
+    }
+
+    function onLostCapture(ev: PointerEvent): void {
+        if (ev.target === el) el.style.cursor = "";
     }
 
     /** Pointer left the host entirely (onto a panel/toolbar): hide every rail. */
