@@ -8,7 +8,10 @@
 // `src` -> `dist` on its own. So we:
 //
 //   1. Build udoc-ui, then the editor and the viewer, once — each package's
-//      `tsc --watch` needs the `dist/` of the one it is built on.
+//      `tsc --watch` needs the `dist/` of the one it is built on. Each one's
+//      `compile`, into the `dist/` already there: its `build` cleans that
+//      first, as a release's must hold nothing a source no longer makes, but
+//      a file a deleted source left costs a dev session nothing.
 //   2. Run each one's `tsc --watch` (src -> dist) alongside the demo's Vite
 //      server. Each recompile updates `dist`, and Vite reloads the demo.
 //   3. Run udoc-server on its default address, keeping documents in
@@ -87,7 +90,7 @@ function tscWatch(workspace, then) {
 // 1. One-time build: udoc-ui, then the two packages built on it.
 const UI_PACKAGES = ["@docmentis/udoc-ui", "@docmentis/udoc-editor", "@docmentis/udoc-viewer"];
 inTurn(
-    UI_PACKAGES.map((workspace) => ["run", "build", "--workspace", workspace]),
+    UI_PACKAGES.map((workspace) => ["run", "compile", "--workspace", workspace]),
     () => {
         // 2 and 3. Watch the UI packages', udoc-node's and the server's source ->
         //    dist, serve the demo, and run the server once its first compile is
