@@ -1,0 +1,18 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "src",
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        // A Node program — see `udoc-node`'s tsconfig for why the DOM lib stays.
+        "types": ["node"],
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        // A module names a sibling by the `.ts` file that is there, which
+        // `node --test` loads as it is; the build rewrites each to `.js`.
+        "rewriteRelativeImportExtensions": true
+    },
+    "include": ["src"]
+}

@@ -1,0 +1,370 @@
+import type { Messages } from "./messages.js";
+
+/** Traditional Chinese. */
+export const zhTW: Messages = {
+    // Shared
+    "common.cancel": "取消",
+    "common.save": "儲存",
+    "common.close": "關閉",
+    "common.delete": "刪除",
+
+    // Numbers
+    "format.percent": "{percent}%",
+    "format.points": "{points} 點",
+
+    // A key that runs a command, as a tooltip names it off a Mac
+    "shortcut.control": "Ctrl+{key}",
+    "shortcut.controlShift": "Ctrl+Shift+{key}",
+    "shortcut.tooltip": "{label} ({shortcut})",
+
+    // Regions
+    "shell.skipToDocument": "跳至文件",
+    "shell.regionToolbar": "工具列",
+    "shell.regionSidePanel": "側邊面板",
+    "shell.regionDocument": "文件",
+    "shell.regionSearchComments": "搜尋與註解",
+
+    // Toolbar
+    "toolbar.label": "文件工具列",
+    "toolbar.menu": "選單",
+    "toolbar.more": "更多",
+    "toolbar.search": "搜尋",
+    "toolbar.comments": "註解",
+    "toolbar.print": "列印",
+    "toolbar.download": "下載",
+    "toolbar.darkMode": "深色模式",
+    "toolbar.systemTheme": "跟隨系統",
+    "toolbar.lightMode": "淺色模式",
+    "toolbar.fullscreen": "全螢幕",
+    "toolbar.exitFullscreen": "結束全螢幕",
+    "toolbar.developer": "開發人員",
+
+    // The people button: the collaboration the document is in
+    "collaboration.label": "共同編輯",
+    "collaboration.paused": "共同編輯已暫停",
+    "collaboration.reconnecting": "正在重新連線…",
+    "collaboration.you": "{name}（我）",
+    "collaboration.sharePointer": "分享我的指標",
+    "collaboration.pause": "暫停共同編輯",
+    "collaboration.resume": "繼續共同編輯",
+
+    // Pointer tools
+    "pointerTool.select": "選取",
+    "pointerTool.pan": "平移",
+    "pointerTool.zoom": "縮放",
+    "pointerTool.options": "指標工具選項",
+    "pointerTool.menu": "指標工具",
+    "pointerTool.tooltip": "工具：{tool}",
+    "pointerTool.label": "指標工具：{tool}",
+
+    // Ribbon tabs
+    "ribbon.annotate": "註解",
+
+    // Ribbon
+    "ribbon.label": "工具選項",
+    "ribbon.tabs": "工具索引標籤",
+    "ribbon.more": "更多工具",
+    "ribbon.moreTabs": "更多索引標籤",
+    "ribbon.paintOptions": "{label}選項",
+
+    // Ribbon commands, by command id
+    "command.undo": "復原",
+    "command.redo": "取消復原",
+    "command.annotateHighlight": "醒目提示",
+    "command.annotateUnderline": "底線",
+    "command.annotateStrikeOut": "刪除線",
+    "command.annotateSquiggly": "波浪底線",
+    "command.annotateNote": "附註",
+    "command.annotateTextBox": "文字方塊",
+    "command.annotateStamp": "印章",
+    "command.annotatePen": "畫筆",
+    "command.annotateShape": "圖案",
+    "command.annotationColor": "色彩",
+    "command.annotationFill": "填滿",
+    "command.annotationOpacity": "不透明度",
+
+    // Shape pickers
+    "shape.rectangle": "矩形",
+    "shape.ellipse": "橢圓形",
+    "shape.line": "直線",
+    "shape.arrow": "箭號",
+    "shape.polygon": "多邊形",
+    "shape.polyline": "折線",
+    "shape.cloud": "雲朵",
+
+    // Standard stamps
+    "stamp.approved": "已核准",
+    "stamp.experimental": "實驗性",
+    "stamp.notApproved": "未核准",
+    "stamp.asIs": "依現狀",
+    "stamp.expired": "已過期",
+    "stamp.notForPublicRelease": "不可公開發布",
+    "stamp.confidential": "機密",
+    "stamp.final": "最終版",
+    "stamp.sold": "已售出",
+    "stamp.departmental": "部門專用",
+    "stamp.forComment": "徵求意見",
+    "stamp.topSecret": "最高機密",
+    "stamp.draft": "草稿",
+    "stamp.forPublicRelease": "可公開發布",
+
+    // Color and line panel
+    "paint.noFill": "無填滿",
+    "paint.noLine": "無線條",
+    "paint.noColor": "無色彩",
+    "paint.moreFillOptions": "其他填滿選項…",
+    "paint.moreLineOptions": "其他線條選項…",
+    "paint.moreColorOptions": "其他色彩選項…",
+    "paint.themeColors": "佈景主題色彩",
+    "paint.standardColors": "標準色彩",
+    "paint.recentColors": "最近使用的色彩",
+    "paint.text1": "文字 1",
+    "paint.background1": "背景 1",
+    "paint.text2": "文字 2",
+    "paint.background2": "背景 2",
+    "paint.accent1": "輔色 1",
+    "paint.accent2": "輔色 2",
+    "paint.accent3": "輔色 3",
+    "paint.accent4": "輔色 4",
+    "paint.accent5": "輔色 5",
+    "paint.accent6": "輔色 6",
+    "paint.lighter": "較淺 {percent}%",
+    "paint.darker": "較深 {percent}%",
+    "paint.themeVariant": "{color}，{variant}",
+    "paint.weight": "寬度",
+    "paint.dashes": "虛線",
+    "paint.solid": "實線",
+    "paint.dashed": "虛線",
+    "paint.dotted": "點線",
+    "paint.dashDot": "虛線點",
+    "paint.start": "起點",
+    "paint.end": "終點",
+
+    // Standard colors
+    "color.darkRed": "深紅色",
+    "color.red": "紅色",
+    "color.orange": "橙色",
+    "color.yellow": "黃色",
+    "color.lightGreen": "淺綠色",
+    "color.green": "綠色",
+    "color.lightBlue": "淺藍色",
+    "color.blue": "藍色",
+    "color.darkBlue": "深藍色",
+    "color.purple": "紫色",
+
+    // Line endings
+    "lineEnding.none": "無",
+    "lineEnding.openArrow": "開放式箭號",
+    "lineEnding.closedArrow": "封閉式箭號",
+    "lineEnding.circle": "圓形",
+    "lineEnding.square": "方形",
+    "lineEnding.diamond": "菱形",
+
+    // Page navigation
+    "viewControls.pageNavigation": "頁面導覽與縮放",
+    "viewControls.slideNavigation": "投影片導覽與縮放",
+    "viewControls.previousPage": "上一頁",
+    "viewControls.nextPage": "下一頁",
+    "viewControls.pageNumber": "頁碼",
+    "viewControls.previousSlide": "上一張投影片",
+    "viewControls.nextSlide": "下一張投影片",
+    "viewControls.slideNumber": "投影片編號",
+
+    // Zoom
+    "zoom.label": "縮放",
+    "zoom.zoomIn": "放大",
+    "zoom.zoomOut": "縮小",
+    "zoom.level": "縮放比例",
+    "zoom.options": "縮放選項",
+    "zoom.levels": "縮放比例清單",
+    "zoom.fitWidth": "符合寬度",
+    "zoom.fitHeight": "符合高度",
+    "zoom.fitPage": "符合頁面",
+    "zoom.fitSlide": "符合投影片",
+
+    // View settings
+    "viewMode.label": "檢視設定",
+    "viewMode.scroll": "捲動",
+    "viewMode.spread": "跨頁",
+    "viewMode.continuous": "連續",
+    "viewMode.layout": "版面配置",
+    "viewMode.single": "單頁",
+    "viewMode.double": "雙頁",
+    "viewMode.coverRight": "封面居右",
+    "viewMode.coverLeft": "封面居左",
+    "viewMode.rotation": "旋轉",
+    "viewMode.degrees": "{degrees}°",
+    "viewMode.pageGap": "頁面間距",
+    "viewMode.on": "開啟",
+    "viewMode.off": "關閉",
+
+    // Status bar
+    "statusBar.label": "狀態列",
+
+    // Sheets
+    "sheet.tabs": "工作表",
+    "sheet.all": "所有工作表",
+    "sheet.scrollLeft": "向左捲動索引標籤",
+    "sheet.scrollRight": "向右捲動索引標籤",
+    "sheet.unnamed": "工作表{sheet}",
+
+    // Left panel
+    "leftPanel.tabs": "面板索引標籤",
+    "leftPanel.thumbnails": "縮圖",
+    "leftPanel.outline": "大綱",
+    "leftPanel.layers": "圖層",
+    "leftPanel.attachments": "附件",
+    "leftPanel.resizeHandle": "調整側邊面板大小",
+    "leftPanel.placeholder": "{panel}：尚無內容",
+
+    // Thumbnails
+    "thumbnails.pages": "頁面縮圖",
+    "thumbnails.slides": "投影片縮圖",
+    "thumbnails.page": "第 {page} 頁",
+    "thumbnails.slide": "投影片 {page}",
+
+    // Outline panel
+    "outline.loading": "正在載入大綱…",
+    "outline.readFailed": "無法讀取大綱",
+    "outline.empty": "此文件沒有大綱",
+
+    // Layers panel
+    "layers.loading": "正在載入圖層…",
+    "layers.readFailed": "無法讀取圖層",
+    "layers.empty": "此文件沒有圖層",
+    "layers.locked": "已鎖定",
+    "layers.hide": "隱藏圖層",
+    "layers.show": "顯示圖層",
+
+    // Right panel
+    "rightPanel.search": "搜尋",
+    "rightPanel.comments": "註解",
+    "rightPanel.resizeHandle": "調整面板大小",
+    "rightPanel.close": "關閉面板",
+
+    // Search panel
+    "search.placeholder": "在文件中搜尋",
+    "search.label": "搜尋文字",
+    "search.clear": "清除搜尋",
+    "search.matchCase": "大小寫須相符",
+    "search.fuzzyMatch": "模糊比對",
+    "search.previousMatch": "上一個相符項目",
+    "search.previousMatchTooltip": "上一個相符項目 (Shift+Enter)",
+    "search.nextMatch": "下一個相符項目",
+    "search.nextMatchTooltip": "下一個相符項目 (Enter)",
+    "search.results": "搜尋結果",
+    "search.status": "第 {current} 項，共 {total} 項",
+    "search.statusRunning": "第 {current} 項，共 {total}+ 項",
+    "search.searching": "正在搜尋…",
+    "search.noResults": "沒有結果",
+    "search.page": "第 {page} 頁",
+    "search.slide": "投影片 {page}",
+
+    // Comments panel
+    "comments.page": "第 {page} 頁",
+    "comments.empty": "此文件沒有註解",
+    "comments.loading": "正在載入註解…",
+
+    // A comment thread
+    "comment.label": "註解",
+    "comment.placeholder": "新增註解",
+    "comment.reply": "回覆",
+    "comment.edit": "編輯",
+    "comment.cancelEditing": "取消編輯",
+    "comment.save": "儲存註解",
+    "comment.replyField": "回覆",
+    "comment.cancelReply": "取消回覆",
+    "comment.saveReply": "儲存回覆",
+    "comment.replies.other": "{count} 則回覆",
+    "comment.locked": "已鎖定：無法刪除或移動",
+    "comment.lockedContents": "已鎖定：無法編輯文字",
+    "comment.lockedBoth": "已鎖定：無法刪除、移動或編輯",
+
+    // An annotation's kind, as a comment names it
+    "annotationKind.note": "附註",
+    "annotationKind.textBox": "文字方塊",
+    "annotationKind.line": "直線",
+    "annotationKind.rectangle": "矩形",
+    "annotationKind.ellipse": "橢圓形",
+    "annotationKind.polygon": "多邊形",
+    "annotationKind.polyline": "折線",
+    "annotationKind.highlight": "醒目提示",
+    "annotationKind.underline": "底線",
+    "annotationKind.squiggly": "波浪底線",
+    "annotationKind.strikethrough": "刪除線",
+    "annotationKind.stamp": "印章",
+    "annotationKind.pen": "畫筆",
+    "annotationKind.attachment": "附件",
+    "annotationKind.caret": "插入號",
+    "annotationKind.sound": "聲音",
+    "annotationKind.redaction": "編修",
+
+    // Annotation bar
+    "annotationBar.label": "註解",
+
+    // Print dialog
+    "print.title": "列印",
+    "print.print": "列印",
+    "print.pages": "頁面範圍",
+    "print.slides": "投影片範圍",
+    "print.allPages": "所有頁面",
+    "print.allSlides": "所有投影片",
+    "print.currentPage": "目前頁面 ({page})",
+    "print.currentSlide": "目前投影片 ({page})",
+    "print.to": "至",
+    "print.firstPage": "起始頁",
+    "print.firstSlide": "起始投影片",
+    "print.lastPage": "結束頁",
+    "print.lastSlide": "結束投影片",
+    "print.custom": "自訂",
+    "print.customPlaceholder": "例如 1,3,5-8",
+    "print.customPages": "自訂頁面",
+    "print.customSlides": "自訂投影片",
+    "print.quality": "品質",
+    "print.qualityDraft": "草稿 (150 DPI)",
+    "print.qualityStandard": "標準 (300 DPI)",
+    "print.qualityHigh": "高品質 (600 DPI)",
+    "print.pagesFromToInvalid": "請輸入 1 到 {count} 之間的頁碼。",
+    "print.slidesFromToInvalid": "請輸入 1 到 {count} 之間的投影片編號。",
+    "print.pagesFromAfterTo": "起始頁不能在結束頁之後。",
+    "print.slidesFromAfterTo": "起始投影片不能在結束投影片之後。",
+    "print.pagesCustomInvalid": "請輸入 1 到 {count} 之間的頁碼和範圍，例如 1,3,5-8。",
+    "print.slidesCustomInvalid": "請輸入 1 到 {count} 之間的投影片編號和範圍，例如 1,3,5-8。",
+
+    // Password dialog
+    "password.title": "需要密碼",
+    "password.message": "此文件受密碼保護，請輸入密碼以開啟。",
+    "password.placeholder": "輸入密碼",
+    "password.label": "密碼",
+    "password.show": "顯示密碼",
+    "password.hide": "隱藏密碼",
+    "password.unlock": "解鎖",
+    "password.incorrect": "密碼不正確",
+
+    // Busy hold
+    "busy.preparingPrint": "正在準備列印…",
+    "busy.preparingPage": "正在準備第 {page} 頁，共 {count} 頁…",
+    "busy.preparingSlide": "正在準備第 {page} 張投影片，共 {count} 張…",
+
+    // Loading overlay
+    "loading.opening": "正在開啟…",
+    "loading.downloading": "正在下載…",
+    "loading.progress": "{loaded} / {total} MB",
+
+    // License notice
+    "license.invalidLicense": "授權無效",
+    "license.permitRefused": "無法免費使用",
+    "license.cannotVerify": "無法驗證免費使用額度",
+    "license.contactOwner": "請聯絡網站擁有者。",
+
+    // The docMentis decal's link
+    "branding.title": "由 docMentis 提供技術支援",
+    "branding.label": "由 docMentis 提供技術支援（開啟 docmentis.com）",
+
+    // The text input that takes typing
+    "textInput.label": "文件文字",
+
+    // Context menu
+    "contextMenu.label": "文件動作",
+    "contextMenu.copy": "複製",
+};

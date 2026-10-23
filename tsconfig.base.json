@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+        // Packages target the browser and see no ambient `@types` unless they
+        // ask: a root devDependency (`@types/node`, for the test runner) must
+        // not silently put Node's globals into browser code, where they type
+        // things like `setTimeout` differently. Opt in per config —
+        // `["vite/client"]` in the demo, `["node"]` in the test program.
+        "types": [],
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        "verbatimModuleSyntax": true,
+        "isolatedModules": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "useDefineForClassFields": true,
+        "resolveJsonModule": true
+    }
+}

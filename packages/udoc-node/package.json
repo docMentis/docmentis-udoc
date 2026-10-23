@@ -1,0 +1,34 @@
+{
+    "name": "@docmentis/udoc-node",
+    "version": "0.1.0",
+    "description": "Embed the udoc engine in a Node application: open a document and render its pages, each document on its own worker thread.",
+    "license": "MIT OR Apache-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist",
+        "LICENSE-MIT",
+        "LICENSE-APACHE"
+    ],
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "engines": {
+        "node": ">=22.18"
+    },
+    "scripts": {
+        "dev": "tsc -p tsconfig.json --watch",
+        "build": "npm run clean && node scripts/check-version.mjs && tsc -p tsconfig.json",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+        "test": "node --test",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@docmentis/udoc-wasm": "0.8.1"
+    }
+}

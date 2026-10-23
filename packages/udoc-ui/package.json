@@ -1,0 +1,45 @@
+{
+    "name": "@docmentis/udoc-ui",
+    "version": "0.8.0",
+    "description": "The document UI the docMentis web packages are built on: the shell, the fixed canvas and the worker that drive the udoc engine. Not for embedding on its own.",
+    "license": "MIT OR Apache-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist",
+        "LICENSE-MIT",
+        "LICENSE-APACHE"
+    ],
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./internal": {
+            "types": "./dist/internal.d.ts",
+            "import": "./dist/internal.js"
+        },
+        "./worker": {
+            "types": "./dist/worker/worker.d.ts",
+            "import": "./dist/worker/worker.js"
+        }
+    },
+    "scripts": {
+        "dev": "tsc -p tsconfig.json --watch",
+        "build": "npm run clean && node scripts/gen-version.mjs && tsc -p tsconfig.json && node scripts/bundle-workers.mjs",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+        "test": "node --test",
+        "gen:icons": "node scripts/gen-icons.mjs",
+        "gen:version": "node scripts/gen-version.mjs",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@docmentis/udoc-wasm": "0.8.1"
+    },
+    "devDependencies": {
+        "esbuild": "^0.25.12"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    // The tests' own program: they run under `node --test`, not in a browser,
+    // so this is the one config that admits Node's globals. `tsconfig.json`
+    // stays browser-only and sees just `src`, which is also why nothing under
+    // `test/` can reach `dist`.
+    //
+    // `allowImportingTsExtensions` is what lets a test write
+    // `../../src/fonts/fulfill.ts`: `node --test` runs the files straight off
+    // disk (stripping types, not resolving them), so the specifier has to name
+    // the file that is actually there. Nothing is emitted from this config, so
+    // the extension never reaches shipped output.
+    //
+    // The same literalness applies transitively: Node will not remap `src`'s own
+    // `./sibling.js` specifiers to `.ts` the way tsc does, so a module a test
+    // loads has to be reachable without them — which is one more reason for a
+    // unit to take its collaborators as parameters.
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "types": ["node"],
+        "rootDir": "."
+    },
+    "include": ["test"]
+}

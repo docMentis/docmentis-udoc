@@ -1,0 +1,12 @@
+{
+    // The tests' own program, as in the editor: `node --test` runs them straight
+    // off disk, stripping types without resolving them, so a test names the
+    // `src/*.ts` file that is actually there. Nothing is emitted from here.
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "rootDir": "."
+    },
+    "include": ["test"]
+}

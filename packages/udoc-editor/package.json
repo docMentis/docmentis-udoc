@@ -1,0 +1,38 @@
+{
+    "name": "@docmentis/udoc-editor",
+    "version": "0.8.0",
+    "description": "Framework-agnostic document editor that drives the udoc engine with a fixed-canvas, dirty-rect render model.",
+    "license": "MIT OR Apache-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist",
+        "LICENSE-MIT",
+        "LICENSE-APACHE"
+    ],
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "dev": "tsc -p tsconfig.json --watch",
+        "build": "npm run clean && node scripts/gen-version.mjs && tsc -p tsconfig.json && node scripts/bundle-workers.mjs",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+        "test": "node --test",
+        "gen:icons": "node scripts/gen-icons.mjs",
+        "gen:version": "node scripts/gen-version.mjs",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@docmentis/udoc-ui": "0.8.0",
+        "@docmentis/udoc-wasm": "0.8.1"
+    },
+    "devDependencies": {
+        "esbuild": "^0.25.12"
+    }
+}

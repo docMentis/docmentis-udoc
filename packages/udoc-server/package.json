@@ -1,0 +1,46 @@
+{
+    "name": "@docmentis/udoc-server",
+    "version": "0.1.0",
+    "description": "The udoc document server: holds open documents on the udoc engine and serves their pages over HTTP.",
+    "license": "MIT OR Apache-2.0",
+    "type": "module",
+    "files": [
+        "dist",
+        "config.example.toml",
+        "LICENSE-MIT",
+        "LICENSE-APACHE"
+    ],
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "bin": {
+        "udoc-server": "./dist/main.js"
+    },
+    "engines": {
+        "node": ">=22.18"
+    },
+    "scripts": {
+        "dev": "tsc -p tsconfig.json --watch",
+        "build": "npm run clean && node scripts/check-version.mjs && tsc -p tsconfig.json && chmod +x dist/main.js",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+        "test": "node --test \"test/**/*.test.ts\"",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@docmentis/udoc-node": "0.1.0",
+        "smol-toml": "^1.9.0",
+        "ws": "^8.21.3",
+        "yauzl": "^3.4.0"
+    },
+    "devDependencies": {
+        "@types/ws": "^8.18.1",
+        "@types/yauzl": "^3.4.0",
+        "@types/yazl": "^3.3.1",
+        "yazl": "^3.3.1"
+    }
+}

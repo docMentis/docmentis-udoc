@@ -1,0 +1,38 @@
+{
+    "name": "docmentis-udoc",
+    "version": "0.1.0",
+    "private": true,
+    "description": "The open-source docMentis udoc packages: the web viewer and editor, their shared UI, and the Node hosts, on the udoc engine.",
+    "license": "MIT OR Apache-2.0",
+    "type": "module",
+    "workspaces": [
+        "packages/*"
+    ],
+    "scripts": {
+        "postinstall": "node scripts/link-engine.mjs",
+        "link-engine": "node scripts/link-engine.mjs",
+        "build": "npm run build -w @docmentis/udoc-node && npm run build -w @docmentis/udoc-cli && npm run build -w @docmentis/udoc-server && npm run build -w @docmentis/udoc-ui && npm run build -w @docmentis/udoc-editor && npm run build -w @docmentis/udoc-viewer && npm run build -w @docmentis/udoc-demo",
+        "dev": "node scripts/dev.mjs",
+        "typecheck": "npm run typecheck --workspaces --if-present",
+        "test": "npm run test --workspaces --if-present",
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "clean": "npm run clean --workspaces --if-present"
+    },
+    "engines": {
+        "node": ">=22.18"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.17.0",
+        "@types/node": "^22.18.0",
+        "eslint": "^9.17.0",
+        "eslint-config-prettier": "^9.1.0",
+        "globals": "^15.14.0",
+        "prettier": "^3.4.2",
+        "typescript": "^5.7.2",
+        "typescript-eslint": "^8.18.0",
+        "vite": "^6.0.0"
+    }
+}

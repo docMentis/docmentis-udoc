@@ -1,0 +1,28 @@
+{
+    "name": "@docmentis/udoc-cli",
+    "version": "0.1.0",
+    "description": "The udoc command line: open a document and render its pages, on the udoc engine.",
+    "license": "MIT OR Apache-2.0",
+    "type": "module",
+    "files": [
+        "dist",
+        "LICENSE-MIT",
+        "LICENSE-APACHE"
+    ],
+    "bin": {
+        "udoc": "./dist/main.js"
+    },
+    "engines": {
+        "node": ">=22.18"
+    },
+    "scripts": {
+        "dev": "tsc -p tsconfig.json --watch",
+        "build": "npm run clean && node scripts/check-version.mjs && tsc -p tsconfig.json && chmod +x dist/main.js",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+        "test": "node --test",
+        "clean": "rm -rf dist"
+    },
+    "dependencies": {
+        "@docmentis/udoc-node": "0.1.0"
+    }
+}

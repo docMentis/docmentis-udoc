@@ -1,0 +1,13 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "src",
+        "sourceMap": true,
+        // A Node program — see `udoc-node`'s tsconfig for why the DOM lib stays.
+        "types": ["node"],
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
+    },
+    "include": ["src"]
+}

@@ -1,0 +1,19 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "src",
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        // What `@internal` marks stays out of the published declarations.
+        "stripInternal": true,
+        // A Node package, so Node's globals and its module rules. The base's DOM
+        // lib stays: `@types/node` declares no `WebAssembly`, and the lib that
+        // does is DOM's.
+        "types": ["node"],
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
+    },
+    "include": ["src"]
+}

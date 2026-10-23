@@ -1,0 +1,372 @@
+import type { Messages } from "./messages.js";
+
+/** English — the pack every other is translated from, and the one a tag
+ *  with no pack of its own reads. */
+export const en: Messages = {
+    // Shared
+    "common.cancel": "Cancel",
+    "common.save": "Save",
+    "common.close": "Close",
+    "common.delete": "Delete",
+
+    // Numbers
+    "format.percent": "{percent}%",
+    "format.points": "{points} pt",
+
+    // A key that runs a command, as a tooltip names it off a Mac
+    "shortcut.control": "Ctrl+{key}",
+    "shortcut.controlShift": "Ctrl+Shift+{key}",
+    "shortcut.tooltip": "{label} ({shortcut})",
+
+    // Regions
+    "shell.skipToDocument": "Skip to document",
+    "shell.regionToolbar": "Toolbar",
+    "shell.regionSidePanel": "Side panel",
+    "shell.regionDocument": "Document",
+    "shell.regionSearchComments": "Search and comments",
+
+    // Toolbar
+    "toolbar.label": "Document toolbar",
+    "toolbar.menu": "Menu",
+    "toolbar.more": "More",
+    "toolbar.search": "Search",
+    "toolbar.comments": "Comments",
+    "toolbar.print": "Print",
+    "toolbar.download": "Download",
+    "toolbar.darkMode": "Dark Mode",
+    "toolbar.systemTheme": "System Theme",
+    "toolbar.lightMode": "Light Mode",
+    "toolbar.fullscreen": "Fullscreen",
+    "toolbar.exitFullscreen": "Exit Fullscreen",
+    "toolbar.developer": "Developer",
+
+    // The people button: the collaboration the document is in
+    "collaboration.label": "Co-editing",
+    "collaboration.paused": "Co-editing Paused",
+    "collaboration.reconnecting": "Reconnecting…",
+    "collaboration.you": "{name} (you)",
+    "collaboration.sharePointer": "Share My Pointer",
+    "collaboration.pause": "Pause Co-editing",
+    "collaboration.resume": "Resume Co-editing",
+
+    // Pointer tools
+    "pointerTool.select": "Select",
+    "pointerTool.pan": "Pan",
+    "pointerTool.zoom": "Zoom",
+    "pointerTool.options": "Pointer Tool Options",
+    "pointerTool.menu": "Pointer tools",
+    "pointerTool.tooltip": "Tool: {tool}",
+    "pointerTool.label": "Pointer Tool: {tool}",
+
+    // Ribbon tabs
+    "ribbon.annotate": "Annotate",
+
+    // Ribbon
+    "ribbon.label": "Tool options",
+    "ribbon.tabs": "Tool tabs",
+    "ribbon.more": "More tools",
+    "ribbon.moreTabs": "More tabs",
+    "ribbon.paintOptions": "{label} options",
+
+    // Ribbon commands, by command id
+    "command.undo": "Undo",
+    "command.redo": "Redo",
+    "command.annotateHighlight": "Highlight",
+    "command.annotateUnderline": "Underline",
+    "command.annotateStrikeOut": "Strikethrough",
+    "command.annotateSquiggly": "Squiggly",
+    "command.annotateNote": "Note",
+    "command.annotateTextBox": "Text Box",
+    "command.annotateStamp": "Stamp",
+    "command.annotatePen": "Pen",
+    "command.annotateShape": "Shapes",
+    "command.annotationColor": "Color",
+    "command.annotationFill": "Fill",
+    "command.annotationOpacity": "Opacity",
+
+    // Shape pickers
+    "shape.rectangle": "Rectangle",
+    "shape.ellipse": "Ellipse",
+    "shape.line": "Line",
+    "shape.arrow": "Arrow",
+    "shape.polygon": "Polygon",
+    "shape.polyline": "Polyline",
+    "shape.cloud": "Cloud",
+
+    // Standard stamps
+    "stamp.approved": "Approved",
+    "stamp.experimental": "Experimental",
+    "stamp.notApproved": "Not Approved",
+    "stamp.asIs": "As Is",
+    "stamp.expired": "Expired",
+    "stamp.notForPublicRelease": "Not for Public Release",
+    "stamp.confidential": "Confidential",
+    "stamp.final": "Final",
+    "stamp.sold": "Sold",
+    "stamp.departmental": "Departmental",
+    "stamp.forComment": "For Comment",
+    "stamp.topSecret": "Top Secret",
+    "stamp.draft": "Draft",
+    "stamp.forPublicRelease": "For Public Release",
+
+    // Color and line panel
+    "paint.noFill": "No Fill",
+    "paint.noLine": "No Line",
+    "paint.noColor": "No Color",
+    "paint.moreFillOptions": "More Fill Options…",
+    "paint.moreLineOptions": "More Line Options…",
+    "paint.moreColorOptions": "More Color Options…",
+    "paint.themeColors": "Theme Colors",
+    "paint.standardColors": "Standard Colors",
+    "paint.recentColors": "Recent Colors",
+    "paint.text1": "Text 1",
+    "paint.background1": "Background 1",
+    "paint.text2": "Text 2",
+    "paint.background2": "Background 2",
+    "paint.accent1": "Accent 1",
+    "paint.accent2": "Accent 2",
+    "paint.accent3": "Accent 3",
+    "paint.accent4": "Accent 4",
+    "paint.accent5": "Accent 5",
+    "paint.accent6": "Accent 6",
+    "paint.lighter": "Lighter {percent}%",
+    "paint.darker": "Darker {percent}%",
+    "paint.themeVariant": "{color}, {variant}",
+    "paint.weight": "Weight",
+    "paint.dashes": "Dashes",
+    "paint.solid": "Solid",
+    "paint.dashed": "Dashed",
+    "paint.dotted": "Dotted",
+    "paint.dashDot": "Dash Dot",
+    "paint.start": "Start",
+    "paint.end": "End",
+
+    // Standard colors
+    "color.darkRed": "Dark Red",
+    "color.red": "Red",
+    "color.orange": "Orange",
+    "color.yellow": "Yellow",
+    "color.lightGreen": "Light Green",
+    "color.green": "Green",
+    "color.lightBlue": "Light Blue",
+    "color.blue": "Blue",
+    "color.darkBlue": "Dark Blue",
+    "color.purple": "Purple",
+
+    // Line endings
+    "lineEnding.none": "None",
+    "lineEnding.openArrow": "Open Arrow",
+    "lineEnding.closedArrow": "Closed Arrow",
+    "lineEnding.circle": "Circle",
+    "lineEnding.square": "Square",
+    "lineEnding.diamond": "Diamond",
+
+    // Page navigation
+    "viewControls.pageNavigation": "Page navigation and zoom",
+    "viewControls.slideNavigation": "Slide navigation and zoom",
+    "viewControls.previousPage": "Previous Page",
+    "viewControls.nextPage": "Next Page",
+    "viewControls.pageNumber": "Page number",
+    "viewControls.previousSlide": "Previous Slide",
+    "viewControls.nextSlide": "Next Slide",
+    "viewControls.slideNumber": "Slide number",
+
+    // Zoom
+    "zoom.label": "Zoom",
+    "zoom.zoomIn": "Zoom In",
+    "zoom.zoomOut": "Zoom Out",
+    "zoom.level": "Zoom Level",
+    "zoom.options": "Zoom Options",
+    "zoom.levels": "Zoom levels",
+    "zoom.fitWidth": "Fit Width",
+    "zoom.fitHeight": "Fit Height",
+    "zoom.fitPage": "Fit Page",
+    "zoom.fitSlide": "Fit Slide",
+
+    // View settings
+    "viewMode.label": "View Settings",
+    "viewMode.scroll": "Scroll",
+    "viewMode.spread": "Spread",
+    "viewMode.continuous": "Continuous",
+    "viewMode.layout": "Layout",
+    "viewMode.single": "Single",
+    "viewMode.double": "Double",
+    "viewMode.coverRight": "Cover Right",
+    "viewMode.coverLeft": "Cover Left",
+    "viewMode.rotation": "Rotation",
+    "viewMode.degrees": "{degrees}°",
+    "viewMode.pageGap": "Page Gap",
+    "viewMode.on": "On",
+    "viewMode.off": "Off",
+
+    // Status bar
+    "statusBar.label": "Status bar",
+
+    // Sheets
+    "sheet.tabs": "Sheets",
+    "sheet.all": "All sheets",
+    "sheet.scrollLeft": "Scroll tabs left",
+    "sheet.scrollRight": "Scroll tabs right",
+    "sheet.unnamed": "Sheet {sheet}",
+
+    // Left panel
+    "leftPanel.tabs": "Panel tabs",
+    "leftPanel.thumbnails": "Thumbnails",
+    "leftPanel.outline": "Outline",
+    "leftPanel.layers": "Layers",
+    "leftPanel.attachments": "Attachments",
+    "leftPanel.resizeHandle": "Resize side panel",
+    "leftPanel.placeholder": "{panel} — nothing here yet",
+
+    // Thumbnails
+    "thumbnails.pages": "Page thumbnails",
+    "thumbnails.slides": "Slide thumbnails",
+    "thumbnails.page": "Page {page}",
+    "thumbnails.slide": "Slide {page}",
+
+    // Outline panel
+    "outline.loading": "Loading outline…",
+    "outline.readFailed": "Couldn't read the outline",
+    "outline.empty": "No outline in this document",
+
+    // Layers panel
+    "layers.loading": "Loading layers…",
+    "layers.readFailed": "Couldn't read the layers",
+    "layers.empty": "No layers in this document",
+    "layers.locked": "Locked",
+    "layers.hide": "Hide Layer",
+    "layers.show": "Show Layer",
+
+    // Right panel
+    "rightPanel.search": "Search",
+    "rightPanel.comments": "Comments",
+    "rightPanel.resizeHandle": "Resize panel",
+    "rightPanel.close": "Close Panel",
+
+    // Search panel
+    "search.placeholder": "Search in document",
+    "search.label": "Search text",
+    "search.clear": "Clear Search",
+    "search.matchCase": "Match Case",
+    "search.fuzzyMatch": "Fuzzy Match",
+    "search.previousMatch": "Previous Match",
+    "search.previousMatchTooltip": "Previous Match (Shift+Enter)",
+    "search.nextMatch": "Next Match",
+    "search.nextMatchTooltip": "Next Match (Enter)",
+    "search.results": "Search results",
+    "search.status": "{current} of {total}",
+    "search.statusRunning": "{current} of {total}+",
+    "search.searching": "Searching…",
+    "search.noResults": "No results",
+    "search.page": "Page {page}",
+    "search.slide": "Slide {page}",
+
+    // Comments panel
+    "comments.page": "Page {page}",
+    "comments.empty": "No comments in this document",
+    "comments.loading": "Loading comments…",
+
+    // A comment thread
+    "comment.label": "Comment",
+    "comment.placeholder": "Add a comment",
+    "comment.reply": "Reply",
+    "comment.edit": "Edit",
+    "comment.cancelEditing": "Cancel Editing",
+    "comment.save": "Save Comment",
+    "comment.replyField": "Reply",
+    "comment.cancelReply": "Cancel Reply",
+    "comment.saveReply": "Save Reply",
+    "comment.replies.one": "{count} reply",
+    "comment.replies.other": "{count} replies",
+    "comment.locked": "Locked: can't be deleted or moved",
+    "comment.lockedContents": "Locked: text can't be edited",
+    "comment.lockedBoth": "Locked: can't be deleted, moved or edited",
+
+    // An annotation's kind, as a comment names it
+    "annotationKind.note": "Note",
+    "annotationKind.textBox": "Text Box",
+    "annotationKind.line": "Line",
+    "annotationKind.rectangle": "Rectangle",
+    "annotationKind.ellipse": "Ellipse",
+    "annotationKind.polygon": "Polygon",
+    "annotationKind.polyline": "Polyline",
+    "annotationKind.highlight": "Highlight",
+    "annotationKind.underline": "Underline",
+    "annotationKind.squiggly": "Squiggly",
+    "annotationKind.strikethrough": "Strikethrough",
+    "annotationKind.stamp": "Stamp",
+    "annotationKind.pen": "Pen",
+    "annotationKind.attachment": "Attachment",
+    "annotationKind.caret": "Caret",
+    "annotationKind.sound": "Sound",
+    "annotationKind.redaction": "Redaction",
+
+    // Annotation bar
+    "annotationBar.label": "Annotation",
+
+    // Print dialog
+    "print.title": "Print",
+    "print.print": "Print",
+    "print.pages": "Pages",
+    "print.slides": "Slides",
+    "print.allPages": "All Pages",
+    "print.allSlides": "All Slides",
+    "print.currentPage": "Current Page ({page})",
+    "print.currentSlide": "Current Slide ({page})",
+    "print.to": "to",
+    "print.firstPage": "First page",
+    "print.firstSlide": "First slide",
+    "print.lastPage": "Last page",
+    "print.lastSlide": "Last slide",
+    "print.custom": "Custom",
+    "print.customPlaceholder": "e.g. 1,3,5-8",
+    "print.customPages": "Custom pages",
+    "print.customSlides": "Custom slides",
+    "print.quality": "Quality",
+    "print.qualityDraft": "Draft (150 DPI)",
+    "print.qualityStandard": "Standard (300 DPI)",
+    "print.qualityHigh": "High (600 DPI)",
+    "print.pagesFromToInvalid": "Enter pages from 1 to {count}.",
+    "print.slidesFromToInvalid": "Enter slides from 1 to {count}.",
+    "print.pagesFromAfterTo": "The first page can't come after the last.",
+    "print.slidesFromAfterTo": "The first slide can't come after the last.",
+    "print.pagesCustomInvalid": "Enter pages and ranges from 1 to {count}, like 1,3,5-8.",
+    "print.slidesCustomInvalid": "Enter slides and ranges from 1 to {count}, like 1,3,5-8.",
+
+    // Password dialog
+    "password.title": "Password Required",
+    "password.message": "This document is protected. Please enter the password to open it.",
+    "password.placeholder": "Enter password",
+    "password.label": "Password",
+    "password.show": "Show Password",
+    "password.hide": "Hide Password",
+    "password.unlock": "Unlock",
+    "password.incorrect": "Incorrect password",
+
+    // Busy hold
+    "busy.preparingPrint": "Preparing to print…",
+    "busy.preparingPage": "Preparing page {page} of {count}…",
+    "busy.preparingSlide": "Preparing slide {page} of {count}…",
+
+    // Loading overlay
+    "loading.opening": "Opening…",
+    "loading.downloading": "Downloading…",
+    "loading.progress": "{loaded} / {total} MB",
+
+    // License notice
+    "license.invalidLicense": "Invalid License",
+    "license.permitRefused": "Free Usage Unavailable",
+    "license.cannotVerify": "Cannot Verify Free Usage",
+    "license.contactOwner": "Please contact the site owner.",
+
+    // The docMentis decal's link
+    "branding.title": "Powered by docMentis",
+    "branding.label": "Powered by docMentis — opens docmentis.com",
+
+    // The text input that takes typing
+    "textInput.label": "Document text",
+
+    // Context menu
+    "contextMenu.label": "Document actions",
+    "contextMenu.copy": "Copy",
+};

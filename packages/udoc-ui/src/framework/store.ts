@@ -1,0 +1,124 @@
+/**
+ * Framework store: central event loop for state + subscriptions.
+ *
+ * Adapted from the `docmentis-udoc-viewer` ui/framework layer (MIT).
+ *
+ * Rules:
+ * - Reducers must be pure and synchronous.
+ * - Render subscribers update DOM only (no effects).
+ * - Effect subscribers may do async work and may dispatch.
+ * - Store does not know about app-specific state.
+ *
+ * Usage:
+ * ```ts
+ * const store = createStore(reducer, initialState, { batched: true });
+ * const off = store.subscribeRender((_prev, next) => render(next));
+ * store.dispatch({ type: "SET_PAGE", page: 2 });
+ * off();
+ * ```
+ */
+export type Reducer<S, A> = (state: S, action: A) => S;
+export type Subscriber<S> = (prev: S, next: S) => void;
+export type ActionListener<S, A> = (action: A, prev: S, next: S) => void;
+
+export interface Store<S, A> {
+    /** Current state snapshot. */
+    getState(): S;
+    /** Dispatch an action to transition state via the reducer. */
+    dispatch(action: A): void;
+    /** Render-phase subscription (DOM only). */
+    subscribeRender(fn: Subscriber<S>): () => void;
+    /** Effect-phase subscription (async allowed). */
+    subscribeEffect(fn: Subscriber<S>): () => void;
+    /**
+     * Action-phase subscription: invoked synchronously after each dispatch
+     * that actually changed state, with the action plus prev/next snapshots.
+     * Use for emitting external events keyed to specific action types.
+     */
+    subscribeAction(fn: ActionListener<S, A>): () => void;
+}
+
+/**
+ * Create a store with optional microtask batching for subscriber notifications.
+ * Batching groups multiple dispatches into a single notify cycle.
+ */
+export function createStore<S, A>(
+    reducer: Reducer<S, A>,
+    initialState: S,
+    options: { batched?: boolean } = {},
+): Store<S, A> {
+    let state = initialState;
+    const renderSubs = new Set<Subscriber<S>>();
+    const effectSubs = new Set<Subscriber<S>>();
+    const actionSubs = new Set<ActionListener<S, A>>();
+
+    const batched = options.batched ?? true;
+    let pending = false;
+    let lastPrev: S | null = null;
+    let lastNext: S | null = null;
+
+    function notify(prev: S, next: S): void {
+        for (const fn of renderSubs) {
+            try {
+                fn(prev, next);
+            } catch (e) {
+                console.error("Render subscriber error:", e);
+            }
+        }
+        for (const fn of effectSubs) {
+            try {
+                fn(prev, next);
+            } catch (e) {
+                console.error("Effect subscriber error:", e);
+            }
+        }
+    }
+
+    function scheduleNotify(prev: S, next: S): void {
+        if (!batched) return notify(prev, next);
+        lastPrev = lastPrev ?? prev;
+        lastNext = next;
+        if (pending) return;
+        pending = true;
+        queueMicrotask(() => {
+            pending = false;
+            const p = lastPrev as S;
+            const n = lastNext as S;
+            lastPrev = null;
+            lastNext = null;
+            notify(p, n);
+        });
+    }
+
+    function dispatch(action: A): void {
+        const prev = state;
+        const next = reducer(prev, action);
+        if (next === prev) return;
+        state = next;
+        for (const fn of actionSubs) {
+            try {
+                fn(action, prev, next);
+            } catch (e) {
+                console.error("Action subscriber error:", e);
+            }
+        }
+        scheduleNotify(prev, next);
+    }
+
+    function subscribeRender(fn: Subscriber<S>): () => void {
+        renderSubs.add(fn);
+        return () => renderSubs.delete(fn);
+    }
+
+    function subscribeEffect(fn: Subscriber<S>): () => void {
+        effectSubs.add(fn);
+        return () => effectSubs.delete(fn);
+    }
+
+    function subscribeAction(fn: ActionListener<S, A>): () => void {
+        actionSubs.add(fn);
+        return () => actionSubs.delete(fn);
+    }
+
+    return { getState: () => state, dispatch, subscribeRender, subscribeEffect, subscribeAction };
+}

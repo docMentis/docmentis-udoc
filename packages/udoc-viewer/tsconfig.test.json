@@ -1,0 +1,16 @@
+{
+    // The tests' own program: they run under `node --test`, not in a browser,
+    // so this is the one config that admits Node's globals.
+    //
+    // `allowImportingTsExtensions` lets a test name the `.ts` file that is
+    // actually there, as `node --test` runs the files straight off disk.
+    // Nothing is emitted from this config.
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "types": ["node"],
+        "rootDir": "."
+    },
+    "include": ["test"]
+}

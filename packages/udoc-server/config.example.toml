@@ -1,0 +1,26 @@
+# udoc-server settings — pass with `udoc-server --config <this file>`.
+#
+# Every key is a flag of the same name, in the same units, and a flag on the
+# command line overrides it. Each is shown at its default. An unknown key is an
+# error, so a typo never falls back to a default quietly.
+#
+# The license is not a setting: udoc-server reads it from the environment
+# (UDOC_LICENSE, for the domain in UDOC_DOMAIN), so this file can be committed.
+
+# The address to bind. Loopback by default: udoc-server does no authentication,
+# so put it behind whatever authenticates your users before exposing it.
+host = "127.0.0.1"
+
+# The port to listen on.
+port = 8080
+
+# Where documents are kept: a directory per document, holding its original and
+# its udoc package. A relative path is relative to this file.
+data-dir = "udoc-data"
+
+# How long, in seconds, a document's session stays open with no request for it.
+session-timeout = 300
+
+# How many sessions stay open once their requests finish. Past it, the least
+# recently used idle sessions close; a closed one reopens on its next request.
+session-pool = 32

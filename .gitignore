@@ -1,0 +1,16 @@
+# Build output, and udoc-server's documents under `npm run dev` (target/udoc-data)
+target
+packages/*/dist
+*.tsbuildinfo
+
+# Node / npm workspace
+node_modules
+
+# Claude Code agent runtime state (scheduled-task locks, etc.)
+.claude/
+
+# Editor-local settings
+.vscode/
+
+# macOS Finder folder metadata
+.DS_Store

@@ -1,0 +1,8 @@
+**/dist/
+**/node_modules/
+package-lock.json
+target/
+
+# A verbatim capture of a Google Fonts css2 response — reformatting it would
+# stop it being what the parser actually meets.
+packages/udoc-ui/test/fixtures/

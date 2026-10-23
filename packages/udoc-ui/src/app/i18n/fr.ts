@@ -1,0 +1,372 @@
+import type { Messages } from "./messages.js";
+
+/** French. */
+export const fr: Messages = {
+    // Shared
+    "common.cancel": "Annuler",
+    "common.save": "Enregistrer",
+    "common.close": "Fermer",
+    "common.delete": "Supprimer",
+
+    // Numbers
+    "format.percent": "{percent} %",
+    "format.points": "{points} pt",
+
+    // A key that runs a command, as a tooltip names it off a Mac
+    "shortcut.control": "Ctrl+{key}",
+    "shortcut.controlShift": "Ctrl+Maj+{key}",
+    "shortcut.tooltip": "{label} ({shortcut})",
+
+    // Regions
+    "shell.skipToDocument": "Aller au document",
+    "shell.regionToolbar": "Barre d'outils",
+    "shell.regionSidePanel": "Panneau latéral",
+    "shell.regionDocument": "Document",
+    "shell.regionSearchComments": "Recherche et commentaires",
+
+    // Toolbar
+    "toolbar.label": "Barre d'outils du document",
+    "toolbar.menu": "Menu",
+    "toolbar.more": "Plus",
+    "toolbar.search": "Rechercher",
+    "toolbar.comments": "Commentaires",
+    "toolbar.print": "Imprimer",
+    "toolbar.download": "Télécharger",
+    "toolbar.darkMode": "Mode sombre",
+    "toolbar.systemTheme": "Thème du système",
+    "toolbar.lightMode": "Mode clair",
+    "toolbar.fullscreen": "Plein écran",
+    "toolbar.exitFullscreen": "Quitter le plein écran",
+    "toolbar.developer": "Développeur",
+
+    // The people button: the collaboration the document is in
+    "collaboration.label": "Coédition",
+    "collaboration.paused": "Coédition en pause",
+    "collaboration.reconnecting": "Reconnexion…",
+    "collaboration.you": "{name} (vous)",
+    "collaboration.sharePointer": "Partager mon pointeur",
+    "collaboration.pause": "Suspendre la coédition",
+    "collaboration.resume": "Reprendre la coédition",
+
+    // Pointer tools
+    "pointerTool.select": "Sélectionner",
+    "pointerTool.pan": "Main",
+    "pointerTool.zoom": "Zoom",
+    "pointerTool.options": "Options de l'outil pointeur",
+    "pointerTool.menu": "Outils pointeur",
+    "pointerTool.tooltip": "Outil : {tool}",
+    "pointerTool.label": "Outil pointeur : {tool}",
+
+    // Ribbon tabs
+    "ribbon.annotate": "Annoter",
+
+    // Ribbon
+    "ribbon.label": "Options d'outil",
+    "ribbon.tabs": "Onglets d'outils",
+    "ribbon.more": "Plus d'outils",
+    "ribbon.moreTabs": "Plus d'onglets",
+    "ribbon.paintOptions": "Options : {label}",
+
+    // Ribbon commands, by command id
+    "command.undo": "Annuler",
+    "command.redo": "Rétablir",
+    "command.annotateHighlight": "Surligner",
+    "command.annotateUnderline": "Souligner",
+    "command.annotateStrikeOut": "Barrer",
+    "command.annotateSquiggly": "Ondulé",
+    "command.annotateNote": "Note",
+    "command.annotateTextBox": "Zone de texte",
+    "command.annotateStamp": "Tampon",
+    "command.annotatePen": "Stylo",
+    "command.annotateShape": "Formes",
+    "command.annotationColor": "Couleur",
+    "command.annotationFill": "Remplissage",
+    "command.annotationOpacity": "Opacité",
+
+    // Shape pickers
+    "shape.rectangle": "Rectangle",
+    "shape.ellipse": "Ellipse",
+    "shape.line": "Ligne",
+    "shape.arrow": "Flèche",
+    "shape.polygon": "Polygone",
+    "shape.polyline": "Polyligne",
+    "shape.cloud": "Nuage",
+
+    // Standard stamps
+    "stamp.approved": "Approuvé",
+    "stamp.experimental": "Expérimental",
+    "stamp.notApproved": "Non approuvé",
+    "stamp.asIs": "En l'état",
+    "stamp.expired": "Expiré",
+    "stamp.notForPublicRelease": "Non destiné à la diffusion publique",
+    "stamp.confidential": "Confidentiel",
+    "stamp.final": "Final",
+    "stamp.sold": "Vendu",
+    "stamp.departmental": "Interne au service",
+    "stamp.forComment": "Pour commentaires",
+    "stamp.topSecret": "Top secret",
+    "stamp.draft": "Brouillon",
+    "stamp.forPublicRelease": "Pour diffusion publique",
+
+    // Color and line panel
+    "paint.noFill": "Aucun remplissage",
+    "paint.noLine": "Aucun contour",
+    "paint.noColor": "Aucune couleur",
+    "paint.moreFillOptions": "Autres options de remplissage…",
+    "paint.moreLineOptions": "Autres options de contour…",
+    "paint.moreColorOptions": "Autres options de couleur…",
+    "paint.themeColors": "Couleurs du thème",
+    "paint.standardColors": "Couleurs standard",
+    "paint.recentColors": "Couleurs récentes",
+    "paint.text1": "Texte 1",
+    "paint.background1": "Arrière-plan 1",
+    "paint.text2": "Texte 2",
+    "paint.background2": "Arrière-plan 2",
+    "paint.accent1": "Accentuation 1",
+    "paint.accent2": "Accentuation 2",
+    "paint.accent3": "Accentuation 3",
+    "paint.accent4": "Accentuation 4",
+    "paint.accent5": "Accentuation 5",
+    "paint.accent6": "Accentuation 6",
+    "paint.lighter": "plus clair {percent} %",
+    "paint.darker": "plus sombre {percent} %",
+    "paint.themeVariant": "{color}, {variant}",
+    "paint.weight": "Épaisseur",
+    "paint.dashes": "Tirets",
+    "paint.solid": "Trait plein",
+    "paint.dashed": "Tiret",
+    "paint.dotted": "Pointillé",
+    "paint.dashDot": "Tiret point",
+    "paint.start": "Début",
+    "paint.end": "Fin",
+
+    // Standard colors
+    "color.darkRed": "Rouge foncé",
+    "color.red": "Rouge",
+    "color.orange": "Orange",
+    "color.yellow": "Jaune",
+    "color.lightGreen": "Vert clair",
+    "color.green": "Vert",
+    "color.lightBlue": "Bleu clair",
+    "color.blue": "Bleu",
+    "color.darkBlue": "Bleu foncé",
+    "color.purple": "Violet",
+
+    // Line endings
+    "lineEnding.none": "Aucune",
+    "lineEnding.openArrow": "Flèche ouverte",
+    "lineEnding.closedArrow": "Flèche fermée",
+    "lineEnding.circle": "Cercle",
+    "lineEnding.square": "Carré",
+    "lineEnding.diamond": "Losange",
+
+    // Page navigation
+    "viewControls.pageNavigation": "Navigation dans les pages et zoom",
+    "viewControls.slideNavigation": "Navigation dans les diapositives et zoom",
+    "viewControls.previousPage": "Page précédente",
+    "viewControls.nextPage": "Page suivante",
+    "viewControls.pageNumber": "Numéro de page",
+    "viewControls.previousSlide": "Diapositive précédente",
+    "viewControls.nextSlide": "Diapositive suivante",
+    "viewControls.slideNumber": "Numéro de diapositive",
+
+    // Zoom
+    "zoom.label": "Zoom",
+    "zoom.zoomIn": "Zoom avant",
+    "zoom.zoomOut": "Zoom arrière",
+    "zoom.level": "Niveau de zoom",
+    "zoom.options": "Options de zoom",
+    "zoom.levels": "Niveaux de zoom",
+    "zoom.fitWidth": "Ajuster à la largeur",
+    "zoom.fitHeight": "Ajuster à la hauteur",
+    "zoom.fitPage": "Ajuster à la page",
+    "zoom.fitSlide": "Ajuster à la diapositive",
+
+    // View settings
+    "viewMode.label": "Paramètres d'affichage",
+    "viewMode.scroll": "Défilement",
+    "viewMode.spread": "Page par page",
+    "viewMode.continuous": "Continu",
+    "viewMode.layout": "Disposition",
+    "viewMode.single": "Simple",
+    "viewMode.double": "Double",
+    "viewMode.coverRight": "Couverture à droite",
+    "viewMode.coverLeft": "Couverture à gauche",
+    "viewMode.rotation": "Rotation",
+    "viewMode.degrees": "{degrees}°",
+    "viewMode.pageGap": "Espacement des pages",
+    "viewMode.on": "Activé",
+    "viewMode.off": "Désactivé",
+
+    // Status bar
+    "statusBar.label": "Barre d'état",
+
+    // Sheets
+    "sheet.tabs": "Feuilles",
+    "sheet.all": "Toutes les feuilles",
+    "sheet.scrollLeft": "Faire défiler les onglets vers la gauche",
+    "sheet.scrollRight": "Faire défiler les onglets vers la droite",
+    "sheet.unnamed": "Feuille {sheet}",
+
+    // Left panel
+    "leftPanel.tabs": "Onglets du panneau",
+    "leftPanel.thumbnails": "Miniatures",
+    "leftPanel.outline": "Sommaire",
+    "leftPanel.layers": "Calques",
+    "leftPanel.attachments": "Pièces jointes",
+    "leftPanel.resizeHandle": "Redimensionner le panneau latéral",
+    "leftPanel.placeholder": "{panel} — rien ici pour le moment",
+
+    // Thumbnails
+    "thumbnails.pages": "Miniatures des pages",
+    "thumbnails.slides": "Miniatures des diapositives",
+    "thumbnails.page": "Page {page}",
+    "thumbnails.slide": "Diapositive {page}",
+
+    // Outline panel
+    "outline.loading": "Chargement du sommaire…",
+    "outline.readFailed": "Impossible de lire le sommaire",
+    "outline.empty": "Aucun sommaire dans ce document",
+
+    // Layers panel
+    "layers.loading": "Chargement des calques…",
+    "layers.readFailed": "Impossible de lire les calques",
+    "layers.empty": "Aucun calque dans ce document",
+    "layers.locked": "Verrouillé",
+    "layers.hide": "Masquer le calque",
+    "layers.show": "Afficher le calque",
+
+    // Right panel
+    "rightPanel.search": "Rechercher",
+    "rightPanel.comments": "Commentaires",
+    "rightPanel.resizeHandle": "Redimensionner le panneau",
+    "rightPanel.close": "Fermer le panneau",
+
+    // Search panel
+    "search.placeholder": "Rechercher dans le document",
+    "search.label": "Texte de recherche",
+    "search.clear": "Effacer la recherche",
+    "search.matchCase": "Respecter la casse",
+    "search.fuzzyMatch": "Correspondance floue",
+    "search.previousMatch": "Résultat précédent",
+    "search.previousMatchTooltip": "Résultat précédent (Maj+Entrée)",
+    "search.nextMatch": "Résultat suivant",
+    "search.nextMatchTooltip": "Résultat suivant (Entrée)",
+    "search.results": "Résultats de recherche",
+    "search.status": "{current} sur {total}",
+    "search.statusRunning": "{current} sur {total}+",
+    "search.searching": "Recherche en cours…",
+    "search.noResults": "Aucun résultat",
+    "search.page": "Page {page}",
+    "search.slide": "Diapositive {page}",
+
+    // Comments panel
+    "comments.page": "Page {page}",
+    "comments.empty": "Aucun commentaire dans ce document",
+    "comments.loading": "Chargement des commentaires…",
+
+    // A comment thread
+    "comment.label": "Commentaire",
+    "comment.placeholder": "Ajouter un commentaire",
+    "comment.reply": "Répondre",
+    "comment.edit": "Modifier",
+    "comment.cancelEditing": "Annuler la modification",
+    "comment.save": "Enregistrer le commentaire",
+    "comment.replyField": "Réponse",
+    "comment.cancelReply": "Annuler la réponse",
+    "comment.saveReply": "Enregistrer la réponse",
+    "comment.replies.one": "{count} réponse",
+    "comment.replies.many": "{count} de réponses",
+    "comment.replies.other": "{count} réponses",
+    "comment.locked": "Verrouillé : ne peut être ni supprimé ni déplacé",
+    "comment.lockedContents": "Verrouillé : le texte ne peut pas être modifié",
+    "comment.lockedBoth": "Verrouillé : ne peut être ni supprimé, ni déplacé, ni modifié",
+
+    // An annotation's kind, as a comment names it
+    "annotationKind.note": "Note",
+    "annotationKind.textBox": "Zone de texte",
+    "annotationKind.line": "Ligne",
+    "annotationKind.rectangle": "Rectangle",
+    "annotationKind.ellipse": "Ellipse",
+    "annotationKind.polygon": "Polygone",
+    "annotationKind.polyline": "Polyligne",
+    "annotationKind.highlight": "Surlignage",
+    "annotationKind.underline": "Soulignement",
+    "annotationKind.squiggly": "Soulignement ondulé",
+    "annotationKind.strikethrough": "Barré",
+    "annotationKind.stamp": "Tampon",
+    "annotationKind.pen": "Stylo",
+    "annotationKind.attachment": "Pièce jointe",
+    "annotationKind.caret": "Signe d'insertion",
+    "annotationKind.sound": "Son",
+    "annotationKind.redaction": "Biffure",
+
+    // Annotation bar
+    "annotationBar.label": "Annotation",
+
+    // Print dialog
+    "print.title": "Imprimer",
+    "print.print": "Imprimer",
+    "print.pages": "Pages",
+    "print.slides": "Diapositives",
+    "print.allPages": "Toutes les pages",
+    "print.allSlides": "Toutes les diapositives",
+    "print.currentPage": "Page actuelle ({page})",
+    "print.currentSlide": "Diapositive actuelle ({page})",
+    "print.to": "à",
+    "print.firstPage": "Première page",
+    "print.firstSlide": "Première diapositive",
+    "print.lastPage": "Dernière page",
+    "print.lastSlide": "Dernière diapositive",
+    "print.custom": "Personnalisé",
+    "print.customPlaceholder": "ex. 1,3,5-8",
+    "print.customPages": "Pages personnalisées",
+    "print.customSlides": "Diapositives personnalisées",
+    "print.quality": "Qualité",
+    "print.qualityDraft": "Brouillon (150 ppp)",
+    "print.qualityStandard": "Standard (300 ppp)",
+    "print.qualityHigh": "Haute (600 ppp)",
+    "print.pagesFromToInvalid": "Saisissez des numéros de page de 1 à {count}.",
+    "print.slidesFromToInvalid": "Saisissez des numéros de diapositive de 1 à {count}.",
+    "print.pagesFromAfterTo": "La première page ne peut pas se trouver après la dernière.",
+    "print.slidesFromAfterTo": "La première diapositive ne peut pas se trouver après la dernière.",
+    "print.pagesCustomInvalid": "Saisissez des pages et des plages de 1 à {count}, par exemple 1,3,5-8.",
+    "print.slidesCustomInvalid": "Saisissez des diapositives et des plages de 1 à {count}, par exemple 1,3,5-8.",
+
+    // Password dialog
+    "password.title": "Mot de passe requis",
+    "password.message": "Ce document est protégé. Veuillez saisir le mot de passe pour l'ouvrir.",
+    "password.placeholder": "Saisir le mot de passe",
+    "password.label": "Mot de passe",
+    "password.show": "Afficher le mot de passe",
+    "password.hide": "Masquer le mot de passe",
+    "password.unlock": "Déverrouiller",
+    "password.incorrect": "Mot de passe incorrect",
+
+    // Busy hold
+    "busy.preparingPrint": "Préparation de l'impression…",
+    "busy.preparingPage": "Préparation de la page {page} sur {count}…",
+    "busy.preparingSlide": "Préparation de la diapositive {page} sur {count}…",
+
+    // Loading overlay
+    "loading.opening": "Ouverture…",
+    "loading.downloading": "Téléchargement…",
+    "loading.progress": "{loaded} / {total} Mo",
+
+    // License notice
+    "license.invalidLicense": "Licence non valide",
+    "license.permitRefused": "Utilisation gratuite indisponible",
+    "license.cannotVerify": "Impossible de vérifier l'utilisation gratuite",
+    "license.contactOwner": "Veuillez contacter le propriétaire du site.",
+
+    // The docMentis decal's link
+    "branding.title": "Propulsé par docMentis",
+    "branding.label": "Propulsé par docMentis — ouvre docmentis.com",
+
+    // The text input that takes typing
+    "textInput.label": "Texte du document",
+
+    // Context menu
+    "contextMenu.label": "Actions du document",
+    "contextMenu.copy": "Copier",
+};
