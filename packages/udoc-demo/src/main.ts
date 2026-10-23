@@ -202,7 +202,8 @@ async function fetchBytes(path: string): Promise<Uint8Array> {
 async function openSample(doc: SampleDoc): Promise<void> {
     sidebar.setActiveDoc(doc.path);
     try {
-        await stage.openDoc({ name: doc.name, bytes: await fetchBytes(doc.path) });
+        // Named by its file, not its title: the name is what a download saves.
+        await stage.openDoc({ name: doc.path.split("/").pop()!, bytes: await fetchBytes(doc.path) });
     } catch (err) {
         console.error("udoc: failed to open sample", err);
         showError(`Could not load "${doc.name}".`);
