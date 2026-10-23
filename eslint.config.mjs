@@ -83,6 +83,7 @@ export default tseslint.config(
     {
         files: [
             "**/vite.config.ts",
+            "**/.vitepress/config.ts",
             "**/*.config.mjs",
             "**/scripts/*.mjs",
             "**/test/**/*.ts",

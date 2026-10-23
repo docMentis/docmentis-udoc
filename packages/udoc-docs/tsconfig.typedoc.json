@@ -1,0 +1,21 @@
+{
+    // TypeDoc's program: the published declarations, not the source. They are
+    // what an npm user gets — `@internal` stripped where a package strips it —
+    // and the viewer's and the editor's `export * from "@docmentis/udoc-ui"`
+    // resolves to the very file udoc-ui's entry point is, so TypeDoc meets each
+    // shared symbol once. The browser and the Node packages meet in this one
+    // program, so it has Node's types beside the base's DOM lib; declarations
+    // are not type-checked (`skipLibCheck`), so neither leaks into the other.
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "noEmit": true,
+        "types": ["node"]
+    },
+    "files": [
+        "../udoc-ui/dist/index.d.ts",
+        "../udoc-viewer/dist/index.d.ts",
+        "../udoc-editor/dist/index.d.ts",
+        "../udoc-node/dist/index.d.ts",
+        "../udoc-server/dist/index.d.ts"
+    ]
+}

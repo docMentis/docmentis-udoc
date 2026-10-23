@@ -6,7 +6,8 @@ Guidance for Claude Code when working in this repo.
 
 `docmentis-udoc` holds the open-source TypeScript packages of docMentis udoc:
 the web viewer and editor, `udoc-ui` they are built on, the Node hosts
-(`udoc-node`, `udoc-cli`, `udoc-server`) and the private `udoc-demo`. The
+(`udoc-node`, `udoc-cli`, `udoc-server`) and the private `udoc-demo` and
+`udoc-docs`. The
 repo is public and dual-licensed MIT OR Apache-2.0.
 
 The engine they run on is not here. The Rust crates and
@@ -22,8 +23,11 @@ what the packages here see.
 - Packages live under `packages/<name>/`, one npm workspace each.
 - `udoc-ui` imports neither the viewer nor the editor, and the viewer never
   imports the editor; `eslint.config.mjs` enforces both.
-- Every package except `udoc-demo` is published, with its own copy of
-  `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`.
+- A public export's doc comment is its entry in the API reference:
+  `udoc-docs` generates the reference from the packages' built declarations
+  with TypeDoc, so write it for the package's users.
+- Every package except `udoc-demo` and `udoc-docs` is published, with its own
+  copy of `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`.
 - Everything Prettier formats is formatted: the pre-commit hook
   (`.githooks/pre-commit`, turned on by `npm install`) rejects a commit whose
   staged files `prettier --check` fails. `npm run format` fixes them.
@@ -63,4 +67,5 @@ npm test
 npm run lint
 npm run format:check
 npm run dev     # the demo, with the UI packages and udoc-server rebuilding
+npm run docs    # the docs site, its API reference from the built packages
 ```

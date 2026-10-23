@@ -1,0 +1,36 @@
+{
+    "$schema": "https://typedoc-plugin-markdown.org/schema.json",
+    "tsconfig": "tsconfig.typedoc.json",
+    // udoc-ui first: TypeDoc converts a symbol where it first meets it, and the
+    // viewer and the editor re-export all of udoc-ui. The sidebar's order is
+    // the plugin's.
+    "entryPoints": [
+        "../udoc-ui/dist/index.d.ts",
+        "../udoc-viewer/dist/index.d.ts",
+        "../udoc-editor/dist/index.d.ts",
+        "../udoc-node/dist/index.d.ts",
+        "../udoc-server/dist/index.d.ts"
+    ],
+    "sortEntryPoints": false,
+    // Members as their declaration orders them, which groups related options
+    // and methods together; statics first, so a class opens with `create`. The
+    // plugin lists each package's exports alphabetically.
+    "sort": ["static-first", "source-order"],
+    "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme", "./scripts/typedoc-plugin.mjs"],
+    "name": "API reference",
+    "out": "api",
+    "docsRoot": ".",
+    "readme": "none",
+    "excludeInternal": true,
+    "excludePrivate": true,
+    "excludeProtected": true,
+    "disableSources": true,
+    "excludeScopesInPaths": true,
+    "useCodeBlocks": true,
+    "hidePageHeader": true,
+    "validation": {
+        "notExported": true,
+        "invalidLink": true,
+        "notDocumented": true
+    }
+}

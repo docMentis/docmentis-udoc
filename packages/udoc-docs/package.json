@@ -1,0 +1,29 @@
+{
+    "name": "@docmentis/udoc-docs",
+    "version": "0.1.0",
+    "description": "The udoc developer docs site: the guides, and the API reference generated from the published packages' declarations.",
+    "license": "MIT OR Apache-2.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "api": "typedoc",
+        "dev": "typedoc && vitepress dev",
+        "build": "typedoc && vitepress build",
+        "preview": "vitepress preview",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "clean": "rm -rf dist api .vitepress/cache"
+    },
+    "dependencies": {
+        "@docmentis/udoc-editor": "*",
+        "@docmentis/udoc-node": "*",
+        "@docmentis/udoc-server": "*",
+        "@docmentis/udoc-ui": "*",
+        "@docmentis/udoc-viewer": "*"
+    },
+    "devDependencies": {
+        "typedoc": "0.28.20",
+        "typedoc-plugin-markdown": "4.13.1",
+        "typedoc-vitepress-theme": "1.1.4",
+        "vitepress": "1.6.4"
+    }
+}

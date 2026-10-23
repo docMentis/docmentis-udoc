@@ -12,6 +12,7 @@ the UI they share, and the hosts that run the udoc engine in Node.
 | [`@docmentis/udoc-cli`](packages/udoc-cli)       | The `udoc` command line.                                                           |
 | [`@docmentis/udoc-server`](packages/udoc-server) | A document server: keeps documents on the engine and serves their pages over HTTP. |
 | [`udoc-demo`](packages/udoc-demo)                | The end-to-end demo app for the viewer and the editor. Not published.              |
+| [`udoc-docs`](packages/udoc-docs)                | The developer docs site and its API reference, generated from the packages' TSDoc. |
 
 All of them run on [`@docmentis/udoc-wasm`](https://www.npmjs.com/package/@docmentis/udoc-wasm),
 the udoc engine: a proprietary WebAssembly runtime under its own license,
@@ -23,6 +24,7 @@ developed separately and installed from npm.
 npm install
 npm run build
 npm run dev           # the demo, with the UI packages and udoc-server rebuilding as you edit
+npm run docs          # the docs site, its API reference generated from the built packages
 npm run typecheck
 npm test
 npm run lint
