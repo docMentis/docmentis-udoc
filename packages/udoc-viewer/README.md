@@ -4,6 +4,13 @@
 
 Bring PDF, Word, PowerPoint, Excel, SVG, images, and other documents directly into your application with a consistent viewing experience. Built on the docMentis document engine, udoc-viewer combines high-fidelity rendering with the tools people expect from a modern document viewer.
 
+[![npm version](https://img.shields.io/npm/v/@docmentis/udoc-viewer)](https://www.npmjs.com/package/@docmentis/udoc-viewer)
+[![license](https://img.shields.io/npm/l/@docmentis/udoc-viewer)](https://github.com/docMentis/docmentis-udoc#open-source-packages-shared-runtime)
+
+**[Live Demo](https://www.docmentis.com/viewer/demo)** · **[Docs](https://www.docmentis.com/docs)** · **[API Reference](https://www.docmentis.com/docs/api/udoc-viewer)** · **[Changelog](https://github.com/docMentis/docmentis-udoc/blob/main/CHANGELOG.md)** · **[Report Issue](https://github.com/docMentis/docmentis-udoc/issues)**
+
+---
+
 ## Why udoc-viewer?
 
 - **One viewer for many formats.** Display PDF, DOCX, PPTX, XLSX, and other supported document and image formats without switching components.

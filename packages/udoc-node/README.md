@@ -4,6 +4,13 @@
 
 Use docMentis document capabilities programmatically in Node.js applications and services. Open documents, render pages, export images, and save document content without embedding a browser-based viewer.
 
+[![npm version](https://img.shields.io/npm/v/@docmentis/udoc-node)](https://www.npmjs.com/package/@docmentis/udoc-node)
+[![license](https://img.shields.io/npm/l/@docmentis/udoc-node)](https://github.com/docMentis/docmentis-udoc#open-source-packages-shared-runtime)
+
+**[Docs](https://www.docmentis.com/docs)** · **[API Reference](https://www.docmentis.com/docs/api/udoc-node)** · **[Changelog](https://github.com/docMentis/docmentis-udoc/blob/main/CHANGELOG.md)** · **[Report Issue](https://github.com/docMentis/docmentis-udoc/issues)**
+
+---
+
 ## When to use it
 
 - **Backend document workflows.** Inspect and process documents inside your existing Node.js application.

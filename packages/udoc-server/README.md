@@ -4,6 +4,13 @@
 
 Host documents on your own infrastructure, access document content and rendered pages over HTTP, and support collaborative editing in applications built with docMentis.
 
+[![npm version](https://img.shields.io/npm/v/@docmentis/udoc-server)](https://www.npmjs.com/package/@docmentis/udoc-server)
+[![license](https://img.shields.io/npm/l/@docmentis/udoc-server)](https://github.com/docMentis/docmentis-udoc#open-source-packages-shared-runtime)
+
+**[Docs](https://www.docmentis.com/docs)** · **[API Reference](https://www.docmentis.com/docs/api/udoc-server)** · **[Changelog](https://github.com/docMentis/docmentis-udoc/blob/main/CHANGELOG.md)** · **[Report Issue](https://github.com/docMentis/docmentis-udoc/issues)**
+
+---
+
 ## What it provides
 
 - **Document hosting.** Store and retrieve documents through a document service you operate.

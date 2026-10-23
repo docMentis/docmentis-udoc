@@ -4,6 +4,13 @@
 
 Bring rich document interaction and editing directly into your application. udoc-editor builds on the same document experience as udoc-viewer, adding content editing, undo and redo, and collaborative authoring for supported document formats.
 
+[![npm version](https://img.shields.io/npm/v/@docmentis/udoc-editor)](https://www.npmjs.com/package/@docmentis/udoc-editor)
+[![license](https://img.shields.io/npm/l/@docmentis/udoc-editor)](https://github.com/docMentis/docmentis-udoc#open-source-packages-shared-runtime)
+
+**[Live Demo](https://www.docmentis.com/editor/demo)** · **[Docs](https://www.docmentis.com/docs)** · **[API Reference](https://www.docmentis.com/docs/api/udoc-editor)** · **[Changelog](https://github.com/docMentis/docmentis-udoc/blob/main/CHANGELOG.md)** · **[Report Issue](https://github.com/docMentis/docmentis-udoc/issues)**
+
+---
+
 ## Why udoc-editor?
 
 - **Viewing and editing together.** Open documents, navigate them, and switch between viewing and editing workflows in one component.

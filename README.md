@@ -6,6 +6,13 @@
 
 **We provide the infrastructure. You build the experience.**
 
+[![CI](https://github.com/docMentis/docmentis-udoc/actions/workflows/ci.yml/badge.svg)](https://github.com/docMentis/docmentis-udoc/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](https://github.com/docMentis/docmentis-udoc#open-source-packages-shared-runtime)
+
+**[Viewer Demo](https://www.docmentis.com/viewer/demo)** · **[Editor Demo](https://www.docmentis.com/editor/demo)** · **[Docs](https://www.docmentis.com/docs)** · **[Changelog](https://github.com/docMentis/docmentis-udoc/blob/main/CHANGELOG.md)** · **[Report Issue](https://github.com/docMentis/docmentis-udoc/issues)**
+
+---
+
 ## Choose a package
 
 | Package                                                                      | Use it to                                                                    |

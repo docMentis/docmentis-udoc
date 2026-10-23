@@ -4,6 +4,13 @@
 
 Run document inspection, rendering, and export operations from your terminal or automation scripts, powered by the same udoc engine used across the docMentis ecosystem.
 
+[![npm version](https://img.shields.io/npm/v/@docmentis/udoc-cli)](https://www.npmjs.com/package/@docmentis/udoc-cli)
+[![license](https://img.shields.io/npm/l/@docmentis/udoc-cli)](https://github.com/docMentis/docmentis-udoc#open-source-packages-shared-runtime)
+
+**[Docs](https://www.docmentis.com/docs)** · **[Changelog](https://github.com/docMentis/docmentis-udoc/blob/main/CHANGELOG.md)** · **[Report Issue](https://github.com/docMentis/docmentis-udoc/issues)**
+
+---
+
 ## Get started
 
 ```sh
