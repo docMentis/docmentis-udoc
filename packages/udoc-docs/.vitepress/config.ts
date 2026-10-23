@@ -11,6 +11,11 @@ const apiSidebar = JSON.parse(
 export default defineConfig({
     title: "docMentis udoc",
     description: "Guides and API reference for the docMentis udoc viewer, editor and Node hosts.",
+    // Served at docmentis.com/docs: the site proxies `/docs/*` to the GitHub
+    // Pages deployment (.github/workflows/docs.yml), so every link and asset
+    // is under `/docs/` — on Pages' own github.io address too, where the
+    // pages therefore come up without their styles.
+    base: "/docs/",
     outDir: "dist",
     cleanUrls: true,
     themeConfig: {

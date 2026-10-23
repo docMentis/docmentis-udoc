@@ -1,0 +1,44 @@
+# Deploy the docs site (packages/udoc-docs) to GitHub Pages, which the
+# docMentis site serves at docmentis.com/docs. On each published release, so
+# the reference describes what is on npm; run it by hand to redeploy.
+#
+# The packages build against @docmentis/udoc-wasm from npm: there is no engine
+# checkout beside this one here, so `npm ci`'s link-engine step does nothing.
+name: Docs
+
+on:
+    release:
+        types: [published]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+# One deploy at a time; a newer one waits rather than cancel one under way.
+concurrency:
+    group: pages
+    cancel-in-progress: false
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci
+            # The docs read the packages' built declarations, so build them
+            # all first; the root build ends with the docs.
+            - run: npm run build
+            - uses: actions/upload-pages-artifact@v5
+              with:
+                  path: packages/udoc-docs/dist
+            - id: deployment
+              uses: actions/deploy-pages@v5

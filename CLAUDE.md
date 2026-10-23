@@ -25,7 +25,9 @@ what the packages here see.
   imports the editor; `eslint.config.mjs` enforces both.
 - A public export's doc comment is its entry in the API reference:
   `udoc-docs` generates the reference from the packages' built declarations
-  with TypeDoc, so write it for the package's users.
+  with TypeDoc, so write it for the package's users. Publishing a GitHub
+  release deploys the docs to GitHub Pages (`.github/workflows/docs.yml`);
+  docmentis-site proxies `docmentis.com/docs` to it.
 - Every package except `udoc-demo` and `udoc-docs` is published, with its own
   copy of `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`.
 - Everything Prettier formats is formatted: the pre-commit hook
