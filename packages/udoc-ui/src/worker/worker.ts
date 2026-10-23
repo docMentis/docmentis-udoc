@@ -1562,6 +1562,12 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, buffer, undefined, [buffer]);
                 break;
             }
+            case "originalBytes": {
+                if (!session) throw new Error("engine worker: originalBytes before open");
+                const buffer = session.originalBytes().slice().buffer;
+                reply(id, buffer, undefined, [buffer]);
+                break;
+            }
             case "saveToPackage": {
                 if (!session) throw new Error("engine worker: saveToPackage before open");
                 const buffer = session.saveToPackage(msg.version).slice().buffer;

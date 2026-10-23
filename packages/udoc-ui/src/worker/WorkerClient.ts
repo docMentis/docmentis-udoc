@@ -1403,6 +1403,15 @@ export class WorkerClient {
     }
 
     /**
+     * Read the file the open document was opened from, byte for byte, whatever
+     * has been edited since — the original the session's loader holds.
+     */
+    async originalBytes(): Promise<Uint8Array> {
+        const buffer = (await this.#send({ type: "originalBytes" })) as ArrayBuffer;
+        return new Uint8Array(buffer);
+    }
+
+    /**
      * Save the open document as a udoc package — the bytes of a `.udoc` zip. A
      * `version` makes it a checkpoint, which keeps the edit log a reopen
      * replays; without one the package is a flat baseline.

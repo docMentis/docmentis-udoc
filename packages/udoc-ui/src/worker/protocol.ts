@@ -1291,6 +1291,14 @@ export interface SaveToBytesRequest {
 }
 
 /**
+ * Read the file the open document was opened from, byte for byte, whatever has
+ * been edited since. Replies with the bytes (an `ArrayBuffer`).
+ */
+export interface OriginalBytesRequest {
+    type: "originalBytes";
+}
+
+/**
  * Save the open document as a udoc package — the bytes of a `.udoc` zip.
  * `version` makes it a checkpoint, baseline `v<version>`, which keeps the edit
  * log a reopen replays; absent, the package is a flat baseline. Replies with
@@ -1542,6 +1550,7 @@ export type WorkerRequest =
     | ExecuteOnSelectionRequest
     | SnapshotRequest
     | SaveToBytesRequest
+    | OriginalBytesRequest
     | SaveToPackageRequest
     | SetUserInfoRequest
     | PresenceRequest

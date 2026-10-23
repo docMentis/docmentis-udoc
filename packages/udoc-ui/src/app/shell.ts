@@ -2244,7 +2244,12 @@ export function mountUIShell(
         if (format === null) throw new Error("download: there is no open document with a source format to save as");
         // Named before the save, which another open could overtake.
         const name = filename ?? sourceFilename ?? `document.${format}`;
-        const bytes = await savedCopy(format);
+        // A viewer edits only a PDF — its annotations and form fields — so any
+        // other document it holds the original of downloads as that file.
+        const bytes =
+            extension === null && format !== "pdf" && remotePackage === undefined
+                ? ((await client.originalBytes()) as Uint8Array<ArrayBuffer>)
+                : await savedCopy(format);
         const url = URL.createObjectURL(new Blob([bytes], { type: mediaType(format) }));
         const link = document.createElement("a");
         link.href = url;
