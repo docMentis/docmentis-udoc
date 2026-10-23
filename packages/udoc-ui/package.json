@@ -1,7 +1,16 @@
 {
     "name": "@docmentis/udoc-ui",
     "version": "0.8.0",
-    "description": "The document UI the docMentis web packages are built on: the shell, the fixed canvas and the worker that drive the udoc engine. Not for embedding on its own.",
+    "description": "The document UI @docmentis/udoc-viewer and @docmentis/udoc-editor are built on, over the docMentis udoc engine. Install one of those rather than this.",
+    "keywords": [
+        "document-viewer",
+        "document-editor",
+        "docmentis",
+        "udoc",
+        "webassembly",
+        "wasm"
+    ],
+    "homepage": "https://www.docmentis.com/docs",
     "license": "MIT OR Apache-2.0",
     "repository": {
         "type": "git",

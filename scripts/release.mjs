@@ -6,8 +6,9 @@
 // and one on a new engine minor (`npm run update-engine`) is that minor's
 // first. docs/design/releasing.md has the why.
 //
-// It sets the version in every published package and in their pins on each
-// other, dates the changelog's Unreleased section, builds and runs the checks,
+// It sets the version in every published package, in their pins on each other
+// and in the CDN URLs the docs write out with it, dates the changelog's
+// Unreleased section, builds and runs the checks,
 // commits, tags `v<version>` and pushes. The tag is the release:
 // .github/workflows/release.yml publishes it to npm, and nothing else does, as
 // a build here may run a linked engine checkout (scripts/link-engine.mjs)
@@ -158,6 +159,24 @@ writeFileSync(
     ),
 );
 
+// A copy of a CDN URL written out in the docs, such as the viewer's import map.
+// Not the changelog's, which say what a past release shipped as.
+const url = new RegExp(
+    `(@docmentis/(?:${[...names].map((name) => name.split("/")[1]).join("|")})@)\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?/`,
+    "g",
+);
+const documents =
+    output("git", "grep", "-l", "-E", "@docmentis/udoc-[a-z]+@[0-9]", "--", ":!**/CHANGELOG.md")?.split("\n") ?? [];
+const rewritten = [];
+for (const file of documents) {
+    const text = readFileSync(join(root, file), "utf8");
+    const updated = text.replace(url, (_, prefix) => `${prefix}${next}/`);
+    if (updated !== text) {
+        writeFileSync(join(root, file), updated);
+        rewritten.push(file);
+    }
+}
+
 // The build also writes the version each package reports into its src/version.ts.
 for (const script of ["build", "typecheck", "test", "lint", "format:check"]) run("npm", "run", script);
 const changed = [
@@ -167,6 +186,7 @@ const changed = [
 const released = new Set([
     "CHANGELOG.md",
     "package-lock.json",
+    ...rewritten,
     ...packages.flatMap(({ dir }) => [`${dir}/package.json`, `${dir}/src/version.ts`]),
 ]);
 const stray = changed.filter((file) => !released.has(file));

@@ -1,7 +1,27 @@
 {
     "name": "@docmentis/udoc-cli",
     "version": "0.8.0",
-    "description": "The udoc command line: open a document and render its pages, on the udoc engine.",
+    "description": "The udoc command: count the pages of PDF, Word, PowerPoint and Excel documents, render them to PNG and save them, with the docMentis udoc engine.",
+    "keywords": [
+        "cli",
+        "command-line",
+        "document",
+        "pdf",
+        "docx",
+        "pptx",
+        "xlsx",
+        "word",
+        "powerpoint",
+        "excel",
+        "office",
+        "render",
+        "png",
+        "docmentis",
+        "udoc",
+        "webassembly",
+        "wasm"
+    ],
+    "homepage": "https://www.docmentis.com/docs",
     "license": "MIT OR Apache-2.0",
     "repository": {
         "type": "git",

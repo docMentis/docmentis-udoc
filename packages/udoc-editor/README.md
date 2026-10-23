@@ -1,15 +1,17 @@
 # @docmentis/udoc-editor
 
-A document editor for the web. It opens PDF, Word, PowerPoint and Excel files
-and images in the page, rendered by the docMentis engine — WebAssembly, on a
-canvas, in a worker — and edits them: text, shapes, images, pages, annotations
-and form fields, with undo, and with other people at the same time.
+A document editor for the web. It opens PDF, Word, PowerPoint and Excel files,
+CSV and images in the page, rendered by the docMentis udoc engine —
+WebAssembly, on a canvas, in a worker — and edits them: text, shapes, images,
+pages, annotations and form fields, with undo, and with other people at the
+same time.
 
-The editor and [`@docmentis/udoc-viewer`](../udoc-viewer), which only views,
-are both built on `@docmentis/udoc-ui`, the document UI they share. The
-viewer's [README](../udoc-viewer/README.md) covers what the two share — formats,
-options, methods, events, theming, browser support, Content Security Policy and
-licensing — and all of it applies here. This one covers what editing adds.
+The editor and
+[`@docmentis/udoc-viewer`](https://www.npmjs.com/package/@docmentis/udoc-viewer),
+which only views, are both built on `@docmentis/udoc-ui`, the document UI they
+share. The viewer's README covers what the two share — formats, the engine's
+hosting, theming, browser support, Content Security Policy and license keys —
+and all of it applies here. This one covers what editing adds.
 
 ## Quick start
 
@@ -37,34 +39,28 @@ mode.
 
 ## Editing
 
-| Method                                                       | What it does                                                                        |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `execute(command)`                                           | Run one edit, a `UDocCommand`, as the editor's own tools do.                        |
-| `undo()`, `redo()`                                           | Undo or redo the last edit.                                                         |
-| `selection()`, `setSelection(selection)`, `clearSelection()` | The selection.                                                                      |
-| `insertImage(bytes, contentType)`                            | Insert an image.                                                                    |
-| `setShowRuler(visible)`                                      | The page ruler, as the option.                                                      |
-| `setShowFormattingMarks(visible)`                            | Word's formatting marks: `¶`, a dot per space, a tab's arrow.                       |
-| `setUserInfo(name)`                                          | The user's name: the author of their annotations, and their label to collaborators. |
-| `saveToBytes(format, strategy)`                              | The edited document, in a format it saves to.                                       |
-| `download(filename?)`                                        | The same, handed to the browser.                                                    |
+The editor takes the viewer's
+[options](https://www.docmentis.com/docs/api/udoc-editor/interfaces/UDocEditorOptions),
+and has its [methods](https://www.docmentis.com/docs/api/udoc-editor/classes/UDocEditor)
+and [events](https://www.docmentis.com/docs/api/udoc-editor/interfaces/UDocEditorEvents)
+and more. `execute(command)` runs one edit, a `UDocCommand`, as the editor's
+own tools do, and `undo()` and `redo()` step through them; `document:edited`
+fires as each is applied, and `selection:changed` as the selection changes.
+`saveToBytes(format, strategy)` returns the edited document, and
+`download(filename?)` hands it to the browser.
 
 `download` keeps as much of the original as its format can: a PDF appends the
 edits as a new revision, so its signatures stay valid; a Word, PowerPoint or
 Excel file rewrites only the parts that changed.
-
-| Event               | Payload                  | Fires when                           |
-| ------------------- | ------------------------ | ------------------------------------ |
-| `mode:changed`      | `{ mode, previousMode }` | The mode changes.                    |
-| `document:edited`   | `{ composedPageCount }`  | An edit of this editor's is applied. |
-| `selection:changed` | `{}`                     | This editor's selection changes.     |
 
 ## Collaboration
 
 Several editors can edit one document together, each seeing the others' edits
 and selections as they make them.
 
-**Through a udoc server** (`@docmentis/udoc-server`), which keeps the document:
+**Through a udoc server**
+([`@docmentis/udoc-server`](https://www.npmjs.com/package/@docmentis/udoc-server)),
+which keeps the document:
 
 ```ts
 const base = "https://example.com/documents/42";
@@ -81,29 +77,22 @@ editor.joinLocalCollaboration(id, "Ada");
 ```
 
 `leaveCollaboration()` leaves; opening another document or closing this one
-leaves too.
-
-| Event                       | Payload            | Fires when                                             |
-| --------------------------- | ------------------ | ------------------------------------------------------ |
-| `collaboration:joined`      | `{}`               | The join is answered, and again on each rejoin.        |
-| `collaboration:interrupted` | `{ code, reason }` | The connection is lost; the editor rejoins by itself.  |
-| `collaboration:failed`      | `{ code, reason }` | The collaboration ends in an error; it isn't rejoined. |
-| `collaboration:left`        | `{}`               | The editor leaves.                                     |
+leaves too. The `collaboration:joined`, `collaboration:interrupted`,
+`collaboration:failed` and `collaboration:left` events follow it: an
+interrupted collaboration rejoins by itself, and a failed one doesn't.
 
 A host that carries edits over its own channel uses the calls these build on:
 `snapshot`, `versionVector`, `patchSince`, `merge`, `opaquePartsSince`,
 `mergeOpaqueParts`, `presence` and `mergePresence`, cued by `document:edited`
 and `selection:changed`.
 
-## Development
+## Documentation
 
-In this repo, build the shared UI before the package:
+The guides and the API reference are at
+[docmentis.com/docs](https://www.docmentis.com/docs).
 
-```sh
-npm install                                       # the engine from npm, or a local build linked in
-npm run build --workspace @docmentis/udoc-ui      # the shared UI → its dist/
-npm run build --workspace @docmentis/udoc-editor  # tsc → dist/, then its render worker bundled
-```
+## License
 
-`npm run dev` runs the demo against this package's source. The architecture is in
-[docs/design/ui-editor.md](../../docs/design/ui-editor.md).
+MIT OR Apache-2.0, at your option. That covers this package, not the
+`@docmentis/udoc-wasm` engine it runs on, which is proprietary, under its own
+license.

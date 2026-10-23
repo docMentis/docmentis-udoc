@@ -87,7 +87,7 @@ npm run typecheck
 npm test
 npm run lint
 npm run format:check
-npm run dev     # the demo, with the UI packages and udoc-server rebuilding
-npm run docs    # the docs site, its API reference from the built packages
+npm run dev               # the demo, with the UI packages and udoc-server rebuilding
+npm run docs              # the docs site, its API reference from the built packages
 npm run release -- patch  # cut a release, which CI publishes
 ```
