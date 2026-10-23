@@ -62,7 +62,7 @@ function escapeHtml(value: string): string {
  * A pure-shape copy has no text, so its body is a `&nbsp;` — HTML can't
  * express a shape, and there is nothing to say about it; the envelope exists
  * only to carry the attribute. That is what a Google Slides shape copy puts on
- * the clipboard too, and why pasting one into a text editor yields a space.
+ * the clipboard too, and why pasting one into a plain-text app yields a space.
  */
 function fragmentHtml(payload: ClipboardPayload): string {
     const body = payload.text ? escapeHtml(payload.text) : "&nbsp;";

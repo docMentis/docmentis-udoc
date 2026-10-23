@@ -92,9 +92,9 @@ export interface UDocOptions {
      *  dialog: the performance counter, the repaint area. Default `false`. */
     showDeveloperButton?: boolean;
     /** Let the user copy what they select to the system clipboard — Ctrl/Cmd+C
-     *  and the context menu's Copy — in the viewer and the editor's view mode.
-     *  `false` leaves the selection to highlight only; the editor's edit mode
-     *  copies whatever this says. Default `true`. */
+     *  and the context menu's Copy — in view mode. `false` leaves the
+     *  selection to highlight only; edit mode copies whatever this says.
+     *  Default `true`. */
     enableCopy?: boolean;
     /** Share this one's pointer with the collaboration it joins: the others
      *  see it move over the pages, under its name — for presenting remotely.
@@ -196,11 +196,10 @@ export interface UDocOptions {
      *  Ignored when {@link enableGoogleFonts} is `false`. Default
      *  `https://fonts.googleapis.com/css2`. */
     googleFontEndpoint?: string | URL;
-    /** Let the viewer and editor use the fonts available to the user's
-     *  browser. A family a document names that is neither registered
-     *  ({@link fonts}) nor served online (Google Fonts) then renders in the
-     *  copy installed on the end user's machine, which is better quality than
-     *  a substitute. It depends on the device, though: the same document may
+    /** Use the fonts available to the user's browser. A family a document
+     *  names that is neither registered ({@link fonts}) nor served online
+     *  (Google Fonts) then renders in the copy installed on the end user's
+     *  machine, which is better quality than a substitute. It depends on the device, though: the same document may
      *  render differently here than on a server or on another device.
      *  Default `true`. */
     enableCanvasFonts?: boolean;
