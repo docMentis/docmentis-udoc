@@ -10,7 +10,7 @@
         "webassembly",
         "wasm"
     ],
-    "homepage": "https://www.docmentis.com/docs",
+    "homepage": "https://www.docmentis.com",
     "license": "MIT OR Apache-2.0",
     "repository": {
         "type": "git",
