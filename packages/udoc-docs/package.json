@@ -10,7 +10,7 @@
         "dev": "typedoc && vitepress dev",
         "build": "typedoc && vitepress build",
         "preview": "vitepress preview",
-        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.snippets.json",
         "clean": "rm -rf dist api .vitepress/cache"
     },
     "dependencies": {

@@ -1,0 +1,9 @@
+{
+    // The guides' code samples: browser code, typechecked against the built
+    // packages, so an API change that breaks one fails `npm run typecheck`.
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "noEmit": true
+    },
+    "include": ["snippets"]
+}

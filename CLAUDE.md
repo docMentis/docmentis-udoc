@@ -28,6 +28,14 @@ what the packages here see.
   with TypeDoc, so write it for the package's users. Publishing a GitHub
   release deploys the docs to GitHub Pages (`.github/workflows/docs.yml`);
   docmentis-site proxies `docmentis.com/docs` to it.
+- The guides are `packages/udoc-docs/guide/*.md`, one task per page, written
+  once for the viewer and the editor (a code group where their code differs),
+  and listed in order in `.vitepress/config.ts`. A guide links to the API
+  reference rather than repeating it. Its code samples are files in
+  `packages/udoc-docs/snippets/`, embedded with `<<< @/snippets/…`, so the
+  docs package's typecheck compiles them against the built packages. A guide
+  folder gets no `index.md`: the site's proxy needs a rule for each folder
+  page, and has them only for the reference's.
 - Every package except `udoc-demo` and `udoc-docs` is published, with its own
   copy of `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`.
 - Everything Prettier formats is formatted: the pre-commit hook

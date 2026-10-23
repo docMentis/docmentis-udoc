@@ -32,8 +32,13 @@ export default defineConfig({
     outDir: "dist",
     cleanUrls: true,
     themeConfig: {
-        nav: [{ text: "API reference", link: "/api/" }],
+        nav: [
+            { text: "Guide", link: "/guide/quick-start" },
+            { text: "API reference", link: "/api/" },
+        ],
         sidebar: {
+            // In reading order, which is the guides' own, not their files'.
+            "/guide/": [{ text: "Guide", items: [{ text: "Quick start", link: "/guide/quick-start" }] }],
             "/api/": [{ text: "API reference", link: "/api/", items: apiSidebar }],
         },
         // A class's members are its page's h3s, under h2s by kind.
