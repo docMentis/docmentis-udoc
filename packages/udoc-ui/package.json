@@ -3,6 +3,11 @@
     "version": "0.8.0",
     "description": "The document UI the docMentis web packages are built on: the shell, the fixed canvas and the worker that drive the udoc engine. Not for embedding on its own.",
     "license": "MIT OR Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/docMentis/docmentis-udoc.git",
+        "directory": "packages/udoc-ui"
+    },
     "type": "module",
     "sideEffects": false,
     "files": [
@@ -10,6 +15,9 @@
         "LICENSE-MIT",
         "LICENSE-APACHE"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "main": "./dist/index.js",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",

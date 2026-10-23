@@ -1,8 +1,13 @@
 {
     "name": "@docmentis/udoc-server",
-    "version": "0.1.0",
+    "version": "0.8.0",
     "description": "The udoc document server: holds open documents on the udoc engine and serves their pages over HTTP.",
     "license": "MIT OR Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/docMentis/docmentis-udoc.git",
+        "directory": "packages/udoc-server"
+    },
     "type": "module",
     "files": [
         "dist",
@@ -10,6 +15,9 @@
         "LICENSE-MIT",
         "LICENSE-APACHE"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "exports": {
@@ -19,7 +27,7 @@
         }
     },
     "bin": {
-        "udoc-server": "./dist/main.js"
+        "udoc-server": "dist/main.js"
     },
     "engines": {
         "node": ">=22.18"
@@ -32,7 +40,7 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-node": "0.1.0",
+        "@docmentis/udoc-node": "0.8.0",
         "smol-toml": "^1.9.0",
         "ws": "^8.21.3",
         "yauzl": "^3.4.0"

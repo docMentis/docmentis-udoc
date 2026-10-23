@@ -3,6 +3,11 @@
     "version": "0.8.0",
     "description": "Framework-agnostic document editor that drives the udoc engine with a fixed-canvas, dirty-rect render model.",
     "license": "MIT OR Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/docMentis/docmentis-udoc.git",
+        "directory": "packages/udoc-editor"
+    },
     "type": "module",
     "sideEffects": false,
     "files": [
@@ -10,6 +15,9 @@
         "LICENSE-MIT",
         "LICENSE-APACHE"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "main": "./dist/index.js",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",

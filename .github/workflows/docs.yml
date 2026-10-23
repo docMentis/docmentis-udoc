@@ -1,14 +1,14 @@
 # Deploy the docs site (packages/udoc-docs) to GitHub Pages, which the
-# docMentis site serves at docmentis.com/docs. On each published release, so
-# the reference describes what is on npm; run it by hand to redeploy.
+# docMentis site serves at docmentis.com/docs. Run by the Release workflow
+# once a release is on npm, so the reference describes what is there; run it
+# by hand to redeploy.
 #
 # The packages build against @docmentis/udoc-wasm from npm: there is no engine
 # checkout beside this one here, so `npm ci`'s link-engine step does nothing.
 name: Docs
 
 on:
-    release:
-        types: [published]
+    workflow_call:
     workflow_dispatch:
 
 permissions:

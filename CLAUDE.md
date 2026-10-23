@@ -27,8 +27,9 @@ udoc-ui's generated engine version and the CDN URLs the docs write out.
   imports the editor; `eslint.config.mjs` enforces both.
 - A public export's doc comment is its entry in the API reference:
   `udoc-docs` generates the reference from the packages' built declarations
-  with TypeDoc, so write it for the package's users. Publishing a GitHub
-  release deploys the docs to GitHub Pages (`.github/workflows/docs.yml`);
+  with TypeDoc, so write it for the package's users. A release deploys the
+  docs to GitHub Pages once its packages are on npm
+  (`.github/workflows/docs.yml`, run by the Release workflow);
   docmentis-site proxies `docmentis.com/docs` to it.
 - The guides are `packages/udoc-docs/guide/*.md`, one task per page, written
   once for the viewer and the editor (a code group where their code differs),
@@ -39,7 +40,15 @@ udoc-ui's generated engine version and the CDN URLs the docs write out.
   folder gets no `index.md`: the site's proxy needs a rule for each folder
   page, and has them only for the reference's.
 - Every package except `udoc-demo` and `udoc-docs` is published, with its own
-  copy of `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`.
+  copy of `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`, and a
+  `repository` naming this repo, which npm's provenance checks.
+- The published packages release together at one version, on the major and
+  minor of the engine they pin, and only from CI:
+  `npm run release -- <patch|minor|major|version>` tags a release and
+  `.github/workflows/release.yml` publishes it
+  ([`docs/design/releasing.md`](docs/design/releasing.md)). Never
+  `npm publish` by hand. A change a package's users will notice gets a line
+  under `## [Unreleased]` in `CHANGELOG.md`, under the package's heading.
 - Everything Prettier formats is formatted: the pre-commit hook
   (`.githooks/pre-commit`, turned on by `npm install`) rejects a commit whose
   staged files `prettier --check` fails. `npm run format` fixes them.
@@ -80,4 +89,5 @@ npm run lint
 npm run format:check
 npm run dev     # the demo, with the UI packages and udoc-server rebuilding
 npm run docs    # the docs site, its API reference from the built packages
+npm run release -- patch  # cut a release, which CI publishes
 ```

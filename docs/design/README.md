@@ -49,3 +49,11 @@ the packages here call through — is documented with the engine, not here.
   join / patch / presence messages, a presence refreshed while joined and withdrawn
   on leaving, the close codes and which a client rejoins after, and why there is no
   REST fallback.
+
+### Release
+
+- [Releasing](releasing.md) — the published packages at one version, released
+  together on the major and minor of the engine they pin, with a patch of their
+  own; `npm run release` tagging a release and the Release workflow publishing
+  it, from CI only, as a linked engine checkout may not be the engine pinned;
+  and the placeholder and trusted publisher a new package needs first.

@@ -13,6 +13,7 @@
         "postinstall": "node scripts/link-engine.mjs",
         "link-engine": "node scripts/link-engine.mjs",
         "update-engine": "node scripts/update-engine.mjs",
+        "release": "node scripts/release.mjs",
         "build": "npm run build -w @docmentis/udoc-node && npm run build -w @docmentis/udoc-cli && npm run build -w @docmentis/udoc-server && npm run build -w @docmentis/udoc-ui && npm run build -w @docmentis/udoc-editor && npm run build -w @docmentis/udoc-viewer && npm run build -w @docmentis/udoc-demo && npm run build -w @docmentis/udoc-docs",
         "dev": "node scripts/dev.mjs",
         "docs": "npm run dev -w @docmentis/udoc-docs",

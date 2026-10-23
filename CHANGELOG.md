@@ -1,15 +1,21 @@
 # Changelog
 
-## [0.8.0] - Unreleased
+The published packages release together, at one version: each release is
+listed once, by package. Its major and minor version are those of the
+`@docmentis/udoc-wasm` it is built on, and its patch is its own.
+
+## [Unreleased]
+
+### udoc-viewer
 
 The viewer is rebuilt on the docMentis engine's new architecture: each
 document renders in a worker, on one canvas, and the viewer is built on
 `@docmentis/udoc-ui`, the document UI the docMentis packages share. Its API
 changed;
-[API-COMPARISON.md](API-COMPARISON.md) maps every export of 0.7 to what 0.8
-offers in its place.
+[API-COMPARISON.md](packages/udoc-viewer/API-COMPARISON.md) maps every export
+of 0.7 to what 0.8 offers in its place.
 
-### Added
+#### Added
 
 - Form filling in PDFs, and audio and video playback.
 - TSV and PSV files, opened as CSV is, and CSV files split by semicolons.
@@ -24,7 +30,7 @@ offers in its place.
 - `setOverlay` draws any number of overlays over the pages.
 - `showDeveloperButton`: diagnostics in the toolbar's menu.
 
-### Changed
+#### Changed
 
 - `UDocViewer.create(container, options)` replaces `UDocClient.create` and
   `client.createViewer`; `load` is `open`, which takes a URL, a `Blob` or
@@ -50,7 +56,7 @@ offers in its place.
   `--udoc-color-*` for every color it uses, `--udoc-color-primary` for your
   brand color, and a fill per region such as `--udoc-toolbar-background`.
 
-### Removed
+#### Removed
 
 - ico, tga, ppm, hdr, exr and qoi images.
 - The fonts panel, slide transitions and animations, and the spreadsheet's
@@ -61,3 +67,7 @@ offers in its place.
   `extractFonts`, `parseFontInfo`, `compress` and `decompress`.
 - The setters for chrome the options now fix at creation, such as
   `setToolbarVisible`.
+
+### udoc-ui, udoc-editor, udoc-node, udoc-cli and udoc-server
+
+The first release of each.

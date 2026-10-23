@@ -1,0 +1,72 @@
+# Publish a release when its tag is pushed (`npm run release` pushes it): the
+# packages to npm, then its GitHub Release, then the docs that describe it.
+#
+# The one place the packages are published from. npm trusts this workflow to
+# publish them (trusted publishing), and attests where each was built
+# (provenance); and it builds against @docmentis/udoc-wasm from npm, with no
+# engine checkout beside this one to link in. Re-run it to finish a release
+# that failed part-way: a package already on npm is skipped.
+name: Release
+
+on:
+    push:
+        tags:
+            - "v[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+    contents: read
+
+# One release at a time, and never cut short.
+concurrency:
+    group: release
+    cancel-in-progress: false
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        permissions:
+            # The GitHub Release.
+            contents: write
+            # The identity npm's trusted publishing checks.
+            id-token: write
+        steps:
+            - uses: actions/checkout@v7
+            # Trusted publishing needs npm 11.5.1 or later, which Node 22's
+            # npm isn't. No cache: a release builds from nothing it didn't fetch.
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 24
+            - run: npm ci
+            - run: npm run build
+            - run: npm run typecheck
+            - run: npm test
+            - run: npm run lint
+            - run: npm run format:check
+            # The build regenerates committed source; the release must hold it.
+            - run: git diff --exit-code
+            - run: node scripts/publish.mjs "${GITHUB_REF_NAME#v}"
+              env:
+                  NPM_CONFIG_PROVENANCE: "true"
+            - name: Create the GitHub Release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  version="${GITHUB_REF_NAME#v}"
+                  if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+                      echo "$GITHUB_REF_NAME has a release already."
+                      exit 0
+                  fi
+                  node scripts/release-notes.mjs "$version" > "$RUNNER_TEMP/notes.md"
+                  prerelease=()
+                  [[ "$version" == *-* ]] && prerelease=(--prerelease)
+                  gh release create "$GITHUB_REF_NAME" --title "$version" --notes-file "$RUNNER_TEMP/notes.md" "${prerelease[@]}"
+
+    # The docs describe the latest release, so a prerelease leaves them be.
+    docs:
+        needs: publish
+        if: ${{ !contains(github.ref_name, '-') }}
+        permissions:
+            contents: read
+            pages: write
+            id-token: write
+        uses: ./.github/workflows/docs.yml

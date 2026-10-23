@@ -381,5 +381,6 @@ document, its name or its content. A licensee can turn them off with
 - ico, tga, ppm, hdr, exr and qoi images are no longer opened.
 
 [API-COMPARISON.md](API-COMPARISON.md) maps every export of 0.7, row by row, to
-what 0.8 offers in its place, and [CHANGELOG.md](CHANGELOG.md) lists what
-changed.
+what 0.8 offers in its place, and the
+[changelog](https://github.com/docMentis/docmentis-udoc/blob/main/CHANGELOG.md)
+lists what changed.
