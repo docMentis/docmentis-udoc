@@ -1,9 +1,7 @@
 // Public API — the common surface every docMentis document UI shares, and the
 // viewer's class. A viewer only views: it opens in view mode, its only one,
-// under the viewer's own name — and the engine never lets a session started as
-// `udoc-viewer` edit a document's content, whatever its license or permit
-// grants. It may annotate, fill in forms and follow a collaboration, as its
-// license or permit allows.
+// under the viewer's own name. It may annotate, fill in forms and follow a
+// collaboration, as its license or permit allows.
 import { UDocBase } from "@docmentis/udoc-ui";
 import type { LocalCollaborationServiceOptions, UDocOptions } from "@docmentis/udoc-ui";
 import { createAs, startLocalCollaborationService } from "@docmentis/udoc-ui/internal";
