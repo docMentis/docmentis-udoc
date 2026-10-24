@@ -15,7 +15,7 @@ the viewer's `LeftPanel` uses. The panel needs the `WorkerClient` (for renders),
 so `LeftPanel.mount` is widened to thread `client` through from the shell.
 
 Navigation reuses the existing seam: a click dispatches `NAVIGATE_TO_PAGE`; the
-current-page highlight reads `state.page`. No new navigation plumbing.
+current-page highlight reads `state.pageIndex`. No new navigation plumbing.
 
 ## Pixel source — engine raster
 
@@ -100,10 +100,10 @@ page from scroll position in JS (`updateCurrentPageFromScroll` →
 `findSpreadAtCenter` → `SET_PAGE`) and guards that against programmatic nav
 (`navigationPage`/`navigationScrollTop`). The editor inherits the easy half for
 free: the worker already streams `currentPage` each frame and the Canvas folds
-it into `state.page`/`state.pageIndex`, so the strip never re-derives it from
+it into `state.pageIndex`, so the strip never re-derives it from
 spread math. What the panel still owns:
 
-- **Viewport → strip.** Subscribe to `state.page`; on change, move the active
+- **Viewport → strip.** Subscribe to `state.pageIndex`; on change, move the active
   highlight and `scrollIntoView({ block: "nearest" })` the active item. Because
   that scrolls the _panel_ container (not the document viewport), it can't loop
   back into a viewport scroll — the same natural guard the viewer relies on.
@@ -112,7 +112,7 @@ spread math. What the panel still owns:
   `client.goToPage`, which scrolls and streams the new `currentPage` back. No
   new viewport plumbing.
 - **Keyboard focus vs. current page.** A local `focusedPage` (arrow-key cursor)
-  is distinct from `state.page` (where the viewport is) and follows it on every
+  is distinct from `state.pageIndex` (where the viewport is) and follows it on every
   viewport-driven change, but may lead it while arrowing before Enter commits —
   mirroring the viewer.
 - **Render-focus follows the eye.** On panel scroll, the thumbnail queue's focus

@@ -26,7 +26,7 @@ import type { I18n } from "../i18n/index.js";
  *    recycle; their bitmaps stay in the {@link WorkerClient} LRU cache.
  *
  * Bidirectional current-page sync rides on existing seams: the worker streams
- * the current page into `state.page` (so the strip never re-derives it), and a
+ * the current page into `state.pageIndex` (so the strip never re-derives it), and a
  * click/keyboard dispatches `NAVIGATE_TO_PAGE`, which the shell already
  * forwards to the engine.
  */
@@ -61,14 +61,18 @@ interface ThumbItem {
 
 interface ThumbnailSlice {
     composedPageCount: number;
-    /** 1-based current page (`state.page`). */
+    /** The current page's index (`state.pageIndex`). */
     currentPage: number;
     /** Bumped on each new document open — forces a full rebuild. */
     generation: number;
 }
 
 function selectSlice(state: UIState): ThumbnailSlice {
-    return { composedPageCount: state.composedPageCount, currentPage: state.page, generation: state.docGeneration };
+    return {
+        composedPageCount: state.composedPageCount,
+        currentPage: state.pageIndex,
+        generation: state.docGeneration,
+    };
 }
 
 export function createThumbnailPanel(i18n: I18n) {
@@ -89,7 +93,7 @@ export function createThumbnailPanel(i18n: I18n) {
     let client: WorkerClient | null = null;
     let mounted = false;
 
-    let slice: ThumbnailSlice = { composedPageCount: 0, currentPage: 1, generation: -1 };
+    let slice: ThumbnailSlice = { composedPageCount: 0, currentPage: 0, generation: -1 };
     /** Mounted items by 0-based page index. */
     const items = new Map<number, ThumbItem>();
     /** Measured page sizes (document points) by page index — drives aspect + scale. */
@@ -104,8 +108,8 @@ export function createThumbnailPanel(i18n: I18n) {
     let offsets: number[] = [TOP_PAD];
     /** Thumbnail width in CSS px (panel inner width); tracks panel resize. */
     let thumbWidth = 0;
-    /** Keyboard cursor (1-based), distinct from the viewport's current page. */
-    let focusedPage = 1;
+    /** Keyboard cursor (a page index), distinct from the viewport's current page. */
+    let focusedPage = 0;
 
     /** Whether one page is called a slide in the open document — in a deck. */
     const slides = (): boolean => profileFor(store?.getState().docType ?? null).pageNoun === "Slide";
@@ -196,14 +200,14 @@ export function createThumbnailPanel(i18n: I18n) {
         item.container.style.height = `${cardHeight(page)}px`;
         item.canvas.style.width = `${thumbWidth}px`;
         item.canvas.style.height = `${Math.round(thumbWidth / aspect(page))}px`;
-        item.container.classList.toggle("udoc-thumbnail-item--selected", page + 1 === slice.currentPage);
-        item.container.setAttribute("aria-selected", String(page + 1 === slice.currentPage));
+        item.container.classList.toggle("udoc-thumbnail-item--selected", page === slice.currentPage);
+        item.container.setAttribute("aria-selected", String(page === slice.currentPage));
     }
 
     function createItem(page: number): ThumbItem {
         const container = document.createElement("div");
         container.className = "udoc-thumbnail-item";
-        container.id = `udoc-thumb-${page + 1}`;
+        container.id = `udoc-thumb-${page}`;
         container.setAttribute("role", "option");
         container.setAttribute(
             "aria-label",
@@ -221,7 +225,7 @@ export function createThumbnailPanel(i18n: I18n) {
         label.textContent = String(page + 1);
         container.appendChild(label);
 
-        container.addEventListener("click", () => navigateTo(page + 1));
+        container.addEventListener("click", () => navigateTo(page));
         return { container, canvas, drawnKey: null };
     }
 
@@ -285,15 +289,14 @@ export function createThumbnailPanel(i18n: I18n) {
 
     // --- navigation + current-page sync ----------------------------------
 
-    function navigateTo(page1: number): void {
-        focusedPage = page1;
-        store?.dispatch({ type: "NAVIGATE_TO_PAGE", page: page1 });
+    function navigateTo(page: number): void {
+        focusedPage = page;
+        store?.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: page });
     }
 
     /** Scroll the active page's slot into view (called when the viewport's
      *  current page changes). Cheap when it's already visible. */
-    function scrollActiveIntoView(page1: number): void {
-        const page = page1 - 1;
+    function scrollActiveIntoView(page: number): void {
         if (page < 0 || page >= slice.composedPageCount) return;
         const top = offsets[page]!;
         const bottom = offsets[page + 1]!;
@@ -303,7 +306,7 @@ export function createThumbnailPanel(i18n: I18n) {
 
     function updateHighlight(): void {
         for (const [page, item] of items) {
-            const active = page + 1 === slice.currentPage;
+            const active = page === slice.currentPage;
             item.container.classList.toggle("udoc-thumbnail-item--selected", active);
             item.container.setAttribute("aria-selected", String(active));
         }
@@ -314,16 +317,16 @@ export function createThumbnailPanel(i18n: I18n) {
         let handled = true;
         switch (e.key) {
             case "ArrowDown":
-                focusedPage = Math.min(focusedPage + 1, slice.composedPageCount);
+                focusedPage = Math.min(focusedPage + 1, slice.composedPageCount - 1);
                 break;
             case "ArrowUp":
-                focusedPage = Math.max(focusedPage - 1, 1);
+                focusedPage = Math.max(focusedPage - 1, 0);
                 break;
             case "Home":
-                focusedPage = 1;
+                focusedPage = 0;
                 break;
             case "End":
-                focusedPage = slice.composedPageCount;
+                focusedPage = slice.composedPageCount - 1;
                 break;
             case "Enter":
             case " ":
@@ -435,7 +438,7 @@ export function createThumbnailPanel(i18n: I18n) {
         resizeObserver.observe(el);
 
         measureWidth();
-        slice = { composedPageCount: 0, currentPage: 1, generation: -1 };
+        slice = { composedPageCount: 0, currentPage: 0, generation: -1 };
         applySlice(selectSlice(s.getState()));
         unsub = subscribeSelector(s, selectSlice, applySlice, {
             equality: (a, b) =>

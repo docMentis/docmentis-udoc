@@ -133,7 +133,7 @@ export type Action =
     | { type: "SET_PAGE_INDEX"; pageIndex: number }
     // The pages the last painted frame showed (0-based, `end` exclusive)
     | { type: "SET_SHOWN_PAGES"; start: number; end: number }
-    | { type: "NAVIGATE_TO_PAGE"; page: number }
+    | { type: "NAVIGATE_TO_PAGE"; pageIndex: number }
     // Arrangement — scroll mode, layout mode, page rotation and the reading
     // page gap; the shell pushes each to the worker
     | { type: "SET_SCROLL_MODE"; mode: ScrollMode }

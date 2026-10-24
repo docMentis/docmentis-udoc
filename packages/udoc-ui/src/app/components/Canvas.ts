@@ -3591,7 +3591,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // it while cooling down just avoids a no-op clamp.
         if (pageFlipArmed) {
             pageFlipArmed = false;
-            st.dispatch({ type: "NAVIGATE_TO_PAGE", page: target });
+            st.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: target });
         }
         return true;
     }

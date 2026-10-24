@@ -85,7 +85,7 @@ export function viewDpi(state: { dpi: number | null; docType: UDocType | null })
 }
 
 /**
- * The 1-based page a step to the next (`1`) or previous (`-1`) page lands on:
+ * The page index a step to the next (`1`) or previous (`-1`) page lands on:
  * in spread mode the next or previous spread's, past the shown spread
  * ({@link UIState.shownPages}), since a page of the shown spread is already
  * in view; otherwise the adjacent page. `null` past either end of the composed
@@ -94,8 +94,8 @@ export function viewDpi(state: { dpi: number | null; docType: UDocType | null })
 export function pageStep(state: UIState, by: 1 | -1): number | null {
     const { start, end } = state.shownPages;
     const bySpread = state.scrollMode === "spread" && end > start;
-    const target = !bySpread ? state.page + by : by > 0 ? end + 1 : start;
-    return target >= 1 && target <= state.composedPageCount ? target : null;
+    const target = !bySpread ? state.pageIndex + by : by > 0 ? end : start - 1;
+    return target >= 0 && target < state.composedPageCount ? target : null;
 }
 
 /** Discrete zoom steps the in/out buttons and the zoom dropdown snap to. */
@@ -519,21 +519,19 @@ export interface UIState {
 
     /** 0-based page index nearest the top of the viewport (derived, for UI). */
     pageIndex: number;
-    /** 1-based current page (kept in sync with `pageIndex`, for the toolbars). */
-    page: number;
     /**
      * The pages the last painted frame showed, 0-based, `end` exclusive — in
      * spread mode, the shown spread, which {@link pageStep} steps past.
      */
     shownPages: { start: number; end: number };
     /**
-     * A "go to page" request, as an event carried in state: `page` is the
-     * 1-based target and `seq` bumps on every {@link Action} `NAVIGATE_TO_PAGE`
+     * A "go to page" request, as an event carried in state: `pageIndex` is the
+     * target and `seq` bumps on every {@link Action} `NAVIGATE_TO_PAGE`
      * (even when the page is unchanged — re-centering after a fit change
      * re-requests the same page). The shell watches `seq` and forwards the
      * target to the worker, which owns per-page offsets and actually scrolls.
      */
-    navRequest: { page: number; seq: number };
+    navRequest: { pageIndex: number; seq: number };
 
     // --- Arrangement -----------------------------------------------------
     /** How the view scrolls: one spread at a time, or continuously. */
@@ -714,9 +712,8 @@ export const initialState: UIState = {
     viewportWidth: 0,
     viewportHeight: 0,
     pageIndex: 0,
-    page: 1,
     shownPages: { start: 0, end: 0 },
-    navRequest: { page: 1, seq: 0 },
+    navRequest: { pageIndex: 0, seq: 0 },
 
     // Match the engine's default arrangement (a scrolling single column). The
     // view-mode menu switches them and the shell pushes each to the worker.

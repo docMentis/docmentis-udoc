@@ -941,7 +941,7 @@ export function mountUIShell(
         store,
         (s) => s.navRequest,
         (req) => {
-            if (store.getState().status === "ready") client.goToPage(req.page - 1);
+            if (store.getState().status === "ready") client.goToPage(req.pageIndex);
         },
     );
 
@@ -1872,7 +1872,7 @@ export function mountUIShell(
     // the jump left.
     function goToSlide(index: number, from: number): void {
         slideLeftByLink = from;
-        store.dispatch({ type: "NAVIGATE_TO_PAGE", page: index + 1 });
+        store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: index });
     }
 
     // Open the URL a clicked link or outline item names: through the host's
@@ -2309,12 +2309,12 @@ export function mountUIShell(
         // A page is known only once composed, so every page must be to count
         // them, or to print them all.
         if (!(await busyModal.hold(i18n.t("busy.preparingPrint"), composeAll()))) return;
-        const { composedPageCount: pageCount, page } = store.getState();
+        const { composedPageCount: pageCount, pageIndex } = store.getState();
         if (pageCount === 0) throw new Error("print: the open document has no pages to print");
         if (options === undefined) {
             printModal.open({
                 pageCount,
-                currentPage: page,
+                currentPage: pageIndex,
                 pageNoun: profileFor(store.getState().docType).pageNoun,
                 onPrint: (chosen) =>
                     void printPages(chosen).catch((error: unknown) => console.error("udoc: printing failed", error)),

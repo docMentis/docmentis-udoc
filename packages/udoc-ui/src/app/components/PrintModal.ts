@@ -6,7 +6,7 @@
 // NewSlideModal): mounted once by the shell and reused. `open(ctx)` seeds it
 // with the document's page count and current page; Print hands the choice to
 // `ctx.onPrint` as `PrintOptions`. The dialog speaks in the page numbers a
-// reader sees, from 1; `PrintOptions` takes 0-based indices.
+// reader sees, from 1, and turns what is typed into page indices at once.
 
 import { on } from "../../framework/index.js";
 import { trapFocus } from "../a11y.js";
@@ -19,7 +19,7 @@ import type { I18n, MessageKey } from "../i18n/index.js";
 export interface PrintModalContext {
     /** Pages in the document. */
     pageCount: number;
-    /** The current page, 1-based. */
+    /** The current page's index. */
     currentPage: number;
     /** What a page is called — "Slide" in a deck — which the dialog's words
      *  carry. */
@@ -78,8 +78,9 @@ const PAGE_WORDS: Record<
 };
 
 /**
- * The 1-based pages a custom range like `1,3,5-8` names, sorted and without
- * repeats, or null when it names none or one past `pageCount`.
+ * The page indices a custom range like `1,3,5-8` names — typed as a reader
+ * numbers pages, from 1 — sorted and without repeats, or null when it names
+ * none or one past `pageCount`.
  */
 function parsePageList(input: string, pageCount: number): number[] | null {
     const pages = new Set<number>();
@@ -93,12 +94,12 @@ function parsePageList(input: string, pageCount: number): number[] | null {
         const from = bounds[0]!;
         const to = bounds[1] ?? from;
         if (from > to) return null;
-        for (let page = from; page <= to; page++) pages.add(page);
+        for (let page = from; page <= to; page++) pages.add(page - 1);
     }
     return pages.size === 0 ? null : [...pages].sort((a, b) => a - b);
 }
 
-/** The pages from `from` to `to`, inclusive. */
+/** The page indices from `from` to `to`, inclusive. */
 function pagesFromTo(from: number, to: number): number[] {
     return Array.from({ length: to - from + 1 }, (_, i) => from + i);
 }
@@ -194,7 +195,7 @@ export function createPrintModal(i18n: I18n) {
         pagesLabel.textContent = i18n.t(words.pages);
         radioGroup.setAttribute("aria-label", i18n.t(words.pages));
         radioLabels.get("all")!.textContent = i18n.t(words.all);
-        radioLabels.get("current")!.textContent = i18n.t(words.current, { page: currentPage });
+        radioLabels.get("current")!.textContent = i18n.t(words.current, { page: currentPage + 1 });
         radioLabels.get("fromTo")!.textContent = i18n.t(words.pages);
         fromInput.setAttribute("aria-label", i18n.t(words.first));
         toInput.setAttribute("aria-label", i18n.t(words.last));
@@ -267,7 +268,7 @@ export function createPrintModal(i18n: I18n) {
     on(toInput, "focus", () => choose("fromTo"));
     on(customInput, "focus", () => choose("custom"));
 
-    /** The pages chosen, or null after saying what is wrong with them. */
+    /** The page indices chosen, or null after saying what is wrong with them. */
     function chosenPages(context: PrintModalContext): readonly number[] | undefined | null {
         const { pageCount, currentPage } = context;
         const words = PAGE_WORDS[context.pageNoun];
@@ -288,7 +289,7 @@ export function createPrintModal(i18n: I18n) {
                     error.textContent = i18n.t(words.fromAfterTo);
                     return null;
                 }
-                return pagesFromTo(from, to);
+                return pagesFromTo(from - 1, to - 1);
             }
             case "custom": {
                 const pages = parsePageList(customInput.value, pageCount);
@@ -305,7 +306,7 @@ export function createPrintModal(i18n: I18n) {
         const onPrint = ctx.onPrint;
         const quality = qualitySelect.value as PrintQuality;
         close();
-        onPrint(pages === undefined ? { quality } : { pages: pages.map((page) => page - 1), quality });
+        onPrint(pages === undefined ? { quality } : { pages, quality });
     }
 
     on(printBtn, "click", print);

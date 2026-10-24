@@ -43,7 +43,7 @@ export async function follow(
         const page = namedPage(store.getState(), target.action);
         const hide = hideOf(target.action);
         if (url) openUrl(url);
-        else if (page !== null) store.dispatch({ type: "NAVIGATE_TO_PAGE", page });
+        else if (page !== null) store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: page });
         else if (hide) await client.portable.hideAnnotations(hide.targets, hide.hide ?? true);
         return;
     }
@@ -97,22 +97,22 @@ function uriOf(action: PdfAction | null): string | null {
     return typeof action === "object" && action && "uri" in action ? action.uri.uri : null;
 }
 
-/** The page (1-based) a named action moves to — one of the four Table 215 has
+/** The page index a named action moves to — one of the four Table 215 has
  *  every viewer support, the next and the previous as the page buttons step —
  *  or `null` for any other name or action, and a move past either end. A
  *  viewer that doesn't know a name takes no action (§12.6.4.12). */
 function namedPage(state: UIState, action: PdfAction | null): number | null {
     const name = typeof action === "object" && action && "named" in action ? action.named.name : null;
-    const last = state.composedPageCount;
+    const count = state.composedPageCount;
     switch (name) {
         case "NextPage":
             return pageStep(state, 1);
         case "PrevPage":
             return pageStep(state, -1);
         case "FirstPage":
-            return last > 0 ? 1 : null;
+            return count > 0 ? 0 : null;
         case "LastPage":
-            return last > 0 ? last : null;
+            return count > 0 ? count - 1 : null;
         default:
             return null;
     }

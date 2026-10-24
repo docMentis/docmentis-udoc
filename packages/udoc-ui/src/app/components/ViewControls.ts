@@ -21,9 +21,9 @@ import type { I18n, MessageKey } from "../i18n/index.js";
  */
 
 interface ViewControlsSlice {
-    page: number;
+    pageIndex: number;
     composedPageCount: number;
-    /** The 1-based page the previous / next buttons go to, or null for none. */
+    /** The page index the previous / next buttons go to, or null for none. */
     previousPage: number | null;
     nextPage: number | null;
     zoom: number;
@@ -38,7 +38,7 @@ interface ViewControlsSlice {
 
 function sliceEqual(a: ViewControlsSlice, b: ViewControlsSlice): boolean {
     return (
-        a.page === b.page &&
+        a.pageIndex === b.pageIndex &&
         a.composedPageCount === b.composedPageCount &&
         a.previousPage === b.previousPage &&
         a.nextPage === b.nextPage &&
@@ -68,7 +68,7 @@ function sameZoomList(a: ViewControlsSlice, b: ViewControlsSlice): boolean {
 
 function selectSlice(state: UIState): ViewControlsSlice {
     return {
-        page: state.page,
+        pageIndex: state.pageIndex,
         composedPageCount: state.composedPageCount,
         previousPage: pageStep(state, -1),
         nextPage: pageStep(state, 1),
@@ -246,26 +246,27 @@ export function createViewControls(i18n: I18n) {
         // --- Page navigation ---
         unsubEvents.push(
             on(prevBtn, "click", () => {
-                const page = pageStep(store.getState(), -1);
-                if (page !== null) store.dispatch({ type: "NAVIGATE_TO_PAGE", page });
+                const pageIndex = pageStep(store.getState(), -1);
+                if (pageIndex !== null) store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex });
             }),
             on(nextBtn, "click", () => {
-                const page = pageStep(store.getState(), 1);
-                if (page !== null) store.dispatch({ type: "NAVIGATE_TO_PAGE", page });
+                const pageIndex = pageStep(store.getState(), 1);
+                if (pageIndex !== null) store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex });
             }),
             on(pageInput, "keydown", (e: KeyboardEvent) => {
                 if (e.key !== "Enter") return;
+                // The field holds a page number as a reader counts pages, from 1.
                 const value = parseInt(pageInput.value, 10);
                 const state = store.getState();
                 if (!isNaN(value) && value >= 1 && value <= state.composedPageCount) {
-                    store.dispatch({ type: "NAVIGATE_TO_PAGE", page: value });
+                    store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: value - 1 });
                 } else {
-                    pageInput.value = String(state.page);
+                    pageInput.value = String(state.pageIndex + 1);
                 }
                 pageInput.blur();
             }),
             on(pageInput, "blur", () => {
-                pageInput.value = String(store.getState().page);
+                pageInput.value = String(store.getState().pageIndex + 1);
             }),
         );
 
@@ -367,7 +368,7 @@ export function createViewControls(i18n: I18n) {
         // is lost) — and redo only what the change reaches.
         const applyState = (slice: ViewControlsSlice, prev?: ViewControlsSlice) => {
             if (slice.pageNoun !== pageNoun) namePageNavigation(slice.pageNoun);
-            if (document.activeElement !== pageInput) pageInput.value = String(slice.page);
+            if (document.activeElement !== pageInput) pageInput.value = String(slice.pageIndex + 1);
             pageTotal.textContent = ` / ${slice.composedPageCount}`;
             if (document.activeElement !== zoomInput) {
                 zoomInput.value = formatZoomPercent(getDisplayZoom(slice), i18n);

@@ -760,7 +760,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
 
     /** Scroll the viewport to page index `page` (0-based, clamped to the pages composed). */
     goToPage(page: number): void {
-        this.shell.dispatch({ type: "NAVIGATE_TO_PAGE", page: page + 1 });
+        this.shell.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: page });
     }
 
     /** Step to the next page, as the view controls' arrow does — the next
@@ -777,7 +777,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
 
     #stepPage(by: 1 | -1): void {
         const page = pageStep(this.shell.getState(), by);
-        if (page !== null) this.shell.dispatch({ type: "NAVIGATE_TO_PAGE", page });
+        if (page !== null) this.shell.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: page });
     }
 
     /**

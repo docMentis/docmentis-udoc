@@ -138,7 +138,6 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 fit: initialState.fit,
                 effectiveZoom: initialState.effectiveZoom,
                 pageIndex: 0,
-                page: 1,
             };
         }
 
@@ -184,7 +183,6 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 scrollX: 0,
                 scrollY: 0,
                 pageIndex: 0,
-                page: 1,
             };
 
         case "DOC_RELAYOUT": {
@@ -350,24 +348,23 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_PAGE_INDEX":
             if (action.pageIndex === state.pageIndex) return state;
-            return { ...state, pageIndex: action.pageIndex, page: action.pageIndex + 1 };
+            return { ...state, pageIndex: action.pageIndex };
 
         case "SET_SHOWN_PAGES":
             if (action.start === state.shownPages.start && action.end === state.shownPages.end) return state;
             return { ...state, shownPages: { start: action.start, end: action.end } };
 
         case "NAVIGATE_TO_PAGE": {
-            const page = clamp(Math.round(action.page), 1, Math.max(1, state.composedPageCount));
+            const pageIndex = clamp(Math.round(action.pageIndex), 0, Math.max(0, state.composedPageCount - 1));
             // Update the displayed page optimistically and raise a navRequest
             // the shell forwards to the worker (which owns per-page offsets and
-            // does the actual scroll). The seq bumps even when `page` is
+            // does the actual scroll). The seq bumps even when the page is
             // unchanged so re-selecting the current page — re-centering after a
             // fit change — still re-scrolls.
             return {
                 ...state,
-                page,
-                pageIndex: page - 1,
-                navRequest: { page, seq: state.navRequest.seq + 1 },
+                pageIndex,
+                navRequest: { pageIndex, seq: state.navRequest.seq + 1 },
             };
         }
 
