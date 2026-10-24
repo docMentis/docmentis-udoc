@@ -32,7 +32,14 @@ import type {
     WorkerRequestEnvelope,
 } from "./protocol.js";
 import initEngine, { createFontFetchMemory, fetchFontBinaries, startSession } from "@docmentis/udoc-wasm";
-import type { CanvasText, FontLocation, GoogleFontFamily, UrlFont, WasmSession } from "@docmentis/udoc-wasm";
+import type {
+    CanvasText,
+    FontLocation,
+    GoogleFontFamily,
+    SheetState,
+    UrlFont,
+    WasmSession,
+} from "@docmentis/udoc-wasm";
 import { UDocError } from "@docmentis/udoc-wasm/error";
 import type {
     AcroForm,
@@ -1065,21 +1072,21 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "planeInfo": {
                 if (!session) throw new Error("engine worker: planeInfo before open");
                 // The plane roster (sheet tabs): count + active + each plane's
-                // name, tab colour, kind and whether it is very hidden — the
+                // name, tab colour, kind and visibility — the
                 // colour and kind of the sheets loaded so far, the rest following
                 // from `walkSheets`. A pure read — no compose, no repaint.
                 const count = session.planeCount();
                 const names: string[] = [];
                 const colors: (string | null | undefined)[] = [];
                 const chartsheets: boolean[] = [];
-                const veryHidden: boolean[] = [];
+                const visibility: SheetState[] = [];
                 for (let i = 0; i < count; i++) {
                     names.push(session.planeName(i) ?? "");
                     colors.push(loadedSheets.has(i) ? tabColorHex(session, i) : undefined);
                     chartsheets.push(session.planeIsChartsheet(i));
-                    veryHidden.push(session.planeIsVeryHidden(i));
+                    visibility.push(session.planeSheetState(i) ?? "visible");
                 }
-                reply(id, { count, current: session.currentPlane(), names, colors, chartsheets, veryHidden });
+                reply(id, { count, current: session.currentPlane(), names, colors, chartsheets, visibility });
                 break;
             }
             case "goToPlane": {

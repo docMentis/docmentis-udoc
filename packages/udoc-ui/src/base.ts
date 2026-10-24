@@ -22,6 +22,7 @@ import type {
     SaveStrategy,
     SearchMatch,
     SearchOptions,
+    SheetState,
     UDocType,
     UrlFont,
 } from "@docmentis/udoc-wasm";
@@ -243,6 +244,12 @@ export interface OpenOptions {
 export interface SheetInfo {
     /** The sheet's name, as its tab shows it; `""` for one the workbook left unnamed. */
     name: string;
+    /**
+     * Whether the sheet shows: `"visible"`, or one with no tab — `"hidden"`,
+     * which Excel lets its user unhide, or `"veryHidden"`, which it doesn't.
+     * Only a visible sheet can be shown, by its tab or {@link UDocBase.goToSheet}.
+     */
+    visibility: "visible" | "hidden" | "veryHidden";
     /**
      * Its tab's color as `#rrggbb`, or `null` for a tab in no color. A sheet's
      * color is known once the sheet has loaded, `undefined` until then: the
@@ -837,7 +844,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * so {@link goToPage} moves within the sheet shown.
      *
      * Rejects with no workbook open, an index past the last sheet, a name no
-     * sheet has, or a very hidden sheet, which has no tab and never shows.
+     * sheet has, or a sheet that isn't visible — hidden or very hidden, it has
+     * no tab, and Excel shows it only once unhidden.
      */
     async goToSheet(sheet: number | string): Promise<void> {
         const state = this.shell.getState();
@@ -850,7 +858,12 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         if (!Number.isInteger(index) || index < 0 || index >= count) {
             throw new Error(`goToSheet: there is no sheet at index ${index}, of ${count}`);
         }
-        if (state.planeVeryHidden[index]) throw new Error(`goToSheet: the sheet at index ${index} is very hidden`);
+        const visibility = state.planeVisibility[index];
+        if (visibility !== "visible") {
+            throw new Error(
+                `goToSheet: the sheet at index ${index} is ${visibility === "hidden" ? "hidden" : "very hidden"}`,
+            );
+        }
         await this.shell.goToPlane(index);
     }
 
@@ -1362,8 +1375,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * How many sheets the open workbook has, very hidden ones included, so
-     * that an index counts the workbook's own sheets in order. `0` with no
+     * How many sheets the open workbook has, hidden ones included, so that an
+     * index counts the workbook's own sheets in order. `0` with no
      * document open, or one without sheets.
      */
     get sheetCount(): number {
@@ -1380,7 +1393,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * The open workbook's sheets, in its own order — very hidden ones too —
+     * The open workbook's sheets, in its own order — hidden ones too —
      * so that a sheet's index here is the one {@link goToSheet} takes and
      * {@link currentSheet} reports. Empty with no document open, or one
      * without sheets. The same array until it changes, when
@@ -1393,6 +1406,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     /** The roster {@link sheets} last listed, and the list, kept while the roster is unchanged. */
     #sheetList: {
         names: readonly string[];
+        visibility: readonly SheetState[];
         colors: readonly (string | null | undefined)[];
         sheets: readonly SheetInfo[];
     } | null = null;
@@ -1400,10 +1414,15 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     #sheetsOf(state: UIState): readonly SheetInfo[] {
         const count = sheetCountOf(state);
         if (count === 0) return NO_SHEETS;
-        const { planeNames: names, planeColors: colors } = state;
-        if (this.#sheetList?.names === names && this.#sheetList.colors === colors) return this.#sheetList.sheets;
-        const sheets = Array.from({ length: count }, (_, i) => ({ name: names[i] ?? "", color: colors[i] }));
-        this.#sheetList = { names, colors, sheets };
+        const { planeNames: names, planeVisibility: visibility, planeColors: colors } = state;
+        const kept = this.#sheetList;
+        if (kept?.names === names && kept.visibility === visibility && kept.colors === colors) return kept.sheets;
+        const sheets = Array.from({ length: count }, (_, i) => ({
+            name: names[i] ?? "",
+            visibility: visibility[i] ?? "visible",
+            color: colors[i],
+        }));
+        this.#sheetList = { names, visibility, colors, sheets };
         return sheets;
     }
 

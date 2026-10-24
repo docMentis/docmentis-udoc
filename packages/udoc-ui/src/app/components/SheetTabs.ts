@@ -1,5 +1,5 @@
 import { createMenuController, subscribeSelector } from "../../framework/index.js";
-import type { UDocType } from "@docmentis/udoc-wasm";
+import type { SheetState, UDocType } from "@docmentis/udoc-wasm";
 import type { MenuController, Store } from "../../framework/index.js";
 import type { Action } from "../actions.js";
 import type { UIState } from "../state.js";
@@ -11,8 +11,8 @@ import type { I18n } from "../i18n/index.js";
 
 /**
  * The bottom sheet-tab bar — one tab per layout plane (a workbook's sheets),
- * switching the viewer's current plane; a very hidden sheet has none, as in
- * Excel. Shown only for doc types whose profile sets `sheetTabs`
+ * switching the viewer's current plane; a hidden or very hidden sheet has
+ * none, as in Excel. Shown only for doc types whose profile sets `sheetTabs`
  * (spreadsheets); every single-plane doc type leaves it empty.
  *
  * A tab click dispatches `SET_CURRENT_PLANE`, which optimistically flips the
@@ -28,7 +28,7 @@ interface SheetTabsSlice {
     planeCount: number;
     currentPlane: number;
     planeNames: readonly string[];
-    planeVeryHidden: readonly boolean[];
+    planeVisibility: readonly SheetState[];
 }
 
 function selectSlice(s: UIState): SheetTabsSlice {
@@ -37,7 +37,7 @@ function selectSlice(s: UIState): SheetTabsSlice {
         planeCount: s.planeCount,
         currentPlane: s.currentPlane,
         planeNames: s.planeNames,
-        planeVeryHidden: s.planeVeryHidden,
+        planeVisibility: s.planeVisibility,
     };
 }
 
@@ -47,7 +47,7 @@ function sliceEqual(a: SheetTabsSlice, b: SheetTabsSlice): boolean {
         a.planeCount === b.planeCount &&
         a.currentPlane === b.currentPlane &&
         a.planeNames === b.planeNames &&
-        a.planeVeryHidden === b.planeVeryHidden
+        a.planeVisibility === b.planeVisibility
     );
 }
 
@@ -107,8 +107,8 @@ export function createSheetTabs(i18n: I18n) {
     let roving: ReturnType<typeof setupRovingTabindex> | null = null;
     let menu: MenuController | null = null;
     let resizeObserver: ResizeObserver | null = null;
-    // Signature of the currently-built tab set (doc type + count + names + the
-    // very hidden), so a pure current-plane change only restyles instead of
+    // Signature of the currently-built tab set (doc type + count + names +
+    // visibility), so a pure current-plane change only restyles instead of
     // rebuilding.
     let builtKey = "";
     // The first tab the strip shows. It scrolls a whole tab at a time, as
@@ -193,7 +193,7 @@ export function createSheetTabs(i18n: I18n) {
             tabs.length = 0;
             first = 0;
             for (let i = 0; i < slice.planeCount; i++) {
-                if (slice.planeVeryHidden[i]) continue;
+                if (slice.planeVisibility[i] !== "visible") continue;
                 const btn = document.createElement("button");
                 btn.className = "udoc-sheet-tab";
                 btn.setAttribute("role", "tab");
@@ -236,8 +236,7 @@ export function createSheetTabs(i18n: I18n) {
                 builtKey = "";
                 return;
             }
-            const hidden = slice.planeVeryHidden.map(Number).join("");
-            const key = `${slice.docType}:${slice.planeCount}:${slice.planeNames.join("\u0000")}:${hidden}`;
+            const key = `${slice.docType}:${slice.planeCount}:${slice.planeNames.join("\u0000")}:${slice.planeVisibility.join()}`;
             if (key !== builtKey) {
                 builtKey = key;
                 build(slice);

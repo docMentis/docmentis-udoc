@@ -8,6 +8,7 @@ import type {
     Feature,
     FileFormat,
     SearchMatch,
+    SheetState,
     StampIcon,
     StartError,
     UDocSearchScope,
@@ -352,9 +353,9 @@ export interface UIState {
      *  grid, so no header bands. Empty with no document open; `false` for a
      *  worksheet, or one whose sheet the worker hasn't loaded yet. */
     planeChartsheets: readonly boolean[];
-    /** Whether each plane is a very hidden sheet, indexed by plane — one with
-     *  no tab. Empty with no document open. */
-    planeVeryHidden: readonly boolean[];
+    /** Each plane's sheet visibility, indexed by plane — a hidden or very
+     *  hidden sheet has no tab. Empty with no document open. */
+    planeVisibility: readonly SheetState[];
     /** Full scrollable document size; drives scroll clamping. Also dynamic. */
     scrollSize: Size;
     /** Used content size the scrollbar is drawn from. Equals `scrollSize` for
@@ -668,7 +669,7 @@ export const initialState: UIState = {
     planeNames: [],
     planeColors: [],
     planeChartsheets: [],
-    planeVeryHidden: [],
+    planeVisibility: [],
     scrollSize: { width: 0, height: 0 },
     scrollUsedSize: { width: 0, height: 0 },
     scrollbars: { x: false, y: false },

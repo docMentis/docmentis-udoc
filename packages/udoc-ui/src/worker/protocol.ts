@@ -508,9 +508,9 @@ export interface EnsureFontRequest {
 /**
  * Read the document's plane roster — how many planes it has, which is current,
  * and each plane's display name, tab colour, whether it is a chartsheet and
- * whether it is very hidden. For a spreadsheet this is the sheet tabs (name,
- * colour, count, active sheet); for a single-plane doc type it's
- * `{ count: 1, current: 0, names: [""], colors: [null], chartsheets: [false], veryHidden: [false] }`.
+ * its visibility. For a spreadsheet this is the sheet tabs (name, colour,
+ * count, active sheet); for a single-plane doc type it's
+ * `{ count: 1, current: 0, names: [""], colors: [null], chartsheets: [false], visibility: ["visible"] }`.
  * A pure read (no compose), pulled on open. Replies with a {@link PlaneInfo}.
  */
 export interface PlaneInfoRequest {

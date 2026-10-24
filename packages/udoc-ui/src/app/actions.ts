@@ -2,6 +2,7 @@ import type {
     Feature,
     FileFormat,
     SearchMatch,
+    SheetState,
     StampIcon,
     StartError,
     UDocSearchScope,
@@ -66,7 +67,7 @@ export type Action =
           names: readonly string[];
           colors: readonly (string | null | undefined)[];
           chartsheets: readonly boolean[];
-          veryHidden: readonly boolean[];
+          visibility: readonly SheetState[];
       }
     // One plane's tab colour and whether it is a chartsheet — a sheet the
     // worker loaded in the background, after the open.

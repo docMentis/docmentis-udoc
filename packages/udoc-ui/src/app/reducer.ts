@@ -145,7 +145,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeNames: [],
                 planeColors: [],
                 planeChartsheets: [],
-                planeVeryHidden: [],
+                planeVisibility: [],
             };
         }
 
@@ -184,7 +184,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeNames: [],
                 planeColors: [],
                 planeChartsheets: [],
-                planeVeryHidden: [],
+                planeVisibility: [],
                 scrollSize: { width: 0, height: 0 },
                 canUndo: false,
                 canRedo: false,
@@ -209,7 +209,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeNames: action.names,
                 planeColors: action.colors,
                 planeChartsheets: action.chartsheets,
-                planeVeryHidden: action.veryHidden,
+                planeVisibility: action.visibility,
             };
 
         case "PLANE_LOADED": {

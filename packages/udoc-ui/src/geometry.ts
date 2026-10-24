@@ -7,7 +7,7 @@
 // Wire contract types declared from the Rust source (tsify → `udoc.d.ts`) are
 // re-exported here so host code keeps one geometry import surface. They are the
 // single definition — no hand-authored mirror.
-import type { Feature, FileFormat, UDocType } from "@docmentis/udoc-wasm";
+import type { Feature, FileFormat, SheetState, UDocType } from "@docmentis/udoc-wasm";
 import type {
     UDocSelectionCapabilities as SelectionCapabilities,
     SelectionBox,
@@ -197,11 +197,12 @@ export interface PlaneInfo {
      */
     chartsheets: boolean[];
     /**
-     * Whether each plane is a very hidden sheet — `state="veryHidden"`, which
-     * Excel shows no tab for and offers no way to unhide — indexed by plane.
-     * `false` for every other sheet and every single-plane doc type.
+     * Each plane's sheet visibility, its `state`, indexed by plane: `"hidden"`
+     * for a sheet Excel shows no tab for until the user unhides it,
+     * `"veryHidden"` for one it offers no way to unhide, and `"visible"` for
+     * every other sheet and every single-plane doc type.
      */
-    veryHidden: boolean[];
+    visibility: SheetState[];
 }
 
 /**

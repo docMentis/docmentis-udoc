@@ -1470,7 +1470,7 @@ export function mountUIShell(
                     names: planes.names,
                     colors: planes.colors,
                     chartsheets: planes.chartsheets,
-                    veryHidden: planes.veryHidden,
+                    visibility: planes.visibility,
                 });
             });
             // A PDF that asks to open with its outline showing opens the outline
@@ -1913,7 +1913,7 @@ export function mountUIShell(
                       : jump === "lastSlideViewed"
                         ? slideLeftByLink
                         : typeof jump === "object"
-                          ? jump.slide.number - 1
+                          ? jump.slide.slideIndex
                           : null;
         if (index !== null && index >= 0 && index <= last && index !== page) goToSlide(index, page);
     }

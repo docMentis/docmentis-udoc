@@ -14,14 +14,17 @@ listed once, by package. Its major and minor version are those of the
   name, and resolves once it has painted; `sheetCount`, `currentSheet` and the
   `currentSheet:changed` event follow it, and an overlay frame's `sheet` says
   which sheet the frame shows.
-- `sheets` lists a workbook's sheets, each with its name and tab color;
-  `sheets:changed` fires as each sheet's color becomes known.
+- `sheets` lists a workbook's sheets, each with its name, visibility and tab
+  color; `sheets:changed` fires as each sheet's color becomes known.
 
 #### Changed
 
 - A page is a 0-based index throughout the API: `goToPage`, `currentPage`,
   `currentPage:changed`, `renderPage` and `PrintOptions.pages` now count from
   0, as the annotation calls and `viewport:changed` already did.
+- A hidden sheet has no tab, as in Excel, where only a very hidden one had
+  none; and a workbook opens on the sheet it was saved showing, or its first
+  visible one, rather than always its first.
 
 ## [0.8.0] - 2026-10-23
 
