@@ -1343,7 +1343,7 @@ export function mountUIShell(
                 return;
             }
             void client
-                .updateLayout(count + COMPOSE_BATCH - 1)
+                .updateLayout(count + COMPOSE_BATCH - 1, { background: true })
                 .then((layout) => {
                     if (gen !== composeGen) return; // a newer document took over
                     store.dispatch({

@@ -25,6 +25,10 @@ listed once, by package. Its major and minor version are those of the
 - A hidden sheet has no tab, as in Excel, where only a very hidden one had
   none; and a workbook opens on the sheet it was saved showing, or its first
   visible one, rather than always its first.
+- What the reader does — a sheet tab, a page turn, an edit — runs ahead of
+  background work: loading a workbook's other sheets, composing ahead,
+  thumbnails and web fonts. It waits at most for the one background job
+  already running, and paints before the next starts.
 
 ## [0.8.0] - 2026-10-23
 

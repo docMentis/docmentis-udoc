@@ -657,10 +657,17 @@ export class WorkerClient {
      * the document's grown layout (composed page count + content size) and
      * `complete` — whether the document is now fully composed. Pages compose
      * lazily, so the host calls this during idle time with a rising limit until
-     * `complete`, which is also how it learns the document's page count.
+     * `complete`, which is also how it learns the document's page count. With
+     * `background`, it runs as the worker's background work, after what the
+     * reader asked for — as the idle compose-ahead does.
      */
-    async updateLayout(pageLimit: number): Promise<DocumentLayout> {
-        return (await this.#send({ type: "updateLayout", pageLimit })) as DocumentLayout;
+    async updateLayout(pageLimit: number, options: { background?: boolean } = {}): Promise<DocumentLayout> {
+        return (await this.#send(
+            { type: "updateLayout", pageLimit },
+            undefined,
+            undefined,
+            options.background,
+        )) as DocumentLayout;
     }
 
     /**
@@ -1711,16 +1718,18 @@ export class WorkerClient {
         msg: WorkerRequest | ExtensionRequest,
         transfer?: Transferable[],
         changesDocument = MUTATING_REQUESTS.has(msg.type),
+        background = false,
     ): Promise<unknown> {
         const _id = this.#nextId++;
-        const envelope = { ...msg, _id };
+        const envelope = background ? { ...msg, _id, _background: true } : { ...msg, _id };
         const promise = new Promise<unknown>((resolve, reject) => {
             this.#pending.set(_id, { resolve, reject });
             this.#worker.postMessage(envelope, transfer ?? []);
         });
         // The executor (hence the post) ran synchronously above; dropping the
-        // cache *after* it keeps any refresh-driven thumbnail render queued
-        // behind this edit in the worker's FIFO, so it rasters the new pixels.
+        // cache *after* it keeps any refresh-driven thumbnail render behind
+        // this edit in the worker — background work, after every request — so
+        // it rasters the new pixels.
         if (changesDocument) {
             this.invalidateThumbnails();
             for (const listener of this.#documentChangedListeners) listener();
@@ -1871,12 +1880,14 @@ export class WorkerClient {
      *  {@link ImageBitmap}, and cache it (unless the document changed meanwhile). */
     async #renderThumbnail(index: number, req: ThumbnailRequest, epoch: number): Promise<void> {
         try {
-            const result = (await this.#send({
-                type: "renderThumbnail",
-                plane: 0,
-                index,
-                scale: req.scale,
-            })) as ThumbnailResult;
+            // Background work in the worker: what the reader asked for, and
+            // the frame it scheduled, go first.
+            const result = (await this.#send(
+                { type: "renderThumbnail", plane: 0, index, scale: req.scale },
+                undefined,
+                undefined,
+                true,
+            )) as ThumbnailResult;
             // A new document / edit landed while this rendered: the pixels are
             // stale, so discard them rather than caching against a cleared map.
             if (epoch !== this.#thumbnailEpoch) {

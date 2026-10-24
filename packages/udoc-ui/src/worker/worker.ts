@@ -49,6 +49,8 @@ import type {
     UDocSelectionEdit,
     UDocType,
 } from "@docmentis/udoc-wasm";
+import { createLanes } from "./lanes.js";
+import type { Job } from "./lanes.js";
 import { Selection } from "./selection.js";
 
 interface WorkerScope {
@@ -174,8 +176,10 @@ function scheduleFrame(): void {
         // at the wrong gap/padding for one frame before the host's post-open
         // `setSpacing` lands. Holding here keeps the gate honest; that
         // `setSpacing` reschedules the paint.
-        if (awaitingSpacing) return;
-        renderFrame();
+        if (!awaitingSpacing) renderFrame();
+        // Painted or held, the frame is no longer pending: background work,
+        // which waits for it, may run.
+        lanes.framed();
     });
 }
 
@@ -478,16 +482,25 @@ function emitHistory(): void {
 //
 // A job is usually one message, but not always: the font pump installs what it
 // fetched as a job of its own, so that the *waiting* on the network happens
-// outside the queue while the `&mut self` calls stay inside it. That is the rule
-// this queue really enforces — one thing at a time on the session — and anything
-// that would hold it across an `await` on the network does not belong in a
-// handler.
+// outside the lanes while the `&mut self` calls stay inside them. That is the
+// rule the lanes really enforce — one thing at a time on the session — and
+// anything that would hold it across an `await` on the network does not belong
+// in a handler.
+//
+// Two lanes (`lanes.ts`): a reader's requests run before background work — the
+// sheet walk, the font pump's installs, and what the host marks `_background`
+// (compose-ahead, thumbnails) — which waits, too, for a pending frame to paint.
 
-const queue: Array<() => void | Promise<void>> = [];
-let processing = false;
+const lanes = createLanes({
+    framePending: () => rafId !== null,
+    schedule: (callback) => setTimeout(callback, 0),
+    report: (error) => console.error("udoc: a worker job failed", error),
+});
 
 /** A request as posted to the worker: one of the engine's own, or a product's. */
-type EngineRequestEnvelope = WorkerRequestEnvelope | (ExtensionRequest & { readonly _id?: number });
+type EngineRequestEnvelope =
+    | WorkerRequestEnvelope
+    | (ExtensionRequest & { readonly _id?: number; readonly _background?: true });
 
 /** What the engine worker lends a request handler a product adds to it. */
 export interface EngineWorker {
@@ -547,25 +560,15 @@ const engineWorker: EngineWorker = {
 export function serveEngine(extra: Readonly<Record<string, WorkerHandler<never>>> = {}): void {
     handlers = extra;
     scope.onmessage = (ev: MessageEvent<EngineRequestEnvelope>) => {
-        enqueue(() => handle(ev.data));
+        const job = (): Promise<void> => handle(ev.data);
+        if (ev.data._background) lanes.background(job);
+        else enqueue(job);
     };
 }
 
-/** Run `job` once the session is free, after everything already waiting. */
-function enqueue(job: () => void | Promise<void>): void {
-    queue.push(job);
-    if (!processing) void drain();
-}
-
-async function drain(): Promise<void> {
-    processing = true;
-    try {
-        while (queue.length > 0) await queue.shift()!();
-    } finally {
-        // A job that throws must not wedge the queue: the next enqueue restarts
-        // the drain, and whatever is still waiting runs then.
-        processing = false;
-    }
+/** Run `job` once the session is free, after the requests already waiting, before any background work. */
+function enqueue(job: Job): void {
+    lanes.request(job);
 }
 
 /**
@@ -587,7 +590,9 @@ const fontMemory = createFontFetchMemory();
 
 const fetchFontOrders = createFontPump({
     session: () => session,
-    enqueue,
+    // An install re-shapes what waited on its family: background work, after
+    // what the reader asked for.
+    enqueue: (job) => lanes.background(job),
     repaint: () => {
         scheduleFrame();
         // Text may sit elsewhere now; what the host placed by it is placed again.
@@ -650,9 +655,9 @@ function loadSheet(s: WasmSession, plane: number): void {
 /**
  * Load the open workbook's sheets in the background, so each tab shows its
  * colour, and the host knows each chartsheet, before its sheet is first shown.
- * One sheet a job, in tab order, the next queued only once the event loop has
- * turned: what the host sends gets in between, and frames still paint. Each
- * sheet's tab colour and kind are posted as it lands. A sheet already loaded
+ * One sheet a background job, in tab order: what the host sends, and the frame
+ * it schedules, go ahead of the next sheet. Each sheet's tab colour and kind
+ * are posted as it lands. A sheet already loaded
  * is skipped — the one the open showed, which `planeInfo` reads, and any shown
  * since. Any other doc type has no sheets to walk.
  */
@@ -660,13 +665,11 @@ function walkSheets(s: WasmSession): void {
     const walk = ++sheetWalk;
     if (s.docType() !== "spreadsheet") return;
     const step = (plane: number): void => {
-        setTimeout(() => {
-            enqueue(() => {
-                if (walk !== sheetWalk || !session || plane >= session.planeCount()) return;
-                if (!loadedSheets.has(plane)) loadSheet(session, plane);
-                step(plane + 1);
-            });
-        }, 0);
+        lanes.background(() => {
+            if (walk !== sheetWalk || !session || plane >= session.planeCount()) return;
+            if (!loadedSheets.has(plane)) loadSheet(session, plane);
+            step(plane + 1);
+        });
     };
     step(0);
 }

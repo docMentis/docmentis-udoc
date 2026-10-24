@@ -1573,8 +1573,13 @@ export interface ExtensionRequest {
     readonly type: string;
 }
 
-/** A request envelope as posted to the worker. */
-export type WorkerRequestEnvelope = WorkerRequest & { _id?: number };
+/**
+ * A request envelope as posted to the worker: `_id` keys its reply, and
+ * `_background` runs it as background work — after every request not so
+ * marked, and once a pending frame has painted — as the host's compose-ahead
+ * and thumbnails do.
+ */
+export type WorkerRequestEnvelope = WorkerRequest & { _id?: number; _background?: true };
 
 // A successful `open` replies with the initial DocumentLayout (page count +
 // content size). Worker → main results travel as `unknown`, so the layout type
