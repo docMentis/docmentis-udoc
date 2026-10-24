@@ -213,7 +213,7 @@ export function createSheetTabs(i18n: I18n) {
         };
 
         // Each tab in its sheet's colour, as the colours land — no rebuild.
-        const applyColors = (colors: readonly (string | null)[]): void => {
+        const applyColors = (colors: readonly (string | null | undefined)[]): void => {
             for (const btn of tabs) {
                 const color = colors[Number(btn.dataset.plane)] ?? null;
                 btn.classList.toggle("udoc-sheet-tab--colored", color !== null);

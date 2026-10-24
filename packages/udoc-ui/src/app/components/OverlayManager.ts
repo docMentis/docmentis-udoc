@@ -35,6 +35,11 @@ export interface OverlayFrame {
     /** The branding decal's rect (CSS px, bottom-right), punched out of the clip
      *  so no overlay paints over the logo; `null` before the engine reports it. */
     branding: Rect | null;
+    /** The sheet this frame shows, as `currentSheet` counts it — a 0-based
+     *  index into the workbook's sheets — or `-1` for a doc type without
+     *  sheets. Each sheet's pages count from 0, so an overlay drawing on one
+     *  sheet checks it before trusting a page index. */
+    sheet: number;
 }
 
 /**
@@ -95,7 +100,7 @@ export class OverlayManager {
     readonly #container: HTMLElement;
     readonly #sources = new Map<string, OverlaySource>();
     readonly #wrappers = new Map<string, HTMLElement>();
-    #lastFrame: OverlayFrame = { views: [], scale: 1, branding: null };
+    #lastFrame: OverlayFrame = { views: [], scale: 1, branding: null, sheet: -1 };
     /** The content-clip key last applied to the container, so an unchanged clip
      *  doesn't restyle it (or trigger its layout read) every frame. */
     #lastClipKey = "";

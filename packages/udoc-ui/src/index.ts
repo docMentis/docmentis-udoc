@@ -1,7 +1,7 @@
 // Public API shared by the docMentis packages built on this one: the class
 // each package's own extends, and the types its calls take and return.
 export { UDocBase } from "./base.js";
-export type { EventHandler, OpenOptions, RenderPageOptions, UDocEvents, UDocOptions } from "./base.js";
+export type { EventHandler, OpenOptions, RenderPageOptions, SheetInfo, UDocEvents, UDocOptions } from "./base.js";
 // A PDF's annotations, as the page-annotation calls and events hand them to a
 // host and take them back (generated from the Rust serde), and the partial one
 // `patchPageAnnotation` merges in.

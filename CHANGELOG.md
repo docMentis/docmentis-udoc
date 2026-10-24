@@ -8,6 +8,15 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- `goToSheet(sheet)` shows a workbook's sheet, by its 0-based index or its
+  name, and resolves once it has painted; `sheetCount`, `currentSheet` and the
+  `currentSheet:changed` event follow it, and an overlay frame's `sheet` says
+  which sheet the frame shows.
+- `sheets` lists a workbook's sheets, each with its name and tab color;
+  `sheets:changed` fires as each sheet's color becomes known.
+
 #### Changed
 
 - A page is a 0-based index throughout the API: `goToPage`, `currentPage`,

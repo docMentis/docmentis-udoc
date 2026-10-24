@@ -64,7 +64,7 @@ export type Action =
           count: number;
           current: number;
           names: readonly string[];
-          colors: readonly (string | null)[];
+          colors: readonly (string | null | undefined)[];
           chartsheets: readonly boolean[];
           veryHidden: readonly boolean[];
       }

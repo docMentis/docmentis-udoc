@@ -7,7 +7,8 @@ import type { UIShell } from "./app/shell.js";
 import type { RemoteCheckpointResponse } from "./app/remote.js";
 import type { AnnotationPatch } from "./app/annotation-patch.js";
 import { pageStep, renderZoom, viewDpi } from "./app/state.js";
-import type { PanelTab, ThemeMode, ViewControlsPlacement } from "./app/state.js";
+import type { PanelTab, ThemeMode, UIState, ViewControlsPlacement } from "./app/state.js";
+import { profileFor } from "./app/profiles.js";
 import { cssPxPerPt } from "./geometry.js";
 import type { Fit, LayoutMode, PageGap, PageViewsFrame, ScrollAlignment, ScrollMode } from "./geometry.js";
 import type {
@@ -238,6 +239,19 @@ export interface OpenOptions {
     password?: string;
 }
 
+/** A sheet of the open workbook, as {@link UDocBase.sheets} lists it. */
+export interface SheetInfo {
+    /** The sheet's name, as its tab shows it; `""` for one the workbook left unnamed. */
+    name: string;
+    /**
+     * Its tab's color as `#rrggbb`, or `null` for a tab in no color. A sheet's
+     * color is known once the sheet has loaded, `undefined` until then: the
+     * workbook's sheets load in the background once it opens, a sheet shown
+     * at once, and `"sheets:changed"` fires as each color becomes known.
+     */
+    color: string | null | undefined;
+}
+
 /**
  * The public event map: event name → payload. Subscribe with
  * {@link UDocBase.on}.
@@ -249,6 +263,18 @@ export interface UDocEvents {
      * {@link UDocBase.currentPage} is.
      */
     "currentPage:changed": { page: number; previousPage: number };
+    /**
+     * Fires when the sheet shown changes — a tab clicked, {@link UDocBase.goToSheet},
+     * a search result on another sheet, or a workbook opened or closed.
+     * `sheet` and `previousSheet` are 0-based indices, as
+     * {@link UDocBase.currentSheet} is: `-1` for none.
+     */
+    "currentSheet:changed": { sheet: number; previousSheet: number };
+    /**
+     * Fires when {@link UDocBase.sheets} changes — a workbook opened or closed,
+     * and a sheet's tab color becoming known as the sheet loads.
+     */
+    "sheets:changed": { sheets: readonly SheetInfo[] };
     /**
      * Fires when the view moves — scrolled, zoomed or laid out again — once the
      * frame showing it has painted, and only when what it reports has changed.
@@ -372,6 +398,19 @@ function viewportOf(frame: PageViewsFrame, dpi: number): Viewport {
     };
 }
 
+/** How many sheets the open document has: its planes, for a workbook; `0` for anything else. */
+function sheetCountOf(state: UIState): number {
+    return state.status === "ready" && profileFor(state.docType).sheetTabs ? state.planeCount : 0;
+}
+
+/** What {@link UDocBase.sheets} lists for a document without sheets. */
+const NO_SHEETS: readonly SheetInfo[] = [];
+
+/** The sheet the open document shows, or `-1` for one without sheets. */
+function currentSheetOf(state: UIState): number {
+    return sheetCountOf(state) > 0 ? state.currentPlane : -1;
+}
+
 function sameViewport(a: Viewport, b: Viewport): boolean {
     return (
         a.firstVisiblePage === b.firstVisiblePage &&
@@ -426,6 +465,14 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
                 shell.store,
                 (s) => s.pageIndex,
                 (page, previousPage) => this.#emit("currentPage:changed", { page, previousPage }),
+            ),
+            subscribeSelector(shell.store, currentSheetOf, (sheet, previousSheet) =>
+                this.#emit("currentSheet:changed", { sheet, previousSheet }),
+            ),
+            subscribeSelector(
+                shell.store,
+                (s) => this.#sheetsOf(s),
+                (sheets) => this.#emit("sheets:changed", { sheets }),
             ),
             this.#watchViewport(),
             subscribeSelector(
@@ -491,7 +538,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * opens, `"document:loading"` reports how far its bytes have been read,
      * and the loading overlay shows once it has taken long enough to notice.
      * The opened document's doc type and source format are then
-     * {@link docType} and {@link sourceFormat}.
+     * {@link docType} and {@link sourceFormat}, and a workbook's sheets
+     * {@link sheetCount} and {@link currentSheet}.
      *
      * Rejects with a `UDocError` when the document doesn't open — an `io` one
      * when its URL can't be fetched — after showing it, with the
@@ -778,6 +826,32 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     #stepPage(by: 1 | -1): void {
         const page = pageStep(this.shell.getState(), by);
         if (page !== null) this.shell.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: page });
+    }
+
+    /**
+     * Show a sheet of the open workbook, as clicking its tab does: `sheet` is
+     * its 0-based index, as {@link currentSheet} counts it, or its name.
+     * Resolves once a frame showing it has painted, so an overlay drawn then
+     * lands on it; or once the view has moved on without it, another sheet
+     * chosen first or the document closed. Each sheet's pages count from 0,
+     * so {@link goToPage} moves within the sheet shown.
+     *
+     * Rejects with no workbook open, an index past the last sheet, a name no
+     * sheet has, or a very hidden sheet, which has no tab and never shows.
+     */
+    async goToSheet(sheet: number | string): Promise<void> {
+        const state = this.shell.getState();
+        const count = sheetCountOf(state);
+        if (count === 0) throw new Error("goToSheet: the open document has no sheets");
+        const index = typeof sheet === "string" ? state.planeNames.indexOf(sheet) : sheet;
+        if (typeof sheet === "string" && (sheet === "" || index < 0)) {
+            throw new Error(`goToSheet: no sheet is named ${JSON.stringify(sheet)}`);
+        }
+        if (!Number.isInteger(index) || index < 0 || index >= count) {
+            throw new Error(`goToSheet: there is no sheet at index ${index}, of ${count}`);
+        }
+        if (state.planeVeryHidden[index]) throw new Error(`goToSheet: the sheet at index ${index} is very hidden`);
+        await this.shell.goToPlane(index);
     }
 
     /**
@@ -1285,6 +1359,52 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     /** The current page's 0-based index, as {@link goToPage} takes it; `"currentPage:changed"` fires when it changes. */
     get currentPage(): number {
         return this.shell.getState().pageIndex;
+    }
+
+    /**
+     * How many sheets the open workbook has, very hidden ones included, so
+     * that an index counts the workbook's own sheets in order. `0` with no
+     * document open, or one without sheets.
+     */
+    get sheetCount(): number {
+        return sheetCountOf(this.shell.getState());
+    }
+
+    /**
+     * The sheet shown: its 0-based index, as {@link goToSheet} takes it, or
+     * `-1` with no document open, or one without sheets.
+     * `"currentSheet:changed"` fires when it changes.
+     */
+    get currentSheet(): number {
+        return currentSheetOf(this.shell.getState());
+    }
+
+    /**
+     * The open workbook's sheets, in its own order — very hidden ones too —
+     * so that a sheet's index here is the one {@link goToSheet} takes and
+     * {@link currentSheet} reports. Empty with no document open, or one
+     * without sheets. The same array until it changes, when
+     * `"sheets:changed"` fires.
+     */
+    get sheets(): readonly SheetInfo[] {
+        return this.#sheetsOf(this.shell.getState());
+    }
+
+    /** The roster {@link sheets} last listed, and the list, kept while the roster is unchanged. */
+    #sheetList: {
+        names: readonly string[];
+        colors: readonly (string | null | undefined)[];
+        sheets: readonly SheetInfo[];
+    } | null = null;
+
+    #sheetsOf(state: UIState): readonly SheetInfo[] {
+        const count = sheetCountOf(state);
+        if (count === 0) return NO_SHEETS;
+        const { planeNames: names, planeColors: colors } = state;
+        if (this.#sheetList?.names === names && this.#sheetList.colors === colors) return this.#sheetList.sheets;
+        const sheets = Array.from({ length: count }, (_, i) => ({ name: names[i] ?? "", color: colors[i] }));
+        this.#sheetList = { names, colors, sheets };
+        return sheets;
     }
 
     /** The color theme, as {@link setTheme} or the toolbar's theme button last set it. */

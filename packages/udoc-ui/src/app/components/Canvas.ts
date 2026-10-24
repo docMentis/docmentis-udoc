@@ -861,6 +861,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     // Latest branding decal rect (CSS px), from `onBrandingRect` — the other half
     // of the content clip every overlay honors. `null` until the engine reports it.
     let lastBrandingRect: Rect | null = null;
+    // The sheet the latest frame shows — a spreadsheet's, 0-based — or `-1` for
+    // a doc type without sheets: the `sheet` every overlay frame carries.
+    let lastSheet = -1;
     // The scrollbar size (CSS px) last sent to the worker, so a band re-layout
     // that leaves the doc type alone doesn't re-send it. `NaN` until the first
     // send.
@@ -872,7 +875,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     // between paints (a click-select, a drag preview, an edit-mode toggle): the
     // page-insert strips read the selection's keep-out rect, so they must
     // re-evaluate the instant it changes, not wait for the next painted frame.
-    selection.onChromeChange(() => renderOverlays({ views: lastViews, scale: lastScale, branding: lastBrandingRect }));
+    selection.onChromeChange(() =>
+        renderOverlays({ views: lastViews, scale: lastScale, branding: lastBrandingRect, sheet: lastSheet }),
+    );
     // The page the pointer is currently over (null over a gap or off-page). The
     // page-controls overlay reads this — via the accessor on the returned API —
     // to reveal only the hovered page's rail.
@@ -1641,6 +1646,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         const offViews = client.onPageViews((frame) => {
             lastScale = frame.scale;
             lastViews = frame.views;
+            lastSheet = profileFor(s.getState().docType).sheetTabs ? frame.plane : -1;
             // Selection first: the page-insert overlay reads the selection's
             // keep-out rect (via `selectionKeepOut`) as it renders, so its chrome
             // must be projected against this frame before the overlay runs.
@@ -1656,6 +1662,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
                 views: frame.views,
                 scale: frame.scale,
                 branding: lastBrandingRect,
+                sheet: lastSheet,
             });
             // Paint the guide bands' content into the strips `applyBandLayout`
             // reserved; whether a band shows (and how thick) is host-static and
@@ -1760,7 +1767,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             search.setBrandingRect(rect);
             annotationHover.setBrandingRect(rect);
             selection.setBrandingRect(rect);
-            renderOverlays({ views: lastViews, scale: lastScale, branding: rect });
+            renderOverlays({ views: lastViews, scale: lastScale, branding: rect, sheet: lastSheet });
             if (!rect) {
                 brandingLink.style.display = "none";
                 return;
@@ -1942,7 +1949,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     function setHoveredPage(page: number | null): void {
         if (page === hoveredPage) return;
         hoveredPage = page;
-        renderOverlays({ views: lastViews, scale: lastScale, branding: lastBrandingRect });
+        renderOverlays({ views: lastViews, scale: lastScale, branding: lastBrandingRect, sheet: lastSheet });
     }
 
     /**

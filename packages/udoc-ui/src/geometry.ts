@@ -185,10 +185,10 @@ export interface PlaneInfo {
     /**
      * Each plane's tab colour as `#rrggbb`, indexed by plane — a spreadsheet's
      * sheet-tab colours. `null` for a tab in no colour (every single-plane doc
-     * type), and for a sheet not loaded yet: the worker loads the sheets one by
-     * one, and posts each one's colour as it lands.
+     * type), and `undefined` for a sheet not loaded yet: the worker loads the
+     * sheets one by one, and posts each one's colour as it lands.
      */
-    colors: (string | null)[];
+    colors: (string | null | undefined)[];
     /**
      * Whether each plane is a chartsheet — a chart, with no grid and so no row
      * and column headers — indexed by plane. `false` for a worksheet, every
@@ -815,6 +815,9 @@ export interface PageViewsFrame {
      * anchor for the page indicator — or `null` when no page is arranged.
      */
     currentPage: number | null;
+    /** The plane this frame shows — a spreadsheet's sheet, 0-based; `0` for a
+     *  single-plane doc type. */
+    plane: number;
     /** The guide chrome (ruler / row-column headers) to draw this frame, already
      *  scroll-resolved to CSS px, or `null` for a doc type with no chrome. Pulled
      *  each painted frame beside the view state, so the bands track scroll/zoom. */

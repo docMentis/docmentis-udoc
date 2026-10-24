@@ -345,9 +345,9 @@ export interface UIState {
      *  with no document open; `""` for an unnamed plane. */
     planeNames: readonly string[];
     /** Each plane's tab colour as `#rrggbb`, indexed by plane — the sheet-tab
-     *  colours. Empty with no document open; `null` for a tab in no colour, or
-     *  one whose sheet the worker hasn't loaded yet. */
-    planeColors: readonly (string | null)[];
+     *  colours. Empty with no document open; `null` for a tab in no colour, and
+     *  `undefined` for one whose sheet the worker hasn't loaded yet. */
+    planeColors: readonly (string | null | undefined)[];
     /** Whether each plane is a chartsheet, indexed by plane — a sheet with no
      *  grid, so no header bands. Empty with no document open; `false` for a
      *  worksheet, or one whose sheet the worker hasn't loaded yet. */

@@ -259,6 +259,8 @@ export interface UIShell {
     setNavigationScrollAlignment: (alignment: ScrollAlignment) => void;
     /** Follow a PDF `destination` — by `scrollAlignment` when given, else the standing navigation alignment; resolves once it has landed, or not. */
     goToDestination: (destination: Destination, scrollAlignment?: ScrollAlignment) => Promise<void>;
+    /** Show plane `plane` — a sheet of the open workbook, 0-based — as its tab does; resolves once a frame showing it has painted, or the view has moved on without it. */
+    goToPlane: (plane: number) => Promise<void>;
     /** The selection naming `match`'s text — the separate step from a match to a selection — or null when nothing there can be selected. */
     searchMatchSelection: (match: SearchMatch) => Promise<UDocSelection | null>;
     /** Ask the server the open document was opened from to checkpoint it. */
@@ -988,6 +990,20 @@ export function mountUIShell(
     );
     client.setDpi(store.getState().dpi);
 
+    // The plane the worker was last asked to show, as the store last told of
+    // `currentPlane`; the plane the last painted frame showed (`-1` before the
+    // open document's first); and the `goToPlane` calls waiting for a frame to
+    // show theirs. A wait settles once that frame paints, or once the view has
+    // moved on without it: another plane chosen, or the document gone.
+    let requestedPlane = 0;
+    let paintedPlane = -1;
+    const planeWaiters = new Map<() => void, number>();
+    function settlePlaneWaiters(): void {
+        for (const [settle, plane] of planeWaiters) {
+            if (requestedPlane !== plane || paintedPlane === plane) settle();
+        }
+    }
+
     // A sheet-tab click flips `currentPlane` in the store; tell the worker to
     // switch the active plane and adopt the new sheet's layout. Keyed on the
     // value, so the initial subscribe (and a no-op re-pick) doesn't fire.
@@ -995,9 +1011,41 @@ export function mountUIShell(
         store,
         (s) => s.currentPlane,
         (plane) => {
+            requestedPlane = plane;
             if (store.getState().status === "ready") void switchPlane(plane);
+            settlePlaneWaiters();
         },
     );
+    const unsubPaintedPlane = client.onPageViews((frame) => {
+        if (store.getState().status !== "ready") return;
+        paintedPlane = frame.plane;
+        settlePlaneWaiters();
+    });
+    const unsubPlaneStatus = subscribeSelector(
+        store,
+        (s) => s.status,
+        (status) => {
+            if (status === "ready") return;
+            paintedPlane = -1;
+            for (const settle of planeWaiters.keys()) settle();
+        },
+    );
+
+    async function goToPlane(plane: number): Promise<void> {
+        store.dispatch({ type: "SET_CURRENT_PLANE", plane });
+        // The store tells its subscribers in a microtask: by the end of it the
+        // switch is asked for, or a later choice made in the same task has
+        // superseded it.
+        await Promise.resolve();
+        if (requestedPlane !== plane || paintedPlane === plane) return;
+        await new Promise<void>((resolve) => {
+            const settle = (): void => {
+                planeWaiters.delete(settle);
+                resolve();
+            };
+            planeWaiters.set(settle, plane);
+        });
+    }
 
     // Performance counter: the toggle both enables the worker's counter and
     // shows the on-screen HUD; the HUD updates from the worker's perf stream.
@@ -1412,8 +1460,9 @@ export function mountUIShell(
             sourceFilename = from.filename;
             // Pull the plane roster (the sheet tabs) — the session has
             // reconciled by the time `open` resolved, so the count is settled.
-            // Async, off the critical path; the status bar shows it once ready.
-            void client.planeInfo().then((planes) => {
+            // Asked before the first paint, which the worker answers it ahead
+            // of; awaited last, so the document opens with its sheets known.
+            const planesRead = client.planeInfo().then((planes) => {
                 store.dispatch({
                     type: "SET_PLANES",
                     count: planes.count,
@@ -1455,6 +1504,7 @@ export function mountUIShell(
             canvas.reserveGuides();
             applySpacing();
             startComposeAhead(layout.composedPageCount);
+            await planesRead;
         } catch (err) {
             passwordModal.dismiss();
             const error = UDocError.from(err);
@@ -2744,6 +2794,8 @@ export function mountUIShell(
         unsubDefaultFit();
         unsubDpi();
         unsubPlane();
+        unsubPaintedPlane();
+        unsubPlaneStatus();
         unsubPageBorder();
         unsubPerf();
         unsubPerfToggle();
@@ -2814,6 +2866,7 @@ export function mountUIShell(
             store.dispatch({ type: "SET_NAVIGATION_SCROLL_ALIGNMENT", alignment }),
         goToDestination: (destination, scrollAlignment) =>
             follow(client, store, { action: null, destination }, openUrl, scrollAlignment),
+        goToPlane,
         searchMatchSelection: (match) => client.searchMatchSelection(match.location),
         requestRemoteCheckpoint,
         versionVector,

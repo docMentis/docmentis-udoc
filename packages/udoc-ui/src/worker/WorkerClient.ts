@@ -1814,6 +1814,7 @@ export class WorkerClient {
             scrollbars: { x: report.scrollbarX, y: report.scrollbarY },
             scroll: { x: report.scrollX, y: report.scrollY },
             currentPage: report.currentPage >= 0 ? report.currentPage : null,
+            plane: report.plane,
             guide: report.guide,
             repaintArea: report.repaintArea,
             // Reflects the latest viewport we sent — older frames painted

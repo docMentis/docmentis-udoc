@@ -1630,6 +1630,9 @@ export interface PageViewsReport {
     scrollHeight: number;
     /** 0-based index of the page at the viewport center; `-1` when none. */
     currentPage: number;
+    /** The plane this frame shows — a spreadsheet's sheet, 0-based; `0` for a
+     *  single-plane doc type. */
+    plane: number;
     /** Filled portion of the scrollable extent (Rust `scroll_used_extent`) the
      *  scrollbar thumb is drawn from, document points — equal to the scroll
      *  extent for most doc types, a spreadsheet's data range otherwise. */

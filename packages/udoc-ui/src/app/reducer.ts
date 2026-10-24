@@ -138,6 +138,14 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 fit: initialState.fit,
                 effectiveZoom: initialState.effectiveZoom,
                 pageIndex: 0,
+                // No planes until the new document's roster lands (SET_PLANES),
+                // so the previous workbook's sheets never show for this one.
+                planeCount: 0,
+                currentPlane: 0,
+                planeNames: [],
+                planeColors: [],
+                planeChartsheets: [],
+                planeVeryHidden: [],
             };
         }
 

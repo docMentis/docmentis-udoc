@@ -315,6 +315,7 @@ function emitPageViews(s: WasmSession): void {
             scrollWidth: state[3] ?? 0,
             scrollHeight: state[4] ?? 0,
             currentPage: state[5] ?? -1,
+            plane: s.currentPlane(),
             scrollUsedWidth: state[6] ?? 0,
             scrollUsedHeight: state[7] ?? 0,
             scrollbarX: state[8] === 1,
@@ -612,10 +613,31 @@ let sheetWalk = 0;
  */
 let walkAfterPaint = false;
 
+/**
+ * The open workbook's sheets loaded so far, by plane: those whose tab colour
+ * the engine can read, and the host has been told.
+ */
+const loadedSheets = new Set<number>();
+
 /** Stop any walk, and walk the document just opened once its first frame paints. */
 function walkSheetsAfterPaint(): void {
     sheetWalk++;
     walkAfterPaint = true;
+    // The open loaded the sheet it shows, and no other yet.
+    loadedSheets.clear();
+    if (session) loadedSheets.add(session.currentPlane());
+}
+
+/** Load sheet `plane` of the open workbook, and post its tab colour and kind. */
+function loadSheet(s: WasmSession, plane: number): void {
+    s.spreadsheet.loadSheet(plane);
+    loadedSheets.add(plane);
+    scope.postMessage({
+        type: "planeLoaded",
+        plane,
+        color: tabColorHex(s, plane),
+        chartsheet: s.planeIsChartsheet(plane),
+    });
 }
 
 /**
@@ -623,27 +645,18 @@ function walkSheetsAfterPaint(): void {
  * colour, and the host knows each chartsheet, before its sheet is first shown.
  * One sheet a job, in tab order, the next queued only once the event loop has
  * turned: what the host sends gets in between, and frames still paint. Each
- * sheet's tab colour and kind are posted as it lands. The sheet shown at the
- * start is skipped — the open loaded it, and `planeInfo` reads it. Any other
- * doc type has no sheets to walk.
+ * sheet's tab colour and kind are posted as it lands. A sheet already loaded
+ * is skipped — the one the open showed, which `planeInfo` reads, and any shown
+ * since. Any other doc type has no sheets to walk.
  */
 function walkSheets(s: WasmSession): void {
     const walk = ++sheetWalk;
     if (s.docType() !== "spreadsheet") return;
-    const shown = s.currentPlane();
     const step = (plane: number): void => {
         setTimeout(() => {
             enqueue(() => {
                 if (walk !== sheetWalk || !session || plane >= session.planeCount()) return;
-                if (plane !== shown) {
-                    session.spreadsheet.loadSheet(plane);
-                    scope.postMessage({
-                        type: "planeLoaded",
-                        plane,
-                        color: tabColorHex(session, plane),
-                        chartsheet: session.planeIsChartsheet(plane),
-                    });
-                }
+                if (!loadedSheets.has(plane)) loadSheet(session, plane);
                 step(plane + 1);
             });
         }, 0);
@@ -1057,12 +1070,12 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // from `walkSheets`. A pure read — no compose, no repaint.
                 const count = session.planeCount();
                 const names: string[] = [];
-                const colors: (string | null)[] = [];
+                const colors: (string | null | undefined)[] = [];
                 const chartsheets: boolean[] = [];
                 const veryHidden: boolean[] = [];
                 for (let i = 0; i < count; i++) {
                     names.push(session.planeName(i) ?? "");
-                    colors.push(tabColorHex(session, i));
+                    colors.push(loadedSheets.has(i) ? tabColorHex(session, i) : undefined);
                     chartsheets.push(session.planeIsChartsheet(i));
                     veryHidden.push(session.planeIsVeryHidden(i));
                 }
@@ -1077,6 +1090,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // the layout replied is the one known before it — the frame
                 // reports the sheet's extent once it has painted.
                 session.goToPlane(msg.plane);
+                // A sheet shown before the walk reached it loads now, and the
+                // host learns its tab's colour at once.
+                if (session.docType() === "spreadsheet" && !loadedSheets.has(msg.plane)) loadSheet(session, msg.plane);
                 const layout = layoutOf(session);
                 emitSelection(false);
                 // The peers' pointers on the plane now shown.
@@ -1684,6 +1700,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 session?.close();
                 sheetWalk++;
                 walkAfterPaint = false;
+                loadedSheets.clear();
                 emitSelection(false);
                 emitPeers();
                 emitPeerPointers();
