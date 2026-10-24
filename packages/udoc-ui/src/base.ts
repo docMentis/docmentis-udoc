@@ -243,7 +243,11 @@ export interface OpenOptions {
  * {@link UDocBase.on}.
  */
 export interface UDocEvents {
-    /** Fires when the current page changes — scrolled to, navigated to, or a document opened. */
+    /**
+     * Fires when the current page changes — scrolled to, navigated to, or a
+     * document opened. `page` and `previousPage` are 0-based page indices, as
+     * {@link UDocBase.currentPage} is.
+     */
     "currentPage:changed": { page: number; previousPage: number };
     /**
      * Fires when the view moves — scrolled, zoomed or laid out again — once the
@@ -420,7 +424,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         this.#unsubscribes.push(
             subscribeSelector(
                 shell.store,
-                (s) => s.page,
+                (s) => s.pageIndex,
                 (page, previousPage) => this.#emit("currentPage:changed", { page, previousPage }),
             ),
             this.#watchViewport(),
@@ -754,9 +758,9 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.pageAnnotations.removePageAnnotation(page, name);
     }
 
-    /** Scroll the viewport to `page` (1-based, clamped to the page count). */
+    /** Scroll the viewport to page index `page` (0-based, clamped to the pages composed). */
     goToPage(page: number): void {
-        this.shell.dispatch({ type: "NAVIGATE_TO_PAGE", page });
+        this.shell.dispatch({ type: "NAVIGATE_TO_PAGE", page: page + 1 });
     }
 
     /** Step to the next page, as the view controls' arrow does — the next
@@ -871,14 +875,14 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * one sheet each, with input held while they render — Cancel there
      * stops the print. The print job is named after the file {@link open} was
      * given. Rejects with no document open, one without pages (a
-     * spreadsheet), or a page number past its last page.
+     * spreadsheet), or a page index past its last page.
      */
     print(options?: PrintOptions): Promise<void> {
         return this.shell.print(options);
     }
 
     /**
-     * Render page `page` — 1-based, as {@link goToPage} takes it — to an
+     * Render page `page` — a 0-based index, as {@link goToPage} takes it — to an
      * image, as the document now stands, at {@link RenderPageOptions}'
      * `scale`. It renders off the viewport, so nothing on screen changes; a
      * page not yet composed is composed first. Rejects with no document open,
@@ -1278,9 +1282,9 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.getState().composedPageCount;
     }
 
-    /** The current page, 1-based as {@link goToPage} takes it; `"currentPage:changed"` fires when it changes. */
+    /** The current page's 0-based index, as {@link goToPage} takes it; `"currentPage:changed"` fires when it changes. */
     get currentPage(): number {
-        return this.shell.getState().page;
+        return this.shell.getState().pageIndex;
     }
 
     /** The color theme, as {@link setTheme} or the toolbar's theme button last set it. */

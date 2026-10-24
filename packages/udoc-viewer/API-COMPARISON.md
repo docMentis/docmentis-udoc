@@ -158,16 +158,16 @@ status takes more than a few words, a note under the table says the rest.
 
 ### Reads
 
-| Legacy                               | New                          | Status                                     |
-| ------------------------------------ | ---------------------------- | ------------------------------------------ |
-| `getOutline()`                       | —                            | dropped                                    |
-| `getFontUsage()`                     | —                            | dropped                                    |
-| `getPageInfo(page)`                  | —                            | dropped                                    |
-| `getLayoutPage(page)`                | —                            | dropped                                    |
-| `getPageText(page)`                  | —                            | dropped                                    |
-| `renderPage(page, options?)`         | `renderPage(page, options?)` | different shape: 1-based; an `ImageBitmap` |
-| `renderThumbnail(page, options?)`    | —                            | dropped                                    |
-| `renderRegion(page, rect, options?)` | —                            | dropped                                    |
+| Legacy                               | New                          | Status                            |
+| ------------------------------------ | ---------------------------- | --------------------------------- |
+| `getOutline()`                       | —                            | dropped                           |
+| `getFontUsage()`                     | —                            | dropped                           |
+| `getPageInfo(page)`                  | —                            | dropped                           |
+| `getLayoutPage(page)`                | —                            | dropped                           |
+| `getPageText(page)`                  | —                            | dropped                           |
+| `renderPage(page, options?)`         | `renderPage(page, options?)` | different shape: an `ImageBitmap` |
+| `renderThumbnail(page, options?)`    | —                            | dropped                           |
+| `renderRegion(page, rect, options?)` | —                            | dropped                           |
 
 - `renderPage` — `options` holds only `scale`, default `1` (72 DPI); the image
   is always an `ImageBitmap`, where legacy also gave `ImageData`, a `Blob` or a
@@ -217,8 +217,8 @@ none, the permit grants
 
 | Legacy                                   | New                                      | Status                                                 |
 | ---------------------------------------- | ---------------------------------------- | ------------------------------------------------------ |
-| `get currentPage`                        | `currentPage`                            | same                                                   |
-| `goToPage(page)`                         | `goToPage(page)`                         | same: 1-based                                          |
+| `get currentPage`                        | `currentPage`                            | different shape: a 0-based index                       |
+| `goToPage(page)`                         | `goToPage(page)`                         | different shape: a 0-based index                       |
 | `goToDestination(destination, options?)` | `goToDestination(destination, options?)` | different shape: the engine's `Destination`; a promise |
 | `nextPage()`                             | `goToNextPage()`                         | different shape: renamed; a spread in spread scrolling |
 | `previousPage()`                         | `goToPrevPage()`                         | different shape: renamed; a spread in spread scrolling |
@@ -320,7 +320,7 @@ none, the permit grants
 | `download`            | `document:downloaded` | renamed                                             |
 | `print`               | `document:printed`    | renamed                                             |
 | `error`               | `open` rejecting      | different shape: with the `UDocError`               |
-| `page:change`         | `currentPage:changed` | renamed                                             |
+| `page:change`         | `currentPage:changed` | renamed: its pages are 0-based indices              |
 | `viewport:change`     | `viewport:changed`    | renamed                                             |
 | `panel:change`        | `panel:changed`       | renamed                                             |
 | `ui:visibilityChange` | —                     | dropped                                             |
@@ -391,7 +391,7 @@ none, the permit grants
 - `SpacingMode` — `PageGap` holds the gaps' sizes, not which gaps show.
 - `SearchMatch` — `page`, `plane`, page-local `quads` and `context`; `location`
   in place of `charOffset`.
-- `PrintPageRange` — `PrintOptions` lists the pages, 1-based.
+- `PrintPageRange` — `PrintOptions` lists the pages, as 0-based indices.
 - `FontEntry` — its `typeface`, `bold` and `italic` are a `UrlFont`'s
   `descriptor`, a `FontDescriptor` of `family`, `bold` and `italic`; `url` is
   the same, and an optional `scripts` narrows which text asks for it.

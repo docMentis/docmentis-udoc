@@ -6,6 +6,14 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Changed
+
+- A page is a 0-based index throughout the API: `goToPage`, `currentPage`,
+  `currentPage:changed`, `renderPage` and `PrintOptions.pages` now count from
+  0, as the annotation calls and `viewport:changed` already did.
+
 ## [0.8.0] - 2026-10-23
 
 Built on `@docmentis/udoc-wasm` 0.8.2.

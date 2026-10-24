@@ -5,7 +5,8 @@
 // Storeless and imperative, like the other dialogs (PageSettingsModal,
 // NewSlideModal): mounted once by the shell and reused. `open(ctx)` seeds it
 // with the document's page count and current page; Print hands the choice to
-// `ctx.onPrint` as `PrintOptions`.
+// `ctx.onPrint` as `PrintOptions`. The dialog speaks in the page numbers a
+// reader sees, from 1; `PrintOptions` takes 0-based indices.
 
 import { on } from "../../framework/index.js";
 import { trapFocus } from "../a11y.js";
@@ -304,7 +305,7 @@ export function createPrintModal(i18n: I18n) {
         const onPrint = ctx.onPrint;
         const quality = qualitySelect.value as PrintQuality;
         close();
-        onPrint(pages === undefined ? { quality } : { pages, quality });
+        onPrint(pages === undefined ? { quality } : { pages: pages.map((page) => page - 1), quality });
     }
 
     on(printBtn, "click", print);

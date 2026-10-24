@@ -8,7 +8,7 @@ export type PrintQuality = "draft" | "standard" | "high";
 
 /** Options for `print`. Every field is optional; each says its default. */
 export interface PrintOptions {
-    /** The pages to print, 1-based, in the order printed. Default every page. */
+    /** The pages to print, as 0-based indices, in the order printed. Default every page. */
     pages?: readonly number[];
     /** How finely to render the pages. Default `"standard"`. */
     quality?: PrintQuality;

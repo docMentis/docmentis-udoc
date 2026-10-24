@@ -237,7 +237,7 @@ export interface UIShell {
     print: (options?: PrintOptions) => Promise<void>;
     /** Subscribe to the prints {@link print} hands the browser's print dialog — the toolbar's too — with each one's page count; returns the unsubscribe. */
     onPrint: (listener: (pageCount: number) => void) => () => void;
-    /** Render page `page` (1-based) at `scale` image pixels per point, composing it first if it isn't yet. */
+    /** Render page index `page` (0-based) at `scale` image pixels per point, composing it first if it isn't yet. */
     renderPage: (page: number, scale: number) => Promise<ImageBitmap>;
     /** The host's page annotations: legacy's calls, over the model (page-annotations.ts). */
     pageAnnotations: PageAnnotations;
@@ -2283,8 +2283,8 @@ export function mountUIShell(
         if (!(scale > 0)) throw new Error(`renderPage: scale ${scale} is not a positive number`);
         let pageCount = store.getState().composedPageCount;
         // A page is known only once composed: compose through it first.
-        if (Number.isInteger(page) && page > pageCount) {
-            const layout = await client.updateLayout(page - 1);
+        if (Number.isInteger(page) && page >= pageCount) {
+            const layout = await client.updateLayout(page);
             store.dispatch({
                 type: "DOC_RELAYOUT",
                 composedPageCount: layout.composedPageCount,
@@ -2292,10 +2292,10 @@ export function mountUIShell(
             });
             pageCount = layout.composedPageCount;
         }
-        if (!Number.isInteger(page) || page < 1 || page > pageCount) {
-            throw new Error(`renderPage: there is no page ${page}, of ${pageCount}`);
+        if (!Number.isInteger(page) || page < 0 || page >= pageCount) {
+            throw new Error(`renderPage: there is no page at index ${page}, of ${pageCount}`);
         }
-        return client.renderPagePreview(0, page - 1, scale);
+        return client.renderPagePreview(0, page, scale);
     }
 
     const printListeners = new Set<(pageCount: number) => void>();
@@ -2327,10 +2327,10 @@ export function mountUIShell(
     /** Print the pages `options` names, every page composed. */
     async function printPages(options: PrintOptions): Promise<void> {
         const { composedPageCount: pageCount, sourceFormat } = store.getState();
-        const pages = options.pages ?? Array.from({ length: pageCount }, (_, i) => i + 1);
+        const pages = options.pages ?? Array.from({ length: pageCount }, (_, i) => i);
         if (pages.length === 0) throw new Error("print: no pages to print");
-        const missing = pages.find((page) => !Number.isInteger(page) || page < 1 || page > pageCount);
-        if (missing !== undefined) throw new Error(`print: there is no page ${missing}, of ${pageCount}`);
+        const missing = pages.find((page) => !Number.isInteger(page) || page < 0 || page >= pageCount);
+        if (missing !== undefined) throw new Error(`print: there is no page at index ${missing}, of ${pageCount}`);
         const quality = options.quality ?? "standard";
         const title = sourceFilename?.replace(/\.[^.]+$/, "");
         // Every page of a PDF at standard quality prints as the PDF itself,
@@ -2351,7 +2351,7 @@ export function mountUIShell(
         await printRendered(pages, PRINT_DPI[quality], title);
     }
 
-    /** Render `pages` (1-based) at `dpi`, one at a time under the busy hold, and print them. */
+    /** Render `pages` (0-based indices) at `dpi`, one at a time under the busy hold, and print them. */
     async function printRendered(pages: readonly number[], dpi: number, title: string | undefined): Promise<void> {
         const printed: PrintPage[] = [];
         let cancelled = false;
@@ -2362,7 +2362,7 @@ export function mountUIShell(
                 if (cancelled) return;
                 busyModal.relabel(i18n.t(preparing, { page: i + 1, count: pages.length }));
                 // Ephemeral annotations show, but don't print.
-                printed.push(await printPageOf(await client.renderPagePreview(0, page - 1, dpi / 72, false), dpi));
+                printed.push(await printPageOf(await client.renderPagePreview(0, page, dpi / 72, false), dpi));
             }
         })();
         cancelled = !(await busyModal.hold(i18n.t(preparing, { page: 1, count: pages.length }), rendering));
