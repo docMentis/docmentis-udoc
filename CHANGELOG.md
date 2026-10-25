@@ -12,6 +12,8 @@ listed once, by package. Its major and minor version are those of the
 
 - A document opened where another was open draws at once, where it stayed
   blank until the view changed size.
+- A document opened where another was open scrolls whole, where a scroll
+  redrew only the strip it brought into view and left the rest as it was.
 
 ### udoc-demo
 
