@@ -202,7 +202,8 @@ function registerHostFonts(s: WasmSession): void {
  * says it.
  *
  * It ends: each settled order installs its font or retires its characters from
- * that vendor, and a family's chain of vendors is finite.
+ * that vendor — putting the next one on order — and a family's chain of vendors
+ * is finite.
  */
 async function updateLayoutSettled(s: WasmSession, index: number): Promise<boolean> {
     let complete = s.updateLayout({ pages: { start: 0, limit: index } });
@@ -214,8 +215,9 @@ async function updateLayoutSettled(s: WasmSession, index: number): Promise<boole
             ),
         );
         for (const [id, binaries] of settled) s.completeFontRequest(BigInt(id), binaries);
-        // A refusal re-shapes too: re-resolving is what orders from the next
-        // vendor down the chain.
+        // A round of nothing but refusals installed nothing, so there is nothing
+        // to re-shape; the next vendors are already on order.
+        if (settled.every(([, binaries]) => binaries.length === 0)) continue;
         s.refreshFonts();
         // Re-shaping can move page breaks, so the page asked for may sit
         // beyond what is composed now.
