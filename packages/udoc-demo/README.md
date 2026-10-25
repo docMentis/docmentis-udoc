@@ -18,4 +18,7 @@ npm install
 npm run dev
 ```
 
+It opens in View mode, on the viewer. `?mode=view`, `edit`, `coedit` or `ai`
+opens it in that mode, and the address follows the mode you switch to.
+
 For a reusable document viewer or editor, install the corresponding published package rather than this demo workspace.

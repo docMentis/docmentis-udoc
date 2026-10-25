@@ -1,5 +1,6 @@
-/* docMentis Editor demo — shell chrome. The editor paints its own UI; this file
-   styles only the demo around it (header, sidebar, stage framing, AI panel). */
+/* docMentis demo — shell chrome. The viewer and editor paint their own UI; this
+   file styles only the demo around them (header, sidebar, stage framing, AI
+   panel). */
 
 * {
     margin: 0;

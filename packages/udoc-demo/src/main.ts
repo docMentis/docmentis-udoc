@@ -8,7 +8,7 @@ import { UDocEditor } from "@docmentis/udoc-editor";
 import type { UDocEditorOptions, ViewControlsPlacement } from "@docmentis/udoc-editor";
 import { FILE_ACCEPT, DEFAULT_SAMPLE, type SampleDoc } from "./samples.js";
 import { getTheme, toggleTheme } from "./theme.js";
-import type { Mode } from "./types.js";
+import { MODES, type Mode } from "./types.js";
 
 const root = document.getElementById("app");
 if (!root) throw new Error("#app not found");
@@ -187,9 +187,19 @@ function defaultCollapsed(mode: Mode): boolean {
     return mode !== "edit" && mode !== "view";
 }
 
+/** The mode `?mode=` names, so a link can open the demo in it; View when it names none. */
+function initialMode(): Mode {
+    const mode = new URLSearchParams(location.search).get("mode");
+    return MODES.find((m) => m.id === mode)?.id ?? "view";
+}
+
 async function setMode(mode: Mode): Promise<void> {
     header.setMode(mode);
     sidebar.setCollapsed(defaultCollapsed(mode));
+    // Keep `?mode=` in step, so the page's address reopens it in this mode.
+    const url = new URL(location.href);
+    url.searchParams.set("mode", mode);
+    history.replaceState(history.state, "", url);
     await stage.setMode(mode);
 }
 
@@ -260,7 +270,7 @@ function showError(message: string): void {
 // --- boot -----------------------------------------------------------------
 async function main(): Promise<void> {
     document.body.appendChild(optionsModal.el);
-    await setMode("view");
+    await setMode(initialMode());
     const remote = new URLSearchParams(location.search).get("document");
     await (remote ? openRemote(remote) : openSample(DEFAULT_SAMPLE));
 }

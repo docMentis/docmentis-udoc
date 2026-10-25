@@ -116,13 +116,14 @@ export class Stage {
             editors = await Promise.all(hosts.map(create));
         } catch (err) {
             if (gen !== this.#gen) return;
-            console.error("udoc: failed to start the editor", err);
+            const what = this.#mode === "view" ? "viewer" : "editor";
+            console.error(`udoc: failed to start the ${what}`, err);
             this.onError(
                 err instanceof UDocError && err.code === "unsupported"
-                    ? "This browser is unsupported. The udoc editor needs OffscreenCanvas (Safari 16.4+, or a current Chrome/Firefox)."
+                    ? `This browser is unsupported. The udoc ${what} needs OffscreenCanvas (Safari 16.4+, or a current Chrome/Firefox).`
                     : import.meta.env.DEV
                       ? "Failed to load the udoc WASM engine. Run `npm install` — and `just build-wasm` in a linked engine checkout — then reload."
-                      : "The editor couldn't load. Reload the page to try again.",
+                      : `The ${what} couldn't load. Reload the page to try again.`,
             );
             return;
         }
