@@ -2,24 +2,36 @@ import { readFileSync } from "node:fs";
 import { defineConfig } from "vitepress";
 import type { DefaultTheme } from "vitepress";
 
-// An "Engine types" section is one entry, its index page: its hundreds of
-// types are reached from the pages that use them, and every page carries the
-// whole sidebar.
-function collapseEngineTypes(items: DefaultTheme.SidebarItem[]): DefaultTheme.SidebarItem[] {
-    return items.map((item) => {
-        if (item.text === "Engine types") {
-            const { items: _items, collapsed: _collapsed, ...entry } = item;
-            return entry;
-        }
-        return item.items ? { ...item, items: collapseEngineTypes(item.items) } : item;
-    });
+/** The most exports a package lists by name; one with more lists them by kind. */
+const FLAT_EXPORTS = 20;
+
+// A package's entry, which TypeDoc gives a group per kind of export. A package
+// with a few lists them by name, as a reader looks one up — the class,
+// interface or function its page says it is; one with many, Common, keeps
+// the groups. Its "Engine types" section is one entry, last, its index page:
+// its hundreds of types are reached from the pages that use them, and every
+// page carries the whole sidebar.
+function shapePackage(entry: DefaultTheme.SidebarItem): DefaultTheme.SidebarItem {
+    const groups = entry.items ?? [];
+    const engineTypes = groups.find((group) => group.text === "Engine types")?.items?.[0];
+    const kinds = groups.filter((group) => group.text !== "Engine types");
+    const exports = kinds.flatMap((group) => group.items ?? []);
+    const items =
+        exports.length <= FLAT_EXPORTS ? exports.sort((a, b) => (a.text ?? "").localeCompare(b.text ?? "")) : kinds;
+    if (engineTypes) {
+        const { items: _items, collapsed: _collapsed, ...indexPage } = engineTypes;
+        items.push(indexPage);
+    }
+    return { ...entry, items };
 }
 
-// The API reference's sidebar, which TypeDoc writes beside the pages it
-// generates (`npm run api`).
-const apiSidebar = collapseEngineTypes(
-    JSON.parse(readFileSync(new URL("../api/typedoc-sidebar.json", import.meta.url), "utf8")),
-);
+// The API reference's sidebar, a package's entry apiece, which TypeDoc writes
+// beside the pages it generates (`npm run api`).
+const apiSidebar = (
+    JSON.parse(
+        readFileSync(new URL("../api/typedoc-sidebar.json", import.meta.url), "utf8"),
+    ) as DefaultTheme.SidebarItem[]
+).map(shapePackage);
 
 // Served at docmentis.com/docs: the site proxies `/docs/*` to the GitHub Pages
 // deployment (.github/workflows/docs.yml), so every link and asset is under

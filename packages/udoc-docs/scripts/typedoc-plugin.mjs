@@ -35,8 +35,10 @@ import {
     ReferenceReflection,
     ReflectionKind,
     SignatureReflection,
+    i18n,
     makeRecursiveVisitor,
 } from "typedoc";
+import { MarkdownTheme, MarkdownThemeContext } from "typedoc-plugin-markdown";
 
 /** Each entry point's package directory, in sidebar order, and the module it becomes. */
 const MODULES = [
@@ -215,7 +217,106 @@ function unlinkUnreachable(project) {
     }
 }
 
+/**
+ * Markdown on one line of a table row, as typedoc-plugin-markdown's own tables
+ * put it (its `formatTableCell`, which it doesn't export): line breaks and runs
+ * of spaces as one space, a code block as inline code.
+ */
+function tableCell(markdown) {
+    return markdown
+        .replace(/\r?\n/g, " ")
+        .replace(/```(\w+\s)?([\s\S]*?)```/g, (_block, _lang, code) => `\`${code.trim()}\``)
+        .replace(/ +/g, " ")
+        .trim();
+}
+
+/**
+ * typedoc-plugin-markdown's pages less what a reader skims past. A signature
+ * is a code block (`useCodeBlocks`), so a "Returns" that only repeats its type
+ * goes, and a getter — the API has no setters — loses its "Get Signature"
+ * heading, its code block saying as much. "Inherited from" and "Overrides"
+ * go: what a member inherits from udoc-ui's base class is nothing a reader
+ * acts on, and on the viewer's and the editor's pages it is nearly every one.
+ *
+ * A table of described properties is two columns, each property's type under
+ * its name. In three, the names, the longest types and the URLs in the
+ * descriptions came to more than the page's width, and the descriptions
+ * scrolled out of sight. A property of an object type is one row, the type
+ * written out, unless its fields say something of their own: then a row
+ * apiece follows it, `property.field` — an event's payload, say.
+ */
+class UDocThemeContext extends MarkdownThemeContext {
+    constructor(theme, page, options) {
+        super(theme, page, options);
+        const { accessor, inheritance, propertiesTable, signatureReturns } = this.partials;
+        this.partials = {
+            ...this.partials,
+            accessor: (model, options) => {
+                const get = model.getSignature;
+                if (!get || model.setSignature) return accessor(model, options);
+                const { headingLevel } = options;
+                return [
+                    this.partials.signatureTitle(get, { accessor: "get" }),
+                    get.comment ? this.partials.comment(get.comment, { headingLevel }) : "",
+                    get.type ? this.partials.signatureReturns(get, { headingLevel }) : "",
+                    model.comment ? this.partials.comment(model.comment, { headingLevel }) : "",
+                    this.partials.inheritance(model, { headingLevel }),
+                ]
+                    .filter(Boolean)
+                    .join("\n\n");
+            },
+            // The partial reads no more of the model than these.
+            inheritance: (model, options) => inheritance({ implementationOf: model.implementationOf }, options),
+            propertiesTable: (model, options) => {
+                const fieldRows = new Set(
+                    model.filter((property) => property.type?.declaration?.children?.some((field) => field.comment)),
+                );
+                const properties = model.flatMap((property) =>
+                    fieldRows.has(property) ? this.helpers.getFlattenedDeclarations([property]) : [property],
+                );
+                const comments = properties.map((property) =>
+                    property.comment ? this.partials.comment(property.comment, { isTableColumn: true }).trim() : "",
+                );
+                if (!comments.some(Boolean)) return propertiesTable(model, options);
+                const rows = properties.map((property, index) => {
+                    const anchor = this.router.hasUrl(property)
+                        ? `<a id="${this.router.getAnchor(property)}"></a> `
+                        : "";
+                    const modifier = this.helpers.getModifier(property);
+                    let name = `\`${modifier ? `${modifier} ` : ""}${property.name}${property.flags.isOptional ? "?" : ""}\``;
+                    if (property.isDeprecated?.()) name = `~~${name}~~`;
+                    const type = this.helpers.getDeclarationType(property);
+                    const forceCollapse = !fieldRows.has(property);
+                    const typeLine = type ? `<br>${this.partials.someType(type, { forceCollapse })}` : "";
+                    return `| ${tableCell(anchor + name + typeLine)} | ${tableCell(comments[index] || "-")} |`;
+                });
+                const kind = options?.isEventProps
+                    ? i18n.theme_event()
+                    : ReflectionKind.singularString(ReflectionKind.Property);
+                return [`| ${kind} | ${i18n.theme_description()} |`, "| ------ | ------ |", ...rows].join("\n");
+            },
+            signatureReturns: (model, options) => {
+                const declaration = model.type?.declaration;
+                const repeatsType =
+                    !model.comment?.getTag("@returns") &&
+                    !(model.type && this.helpers.hasUsefulTypeDetails(model.type)) &&
+                    !declaration?.signatures?.length &&
+                    !declaration?.children;
+                return repeatsType ? "" : signatureReturns(model, options);
+            },
+        };
+    }
+}
+
+class UDocTheme extends MarkdownTheme {
+    getRenderContext(page) {
+        return new UDocThemeContext(this, page, this.application.options);
+    }
+}
+
 export function load(app) {
+    app.renderer.defineTheme("udoc", UDocTheme);
+
     let common;
     const exportingCommon = [];
 
@@ -279,6 +380,17 @@ export function load(app) {
                 for (const group of module.groups ?? []) {
                     group.children.sort((a, b) => a.name.localeCompare(b.name));
                 }
+            }
+            // TypeDoc files a package's "Engine types" under "Modules", its
+            // first group. It is what the package's types are built from,
+            // so it goes last, under its own name.
+            const name = app.options.getValue("internalModule");
+            for (const module of context.project.children ?? []) {
+                const index = module.groups?.findIndex((group) => group.children.every((child) => child.name === name));
+                if (index === undefined || index < 0) continue;
+                const [group] = module.groups.splice(index, 1);
+                group.title = name;
+                module.groups.push(group);
             }
         },
         -200,

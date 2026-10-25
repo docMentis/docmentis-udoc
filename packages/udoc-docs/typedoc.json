@@ -41,6 +41,19 @@
     "disableSources": true,
     "excludeScopesInPaths": true,
     "hidePageHeader": true,
+    // Pages to scan: a signature is one code block, and properties and
+    // parameters are a table each, a row apiece, not a heading apiece. Where a
+    // member comes from in udoc-ui's class hierarchy is nothing a reader acts
+    // on, so tables leave out "Inherited from" and "Overrides", as the
+    // plugin's theme does for members.
+    "theme": "udoc",
+    "useCodeBlocks": true,
+    "indexFormat": "table",
+    "parametersFormat": "table",
+    "interfacePropertiesFormat": "table",
+    "typeAliasPropertiesFormat": "table",
+    "typeDeclarationFormat": "table",
+    "tableColumnSettings": { "hideInherited": true, "hideOverrides": true },
     "validation": {
         "notExported": true,
         "invalidLink": true,
