@@ -38,7 +38,7 @@ export default defineConfig({
     head: [["link", { rel: "icon", type: "image/svg+xml", href: `${base}favicon.svg` }]],
     themeConfig: {
         logo: { light: "/logo.svg", dark: "/logo-dark.svg", alt: "docMentis" },
-        siteTitle: "udoc",
+        siteTitle: false,
         nav: [
             { text: "Guide", link: "/guide/quick-start" },
             { text: "API reference", link: "/api/" },
