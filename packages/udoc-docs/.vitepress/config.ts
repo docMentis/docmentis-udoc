@@ -66,6 +66,10 @@ export default defineConfig({
     themeConfig: {
         logo: { light: "/logo.svg", dark: "/logo-dark.svg", alt: "docMentis" },
         siteTitle: false,
+        // The footer the default theme shows on a page without a sidebar, the
+        // home page; the theme repeats the copyright under every other page
+        // (`theme/index.ts`). The year is the build's, a release's.
+        footer: { copyright: `Copyright © ${new Date().getFullYear()} docMentis LLC` },
         nav: [
             { text: "Guide", link: "/guide/quick-start" },
             { text: "API reference", link: "/api/" },

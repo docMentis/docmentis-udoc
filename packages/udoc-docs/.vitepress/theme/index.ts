@@ -20,7 +20,21 @@ const HeroEyebrow = defineComponent(() => {
     };
 });
 
+// The footer's copyright under a page with a sidebar — a guide's, the
+// reference's — where the default theme hides its footer.
+const DocCopyright = defineComponent(() => {
+    const { theme } = useData();
+    return () => {
+        const copyright: unknown = theme.value.footer?.copyright;
+        return typeof copyright === "string" ? h("p", { class: "doc-copyright" }, copyright) : null;
+    };
+});
+
 export default {
     extends: DefaultTheme,
-    Layout: () => h(DefaultTheme.Layout, null, { "home-hero-info-before": () => h(HeroEyebrow) }),
+    Layout: () =>
+        h(DefaultTheme.Layout, null, {
+            "home-hero-info-before": () => h(HeroEyebrow),
+            "doc-after": () => h(DocCopyright),
+        }),
 } satisfies Theme;

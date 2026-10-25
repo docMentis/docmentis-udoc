@@ -148,6 +148,18 @@
     background-color: var(--vp-code-bg);
 }
 
+/* The copyright under a guide or reference page, set as the home page's
+   footer is: below a rule, small and muted. */
+.doc-copyright {
+    margin-top: 48px;
+    border-top: 1px solid var(--vp-c-divider);
+    padding-top: 24px;
+    line-height: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--vp-c-text-2);
+}
+
 /* A row reads from its top: a name beside a description of several lines
    heads it, not centers on it. */
 .vp-doc td {
