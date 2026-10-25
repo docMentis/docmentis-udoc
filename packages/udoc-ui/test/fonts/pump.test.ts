@@ -281,7 +281,6 @@ test("a stale completion re-shapes nothing", async () => {
 
     assert.equal(engine.refreshes(), 0);
     assert.equal(repaints, 0);
-    assert.equal(clock.waiting(), 0, "and owes no re-shape later");
 });
 
 test("a session that goes away mid-flight drops what landed", async () => {
@@ -405,13 +404,13 @@ test("a font landing during the wait joins the install", async () => {
     assert.equal(engine.refreshes(), 1);
 });
 
-test("a batch of refusals re-shapes later, not now", async () => {
-    // Nothing new to draw with, so the page cannot change — but the refusal is
-    // still owed the re-shape that asks the next vendor.
+test("a batch of refusals re-shapes nothing, and takes the next orders at once", async () => {
+    // Nothing was installed, so the page cannot change; and the engine put the
+    // next vendor on order as it settled the refusal, so the pump takes it now.
     const queue = manualQueue();
     const clock = manualClock();
     const fetch = heldFetch();
-    const engine = fakeSession([[order(1)]]);
+    const engine = fakeSession([[order(1)], [order(2)]]);
     const kick = createFontPump({
         session: () => engine.session,
         enqueue: queue.enqueue,
@@ -425,97 +424,8 @@ test("a batch of refusals re-shapes later, not now", async () => {
     await flush();
     clock.fireNext();
     queue.run();
-    assert.equal(engine.refreshes(), 0, "not on the refusal itself");
-    assert.equal(clock.waiting(), 1, "but owed");
 
-    clock.fireNext();
-    queue.run();
-    assert.equal(engine.refreshes(), 1, "once the wait runs out");
-});
-
-test("each refusal pushes the owed re-shape back", async () => {
-    // Refusals trickle in during a document's opening seconds; the re-shape
-    // they are owed runs once, after the last.
-    const queue = manualQueue();
-    const clock = manualClock();
-    const fetch = heldFetch();
-    const engine = fakeSession([[order(1), order(2)]]);
-    const kick = createFontPump({
-        session: () => engine.session,
-        enqueue: queue.enqueue,
-        repaint: () => {},
-        fetch: fetch.fetch,
-        schedule: clock.schedule,
-    });
-    kick();
-
-    fetch.settle(1, []);
-    await flush();
-    clock.fireNext();
-    queue.run();
-    fetch.settle(2, []);
-    await flush();
-    clock.fireNext();
-    queue.run();
-    assert.equal(clock.waiting(), 1, "one owed re-shape, not two");
-
-    clock.fireAll();
-    queue.run();
-    assert.equal(engine.refreshes(), 1);
-});
-
-test("a font that installs pays the refusals' re-shape", async () => {
-    const queue = manualQueue();
-    const clock = manualClock();
-    const fetch = heldFetch();
-    const engine = fakeSession([[order(1), order(2)]]);
-    const kick = createFontPump({
-        session: () => engine.session,
-        enqueue: queue.enqueue,
-        repaint: () => {},
-        fetch: fetch.fetch,
-        schedule: clock.schedule,
-    });
-    kick();
-
-    fetch.settle(1, []);
-    await flush();
-    clock.fireNext();
-    queue.run();
-    fetch.settle(2);
-    await flush();
-    clock.fireNext(); // the install's wait, shorter than the owed one
-    queue.run();
-
-    assert.equal(engine.refreshes(), 1, "the install re-shaped");
-    assert.equal(clock.waiting(), 0, "and the owed re-shape is off");
-});
-
-test("an owed re-shape an install already paid does nothing", async () => {
-    // Both waits ran out with the install's job ahead in the queue: the install
-    // re-shapes, and the owed job behind it finds the debt settled.
-    const queue = manualQueue();
-    const clock = manualClock();
-    const fetch = heldFetch();
-    const engine = fakeSession([[order(1), order(2)]]);
-    const kick = createFontPump({
-        session: () => engine.session,
-        enqueue: queue.enqueue,
-        repaint: () => {},
-        fetch: fetch.fetch,
-        schedule: clock.schedule,
-    });
-    kick();
-
-    fetch.settle(1, []);
-    await flush();
-    clock.fireNext();
-    queue.run();
-    fetch.settle(2);
-    await flush();
-    clock.fireAll(); // install's wait, then the owed one — both jobs queued
-    assert.equal(queue.jobs.length, 2);
-    queue.run();
-
-    assert.equal(engine.refreshes(), 1);
+    assert.equal(engine.refreshes(), 0, "no re-shape for a refusal");
+    assert.equal(clock.waiting(), 0, "and none owed for later");
+    assert.ok(fetch.pending.has(2), "the next vendor's order went out");
 });

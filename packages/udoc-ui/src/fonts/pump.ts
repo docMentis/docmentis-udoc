@@ -15,16 +15,17 @@
  * event loop; and only the install — the `&mut self` part — goes back through
  * the queue as a job of its own.
  *
- * The pump also drives itself. A landed font can put more on order (a vendor
- * that turned out not to have the characters advances the chain), so installing
- * kicks again and the cycle runs to quiet without anyone asking.
+ * The pump also drives itself. A settled order can put more on order (a vendor
+ * that turned out not to have the characters puts the next one on order), so
+ * settling kicks again and the cycle runs to quiet without anyone asking.
  *
  * And it keeps re-shaping rare, because a re-shape is `refresh_fonts`: every
  * composed page laid out again, as one job the reader waits behind. Fonts that
- * land within {@link INSTALL_WAIT_MS} of each other install together; a batch
- * that installed a font re-shapes at once; and a batch of nothing but refusals
- * — "this vendor has none of those" — changes nothing on screen, so its
- * re-shape waits {@link REFUSAL_RESHAPE_MS} for one that will happen anyway.
+ * land within {@link INSTALL_WAIT_MS} of each other install together, and a
+ * batch that installed a font re-shapes at once. A batch of nothing but
+ * refusals — "this vendor has none of those" — re-shapes not at all: it
+ * installed nothing, so nothing on screen can change, and the engine has
+ * already put the next vendor on order.
  */
 
 import type { FontRequest } from "@docmentis/udoc-wasm";
@@ -47,16 +48,6 @@ export interface FontPumpSession {
  */
 const INSTALL_WAIT_MS = 100;
 
-/**
- * How long a refusal waits for a re-shape before forcing one.
- *
- * A refusal still owes one: re-resolving is what asks the next vendor down the
- * chain, so a character a vendor refused keeps its stand-in until something
- * re-shapes it. A font that installs meanwhile re-shapes anyway and pays the
- * debt; otherwise this does, once the refusals stop coming.
- */
-const REFUSAL_RESHAPE_MS = 500;
-
 /** What a pump needs from its worker. */
 export interface FontPumpDeps {
     /** The live session, or `null` once it is closed or replaced. */
@@ -74,10 +65,10 @@ export interface FontPumpDeps {
      */
     fetch: (order: FontRequest) => Promise<Uint8Array[]>;
     /**
-     * Run `callback` after `ms`, returning what cancels it — `setTimeout` in the
-     * worker. A parameter so tests move the clock by hand.
+     * Run `callback` after `ms` — `setTimeout` in the worker. A parameter so
+     * tests move the clock by hand.
      */
-    schedule: (callback: () => void, ms: number) => () => void;
+    schedule: (callback: () => void, ms: number) => void;
 }
 
 /**
@@ -91,14 +82,6 @@ export function createFontPump(deps: FontPumpDeps): () => void {
     /** Fetched orders waiting to be installed, so a burst installs in one pass. */
     const landed: Array<{ id: number; binaries: Uint8Array[] }> = [];
     let installArmed = false;
-    /**
-     * The session a refusal settled in since its last re-shape, which owes it
-     * one — or `null`. A session, not a flag, so a document replaced during the
-     * wait is not re-shaped for its predecessor's refusals.
-     */
-    let owedBy: FontPumpSession | null = null;
-    /** Cancels the wait before the owed re-shape, while it is still waiting. */
-    let cancelOwed: (() => void) | null = null;
 
     function kick(): void {
         const session = deps.session();
@@ -117,14 +100,6 @@ export function createFontPump(deps: FontPumpDeps): () => void {
         }
     }
 
-    /** Lay the composed pages out again against what is installed now. */
-    function reshape(session: FontPumpSession): void {
-        owedBy = null;
-        cancelOwed?.();
-        cancelOwed = null;
-        if (session.refreshFonts()) deps.repaint();
-    }
-
     function install(): void {
         installArmed = false;
         const batch = landed.splice(0);
@@ -134,14 +109,13 @@ export function createFontPump(deps: FontPumpDeps): () => void {
         // one — but dropping the binaries here frees them.
         if (!session) return;
         let installed = false;
-        let refused = false;
         for (const { id, binaries } of batch) {
             try {
                 // `[]` is a complete answer: "this vendor has nothing". Either
-                // way the order is finished, so the next layout moves on.
+                // way the order is finished, and a refusal puts the next vendor
+                // on order.
                 if (!session.completeFontRequest(BigInt(id), binaries)) continue;
                 if (binaries.length > 0) installed = true;
-                else refused = true;
             } catch {
                 // Per order, not per batch. The engine keeps one order per font
                 // out at a time, so an order left unsettled by a *neighbour's*
@@ -151,38 +125,14 @@ export function createFontPump(deps: FontPumpDeps): () => void {
             }
         }
         try {
-            if (installed) {
-                reshape(session);
-            } else if (refused) {
-                // Nothing new to draw with, so nothing on screen changes yet —
-                // but the refusal is owed a re-shape, the one that asks the next
-                // vendor. Each refusal pushes it back, so it runs once they
-                // stop coming, unless an install pays it first.
-                owedBy = session;
-                cancelOwed?.();
-                cancelOwed = deps.schedule(() => {
-                    cancelOwed = null;
-                    deps.enqueue(reshapeOwed);
-                }, REFUSAL_RESHAPE_MS);
-            }
+            // Lay the composed pages out again against what is installed now. A
+            // batch of refusals installed nothing, so there is nothing to lay out.
+            if (installed && session.refreshFonts()) deps.repaint();
             // A settled order frees its font's next one, refused or not.
             kick();
         } catch {
             // This runs as a queued job, with no request behind it to fail: a
             // re-shape that won't run is not worth taking the worker down for.
-        }
-    }
-
-    /** The re-shape refusals were owed, once nothing else paid it. */
-    function reshapeOwed(): void {
-        const session = deps.session();
-        // An install between the wait and this job already re-shaped.
-        if (!session || session !== owedBy) return;
-        try {
-            reshape(session);
-            kick();
-        } catch {
-            // As in `install`: no request behind it to fail.
         }
     }
 

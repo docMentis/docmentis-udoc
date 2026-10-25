@@ -769,10 +769,7 @@ const fetchFontOrders = createFontPump({
         scope.postMessage({ type: "fontsRefreshed" });
     },
     fetch: (order) => fetchFontBinaries(order, fetch, fontMemory, googleFontEndpoint),
-    schedule: (callback, ms) => {
-        const timer = setTimeout(callback, ms);
-        return () => clearTimeout(timer);
-    },
+    schedule: (callback, ms) => void setTimeout(callback, ms),
 });
 
 /** Run `job` on the session and resolve with what it returned. */
