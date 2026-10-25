@@ -349,8 +349,9 @@ export class UDocSession {
     }
 
     /**
-     * Export the whole document as `format` — a rendering of its laid-out
-     * pages, fixed and one-way. Rejects until PDF export is built.
+     * Export the whole document as `format`, `"pdf"` — a rendering of its
+     * laid-out pages, fixed and one-way. Rejects `unsupported` for a
+     * spreadsheet, whose sheets have no print pages yet.
      */
     exportToBytes(format: ExportFormat): Promise<Uint8Array> {
         return this.#call((id) => ({ id, type: "exportToBytes", format }));
@@ -358,8 +359,9 @@ export class UDocSession {
 
     /**
      * Export page `index` (0-based) of the document's primary plane as
-     * `format` — `{ png: { scale } }`, where `scale` is output pixels per
-     * document point (`1` is 72 DPI).
+     * `format`: `{ png: { scale } }`, where `scale` is output pixels per
+     * document point (`1` is 72 DPI), or `"svg"`, an SVG document sized in
+     * points.
      *
      * Composes the document through that page first — not past it. Rejects
      * `notFound` when the document turns out to have fewer pages; its message
