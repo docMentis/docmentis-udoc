@@ -6,6 +6,30 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Added
+
+- Emoji draw in color, from a font's color glyphs; one the document's fonts
+  lack, or sets in Segoe UI Emoji or Apple Color Emoji, draws in Noto Color
+  Emoji.
+- Saving a DOCX, PPTX or XLSX keeps its edits, by `"delta"`, over the
+  original, or `"rewrite"`, as a new file. A delta save gave back the original
+  unchanged, and a rewrite was refused.
+
+#### Changed
+
+- A web font one provider can't supply is ordered from the next at once,
+  without laying every page out again first.
+- A `.udoc` package saved by 0.8.0 from a PPTX no longer loads a slide holding
+  a link that jumps to a slide by its number, and a link into another deck
+  opens it a slide later.
+
+#### Fixed
+
+- An emoji with a variation selector, such as ❤️, draws instead of leaving a
+  gap, and a keycap such as 1️⃣ draws its digit once, not twice.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -35,6 +59,13 @@ listed once, by package. Its major and minor version are those of the
   first: the rows on screen are laid out for the first paint, and the rest in
   the background while the reader pauses. Issue #2's 32,863-row sheet paints
   in about 2 seconds, from about 20.
+- A large worksheet no longer lays out every row again when a web font changes
+  its rows' or columns' sizes, or before a jump into it.
+
+#### Fixed
+
+- A page narrower than the view, which shows centred, paints once per wheel
+  step and relayout, not twice.
 
 ## [0.8.0] - 2026-10-23
 
