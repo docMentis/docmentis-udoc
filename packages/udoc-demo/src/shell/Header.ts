@@ -22,10 +22,11 @@ export class Header {
 
     constructor(handlers: HeaderHandlers) {
         // Identical markup to the site's `Logo` component: DM Sans bold text,
-        // `doc` in slate-900, `Mentis` in indigo-600.
+        // `doc` in slate-900, `Mentis` in indigo-600. It opens the site in the
+        // whole window, not in the frame the site embeds the demo in.
         const logo = h(
             "a",
-            { class: "logo", href: "https://www.docmentis.com", title: "docMentis" },
+            { class: "logo", href: "https://www.docmentis.com", target: "_top", title: "docMentis" },
             h(
                 "span",
                 { class: "logo-text" },

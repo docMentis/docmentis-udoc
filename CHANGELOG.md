@@ -6,6 +6,13 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-demo
+
+#### Fixed
+
+- The docMentis logo opens the site in the whole window, not inside the frame
+  a page embeds the demo in.
+
 ## [0.8.2] - 2026-10-25
 
 Built on `@docmentis/udoc-wasm` 0.8.4.
