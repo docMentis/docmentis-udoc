@@ -10,9 +10,7 @@ listed once, by package. Its major and minor version are those of the
 
 #### Added
 
-- Published to npm: the demo, built to serve from any directory. It loads the
-  engine from `udoc-wasm/` beside it, laid out as `@docmentis/udoc-wasm`'s
-  `dist/`, or else from jsDelivr.
+- Published to npm: a demo app showcasing udoc-viewer and udoc-editor.
 - `?mode=view`, `edit`, `coedit` or `ai` opens the demo in that mode.
 
 ## [0.8.1] - 2026-10-24

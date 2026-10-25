@@ -1,7 +1,7 @@
 {
     "name": "@docmentis/udoc-demo",
     "version": "0.8.1",
-    "description": "The docMentis udoc demo, built to serve: the viewer and the editor on sample documents.",
+    "description": "A demo app showcasing the docMentis udoc-viewer and udoc-editor.",
     "keywords": [
         "demo",
         "document-viewer",
