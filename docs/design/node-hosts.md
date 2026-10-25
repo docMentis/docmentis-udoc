@@ -140,7 +140,8 @@ can be committed or baked into an image.
 | `POST /documents?format=` (the bytes)                                                                 | `201 { id }`, the document kept · a license refusal `503` with its code · unreadable `422`, `malformed` or `unsupported` · a udoc package `422 cannotImportPackage` · too large `413` · a `format` that isn't one `400`                                                                                                                                                         |
 | `GET /documents/:id/original`                                                                         | the upload, byte for byte — read from the store, with no session opened                                                                                                                                                                                                                                                                                                         |
 | `GET /documents/:id/layout/page-count`                                                                | `{ pageCount }` — a resource of its own, because the first ask composes the whole document                                                                                                                                                                                                                                                                                      |
-| `GET /documents/:id/layout/pages/:index.png?scale=`                                                   | the composed page as a PNG · no such page `404 notFound`                                                                                                                                                                                                                                                                                                                        |
+| `GET /documents/:id/layout/pages/:index.:format?scale=`                                               | the composed page as a PNG, at `?scale=` pixels per point, or an SVG, sized in points, which takes none · no such page `404 notFound` · a scale for an SVG `400 invalidRequest`                                                                                                                                                                                                 |
+| `GET /documents/:id/layout/pages.pdf`                                                                 | the document exported as a PDF of its laid-out pages: a rendering, fixed and one-way, not the faithful copy `file.pdf` saves of a PDF · a spreadsheet, whose sheets have no print pages yet, `422 unsupported`                                                                                                                                                                  |
 | `GET /documents/:id/package` · `…/package/:kinds/:partId` · `…/package/blobs/:key` · `…/package/crdt` | the latest checkpoint's description, one part — its, an opaque part an edit brought, or an earlier checkpoint's — one blob, the edit log — read from the store, with no session opened ([Node Streaming](node-streaming.md))                                                                                                                                                    |
 | `GET /documents/:id/collaboration`, upgraded to a WebSocket                                           | edit the document with every other client connected to it ([Node Collaboration](node-collaboration.md)) · a refusal takes the upgrade and closes it with a code · without the upgrade `426 upgradeRequired`                                                                                                                                                                     |
 | `GET /documents/:id/file.:format?strategy=`                                                           | a copy saved in the document's session as `format` — one of its own (`pdf`, `pptx`, …) by `strategy`, `rewrite` if absent, `delta` or `incremental`, or `udoc` for a package, which takes none (Core Save — Copy) · a format or strategy it can't be saved by `400 invalidRequest`, or a save not built `422 unsupported` · a strategy that isn't one, or one for `udoc`, `400` |
@@ -174,22 +175,25 @@ so the layout and the saves show the edits.
 the host names, and saying whether it was a package — or opens a package a server
 keeps, part by part ([Node Streaming](node-streaming.md)); counts the pages of its
 primary plane — composing all of them, since a page is known only once composed —
-exports one to PNG, and saves the document to one of its own formats or as a udoc
-package; offers each session the host's own fonts, as bytes or by URL, and the Google
-font catalog, and fills every font order a composing call places — a `file:` URL read
+exports one to PNG or SVG, exports the document to PDF, and saves it to one of its
+own formats or as a udoc package; offers each session the host's own fonts, as
+bytes or by URL, and the Google font catalog, and fills every font order a
+composing call places — a `file:` URL read
 from disk, anything else fetched, a Google family through css2, with the fulfiller the
 browser host uses (Text Font System) — composing again until
 none is left, so a page it exports is never drawn in a stand-in; keeps the font files
 it downloads in one cache per `UDocNode`, least recently used dropped first past a byte
 limit, which every session's worker asks before the network, so a second document naming
 a family downloads none of it;
-`udoc page-count` prints the count, `udoc render` writes one page to a PNG,
-and `udoc save` writes the document in the format its output's extension names;
+`udoc page-count` prints the count, `udoc render` writes one page to a PNG or an
+SVG, `udoc export` writes the document as a PDF of its pages, and `udoc save` writes
+it in the format its output's extension names;
 `udoc-server`, listening on loopback by default or embedded in a host's own Node
 server beneath a base path, keeps each upload as its original
 and its checkpoints, a directory per document; serves the original and the package
 part by part from the store ([Node Streaming](node-streaming.md)); serves counts,
-pages, copies and checkpoints from a pool of sessions over what it keeps; and lets
+pages as PNGs or SVGs, the document exported as a PDF, copies and checkpoints from a
+pool of sessions over what it keeps; and lets
 clients edit a document together, keeping its edit log ([Node Collaboration](node-collaboration.md)),
 through the engine's sync calls, which `udoc-node` carries. The native CLI is
 `udoc-debug`, and VRT replay picks whichever of the two names a replayed revision

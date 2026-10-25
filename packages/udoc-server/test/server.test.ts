@@ -29,7 +29,15 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { inflateRawSync } from "node:zlib";
 
 import { UDocError } from "@docmentis/udoc-node";
-import type { FileFormat, PageExportFormat, SaveStrategy, UDocNode, UDocSession, UDocType } from "@docmentis/udoc-node";
+import type {
+    ExportFormat,
+    FileFormat,
+    PageExportFormat,
+    SaveStrategy,
+    UDocNode,
+    UDocSession,
+    UDocType,
+} from "@docmentis/udoc-node";
 
 import { createUDocServer } from "../src/server.ts";
 import type { UDocServerOptions } from "../src/server.ts";
@@ -77,6 +85,10 @@ class FakeSession {
     readonly fromPackage: boolean;
     readonly package: Uint8Array;
     readonly renders: { index: number; scale: number }[] = [];
+    /** The page of every export as an SVG. */
+    readonly svgs: number[] = [];
+    /** The format of every export of the whole document. */
+    readonly exports: ExportFormat[] = [];
     /** The strategy of every save as its own format, and the version of every save as a package. */
     readonly saves: (SaveStrategy | undefined)[] = [];
     readonly packageSaves: (number | undefined)[] = [];
@@ -117,11 +129,16 @@ class FakeSession {
         return 3;
     }
     async exportPageToBytes(index: number, format: PageExportFormat): Promise<Uint8Array> {
-        assert.notEqual(format, "svg");
-        this.renders.push({ index, scale: format !== "svg" ? format.png.scale : 0 });
+        if (format === "svg") this.svgs.push(index);
+        else this.renders.push({ index, scale: format.png.scale });
         await this.hold;
         if (index >= 3) throw new UDocError("notFound", "the document has 3 page(s)");
-        return new Uint8Array([index]);
+        return format === "svg" ? bytesOf(`<svg>${index}</svg>`) : new Uint8Array([index]);
+    }
+    async exportToBytes(format: ExportFormat): Promise<Uint8Array> {
+        this.exports.push(format);
+        if (this.docType === "spreadsheet") throw new UDocError("unsupported", "its sheets have no print pages");
+        return bytesOf("%PDF");
     }
     async saveToBytes(format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
         this.saves.push(strategy);
@@ -382,6 +399,32 @@ test("an upload is kept as its original and its first checkpoint, served, and de
     assert.deepEqual(await readdir(directory), []);
     assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/layout/pages/0.png`)), [404, "notFound"]);
     assert.deepEqual(await errorOf(await request("DELETE", `/documents/${id}`)), [404, "notFound"]);
+});
+
+test("a page exports as an SVG, and the document as a PDF of its pages", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { udoc, request } = await serve(t, directory);
+    const { id } = (await (await request("POST", "/documents", "pdf")).json()) as { id: string };
+
+    const svg = await request("GET", `/documents/${id}/layout/pages/1.svg`);
+    assert.equal(svg.status, 200);
+    assert.equal(svg.headers.get("content-type"), "image/svg+xml");
+    assert.equal(await svg.text(), "<svg>1</svg>");
+    const pdf = await request("GET", `/documents/${id}/layout/pages.pdf`);
+    assert.equal(pdf.status, 200);
+    assert.equal(pdf.headers.get("content-type"), "application/pdf");
+    assert.equal(await pdf.text(), "%PDF");
+    const { session } = udoc.opened.find(({ bytes }) => bytes === keptUrl(id))!;
+    assert.deepEqual(session.svgs, [1]);
+    assert.deepEqual(session.exports, ["pdf"]);
+    assert.deepEqual(session.renders, [], "an SVG is no PNG render");
+
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/layout/pages/1.svg?scale=2`)), [
+        400,
+        "invalidRequest",
+    ]);
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/layout/pages/3.svg`)), [404, "notFound"]);
+    assert.equal((await request("GET", `/documents/${id}/layout/pages/1.jpg`)).status, HOST_STATUS);
 });
 
 test("an encrypted upload opens with the password its header sends, and nothing is kept without it", async (t) => {

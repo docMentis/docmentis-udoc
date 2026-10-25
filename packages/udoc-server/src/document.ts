@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 
 import { UDocError, isFileFormat } from "@docmentis/udoc-node";
-import type { FileFormat, SaveStrategy, UDocNode, UDocSession } from "@docmentis/udoc-node";
+import type { FileFormat, PageExportFormat, SaveStrategy, UDocNode, UDocSession } from "@docmentis/udoc-node";
 
 import type { Collaborations } from "./collaboration.ts";
 import { HttpFailure, bytes, failureOf, json, noContent, notFound } from "./http.ts";
@@ -63,7 +63,10 @@ export function documentRoutes({
         route("DELETE", "/documents/:id", deleteDocument),
         route("GET", "/documents/:id/original", original),
         route("GET", "/documents/:id/layout/page-count", pageCount),
-        route("GET", "/documents/:id/layout/pages/:index.png", page, { params: { index: /\d+/ } }),
+        route("GET", "/documents/:id/layout/pages.pdf", pages),
+        route("GET", "/documents/:id/layout/pages/:index.:format", page, {
+            params: { index: /\d+/, format: /png|svg/ },
+        }),
         route("GET", "/documents/:id/file.:format", file, { params: { format: /\w+/ } }),
         route("POST", "/documents/:id/checkpoints", checkpoint),
         route("GET", "/documents/:id/package", packageResource),
@@ -131,15 +134,18 @@ export function documentRoutes({
     }
 
     /**
-     * Composed page `index`, counting from 0, as a PNG. `?scale=` is output
-     * pixels per point, `1` if absent.
+     * Composed page `index`, counting from 0, as a PNG or an SVG, as its
+     * extension names. A PNG's `?scale=` is output pixels per point, `1` if
+     * absent; an SVG, sized in points, takes none.
      */
     async function page({ params, query }: RouteRequest): Promise<Reply> {
         const id = documentId(params);
         const index = Number(params.index);
-        const scale = scaleOf(query.get("scale"));
-        const png = await sessions.use(id, (session) =>
-            session.exportPageToBytes(index, { png: { scale } }).catch((error: unknown) => {
+        const svg = params.format === "svg";
+        if (svg && query.has("scale")) throw new HttpFailure(400, "invalidRequest", "scale is for a PNG");
+        const format: PageExportFormat = svg ? "svg" : { png: { scale: scaleOf(query.get("scale")) } };
+        const exported = await sessions.use(id, (session) =>
+            session.exportPageToBytes(index, format).catch((error: unknown) => {
                 // The path only matches digits and the scale is checked above,
                 // so `notFound` here means there is no such page — whose
                 // address is ours to word.
@@ -148,7 +154,17 @@ export function documentRoutes({
                     : error;
             }),
         );
-        return bytes(png, "image/png");
+        return bytes(exported, svg ? "image/svg+xml" : "image/png");
+    }
+
+    /**
+     * The document exported as a PDF of its laid-out pages: a rendering, fixed
+     * and one-way, apart from the copy `file.pdf` saves of a PDF. A spreadsheet,
+     * whose sheets have no print pages yet, `422 unsupported`.
+     */
+    async function pages({ params }: RouteRequest): Promise<Reply> {
+        const pdf = await sessions.use(documentId(params), (session) => session.exportToBytes("pdf"));
+        return bytes(pdf, "application/pdf");
     }
 
     /**
