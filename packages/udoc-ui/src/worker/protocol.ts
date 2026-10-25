@@ -1837,7 +1837,9 @@ export interface PlaneLoadedReport {
  * the reader, in the background, and this is its layout now — the composed
  * page count and content size the host's scroll bounds follow, and whether it
  * is `complete`. The worker starts composing ahead once an opened document has
- * painted, and again after each edit and sheet switch, until it is complete.
+ * painted, and again after each edit, sheet switch and font re-shape, until it
+ * is complete. A worksheet's grid composes ahead by its rows, whose extent is
+ * known before they are, so it posts none.
  */
 export interface ComposedReport {
     type: "composed";

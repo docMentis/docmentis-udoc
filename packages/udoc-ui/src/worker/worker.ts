@@ -528,11 +528,30 @@ function emitHistory(): void {
 const BACKGROUND_QUIET_MS = 300;
 
 /**
- * How many pages each compose-ahead step composes. Kept small: composition is
- * synchronous, so a request that arrives during a step waits out the whole
- * step. Tune up for faster background fill, down for a quicker answer.
+ * How many pages each compose-ahead step composes on a paged plane, and how
+ * many rows on a worksheet's grid — whatever size of block the engine composes
+ * them in, about 30 ms of composing on a large sheet. Kept small: composition
+ * is synchronous, so a request that arrives during a step waits out the whole
+ * step. Tune up for faster background fill, down for a quicker answer; each
+ * step also costs a turn of the event loop, which a chain of them clamps to
+ * 4 ms.
  */
 const COMPOSE_BATCH = 2;
+const COMPOSE_ROWS = 64;
+
+/**
+ * How many times a compose-ahead step on a grid asks for its rows at most,
+ * passing over those already composed — the view's, which each frame composes —
+ * to reach some that aren't. Rows already composed cost the engine a bit-check.
+ */
+const ROW_ASKS_PER_STEP = 256;
+
+/**
+ * Excel's row count. Compose-ahead on a grid ends here even when the grid
+ * hasn't reported itself complete: the engine doesn't say how many rows a grid
+ * has, so this is the walk's safety net.
+ */
+const SHEET_ROWS = 1_048_576;
 
 /** The font pump's installs, waiting their turn. */
 const fontInstalls: Job[] = [];
@@ -572,14 +591,15 @@ const thumbnailTask: Task = {
 };
 
 /**
- * Where compose-ahead has reached — the composed page count its last step left
- * — or `null` with nothing left for it to compose.
+ * Where compose-ahead has reached, or `null` with nothing left for it to
+ * compose: on a paged plane, the composed page count its last step left; on a
+ * worksheet's grid, the next row it asks for.
  */
-let composedThrough: number | null = null;
+let composeAt: { pages: number } | { rows: number } | null = null;
 
 const composeTask: Task = {
     quietMs: BACKGROUND_QUIET_MS,
-    pending: () => composedThrough !== null,
+    pending: () => composeAt !== null,
     take: () => composeAhead,
 };
 
@@ -744,6 +764,7 @@ const fetchFontOrders = createFontPump({
     },
     repaint: () => {
         scheduleFrame();
+        fontsReshaped();
         // Text may sit elsewhere now; what the host placed by it is placed again.
         scope.postMessage({ type: "fontsRefreshed" });
     },
@@ -794,47 +815,98 @@ function startBackground(s: WasmSession): void {
 /** Drop the open document's background work: compose-ahead and the sheet walk. */
 function stopBackground(): void {
     backgroundAfterPaint = false;
-    composedThrough = null;
+    composeAt = null;
     walkFrom = null;
     loadedSheets.clear();
 }
 
 /**
- * Compose ahead on `s` from the pages composed so far, a step at a time, as
- * background work, until it is complete. Pages compose lazily, so an open, an
- * edit or a sheet switch only lays out the visible window; this fills in the
- * rest, growing the page count and content extent (and the scrollbar) the host
- * is told of ({@link ComposedReport}).
+ * Compose ahead on `s`'s current plane, a step at a time, as background work,
+ * until it is complete. Pages compose lazily, so an open, an edit or a sheet
+ * switch only lays out the visible window; this fills in the rest — a paged
+ * plane's pages, growing the page count and content extent (and the
+ * scrollbar) the host is told of ({@link ComposedReport}), or a worksheet's
+ * rows, so a scroll finds them laid out.
  */
 function startComposeAhead(s: WasmSession): void {
-    composedThrough = s.composedPageCount();
+    composeAgain(s);
     // Web families a document references aren't bundled; the engine renders
     // them in a stand-in and puts them on order. Kicked now, so the visible
     // window's fonts start downloading at once rather than a step later.
     fetchFontOrders();
+}
+
+/** Start compose-ahead on `s`'s current plane over: a grid from its first row, a paged plane from its composed pages. */
+function composeAgain(s: WasmSession): void {
+    composeAt = composesByRows(s) ? { rows: 0 } : { pages: s.composedPageCount() };
     lanes.wake();
 }
 
-/** Compose-ahead's next step: a few pages more, and the layout they grew posted. */
+/** Whether `s` shows a worksheet's grid, which composes by rows, rather than pages. */
+function composesByRows(s: WasmSession): boolean {
+    return s.docType() === "spreadsheet" && !s.planeIsChartsheet(s.currentPlane());
+}
+
+/**
+ * Fonts landed and the document was re-shaped against them: a page break may
+ * have moved, and a worksheet's composed rows were dropped, so compose ahead
+ * again — once the document has painted, as after an open.
+ */
+function fontsReshaped(): void {
+    if (!session || backgroundAfterPaint || session.docType() === undefined || session.needsPassword()) return;
+    composeAgain(session);
+}
+
+/** Compose-ahead's next step, on a paged plane or a worksheet's grid. */
 function composeAhead(): void {
-    const from = composedThrough;
+    const at = composeAt;
     // Off before the step, so one that throws ends compose-ahead rather than
     // repeating.
-    composedThrough = null;
-    if (!session || from === null) return;
-    const layout = composeThrough(session, from + COMPOSE_BATCH - 1);
+    composeAt = null;
+    if (!session || at === null) return;
+    if ("rows" in at) composeRowsAhead(session, at.rows);
+    else composePagesAhead(session, at.pages);
+}
+
+/** A paged plane's compose-ahead step: a few pages more, and the layout they grew posted. */
+function composePagesAhead(s: WasmSession, from: number): void {
+    const layout = composeThrough(s, from + COMPOSE_BATCH - 1);
     // `complete` is the engine saying there is nothing left to compose — the
     // only authority on the document's length, since a page is known only once
     // composed. The no-growth check is the safety net: a page that fails to
     // compose is left out and never reports complete, and without it
     // compose-ahead would spin on it forever.
-    if (!layout.complete && layout.composedPageCount > from) composedThrough = layout.composedPageCount;
+    if (!layout.complete && layout.composedPageCount > from) composeAt = { pages: layout.composedPageCount };
     scope.postMessage({ type: "composed", layout });
 }
 
 /**
+ * A worksheet grid's compose-ahead step, from row `from` down: past the rows
+ * already composed — the view's among them, which each frame composes with a
+ * view below — to the next that aren't, which it composes. A grid's extent is
+ * known before its rows are, so there is no layout to post. It ends once the
+ * grid reports every row composed.
+ */
+function composeRowsAhead(s: WasmSession, from: number): void {
+    const before = s.composedRowCount();
+    let row = from;
+    let done = false;
+    for (let asked = 0; asked < ROW_ASKS_PER_STEP && !done; asked++) {
+        done = s.updateLayout({ rows: { start: row, limit: row + COMPOSE_ROWS - 1 } });
+        row += COMPOSE_ROWS;
+        done ||= row >= SHEET_ROWS;
+        if (s.composedRowCount() !== before) break;
+    }
+    if (!done) composeAt = { rows: row };
+    // The rows just composed may name families nothing has asked for yet.
+    fetchFontOrders();
+}
+
+/**
  * Compose `s` through page index `pageLimit`, as an `updateLayout` request or a
- * compose-ahead step asks, and read its layout after, with `complete`.
+ * paged compose-ahead step asks, and read its layout after, with `complete`.
+ * Every page up to it, from the first — and a worksheet's grid whole, which a
+ * pages scope covering it composes: what a print or a page render needs.
  */
 function composeThrough(s: WasmSession, pageLimit: number): DocumentLayout {
     // The pages composed are off-screen, so normally only the layout (page
@@ -844,7 +916,7 @@ function composeThrough(s: WasmSession, pageLimit: number): DocumentLayout {
     // new pages are off-screen. Capture the scale across the step and repaint
     // only when it moved (a no-op for a uniform-size document).
     const scaleBefore = s.viewState()[0] ?? 0;
-    const complete = s.updateLayout(pageLimit);
+    const complete = s.updateLayout({ pages: { start: 0, limit: pageLimit } });
     const layout = { ...layoutOf(s), complete };
     const scaleAfter = s.viewState()[0] ?? 0;
     // A peer's selection can reference a page this side hadn't composed yet;

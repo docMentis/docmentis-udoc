@@ -1678,8 +1678,10 @@ export class WorkerClient {
      * Subscribe to compose-ahead — fired as the worker composes more of the
      * document ahead of the reader, in the background, with the layout that
      * grew: composed page count, content size, and whether it is complete. It
-     * starts once an opened document has painted, and again after each edit and
-     * sheet switch. Returns an unsubscribe function.
+     * starts once an opened document has painted, and again after each edit,
+     * sheet switch and font re-shape. A worksheet composes ahead by its rows,
+     * which grows nothing the host keeps, so it fires none. Returns an
+     * unsubscribe function.
      */
     onComposed(listener: (layout: DocumentLayout) => void): () => void {
         this.#composedListeners.add(listener);

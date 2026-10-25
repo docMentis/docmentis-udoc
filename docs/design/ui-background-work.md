@@ -25,12 +25,19 @@ A reader waits at most for the one slice already running.
 
 Priority is the order of the table.
 
-| Task          | One slice                                                         | Starts                                                               | Stops                                     |
-| ------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------- |
-| Font installs | install a fetched batch, or settle a refusal; re-shape every page | the font pump fetched a batch, or a font was refused                 | nothing left to install                   |
-| Thumbnails    | rasterize the queued page nearest the strip's focus               | the strip queues a render                                            | queue empty: rendered, cancelled, dropped |
-| Compose-ahead | compose two more pages, post the layout (`composed`)              | an opened document's first paint; an edit, undo, merge, sheet switch | complete, or a step that didn't grow      |
-| Sheet walk    | load the next sheet not loaded yet, post its tab (`planeLoaded`)  | an opened workbook's first paint                                     | its last sheet                            |
+| Task          | One slice                                                                                               | Starts                                                                              | Stops                                     |
+| ------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------- |
+| Font installs | install a fetched batch, or settle a refusal; re-shape every page                                       | the font pump fetched a batch, or a font was refused                                | nothing left to install                   |
+| Thumbnails    | rasterize the queued page nearest the strip's focus                                                     | the strip queues a render                                                           | queue empty: rendered, cancelled, dropped |
+| Compose-ahead | compose two more pages, post the layout (`composed`); on a worksheet, the next 64 rows not yet composed | an opened document's first paint; an edit, undo, merge, sheet switch, font re-shape | complete, or a step that didn't grow      |
+| Sheet walk    | load the next sheet not loaded yet, post its tab (`planeLoaded`)                                        | an opened workbook's first paint                                                    | its last sheet                            |
+
+A worksheet's grid composes by rows, in blocks, so compose-ahead walks it down
+from its first row, 64 rows a step: past the rows already composed (the view's,
+which each frame composes with a view below) to the next that aren't. Its
+extent is known before its rows are, so it posts nothing; it ends when the grid
+reports every row composed. A font re-shape drops a sheet's composed rows, so
+compose-ahead starts over after one.
 
 A task hands out its slice only as the slice runs. Nothing is queued ahead of
 time, so nothing goes stale and no generation counter is needed: an open, a

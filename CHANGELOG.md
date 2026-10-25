@@ -31,6 +31,10 @@ listed once, by package. Its major and minor version are those of the
   reader has paused for a moment, so scrolling, hovering or typing never lands
   behind it. A reader waits at most for the one background step already
   running, and its paint comes before the next.
+- A large worksheet paints once it has loaded, without laying out every row
+  first: the rows on screen are laid out for the first paint, and the rest in
+  the background while the reader pauses. Issue #2's 32,863-row sheet paints
+  in about 2 seconds, from about 20.
 
 ## [0.8.0] - 2026-10-23
 

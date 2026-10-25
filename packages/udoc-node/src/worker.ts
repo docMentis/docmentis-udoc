@@ -205,7 +205,7 @@ function registerHostFonts(s: WasmSession): void {
  * that vendor, and a family's chain of vendors is finite.
  */
 async function updateLayoutSettled(s: WasmSession, index: number): Promise<boolean> {
-    let complete = s.updateLayout(index);
+    let complete = s.updateLayout({ pages: { start: 0, limit: index } });
     for (let orders = s.takeFontRequests(); orders.length > 0; orders = s.takeFontRequests()) {
         const settled = await Promise.all(
             orders.map(
@@ -219,7 +219,7 @@ async function updateLayoutSettled(s: WasmSession, index: number): Promise<boole
         s.refreshFonts();
         // Re-shaping can move page breaks, so the page asked for may sit
         // beyond what is composed now.
-        complete = s.updateLayout(index);
+        complete = s.updateLayout({ pages: { start: 0, limit: index } });
     }
     return complete;
 }
