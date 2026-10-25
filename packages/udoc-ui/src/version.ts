@@ -3,4 +3,4 @@
 // The version of the `@docmentis/udoc-wasm` this package is built against,
 // whose copy on a CDN it falls back to. Generated from its package.json, which
 // is the one place a release bumps.
-export const WASM_VERSION = "0.8.3";
+export const WASM_VERSION = "0.8.4";
