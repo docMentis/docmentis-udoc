@@ -6,6 +6,63 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Added
+
+- A map chart shades its regions through a three-color scale, its middle color
+  shown in the legend's bar as well, and labels each region with its name,
+  placed as PowerPoint places it.
+
+### udoc-viewer and udoc-editor
+
+#### Added
+
+- `exportToBytes("pdf")` exports the document as a PDF of its laid-out pages,
+  and `exportPageToBytes(page, format)` a page as the bytes of a PNG,
+  `{ png: { scale } }`, or an SVG, `"svg"`, as udoc-node's do. Both fetch the
+  fonts the document names first, so none is drawn in a stand-in. A
+  spreadsheet can't be exported to PDF yet.
+
+### udoc-node
+
+#### Added
+
+- `exportToBytes("pdf")` exports the document as a PDF of its laid-out pages,
+  in its own fonts, and `exportPageToBytes(index, "svg")` exports a page as
+  SVG; both rejected before. A spreadsheet can't be exported to PDF yet.
+
+#### Fixed
+
+- `openRemote` with a `fetch` that answers in a Node `Buffer` gets the bytes it
+  answered, where it threw, and stopped the process, on Node 21 and later.
+
+### udoc-cli
+
+#### Added
+
+- `udoc render` writes a page as an SVG for an `--out` ending in `.svg`, and
+  `udoc export <input> --out <file.pdf>` exports the document as a PDF of its
+  laid-out pages.
+
+#### Changed
+
+- `udoc render` refuses an `--out` that isn't a `.png` or a `.svg`, where it
+  wrote a PNG whatever the name.
+
+### udoc-server
+
+#### Added
+
+- `GET /documents/:id/layout/pages/:index.svg` answers a page as an SVG, and
+  `GET /documents/:id/layout/pages.pdf` the document exported as a PDF of its
+  laid-out pages, `422 unsupported` for a spreadsheet.
+
+#### Fixed
+
+- A request that opens a kept document, for a page image, its page count or a
+  saved copy, no longer stops the server.
+
 ### udoc-demo
 
 #### Added
