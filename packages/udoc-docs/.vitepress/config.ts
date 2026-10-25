@@ -34,9 +34,11 @@ const apiSidebar = (
 ).map(shapePackage);
 
 /** The `package.json` of the package in `packages/<dir>`. */
-function packageJson(dir: string): { name: string; description: string } {
+function packageJson(dir: string): { name: string; version: string; description: string } {
     return JSON.parse(readFileSync(new URL(`../../${dir}/package.json`, import.meta.url), "utf8"));
 }
+
+const REPO = "https://github.com/docMentis/docmentis-udoc";
 
 // Served at docmentis.com/docs: the site proxies `/docs/*` to the GitHub Pages
 // deployment (.github/workflows/docs.yml), so every link and asset is under
@@ -45,22 +47,28 @@ function packageJson(dir: string): { name: string; description: string } {
 const base = "/docs/";
 
 export default defineConfig({
-    title: "docMentis udoc",
+    title: "docMentis Docs",
     description: "Guides and API reference for the docMentis udoc viewer, editor and Node hosts.",
     base,
     outDir: "dist",
     cleanUrls: true,
+    // The package's own README, for its folder on GitHub, not a page of the
+    // site.
+    srcExclude: ["README.md"],
     // docmentis.com's icon and wordmark, from `public/`. VitePress puts the
     // logo under `base` itself, but not what `head` links to.
     head: [["link", { rel: "icon", type: "image/svg+xml", href: `${base}favicon.svg` }]],
-    // The home page's card for a package describes it as npm does, from its
-    // `package.json`, so the two can't drift apart.
     transformPageData(pageData) {
-        if (pageData.relativePath !== "index.md") return;
-        for (const feature of pageData.frontmatter.features as { package?: string; details?: string }[]) {
-            if (!feature.package) continue;
-            const { name, description } = packageJson(feature.package);
-            feature.details = `<code>${name}</code> ${description}`;
+        // The reference is TypeDoc's: no page of it is a file to edit.
+        if (pageData.relativePath.startsWith("api/")) pageData.frontmatter.editLink = false;
+        // The home page's card for a package describes it as npm does, from
+        // its `package.json`, so the two can't drift apart.
+        if (pageData.relativePath === "index.md") {
+            for (const feature of pageData.frontmatter.features as { package?: string; details?: string }[]) {
+                if (!feature.package) continue;
+                const { name, description } = packageJson(feature.package);
+                feature.details = `<code>${name}</code> ${description}`;
+            }
         }
     },
     themeConfig: {
@@ -70,10 +78,22 @@ export default defineConfig({
         // home page; the theme repeats the copyright under every other page
         // (`theme/index.ts`). The year is the build's, a release's.
         footer: { copyright: `Copyright © ${new Date().getFullYear()} docMentis LLC` },
+        // Each section's entry is active on any page of it. The version is the
+        // packages' — they release together, at one — so the docs, deployed
+        // on a release, name the release they describe.
         nav: [
-            { text: "Guide", link: "/guide/quick-start" },
-            { text: "API reference", link: "/api/" },
+            { text: "Guide", link: "/guide/quick-start", activeMatch: "^/guide/" },
+            { text: "API reference", link: "/api/", activeMatch: "^/api/" },
+            {
+                text: `v${packageJson("udoc-viewer").version}`,
+                items: [
+                    { text: "Changelog", link: `${REPO}/blob/main/CHANGELOG.md` },
+                    { text: "Releases", link: `${REPO}/releases` },
+                ],
+            },
+            { text: "docmentis.com", link: "https://www.docmentis.com" },
         ],
+        editLink: { pattern: `${REPO}/edit/main/packages/udoc-docs/:path`, text: "Edit this page on GitHub" },
         sidebar: {
             // In reading order, which is the guides' own, not their files'.
             "/guide/": [{ text: "Guide", items: [{ text: "Quick start", link: "/guide/quick-start" }] }],
@@ -82,6 +102,6 @@ export default defineConfig({
         // A class's members are its page's h3s, under h2s by kind.
         outline: [2, 3],
         search: { provider: "local" },
-        socialLinks: [{ icon: "github", link: "https://github.com/docMentis/docmentis-udoc" }],
+        socialLinks: [{ icon: "github", link: REPO }],
     },
 });
