@@ -17,8 +17,10 @@ import type {
     UDocSearchScope,
     UDocSelection,
     Destination,
+    ExportFormat,
     FileFormat,
     GoogleFontFamily,
+    PageExportFormat,
     SaveStrategy,
     SearchMatch,
     SearchOptions,
@@ -977,6 +979,33 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      */
     renderPage(page: number, options: RenderPageOptions = {}): Promise<ImageBitmap> {
         return this.shell.renderPage(page, options.scale ?? 1);
+    }
+
+    /**
+     * Export the open document as `format`, `"pdf"` — a rendering of its
+     * laid-out pages as the document now stands, fixed and one-way, unlike
+     * {@link saveToBytes}, whose bytes reopen as the same document. Every page
+     * is composed first, and the fonts it names fetched, so none is drawn in a
+     * stand-in. Rejects with no document open, and with a
+     * `UDocError` whose `code` is `"unsupported"` for a spreadsheet, whose
+     * sheets have no print pages yet.
+     */
+    exportToBytes(format: ExportFormat): Promise<Uint8Array> {
+        return this.shell.exportToBytes(format);
+    }
+
+    /**
+     * Export page `page` — a 0-based index, as {@link goToPage} takes it — as
+     * the document now stands, as `format`: `{ png: { scale } }`, the bytes of
+     * a PNG at `scale` image pixels per point (`1` is 72 DPI), or `"svg"`, an
+     * SVG document sized in points. Like {@link renderPage}, it renders off the
+     * viewport, and composes a page not yet composed first; unlike it, it
+     * fetches the fonts the page names first, so none is drawn in a stand-in.
+     * Rejects with no document open, a page past its last, or a `scale` that
+     * isn't a positive number.
+     */
+    exportPageToBytes(page: number, format: PageExportFormat): Promise<Uint8Array> {
+        return this.shell.exportPageToBytes(page, format);
     }
 
     /**

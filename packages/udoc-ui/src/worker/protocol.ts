@@ -27,9 +27,11 @@ import type {
     UDocSelection,
     UDocSearchScope,
     UDocType,
+    ExportFormat,
     FileFormat,
     FontLocation,
     GoogleFontFamily,
+    PageExportFormat,
     SaveStrategy,
     SearchBatch,
     SearchContinuation,
@@ -478,6 +480,15 @@ export interface UpdateLayoutRequest {
  */
 export interface FetchFontOrdersRequest {
     type: "fetchFontOrders";
+}
+
+/**
+ * Fetch what is on order, and reply once nothing is — in the air or waiting to
+ * install: `true` if anything was, and the composed pages may have been laid
+ * out again, else `false` at once. The reply waits; the worker doesn't.
+ */
+export interface SettleFontsRequest {
+    type: "settleFonts";
 }
 
 /**
@@ -1310,6 +1321,25 @@ export interface SaveToPackageRequest {
 }
 
 /**
+ * Export the open document as `format` — a rendering of its laid-out pages,
+ * fixed and one-way. Replies with the bytes (an `ArrayBuffer`).
+ */
+export interface ExportToBytesRequest {
+    type: "exportToBytes";
+    format: ExportFormat;
+}
+
+/**
+ * Export page `index` (0-based) of the primary plane as `format`, the page
+ * composed already. Replies with the bytes (an `ArrayBuffer`).
+ */
+export interface ExportPageToBytesRequest {
+    type: "exportPageToBytes";
+    index: number;
+    format: PageExportFormat;
+}
+
+/**
  * Set this client's collaborator user info (currently a display name) — the
  * label peers draw on its selection. Sticky in the worker (re-applied to every
  * document opened later, like the backdrop), so it survives a re-open. Rides
@@ -1543,6 +1573,7 @@ export type WorkerRequest =
     | SetDefaultZoomRequest
     | UpdateLayoutRequest
     | FetchFontOrdersRequest
+    | SettleFontsRequest
     | EnsureFontRequest
     | PlaneInfoRequest
     | GoToPlaneRequest
@@ -1602,6 +1633,8 @@ export type WorkerRequest =
     | SaveToBytesRequest
     | OriginalBytesRequest
     | SaveToPackageRequest
+    | ExportToBytesRequest
+    | ExportPageToBytesRequest
     | SetUserInfoRequest
     | PresenceRequest
     | MergePresenceRequest

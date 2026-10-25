@@ -8,7 +8,9 @@ import { Command } from "../worker/commands.js";
 import type {
     UDocCommand,
     UDocSelection,
+    ExportFormat,
     FileFormat,
+    PageExportFormat,
     SaveStrategy,
     ComposedShapeMedia,
     LinkAnnotation,
@@ -223,6 +225,10 @@ export interface UIShell {
     onPrint: (listener: (pageCount: number) => void) => () => void;
     /** Render page index `page` (0-based) at `scale` image pixels per point, composing it first if it isn't yet. */
     renderPage: (page: number, scale: number) => Promise<ImageBitmap>;
+    /** Export the open document as `format` — a rendering of its laid-out pages, fixed and one-way — composing every page first. */
+    exportToBytes: (format: ExportFormat) => Promise<Uint8Array>;
+    /** Export page index `page` (0-based) as `format`, a PNG at a scale or an SVG, composing it first if it isn't yet. */
+    exportPageToBytes: (page: number, format: PageExportFormat) => Promise<Uint8Array>;
     /** The host's page annotations: legacy's calls, over the model (page-annotations.ts). */
     pageAnnotations: PageAnnotations;
     /** Subscribe to the annotation events, with legacy's payloads; returns the unsubscribe. */
@@ -2245,9 +2251,8 @@ export function mountUIShell(
         }
     }
 
-    async function renderPage(page: number, scale: number): Promise<ImageBitmap> {
-        if (store.getState().status !== "ready") throw new Error("renderPage: there is no open document to render");
-        if (!(scale > 0)) throw new Error(`renderPage: scale ${scale} is not a positive number`);
+    /** Compose through page index `page` if it isn't yet, and check there is one: what `method` needs of a page first. */
+    async function composeThrough(method: string, page: number): Promise<void> {
         let pageCount = store.getState().composedPageCount;
         // A page is known only once composed: compose through it first.
         if (Number.isInteger(page) && page >= pageCount) {
@@ -2260,9 +2265,45 @@ export function mountUIShell(
             pageCount = layout.composedPageCount;
         }
         if (!Number.isInteger(page) || page < 0 || page >= pageCount) {
-            throw new Error(`renderPage: there is no page at index ${page}, of ${pageCount}`);
+            throw new Error(`${method}: there is no page at index ${page}, of ${pageCount}`);
         }
+    }
+
+    async function renderPage(page: number, scale: number): Promise<ImageBitmap> {
+        if (store.getState().status !== "ready") throw new Error("renderPage: there is no open document to render");
+        if (!(scale > 0)) throw new Error(`renderPage: scale ${scale} is not a positive number`);
+        await composeThrough("renderPage", page);
         return client.renderPagePreview(0, page, scale);
+    }
+
+    /**
+     * Compose by `compose`, then wait for the fonts the composing put on order,
+     * and compose again, until none is left — so an export draws the
+     * document's own fonts, never the stand-in of one still on order. A landed
+     * font lays the composed pages out again, which can move page breaks.
+     */
+    async function composeSettled(compose: () => Promise<void>): Promise<void> {
+        do await compose();
+        while (await client.settleFonts());
+    }
+
+    async function exportToBytes(format: ExportFormat): Promise<Uint8Array> {
+        if (store.getState().status !== "ready") throw new Error("exportToBytes: there is no open document to export");
+        // Every page goes in: compose them first, as a print does, so the
+        // reader's page count is the one exported.
+        await composeSettled(composeAll);
+        return client.exportToBytes(format);
+    }
+
+    async function exportPageToBytes(page: number, format: PageExportFormat): Promise<Uint8Array> {
+        if (store.getState().status !== "ready") {
+            throw new Error("exportPageToBytes: there is no open document to export");
+        }
+        if (format !== "svg" && !(format.png.scale > 0)) {
+            throw new Error(`exportPageToBytes: scale ${format.png.scale} is not a positive number`);
+        }
+        await composeSettled(() => composeThrough("exportPageToBytes", page));
+        return client.exportPageToBytes(page, format);
     }
 
     const printListeners = new Set<(pageCount: number) => void>();
@@ -2763,6 +2804,8 @@ export function mountUIShell(
         print,
         onPrint,
         renderPage,
+        exportToBytes,
+        exportPageToBytes,
         pageAnnotations,
         onPageAnnotationEvent: (listener) => {
             pageAnnotationListeners.add(listener);

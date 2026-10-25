@@ -429,3 +429,78 @@ test("a batch of refusals re-shapes nothing, and takes the next orders at once",
     assert.equal(clock.waiting(), 0, "and none owed for later");
     assert.ok(fetch.pending.has(2), "the next vendor's order went out");
 });
+
+test("settled answers at once when nothing is on order", async () => {
+    const queue = manualQueue();
+    const clock = manualClock();
+    const fetch = heldFetch();
+    const engine = fakeSession([[]]);
+    const pump = createFontPump({
+        session: () => engine.session,
+        enqueue: queue.enqueue,
+        repaint: () => {},
+        fetch: fetch.fetch,
+        schedule: clock.schedule,
+    });
+
+    assert.equal(await pump.settled(), false);
+    assert.equal(engine.rounds(), 1, "it looked for orders first");
+});
+
+test("settled waits for every order, through the next vendor's, and holds no job", async () => {
+    // An export draws the document's own fonts only once those on order have
+    // landed — including the round a refusal puts on order behind them.
+    const queue = manualQueue();
+    const clock = manualClock();
+    const fetch = heldFetch();
+    const engine = fakeSession([[order(1), order(2)], [order(3)], []]);
+    const pump = createFontPump({
+        session: () => engine.session,
+        enqueue: queue.enqueue,
+        repaint: () => {},
+        fetch: fetch.fetch,
+        schedule: clock.schedule,
+    });
+    let settled: boolean | undefined;
+    void pump.settled().then((waited) => (settled = waited));
+    assert.equal(queue.jobs.length, 0, "waiting holds nothing up");
+
+    fetch.settle(1);
+    fetch.settle(2, []);
+    await flush();
+    clock.fireNext();
+    queue.run();
+    await flush();
+    assert.equal(settled, undefined, "order 3, the refusal's next vendor, is still in the air");
+
+    fetch.settle(3);
+    await flush();
+    clock.fireNext();
+    queue.run();
+    await flush();
+    assert.equal(settled, true);
+});
+
+test("settled ends when the session goes away mid-flight", async () => {
+    const queue = manualQueue();
+    const clock = manualClock();
+    const fetch = heldFetch();
+    const engine = fakeSession([[order(1)]]);
+    let live: FontPumpSession | null = engine.session;
+    const pump = createFontPump({
+        session: () => live,
+        enqueue: queue.enqueue,
+        repaint: () => {},
+        fetch: fetch.fetch,
+        schedule: clock.schedule,
+    });
+    const waiting = pump.settled();
+
+    live = null;
+    fetch.settle(1);
+    await flush();
+    clock.fireNext();
+    queue.run();
+
+    assert.equal(await waiting, true);
+});

@@ -37,8 +37,9 @@ export type {
 
 // A document in and out (generated from the Rust serde): the doc type it opened
 // as, the file format it opens from and saves to, and the strategy it saves by —
-// `UDocBase.open`, `saveToBytes`, and `docType` / `sourceFormat`.
-export type { FileFormat, SaveStrategy, UDocType } from "@docmentis/udoc-wasm";
+// `UDocBase.open`, `saveToBytes`, and `docType` / `sourceFormat` — and the
+// formats it and its pages export to, `exportToBytes` and `exportPageToBytes`.
+export type { ExportFormat, FileFormat, PageExportFormat, SaveStrategy, UDocType } from "@docmentis/udoc-wasm";
 
 // A PDF destination, for `UDocBase.goToDestination` (generated from the Rust
 // serde): a page and the view it lands by, or a name the document resolves.

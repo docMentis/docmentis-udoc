@@ -71,22 +71,42 @@ export interface FontPumpDeps {
     schedule: (callback: () => void, ms: number) => void;
 }
 
-/**
- * Build a pump, returning its kick.
- *
- * Call the kick whenever a layout change may have put new families on order. It
- * starts the fetches and returns — there is no round to drive, no result to
- * wait for, and calling it with nothing on order costs a `takeFontRequests`.
- */
-export function createFontPump(deps: FontPumpDeps): () => void {
+/** A pump: its kick, and what waits for it to go quiet. */
+export interface FontPump {
+    /**
+     * Take what is on order and start fetching it. Call it whenever a layout
+     * change may have put new families on order. It starts the fetches and
+     * returns — there is no round to drive, no result to wait for, and calling
+     * it with nothing on order costs a `takeFontRequests`.
+     */
+    (): void;
+    /**
+     * Kick, then resolve once nothing is on order, in the air or waiting to
+     * install: `true` if anything was, and the pages may have been laid out
+     * again; `false`, at once, if nothing was. For an export, which draws the
+     * document's own fonts only once those on order have landed. It waits on
+     * the event loop, never in a job; it ends because every order does — a
+     * fetch that fails answers with nothing — and a family's chain of vendors
+     * is finite.
+     */
+    settled(): Promise<boolean>;
+}
+
+/** Build a pump, returning its kick, with {@link FontPump.settled} on it. */
+export function createFontPump(deps: FontPumpDeps): FontPump {
     /** Fetched orders waiting to be installed, so a burst installs in one pass. */
     const landed: Array<{ id: number; binaries: Uint8Array[] }> = [];
     let installArmed = false;
+    /** Orders taken and not yet installed: in the air, or landed and waiting. */
+    let open = 0;
+    /** Who waits for {@link FontPump.settled}, each told once `open` is back to none. */
+    const waiting: Array<() => void> = [];
 
     function kick(): void {
         const session = deps.session();
         if (!session) return;
         for (const order of session.takeFontRequests()) {
+            open++;
             void deps.fetch(order).then((binaries) => {
                 landed.push({ id: order.id, binaries });
                 // One install per burst, not one per order: the first to land
@@ -103,11 +123,15 @@ export function createFontPump(deps: FontPumpDeps): () => void {
     function install(): void {
         installArmed = false;
         const batch = landed.splice(0);
+        open -= batch.length;
         const session = deps.session();
         // Closed or replaced mid-flight. The ids are dead either way — they are
         // minted from a process-global counter, so a new session never reuses
         // one — but dropping the binaries here frees them.
-        if (!session) return;
+        if (!session) {
+            quieted();
+            return;
+        }
         let installed = false;
         for (const { id, binaries } of batch) {
             try {
@@ -134,7 +158,20 @@ export function createFontPump(deps: FontPumpDeps): () => void {
             // This runs as a queued job, with no request behind it to fail: a
             // re-shape that won't run is not worth taking the worker down for.
         }
+        quieted();
     }
 
-    return kick;
+    /** Tell whoever waits that the pump is quiet, once nothing is open. */
+    function quieted(): void {
+        if (open > 0) return;
+        for (const resolve of waiting.splice(0)) resolve();
+    }
+
+    function settled(): Promise<boolean> {
+        kick();
+        if (open === 0) return Promise.resolve(false);
+        return new Promise((resolve) => waiting.push(() => resolve(true)));
+    }
+
+    return Object.assign(kick, { settled });
 }

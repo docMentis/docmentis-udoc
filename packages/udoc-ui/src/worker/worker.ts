@@ -1375,6 +1375,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, undefined);
                 break;
             }
+            case "settleFonts": {
+                if (!session) throw new Error("engine worker: settleFonts before open");
+                // Answered once the pump is quiet, not waited for here: the
+                // fonts land on the event loop and install as jobs of their
+                // own, so this request holds nothing up behind it.
+                void fetchFontOrders.settled().then((waited) => reply(id, waited));
+                break;
+            }
             case "planeInfo": {
                 if (!session) throw new Error("engine worker: planeInfo before open");
                 // The plane roster (sheet tabs): count + active + each plane's
@@ -1917,6 +1925,20 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "saveToPackage": {
                 if (!session) throw new Error("engine worker: saveToPackage before open");
                 const buffer = session.saveToPackage(msg.version).slice().buffer;
+                reply(id, buffer, undefined, [buffer]);
+                break;
+            }
+            case "exportToBytes": {
+                if (!session) throw new Error("engine worker: exportToBytes before open");
+                const buffer = session.exportToBytes(msg.format).slice().buffer;
+                reply(id, buffer, undefined, [buffer]);
+                break;
+            }
+            case "exportPageToBytes": {
+                if (!session) throw new Error("engine worker: exportPageToBytes before open");
+                // Plane 0 — the document's primary plane (the deck for a
+                // presentation).
+                const buffer = session.exportPageToBytes(0, msg.index, msg.format).slice().buffer;
                 reply(id, buffer, undefined, [buffer]);
                 break;
             }

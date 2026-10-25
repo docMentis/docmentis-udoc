@@ -39,7 +39,9 @@ import type {
     Outline,
     PageMode,
     SessionConfig,
+    ExportFormat,
     FileFormat,
+    PageExportFormat,
     SaveStrategy,
     GoogleFontFamily,
     ComposedShapeMedia,
@@ -691,6 +693,15 @@ export class WorkerClient {
      */
     async fetchFontOrders(): Promise<void> {
         await this.#send({ type: "fetchFontOrders" });
+    }
+
+    /**
+     * Fetch what is on order, and resolve once nothing is: `true` if anything
+     * was, so the composed pages may have been laid out again — and composing
+     * further may put more on order — else `false` at once.
+     */
+    async settleFonts(): Promise<boolean> {
+        return (await this.#send({ type: "settleFonts" })) as boolean;
     }
 
     /**
@@ -1387,6 +1398,18 @@ export class WorkerClient {
             format,
             ...(strategy !== undefined ? { strategy } : {}),
         })) as ArrayBuffer;
+        return new Uint8Array(buffer);
+    }
+
+    /** Export the open document as `format` — a rendering of its laid-out pages, fixed and one-way. */
+    async exportToBytes(format: ExportFormat): Promise<Uint8Array> {
+        const buffer = (await this.#send({ type: "exportToBytes", format })) as ArrayBuffer;
+        return new Uint8Array(buffer);
+    }
+
+    /** Export page `page` (0-based) of the primary plane as `format`, the page composed already. */
+    async exportPageToBytes(page: number, format: PageExportFormat): Promise<Uint8Array> {
+        const buffer = (await this.#send({ type: "exportPageToBytes", index: page, format })) as ArrayBuffer;
         return new Uint8Array(buffer);
     }
 
