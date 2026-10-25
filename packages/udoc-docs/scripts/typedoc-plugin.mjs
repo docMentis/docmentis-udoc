@@ -7,7 +7,8 @@
 // "Re-exports" line for every symbol of Common, which would bury it. udoc-ui is
 // the first entry point, so it is where TypeDoc converts those symbols; another
 // package that re-exports a few of them (udoc-node, its error) keeps its
-// "Re-exports" lines, which link into Common.
+// "Re-exports" lines, which link into Common. Common comes last, after the
+// packages, as what they share rather than one of them.
 //
 // Those references are dropped from the page, not from the project: a comment
 // in the editor that links `UDocBase.setTheme` resolves `UDocBase` through the
@@ -41,6 +42,8 @@ import {
 const MODULES = [
     { dir: "udoc-viewer", name: "@docmentis/udoc-viewer", common: true },
     { dir: "udoc-editor", name: "@docmentis/udoc-editor", common: true },
+    { dir: "udoc-node", name: "@docmentis/udoc-node" },
+    { dir: "udoc-server", name: "@docmentis/udoc-server" },
     {
         dir: "udoc-ui",
         name: "Common",
@@ -48,8 +51,6 @@ const MODULES = [
             "The base class the viewer and the editor extend, and the types their calls take and return. " +
             "Both packages export all of it: import it from whichever you use, not from `@docmentis/udoc-ui`.",
     },
-    { dir: "udoc-node", name: "@docmentis/udoc-node" },
-    { dir: "udoc-server", name: "@docmentis/udoc-server" },
 ];
 
 function description(dir) {
