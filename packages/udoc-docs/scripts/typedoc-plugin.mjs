@@ -33,12 +33,14 @@ import {
     Converter,
     DeclarationReflection,
     ReferenceReflection,
+    ReferenceType,
     ReflectionKind,
     SignatureReflection,
     i18n,
     makeRecursiveVisitor,
 } from "typedoc";
 import { MarkdownTheme, MarkdownThemeContext } from "typedoc-plugin-markdown";
+import ts from "typescript";
 
 /** Each entry point's package directory, in sidebar order, and the module it becomes. */
 const MODULES = [
@@ -238,17 +240,20 @@ function tableCell(markdown) {
  * go: what a member inherits from udoc-ui's base class is nothing a reader
  * acts on, and on the viewer's and the editor's pages it is nearly every one.
  *
- * A table of described properties is two columns, each property's type under
- * its name. In three, the names, the longest types and the URLs in the
+ * A table of properties is two columns: each property's type under its name
+ * and its description beside them, or, with none described, the type beside
+ * the name. In three, the names, the longest types and the URLs in the
  * descriptions came to more than the page's width, and the descriptions
  * scrolled out of sight. A property of an object type is one row, the type
  * written out, unless its fields say something of their own: then a row
- * apiece follows it, `property.field` — an event's payload, say.
+ * apiece follows it, `property.field` — an event's payload, say. A
+ * parameter of an object type is one row likewise, `options` and not
+ * `options` then `options.scrollAlignment`.
  */
 class UDocThemeContext extends MarkdownThemeContext {
     constructor(theme, page, options) {
         super(theme, page, options);
-        const { accessor, inheritance, propertiesTable, signatureReturns } = this.partials;
+        const { accessor, inheritance, parametersTable, signatureReturns } = this.partials;
         this.partials = {
             ...this.partials,
             accessor: (model, options) => {
@@ -277,7 +282,7 @@ class UDocThemeContext extends MarkdownThemeContext {
                 const comments = properties.map((property) =>
                     property.comment ? this.partials.comment(property.comment, { isTableColumn: true }).trim() : "",
                 );
-                if (!comments.some(Boolean)) return propertiesTable(model, options);
+                const described = comments.some(Boolean);
                 const rows = properties.map((property, index) => {
                     const anchor = this.router.hasUrl(property)
                         ? `<a id="${this.router.getAnchor(property)}"></a> `
@@ -285,15 +290,42 @@ class UDocThemeContext extends MarkdownThemeContext {
                     const modifier = this.helpers.getModifier(property);
                     let name = `\`${modifier ? `${modifier} ` : ""}${property.name}${property.flags.isOptional ? "?" : ""}\``;
                     if (property.isDeprecated?.()) name = `~~${name}~~`;
-                    const type = this.helpers.getDeclarationType(property);
+                    const declarationType = this.helpers.getDeclarationType(property);
                     const forceCollapse = !fieldRows.has(property);
-                    const typeLine = type ? `<br>${this.partials.someType(type, { forceCollapse })}` : "";
-                    return `| ${tableCell(anchor + name + typeLine)} | ${tableCell(comments[index] || "-")} |`;
+                    const type = declarationType ? this.partials.someType(declarationType, { forceCollapse }) : "";
+                    return described
+                        ? `| ${tableCell(anchor + name + (type && `<br>${type}`))} | ${tableCell(comments[index] || "-")} |`
+                        : `| ${tableCell(anchor + name)} | ${tableCell(type)} |`;
                 });
                 const kind = options?.isEventProps
                     ? i18n.theme_event()
                     : ReflectionKind.singularString(ReflectionKind.Property);
-                return [`| ${kind} | ${i18n.theme_description()} |`, "| ------ | ------ |", ...rows].join("\n");
+                const second = described ? i18n.theme_description() : i18n.theme_type();
+                return [`| ${kind} | ${second} |`, "| ------ | ------ |", ...rows].join("\n");
+            },
+            // The declarations are `.d.ts` files, which carry no parameter's
+            // default, so there is no column for one.
+            parametersTable: (model) => {
+                if (model.some((parameter) => parameter.type?.declaration?.children?.some((field) => field.comment))) {
+                    return parametersTable(model);
+                }
+                const comments = model.map((parameter) =>
+                    parameter.comment ? this.partials.comment(parameter.comment, { isTableColumn: true }).trim() : "",
+                );
+                const described = comments.some(Boolean);
+                const headers = [ReflectionKind.singularString(ReflectionKind.Parameter), i18n.theme_type()];
+                if (described) headers.push(i18n.theme_description());
+                const rows = model.map((parameter, index) => {
+                    const name = `${parameter.flags.isRest ? "..." : ""}\`${parameter.name}${parameter.flags.isOptional ? "?" : ""}\``;
+                    const cells = [
+                        name,
+                        parameter.type ? this.partials.someType(parameter.type, { forceCollapse: true }) : "",
+                    ];
+                    if (described) cells.push(comments[index] || "-");
+                    return `| ${cells.map(tableCell).join(" | ")} |`;
+                });
+                const header = `| ${headers.join(" | ")} |\n| ${headers.map(() => "------").join(" | ")} |`;
+                return [header, ...rows].join("\n");
             },
             signatureReturns: (model, options) => {
                 const declaration = model.type?.declaration;
@@ -319,6 +351,33 @@ export function load(app) {
 
     let common;
     const exportingCommon = [];
+
+    // A parameter declared as one of the packages' type aliases, and the
+    // alias. TypeScript keeps no alias for one that names another's
+    // instantiation (`AnnotationPatch = DeepPartial<Annotation>`): the type is
+    // `DeepPartial`'s, which isn't exported, so TypeDoc writes the whole type
+    // out — 53 KB of it for `patch` — where the declaration named the alias.
+    const aliasedParameters = [];
+    app.converter.on(Converter.EVENT_CREATE_SIGNATURE, (context, signature) => {
+        for (const parameter of signature.parameters ?? []) {
+            const declaration = context.getSymbolFromReflection(parameter)?.valueDeclaration;
+            const node = declaration && ts.isParameter(declaration) ? declaration.type : undefined;
+            if (!node || !ts.isTypeReferenceNode(node) || node.typeArguments) continue;
+            let symbol = context.checker.getSymbolAtLocation(node.typeName);
+            if (symbol && symbol.flags & ts.SymbolFlags.Alias) symbol = context.checker.getAliasedSymbol(symbol);
+            if (symbol && symbol.flags & ts.SymbolFlags.TypeAlias) aliasedParameters.push([parameter, symbol]);
+        }
+    });
+    // Once every alias has its reflection, and before the engine's types are
+    // pruned by what links to them.
+    app.converter.on(Converter.EVENT_RESOLVE_BEGIN, (context) => {
+        for (const [parameter, symbol] of aliasedParameters) {
+            const alias = context.getReflectionFromSymbol(symbol);
+            if (alias && !(parameter.type instanceof ReferenceType && parameter.type.reflection === alias)) {
+                parameter.type = ReferenceType.createResolvedReference(alias.name, alias, context.project);
+            }
+        }
+    });
 
     app.converter.on(Converter.EVENT_RESOLVE_BEGIN, (context) => {
         const project = context.project;
