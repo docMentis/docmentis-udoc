@@ -21,17 +21,24 @@ const apiSidebar = collapseEngineTypes(
     JSON.parse(readFileSync(new URL("../api/typedoc-sidebar.json", import.meta.url), "utf8")),
 );
 
+// Served at docmentis.com/docs: the site proxies `/docs/*` to the GitHub Pages
+// deployment (.github/workflows/docs.yml), so every link and asset is under
+// `/docs/` — on Pages' own github.io address too, where the pages therefore
+// come up without their styles.
+const base = "/docs/";
+
 export default defineConfig({
     title: "docMentis udoc",
     description: "Guides and API reference for the docMentis udoc viewer, editor and Node hosts.",
-    // Served at docmentis.com/docs: the site proxies `/docs/*` to the GitHub
-    // Pages deployment (.github/workflows/docs.yml), so every link and asset
-    // is under `/docs/` — on Pages' own github.io address too, where the
-    // pages therefore come up without their styles.
-    base: "/docs/",
+    base,
     outDir: "dist",
     cleanUrls: true,
+    // docmentis.com's icon and wordmark, from `public/`. VitePress puts the
+    // logo under `base` itself, but not what `head` links to.
+    head: [["link", { rel: "icon", type: "image/svg+xml", href: `${base}favicon.svg` }]],
     themeConfig: {
+        logo: { light: "/logo.svg", dark: "/logo-dark.svg", alt: "docMentis" },
+        siteTitle: "udoc",
         nav: [
             { text: "Guide", link: "/guide/quick-start" },
             { text: "API reference", link: "/api/" },

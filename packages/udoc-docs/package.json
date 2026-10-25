@@ -21,6 +21,8 @@
         "@docmentis/udoc-viewer": "*"
     },
     "devDependencies": {
+        "@fontsource-variable/geist": "5.3.0",
+        "@fontsource-variable/geist-mono": "5.3.0",
         "typedoc": "0.28.20",
         "typedoc-plugin-markdown": "4.13.1",
         "typedoc-plugin-missing-exports": "4.1.4",

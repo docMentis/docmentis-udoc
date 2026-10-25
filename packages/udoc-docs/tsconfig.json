@@ -1,10 +1,10 @@
 {
-    // The site's own code: its VitePress config, which runs in Node. TypeDoc's
-    // program is `tsconfig.typedoc.json`.
+    // The site's own code: its VitePress config, which runs in Node, and its
+    // theme. TypeDoc's program is `tsconfig.typedoc.json`.
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
         "noEmit": true,
         "types": ["node"]
     },
-    "include": [".vitepress/config.ts"]
+    "include": [".vitepress/config.ts", ".vitepress/theme/**/*.ts"]
 }
