@@ -5,27 +5,33 @@
 import { basename, extname } from "node:path";
 import { parseArgs } from "node:util";
 
-import type { FileFormat } from "@docmentis/udoc-node";
+import type { ExportFormat, FileFormat } from "@docmentis/udoc-node";
 
-export const USAGE = `Usage: udoc render <input> [--page <n>] [--scale <s>] [--out <file.png>]
+export const USAGE = `Usage: udoc render <input> [--page <n>] [--scale <s>] [--out <file.png|file.svg>]
+       udoc export <input> --out <file.pdf>
        udoc save <input> --out <file>
        udoc page-count <input>
 
 Commands:
-  render            render one page of a document to a PNG
+  render            render one page of a document to a PNG or an SVG
+  export            export a document as a PDF of its laid-out pages
   save              save a document faithfully, in the format --out's
                     extension names: one of its own (.pdf, .pptx, …), or .udoc
   page-count        print how many pages the document has
 
 The format is detected from the bytes; a .csv, .tsv, .tab or .psv's from its
 extension.
-Counting pages lays out the whole document; rendering lays it out only as far
-as the page asked for.
+Counting pages and exporting lay out the whole document; rendering lays it out
+only as far as the page asked for.
 
 Options (render):
   -p, --page <n>    page to render, counting from 1 (default 1)
-  -s, --scale <s>   output pixels per point; 1 is 72 DPI (default 1)
-  -o, --out <file>  where to write it (default <input-name>_page_<n>.png)
+  -s, --scale <s>   output pixels per point, for a PNG; 1 is 72 DPI (default 1)
+  -o, --out <file>  where to write it, a .png or a .svg; its extension names
+                    the format (default <input-name>_page_<n>.png)
+
+Options (export):
+  -o, --out <file>  where to write it, a .pdf
 
 Options (save):
   -o, --out <file>  where to write it; its extension names the format
@@ -52,6 +58,7 @@ export type Invocation =
     | { command: "help" }
     | { command: "version" }
     | RenderInvocation
+    | ExportInvocation
     | SaveInvocation
     | PageCountInvocation;
 
@@ -81,8 +88,18 @@ export interface RenderInvocation extends OpenInvocation {
     command: "render";
     /** Counting from 1, as the user wrote it. */
     page: number;
+    /** Output pixels per point, for a PNG. */
     scale: number;
     out: string;
+    /** The format `out`'s extension names. */
+    format: "png" | "svg";
+}
+
+export interface ExportInvocation extends OpenInvocation {
+    command: "export";
+    out: string;
+    /** The format `out`'s extension names. */
+    format: ExportFormat;
 }
 
 /** A command line asking for nothing `udoc` can do. The message says why. */
@@ -133,12 +150,35 @@ export function parseInvocation(argv: readonly string[]): Invocation {
             const input = operands[0]!;
             const page = pageOf(values.page);
             const scale = scaleOf(values.scale);
+            const out = values.out ?? defaultOut(input, page);
+            const format = renderFormatOf(out);
+            if (format === "svg" && values.scale !== undefined) throw new UsageError("--scale is for a PNG");
             return {
                 command: "render",
                 input,
                 page,
                 scale,
-                out: values.out ?? defaultOut(input, page),
+                out,
+                format,
+                ...password,
+                ...inputDelimiter(input),
+            };
+        }
+        case "export": {
+            if (operands.length !== 1) throw new UsageError("export takes exactly one input document");
+            if (values.page !== undefined || values.scale !== undefined) {
+                throw new UsageError("--page and --scale are for render");
+            }
+            if (values.out === undefined) throw new UsageError("export needs --out, a .pdf");
+            const input = operands[0]!;
+            if (extname(values.out).toLowerCase() !== ".pdf") {
+                throw new UsageError(`--out ${JSON.stringify(values.out)} isn't a .pdf, which export writes`);
+            }
+            return {
+                command: "export",
+                input,
+                out: values.out,
+                format: "pdf",
                 ...password,
                 ...inputDelimiter(input),
             };
@@ -231,6 +271,13 @@ function saveFormatOf(out: string): FileFormat | "udoc" {
         throw new UsageError(`--out ${JSON.stringify(out)} doesn't name a format save writes`);
     }
     return format;
+}
+
+/** The format `render` writes to `out`, named by its extension. */
+function renderFormatOf(out: string): "png" | "svg" {
+    const ext = extname(out).slice(1).toLowerCase();
+    if (ext === "png" || ext === "svg") return ext;
+    throw new UsageError(`--out ${JSON.stringify(out)} isn't a .png or a .svg, which render writes`);
 }
 
 /** `<input-name>_page_<page>.png`, in the working directory. */

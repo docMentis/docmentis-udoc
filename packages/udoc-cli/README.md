@@ -20,6 +20,8 @@ npm install -g @docmentis/udoc-cli
 ```sh
 udoc page-count slides.pptx
 udoc render slides.pptx --page 3 --scale 2 --out slide-3.png
+udoc render slides.pptx --page 3 --out slide-3.svg
+udoc export slides.pptx --out slides.pdf
 udoc save slides.pptx --out slides.udoc
 ```
 

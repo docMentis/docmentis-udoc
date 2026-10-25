@@ -16,6 +16,7 @@ test("render defaults to page 1 at scale 1, named after the input", () => {
         page: 1,
         scale: 1,
         out: "Quarterly Report_page_1.png",
+        format: "png",
     });
 });
 
@@ -26,6 +27,7 @@ test("the page names the default output, and --out overrides it", () => {
         page: 3,
         scale: 2,
         out: "a_page_3.png",
+        format: "png",
     });
     assert.deepEqual(parseInvocation(["render", "a.pdf", "-p", "3", "-o", "x.png"]), {
         command: "render",
@@ -33,6 +35,27 @@ test("the page names the default output, and --out overrides it", () => {
         page: 3,
         scale: 1,
         out: "x.png",
+        format: "png",
+    });
+});
+
+test("render writes an SVG for an --out that names one", () => {
+    assert.deepEqual(parseInvocation(["render", "a.pptx", "-p", "2", "-o", "slide.SVG"]), {
+        command: "render",
+        input: "a.pptx",
+        page: 2,
+        scale: 1,
+        out: "slide.SVG",
+        format: "svg",
+    });
+});
+
+test("export writes the whole document as a PDF", () => {
+    assert.deepEqual(parseInvocation(["export", "a.docx", "--out", "a.pdf"]), {
+        command: "export",
+        input: "a.docx",
+        out: "a.pdf",
+        format: "pdf",
     });
 });
 
@@ -62,6 +85,14 @@ test("what can't be run is a usage error", () => {
         ["render", "a.pdf", "--scale", "0"],
         ["render", "a.pdf", "--scale", "big"],
         ["render", "a.pdf", "--colour"],
+        ["render", "a.pdf", "-o", "a.jpg"],
+        ["render", "a.pdf", "-o", "a"],
+        ["render", "a.pdf", "-o", "a.svg", "--scale", "2"],
+        ["export", "a.docx"],
+        ["export", "a.docx", "b.docx", "-o", "c.pdf"],
+        ["export", "a.docx", "-o", "a.docx"],
+        ["export", "a.docx", "-o", "a.pdf", "--page", "2"],
+        ["export", "a.docx", "-o", "a.pdf", "--scale", "2"],
         ["page-count"],
         ["page-count", "a.pdf", "b.pdf"],
         ["page-count", "a.pdf", "--page", "2"],

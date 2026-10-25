@@ -13,7 +13,7 @@ import { UDocError, UDocNode } from "@docmentis/udoc-node";
 import type { FileFormat, UDocNodeOptions, UDocSession } from "@docmentis/udoc-node";
 
 import { USAGE, UsageError, parseInvocation } from "./args.js";
-import type { Invocation, PageCountInvocation, RenderInvocation, SaveInvocation } from "./args.js";
+import type { ExportInvocation, Invocation, PageCountInvocation, RenderInvocation, SaveInvocation } from "./args.js";
 import { WRAPPER_VERSION } from "./version.js";
 
 async function main(): Promise<number> {
@@ -35,6 +35,9 @@ async function main(): Promise<number> {
         case "render":
             await render(invocation);
             return 0;
+        case "export":
+            await exportDocument(invocation);
+            return 0;
         case "save":
             await save(invocation);
             return 0;
@@ -44,18 +47,32 @@ async function main(): Promise<number> {
     }
 }
 
-async function render({ input, password, delimiter, page, scale, out }: RenderInvocation): Promise<void> {
+async function render({ input, password, delimiter, page, scale, out, format }: RenderInvocation): Promise<void> {
     const session = await open(input, password, delimiter);
     try {
-        const png = await session.exportPageToBytes(page - 1, { png: { scale } }).catch((error: unknown) => {
-            // The engine counts pages from 0 and says only how many there are;
-            // the address is ours to word, in the user's numbering.
-            throw error instanceof UDocError && error.code === "notFound"
-                ? new UDocError("notFound", `page ${page} is out of range: ${error.message}`)
-                : error;
-        });
-        await fileIo(writeFile(out, png));
-        console.log(`Rendered page ${page} → ${out} (${png.length} bytes, scale ${scale})`);
+        const bytes = await session
+            .exportPageToBytes(page - 1, format === "svg" ? "svg" : { png: { scale } })
+            .catch((error: unknown) => {
+                // The engine counts pages from 0 and says only how many there
+                // are; the address is ours to word, in the user's numbering.
+                throw error instanceof UDocError && error.code === "notFound"
+                    ? new UDocError("notFound", `page ${page} is out of range: ${error.message}`)
+                    : error;
+            });
+        await fileIo(writeFile(out, bytes));
+        const at = format === "svg" ? "" : `, scale ${scale}`;
+        console.log(`Rendered page ${page} → ${out} (${bytes.length} bytes${at})`);
+    } finally {
+        await session.close();
+    }
+}
+
+async function exportDocument({ input, password, delimiter, out, format }: ExportInvocation): Promise<void> {
+    const session = await open(input, password, delimiter);
+    try {
+        const bytes = await session.exportToBytes(format);
+        await fileIo(writeFile(out, bytes));
+        console.log(`Exported → ${out} (${bytes.length} bytes)`);
     } finally {
         await session.close();
     }
