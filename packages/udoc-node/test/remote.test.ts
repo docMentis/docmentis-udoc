@@ -56,12 +56,13 @@ async function closedAddress(): Promise<string> {
 
 /**
  * Fetch each of `urls` in turn on a thread blocking on the session's side, as
- * the engine does: the text of each part, or `refused: <why>`.
+ * the engine does, by `fetch` or the session's own: the text of each part, or
+ * `refused: <why>`.
  */
-async function fetchOnAThread(urls: string[]): Promise<string[]> {
+async function fetchOnAThread(urls: string[], fetch?: (url: string) => Promise<Uint8Array>): Promise<string[]> {
     const { port1, port2 } = new MessageChannel();
     const answered = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
-    answerFetches(port1, answered);
+    answerFetches(port1, answered, fetch);
     const thread = new Worker(
         `const { parentPort, workerData } = require("node:worker_threads");
         import(workerData.module).then(({ blockingFetch }) => {
@@ -107,6 +108,17 @@ test("the thread blocks while the session's side fetches, and gets each part's b
     assert.equal(missing, "refused: HTTP 404");
     assert.match(refused ?? "", /^refused: fetch failed: connect ECONNREFUSED /);
     assert.equal(blob, "blob", "an answer after a refusal is still its own URL's");
+});
+
+test("an embedder's answer in a Node Buffer reaches the thread as its own bytes", async () => {
+    // A small Buffer, as udoc-server answers from its store, is a view into a
+    // pool Node shares among them: one that can't be transferred, and whose
+    // whole buffer is not the answer.
+    const texts = await fetchOnAThread(["kept://doc/package", "kept://doc/package/part"], async (url) =>
+        Buffer.from(url.slice(url.lastIndexOf("/") + 1)),
+    );
+
+    assert.deepEqual(texts, ["package", "part"]);
 });
 
 test("a relative URL is refused before a thread starts, so no permit is spent on it", async () => {

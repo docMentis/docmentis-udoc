@@ -506,8 +506,11 @@ export function answerFetches(
     port.on("message", (url: string) => {
         void fetch(url)
             .then(
-                // Its own buffer, whole, so it can be transferred.
-                (bytes): FetchAnswer => ({ ok: true, body: bytes.slice().buffer }),
+                // Copied into a buffer of its own, whole, so it can be
+                // transferred: a Node Buffer, as an embedder may answer with,
+                // is a view into a pool shared with others, which can't be,
+                // and its `slice` is a view too.
+                (bytes): FetchAnswer => ({ ok: true, body: new Uint8Array(bytes).buffer }),
                 (error: unknown): FetchAnswer => ({ ok: false, message: reasonOf(error) }),
             )
             .then((answer) => {
