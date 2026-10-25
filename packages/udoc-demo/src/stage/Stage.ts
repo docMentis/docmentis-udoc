@@ -1,5 +1,5 @@
 import { UDocEditor, UDocError } from "@docmentis/udoc-editor";
-import type { UDocBase, UDocEditorOptions } from "@docmentis/udoc-editor";
+import type { UDocBase, UDocEditorOptions, WasmLocateOptions } from "@docmentis/udoc-editor";
 import { UDocViewer } from "@docmentis/udoc-viewer";
 import { h } from "../dom.js";
 import type { Theme } from "../theme.js";
@@ -8,6 +8,13 @@ import { aiPanel } from "./AiPanel.js";
 
 /** This page's name in a collaboration it joins with one editor — one per page load, so two browsers tell apart. */
 const GUEST_NAME = `Guest ${Math.floor(100 + Math.random() * 900)}`;
+
+/**
+ * Where the engine is. A build leaves it out (see `vite.config.ts`) for its
+ * host to serve beside it, at `udoc-wasm/` laid out as `@docmentis/udoc-wasm`'s
+ * `dist/`, else it loads from jsDelivr; dev serves the installed engine.
+ */
+const ENGINE: WasmLocateOptions = import.meta.env.PROD ? { baseUrl: "./udoc-wasm/" } : {};
 
 /**
  * The stage: everything to the right of the sidebar. Owns the editor host(s)
@@ -25,7 +32,7 @@ export class Stage {
     #gen = 0;
     #theme: Theme;
     /** The options the Options dialog set, on top of each mode's own. */
-    #options: UDocEditorOptions = { showDeveloperButton: true, enablePointerSharing: true };
+    #options: UDocEditorOptions = { showDeveloperButton: true, enablePointerSharing: true, wasm: ENGINE };
 
     constructor(
         private readonly onError: (message: string) => void,
@@ -159,7 +166,7 @@ export class Stage {
         }
         let service: string;
         try {
-            service = await UDocEditor.startLocalCollaborationService(doc.bytes, { filename: doc.name });
+            service = await UDocEditor.startLocalCollaborationService(doc.bytes, { filename: doc.name, wasm: ENGINE });
         } catch (err) {
             console.error("udoc: failed to start a local collaboration service", err);
             this.onError(`Co-edit could not start: ${(err as Error).message}`);

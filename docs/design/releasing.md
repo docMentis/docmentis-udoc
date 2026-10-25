@@ -1,8 +1,8 @@
 # Releasing
 
 The published packages (udoc-ui, udoc-viewer, udoc-editor, udoc-node,
-udoc-cli and udoc-server) release together, from CI, on the engine release
-they pin.
+udoc-cli, udoc-server and udoc-demo) release together, from CI, on the engine
+release they pin.
 
 ## One version
 

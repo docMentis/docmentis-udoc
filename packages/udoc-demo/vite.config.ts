@@ -14,12 +14,17 @@ const root = resolve(import.meta.dirname, "../..");
 // this repo when scripts/link-engine.mjs has linked in a local build.
 export default defineConfig({
     // Relative asset paths so the built demo works when served from a
-    // subdirectory (e.g. embedded in an iframe at /editor-demo/ on the site).
+    // subdirectory (e.g. embedded in an iframe at /demo/ on the site).
     base: "./",
     optimizeDeps: {
         exclude: ["@docmentis/udoc-editor", "@docmentis/udoc-viewer", "@docmentis/udoc-ui", "@docmentis/udoc-wasm"],
     },
-    build: { target: "es2022" },
+    // The build leaves the engine out. The packages' lookup of a bundled copy
+    // (`@docmentis/udoc-wasm/meta-url`) stays an import the browser can't
+    // resolve, so Vite copies in neither the binary nor the fonts, and the
+    // packages go on to where the demo's host serves them (`ENGINE` in
+    // src/stage/Stage.ts), then to jsDelivr. Dev serves the installed engine.
+    build: { target: "es2022", rollupOptions: { external: ["@docmentis/udoc-wasm/meta-url"] } },
     server: {
         fs: { allow: [root, realpathSync(resolve(root, "node_modules/@docmentis/udoc-wasm"))] },
         // `?document=<id>` opens a document udoc-server keeps, part by part,

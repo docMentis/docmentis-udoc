@@ -19,7 +19,7 @@ export interface SampleCategory {
 
 // Resolve a `public/` file against Vite's base URL so the paths work both when
 // served at the site root (dev, `BASE_URL === "/"`) and from a subdirectory
-// (the built demo is embedded in an iframe at /editor-demo/, `BASE_URL === "./"`).
+// (the built demo is embedded in an iframe at /demo/, `BASE_URL === "./"`).
 const asset = (path: string): string => `${import.meta.env.BASE_URL}${path}`;
 
 export const SAMPLE_CATEGORIES: SampleCategory[] = [

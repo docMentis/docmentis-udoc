@@ -1,10 +1,30 @@
 {
     "name": "@docmentis/udoc-demo",
-    "version": "0.1.0",
-    "description": "Demo application for docMentis document viewing and editing.",
+    "version": "0.8.1",
+    "description": "The docMentis udoc demo, built to serve: the viewer and the editor on sample documents.",
+    "keywords": [
+        "demo",
+        "document-viewer",
+        "document-editor",
+        "docmentis",
+        "udoc"
+    ],
+    "homepage": "https://www.docmentis.com",
     "license": "MIT OR Apache-2.0",
-    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/docMentis/docmentis-udoc.git",
+        "directory": "packages/udoc-demo"
+    },
     "type": "module",
+    "files": [
+        "dist",
+        "LICENSE-MIT",
+        "LICENSE-APACHE"
+    ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "dev": "vite",
         "build": "tsc -p tsconfig.json --noEmit && vite build",
@@ -13,6 +33,9 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
+        "@docmentis/udoc-wasm": "0.8.3"
+    },
+    "devDependencies": {
         "@docmentis/udoc-editor": "*",
         "@docmentis/udoc-viewer": "*"
     }

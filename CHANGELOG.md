@@ -6,6 +6,15 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-demo
+
+#### Added
+
+- Published to npm: the demo, built to serve from any directory. It loads the
+  engine from `udoc-wasm/` beside it, laid out as `@docmentis/udoc-wasm`'s
+  `dist/`, or else from jsDelivr.
+- `?mode=view`, `edit`, `coedit` or `ai` opens the demo in that mode.
+
 ## [0.8.1] - 2026-10-24
 
 Built on `@docmentis/udoc-wasm` 0.8.3.

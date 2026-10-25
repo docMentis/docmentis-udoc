@@ -1,24 +1,37 @@
-# udoc demo
+# @docmentis/udoc-demo
 
-An example application demonstrating document viewing and editing with [`@docmentis/udoc-viewer`](../udoc-viewer) and [`@docmentis/udoc-editor`](../udoc-editor).
+**The docMentis udoc demo, built and ready to serve.**
 
-[![CI](https://github.com/docMentis/docmentis-udoc/actions/workflows/ci.yml/badge.svg)](https://github.com/docMentis/docmentis-udoc/actions/workflows/ci.yml)
-[![license](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](https://github.com/docMentis/docmentis-udoc#open-source-packages-shared-runtime)
+The viewer and the editor on sample documents: open a file or a URL, view it, edit it, or co-edit it in two editors side by side. It is the demo docmentis.com runs, published built so a site can serve it as it is.
+
+[![npm version](https://img.shields.io/npm/v/@docmentis/udoc-demo)](https://www.npmjs.com/package/@docmentis/udoc-demo)
+[![license](https://img.shields.io/npm/l/@docmentis/udoc-demo)](https://github.com/docMentis/docmentis-udoc#open-source-packages-shared-runtime)
 
 **[Viewer Demo](https://www.docmentis.com/viewer/demo)** · **[Editor Demo](https://www.docmentis.com/editor/demo)** · **[Docs](https://www.docmentis.com/docs)** · **[Report Issue](https://github.com/docMentis/docmentis-udoc/issues)**
 
 ---
 
-This workspace is part of the [docMentis udoc monorepo](https://github.com/docMentis/docmentis-udoc) and is **not published to npm**.
+## Serve it
 
-From the repository root:
+`dist/` is the demo. Its paths are relative, so it can be served from any directory.
+
+It leaves the engine out. Serve the `@docmentis/udoc-wasm` this package depends on beside it, in `udoc-wasm/`, laid out as that package's `dist/`; without it, the demo loads the engine from jsDelivr. The engine is under its own license, which `@docmentis/udoc-wasm` carries.
+
+```text
+demo/
+├── index.html, assets/, pdf/, …    @docmentis/udoc-demo/dist/
+└── udoc-wasm/
+    ├── wasm/udoc_bg.wasm           @docmentis/udoc-wasm/dist/wasm/udoc_bg.wasm
+    └── fonts/                      @docmentis/udoc-wasm/dist/fonts/
+```
+
+It opens in View mode, on the viewer. `?mode=view`, `edit`, `coedit` or `ai` opens it in that mode, and the address follows the mode you switch to.
+
+## Run it from source
+
+In the [docMentis udoc monorepo](https://github.com/docMentis/docmentis-udoc), from the repository root:
 
 ```sh
 npm install
 npm run dev
 ```
-
-It opens in View mode, on the viewer. `?mode=view`, `edit`, `coedit` or `ai`
-opens it in that mode, and the address follows the mode you switch to.
-
-For a reusable document viewer or editor, install the corresponding published package rather than this demo workspace.

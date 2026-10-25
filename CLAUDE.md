@@ -6,9 +6,8 @@ Guidance for Claude Code when working in this repo.
 
 `docmentis-udoc` holds the open-source TypeScript packages of docMentis udoc:
 the web viewer and editor, `udoc-ui` they are built on, the Node hosts
-(`udoc-node`, `udoc-cli`, `udoc-server`) and the private `udoc-demo` and
-`udoc-docs`. The
-repo is public and dual-licensed MIT OR Apache-2.0.
+(`udoc-node`, `udoc-cli`, `udoc-server`), the demo `udoc-demo` and the private
+`udoc-docs`. The repo is public and dual-licensed MIT OR Apache-2.0.
 
 The engine they run on is not here. The Rust crates and
 `@docmentis/udoc-wasm`, the proprietary WebAssembly runtime built from them,
@@ -46,9 +45,13 @@ udoc-ui's generated engine version and the CDN URLs the docs write out.
   repo, builds it and opens it in headless Chrome; the Examples workflow runs
   it on a change to the browser packages or the examples, and nightly. A change to how the packages load (the engine, its
   fonts, the workers, a new bare import) runs it before it lands.
-- Every package except `udoc-demo` and `udoc-docs` is published, with its own
-  copy of `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`, and a
+- Every package except `udoc-docs` is published, with its own copy of
+  `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`, and a
   `repository` naming this repo, which npm's provenance checks.
+- `udoc-demo` is published built, its `dist/`, without the engine: its host
+  serves `@docmentis/udoc-wasm` beside it, in `udoc-wasm/`. docmentis-site
+  installs it and serves it at `/demo/`, its viewer demo opening `?mode=view`
+  and its editor demo `?mode=edit`.
 - The published packages release together at one version, on the major and
   minor of the engine they pin, and only from CI:
   `npm run release -- <patch|minor|major|version>` tags a release and

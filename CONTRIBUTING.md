@@ -37,7 +37,7 @@ docmentis-udoc/
 │   ├── udoc-node/      # The engine in Node.js (@docmentis/udoc-node)
 │   ├── udoc-cli/       # The `udoc` command (@docmentis/udoc-cli)
 │   ├── udoc-server/    # Document server (@docmentis/udoc-server)
-│   ├── udoc-demo/      # Demo application (not published)
+│   ├── udoc-demo/      # Demo application, published built (@docmentis/udoc-demo)
 │   └── udoc-docs/      # Docs site: guides and API reference (not published)
 ├── examples/           # An app per framework or bundler, with the viewer and the editor
 ├── docs/design/        # Architecture and design documents
