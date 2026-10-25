@@ -24,9 +24,21 @@ function clampScroll(state: UIState, x: number, y: number): { scrollX: number; s
     // derived zoom while fitting), not the stale explicit `zoom`.
     const perPt = renderZoom(state) * cssPxPerPt(viewDpi(state));
     return {
-        scrollX: clamp(x, 0, maxScroll(state.scrollSize.width, visibleSpan(state, "x"), perPt)),
-        scrollY: clamp(y, 0, maxScroll(state.scrollSize.height, visibleSpan(state, "y"), perPt)),
+        scrollX: clampAxis(x, state.scrollX, maxScroll(state.scrollSize.width, visibleSpan(state, "x"), perPt)),
+        scrollY: clampAxis(y, state.scrollY, maxScroll(state.scrollSize.height, visibleSpan(state, "y"), perPt)),
     };
+}
+
+/**
+ * Scroll `value` on an axis that scrolls through `[0, max]`, from `current`.
+ * Content that fits on the axis (`max` 0) doesn't scroll: the engine places it
+ * — centred, at a negative scroll — so the axis keeps the scroll it has, the
+ * engine's, rather than a 0 the engine would only move back. Each such 0 cost
+ * a round trip: a `setViewport`, a frame, and the engine's scroll adopted and
+ * sent back — on every relayout, and every vertical wheel step.
+ */
+function clampAxis(value: number, current: number, max: number): number {
+    return max === 0 ? current : clamp(value, 0, max);
 }
 
 /**
