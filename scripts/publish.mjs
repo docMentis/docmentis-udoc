@@ -1,8 +1,9 @@
 // Publish a release to npm: every published package at the version its tag
 // names, each after the packages it depends on, so that no install finds a
-// package it pins missing. One npm has at that version already is skipped, so
-// a run that stopped part-way finishes when run again. A prerelease goes out
-// under the `next` dist-tag, leaving `latest` on the last release.
+// package it pins missing, and after those it is built from (packages.mjs).
+// One npm has at that version already is skipped, so a run that stopped
+// part-way finishes when run again. A prerelease goes out under the `next`
+// dist-tag, leaving `latest` on the last release.
 //
 // Run by .github/workflows/release.yml, after the build and the checks, as
 // `node scripts/publish.mjs <version>`. With --dry-run it packs each package

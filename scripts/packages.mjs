@@ -10,7 +10,8 @@ export const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /**
  * Each published package's directory (as the lockfile keys it), manifest file
- * and manifest, after the published packages it depends on.
+ * and manifest, after the published packages it depends on or is built from:
+ * the demo, built from the viewer and the editor, goes after them.
  */
 export function publishedPackages() {
     const packages = readdirSync(join(root, "packages"))
@@ -22,7 +23,7 @@ export function publishedPackages() {
     const ordered = [];
     const visit = (pkg) => {
         if (ordered.includes(pkg)) return;
-        for (const name of Object.keys(pkg.manifest.dependencies ?? {})) {
+        for (const name of Object.keys({ ...pkg.manifest.dependencies, ...pkg.manifest.devDependencies })) {
             if (byName.has(name)) visit(byName.get(name));
         }
         ordered.push(pkg);

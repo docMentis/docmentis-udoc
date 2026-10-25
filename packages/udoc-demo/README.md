@@ -13,19 +13,14 @@ The viewer and the editor on sample documents: open a file or a URL, view it, ed
 
 ## Serve it
 
-`dist/` is the demo. Its paths are relative, so it can be served from any directory.
+The package is the demo, built: `dist/` holds its page, its code with the viewer and the editor built in, and its sample documents. It needs no bundler, and nothing else installed but the engine it runs on, which it leaves out of `dist/`.
 
-It leaves the engine out. Serve the `@docmentis/udoc-wasm` this package depends on beside it, in `udoc-wasm/`, laid out as that package's `dist/`; without it, the demo loads the engine from jsDelivr. The engine is under its own license, which `@docmentis/udoc-wasm` carries.
+1. `npm install @docmentis/udoc-demo`, which installs the `@docmentis/udoc-wasm` it depends on with it.
+2. Copy `node_modules/@docmentis/udoc-demo/dist/` to a folder your site serves, such as `public/demo/`. Its paths are relative, so any folder works.
+3. Copy that `@docmentis/udoc-wasm`'s `dist/wasm/` and `dist/fonts/` into `udoc-wasm/` in the same folder, as `public/demo/udoc-wasm/`. Skip this, and the demo loads the engine from jsDelivr.
+4. Open it, or embed it, at `index.html`: `<iframe src="/demo/index.html?mode=view"></iframe>`. `?mode=view`, `edit`, `coedit` or `ai` opens it in that mode, View when none is named.
 
-```text
-demo/
-├── index.html, assets/, pdf/, …    @docmentis/udoc-demo/dist/
-└── udoc-wasm/
-    ├── wasm/udoc_bg.wasm           @docmentis/udoc-wasm/dist/wasm/udoc_bg.wasm
-    └── fonts/                      @docmentis/udoc-wasm/dist/fonts/
-```
-
-It opens in View mode, on the viewer. `?mode=view`, `edit`, `coedit` or `ai` opens it in that mode, and the address follows the mode you switch to.
+The engine is under its own license, which `@docmentis/udoc-wasm` carries.
 
 ## Run it from source
 
