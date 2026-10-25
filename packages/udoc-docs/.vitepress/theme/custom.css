@@ -21,6 +21,133 @@
     --vp-c-brand-soft: rgba(129, 140, 248, 0.16);
 }
 
+/* The home page's hero, which has no image: centered over the cards rather
+   than left of an empty half, and set smaller — a docs site's front page,
+   not a product's. It reads eyebrow, headline, tagline, actions, each set
+   apart from the next by a little more than the last. */
+.VPHero:not(.has-image) {
+    padding-bottom: 40px;
+}
+
+.VPHero:not(.has-image) .container {
+    text-align: center;
+}
+
+.VPHero:not(.has-image) .main {
+    width: 100%;
+}
+
+.hero-eyebrow {
+    margin-bottom: 12px;
+    line-height: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--vp-c-brand-1);
+}
+
+.VPHero:not(.has-image) .text,
+.VPHero:not(.has-image) .tagline {
+    margin: 0 auto;
+    max-width: 100%;
+    text-wrap: balance;
+}
+
+.VPHero:not(.has-image) .tagline {
+    padding-top: 16px;
+    max-width: 650px;
+    line-height: 28px;
+    font-size: 18px;
+    font-weight: 400;
+}
+
+.VPHero:not(.has-image) .actions {
+    justify-content: center;
+    padding-top: 28px;
+}
+
+@media (min-width: 640px) {
+    .VPHero:not(.has-image) .text {
+        line-height: 48px;
+        font-size: 40px;
+    }
+}
+
+@media (min-width: 960px) {
+    .VPHero:not(.has-image) {
+        padding-top: calc(var(--vp-nav-height) + 64px);
+        padding-bottom: 48px;
+    }
+
+    .VPHero:not(.has-image) .text {
+        line-height: 56px;
+        font-size: 48px;
+    }
+}
+
+/* The home page's cards: a faint tint of the brand on hover or focus, no
+   shadow or lift, and a keyboard's focus ringed besides. Title, package,
+   description and link each set apart. */
+.VPHome .VPFeatures .VPFeature.link:hover,
+.VPHome .VPFeatures .VPFeature.link:focus-visible {
+    border-color: color-mix(in srgb, var(--vp-c-brand-1) 40%, transparent);
+    background-color: color-mix(in srgb, var(--vp-c-brand-1) 4%, var(--vp-c-bg-soft));
+}
+
+.VPHome .VPFeatures .VPFeature.link:focus-visible {
+    outline: 2px solid var(--vp-c-brand-1);
+    outline-offset: 2px;
+}
+
+/* Every card as tall as the tallest, not just as its row's: a grid of the
+   columns the default theme's flex rows have — two from 640px, three from
+   768px. */
+@media (min-width: 640px) {
+    .VPHome .VPFeatures .items {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: 1fr;
+    }
+
+    .VPHome .VPFeatures .item {
+        width: auto;
+    }
+}
+
+@media (min-width: 768px) {
+    .VPHome .VPFeatures .items {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.VPHome .VPFeatures .VPFeature .title {
+    line-height: 26px;
+    font-size: 17px;
+}
+
+.VPHome .VPFeatures .VPFeature .details {
+    padding-top: 10px;
+}
+
+.VPHome .VPFeatures .VPFeature .link-text {
+    padding-top: 16px;
+}
+
+/* A card's package, on its own line over the description, as inline code is
+   in the docs. */
+.VPFeature .details code {
+    display: block;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    padding: 2px 6px;
+    width: fit-content;
+    line-height: 20px;
+    font-size: 0.875em;
+    color: var(--vp-code-color);
+    background-color: var(--vp-code-bg);
+}
+
 /* A row reads from its top: a name beside a description of several lines
    heads it, not centers on it. */
 .vp-doc td {

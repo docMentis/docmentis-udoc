@@ -33,6 +33,11 @@ const apiSidebar = (
     ) as DefaultTheme.SidebarItem[]
 ).map(shapePackage);
 
+/** The `package.json` of the package in `packages/<dir>`. */
+function packageJson(dir: string): { name: string; description: string } {
+    return JSON.parse(readFileSync(new URL(`../../${dir}/package.json`, import.meta.url), "utf8"));
+}
+
 // Served at docmentis.com/docs: the site proxies `/docs/*` to the GitHub Pages
 // deployment (.github/workflows/docs.yml), so every link and asset is under
 // `/docs/` — on Pages' own github.io address too, where the pages therefore
@@ -48,6 +53,16 @@ export default defineConfig({
     // docmentis.com's icon and wordmark, from `public/`. VitePress puts the
     // logo under `base` itself, but not what `head` links to.
     head: [["link", { rel: "icon", type: "image/svg+xml", href: `${base}favicon.svg` }]],
+    // The home page's card for a package describes it as npm does, from its
+    // `package.json`, so the two can't drift apart.
+    transformPageData(pageData) {
+        if (pageData.relativePath !== "index.md") return;
+        for (const feature of pageData.frontmatter.features as { package?: string; details?: string }[]) {
+            if (!feature.package) continue;
+            const { name, description } = packageJson(feature.package);
+            feature.details = `<code>${name}</code> ${description}`;
+        }
+    },
     themeConfig: {
         logo: { light: "/logo.svg", dark: "/logo-dark.svg", alt: "docMentis" },
         siteTitle: false,

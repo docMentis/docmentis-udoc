@@ -1,18 +1,45 @@
-# docMentis udoc
+---
+layout: home
 
-Embed documents in a web page with the viewer or the editor, or run the udoc
-engine in Node.
+# The eyebrow is the theme's (.vitepress/theme/index.ts): the line over the
+# heading, outside the h1, which is the headline alone.
+hero:
+    eyebrow: docMentis Documentation
+    text: Build document experiences with udoc.
+    tagline: Everything you need to integrate document viewing, editing, collaboration, and processing into your applications and workflows.
+    actions:
+        - theme: brand
+          text: Get started
+          link: /guide/quick-start
+        - theme: alt
+          text: Try the demo
+          link: https://www.docmentis.com/viewer/demo
 
-New here? Start with the [Quick start](/guide/quick-start).
-
-- [`@docmentis/udoc-viewer`](/api/udoc-viewer/) — a framework-agnostic
-  document viewer.
-- [`@docmentis/udoc-editor`](/api/udoc-editor/) — a framework-agnostic
-  document editor.
-- [`@docmentis/udoc-node`](/api/udoc-node/) — the engine in a Node
-  application.
-- [`@docmentis/udoc-server`](/api/udoc-server/) — a document server on the
-  engine.
-
-The viewer and the editor share most of their API: the
-[Common](/api/Common/) section of the reference is exported by both.
+# A card that names a package says what its package.json does: its name and
+# description (`transformPageData` in .vitepress/config.ts).
+features:
+    - title: Viewer
+      package: udoc-viewer
+      link: /api/udoc-viewer/
+      linkText: API reference
+    - title: Editor
+      package: udoc-editor
+      link: /api/udoc-editor/
+      linkText: API reference
+    - title: Server
+      package: udoc-server
+      link: /api/udoc-server/
+      linkText: API reference
+    - title: Command line
+      package: udoc-cli
+      link: https://github.com/docMentis/docmentis-udoc/tree/main/packages/udoc-cli#readme
+      linkText: README
+    - title: Node
+      package: udoc-node
+      link: /api/udoc-node/
+      linkText: API reference
+    - title: Examples
+      details: Example apps embedding the viewer and the editor with React, Vue, Svelte, Angular, Next.js, Nuxt, or plain JavaScript on Vite, webpack, or no bundler.
+      link: https://github.com/docMentis/docmentis-udoc/tree/main/examples#readme
+      linkText: On GitHub
+---
