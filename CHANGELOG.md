@@ -6,6 +6,13 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Fixed
+
+- A document opened where another was open draws at once, where it stayed
+  blank until the view changed size.
+
 ### udoc-demo
 
 #### Fixed

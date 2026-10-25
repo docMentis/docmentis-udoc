@@ -1111,6 +1111,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // Nothing of the last session's background work carries over.
                 stopBackground();
                 dropThumbnails();
+                // Nor does the last view pushed to Rust: the new session has
+                // no viewport yet, so the host's next `setViewport` (the open
+                // path sends one) must reach it even at an unchanged size —
+                // deduped against the old session's, it never would, and the
+                // document would paint nothing until the viewport resized.
+                lastW = lastH = lastDpr = Number.NaN;
+                lastScrollX = lastScrollY = lastZoom = Number.NaN;
                 if (canvas) session.attach(canvas);
                 // A fresh session clears any prior poisoned-render state.
                 renderPoisoned = false;
