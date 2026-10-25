@@ -3,4 +3,4 @@
 // This package's version, reported to the engine as the wrapper version so a
 // permit request and a usage event can name what produced them. Generated from
 // package.json, which is the one place a release bumps.
-export const WRAPPER_VERSION = "0.8.1";
+export const WRAPPER_VERSION = "0.8.2";
