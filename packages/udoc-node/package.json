@@ -58,6 +58,6 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-wasm": "0.8.4"
+        "@docmentis/udoc-wasm": "0.8.5"
     }
 }
