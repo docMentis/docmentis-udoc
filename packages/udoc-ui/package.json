@@ -1,6 +1,6 @@
 {
     "name": "@docmentis/udoc-ui",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "description": "Shared document UI foundation for the docMentis viewer and editor.",
     "keywords": [
         "document-viewer",
