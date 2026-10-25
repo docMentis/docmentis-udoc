@@ -122,8 +122,13 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 };
             case "saveToPackage":
                 return { id, ok: true, result: opened().saveToPackage(request.version) };
-            case "exportToBytes":
-                return { id, ok: true, result: opened().exportToBytes(request.format) };
+            case "exportToBytes": {
+                const s = opened();
+                // Every page goes in: compose them all, their fonts filled, so
+                // none is drawn in the stand-in a font still on order is.
+                await updateLayoutSettled(s, WHOLE_DOCUMENT);
+                return { id, ok: true, result: s.exportToBytes(request.format) };
+            }
             case "exportPageToBytes": {
                 const s = opened();
                 // A page is known only once composed, so compose through the
