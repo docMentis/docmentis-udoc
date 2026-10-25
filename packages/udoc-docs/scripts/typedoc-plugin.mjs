@@ -39,7 +39,7 @@ import {
     i18n,
     makeRecursiveVisitor,
 } from "typedoc";
-import { MarkdownTheme, MarkdownThemeContext } from "typedoc-plugin-markdown";
+import { MarkdownPageEvent, MarkdownTheme, MarkdownThemeContext } from "typedoc-plugin-markdown";
 import ts from "typescript";
 
 /** Each entry point's package directory, in sidebar order, and the module it becomes. */
@@ -219,6 +219,33 @@ function unlinkUnreachable(project) {
     }
 }
 
+/** The reference's index page's description. */
+const REFERENCE_DESCRIPTION =
+    "API reference for the docMentis udoc packages: the viewer, the editor, udoc-node and udoc-server.";
+
+/**
+ * A page's description, which search engines show under its title: the first
+ * sentence of what its comment says of it, as plain text, or, with no
+ * comment, what it is.
+ */
+function pageDescription(model) {
+    if (model.kind === ReflectionKind.Project) return REFERENCE_DESCRIPTION;
+    const comment = model.comment ?? model.signatures?.[0]?.comment;
+    const text = (comment?.summary ?? [])
+        .map((part) => part.text)
+        .join("")
+        .replace(/`([^`]*)`/g, "$1")
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .replace(/\s+/g, " ")
+        .trim();
+    if (!text) {
+        const kind = ReflectionKind.singularString(model.kind).toLowerCase();
+        return `${model.name}, ${/^[aeiou]/.test(kind) ? "an" : "a"} ${kind} in the docMentis udoc API reference.`;
+    }
+    const end = text.search(/[.!?](\s|$)/);
+    return end === -1 ? text : text.slice(0, end + 1);
+}
+
 /**
  * Markdown on one line of a table row, as typedoc-plugin-markdown's own tables
  * put it (its `formatTableCell`, which it doesn't export): line breaks and runs
@@ -348,6 +375,12 @@ class UDocTheme extends MarkdownTheme {
 
 export function load(app) {
     app.renderer.defineTheme("udoc", UDocTheme);
+    // Each page's description in its frontmatter, which VitePress makes its
+    // meta description. JSON is YAML, so a JSON string is a quoted scalar.
+    app.renderer.on(MarkdownPageEvent.END, (page) => {
+        const description = JSON.stringify(pageDescription(page.model));
+        page.contents = `---\ndescription: ${description}\n---\n\n${page.contents}`;
+    });
 
     let common;
     const exportingCommon = [];

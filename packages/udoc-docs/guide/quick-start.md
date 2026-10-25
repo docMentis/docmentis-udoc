@@ -1,3 +1,7 @@
+---
+description: Install the docMentis udoc viewer or editor, show a document in your web page, and choose where the engine loads from.
+---
+
 # Quick start
 
 Show documents in your web page with `@docmentis/udoc-viewer`, or let people

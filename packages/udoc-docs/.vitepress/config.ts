@@ -46,12 +46,38 @@ const REPO = "https://github.com/docMentis/docmentis-udoc";
 // come up without their styles.
 const base = "/docs/";
 
+// The docs' public address. Pages serves the same pages at its github.io one,
+// so each names its address here as canonical, for search engines to index
+// it and not the copy; the sitemap lists them there too.
+const SITE = `https://www.docmentis.com${base}`;
+
+const title = "docMentis Docs";
+// The home page's, and any other page's without one of its own.
+const description =
+    "Guides and API reference for docMentis udoc: integrate document viewing, editing, collaboration, " +
+    "and processing into your applications and workflows.";
+
 export default defineConfig({
-    title: "docMentis Docs",
-    description: "Guides and API reference for the docMentis udoc viewer, editor and Node hosts.",
+    title,
+    description,
     base,
     outDir: "dist",
     cleanUrls: true,
+    sitemap: { hostname: SITE },
+    // A page's canonical address, and what a link to it shows where it's
+    // shared.
+    transformHead({ pageData }) {
+        const path = pageData.relativePath.replace(/(^|\/)index\.md$/, "$1").replace(/\.md$/, "");
+        const url = new URL(path, SITE).href;
+        return [
+            ["link", { rel: "canonical", href: url }],
+            ["meta", { property: "og:type", content: "website" }],
+            ["meta", { property: "og:site_name", content: title }],
+            ["meta", { property: "og:title", content: pageData.title ? `${pageData.title} | ${title}` : title }],
+            ["meta", { property: "og:description", content: pageData.description || description }],
+            ["meta", { property: "og:url", content: url }],
+        ];
+    },
     // The package's own README, for its folder on GitHub, not a page of the
     // site.
     srcExclude: ["README.md"],

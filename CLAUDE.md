@@ -32,8 +32,10 @@ udoc-ui's generated engine version and the CDN URLs the docs write out.
   docmentis-site proxies `docmentis.com/docs` to it.
 - The guides are `packages/udoc-docs/guide/*.md`, one task per page, written
   once for the viewer and the editor (a code group where their code differs),
-  and listed in order in `.vitepress/config.ts`. A guide links to the API
-  reference rather than repeating it. Its code samples are files in
+  and listed in order in `.vitepress/config.ts`. Its frontmatter
+  `description`, a sentence on what the reader does in it, is what search
+  engines show under its title. A guide links to the API reference rather
+  than repeating it. Its code samples are files in
   `packages/udoc-docs/snippets/`, embedded with `<<< @/snippets/…`, so the
   docs package's typecheck compiles them against the built packages. A guide
   folder gets no `index.md`: the site's proxy needs a rule for each folder
