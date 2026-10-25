@@ -15,8 +15,23 @@
  * events break it down (the wasm engine reports them via `frameTimings`):
  * `reconcile` (relayout + page load/decode), `record` (building the draw-op
  * scene), `rasterize` (CPU raster), and `composite` (un-premultiply + blit).
+ *
+ * The rest time one step of the worker's background work each, by its task: a
+ * font install, a thumbnail render, a compose-ahead step and a sheet loaded by
+ * the sheet walk. A step can't be interrupted, so its length is the longest a
+ * reader who comes back during it waits.
  */
-export type PerfEvent = "open" | "repaint" | "reconcile" | "record" | "rasterize" | "composite";
+export type PerfEvent =
+    | "open"
+    | "repaint"
+    | "reconcile"
+    | "record"
+    | "rasterize"
+    | "composite"
+    | "fontInstall"
+    | "thumbnail"
+    | "composeAhead"
+    | "sheetWalk";
 
 /** Aggregated timing for one event type over the current window. */
 export interface PerfEventStats {

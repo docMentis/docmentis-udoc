@@ -47,14 +47,15 @@ The editor's viewport is **not** request-driven — it is an autonomous
 wasm call on that same thread, so it competes with live painting directly.
 Priority control is therefore a **yield gate**, not a queue sort:
 
-- Thumbnail renders run only while the viewport is _settled_. We reuse the
-  compose-ahead discipline already in `shell.ts` (`viewportSig` + idle
-  scheduling): while scroll/zoom/edit are in flight the signature changes and
-  thumbnail work defers; it resumes when the view stops. Thumbnails share the
-  idle budget with compose-ahead and always lose to a moving camera.
-- The pending thumbnail queue lives main-side in `WorkerClient`, one render
-  in flight at a time, ordered by distance to the **visible window** (the
-  `thumbnailFocus`/boost equivalent), so what the user is looking at fills first.
+- Thumbnail renders are the worker's background work (see
+  [UI Background Work](ui-background-work.md)): one runs only when no request
+  is waiting, no frame is pending, and the reader has been quiet for 300 ms. A
+  moving camera, a hover or a keystroke always goes first. Thumbnails go ahead of
+  compose-ahead and the sheet walk, and behind font installs.
+- The pending thumbnail queue lives in the worker, one render at a time, ordered
+  by distance to the **visible window** (the `thumbnailFocus`/boost
+  equivalent), so what the user is looking at fills first. `WorkerClient` queues,
+  cancels and drops renders, and posts the strip's focus as it scrolls.
 
 ## Render cache
 

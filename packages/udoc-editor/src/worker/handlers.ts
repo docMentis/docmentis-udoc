@@ -66,8 +66,8 @@ export const EDIT_HANDLERS: EditHandlers = {
     renderFontPreview: {
         // A specimen the browser can't draw itself — an embedded or bundled
         // face, rasterized here as a PNG alpha mask. Small (one short line of
-        // text), so it runs inline like the reads above rather than going
-        // through the thumbnail settle gate.
+        // text), so it runs inline like the reads above rather than queueing
+        // as background work, as the thumbnail strip's renders do.
         //
         // Like `renderThumbnail`, the bytes are moved out of the wasm handle
         // and `slice()`d into a standalone transferable buffer before the

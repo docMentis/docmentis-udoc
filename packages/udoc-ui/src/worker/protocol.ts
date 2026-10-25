@@ -453,12 +453,12 @@ export function defaultDpiForDocType(docType: UDocType | undefined): number {
 }
 
 /**
- * Compose ahead through page index `pageLimit` (inclusive) — the idle
- * compose-ahead step. Replies with the document's grown layout (composed page
- * count + content size) so the host can extend its scroll bounds as pages fill
- * in, plus `complete`: whether there is anything left to compose. A page is
- * known only once composed, so that flag is the only way to learn the
- * document's length.
+ * Compose through page index `pageLimit` (inclusive), now — what a print or a
+ * page render needs composed first; the worker composes the rest ahead on its
+ * own (see {@link ComposedReport}). Replies with the document's grown layout
+ * (composed page count + content size), plus `complete`: whether there is
+ * anything left to compose. A page is known only once composed, so that flag
+ * is the only way to learn the document's length.
  */
 export interface UpdateLayoutRequest {
     type: "updateLayout";
@@ -1433,12 +1433,13 @@ export interface MergeOpaquePartsRequest {
 
 /**
  * Rasterize page `index` (0-based) to a premultiplied-RGBA8 bitmap at `scale`
- * (output pixels per document point — 1.0 == 72 DPI) for the thumbnail strip.
- * An off-viewport CPU raster, wholly separate from the painted frame: a pure
- * read, no document state change and no repaint. Replies with a
- * {@link ThumbnailResult} whose pixel buffer is transferred. The host throttles
- * these against viewport painting (renders only while the camera is settled),
- * since the raster runs synchronously on the worker thread.
+ * (output pixels per document point — 1.0 == 72 DPI), now: a one-off preview —
+ * a slide layout's, a page to print. An off-viewport CPU raster, wholly
+ * separate from the painted frame: a pure read, no document state change and
+ * no repaint. Replies with a {@link ThumbnailResult} whose pixel buffer is
+ * transferred. The thumbnail strip queues its renders instead
+ * ({@link QueueThumbnailRequest}), for the worker to run when the reader leaves
+ * it a moment.
  */
 export interface RenderThumbnailRequest {
     type: "renderThumbnail";
@@ -1452,6 +1453,50 @@ export interface RenderThumbnailRequest {
     /** Draw the ephemeral annotations — shown, never saved. Absent draws them;
      *  a print sends `false`, leaving them out. */
     ephemeral?: boolean;
+}
+
+/**
+ * Queue a thumbnail-strip render of page `index` (0-based) on the slide plane at
+ * `scale`, as a {@link RenderThumbnailRequest} renders it. The worker runs it
+ * as background work — once the reader has been quiet a moment, nearest the
+ * strip's focus ({@link ThumbnailFocusRequest}) first — and replies with the
+ * {@link ThumbnailResult}, or `null` when the render was dropped before it ran:
+ * replaced by a later request for the page, cancelled, or dropped with the rest.
+ */
+export interface QueueThumbnailRequest {
+    type: "queueThumbnail";
+    index: number;
+    scale: number;
+}
+
+/** Drop the queued render of page `index`, if it hasn't run; it replies `null`. */
+export interface CancelThumbnailRequest {
+    type: "cancelThumbnail";
+    index: number;
+}
+
+/** Drop every queued thumbnail render — the document changed; each replies `null`. */
+export interface DropThumbnailsRequest {
+    type: "dropThumbnails";
+}
+
+/**
+ * The page the thumbnail strip is centred on: queued renders nearest it run
+ * first. A hint, taken as it arrives rather than in turn, and never answered.
+ */
+export interface ThumbnailFocusRequest {
+    type: "thumbnailFocus";
+    page: number;
+}
+
+/**
+ * The reader touched the shell — a pointer, a key, a wheel. Background work
+ * waits for the reader to have been quiet a moment, so a hover or a keystroke
+ * doesn't land behind it. A hint, taken as it arrives rather than in turn, and
+ * never answered; the host posts it at most every few tens of ms.
+ */
+export interface ReaderActivityRequest {
+    type: "readerActivity";
 }
 
 /**
@@ -1502,6 +1547,11 @@ export type WorkerRequest =
     | PlaneInfoRequest
     | GoToPlaneRequest
     | RenderThumbnailRequest
+    | QueueThumbnailRequest
+    | CancelThumbnailRequest
+    | DropThumbnailsRequest
+    | ThumbnailFocusRequest
+    | ReaderActivityRequest
     | CloseRequest
     | HistoryRequest
     | SelectTextRequest
@@ -1573,13 +1623,8 @@ export interface ExtensionRequest {
     readonly type: string;
 }
 
-/**
- * A request envelope as posted to the worker: `_id` keys its reply, and
- * `_background` runs it as background work — after every request not so
- * marked, and once a pending frame has painted — as the host's compose-ahead
- * and thumbnails do.
- */
-export type WorkerRequestEnvelope = WorkerRequest & { _id?: number; _background?: true };
+/** A request envelope as posted to the worker: `_id` keys its reply. */
+export type WorkerRequestEnvelope = WorkerRequest & { _id?: number };
 
 // A successful `open` replies with the initial DocumentLayout (page count +
 // content size). Worker → main results travel as `unknown`, so the layout type
@@ -1787,6 +1832,18 @@ export interface PlaneLoadedReport {
     chartsheet: boolean;
 }
 
+/**
+ * Unsolicited layout growth: the worker composed more of the document ahead of
+ * the reader, in the background, and this is its layout now — the composed
+ * page count and content size the host's scroll bounds follow, and whether it
+ * is `complete`. The worker starts composing ahead once an opened document has
+ * painted, and again after each edit and sheet switch, until it is complete.
+ */
+export interface ComposedReport {
+    type: "composed";
+    layout: DocumentLayout;
+}
+
 /** Anything the worker posts back to the main thread. */
 export type WorkerOutbound =
     | WorkerResponse
@@ -1800,6 +1857,7 @@ export type WorkerOutbound =
     | BrandingRectReport
     | FontsRefreshedReport
     | PlaneLoadedReport
+    | ComposedReport
     | RenderErrorReport;
 
 // --- the local collaboration service ---------------------------------------

@@ -23,6 +23,11 @@ the packages here call through — is documented with the engine, not here.
   navigator: engine-raster previews over a new `render_page_to_rgba` wasm
   entry, the yield-gated render priority the autonomous viewport forces, the
   LRU bitmap cache, virtual scrolling, and the slide-navigator future.
+- [UI Background Work](ui-background-work.md) — how the engine worker fits
+  compose-ahead, thumbnails, a workbook's other sheets and web fonts around the
+  reader: a lane of requests ahead of prioritized background tasks, each handing
+  out a slice at a time once no frame is pending and the reader's inputs have
+  paused.
 - [UI Color System](ui-color-system.md) — the chrome's neutral color roles
   (`--udoc-color-*`, M3 names, hand-set light/dark values, lighter is raised)
   and the component tokens over them (region fills, marks on the document),

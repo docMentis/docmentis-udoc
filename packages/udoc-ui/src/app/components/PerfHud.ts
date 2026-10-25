@@ -1,4 +1,12 @@
-import type { PerfSummary } from "../../performance/index.js";
+import type { PerfEvent, PerfSummary } from "../../performance/index.js";
+
+/** The background work the HUD times, each step by its task, and the label it shows. */
+const BACKGROUND: ReadonlyArray<readonly [PerfEvent, string]> = [
+    ["fontInstall", "fonts"],
+    ["thumbnail", "thumbnails"],
+    ["composeAhead", "compose"],
+    ["sheetWalk", "sheets"],
+];
 
 /**
  * A small on-screen heads-up display for the render path's performance counter,
@@ -6,7 +14,9 @@ import type { PerfSummary } from "../../performance/index.js";
  * repaint timings from the {@link PerfSummary} the worker streams: a headline
  * (fps + samples), the per-frame spread (avg/min/max/last), and a phase
  * breakdown (reconcile / record / rasterize / composite avg ms) so the slow
- * stage is obvious at a glance.
+ * stage is obvious at a glance — and, below them, how long the background
+ * work's steps took, by task (avg / max ms): a step can't be interrupted, so its
+ * max is the longest a reader coming back during one waits.
  *
  * Purely presentational: the shell drives it, calling {@link update} on each
  * worker perf report and {@link show}/{@link hide} as the toggle changes.
@@ -30,7 +40,9 @@ export function createPerfHud() {
     line2.className = "udoc-perf-hud__line";
     const line3 = document.createElement("div");
     line3.className = "udoc-perf-hud__line";
-    el.append(line1, line2, line3);
+    const line4 = document.createElement("div");
+    line4.className = "udoc-perf-hud__line";
+    el.append(line1, line2, line3, line4);
 
     function fmt(ms: number): string {
         return ms >= 100 ? ms.toFixed(0) : ms.toFixed(1);
@@ -61,6 +73,12 @@ export function createPerfHud() {
             line2.textContent = "";
             line3.textContent = "";
         }
+        // Line 4: the background steps run in the window, by task.
+        const steps = BACKGROUND.flatMap(([event, label]) => {
+            const stats = summary.breakdown[event];
+            return stats ? [`${label} ${fmt(stats.avg)}/${fmt(stats.max)}`] : [];
+        });
+        line4.textContent = steps.length > 0 ? `background avg/max: ${steps.join(" · ")} ms` : "";
     }
 
     function show(): void {

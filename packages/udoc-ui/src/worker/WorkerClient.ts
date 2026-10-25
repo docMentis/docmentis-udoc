@@ -89,13 +89,11 @@ const PAGE_VIEW_STRIDE = 6;
 const THUMBNAIL_CACHE_LIMIT = 256;
 
 /**
- * How long the camera must be still before a thumbnail raster is allowed to
- * run. The raster is a synchronous CPU call on the worker thread (shared with
- * the live `render_frame` loop), so issuing one mid-scroll would stutter the
- * viewport. Thumbnail work waits out this quiet window after the last
- * scroll/zoom/nav — the main-thread half of the design's render-priority gate.
+ * The least time between two {@link WorkerClient.noteActivity} pings posted.
+ * The worker's background work waits 300 ms past the last, so a ping this
+ * often keeps it as good as exact, at a message per frame or three.
  */
-const THUMBNAIL_SETTLE_MS = 120;
+const ACTIVITY_PING_MS = 50;
 
 /** Message carried by a rejected thumbnail request the panel skips silently
  *  (a superseded scale or a cancelled / invalidated render — not an error). */
@@ -104,8 +102,8 @@ export const THUMBNAIL_DROPPED = "thumbnail dropped";
 /**
  * Request types that change document pixels, so every cached thumbnail may be
  * stale after one. {@link WorkerClient.#send} drops the thumbnail cache after
- * posting any of these. `updateLayout` (compose-ahead) is **not** here — it only
- * composes *new* pages; already-rendered thumbnails stay valid.
+ * posting any of these. `updateLayout` is **not** here — it only composes *new*
+ * pages; already-rendered thumbnails stay valid.
  */
 const MUTATING_REQUESTS: ReadonlySet<string> = new Set<WorkerRequest["type"]>([
     "open",
@@ -116,14 +114,11 @@ const MUTATING_REQUESTS: ReadonlySet<string> = new Set<WorkerRequest["type"]>([
     "merge",
 ]);
 
-/** A queued (not-yet-rendered) thumbnail request, keyed by page index. */
+/** A thumbnail render queued in the worker and not yet answered, keyed by page index. */
 interface ThumbnailRequest {
     /** Cache key `page:scale` — distinguishes a re-request at a new scale. */
     key: string;
-    scale: number;
     promise: Promise<ImageBitmap>;
-    resolve: (bitmap: ImageBitmap) => void;
-    reject: (reason: unknown) => void;
 }
 
 /**
@@ -265,22 +260,18 @@ export class WorkerClient {
     /** Seq of the latest viewport sent; reports echoing it are `fresh`. */
     #viewportSeq = 0;
 
-    // --- thumbnail rendering (cache + gated priority queue) --------------
+    // --- thumbnail rendering (cache here, queue in the worker) ------------
     /** Decoded thumbnail bitmaps, keyed `page:scale`, LRU-evicted. */
     readonly #thumbnailCache = new Map<string, { bitmap: ImageBitmap; lastAccess: number }>();
-    /** Pending thumbnail requests, keyed by page index (one in flight at a time). */
-    readonly #thumbnailQueue = new Map<number, ThumbnailRequest>();
-    /** Whether a thumbnail raster is currently in flight (serialize them). */
-    #thumbnailBusy = false;
-    /** The page the strip is looking at; queued requests render nearest-first. */
+    /** The renders queued in the worker and not yet answered, by page index. */
+    readonly #thumbnailRequests = new Map<number, ThumbnailRequest>();
+    /** The page the strip is looking at, as the worker was last told. */
     #thumbnailFocus = 0;
-    /** `performance.now()` of the last scroll/zoom/nav — drives the settle gate. */
-    #lastViewportAt = 0;
-    /** Pending settle-gate retry timer (drains the queue once the camera stills). */
-    #thumbnailRetry: ReturnType<typeof setTimeout> | null = null;
     /** Bumped on every {@link invalidateThumbnails}; an in-flight render whose
      *  epoch is stale on return is discarded rather than cached. */
     #thumbnailEpoch = 0;
+    /** When the last {@link noteActivity} ping was posted. */
+    #activityPostedAt = -Infinity;
     /** Notified when the thumbnail cache is dropped, so the strip can refresh
      *  its visible window against the changed document. */
     readonly #thumbnailInvalidatedListeners = new Set<() => void>();
@@ -290,6 +281,8 @@ export class WorkerClient {
     readonly #fontsRefreshedListeners = new Set<() => void>();
     /** Notified when a sheet loaded in the background, with its tab's colour. */
     readonly #planeLoadedListeners = new Set<(plane: number, color: string | null, chartsheet: boolean) => void>();
+    /** Notified when the worker composed more of the document ahead of the reader. */
+    readonly #composedListeners = new Set<(layout: DocumentLayout) => void>();
 
     private constructor(worker: Worker, options: LicenseOptions & FontOptions, wrapper: Wrapper) {
         this.#worker = worker;
@@ -446,7 +439,6 @@ export class WorkerClient {
 
     /** Update the painted window (scroll / zoom / resize). Latest-wins. */
     setViewport(viewport: Viewport): void {
-        this.#lastViewportAt = performance.now();
         this.#post({ type: "setViewport", viewport, seq: ++this.#viewportSeq });
     }
 
@@ -459,7 +451,6 @@ export class WorkerClient {
      * fire-and-forget.
      */
     goToPage(index: number): void {
-        this.#lastViewportAt = performance.now();
         this.#post({ type: "goToPage", index, seq: ++this.#viewportSeq });
     }
 
@@ -471,7 +462,6 @@ export class WorkerClient {
      * does. Latest-wins, fire-and-forget.
      */
     goToRect(index: number, rect: Annotation["rect"], alignment: ScrollAlignment): void {
-        this.#lastViewportAt = performance.now();
         this.#post({ type: "goToRect", index, rect, alignment, seq: ++this.#viewportSeq });
     }
 
@@ -483,7 +473,6 @@ export class WorkerClient {
      * viewport seq so that frame is recognized as fresh. Latest-wins.
      */
     zoomAtPoint(zoom: number, x: number, y: number): void {
-        this.#lastViewportAt = performance.now();
         this.#post({ type: "zoomAtPoint", zoom, x, y, seq: ++this.#viewportSeq });
     }
 
@@ -494,7 +483,6 @@ export class WorkerClient {
      * result back in the next {@link PageViewsFrame}. Latest-wins.
      */
     zoomToRect(x: number, y: number, width: number, height: number): void {
-        this.#lastViewportAt = performance.now();
         this.#post({ type: "zoomToRect", x, y, width, height, seq: ++this.#viewportSeq });
     }
 
@@ -653,21 +641,16 @@ export class WorkerClient {
     }
 
     /**
-     * Compose ahead through page index `pageLimit` (inclusive). Resolves with
+     * Compose through page index `pageLimit` (inclusive), now. Resolves with
      * the document's grown layout (composed page count + content size) and
      * `complete` — whether the document is now fully composed. Pages compose
-     * lazily, so the host calls this during idle time with a rising limit until
-     * `complete`, which is also how it learns the document's page count. With
-     * `background`, it runs as the worker's background work, after what the
-     * reader asked for — as the idle compose-ahead does.
+     * lazily, and the worker composes ahead of the reader on its own
+     * ({@link onComposed}); this is for what can't wait for it — a print, which
+     * composes with a rising limit until `complete` to learn the page count,
+     * or a render of a page not composed yet.
      */
-    async updateLayout(pageLimit: number, options: { background?: boolean } = {}): Promise<DocumentLayout> {
-        return (await this.#send(
-            { type: "updateLayout", pageLimit },
-            undefined,
-            undefined,
-            options.background,
-        )) as DocumentLayout;
+    async updateLayout(pageLimit: number): Promise<DocumentLayout> {
+        return (await this.#send({ type: "updateLayout", pageLimit })) as DocumentLayout;
     }
 
     /**
@@ -744,9 +727,9 @@ export class WorkerClient {
     /**
      * Switch the active plane — the current sheet of a multi-sheet spreadsheet
      * (0-based). The viewer resets to the new plane's top; resolves with the
-     * layout known before the frame composes it (page count + content size), so
-     * the caller resumes compose-ahead from there — the frame that paints the
-     * plane reports its extent. A no-op for a single-plane doc type.
+     * layout known before the frame composes it (page count + content size) —
+     * the frame that paints the plane reports its extent, and the worker
+     * composes ahead on it from there. A no-op for a single-plane doc type.
      */
     async goToPlane(plane: number): Promise<DocumentLayout> {
         return (await this.#send({ type: "goToPlane", plane })) as DocumentLayout;
@@ -1099,7 +1082,6 @@ export class WorkerClient {
          * back as {@link goToPage}'s do.
          */
         goToDestination: (destination: Destination, alignment: ScrollAlignment): Promise<DestinationView | null> => {
-            this.#lastViewportAt = performance.now();
             return this.#send({
                 type: "goToDestination",
                 destination,
@@ -1221,7 +1203,6 @@ export class WorkerClient {
          * {@link goToPage}'s does. Latest-wins, fire-and-forget.
          */
         goToBookmark: (name: string, alignment: ScrollAlignment): void => {
-            this.#lastViewportAt = performance.now();
             this.#post({ type: "goToBookmark", name, alignment, seq: ++this.#viewportSeq });
         },
     };
@@ -1540,12 +1521,12 @@ export class WorkerClient {
     /**
      * Render a thumbnail of page `index` (0-based) at `scale` (output pixels
      * per document point), resolving with a decoded {@link ImageBitmap}. Served
-     * from an in-process LRU cache when warm; otherwise queued and rasterized
-     * off the viewport — but **only while the camera is settled** (see
-     * {@link THUMBNAIL_SETTLE_MS}), so the strip never stutters live scrolling.
-     * Queued requests render nearest-{@link boostThumbnails}-focus first, one at
-     * a time. Rejects with a benign {@link THUMBNAIL_DROPPED} error when the
-     * request is superseded (a newer scale for the same page), cancelled
+     * from an in-process LRU cache when warm; otherwise queued in the worker,
+     * which rasterizes it off the viewport as background work — **only once the
+     * reader has been quiet a moment**, so the strip never stutters live
+     * scrolling — nearest-{@link boostThumbnails}-focus first, one at a time.
+     * Rejects with a benign {@link THUMBNAIL_DROPPED} error when the request is
+     * superseded (a newer scale for the same page), cancelled
      * ({@link cancelThumbnail}), or invalidated ({@link invalidateThumbnails});
      * callers skip those silently.
      */
@@ -1556,23 +1537,33 @@ export class WorkerClient {
             cached.lastAccess = performance.now();
             return Promise.resolve(cached.bitmap);
         }
-        // A pending request for the same page+scale shares its promise; a
-        // different scale supersedes the queued one (the panel re-requested at
-        // a new size), so drop the stale entry.
-        const queued = this.#thumbnailQueue.get(index);
-        if (queued) {
-            if (queued.key === key) return queued.promise;
-            queued.reject(new Error(THUMBNAIL_DROPPED));
-            this.#thumbnailQueue.delete(index);
-        }
-        let resolve!: (bitmap: ImageBitmap) => void;
-        let reject!: (reason: unknown) => void;
-        const promise = new Promise<ImageBitmap>((res, rej) => {
-            resolve = res;
-            reject = rej;
-        });
-        this.#thumbnailQueue.set(index, { key, scale, promise, resolve, reject });
-        this.#pumpThumbnails();
+        // A pending request for the same page+scale shares its promise; one at
+        // a different scale (the panel re-requested at a new size) is replaced
+        // in the worker by this one, and answers as dropped.
+        const queued = this.#thumbnailRequests.get(index);
+        if (queued?.key === key) return queued.promise;
+        const epoch = this.#thumbnailEpoch;
+        const promise = (this.#send({ type: "queueThumbnail", index, scale }) as Promise<ThumbnailResult | null>)
+            .then(async (result) => {
+                if (result === null) throw new Error(THUMBNAIL_DROPPED);
+                // The page is opaque (a white media box), so the premultiplied
+                // bytes equal straight-alpha bytes; `ImageData` reads them as-is.
+                const image = new ImageData(new Uint8ClampedArray(result.rgba), result.width, result.height);
+                const bitmap = await createImageBitmap(image);
+                // A new document / edit landed while this rendered: the pixels
+                // are stale, so discard them rather than caching against a
+                // cleared map.
+                if (epoch !== this.#thumbnailEpoch) {
+                    bitmap.close();
+                    throw new Error(THUMBNAIL_DROPPED);
+                }
+                this.#cacheThumbnail(key, bitmap);
+                return bitmap;
+            })
+            .finally(() => {
+                if (this.#thumbnailRequests.get(index)?.promise === promise) this.#thumbnailRequests.delete(index);
+            });
+        this.#thumbnailRequests.set(index, { key, promise });
         return promise;
     }
 
@@ -1581,9 +1572,10 @@ export class WorkerClient {
      * with a decoded {@link ImageBitmap} — for the New-Slide layout picker, which
      * previews slide layouts on their slide-master planes (plane `1..`), and for
      * printing, which renders each page to print at its quality's DPI. Unlike
-     * {@link requestThumbnail} this bypasses the slide-plane strip's queue /
-     * cache / settle gate: the picker renders a small fixed set on open, off the
-     * slide-plane navigator's scheduling. The caller owns the returned bitmap.
+     * {@link requestThumbnail} this bypasses the slide-plane strip's queue and
+     * cache, and runs as a request rather than as background work: the picker
+     * renders a small fixed set on open, off the slide-plane navigator's
+     * scheduling. The caller owns the returned bitmap.
      * `ephemeral` draws the ephemeral annotations, which a print leaves out.
      */
     async renderPagePreview(plane: number, page: number, scale: number, ephemeral = true): Promise<ImageBitmap> {
@@ -1604,20 +1596,21 @@ export class WorkerClient {
      * looking at fills before off-window pages. Cheap to call on every scroll.
      */
     boostThumbnails(page: number): void {
+        if (page === this.#thumbnailFocus) return;
         this.#thumbnailFocus = page;
+        this.#post({ type: "thumbnailFocus", page });
     }
 
     /**
      * Cancel a queued thumbnail request for `index` (a page that scrolled out of
      * the window before it rendered). A no-op if it already rendered or was
-     * never queued; an in-flight render is left to finish (its result still
-     * caches). The pending promise rejects with {@link THUMBNAIL_DROPPED}.
+     * never queued; a render the worker already ran is left to answer (its
+     * result still caches). Otherwise the pending promise rejects with
+     * {@link THUMBNAIL_DROPPED}.
      */
     cancelThumbnail(index: number): void {
-        const queued = this.#thumbnailQueue.get(index);
-        if (!queued) return;
-        this.#thumbnailQueue.delete(index);
-        queued.reject(new Error(THUMBNAIL_DROPPED));
+        if (!this.#thumbnailRequests.delete(index)) return;
+        this.#post({ type: "cancelThumbnail", index });
     }
 
     /**
@@ -1630,12 +1623,10 @@ export class WorkerClient {
         this.#thumbnailEpoch++;
         for (const { bitmap } of this.#thumbnailCache.values()) bitmap.close();
         this.#thumbnailCache.clear();
-        for (const req of this.#thumbnailQueue.values()) req.reject(new Error(THUMBNAIL_DROPPED));
-        this.#thumbnailQueue.clear();
-        if (this.#thumbnailRetry !== null) {
-            clearTimeout(this.#thumbnailRetry);
-            this.#thumbnailRetry = null;
-        }
+        // Every render still queued answers as dropped; one that already ran
+        // answers stale, and is discarded by its epoch.
+        if (this.#thumbnailRequests.size > 0) this.#post({ type: "dropThumbnails" });
+        this.#thumbnailRequests.clear();
         for (const listener of this.#thumbnailInvalidatedListeners) listener();
     }
 
@@ -1683,6 +1674,32 @@ export class WorkerClient {
         return () => this.#planeLoadedListeners.delete(listener);
     }
 
+    /**
+     * Subscribe to compose-ahead — fired as the worker composes more of the
+     * document ahead of the reader, in the background, with the layout that
+     * grew: composed page count, content size, and whether it is complete. It
+     * starts once an opened document has painted, and again after each edit and
+     * sheet switch. Returns an unsubscribe function.
+     */
+    onComposed(listener: (layout: DocumentLayout) => void): () => void {
+        this.#composedListeners.add(listener);
+        return () => this.#composedListeners.delete(listener);
+    }
+
+    /**
+     * Tell the worker the reader touched the shell — a pointer, a key, a wheel —
+     * so its background work (compose-ahead, thumbnails, loading a workbook's
+     * sheets) waits until they have been quiet a moment, and what they do next
+     * doesn't land behind it. Cheap to call on every input: posts at most every
+     * {@link ACTIVITY_PING_MS}.
+     */
+    noteActivity(): void {
+        const now = performance.now();
+        if (now - this.#activityPostedAt < ACTIVITY_PING_MS) return;
+        this.#activityPostedAt = now;
+        this.#post({ type: "readerActivity" });
+    }
+
     /** Release the open document, keeping the worker ready for the next open. */
     close(): void {
         this.invalidateThumbnails();
@@ -1718,18 +1735,15 @@ export class WorkerClient {
         msg: WorkerRequest | ExtensionRequest,
         transfer?: Transferable[],
         changesDocument = MUTATING_REQUESTS.has(msg.type),
-        background = false,
     ): Promise<unknown> {
         const _id = this.#nextId++;
-        const envelope = background ? { ...msg, _id, _background: true } : { ...msg, _id };
         const promise = new Promise<unknown>((resolve, reject) => {
             this.#pending.set(_id, { resolve, reject });
-            this.#worker.postMessage(envelope, transfer ?? []);
+            this.#worker.postMessage({ ...msg, _id }, transfer ?? []);
         });
         // The executor (hence the post) ran synchronously above; dropping the
-        // cache *after* it keeps any refresh-driven thumbnail render behind
-        // this edit in the worker — background work, after every request — so
-        // it rasters the new pixels.
+        // cache *after* it queues any refresh-driven thumbnail render behind
+        // this edit in the worker, so it rasters the new pixels.
         if (changesDocument) {
             this.invalidateThumbnails();
             for (const listener of this.#documentChangedListeners) listener();
@@ -1789,6 +1803,9 @@ export class WorkerClient {
                         listener(msg.plane, msg.color, msg.chartsheet);
                     }
                     return;
+                case "composed":
+                    for (const listener of this.#composedListeners) listener(msg.layout);
+                    return;
             }
             return;
         }
@@ -1831,83 +1848,6 @@ export class WorkerClient {
             fresh: report.seq === this.#viewportSeq,
         };
         for (const listener of this.#pageViewListeners) listener(frame);
-    }
-
-    /**
-     * Drain the thumbnail queue: one raster at a time, nearest the strip's
-     * focus first, and only once the camera has been still for
-     * {@link THUMBNAIL_SETTLE_MS}. While the camera is moving it reschedules
-     * itself for the remaining quiet window instead of rendering — the
-     * main-thread render-priority gate that keeps the worker's paint loop ahead
-     * of thumbnail work.
-     */
-    #pumpThumbnails(): void {
-        if (this.#thumbnailBusy || this.#thumbnailQueue.size === 0) return;
-
-        const quietFor = performance.now() - this.#lastViewportAt;
-        if (quietFor < THUMBNAIL_SETTLE_MS) {
-            if (this.#thumbnailRetry === null) {
-                this.#thumbnailRetry = setTimeout(() => {
-                    this.#thumbnailRetry = null;
-                    this.#pumpThumbnails();
-                }, THUMBNAIL_SETTLE_MS - quietFor);
-            }
-            return;
-        }
-
-        // Pick the queued page nearest the focus — what the user is looking at.
-        let index = -1;
-        let best = Infinity;
-        for (const page of this.#thumbnailQueue.keys()) {
-            const d = Math.abs(page - this.#thumbnailFocus);
-            if (d < best) {
-                best = d;
-                index = page;
-            }
-        }
-        const req = this.#thumbnailQueue.get(index)!;
-        this.#thumbnailQueue.delete(index);
-        this.#thumbnailBusy = true;
-        const epoch = this.#thumbnailEpoch;
-
-        void this.#renderThumbnail(index, req, epoch).finally(() => {
-            this.#thumbnailBusy = false;
-            this.#pumpThumbnails();
-        });
-    }
-
-    /** Issue one render to the worker, decode the reply into an
-     *  {@link ImageBitmap}, and cache it (unless the document changed meanwhile). */
-    async #renderThumbnail(index: number, req: ThumbnailRequest, epoch: number): Promise<void> {
-        try {
-            // Background work in the worker: what the reader asked for, and
-            // the frame it scheduled, go first.
-            const result = (await this.#send(
-                { type: "renderThumbnail", plane: 0, index, scale: req.scale },
-                undefined,
-                undefined,
-                true,
-            )) as ThumbnailResult;
-            // A new document / edit landed while this rendered: the pixels are
-            // stale, so discard them rather than caching against a cleared map.
-            if (epoch !== this.#thumbnailEpoch) {
-                req.reject(new Error(THUMBNAIL_DROPPED));
-                return;
-            }
-            // The page is opaque (a white media box), so the premultiplied
-            // bytes equal straight-alpha bytes; `ImageData` reads them as-is.
-            const image = new ImageData(new Uint8ClampedArray(result.rgba), result.width, result.height);
-            const bitmap = await createImageBitmap(image);
-            if (epoch !== this.#thumbnailEpoch) {
-                bitmap.close();
-                req.reject(new Error(THUMBNAIL_DROPPED));
-                return;
-            }
-            this.#cacheThumbnail(req.key, bitmap);
-            req.resolve(bitmap);
-        } catch (err) {
-            req.reject(err);
-        }
     }
 
     /** Insert a decoded bitmap, evicting the least-recently-used past the cap. */

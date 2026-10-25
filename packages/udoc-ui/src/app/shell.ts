@@ -72,7 +72,7 @@ import { PRINT_DPI, printImages, printPageOf, printPdf } from "./print.js";
 import type { PrintOptions, PrintPage } from "./print.js";
 import { createEffects } from "./effects.js";
 import { createReducer } from "./reducer.js";
-import { LEFT_PANEL_TABS, RIGHT_PANEL_TABS, VIEW_MODE, initialState, renderZoom } from "./state.js";
+import { LEFT_PANEL_TABS, RIGHT_PANEL_TABS, VIEW_MODE, initialState } from "./state.js";
 import { arrangementFor, defaultTab, profileFor } from "./profiles.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
 import type { AnnotationTool, UIState, MarkupTool, PanelTab, ThemeMode, ViewControlsPlacement } from "./state.js";
@@ -106,21 +106,19 @@ import type { Messages } from "./i18n/index.js";
 import type { PageAnnotationListener, PageAnnotations } from "./page-annotations.js";
 
 /**
- * How many pages each idle compose-ahead step asks the engine to compose. Kept
- * small: composition is synchronous in the worker, so a big batch blocks the
- * worker's message loop and stalls scroll/repaint. Tune up for faster
- * background fill, down for smoother scrolling during load.
+ * How many pages each step of composing a whole document — for a print — asks
+ * the engine to compose. Kept small: composition is synchronous in the worker,
+ * so a big batch blocks the worker's message loop and stalls scroll/repaint.
  */
 const COMPOSE_BATCH = 2;
 
 /**
- * How long the shell must go untouched before an idle compose-ahead step runs,
- * and the inputs that count as a touch. Each of those can ask the worker
- * something — a hover hit-test, a pick, a keystroke's edit — and one that lands
- * behind a step waits out the whole step.
+ * The inputs that tell the worker the reader is at the shell. Each of them can
+ * ask the worker something — a hover hit-test, a pick, a keystroke's edit — so
+ * its background work waits until they have stopped a moment, and what they
+ * ask doesn't land behind a step of it.
  */
-const COMPOSE_QUIET_MS = 300;
-const COMPOSE_INPUTS = ["pointerdown", "pointermove", "keydown", "wheel"] as const;
+const ACTIVITY_INPUTS = ["pointerdown", "pointermove", "keydown", "wheel"] as const;
 
 /**
  * Page spacing where no extension takes its place: page-fixed (document points)
@@ -133,20 +131,6 @@ const READ_PAGE_GAP: PageGap = { horizontal: 12, vertical: 12 };
 /** The gaps with the view settings' Page Gap off: the pages butt together. */
 const NO_PAGE_GAP: PageGap = { horizontal: 0, vertical: 0 };
 const READ_PADDING: ContentPadding = { top: { px: 18 }, right: { px: 18 }, bottom: { px: 18 }, left: { px: 18 } };
-
-// Idle scheduling. `requestIdleCallback` on the main thread when available
-// (Chrome/Firefox); a `setTimeout` fallback elsewhere (Safari, test envs).
-const scheduleIdle: (cb: () => void) => number =
-    typeof requestIdleCallback === "function"
-        ? (cb) => requestIdleCallback(cb, { timeout: 200 })
-        : (cb) => setTimeout(cb, 16);
-const cancelIdle: (handle: number) => void =
-    typeof cancelIdleCallback === "function" ? (h) => cancelIdleCallback(h) : (h) => clearTimeout(h);
-
-/** A signature of the current camera; compose-ahead pauses while it changes. */
-function viewportSig(s: UIState): string {
-    return `${s.scrollX}|${s.scrollY}|${renderZoom(s)}|${s.viewportWidth}|${s.viewportHeight}`;
-}
 
 /**
  * Parse a CSS color string — as `getComputedStyle` returns for a custom
@@ -1285,91 +1269,28 @@ export function mountUIShell(
     const handleOverlayClick = () => store.dispatch({ type: "CLOSE_PANEL" });
     panelOverlay.addEventListener("click", handleOverlayClick);
 
-    // --- idle compose-ahead ----------------------------------------------
+    // --- background work -------------------------------------------------
     //
-    // Pages compose lazily, so an open (or edit) only lays out the visible
-    // window. Drive `updateLayout` during idle time to fill in the rest,
-    // growing the page count + content extent (and the scrollbar) until the
-    // whole document is composed. `composeGen` supersedes an in-flight loop
-    // when the document changes (open / close / edit), so a stale fill can't
-    // dispatch onto the new document.
-    let composeGen = 0;
-    let composeIdle: number | null = null;
-    // When the reader last touched the shell. Captured at the root, so a
-    // handler that stops propagation can't hide an input from it.
-    let lastInputAt = -Infinity;
-    const noteInput = (): void => {
-        lastInputAt = performance.now();
-    };
-    for (const type of COMPOSE_INPUTS) layout.addEventListener(type, noteInput, { capture: true, passive: true });
-
-    function cancelComposeAhead(): void {
-        composeGen++;
-        if (composeIdle !== null) {
-            cancelIdle(composeIdle);
-            composeIdle = null;
-        }
-    }
-
-    function startComposeAhead(composedCount: number): void {
-        cancelComposeAhead(); // supersede any running compose loop
-        // Web families a document references aren't bundled; the engine renders
-        // them in a stand-in and puts them on order. This kick is the host's
-        // whole part in it — the worker fetches off its message queue and
-        // re-arms itself until nothing is on order, so there is no loop to drive
-        // and nothing to supersede. Safe to send here, mid-gesture or not: it
-        // starts the fetches and returns.
-        //
-        // It is here rather than left to the worker's own kick after each
-        // compose so the visible window's fonts start downloading now, instead
-        // of an idle tick later when the first compose-ahead step lands.
-        void client.fetchFontOrders().catch(() => {
-            // Worker gone or document closed mid-flight — nothing to fetch for.
+    // Pages compose lazily, so an open, an edit or a sheet switch only lays out
+    // the visible window. The worker composes the rest ahead on its own, as it
+    // renders the thumbnails and loads a workbook's other sheets: in the
+    // background, whenever the reader leaves it a quiet moment. The shell tells
+    // it when the reader touches the shell — captured at the root, so a handler
+    // that stops propagation can't hide an input from it — and adopts the
+    // layout compose-ahead grows, the page count and content extent (and the
+    // scrollbar).
+    const noteInput = (): void => client.noteActivity();
+    for (const type of ACTIVITY_INPUTS) layout.addEventListener(type, noteInput, { capture: true, passive: true });
+    const unsubComposed = client.onComposed((grown) => {
+        // A step the worker took before the document closed, or before another
+        // one opened, lands on none.
+        if (store.getState().status !== "ready") return;
+        store.dispatch({
+            type: "DOC_RELAYOUT",
+            composedPageCount: grown.composedPageCount,
+            scrollSize: grown.scrollSize,
         });
-        const gen = composeGen;
-        let count = composedCount;
-        let lastSig = viewportSig(store.getState());
-        const step = (): void => {
-            composeIdle = null;
-            if (gen !== composeGen || store.getState().status !== "ready") return;
-            // Yield to the reader: if the view moved since the last tick, or
-            // they touched the shell within `COMPOSE_QUIET_MS`, skip composing
-            // (it would hold the worker under a scroll, a hover or a click) and
-            // try again once things settle.
-            const sig = viewportSig(store.getState());
-            if (sig !== lastSig || performance.now() - lastInputAt < COMPOSE_QUIET_MS) {
-                lastSig = sig;
-                composeIdle = scheduleIdle(step);
-                return;
-            }
-            void client
-                .updateLayout(count + COMPOSE_BATCH - 1, { background: true })
-                .then((layout) => {
-                    if (gen !== composeGen) return; // a newer document took over
-                    store.dispatch({
-                        type: "DOC_RELAYOUT",
-                        composedPageCount: layout.composedPageCount,
-                        scrollSize: layout.scrollSize,
-                    });
-                    // Our own dispatch may re-clamp scroll; re-read so it isn't
-                    // mistaken for the user moving the view.
-                    lastSig = viewportSig(store.getState());
-                    // `complete` is the engine saying there is nothing left to
-                    // compose — the only authority on the document's length,
-                    // since a page is known only once composed. The no-growth
-                    // check is the safety net: a page that fails to compose is
-                    // left out and never reports complete, and without this the
-                    // pump would spin on it forever.
-                    const grew = layout.composedPageCount > count;
-                    count = layout.composedPageCount;
-                    if (!layout.complete && grew) composeIdle = scheduleIdle(step);
-                })
-                .catch(() => {
-                    // Worker gone or document closed mid-flight — stop quietly.
-                });
-        };
-        composeIdle = scheduleIdle(step);
-    }
+    });
 
     /** Bumped by every {@link openSource}, so a read an open has been replaced by stops reporting. */
     let sourceGeneration = 0;
@@ -1429,7 +1350,6 @@ export function mountUIShell(
         open: () => Promise<DocumentLayout>,
         from: { packageUrl?: string | undefined; filename?: string | undefined } = {},
     ): Promise<void> {
-        cancelComposeAhead(); // drop any fill from a previously open document
         void leaveCollaboration(); // it was the previous document's
         passwordModal.dismiss(); // so was a password it asked for
         remotePackage = undefined; // and so was the server it came from
@@ -1503,7 +1423,6 @@ export function mountUIShell(
             // full-size and reflows a beat later when the bands land (a flash).
             canvas.reserveGuides();
             applySpacing();
-            startComposeAhead(layout.composedPageCount);
             await planesRead;
         } catch (err) {
             passwordModal.dismiss();
@@ -1616,11 +1535,12 @@ export function mountUIShell(
         store.dispatch({ type: "PLANE_LOADED", plane, color, chartsheet });
     });
 
-    // Run a committing edit: adopt the worker's new layout, resume the background
-    // compose-ahead, and fire the local-edit cue (which a sync transport turns
-    // into a snapshot push) — the shared ceremony behind every edit verb. A no-op
-    // unless a document is ready. `merge` deliberately does *not* go through here:
-    // a remote edit must not re-fire `onEdit` (it would ping-pong between peers).
+    // Run a committing edit: adopt the worker's new layout (which it composes
+    // ahead from, on its own), and fire the local-edit cue (which a sync
+    // transport turns into a snapshot push) — the shared ceremony behind every
+    // edit verb. A no-op unless a document is ready. `merge` deliberately does
+    // *not* go through here: a remote edit must not re-fire `onEdit` (it would
+    // ping-pong between peers).
     async function commit(run: () => Promise<DocumentLayout>): Promise<void> {
         if (store.getState().status !== "ready") return;
         const layout = await run();
@@ -1629,7 +1549,6 @@ export function mountUIShell(
             composedPageCount: layout.composedPageCount,
             scrollSize: layout.scrollSize,
         });
-        startComposeAhead(layout.composedPageCount);
         for (const listener of editListeners) listener();
     }
 
@@ -1647,21 +1566,19 @@ export function mountUIShell(
         void history(op);
     }
 
-    // Switch the active plane (a sheet-tab click): tell the worker, adopt the
-    // layout it replies with, and resume compose-ahead on the new sheet — whose
-    // extent the frame that paints it reports. Not a document edit
-    // (no `onEdit` cue) — it's a view change, like a page nav; the worker resets
-    // the camera to the new sheet's top and repaints.
+    // Switch the active plane (a sheet-tab click): tell the worker, and adopt
+    // the layout it replies with — the new sheet's extent the frame that paints
+    // it reports, and the worker composes ahead on it from there. Not a
+    // document edit (no `onEdit` cue) — it's a view change, like a page nav; the
+    // worker resets the camera to the new sheet's top and repaints.
     async function switchPlane(plane: number): Promise<void> {
         if (store.getState().status !== "ready") return;
-        cancelComposeAhead();
         const layout = await client.goToPlane(plane);
         store.dispatch({
             type: "DOC_RELAYOUT",
             composedPageCount: layout.composedPageCount,
             scrollSize: layout.scrollSize,
         });
-        startComposeAhead(layout.composedPageCount);
     }
 
     // Each edit names what it acts on, as its command does: a drawing's shapes
@@ -2310,7 +2227,7 @@ export function mountUIShell(
         for (const listener of downloadListeners) listener(name);
     }
 
-    /** Compose every page left to compose, as the compose-ahead pump would, without waiting on idle. */
+    /** Compose every page left to compose, as compose-ahead would, without waiting for the reader to pause. */
     async function composeAll(): Promise<void> {
         let count = store.getState().composedPageCount;
         for (;;) {
@@ -2560,7 +2477,6 @@ export function mountUIShell(
             composedPageCount: layout.composedPageCount,
             scrollSize: layout.scrollSize,
         });
-        startComposeAhead(layout.composedPageCount);
         // Note: deliberately no editListeners fire — a merge is a remote edit,
         // and re-broadcasting it would ping-pong between synced peers.
     }
@@ -2670,7 +2586,6 @@ export function mountUIShell(
     }
 
     function close(): void {
-        cancelComposeAhead();
         void leaveCollaboration();
         passwordModal.dismiss();
         remotePackage = undefined;
@@ -2753,14 +2668,14 @@ export function mountUIShell(
     function destroy(): void {
         pageAnnotations.destroy();
         pageAnnotationListeners.clear();
-        cancelComposeAhead();
+        unsubComposed();
         // The worker outlives the rest until the leave has sent the withdrawal
         // of this one's presence, which the worker makes — so the others drop it
         // at once rather than on its timeout.
         const leaving = leaveCollaboration();
         cleanupSystemListener();
         layout.removeEventListener("keydown", handleKeyDown);
-        for (const type of COMPOSE_INPUTS) layout.removeEventListener(type, noteInput, { capture: true });
+        for (const type of ACTIVITY_INPUTS) layout.removeEventListener(type, noteInput, { capture: true });
         panelOverlay.removeEventListener("click", handleOverlayClick);
         unsubChrome();
         unsubSelectionEdit();

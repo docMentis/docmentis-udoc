@@ -11,7 +11,8 @@
 // is typed locally rather than pulling in conflicting WebWorker globals. Every
 // API the worker actually touches lives in the DOM lib.
 
-import { NoOpPerformanceCounter, PerformanceCounter, type IPerformanceCounter } from "../performance/index.js";
+import { NoOpPerformanceCounter, PerformanceCounter } from "../performance/index.js";
+import type { IPerformanceCounter, PerfEvent } from "../performance/index.js";
 import { EMPTY_SELECTION_CAPABILITIES, cssPxPerPt } from "../geometry.js";
 import type { DocumentLayout, Fit, Peer, PeerPointer, SelectionGeometry, Viewport } from "../geometry.js";
 import { createCanvasText } from "../fonts/canvas-text.js";
@@ -27,6 +28,8 @@ import type {
     SelectedAnnotations,
     SelectionEdit,
     SelectionReport,
+    ThumbnailFocusRequest,
+    ThumbnailResult,
     WorkerOutbound,
     WorkerRequest,
     WorkerRequestEnvelope,
@@ -50,7 +53,7 @@ import type {
     UDocType,
 } from "@docmentis/udoc-wasm";
 import { createLanes } from "./lanes.js";
-import type { Job } from "./lanes.js";
+import type { Job, Task } from "./lanes.js";
 import { Selection } from "./selection.js";
 
 interface WorkerScope {
@@ -113,6 +116,8 @@ const sticky = new Map<string, EngineRequestEnvelope>();
 let perf: IPerformanceCounter = new NoOpPerformanceCounter();
 let perfReportAt = 0;
 const PERF_REPORT_INTERVAL_MS = 1000;
+// The report armed for when the current window is due, if any.
+let perfReportTimer: ReturnType<typeof setTimeout> | null = null;
 let rafId: number | null = null;
 
 // Last view pushed to Rust, so we only call resize() / set_view() on real
@@ -206,11 +211,7 @@ function renderFrame(): void {
                 perf.record("rasterize", t.rasterize);
                 perf.record("composite", t.composite);
             }
-            if (now - perfReportAt >= PERF_REPORT_INTERVAL_MS) {
-                scope.postMessage({ type: "perf", summary: perf.getSummary() });
-                perf.reset();
-                perfReportAt = now;
-            }
+            reportPerf();
         }
     } catch (err) {
         // A throw out of `render_frame` means a wasm export unwound on a JS
@@ -227,9 +228,9 @@ function renderFrame(): void {
         return;
     }
     if (painted || viewportSeq !== emittedSeq) emitPageViews(session);
-    if (painted && walkAfterPaint) {
-        walkAfterPaint = false;
-        walkSheets(session);
+    if (painted && backgroundAfterPaint) {
+        backgroundAfterPaint = false;
+        startBackground(session);
     }
     // Ack any pending resize now that the backing store has been repainted at
     // the new size — this is the main thread's cue to commit the CSS size
@@ -237,6 +238,29 @@ function renderFrame(): void {
     // document open): there are no painted pixels to stretch, and the canvas
     // still needs to track the container.
     flushResizeAck(session);
+}
+
+/**
+ * Post the perf summary and start the next window, once the current window has
+ * run its length — or, before then, arm a report for when it will have: a
+ * background step can be the last thing to happen for a while, and its time is
+ * still worth seeing.
+ */
+function reportPerf(): void {
+    const now = performance.now();
+    const due = perfReportAt + PERF_REPORT_INTERVAL_MS - now;
+    if (due > 0) {
+        if (perfReportTimer === null) {
+            perfReportTimer = setTimeout(() => {
+                perfReportTimer = null;
+                if (perf.enabled) reportPerf();
+            }, due);
+        }
+        return;
+    }
+    scope.postMessage({ type: "perf", summary: perf.getSummary() });
+    perf.reset();
+    perfReportAt = now;
 }
 
 /** Post the pending resize ack (if any) so the main thread commits the CSS size. */
@@ -487,20 +511,128 @@ function emitHistory(): void {
 // anything that would hold it across an `await` on the network does not belong
 // in a handler.
 //
-// Two lanes (`lanes.ts`): a reader's requests run before background work — the
-// sheet walk, the font pump's installs, and what the host marks `_background`
-// (compose-ahead, thumbnails) — which waits, too, for a pending frame to paint.
+// Two lanes (`lanes.ts`): a reader's requests run before background work, which
+// comes from the tasks below, in order of priority — the font pump's installs,
+// the thumbnail strip's renders, compose-ahead and the sheet walk — and waits,
+// too, for a pending frame to paint and for the reader to have been quiet a
+// moment.
 
-const lanes = createLanes({
-    framePending: () => rafId !== null,
-    schedule: (callback) => setTimeout(callback, 0),
-    report: (error) => console.error("udoc: a worker job failed", error),
-});
+/**
+ * How long the reader must have been quiet before any background work takes a
+ * step — a font install, a thumbnail, compose-ahead, the sheet walk — in ms. Each of the
+ * reader's inputs can ask the worker something — a hover hit-test, a pick, a
+ * keystroke's edit — and one that lands behind a step waits out the whole step.
+ * Longer than the gap between keystrokes, so typing doesn't render thumbnails
+ * that its next keystroke's edit throws away.
+ */
+const BACKGROUND_QUIET_MS = 300;
+
+/**
+ * How many pages each compose-ahead step composes. Kept small: composition is
+ * synchronous, so a request that arrives during a step waits out the whole
+ * step. Tune up for faster background fill, down for a quicker answer.
+ */
+const COMPOSE_BATCH = 2;
+
+/** The font pump's installs, waiting their turn. */
+const fontInstalls: Job[] = [];
+
+const fontTask: Task = {
+    // A family landing re-shapes every composed page against it, which on a
+    // long document takes a few hundred ms: worth waiting for a pause for.
+    quietMs: BACKGROUND_QUIET_MS,
+    pending: () => fontInstalls.length > 0,
+    take: () => fontInstalls.shift()!,
+};
+
+/** The thumbnail strip's renders, queued and not yet run, by page: the scale, and the request to answer. */
+const thumbnails = new Map<number, { id: number | undefined; scale: number }>();
+
+/** The page the strip is centred on: the queued render nearest it runs first. */
+let thumbnailFocus = 0;
+
+const thumbnailTask: Task = {
+    quietMs: BACKGROUND_QUIET_MS,
+    pending: () => thumbnails.size > 0,
+    take: () => {
+        // Nearest the focus first — what the reader is looking at.
+        let index = -1;
+        let best = Infinity;
+        for (const page of thumbnails.keys()) {
+            const distance = Math.abs(page - thumbnailFocus);
+            if (distance < best) {
+                best = distance;
+                index = page;
+            }
+        }
+        const { id, scale } = thumbnails.get(index)!;
+        thumbnails.delete(index);
+        return () => renderQueuedThumbnail(id, index, scale);
+    },
+};
+
+/**
+ * Where compose-ahead has reached — the composed page count its last step left
+ * — or `null` with nothing left for it to compose.
+ */
+let composedThrough: number | null = null;
+
+const composeTask: Task = {
+    quietMs: BACKGROUND_QUIET_MS,
+    pending: () => composedThrough !== null,
+    take: () => composeAhead,
+};
+
+/** The next sheet the walk loads, by plane, or `null` with no walk. */
+let walkFrom: number | null = null;
+
+const walkTask: Task = {
+    quietMs: BACKGROUND_QUIET_MS,
+    pending: () => walkFrom !== null,
+    take: () => walkSheet,
+};
+
+const lanes = createLanes(
+    {
+        framePending: () => rafId !== null,
+        now: () => performance.now(),
+        schedule: (callback, ms) => {
+            const timer = setTimeout(callback, ms);
+            return () => clearTimeout(timer);
+        },
+        report: (error) => console.error("udoc: a worker job failed", error),
+    },
+    [
+        timed("fontInstall", fontTask),
+        timed("thumbnail", thumbnailTask),
+        timed("composeAhead", composeTask),
+        timed("sheetWalk", walkTask),
+    ],
+);
+
+/** `task`, each of its steps timed into the perf counter as `event` while the counter is on. */
+function timed(event: PerfEvent, task: Task): Task {
+    return {
+        quietMs: task.quietMs,
+        pending: () => task.pending(),
+        take: () => {
+            const step = task.take();
+            return async () => {
+                if (!perf.enabled) return step();
+                const start = performance.now();
+                try {
+                    await step();
+                } finally {
+                    perf.record(event, performance.now() - start);
+                    reportPerf();
+                }
+            };
+        },
+    };
+}
 
 /** A request as posted to the worker: one of the engine's own, or a product's. */
-type EngineRequestEnvelope =
-    | WorkerRequestEnvelope
-    | (ExtensionRequest & { readonly _id?: number; readonly _background?: true });
+type EngineRequestEnvelope = WorkerRequestEnvelope | (ExtensionRequest & { readonly _id?: number });
 
 /** What the engine worker lends a request handler a product adds to it. */
 export interface EngineWorker {
@@ -548,6 +680,7 @@ const engineWorker: EngineWorker = {
         emitSelection(false);
         emitHistory();
         scheduleFrame();
+        startComposeAhead(s);
         return layout;
     },
     scheduleFrame,
@@ -560,9 +693,22 @@ const engineWorker: EngineWorker = {
 export function serveEngine(extra: Readonly<Record<string, WorkerHandler<never>>> = {}): void {
     handlers = extra;
     scope.onmessage = (ev: MessageEvent<EngineRequestEnvelope>) => {
-        const job = (): Promise<void> => handle(ev.data);
-        if (ev.data._background) lanes.background(job);
-        else enqueue(job);
+        const request = ev.data;
+        // Two hints, taken as they arrive rather than in turn: neither touches
+        // the session, and what each says is about now. The reader's activity is
+        // what the host reports of its inputs, and not the view requests: a
+        // scroll is a run of inputs too, but the host also moves the view on its
+        // own — a relayout re-clamping the scroll, the frame's view adopted
+        // back — and none of that is the reader.
+        if (request.type === "readerActivity") {
+            lanes.active();
+            return;
+        }
+        if (request.type === "thumbnailFocus") {
+            thumbnailFocus = (request as ThumbnailFocusRequest).page;
+            return;
+        }
+        enqueue(() => handle(request));
     };
 }
 
@@ -592,7 +738,10 @@ const fetchFontOrders = createFontPump({
     session: () => session,
     // An install re-shapes what waited on its family: background work, after
     // what the reader asked for.
-    enqueue: (job) => lanes.background(job),
+    enqueue: (job) => {
+        fontInstalls.push(job);
+        lanes.wake();
+    },
     repaint: () => {
         scheduleFrame();
         // Text may sit elsewhere now; what the host placed by it is placed again.
@@ -613,17 +762,11 @@ function onSession<T>(job: (live: WasmSession) => T): Promise<T | undefined> {
 }
 
 /**
- * Which walk over the open workbook's sheets is the live one: every open and
- * close moves it on, so a walk over a document no longer open stops.
+ * Whether the document just opened has yet to paint: its first frame starts
+ * its background work, so what it shows is on screen before any other part of
+ * it composes or loads.
  */
-let sheetWalk = 0;
-
-/**
- * Whether the document just opened is still to be walked: the first frame that
- * paints it starts the walk, so the sheet shown is on screen before any other
- * sheet loads.
- */
-let walkAfterPaint = false;
+let backgroundAfterPaint = false;
 
 /**
  * The open workbook's sheets loaded so far, by plane: those whose tab colour
@@ -631,13 +774,107 @@ let walkAfterPaint = false;
  */
 const loadedSheets = new Set<number>();
 
-/** Stop any walk, and walk the document just opened once its first frame paints. */
-function walkSheetsAfterPaint(): void {
-    sheetWalk++;
-    walkAfterPaint = true;
+/** A document was just opened on `s`: drop the last one's background work, and start its own once it paints. */
+function opened(s: WasmSession): void {
+    stopBackground();
+    backgroundAfterPaint = true;
     // The open loaded the sheet it shows, and no other yet.
+    loadedSheets.add(s.currentPlane());
+}
+
+/** Start the background work `s`'s document leaves: composing ahead, and loading a workbook's other sheets. */
+function startBackground(s: WasmSession): void {
+    // A document still waiting for its password has nothing to compose yet;
+    // `authenticate` opens it again.
+    if (s.needsPassword()) return;
+    if (s.docType() === "spreadsheet") walkFrom = 0;
+    startComposeAhead(s);
+}
+
+/** Drop the open document's background work: compose-ahead and the sheet walk. */
+function stopBackground(): void {
+    backgroundAfterPaint = false;
+    composedThrough = null;
+    walkFrom = null;
     loadedSheets.clear();
-    if (session) loadedSheets.add(session.currentPlane());
+}
+
+/**
+ * Compose ahead on `s` from the pages composed so far, a step at a time, as
+ * background work, until it is complete. Pages compose lazily, so an open, an
+ * edit or a sheet switch only lays out the visible window; this fills in the
+ * rest, growing the page count and content extent (and the scrollbar) the host
+ * is told of ({@link ComposedReport}).
+ */
+function startComposeAhead(s: WasmSession): void {
+    composedThrough = s.composedPageCount();
+    // Web families a document references aren't bundled; the engine renders
+    // them in a stand-in and puts them on order. Kicked now, so the visible
+    // window's fonts start downloading at once rather than a step later.
+    fetchFontOrders();
+    lanes.wake();
+}
+
+/** Compose-ahead's next step: a few pages more, and the layout they grew posted. */
+function composeAhead(): void {
+    const from = composedThrough;
+    // Off before the step, so one that throws ends compose-ahead rather than
+    // repeating.
+    composedThrough = null;
+    if (!session || from === null) return;
+    const layout = composeThrough(session, from + COMPOSE_BATCH - 1);
+    // `complete` is the engine saying there is nothing left to compose — the
+    // only authority on the document's length, since a page is known only once
+    // composed. The no-growth check is the safety net: a page that fails to
+    // compose is left out and never reports complete, and without it
+    // compose-ahead would spin on it forever.
+    if (!layout.complete && layout.composedPageCount > from) composedThrough = layout.composedPageCount;
+    scope.postMessage({ type: "composed", layout });
+}
+
+/**
+ * Compose `s` through page index `pageLimit`, as an `updateLayout` request or a
+ * compose-ahead step asks, and read its layout after, with `complete`.
+ */
+function composeThrough(s: WasmSession, pageLimit: number): DocumentLayout {
+    // The pages composed are off-screen, so normally only the layout (page
+    // count + extent) grows and no repaint is needed. But a fit derives its
+    // zoom against the largest loaded page, so composing a larger page ahead
+    // can shrink the fit zoom — changing the visible rendering even though the
+    // new pages are off-screen. Capture the scale across the step and repaint
+    // only when it moved (a no-op for a uniform-size document).
+    const scaleBefore = s.viewState()[0] ?? 0;
+    const complete = s.updateLayout(pageLimit);
+    const layout = { ...layoutOf(s), complete };
+    const scaleAfter = s.viewState()[0] ?? 0;
+    // A peer's selection can reference a page this side hadn't composed yet;
+    // newly composed pages may resolve more of it.
+    emitChangedSelection();
+    if (scaleAfter !== scaleBefore) scheduleFrame();
+    // The pages just composed may name families nothing has asked for yet.
+    // Without this the pump would only ever see what the *visible* window
+    // ordered, and a family first used on page 40 would sit on order until the
+    // next edit. A no-op when nothing is on order, which is the common case.
+    fetchFontOrders();
+    return layout;
+}
+
+/**
+ * The sheet walk's next step: load the open workbook's next sheet not loaded
+ * yet, in tab order — the one the open showed, and any shown since, already
+ * are — and post its tab colour and kind, so each tab shows its colour, and the
+ * host knows each chartsheet, before its sheet is first shown.
+ */
+function walkSheet(): void {
+    let plane = walkFrom;
+    // Off before the step, as compose-ahead's is.
+    walkFrom = null;
+    if (!session || plane === null) return;
+    const count = session.planeCount();
+    while (plane < count && loadedSheets.has(plane)) plane++;
+    if (plane >= count) return;
+    loadSheet(session, plane);
+    if (plane + 1 < count) walkFrom = plane + 1;
 }
 
 /** Load sheet `plane` of the open workbook, and post its tab colour and kind. */
@@ -652,26 +889,40 @@ function loadSheet(s: WasmSession, plane: number): void {
     });
 }
 
+/** Render the strip's queued thumbnail of page `index` at `scale`, and answer request `id` with it. */
+function renderQueuedThumbnail(id: number | undefined, index: number, scale: number): void {
+    if (!session) {
+        reply(id, null);
+        return;
+    }
+    try {
+        const raster = rasterPage(session, 0, index, scale, true);
+        reply(id, raster, undefined, [raster.rgba]);
+    } catch (error) {
+        reply(id, undefined, error);
+    }
+}
+
+/** Answer every queued thumbnail render with nothing, and forget them. */
+function dropThumbnails(): void {
+    for (const { id } of thumbnails.values()) reply(id, null);
+    thumbnails.clear();
+}
+
 /**
- * Load the open workbook's sheets in the background, so each tab shows its
- * colour, and the host knows each chartsheet, before its sheet is first shown.
- * One sheet a background job, in tab order: what the host sends, and the frame
- * it schedules, go ahead of the next sheet. Each sheet's tab colour and kind
- * are posted as it lands. A sheet already loaded
- * is skipped — the one the open showed, which `planeInfo` reads, and any shown
- * since. Any other doc type has no sheets to walk.
+ * Rasterize page `index` of `plane` off the viewport: wholly separate from the
+ * painted frame, so no repaint and no selection/history churn. The pixels move
+ * out of the PageImage (so they aren't cloned) into a standalone, transferable
+ * buffer — the binding copies them out of wasm memory, and `slice()` detaches
+ * them, as the snapshot reads do — and the wasm-side handle is freed.
  */
-function walkSheets(s: WasmSession): void {
-    const walk = ++sheetWalk;
-    if (s.docType() !== "spreadsheet") return;
-    const step = (plane: number): void => {
-        lanes.background(() => {
-            if (walk !== sheetWalk || !session || plane >= session.planeCount()) return;
-            if (!loadedSheets.has(plane)) loadSheet(session, plane);
-            step(plane + 1);
-        });
-    };
-    step(0);
+function rasterPage(s: WasmSession, plane: number, index: number, scale: number, ephemeral: boolean): ThumbnailResult {
+    const img = s.renderPageToRgba(plane, index, scale, ephemeral);
+    const width = img.width;
+    const height = img.height;
+    const rgba = img.takeData().slice().buffer;
+    img.free();
+    return { rgba, width, height };
 }
 
 /** Plane `plane`'s tab colour as `#rrggbb`, or `null` for a tab in none. */
@@ -788,6 +1039,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 }
                 session?.free();
                 session = started;
+                // Nothing of the last session's background work carries over.
+                stopBackground();
+                dropThumbnails();
                 if (canvas) session.attach(canvas);
                 // A fresh session clears any prior poisoned-render state.
                 renderPoisoned = false;
@@ -831,7 +1085,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (msg.type === "open") session.open(new Uint8Array(msg.bytes), msg.format, msg.delimiter);
                 else session.openRemote(msg.url, fetchSync);
                 reply(id, openedLayout(session));
-                walkSheetsAfterPaint();
+                opened(session);
                 break;
             }
             case "authenticate": {
@@ -840,7 +1094,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // which the layout says; the host asks again.
                 session.authenticate(msg.password);
                 reply(id, openedLayout(session));
-                walkSheetsAfterPaint();
+                opened(session);
                 break;
             }
             case "setViewport": {
@@ -1030,29 +1284,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "updateLayout": {
                 if (!session) throw new Error("engine worker: updateLayout before open");
-                // Idle compose-ahead: grows the composed prefix past the visible
-                // window. The pages it composes are off-screen, so normally only
-                // the layout (page count + extent) grows and no repaint is needed.
-                // But a fit derives its zoom against the largest loaded page, so
-                // composing a larger page ahead can shrink the fit zoom — changing
-                // the visible rendering even though the new pages are off-screen.
-                // Capture the scale across the step and repaint only when it moved
-                // (a no-op for a uniform-size document).
-                const scaleBefore = session.viewState()[0] ?? 0;
-                const complete = session.updateLayout(msg.pageLimit);
-                const layout = { ...layoutOf(session), complete };
-                const scaleAfter = session.viewState()[0] ?? 0;
-                // A peer's selection can reference a page this side hadn't
-                // composed yet; newly composed pages may resolve more of it.
-                emitChangedSelection();
-                if (scaleAfter !== scaleBefore) scheduleFrame();
-                // The pages just composed may name families nothing has asked
-                // for yet. Without this the pump would only ever see what the
-                // *visible* window ordered, and a family first used on page 40
-                // would sit on order until the next edit. A no-op when nothing
-                // is on order, which is the common case.
-                fetchFontOrders();
-                reply(id, layout);
+                // What can't wait for compose-ahead — a print, a page render —
+                // composes through the page it needs now.
+                reply(id, composeThrough(session, msg.pageLimit));
                 break;
             }
             case "ensureFont": {
@@ -1077,7 +1311,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // The plane roster (sheet tabs): count + active + each plane's
                 // name, tab colour, kind and visibility — the
                 // colour and kind of the sheets loaded so far, the rest following
-                // from `walkSheets`. A pure read — no compose, no repaint.
+                // from the sheet walk. A pure read — no compose, no repaint.
                 const count = session.planeCount();
                 const names: string[] = [];
                 const colors: (string | null | undefined)[] = [];
@@ -1108,24 +1342,38 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // The peers' pointers on the plane now shown.
                 emitPeerPointers();
                 scheduleFrame();
+                // After the frame that paints it, the rest of the sheet.
+                startComposeAhead(session);
                 reply(id, layout);
                 break;
             }
             case "renderThumbnail": {
                 if (!session) throw new Error("engine worker: renderThumbnail before open");
-                // Off-viewport CPU raster of one page for the thumbnail strip:
-                // wholly separate from the painted frame, so no repaint and no
-                // selection/history churn. Move the pixels out of the PageImage
-                // (so they aren't cloned), transfer their buffer, and free the
-                // wasm-side handle. The image's buffer is copied out of wasm
-                // memory by the binding; `slice()` detaches a standalone,
-                // transferable ArrayBuffer (mirrors the snapshot reads).
-                const img = session.renderPageToRgba(msg.plane, msg.index, msg.scale, msg.ephemeral ?? true);
-                const width = img.width;
-                const height = img.height;
-                const rgba = img.takeData().slice().buffer;
-                img.free();
-                reply(id, { rgba, width, height }, undefined, [rgba]);
+                // A one-off preview, now — a slide layout's, a page to print.
+                const raster = rasterPage(session, msg.plane, msg.index, msg.scale, msg.ephemeral ?? true);
+                reply(id, raster, undefined, [raster.rgba]);
+                break;
+            }
+            case "queueThumbnail": {
+                // The strip's render, queued for the background, to run nearest
+                // the strip's focus once the reader is quiet. One that replaces
+                // an earlier request for the page answers that one with nothing.
+                const earlier = thumbnails.get(msg.index);
+                if (earlier) reply(earlier.id, null);
+                thumbnails.set(msg.index, { id, scale: msg.scale });
+                lanes.wake();
+                break;
+            }
+            case "cancelThumbnail": {
+                const queued = thumbnails.get(msg.index);
+                if (queued) {
+                    thumbnails.delete(msg.index);
+                    reply(queued.id, null);
+                }
+                break;
+            }
+            case "dropThumbnails": {
+                dropThumbnails();
                 break;
             }
             case "history": {
@@ -1137,6 +1385,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 emitSelection(false);
                 emitHistory();
                 scheduleFrame();
+                startComposeAhead(session);
                 reply(id, layout);
                 break;
             }
@@ -1553,6 +1802,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 emitSelection(false);
                 emitHistory();
                 scheduleFrame();
+                startComposeAhead(session);
                 reply(id, layout);
                 break;
             }
@@ -1570,6 +1820,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 emitSelection(false);
                 emitHistory();
                 scheduleFrame();
+                startComposeAhead(session);
                 reply(id, layout);
                 break;
             }
@@ -1686,6 +1937,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // Merged remote edits land on the local undo history.
                 emitHistory();
                 scheduleFrame();
+                startComposeAhead(session);
                 reply(id, layout);
                 break;
             }
@@ -1708,9 +1960,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "close": {
                 session?.close();
-                sheetWalk++;
-                walkAfterPaint = false;
-                loadedSheets.clear();
+                stopBackground();
                 emitSelection(false);
                 emitPeers();
                 emitPeerPointers();
