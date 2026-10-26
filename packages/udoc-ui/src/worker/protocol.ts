@@ -156,6 +156,13 @@ export interface SetViewportRequest {
     type: "setViewport";
     viewport: Viewport;
     /**
+     * The {@link PageViewsReport.anchorShift} of the latest fresh report the
+     * client had when it sent this — what its scroll was read against. The
+     * worker adds the shift since, so a scroll the client read before the
+     * engine last moved the view lands where it was meant to.
+     */
+    anchorShift: number;
+    /**
      * Monotonic per-client sequence number. The worker echoes the latest
      * consumed value in each {@link PageViewsReport}, so the client can tell a
      * frame that reflects its newest viewport from one painted mid-burst.
@@ -1707,6 +1714,12 @@ export interface PageViewsReport {
     /** Authoritative (clamped/anchored) scroll, document points. */
     scrollX: number;
     scrollY: number;
+    /**
+     * How far, in document points, the engine has moved the view down by
+     * itself so far — a running total, grown when pages composed above the
+     * page in view move it and the view follows to hold that page still.
+     */
+    anchorShift: number;
     /** Authoritative scrollable extent (Rust `scroll_extent`), document points —
      *  the whole framed plane in continuous, the current page in single-page. */
     scrollWidth: number;

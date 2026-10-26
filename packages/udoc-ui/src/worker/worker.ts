@@ -128,6 +128,13 @@ let lastDpr = Number.NaN;
 let lastScrollX = Number.NaN;
 let lastScrollY = Number.NaN;
 let lastZoom = Number.NaN;
+// How far, in document points, the engine has moved the view down by itself
+// — a running total. A page composed above the one in view (after a jump past
+// pages not composed yet) moves it, and the engine moves the view with it.
+// Each report carries the total, and a viewport the client sends carries the
+// total of the report its scroll was read from, so `applyViewport` adds the
+// moves the client hadn't seen: its scroll was meant for the plane before them.
+let anchorShift = 0;
 // The screen's CSS px per physical inch (`setDpi`), which the engine's scale
 // is measured against — `null` for each doc type's default.
 let dpi: number | null = null;
@@ -191,6 +198,9 @@ function scheduleFrame(): void {
 /** Paint one frame, timing the repaint and periodically reporting a summary. */
 function renderFrame(): void {
     if (!session || renderPoisoned) return;
+    // The frame's reconcile composes what the view needs, and a page composed
+    // above the one in view moves the view with it.
+    const scrollBefore = session.viewState()[2];
     let painted: boolean;
     try {
         if (!perf.enabled) {
@@ -227,6 +237,7 @@ function renderFrame(): void {
         });
         return;
     }
+    followView(session, scrollBefore);
     if (painted || viewportSeq !== emittedSeq) emitPageViews(session);
     if (painted && backgroundAfterPaint) {
         backgroundAfterPaint = false;
@@ -347,6 +358,7 @@ function emitPageViews(s: WasmSession): void {
             scale: state[0] ?? 1,
             scrollX: state[1] ?? 0,
             scrollY: state[2] ?? 0,
+            anchorShift,
             scrollWidth: state[3] ?? 0,
             scrollHeight: state[4] ?? 0,
             currentPage: state[5] ?? -1,
@@ -921,6 +933,7 @@ function composeThrough(s: WasmSession, start: number, pageLimit: number): Docum
     const before = s.viewState();
     const complete = s.updateLayout({ pages: { start, limit: pageLimit } });
     const layout = { ...layoutOf(s), complete };
+    followView(s, before[2]);
     const after = s.viewState();
     // A peer's selection can reference a page this side hadn't composed yet;
     // newly composed pages may resolve more of it.
@@ -1181,7 +1194,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "setViewport": {
                 viewportSeq = msg.seq;
-                if (session) applyViewport(session, msg.viewport);
+                if (session) applyViewport(session, msg.viewport, msg.anchorShift);
                 scheduleFrame();
                 break;
             }
@@ -2439,8 +2452,12 @@ function adoptView(s: WasmSession): void {
     if (st[0] !== undefined) lastZoom = st[0] / cssPxPerPt(viewDpiOf(s));
 }
 
-/** Route a full viewport into Rust's `resize` (size/dpr) and `set_view` (scroll/zoom). */
-function applyViewport(s: WasmSession, v: Viewport): void {
+/**
+ * Route a full viewport into Rust's `resize` (size/dpr) and `set_view`
+ * (scroll/zoom), its scroll carried over the view's moves since `shift`, the
+ * {@link anchorShift} it was read against.
+ */
+function applyViewport(s: WasmSession, v: Viewport, shift: number): void {
     if (v.width !== lastW || v.height !== lastH || v.dpr !== lastDpr) {
         s.resize(v.width, v.height, v.dpr);
         lastW = v.width;
@@ -2449,12 +2466,24 @@ function applyViewport(s: WasmSession, v: Viewport): void {
         // Hold the CSS-px size for the ack the next frame posts (latest wins).
         resizeAck = { width: v.width, height: v.height };
     }
-    if (v.scrollX !== lastScrollX || v.scrollY !== lastScrollY || v.zoom !== lastZoom) {
-        s.setView(v.scrollX, v.scrollY, v.zoom);
+    const scrollY = v.scrollY + anchorShift - shift;
+    if (v.scrollX !== lastScrollX || scrollY !== lastScrollY || v.zoom !== lastZoom) {
+        s.setView(v.scrollX, scrollY, v.zoom);
         lastScrollX = v.scrollX;
-        lastScrollY = v.scrollY;
+        lastScrollY = scrollY;
         lastZoom = v.zoom;
     }
+}
+
+/**
+ * Add the scroll the engine moved by itself since it read `before` to
+ * {@link anchorShift}, and adopt the view it moved to ({@link adoptView}).
+ */
+function followView(s: WasmSession, before: number | undefined): void {
+    const after = s.viewState()[2];
+    if (after === undefined || before === undefined || after === before) return;
+    anchorShift += after - before;
+    adoptView(s);
 }
 
 function reply(id: number | undefined, result: unknown, error?: unknown, transfer?: Transferable[]): void {

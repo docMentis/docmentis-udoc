@@ -261,6 +261,9 @@ export class WorkerClient {
     #nextId = 1;
     /** Seq of the latest viewport sent; reports echoing it are `fresh`. */
     #viewportSeq = 0;
+    /** The `anchorShift` of the latest fresh report — what the host's scroll,
+     *  adopted from it, was read against. Sent with each viewport. */
+    #anchorShift = 0;
 
     // --- thumbnail rendering (cache here, queue in the worker) ------------
     /** Decoded thumbnail bitmaps, keyed `page:scale`, LRU-evicted. */
@@ -441,7 +444,7 @@ export class WorkerClient {
 
     /** Update the painted window (scroll / zoom / resize). Latest-wins. */
     setViewport(viewport: Viewport): void {
-        this.#post({ type: "setViewport", viewport, seq: ++this.#viewportSeq });
+        this.#post({ type: "setViewport", viewport, anchorShift: this.#anchorShift, seq: ++this.#viewportSeq });
     }
 
     /**
@@ -1844,6 +1847,9 @@ export class WorkerClient {
     /** Parse a report's flat `[index, x, y, w, h, …]` buffer into a
      *  {@link PageViewsFrame} and fan it out to subscribers. */
     #emitPageViews(report: PageViewsReport): void {
+        // Before the listeners: adopting this frame's scroll sends the viewport
+        // back at once, and it was read against this report.
+        if (report.seq === this.#viewportSeq) this.#anchorShift = report.anchorShift;
         if (this.#pageViewListeners.size === 0) return;
         const rects = report.rects;
         const views: PageView[] = [];
