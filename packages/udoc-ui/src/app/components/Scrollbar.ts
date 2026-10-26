@@ -13,6 +13,10 @@ type Axis = "y" | "x";
  *  one (the profile's `scrollbarGutters`). */
 export const SCROLLBAR_THICKNESS_PX = 12;
 
+/** Gap the thumb keeps from each end of its track, in CSS px — as wide as its
+ *  gap from the track's sides (its margin in styles.ts). */
+const THUMB_INSET_PX = 2;
+
 /**
  * A virtual scrollbar for one axis. Because the canvas is pinned to the
  * viewport (synthetic scroll), the browser shows no native scrollbar — this bar
@@ -59,7 +63,7 @@ export function createScrollbar(axis: Axis) {
             // would accelerate under the finger; the frozen travel/range keep the
             // drag linear and hold it within the data (to reach empty grid, wheel).
             const startG = geom(store.getState(), axis);
-            const startTravel = startG.trackPx - startG.thumbPx;
+            const startTravel = startG.travelPx;
 
             const onMove = (e: PointerEvent) => {
                 if (dragPointer !== e.pointerId) return;
@@ -130,6 +134,7 @@ interface Geom {
     trackPx: number;
     thumbPx: number;
     thumbStartPx: number;
+    travelPx: number;
     visibleDoc: number;
     maxScroll: number;
 }
@@ -153,10 +158,12 @@ function geom(s: UIState, axis: Axis): Geom {
     const other: Axis = axis === "y" ? "x" : "y";
     const trackPx = viewportPx - (scrollbarShown(s, other) ? SCROLLBAR_THICKNESS_PX : 0);
     const fraction = content > 0 ? Math.min(1, visibleDoc / content) : 1;
-    const thumbPx = Math.max(24, trackPx * fraction);
-    const travel = trackPx - thumbPx;
-    const thumbStartPx = maxScroll > 0 ? travel * (scroll / maxScroll) : 0;
-    return { shown: scrollbarShown(s, axis), trackPx, thumbPx, thumbStartPx, visibleDoc, maxScroll };
+    // The thumb runs between the insets at the track's two ends.
+    const spanPx = trackPx - 2 * THUMB_INSET_PX;
+    const thumbPx = Math.max(24, spanPx * fraction);
+    const travelPx = spanPx - thumbPx;
+    const thumbStartPx = THUMB_INSET_PX + (maxScroll > 0 ? travelPx * (scroll / maxScroll) : 0);
+    return { shown: scrollbarShown(s, axis), trackPx, thumbPx, thumbStartPx, travelPx, visibleDoc, maxScroll };
 }
 
 /**
