@@ -27,6 +27,22 @@ listed once, by package. Its major and minor version are those of the
   until every page before it had composed. Composing ahead asks for only the
   pages it adds, so its steps no longer slow down as a long document fills in.
 
+### udoc-demo
+
+#### Added
+
+- `?sample=` opens the demo on a sample, by its file's name
+  (`?sample=james-webb-space-telescope.pptx`), and the address keeps it in
+  step as the sample changes.
+- Co-edit shows it is preparing while it loads the whole document into the
+  collaboration service both editors share, which takes longer than opening
+  it in View or Edit.
+
+#### Changed
+
+- Switching the mode or the document adds an entry to the browser's history,
+  so Back returns to the one before.
+
 ## [0.8.3] - 2026-10-25
 
 Built on `@docmentis/udoc-wasm` 0.8.5.

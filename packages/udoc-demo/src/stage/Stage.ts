@@ -164,16 +164,28 @@ export class Stage {
             await Promise.all(editors.map((ed) => ed.open(doc.bytes, { filename: doc.name }))).catch(openFailed);
             return undefined;
         }
-        let service: string;
+        // The service loads the whole document before either editor can open
+        // it, which takes longer than an open in View or Edit: the stage says
+        // so until both have.
+        const preparing = preparingOverlay();
+        this.el.appendChild(preparing);
         try {
-            service = await UDocEditor.startLocalCollaborationService(doc.bytes, { filename: doc.name, wasm: ENGINE });
-        } catch (err) {
-            console.error("udoc: failed to start a local collaboration service", err);
-            this.onError(`Co-edit could not start: ${(err as Error).message}`);
-            return undefined;
+            let service: string;
+            try {
+                service = await UDocEditor.startLocalCollaborationService(doc.bytes, {
+                    filename: doc.name,
+                    wasm: ENGINE,
+                });
+            } catch (err) {
+                console.error("udoc: failed to start a local collaboration service", err);
+                this.onError(`Co-edit could not start: ${(err as Error).message}`);
+                return undefined;
+            }
+            await Promise.all(editors.map((ed) => ed.openLocal(service))).catch(openFailed);
+            return service;
+        } finally {
+            preparing.remove();
         }
-        await Promise.all(editors.map((ed) => ed.openLocal(service))).catch(openFailed);
-        return service;
     }
 
     /**
@@ -223,6 +235,24 @@ export class Stage {
 function namesOf(mode: Mode | null): string[] {
     if (mode === "coedit") return ["Alex", "Robin"];
     return [GUEST_NAME];
+}
+
+/**
+ * What covers the stage while Co-edit prepares its document: a running bar,
+ * and why it takes a while. Shown only once it has (see `.stage-preparing`).
+ */
+function preparingOverlay(): HTMLElement {
+    return h(
+        "div",
+        { class: "stage-preparing", role: "status", "aria-live": "polite" },
+        h("div", { class: "preparing-title" }, "Preparing co-editing"),
+        h("div", { class: "preparing-track" }, h("div", { class: "preparing-fill" })),
+        h(
+            "div",
+            { class: "preparing-hint" },
+            "Loading the whole document into the collaboration service both editors share",
+        ),
+    );
 }
 
 /** A document that didn't open: the editor shows why itself, so the stage only logs it. */

@@ -68,5 +68,15 @@ export const SAMPLE_CATEGORIES: SampleCategory[] = [
 /** What the demo opens on first load. */
 export const DEFAULT_SAMPLE: SampleDoc = SAMPLE_CATEGORIES.find((c) => c.type === "pdf")!.documents[0]!;
 
+/** A sample's file name: what names it in the demo's address (`?sample=`), and what a download saves. */
+export function sampleFile(doc: SampleDoc): string {
+    return doc.path.slice(doc.path.lastIndexOf("/") + 1);
+}
+
+/** The sample whose file is named `file`; `undefined` for none. */
+export function findSample(file: string | null): SampleDoc | undefined {
+    return SAMPLE_CATEGORIES.flatMap((c) => c.documents).find((doc) => sampleFile(doc) === file);
+}
+
 export const FILE_ACCEPT =
     ".pdf,.pptx,.docx,.xlsx,.csv,.tsv,.tab,.psv,.svg,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.webp,.ico";

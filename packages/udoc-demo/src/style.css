@@ -443,6 +443,7 @@ body {
 
 /* ---- stage ---------------------------------------------------------------- */
 .stage {
+    position: relative;
     flex: 1;
     min-width: 0;
     display: flex;
@@ -450,7 +451,8 @@ body {
     overflow: hidden;
 }
 /* Uniform 24px frame around the panels in every mode: padding on the stage
-   body + a gap between split panes (so single/AI/co-edit all match). */
+   body + a gap between split panes (so single/AI/co-edit all match). Isolated,
+   so nothing the editors raise rises over what covers the stage. */
 .stage-single,
 .stage-split {
     flex: 1;
@@ -458,6 +460,63 @@ body {
     min-width: 0;
     padding: 24px;
     gap: 24px;
+    isolation: isolate;
+}
+
+/* What covers the stage while Co-edit prepares its document. Drawn only after
+   300ms, as the editor's own loading overlay is, so an open over by then
+   doesn't flash it. */
+.stage-preparing {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 24px;
+    background: var(--bg);
+    text-align: center;
+    animation: preparing-in 0.2s ease 0.3s both;
+}
+@keyframes preparing-in {
+    from {
+        opacity: 0;
+    }
+}
+.preparing-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+}
+.preparing-track {
+    width: 200px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    overflow: hidden;
+}
+/* Its end isn't known: a third of the bar runs across. */
+.preparing-fill {
+    width: 30%;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    animation: preparing-run 1.5s ease-in-out infinite;
+}
+@keyframes preparing-run {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(333%);
+    }
+}
+.preparing-hint {
+    max-width: 320px;
+    font-size: 12px;
+    color: var(--text-muted);
 }
 .editor-pane {
     flex: 1;
