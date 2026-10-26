@@ -867,7 +867,7 @@ function composeAhead(): void {
 
 /** A paged plane's compose-ahead step: a few pages more, and the layout they grew posted. */
 function composePagesAhead(s: WasmSession, from: number): void {
-    const layout = composeThrough(s, from + COMPOSE_BATCH - 1);
+    const layout = composeThrough(s, from, from + COMPOSE_BATCH - 1);
     // `complete` is the engine saying there is nothing left to compose — the
     // only authority on the document's length, since a page is known only once
     // composed. The no-growth check is the safety net: a page that fails to
@@ -900,26 +900,32 @@ function composeRowsAhead(s: WasmSession, from: number): void {
 }
 
 /**
- * Compose `s` through page index `pageLimit`, as an `updateLayout` request or a
- * paged compose-ahead step asks, and read its layout after, with `complete`.
- * Every page up to it, from the first — and a worksheet's grid whole, which a
- * pages scope covering it composes: what a print or a page render needs.
+ * Compose `s`'s pages `start` through `pageLimit`, as an `updateLayout` request
+ * or a paged compose-ahead step asks, and read its layout after, with
+ * `complete`. A request asks from the first page — every page up to its
+ * limit, and a worksheet's grid whole, which a pages scope covering it
+ * composes: what a print or a page render needs. A compose-ahead step asks for
+ * only the pages it adds, which a doc type with independent pages (PDF,
+ * slides) composes alone.
  */
-function composeThrough(s: WasmSession, pageLimit: number): DocumentLayout {
+function composeThrough(s: WasmSession, start: number, pageLimit: number): DocumentLayout {
     // The pages composed are off-screen, so normally only the layout (page
     // count + extent) grows and no repaint is needed. But a fit derives its
     // zoom against the largest loaded page, so composing a larger page ahead
     // can shrink the fit zoom — changing the visible rendering even though the
-    // new pages are off-screen. Capture the scale across the step and repaint
-    // only when it moved (a no-op for a uniform-size document).
-    const scaleBefore = s.viewState()[0] ?? 0;
-    const complete = s.updateLayout({ pages: { start: 0, limit: pageLimit } });
+    // new pages are off-screen. And a page composed above the one in view —
+    // after a jump past pages not composed yet — moves it down the plane, and
+    // the engine moves the view with it. Capture the scale and scroll across
+    // the step and repaint only when one moved, so the frame hands the host
+    // the scroll to adopt.
+    const before = s.viewState();
+    const complete = s.updateLayout({ pages: { start, limit: pageLimit } });
     const layout = { ...layoutOf(s), complete };
-    const scaleAfter = s.viewState()[0] ?? 0;
+    const after = s.viewState();
     // A peer's selection can reference a page this side hadn't composed yet;
     // newly composed pages may resolve more of it.
     emitChangedSelection();
-    if (scaleAfter !== scaleBefore) scheduleFrame();
+    if (after[0] !== before[0] || after[1] !== before[1] || after[2] !== before[2]) scheduleFrame();
     // The pages just composed may name families nothing has asked for yet.
     // Without this the pump would only ever see what the *visible* window
     // ordered, and a family first used on page 40 would sit on order until the
@@ -1362,7 +1368,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (!session) throw new Error("engine worker: updateLayout before open");
                 // What can't wait for compose-ahead — a print, a page render —
                 // composes through the page it needs now.
-                reply(id, composeThrough(session, msg.pageLimit));
+                reply(id, composeThrough(session, 0, msg.pageLimit));
                 break;
             }
             case "ensureFont": {

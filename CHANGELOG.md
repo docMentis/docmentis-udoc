@@ -20,6 +20,13 @@ listed once, by package. Its major and minor version are those of the
   `--udoc-color-surface-container`, by default, where they took the canvas's,
   so `--udoc-canvas-background` no longer recolors them.
 
+#### Fixed
+
+- In a PDF or a presentation, following a link, an outline item or a page
+  number to a page not composed yet lands at once, where the viewer froze
+  until every page before it had composed. Composing ahead asks for only the
+  pages it adds, so its steps no longer slow down as a long document fills in.
+
 ## [0.8.3] - 2026-10-25
 
 Built on `@docmentis/udoc-wasm` 0.8.5.
