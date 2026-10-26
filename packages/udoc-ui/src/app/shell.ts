@@ -1792,11 +1792,18 @@ export function mountUIShell(
         canvas.setOverlay("udoc:form-field", formFieldSource, { aboveSelection: true });
     }
 
+    // Whether `destroy` has run: the worker it tears down rejects whatever was
+    // still asked of it, which is no failure to report.
+    let destroyed = false;
+
     // Follow a clicked link, or run a widget's action: a destination in the
     // document lands the view, a URL opens (`openUrl`), a named action moves a
     // page, and a hide action hides or shows its annotations.
     function followLink(target: Pick<LinkAnnotation, "action" | "destination">): void {
-        follow(client, store, target, openUrl).catch((err: unknown) => console.error("following a link failed:", err));
+        follow(client, store, target, openUrl).catch((err: unknown) => {
+            // A worker torn down under the call took the viewer with it.
+            if (!destroyed) console.error("following a link failed:", err);
+        });
     }
 
     // The slide the last link jump left — where a jump to the last slide
@@ -2707,6 +2714,7 @@ export function mountUIShell(
     store.dispatch({ type: "__INIT__" });
 
     function destroy(): void {
+        destroyed = true;
         pageAnnotations.destroy();
         pageAnnotationListeners.clear();
         unsubComposed();
