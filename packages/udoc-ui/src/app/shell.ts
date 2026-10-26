@@ -1121,11 +1121,9 @@ export function mountUIShell(
     // engine). All must parse before applying (a partial palette would mix
     // themed and default colors).
     function syncGuideColors(): void {
-        // The guide is part of the canvas, so it shares the canvas background:
-        // band and page gaps read as one canvas surface and only the band's grid
-        // marks it out. Mirrored by the band's CSS background — the fallback until
-        // a strip's content lands — and by syncBackdrop above.
-        const band = resolveColor("var(--udoc-canvas-background)");
+        // The guide's own fill token. Mirrored by the band's CSS background — the
+        // fallback until a strip's content lands.
+        const band = resolveColor("var(--udoc-canvas-guide-background)");
         // Every structural mark the band draws — ticks, separators, framing edges —
         // is the soft outline-variant `grid`. The stronger outline is reserved as
         // `marker` for the future ruler markers; nothing draws with it yet.
@@ -1134,7 +1132,7 @@ export function mountUIShell(
         // The selected row / column: the selected overlay, composited opaque over
         // the band, since the renderer paints solid colors.
         const highlight = resolveColor(
-            "color-mix(in srgb, var(--udoc-color-primary) var(--udoc-state-selected-opacity), var(--udoc-canvas-background))",
+            "color-mix(in srgb, var(--udoc-color-primary) var(--udoc-state-selected-opacity), var(--udoc-canvas-guide-background))",
         );
         const grid = resolveColor("var(--udoc-color-outline-variant)");
         if (band && marker && text && highlight && grid) {

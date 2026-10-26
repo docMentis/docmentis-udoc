@@ -6,6 +6,20 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Added
+
+- `--udoc-canvas-guide-background` sets the fill of the guide, the ruler or a
+  spreadsheet's row and column headers, and
+  `--udoc-canvas-scrollbar-background` that of the scrollbars beside a page.
+
+#### Changed
+
+- The guide and the scrollbars beside a page take the toolbar's color,
+  `--udoc-color-surface-container`, by default, where they took the canvas's,
+  so `--udoc-canvas-background` no longer recolors them.
+
 ## [0.8.3] - 2026-10-25
 
 Built on `@docmentis/udoc-wasm` 0.8.5.

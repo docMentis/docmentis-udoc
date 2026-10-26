@@ -52,6 +52,8 @@ export const uiStyles = css`
         --udoc-panel-background: var(--udoc-color-surface-container);
         --udoc-status-bar-background: var(--udoc-color-surface-container);
         --udoc-canvas-background: var(--udoc-color-surface);
+        --udoc-canvas-guide-background: var(--udoc-color-surface-container);
+        --udoc-canvas-scrollbar-background: var(--udoc-color-surface-container);
 
         /* Scrollbar thumb — on-surface at low alpha, not a role. */
         --udoc-scrollbar-thumb: color-mix(in srgb, var(--udoc-color-on-surface) 30%, transparent);
@@ -1685,10 +1687,8 @@ export const uiStyles = css`
         height: 100%;
         min-width: 0;
         min-height: 0;
-        /* The canvas background the bands frame, so the band and the page gaps read
-       as one surface; keep in sync with the canvas fill the shell resolves
-       (syncGuideColors) and the engine backdrop (syncBackdrop). */
-        background: var(--udoc-canvas-background);
+        /* Keep in sync with the band fill the shell resolves (syncGuideColors). */
+        background: var(--udoc-canvas-guide-background);
         /* Header presses select whole columns / rows via pointer capture; keep a
        touch drag on the band a selection, not a browser scroll gesture. */
         touch-action: none;
@@ -1714,10 +1714,23 @@ export const uiStyles = css`
    the bar rather than a frame after it. Its fits measure the pane less one strip
    on each axis whichever bars show, so a bar coming or going never re-zooms the
    page. The bars overlay the pane's edges as the floating ones do and land in
-   those strips; their tracks are opaque in the backdrop the engine fills a strip
-   with, so no page-anchored overlay shows through one either. */
+   those strips; their tracks are opaque, so no page-anchored overlay shows
+   through one either. */
     .udoc-ui-root .udoc-ui__viewport-grid--scrollbar-gutters .udoc-ui__scrollbar {
-        background: var(--udoc-canvas-background);
+        background: var(--udoc-canvas-scrollbar-background);
+    }
+    /* The corner the two tracks stop short of, filled by the vertical one: its
+   track is cut a bar's thickness short only while the horizontal bar shows, so
+   this sits in the corner then and below the pane, clipped, otherwise. */
+    .udoc-ui-root .udoc-ui__viewport-grid--scrollbar-gutters .udoc-ui__scrollbar--y::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        height: var(--udoc-scrollbar-size);
+        background: inherit;
+        pointer-events: none;
     }
     /* Header resize guide: a transient 1px line the user drags along a column / row
    header boundary — a UI preview of the new track size (it commits nothing yet).
@@ -2370,8 +2383,8 @@ export const uiStyles = css`
 
     /* Virtual scrollbars overlaying the canvas host's right and bottom edges, in
    both modes. A doc type whose bars take a strip of their own (see
-   --scrollbar-gutters above) gives the track the backdrop; the thickness,
-   thumb and hover are common. */
+   --scrollbar-gutters above) gives the track a fill; the thickness, thumb and
+   hover are common. */
     .udoc-ui-root .udoc-ui__scrollbar {
         position: absolute;
         z-index: 2;

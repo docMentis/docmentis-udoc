@@ -46,7 +46,7 @@ The `--udoc-color-` prefix is dropped in the tables.
 | `surface-container-lowest`  | `#e0e0e0` | `#121212` | Nothing yet: a well sunk below the canvas                                                                                                |
 | `surface`                   | `#e6e6e6` | `#181818` | The canvas, via `--udoc-canvas-background`; the slide picker's preview well                                                              |
 | `surface-container-low`     | `#ececec` | `#1e1e1e` | Nothing yet: a frame below the chrome, such as the toolbar stepping down from the ribbon                                                 |
-| `surface-container`         | `#f3f3f3` | `#252525` | The chrome around the canvas, via the [region tokens](#component-tokens): toolbar, ribbon, side panels, status bar                       |
+| `surface-container`         | `#f3f3f3` | `#252525` | The chrome around the canvas, via the [region tokens](#component-tokens): toolbar, ribbon, panels, status bar, guide, scrollbar tracks   |
 | `surface-container-high`    | `#f9f9f9` | `#2c2c2c` | Cards and text boxes inside a panel; the chrome floating over the canvas: floating toolbar, comment popup, annotation bar, page controls |
 | `surface-container-highest` | `#ffffff` | `#333333` | Menus, tooltips, dialogs                                                                                                                 |
 
@@ -139,13 +139,15 @@ is not a role.
 **Regions** are the fixed chrome around the canvas, the parts a host lines up
 with its own app. Each has one fill token that defaults to the region's rung:
 
-| Token                          | Default             | Painted by                                                                                                             |
-| ------------------------------ | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `--udoc-toolbar-background`    | `surface-container` | `.udoc-toolbar`                                                                                                        |
-| `--udoc-ribbon-background`     | `surface-container` | `.udoc-ribbon` and its selected tab                                                                                    |
-| `--udoc-panel-background`      | `surface-container` | `.udoc-left-panel` and its tab strip, `.udoc-right-panel`                                                              |
-| `--udoc-status-bar-background` | `surface-container` | `.udoc-status-bar`                                                                                                     |
-| `--udoc-canvas-background`     | `surface`           | The canvas host, guide bands, scrollbar gutters and the selected sheet tab; pushed to the engine as the page-gap color |
+| Token                                | Default             | Painted by                                                                               |
+| ------------------------------------ | ------------------- | ---------------------------------------------------------------------------------------- |
+| `--udoc-toolbar-background`          | `surface-container` | `.udoc-toolbar`                                                                          |
+| `--udoc-ribbon-background`           | `surface-container` | `.udoc-ribbon` and its selected tab                                                      |
+| `--udoc-panel-background`            | `surface-container` | `.udoc-left-panel` and its tab strip, `.udoc-right-panel`                                |
+| `--udoc-status-bar-background`       | `surface-container` | `.udoc-status-bar`                                                                       |
+| `--udoc-canvas-background`           | `surface`           | The canvas host and the selected sheet tab; pushed to the engine as the page-gap color   |
+| `--udoc-canvas-guide-background`     | `surface-container` | The guide bands: the ruler, a spreadsheet's row and column headers                       |
+| `--udoc-canvas-scrollbar-background` | `surface-container` | The tracks of the scrollbars that take a strip of their own, and the corner between them |
 
 A region token covers the fill only. The region's content keeps the roles' ink,
 outlines and states, so the token picks a tone within its theme's ladder (the
@@ -153,12 +155,13 @@ ribbon a step apart from the toolbar, or the host's own gray); it does not inver
 a region. Floating planes have no tokens of their own and read their rung
 directly, so the ladder stays one decision.
 
-**Chrome on the canvas** paints from roles like any other chrome. The guide bands
-share `--udoc-canvas-background`, draw their grid in `outline-variant` and their
-numbers in `on-surface-variant`, and mark the selected row or column with the
-selected overlay. The page border is `outline-variant`. The page controls, the
-comment popup and the annotation bar are `surface-container-high`. The scrollbar
-thumb is the one color here that is not a role: `--udoc-scrollbar-thumb` and
+**Chrome on the canvas** paints from roles like any other chrome, but for the
+guide bands and the scrollbar tracks, which frame the canvas and fill from their
+region tokens. The bands draw their grid in `outline-variant` and their numbers
+in `on-surface-variant`, and mark the selected row or column with the selected
+overlay. The page border is `outline-variant`. The page controls, the comment
+popup and the annotation bar are `surface-container-high`. The scrollbar thumb
+is the one color here that is not a role: `--udoc-scrollbar-thumb` and
 `--udoc-scrollbar-thumb-hover`, `on-surface` at 30% and 50%.
 
 **Marks on the document** are drawn over page content. They must read against
@@ -310,11 +313,12 @@ A component token that names a role is declared once, in the base block. Its
 
 **Engine read-back.** The engine paints the page gaps and the page border, and
 the guide bands are drawn on a canvas, so `shell.ts` pushes their colors on every
-theme change: `--udoc-canvas-background` (`setBackdrop`, and the band
-background), `outline-variant` (`setPageBorder`, the band grid), `outline` (the
-band marker), `on-surface-variant` (the band text), and the selected highlight
-resolved opaque over the canvas background:
-`color-mix(in srgb, var(--udoc-color-primary) var(--udoc-state-selected-opacity), var(--udoc-canvas-background))`.
+theme change: `--udoc-canvas-background` (`setBackdrop`),
+`--udoc-canvas-guide-background` (the band background), `outline-variant`
+(`setPageBorder`, the band grid), `outline` (the band marker),
+`on-surface-variant` (the band text), and the selected highlight resolved opaque
+over the band:
+`color-mix(in srgb, var(--udoc-color-primary) var(--udoc-state-selected-opacity), var(--udoc-canvas-guide-background))`.
 `getComputedStyle` does not resolve `var()` inside a custom property, so each
 read sets a hidden probe element's `color` to the expression and reads back the
 resolved `color`. For a `color-mix()` that comes back as `color(srgb …)`, which
