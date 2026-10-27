@@ -54,7 +54,8 @@ listed once, by package. Its major and minor version are those of the
 - Co-edit shows it is preparing while it loads the whole document into the
   collaboration service both editors share, which takes longer than opening
   it in View or Edit.
-- The Options dialog turns annotating and form filling off.
+- The Options dialog turns annotating and form filling off, under Features
+  with copy, and groups the toolbar and view items under UI.
 
 #### Changed
 

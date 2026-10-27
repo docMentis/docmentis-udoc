@@ -18,7 +18,7 @@ if (!root) throw new Error("#app not found");
 // editor's own (the Developer item's, the demo's).
 const OPTION_GROUPS: OptionGroup[] = [
     {
-        title: "Toolbar",
+        title: "UI",
         items: [
             { kind: "toggle", id: "showToolbar", label: "Toolbar", default: true },
             { kind: "toggle", id: "showFullscreenButton", label: "Fullscreen Button", default: true },
@@ -26,28 +26,6 @@ const OPTION_GROUPS: OptionGroup[] = [
             { kind: "toggle", id: "showPrintButton", label: "Print Button", default: true },
             { kind: "toggle", id: "showThemeButton", label: "Theme Button", default: true },
             { kind: "toggle", id: "showDeveloperButton", label: "Developer Button", default: true },
-        ],
-    },
-    {
-        title: "Left Panel",
-        items: [
-            { kind: "toggle", id: "showLeftPanel", label: "Left Panel", default: true },
-            { kind: "toggle", id: "showThumbnailPanel", label: "Thumbnail Panel", default: true },
-            { kind: "toggle", id: "showOutlinePanel", label: "Outline Panel", default: true },
-            { kind: "toggle", id: "showLayersPanel", label: "Layers Panel", default: true },
-        ],
-    },
-    {
-        title: "Right Panel",
-        items: [
-            { kind: "toggle", id: "showRightPanel", label: "Right Panel", default: true },
-            { kind: "toggle", id: "showSearchPanel", label: "Search Panel", default: true },
-            { kind: "toggle", id: "showCommentsPanel", label: "Comments Panel", default: true },
-        ],
-    },
-    {
-        title: "View",
-        items: [
             {
                 kind: "select",
                 id: "viewControlsPlacement",
@@ -73,6 +51,28 @@ const OPTION_GROUPS: OptionGroup[] = [
                 hint: "Edit mode",
                 default: true,
             },
+        ],
+    },
+    {
+        title: "Left Panel",
+        items: [
+            { kind: "toggle", id: "showLeftPanel", label: "Left Panel", default: true },
+            { kind: "toggle", id: "showThumbnailPanel", label: "Thumbnail Panel", default: true },
+            { kind: "toggle", id: "showOutlinePanel", label: "Outline Panel", default: true },
+            { kind: "toggle", id: "showLayersPanel", label: "Layers Panel", default: true },
+        ],
+    },
+    {
+        title: "Right Panel",
+        items: [
+            { kind: "toggle", id: "showRightPanel", label: "Right Panel", default: true },
+            { kind: "toggle", id: "showSearchPanel", label: "Search Panel", default: true },
+            { kind: "toggle", id: "showCommentsPanel", label: "Comments Panel", default: true },
+        ],
+    },
+    {
+        title: "Features",
+        items: [
             {
                 kind: "toggle",
                 id: "enableCopy",
