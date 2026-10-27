@@ -1224,6 +1224,12 @@ export type SelectionEdit =
      *  (a rounded rectangle's corner, an arrow's head). Reshapes one geometry,
      *  so it needs a single-shape selection. */
     | { kind: "adjustShapeHandle"; index: number; to: { x: number; y: number } }
+    /** Presentation: drag adjust handle `index` of the selected shape's text
+     *  warp to `to`, a point in the warp's **own space** — the shape's text
+     *  rect's, the space its streamed handle's point is in — the warp-reshaping
+     *  drag (an arch's sweep, a wave's height). Reshapes one warp, so it needs a
+     *  single-shape selection. */
+    | { kind: "adjustTextWarpHandle"; index: number; to: { x: number; y: number } }
     /** PDF: set the paths' non-stroking (fill-side) style. */
     | { kind: "setNonstrokingStyle"; style: NonstrokingStyle }
     /** PDF: set the paths' stroking (outline) style. */

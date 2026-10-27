@@ -156,9 +156,10 @@ export class EditClient {
     }
 
     /**
-     * Where geometry handle `index` of the selection lands if dragged to
-     * `(x, y)` — a point in that handle's **own local space** (the space the
-     * streamed handle's `point` is in), not CSS px.
+     * Where handle `index` of the selection lands if dragged to `(x, y)` — the
+     * shape's text warp's handle when `textWarp`, as the streamed handle says,
+     * else its outline's — with `(x, y)` a point in that handle's **own local
+     * space** (the space the streamed handle's `point` is in), not CSS px.
      *
      * A handle travels the track its geometry describes and stops at the ends of
      * its range, so this is what a live drag draws: the position the release will
@@ -167,8 +168,8 @@ export class EditClient {
      * selection offers none. Cheap enough to call per pointer-move; the caller
      * coalesces it latest-wins, like the client's `hitTest`.
      */
-    selectionHandlePreview(index: number, x: number, y: number): Promise<SelectionHandle | null> {
-        return this.#request({ type: "selectionHandlePreview", index, x, y });
+    selectionHandlePreview(textWarp: boolean, index: number, x: number, y: number): Promise<SelectionHandle | null> {
+        return this.#request({ type: "selectionHandlePreview", textWarp, index, x, y });
     }
 
     /**

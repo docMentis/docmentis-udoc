@@ -196,6 +196,9 @@ export interface InsertImageRequest {
  */
 export interface SelectionHandlePreviewRequest {
     type: "selectionHandlePreview";
+    /** Whether the handle is the shape's text warp's, as its streamed
+     *  `textWarp` says, rather than its outline's. */
+    textWarp: boolean;
     index: number;
     x: number;
     y: number;

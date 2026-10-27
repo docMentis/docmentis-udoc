@@ -1,6 +1,7 @@
 // Edit mode's grips on the selection: a rotation grip above each selected box,
 // and the geometry grips (yellow diamonds) a lone shape offers — a rounded
-// rectangle's corner, an arrow's head. udoc-ui's selection layer draws them
+// rectangle's corner, an arrow's head, its text warp's sweep. udoc-ui's
+// selection layer draws them
 // beside its resize handles (`SelectionChrome`), and the canvas hands a press on
 // one to the gesture this runs (`UIExtension.pressCanvas`).
 import { allowsEdit, applyPoint, DRAG_THRESHOLD, fromComponents, invert } from "@docmentis/udoc-ui/internal";
@@ -48,7 +49,10 @@ const ROTATE_CARDINAL_TOLERANCE = (2.75 * Math.PI) / 180;
  *  and the projection to run backwards while the pointer moves. The shape is
  *  implied — only a single-shape selection offers handles. */
 interface AdjustHandleGrab {
-    /** The handle's index in the shape's geometry — what the edit names. */
+    /** Whether the handle drives the shape's text warp rather than its outline
+     *  — which edit the drag commits. */
+    textWarp: boolean;
+    /** The handle's index in the geometry it drives — what the edit names. */
     index: number;
     /** The page the shape sits on. */
     page: number;
@@ -183,7 +187,9 @@ export function createGrips(tools: () => EditTools | null): Grips {
         const handles = f.state.local.handles ?? [];
         const preview = handlePreview;
         if (!preview) return handles;
-        return handles.map((handle) => (handle.index === preview.index ? preview : handle));
+        return handles.map((handle) =>
+            handle.textWarp === preview.textWarp && handle.index === preview.index ? preview : handle,
+        );
     }
 
     /**
@@ -206,15 +212,17 @@ export function createGrips(tools: () => EditTools | null): Grips {
             if (!lv) continue;
             const c = applyPoint(lv, handle.point.x, handle.point.y);
             if (Math.abs(x - c.x) <= ADJUST_HIT && Math.abs(y - c.y) <= ADJUST_HIT) {
-                return { index: handle.index, page: handle.page, transform };
+                return { textWarp: handle.textWarp, index: handle.index, page: handle.page, transform };
             }
         }
         return null;
     }
 
     /**
-     * Where `(x, y)` (viewport CSS px) lands in the grabbed shape's **own local
-     * space** — the space an `adjustShapeHandle` edit names its target in.
+     * Where `(x, y)` (viewport CSS px) lands in the grabbed handle's **own local
+     * space** — the shape's, or for a text warp's handle its text rect's — the
+     * space an `adjustShapeHandle` / `adjustTextWarpHandle` edit names its
+     * target in.
      *
      * The projection the diamond was drawn through, run backwards: the drag is
      * expressed where the geometry is defined, so the engine solves against the
@@ -441,7 +449,7 @@ export function createGrips(tools: () => EditTools | null): Grips {
             if (probeBusy) return;
             probeBusy = true;
             const seq = ++probeSeq;
-            void edit.selectionHandlePreview(grab.index, to.x, to.y).then((handle) => {
+            void edit.selectionHandlePreview(grab.textWarp, grab.index, to.x, to.y).then((handle) => {
                 probeBusy = false;
                 if (seq === probeSeq && live && handlePreview !== handle) {
                     handlePreview = handle;
@@ -484,9 +492,8 @@ export function createGrips(tools: () => EditTools | null): Grips {
                 // other drags — the engine resolves which shape and solves the
                 // adjust value the drag implies.
                 canvas.committing();
-                void host.commit(() =>
-                    host.client.executeOnSelection({ kind: "adjustShapeHandle", index: grab.index, to }),
-                );
+                const kind = grab.textWarp ? "adjustTextWarpHandle" : "adjustShapeHandle";
+                void host.commit(() => host.client.executeOnSelection({ kind, index: grab.index, to }));
             },
             cancel() {
                 // Nothing was committed, so the preview has nothing to settle onto.

@@ -95,7 +95,9 @@ export const EDIT_HANDLERS: EditHandlers = {
         // the raw cursor. A pure read, no edit, no repaint; `null` when the
         // selection offers no such handle.
         handle: (request, { session }) =>
-            session ? (session.selectionHandlePreview(request.index, request.x, request.y) ?? null) : null,
+            session
+                ? (session.selectionHandlePreview(request.textWarp, request.index, request.x, request.y) ?? null)
+                : null,
     },
     slideMastersSummary: {
         // A pure read: every slide master, summarized for the New-Slide picker.

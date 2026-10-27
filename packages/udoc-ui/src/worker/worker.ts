@@ -2389,6 +2389,7 @@ const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     setShapeFill: "shape",
     setShapeLine: "shape",
     adjustShapeHandle: "shape",
+    adjustTextWarpHandle: "shape",
     pasteShapes: "shape",
 };
 const DRAWING_FAMILY: Record<string, "text" | "shape"> = { ...TEXT_KINDS, ...SHAPE_KINDS };
