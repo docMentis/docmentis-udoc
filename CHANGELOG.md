@@ -24,6 +24,9 @@ listed once, by package. Its major and minor version are those of the
 - The guide and the scrollbars beside a page take the toolbar's color,
   `--udoc-color-surface-container`, by default, where they took the canvas's,
   so `--udoc-canvas-background` no longer recolors them.
+- A scrollbar's thumb keeps 2px clear of its track's ends, as it does of its
+  sides, so it no longer touches the view's edge or the corner where the two
+  scrollbars meet.
 - In a PDF or a presentation, the page count beside the page number, the
   pages it accepts and the thumbnails cover every page from the open, where
   they grew as pages composed ahead, and `pageCount` is the document's total.
@@ -43,6 +46,14 @@ listed once, by package. Its major and minor version are those of the
   number to a page not composed yet lands at once, where the viewer froze
   until every page before it had composed. Composing ahead asks for only the
   pages it adds, so its steps no longer slow down as a long document fills in.
+- In a PDF whose text is set in a Type 3 font, as bitmap text often is, a
+  selection highlights the lines it covers and a drag from between two lines
+  selects them, where its lines had no height to highlight or to pick.
+- A PDF page drawn from thousands of small pieces of text scrolls smoothly
+  with the pointer resting on it, where each frame stalled on finding the text
+  under the pointer.
+- A link still being followed when the viewer is destroyed no longer logs
+  "following a link failed".
 
 ### udoc-demo
 
