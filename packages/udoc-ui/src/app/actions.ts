@@ -140,6 +140,7 @@ export type Action =
     // Arrangement — scroll mode, layout mode, page rotation and the reading
     // page gap; the shell pushes each to the worker
     | { type: "SET_SCROLL_MODE"; mode: ScrollMode }
+    | { type: "SET_DEFAULT_SCROLL_MODE"; mode: ScrollMode | null }
     | { type: "SET_LAYOUT_MODE"; mode: LayoutMode }
     | { type: "SET_PAGE_ROTATION"; rotation: 0 | 90 | 180 | 270 }
     | { type: "SET_PAGE_GAP"; gap: PageGap | null }

@@ -3,7 +3,7 @@ import { UDocError } from "@docmentis/udoc-wasm/error";
 import { localCollaborationService } from "../worker/LocalCollaborationService.js";
 import type { WorkerClient } from "../worker/WorkerClient.js";
 import type { FormWidget, HistoryOp, SelectionEdit } from "../worker/protocol.js";
-import { defaultFitForDocType } from "../worker/protocol.js";
+import { defaultFitForDocType, defaultScrollModeForDocType } from "../worker/protocol.js";
 import { Command } from "../worker/commands.js";
 import type {
     UDocCommand,
@@ -325,8 +325,9 @@ export interface UIShell {
     setTheme: (theme: ThemeMode) => void;
     /** Enter or leave fullscreen on the root; rejects when the browser refuses. */
     setFullscreen: (fullscreen: boolean) => Promise<void>;
-    /** Scroll one spread at a time, or continuously. */
-    setScrollMode: (mode: ScrollMode) => void;
+    /** Scroll one spread at a time, or continuously — the open document and
+     *  every later one; `null` restores each doc type's default. */
+    setScrollMode: (mode: ScrollMode | null) => void;
     /** Group the pages into spreads as `mode` says. */
     setLayoutMode: (mode: LayoutMode) => void;
     /** Turn every page by `rotation` degrees clockwise on top of its own. */
@@ -549,6 +550,7 @@ export function mountUIShell(
         pointerSharing: shellOptions.enablePointerSharing ?? initialState.pointerSharing,
         viewControlsPlacement: shellOptions.viewControlsPlacement ?? initialState.viewControlsPlacement,
         scrollMode: shellOptions.scrollMode ?? initialState.scrollMode,
+        defaultScrollMode: shellOptions.scrollMode ?? initialState.defaultScrollMode,
         layoutMode: shellOptions.layoutMode ?? initialState.layoutMode,
         pageRotation: shellOptions.pageRotation ?? initialState.pageRotation,
         pageGap: shellOptions.pageGap ?? initialState.pageGap,
@@ -939,7 +941,8 @@ export function mountUIShell(
 
     // Push the arrangement — scroll mode, layout mode, page rotation — to the
     // worker when the view-mode menu or the host changes it, and once now for
-    // the host's options. Sticky in the worker, so each survives re-opens; a
+    // the host's options. Sticky in the worker, so each survives re-opens, but
+    // for the scroll mode, which each open sets to the default below; a
     // live switch keeps the current page in view (the engine re-anchors and
     // streams the result back via the fresh-frame SYNC_VIEW path in Canvas).
     const unsubScrollMode = subscribeSelector(
@@ -948,6 +951,14 @@ export function mountUIShell(
         (mode) => client.setScrollMode(mode),
     );
     client.setScrollMode(store.getState().scrollMode);
+    // The scroll mode every document opens in: the worker applies it at open,
+    // before the first frame, and the open adopts the same into the state.
+    const unsubDefaultScrollMode = subscribeSelector(
+        store,
+        (s) => s.defaultScrollMode,
+        (mode) => client.setDefaultScrollMode(mode),
+    );
+    client.setDefaultScrollMode(store.getState().defaultScrollMode);
     // Layout and rotation reach the engine only where the doc type offers them
     // (PDF, Word); any other document gets single, upright pages.
     const unsubLayoutMode = subscribeSelector(
@@ -2766,6 +2777,7 @@ export function mountUIShell(
         unsubCommentPopup();
         unsubNav();
         unsubScrollMode();
+        unsubDefaultScrollMode();
         unsubLayoutMode();
         unsubPageRotation();
         unsubDefaultFit();
@@ -2873,7 +2885,13 @@ export function mountUIShell(
             if (fullscreen === (document.fullscreenElement === layout)) return Promise.resolve();
             return fullscreen ? layout.requestFullscreen() : document.exitFullscreen();
         },
-        setScrollMode: (mode) => store.dispatch({ type: "SET_SCROLL_MODE", mode }),
+        setScrollMode: (mode) => {
+            store.dispatch({ type: "SET_DEFAULT_SCROLL_MODE", mode });
+            store.dispatch({
+                type: "SET_SCROLL_MODE",
+                mode: mode ?? defaultScrollModeForDocType(store.getState().docType ?? undefined),
+            });
+        },
         setLayoutMode: (mode) => store.dispatch({ type: "SET_LAYOUT_MODE", mode }),
         setPageRotation: (rotation) => store.dispatch({ type: "SET_PAGE_ROTATION", rotation }),
         setPageGap: (gap) => store.dispatch({ type: "SET_PAGE_GAP", gap }),

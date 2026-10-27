@@ -545,6 +545,12 @@ export interface UIState {
     // --- Arrangement -----------------------------------------------------
     /** How the view scrolls: one spread at a time, or continuously. */
     scrollMode: ScrollMode;
+    /**
+     * The scroll mode every document opens in in place of its doc type's
+     * default — the host's `scrollMode` option or `setScrollMode`. `null` keeps
+     * the doc type's default.
+     */
+    defaultScrollMode: ScrollMode | null;
     /** How the layout groups pages into spreads. */
     layoutMode: LayoutMode;
     /** The turn, in degrees clockwise, every page is shown at on top of its own. */
@@ -728,6 +734,7 @@ export const initialState: UIState = {
     // Match the engine's default arrangement (a scrolling single column). The
     // view-mode menu switches them and the shell pushes each to the worker.
     scrollMode: "continuous",
+    defaultScrollMode: null,
     layoutMode: "singlePage",
     pageRotation: 0,
     pageGap: null,

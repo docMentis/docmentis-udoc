@@ -5,6 +5,7 @@ import { NO_FIT, VIEW_MODE, initialState, isLeftPanelTab, renderZoom, viewDpi } 
 import { defaultTab, profileDisabledPanels } from "./profiles.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
 import { visibleSpan } from "./components/Scrollbar.js";
+import { defaultScrollModeForDocType } from "../worker/protocol.js";
 
 function clamp(value: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, value));
@@ -113,7 +114,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             // Reset the view camera for the new document — scroll, page, and
             // zoom all return to defaults so nothing leaks from the previously
             // open document. `openSource` follows up with SET_FIT to adopt the
-            // fit the document opens with.
+            // fit the document opens with. The scroll mode is the one the
+            // worker opened it in: the host's, else the doc type's.
             return {
                 ...state,
                 status: "ready",
@@ -149,6 +151,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 scrollY: 0,
                 zoom: state.defaultZoom,
                 fit: initialState.fit,
+                scrollMode: state.defaultScrollMode ?? defaultScrollModeForDocType(action.docType),
                 effectiveZoom: initialState.effectiveZoom,
                 pageIndex: 0,
                 // No planes until the new document's roster lands (SET_PLANES),
@@ -398,6 +401,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_SCROLL_MODE":
             return { ...state, scrollMode: action.mode };
+
+        case "SET_DEFAULT_SCROLL_MODE":
+            return { ...state, defaultScrollMode: action.mode };
 
         case "SET_LAYOUT_MODE":
             return { ...state, layoutMode: action.mode };

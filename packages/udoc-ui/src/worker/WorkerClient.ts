@@ -597,14 +597,23 @@ export class WorkerClient {
     }
 
     /**
-     * Switch the scroll mode: `"spread"` (one spread at a time) or
-     * `"continuous"` (the scrolling stack default). Sticky across opens in the
-     * worker like the backdrop/spacing; a live switch keeps the current page in
-     * view (the resulting scroll/extent rides back in the next
-     * {@link PageViewsFrame}). Latest-wins, fire-and-forget.
+     * Switch the open document's scroll mode: `"spread"` (one spread at a
+     * time) or `"continuous"` (the scrolling stack); the next opens in the
+     * default scroll mode ({@link setDefaultScrollMode}). A live switch keeps
+     * the current page in view (the resulting scroll/extent rides back in the
+     * next {@link PageViewsFrame}). Latest-wins, fire-and-forget.
      */
     setScrollMode(mode: ScrollMode): void {
         this.#post({ type: "setScrollMode", mode });
+    }
+
+    /**
+     * Set the scroll mode every document opens in in place of its doc type's
+     * default; `null` restores the doc type's. Sticky across opens in the
+     * worker. Latest-wins, fire-and-forget.
+     */
+    setDefaultScrollMode(mode: ScrollMode | null): void {
+        this.#post({ type: "setDefaultScrollMode", mode });
     }
 
     /**

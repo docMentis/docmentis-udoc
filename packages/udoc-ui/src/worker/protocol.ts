@@ -267,13 +267,23 @@ export interface ZoomToRectRequest {
 
 /**
  * Switch the scroll mode: `"spread"` (one spread at a time) or `"continuous"`
- * (the scrolling stack default). Sticky like the backdrop/spacing — re-applied
- * to every subsequently opened document, keeping the current page in view on a
- * live switch. Latest-wins, fire-and-forget.
+ * (the scrolling stack), keeping the current page in view on a live switch.
+ * For the open document: the next opens in the default scroll mode
+ * ({@link SetDefaultScrollModeRequest}). Latest-wins, fire-and-forget.
  */
 export interface SetScrollModeRequest {
     type: "setScrollMode";
     mode: ScrollMode;
+}
+
+/**
+ * Set the scroll mode every document opens in in place of its doc type's
+ * default ({@link defaultScrollModeForDocType}); `null` restores the doc
+ * type's. Read at the next open. Latest-wins, fire-and-forget.
+ */
+export interface SetDefaultScrollModeRequest {
+    type: "setDefaultScrollMode";
+    mode: ScrollMode | null;
 }
 
 /**
@@ -459,6 +469,17 @@ export function defaultFitForDocType(docType: UDocType | undefined): Fit {
  */
 export function defaultDpiForDocType(docType: UDocType | undefined): number {
     return docType === "spreadsheet" ? 72 : 96;
+}
+
+/**
+ * The scroll mode a document opens in while the host sets none, by doc type: a
+ * deck one slide at a time, as a presentation is shown; anything else
+ * continuous. One table, two consumers, as {@link defaultFitForDocType}: the
+ * worker applies it at open, before the first frame; the shell adopts the same
+ * into its scroll mode when the open reply lands.
+ */
+export function defaultScrollModeForDocType(docType: UDocType | undefined): ScrollMode {
+    return docType === "presentation" ? "spread" : "continuous";
 }
 
 /**
@@ -1565,6 +1586,7 @@ export type WorkerRequest =
     | ZoomAtPointRequest
     | ZoomToRectRequest
     | SetScrollModeRequest
+    | SetDefaultScrollModeRequest
     | SetLayoutModeRequest
     | SetPageRotationRequest
     | InvalidateRequest

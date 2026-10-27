@@ -22,6 +22,12 @@ listed once, by package. Its major and minor version are those of the
 - In a PDF or a presentation, the page count beside the page number, the
   pages it accepts and the thumbnails cover every page from the open, where
   they grew as pages composed ahead, and `pageCount` is the document's total.
+- A presentation opens one slide at a time, in the `"spread"` scroll mode,
+  where it opened scrolling continuously. The `scrollMode` option and
+  `setScrollMode` set the scroll mode every document opens in, `null`
+  restoring each doc type's own, and the view settings' Scroll section picks
+  one for the open document alone, where its pick held for every document
+  opened after.
 - `document:edited` carries `pageCount`, the document's page count, for
   `composedPageCount`, and udoc-editor's `pageActions` and `pageInserts` take
   a `pageCount` option for `composedPageCount`.

@@ -108,8 +108,9 @@ export interface UDocOptions {
     /** Where the view controls (page nav + zoom + view settings) dock. Default
      *  `"floating"`; {@link UDocBase.setViewControlsPlacement} changes it. */
     viewControlsPlacement?: ViewControlsPlacement;
-    /** How the view scrolls: `"spread"`, one spread at a time, or
-     *  `"continuous"`. Default `"continuous"`; {@link UDocBase.setScrollMode}
+    /** How every document opens scrolling: `"spread"`, one spread at a time,
+     *  or `"continuous"`. Default each doc type's own — one slide at a time for
+     *  a presentation, continuous for the rest; {@link UDocBase.setScrollMode}
      *  changes it. */
     scrollMode?: ScrollMode;
     /** How the pages group into spreads, shown side by side: `"singlePage"`,
@@ -1277,10 +1278,12 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Scroll one spread at a time (`"spread"`) or continuously
-     * (`"continuous"`) — the view settings' Scroll section.
+     * Scroll the open document one spread at a time (`"spread"`) or
+     * continuously (`"continuous"`), and open every later one so; `null`
+     * restores each doc type's default. The view settings' Scroll section
+     * still picks a scroll mode for the open document alone.
      */
-    setScrollMode(mode: ScrollMode): void {
+    setScrollMode(mode: ScrollMode | null): void {
         this.shell.setScrollMode(mode);
     }
 
@@ -1464,7 +1467,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.getState().isFullscreen;
     }
 
-    /** How the view scrolls, as {@link setScrollMode} or the view settings last set it. */
+    /** How the open document scrolls, as it opened or {@link setScrollMode} or the view settings last set it. */
     get scrollMode(): ScrollMode {
         return this.shell.getState().scrollMode;
     }

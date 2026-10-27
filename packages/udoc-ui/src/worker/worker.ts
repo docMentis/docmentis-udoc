@@ -14,10 +14,10 @@
 import { NoOpPerformanceCounter, PerformanceCounter } from "../performance/index.js";
 import type { IPerformanceCounter, PerfEvent } from "../performance/index.js";
 import { EMPTY_SELECTION_CAPABILITIES, cssPxPerPt } from "../geometry.js";
-import type { DocumentLayout, Fit, Peer, PeerPointer, SelectionGeometry, Viewport } from "../geometry.js";
+import type { DocumentLayout, Fit, Peer, PeerPointer, ScrollMode, SelectionGeometry, Viewport } from "../geometry.js";
 import { createCanvasText } from "../fonts/canvas-text.js";
 import { createFontPump } from "../fonts/pump.js";
-import { defaultDpiForDocType, defaultFitForDocType } from "./protocol.js";
+import { defaultDpiForDocType, defaultFitForDocType, defaultScrollModeForDocType } from "./protocol.js";
 import type {
     ExtensionRequest,
     FormWidget,
@@ -164,6 +164,9 @@ let defaultFit: Fit | null = null;
 // The explicit zoom a document opens at while that fit is `none` — the host's,
 // from `setDefaultZoom`.
 let defaultZoom = 1;
+// The scroll mode every document opens in in place of its doc type's default —
+// the host's, from `setDefaultScrollMode`. `null` keeps the doc type's.
+let defaultScrollMode: ScrollMode | null = null;
 
 // Set if `render_frame` ever throws: the wasm session is then poisoned (an
 // export that unwound on a JS throw leaked its `WasmRefCell` borrow, so every
@@ -1349,9 +1352,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 break;
             }
             case "setScrollMode": {
-                // Sticky in Rust: re-applied to every document opened later.
+                // Sticky in Rust, until the next open applies the default.
                 session?.setScrollMode(msg.mode);
                 scheduleFrame();
+                break;
+            }
+            case "setDefaultScrollMode": {
+                // Read at the next open, like the default fit.
+                defaultScrollMode = msg.mode;
                 break;
             }
             case "setLayoutMode": {
@@ -2137,6 +2145,9 @@ function openedLayout(s: WasmSession): DocumentLayout {
     // The doc type's dpi too, unless the host set one: a spreadsheet's 100% is
     // Excel's, so its first frame must already be at that size.
     s.setDpi(dpi ?? defaultDpiForDocType(layout.docType));
+    // Its scroll mode too, unless the host set one: a deck's first frame
+    // already shows one slide.
+    s.setScrollMode(defaultScrollMode ?? defaultScrollModeForDocType(layout.docType));
     const fit = defaultFit ?? defaultFitForDocType(layout.docType);
     s.setFit(fit);
     // Without a fit the zoom is the host's explicit one, applied here for the
