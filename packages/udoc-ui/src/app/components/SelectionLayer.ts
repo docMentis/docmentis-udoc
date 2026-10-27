@@ -7,12 +7,14 @@
 //
 // The geometry arrives from the worker in **page-local document points**
 // (`WorkerClient.onSelection`): each item is the object's bounds in its own
-// local space plus a `local → page` affine. Re-sent only when a selection or
-// the document changes. Each painted frame this layer composes that with the
-// page view rects the worker streams (`onPageViews`) and draws the object's
-// box as a faithful **parallelogram** — so rotation and skew (from an imported
-// PDF `cm`) both render correctly, and the boxes ride scroll/zoom with zero
-// extra worker traffic.
+// local space plus a `local → page` affine, or — for a text highlight — the
+// four corners of a quad on the page. Re-sent only when a selection or the
+// document changes. Each painted frame this layer composes that with the page
+// view rects the worker streams (`onPageViews`) and draws the object's box as
+// a faithful **parallelogram** — so rotation and skew (from an imported PDF
+// `cm`) both render correctly — and a highlight's quad as it is, so text a
+// warp bends is followed; both ride scroll/zoom with zero extra worker
+// traffic.
 
 import { EMPTY_SELECTION_CAPABILITIES, allowsEdit } from "../../geometry.js";
 import type {
@@ -22,10 +24,21 @@ import type {
     Rect,
     SelectionBox,
     SelectionEditKind,
+    SelectionQuad,
     SelectionState,
 } from "../../geometry.js";
 import type { Affine } from "./affine.js";
-import { applyPoint, applyVector, fromComponents, invert, multiply, rotate, scale, translate } from "./affine.js";
+import {
+    IDENTITY,
+    applyPoint,
+    applyVector,
+    fromComponents,
+    invert,
+    multiply,
+    rotate,
+    scale,
+    translate,
+} from "./affine.js";
 import { applyContentClip } from "./overlayClip.js";
 import { ICON_TOOL_POINTER } from "../icons.js";
 
@@ -60,6 +73,9 @@ interface BoxSpec {
     /** How far its box stands off its bounds on screen, CSS px: an
      *  annotation's {@link ANNOTATION_PADDING}, else 0. */
     padding: number;
+    /** A text highlight's corners in page-local points, drawn as they are in
+     *  place of the box under its transform; null for a box. */
+    points: SelectionQuad["points"] | null;
 }
 
 /** The eight resize handles, named by the compass point they sit on. */
@@ -726,7 +742,7 @@ export class SelectionLayer {
         for (const b of local.annotations)
             specs.push({ ...boxSpec(b, "object", null, null), padding: ANNOTATION_PADDING });
         for (const b of local.cells) specs.push(boxSpec(b, "cell", null, null));
-        for (const b of local.text) specs.push(boxSpec(b, "text", null, null));
+        for (const q of local.text) specs.push(quadSpec(q, null, null));
 
         // Peer name flags placed this frame: the projected box top-left, the
         // peer color, and the name. Rendered after the boxes so the pooled
@@ -773,7 +789,9 @@ export class SelectionLayer {
             const m = spec.peer === null && spec.role === "object" ? this.#applyPreview(base, spec) : base;
             const lv = this.#localToViewport(m, view);
             const box = spec.padding > 0 ? padPlacement(spec, lv, spec.padding) : spec;
-            let corners = cornersOf(box).map(([lx, ly]) => applyPoint(lv, lx, ly));
+            let corners = spec.points
+                ? spec.points.map((p) => applyPoint(lv, p.x, p.y))
+                : cornersOf(box).map(([lx, ly]) => applyPoint(lv, lx, ly));
             if (clipping) {
                 corners = clipToRect(corners, -BOX_CLIP_PAD, -BOX_CLIP_PAD, clipW + BOX_CLIP_PAD, clipH + BOX_CLIP_PAD);
             }
@@ -1226,7 +1244,27 @@ function itemPlacement(it: SelectionBox): SelectionPlacement {
 /** A drawn/pooled box spec from a wire {@link SelectionBox}: its flattened
  *  placement plus the presentation role, peer color seed, and name flag. */
 function boxSpec(b: SelectionBox, role: BoxRole, peer: string | null, name: string | null): BoxSpec {
-    return { ...itemPlacement(b), role, peer, name, padding: 0 };
+    return { ...itemPlacement(b), role, peer, name, padding: 0, points: null };
+}
+
+/** A drawn/pooled text-highlight spec from a wire {@link SelectionQuad}: its
+ *  corners on the page, placed under no transform of their own, and anchored
+ *  — for a peer's name flag — at its top-left corner. */
+function quadSpec(q: SelectionQuad, peer: string | null, name: string | null): BoxSpec {
+    const [topLeft] = q.points;
+    return {
+        page: q.page,
+        x: topLeft.x,
+        y: topLeft.y,
+        width: 0,
+        height: 0,
+        transform: IDENTITY,
+        role: "text",
+        peer,
+        name,
+        padding: 0,
+        points: q.points,
+    };
 }
 
 /** A page-local rotation delta by `angle` about page point (`cx`, `cy`). */
@@ -1276,7 +1314,7 @@ function peerBoxes(peer: PeerSelectionGeometry): BoxSpec[] {
     if (text.length > 0 || caret) {
         const specs: BoxSpec[] = objects.map((b) => boxSpec(b, "object", id, null));
         const textStart = specs.length;
-        for (const b of text) specs.push(boxSpec(b, "text", id, null));
+        for (const q of text) specs.push(quadSpec(q, id, null));
         if (!caret) {
             if (specs[textStart]) {
                 specs[textStart].name = name ?? null;
@@ -1342,6 +1380,7 @@ function coveringBoxes(peer: PeerSelectionGeometry, objects: readonly SelectionB
             // reads as one named cursor, not one flag per page.
             name: specs.length === 0 ? (peer.peer.name ?? null) : null,
             padding: 0,
+            points: null,
         });
     }
     return specs;

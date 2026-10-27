@@ -36,6 +36,7 @@ import type {
     RgbColor,
     ScrollMode,
     SelectionBox,
+    SelectionQuad,
 } from "../geometry.js";
 import { createStore, shallowEqual, subscribeSelector } from "../framework/index.js";
 import type { Store } from "../framework/index.js";
@@ -2061,11 +2062,11 @@ export function mountUIShell(
         if (geometry.text.length === 0) return false;
         const style = annotationStyle(tool, store.getState().annotationStyles);
         const now = new Date();
-        const byPage = new Map<number, SelectionBox[]>();
-        for (const box of geometry.text) byPage.set(box.page, [...(byPage.get(box.page) ?? []), box]);
-        for (const [page, boxes] of byPage) {
+        const byPage = new Map<number, SelectionQuad[]>();
+        for (const quad of geometry.text) byPage.set(quad.page, [...(byPage.get(quad.page) ?? []), quad]);
+        for (const [page, quads] of byPage) {
             const pageId = await pageIdByIndex(page);
-            const annotation = markupFor(tool, boxes, style, userName, now);
+            const annotation = markupFor(tool, quads, style, userName, now);
             if (pageId === undefined || !annotation) continue;
             await commit(() => client.execute(Command.insertAnnotations(pageId, [annotation])));
         }

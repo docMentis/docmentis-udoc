@@ -25,7 +25,7 @@ import type {
     StandardFont,
     TextAnnotation,
 } from "@docmentis/udoc-wasm";
-import type { PaintDisplay, SelectionBox } from "../geometry.js";
+import type { PaintDisplay, SelectionQuad } from "../geometry.js";
 import type { PageComments } from "../worker/protocol.js";
 import type { LineDash, PaintSpec } from "./components/PaintPanel.js";
 import type { AnnotationTool, UIState, MarkupTool } from "./state.js";
@@ -249,30 +249,30 @@ export function annotationFor(
 }
 
 /**
- * The model `Annotation` marking the text `boxes` cover on one page — the
- * text selection's boxes, one per run it crosses — with `tool`: a `Highlight`,
- * `Underline`, `StrikeOut` or `Squiggly` over their quadrilaterals, in
- * `style`'s colour and opacity. Null for no boxes. Each box's corners, mapped
- * onto the page, give its quadrilateral in the order Acrobat writes: the upper
- * edge, then the lower, each from the text's start. The rect takes in the
- * highlight's rounded ends, which bulge a quarter of the text's height past
- * them.
+ * The model `Annotation` marking the text `quads` cover on one page — the
+ * text selection's highlight quads, one per run it crosses — with `tool`: a
+ * `Highlight`, `Underline`, `StrikeOut` or `Squiggly` over them, in `style`'s
+ * colour and opacity. Null for no quads. Each quad's corners give its
+ * quadrilateral in the order Acrobat writes: the upper edge, then the lower,
+ * each from the text's start. The rect takes in the highlight's rounded ends,
+ * which bulge a quarter of the text's height past them.
  */
 export function markupFor(
     tool: MarkupTool,
-    boxes: readonly SelectionBox[],
+    quads: readonly SelectionQuad[],
     style: AnnotationStyle,
     author: string | null,
     now: Date,
 ): Annotation | null {
-    if (boxes.length === 0) return null;
-    const quadPoints = boxes.map(({ rect, transform: t }): Quad => {
-        const at = (x: number, y: number) => ({
-            x: t.scaleX * x + t.skewX * y + t.translateX,
-            y: t.skewY * x + t.scaleY * y + t.translateY,
-        });
-        return [at(rect.x0, rect.y0), at(rect.x1, rect.y0), at(rect.x0, rect.y1), at(rect.x1, rect.y1)];
-    });
+    if (quads.length === 0) return null;
+    const quadPoints = quads.map(
+        ({ points: [topLeft, topRight, bottomRight, bottomLeft] }): Quad => [
+            topLeft,
+            topRight,
+            bottomLeft,
+            bottomRight,
+        ],
+    );
     const height = Math.max(
         ...quadPoints.map(([upperLeft, , lowerLeft]) =>
             Math.hypot(lowerLeft.x - upperLeft.x, lowerLeft.y - upperLeft.y),

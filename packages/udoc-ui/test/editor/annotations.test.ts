@@ -14,6 +14,7 @@ import type {
     Annotation,
     FreeTextAnnotation,
     Rect,
+    SelectionQuad,
     StampIcon,
     TextAnnotation,
     TextMarkupAnnotation,
@@ -97,11 +98,16 @@ test("a polygon's sharp join reaches past its corner by its miter, inside the re
 });
 
 test("a markup's quads run along the text's upper edge first, and its rect takes in a highlight's round ends", () => {
-    // One run of text 100 points long and 12 high, set at (50, 200) on the page.
-    const run = {
+    // One run of text 100 points long and 12 high, set at (50, 200) on the page:
+    // its quad's corners clockwise from the top left.
+    const run: SelectionQuad = {
         page: 0,
-        rect: { x0: 0, y0: 0, x1: 100, y1: 12 },
-        transform: { scaleX: 1, skewY: 0, skewX: 0, scaleY: 1, translateX: 50, translateY: 200 },
+        points: [
+            { x: 50, y: 200 },
+            { x: 150, y: 200 },
+            { x: 150, y: 212 },
+            { x: 50, y: 212 },
+        ],
     };
     const highlight = markupFor("highlight", [run], annotationStyle("highlight", {}), null, NOW)!;
     const { quadPoints } = (highlight.kind as { highlight: TextMarkupAnnotation }).highlight;

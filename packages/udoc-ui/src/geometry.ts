@@ -11,6 +11,7 @@ import type { Feature, FileFormat, SheetState, UDocType } from "@docmentis/udoc-
 import type {
     UDocSelectionCapabilities as SelectionCapabilities,
     SelectionBox,
+    SelectionQuad,
     SelectionHandle,
     HeaderBands,
     SelectionGeometry,
@@ -271,8 +272,10 @@ export interface PageView {
 // engine's `Rect`, bounds in its own local space) plus a `local → page`
 // `transform` (its `Affine`); the layer maps the rect's four corners through
 // the transform (then the page's on-screen rect) to draw a faithful
-// parallelogram, so rotation and skew render correctly.
-export type { SelectionBox, SelectionHandle, HeaderBands, SelectionGeometry, PeerSelectionGeometry };
+// parallelogram, so rotation and skew render correctly. A text highlight is a
+// `SelectionQuad` instead — four corners already on the page — since the text
+// under it may be bent by a warp, which no parallelogram follows.
+export type { SelectionBox, SelectionQuad, SelectionHandle, HeaderBands, SelectionGeometry, PeerSelectionGeometry };
 
 // A collaborator — its replica id, a stable color seed, and the name it
 // advertised — and its pointer: the page it rests on and the point in that
