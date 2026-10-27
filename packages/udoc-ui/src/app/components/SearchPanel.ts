@@ -30,13 +30,16 @@ interface SearchPanelSlice {
     matches: readonly SearchMatch[];
     activeIndex: number;
     running: boolean;
-    planeCount: number;
+    /** Whether a match's group is its sheet — a workbook's — rather than its
+     *  page. */
+    bySheet: boolean;
     planeNames: readonly string[];
     /** What a page is called — "Slide" in a deck — for a match's group. */
     pageNoun: DocProfile["pageNoun"];
 }
 
 function selectSlice(state: UIState): SearchPanelSlice {
+    const profile = profileFor(state.docType);
     return {
         query: state.searchQuery,
         caseSensitive: state.searchCaseSensitive,
@@ -44,9 +47,9 @@ function selectSlice(state: UIState): SearchPanelSlice {
         matches: state.searchMatches,
         activeIndex: state.searchActiveIndex,
         running: state.searchRunning,
-        planeCount: state.planeCount,
+        bySheet: profile.sheetTabs,
         planeNames: state.planeNames,
-        pageNoun: profileFor(state.docType).pageNoun,
+        pageNoun: profile.pageNoun,
     };
 }
 
@@ -58,7 +61,7 @@ function sliceEqual(a: SearchPanelSlice, b: SearchPanelSlice): boolean {
         a.matches === b.matches &&
         a.activeIndex === b.activeIndex &&
         a.running === b.running &&
-        a.planeCount === b.planeCount &&
+        a.bySheet === b.bySheet &&
         a.planeNames === b.planeNames &&
         a.pageNoun === b.pageNoun
     );
@@ -139,8 +142,7 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
     let lastGroup: string | null = null;
 
     function groupLabel(match: SearchMatch, slice: SearchPanelSlice): string {
-        if (slice.planeCount > 1)
-            return slice.planeNames[match.plane] || i18n.t("sheet.unnamed", { sheet: match.plane + 1 });
+        if (slice.bySheet) return slice.planeNames[match.plane] || i18n.t("sheet.unnamed", { sheet: match.plane + 1 });
         return i18n.t(slice.pageNoun === "Slide" ? "search.slide" : "search.page", { page: match.page + 1 });
     }
 

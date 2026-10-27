@@ -6,6 +6,14 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Fixed
+
+- The search results group a presentation's matches by slide, where they
+  named each group for a sheet, and a workbook's by sheet, where one with a
+  single sheet grouped them by page.
+
 ## [0.8.4] - 2026-10-26
 
 Built on `@docmentis/udoc-wasm` 0.8.6.
