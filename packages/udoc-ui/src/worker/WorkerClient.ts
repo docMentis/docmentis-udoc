@@ -34,6 +34,7 @@ import type {
     Destination,
     DestinationView,
     Entitlements,
+    Feature,
     FontInfoList,
     OptionalContentProperties,
     Outline,
@@ -158,6 +159,14 @@ export interface FontOptions {
     enableCanvasFonts?: boolean;
 }
 
+/** The features the embedder offers its users, of those the license grants. */
+export interface FeatureOptions {
+    /** Offer annotating. Absent is `true`. */
+    enableAnnotation?: boolean;
+    /** Offer form filling. Absent is `true`. */
+    enableFormFilling?: boolean;
+}
+
 /** The docMentis component embedding the engine, reported with every permit
  *  and usage report so the service can tell the wrappers apart. Not an
  *  embedder's option: each docMentis package names itself through the
@@ -171,8 +180,8 @@ export interface Wrapper {
 const DISTINCT_ID_KEY = "udoc_distinct_id";
 
 /** Everything {@link WorkerClient.create} needs: where to find the WASM, the
- *  license, and the fonts offered. */
-export type CreateClientOptions = { wasm?: WasmLocateOptions } & LicenseOptions & FontOptions;
+ *  license, the fonts and the features offered. */
+export type CreateClientOptions = { wasm?: WasmLocateOptions } & LicenseOptions & FontOptions & FeatureOptions;
 
 function isSupported(): boolean {
     return (
@@ -236,6 +245,9 @@ export class WorkerClient {
     /** What each session is started with. Fixed for the client's life — a
      *  license change means a new client. */
     readonly #config: SessionConfig;
+    /** The features the embedder turned off, taken out of what each session
+     *  is entitled to. Fixed for the client's life. */
+    readonly #withheld: ReadonlySet<Feature>;
     /** The Google font families every session offers — `[]` with Google Fonts
      *  off, and `undefined` for the catalog `startSession` offers unless told
      *  otherwise. */
@@ -289,9 +301,13 @@ export class WorkerClient {
     /** Notified when the worker composed more of the document ahead of the reader. */
     readonly #composedListeners = new Set<(layout: DocumentLayout) => void>();
 
-    private constructor(worker: Worker, options: LicenseOptions & FontOptions, wrapper: Wrapper) {
+    private constructor(worker: Worker, options: LicenseOptions & FontOptions & FeatureOptions, wrapper: Wrapper) {
         this.#worker = worker;
         this.#config = sessionConfigOf(options, wrapper);
+        this.#withheld = new Set<Feature>([
+            ...(options.enableAnnotation === false ? (["annotation"] as const) : []),
+            ...(options.enableFormFilling === false ? (["formFilling"] as const) : []),
+        ]);
         this.#googleFontFamilies = options.enableGoogleFonts === false ? [] : options.googleFontFamilies;
         this.#googleFontEndpoint =
             options.googleFontEndpoint === undefined ? CSS2_ENDPOINT : new URL(options.googleFontEndpoint).href;
@@ -423,15 +439,18 @@ export class WorkerClient {
      * document is opened.
      */
     async start(): Promise<void> {
-        this.#entitlements = (await this.#send({
+        const entitlements = (await this.#send({
             type: "start",
             config: this.#config,
         })) as Entitlements;
+        const features = entitlements.features.filter((feature) => !this.#withheld.has(feature));
+        this.#entitlements = { ...entitlements, features };
     }
 
-    /** What the license granted the open document's session, or `null` before
-     *  the first {@link start}. Advisory — the engine enforces each entitlement
-     *  at the call it guards. */
+    /** What the license granted the open document's session, less the
+     *  features the embedder turned off, or `null` before the first
+     *  {@link start}. What the UI offers; the engine enforces the license's
+     *  own at the call each guards, so the host's API still has the rest. */
     get entitlements(): Entitlements | null {
         return this.#entitlements;
     }

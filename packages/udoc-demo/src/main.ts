@@ -80,6 +80,20 @@ const OPTION_GROUPS: OptionGroup[] = [
                 hint: "View mode",
                 default: true,
             },
+            {
+                kind: "toggle",
+                id: "enableAnnotation",
+                label: "Annotation",
+                hint: "PDF",
+                default: true,
+            },
+            {
+                kind: "toggle",
+                id: "enableFormFilling",
+                label: "Form Filling",
+                hint: "PDF",
+                default: true,
+            },
         ],
     },
     {
@@ -153,8 +167,8 @@ function setOption(id: string, value: boolean | string): Promise<void> {
             });
         }
         default:
-            // The base color, the chrome, copy and the language: read only at
-            // create.
+            // The base color, the chrome, copy, annotating, form filling and
+            // the language: read only at create.
             return stage.setOptions({ [id]: value } as UDocEditorOptions);
     }
 }

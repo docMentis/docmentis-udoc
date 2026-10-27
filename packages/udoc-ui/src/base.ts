@@ -100,6 +100,15 @@ export interface UDocOptions {
      *  selection to highlight only; edit mode copies whatever this says.
      *  Default `true`. */
     enableCopy?: boolean;
+    /** Let the user annotate a PDF: the Annotate tab's tools, writing,
+     *  answering and deleting comments, and moving, resizing, restyling and
+     *  deleting an annotation. `false` still shows the document's annotations
+     *  and comments, to read, and {@link UDocBase.addPageAnnotation} and the
+     *  rest still change them. Default `true`. */
+    enableAnnotation?: boolean;
+    /** Let the user fill in a PDF form's fields. `false` shows them as the
+     *  document has them filled in. Default `true`. */
+    enableFormFilling?: boolean;
     /** Share this one's pointer with the collaboration it joins: the others
      *  see it move over the pages, under its name — for presenting remotely.
      *  Default `false`; the people button's menu and

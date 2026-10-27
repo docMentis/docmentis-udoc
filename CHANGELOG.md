@@ -10,6 +10,11 @@ listed once, by package. Its major and minor version are those of the
 
 #### Added
 
+- `enableAnnotation: false` keeps the user from annotating a PDF, and
+  `enableFormFilling: false` from filling in its form, where the license
+  allows both: the Annotate tab is gone, comments and annotations are there to
+  read, and a press on a form field selects as on the page.
+  `addPageAnnotation` and the rest still change the annotations.
 - `--udoc-canvas-guide-background` sets the fill of the guide, the ruler or a
   spreadsheet's row and column headers, and
   `--udoc-canvas-scrollbar-background` that of the scrollbars beside a page.
@@ -49,6 +54,7 @@ listed once, by package. Its major and minor version are those of the
 - Co-edit shows it is preparing while it loads the whole document into the
   collaboration service both editors share, which takes longer than opening
   it in View or Edit.
+- The Options dialog turns annotating and form filling off.
 
 #### Changed
 
