@@ -1291,7 +1291,8 @@ export function mountUIShell(
         if (store.getState().status !== "ready") return;
         store.dispatch({
             type: "DOC_RELAYOUT",
-            composedPageCount: grown.composedPageCount,
+            pageCount: grown.pageCount ?? null,
+            firstUncomposedPage: grown.firstUncomposedPage,
             scrollSize: grown.scrollSize,
         });
     });
@@ -1374,7 +1375,8 @@ export function mountUIShell(
             if (!layout) return;
             store.dispatch({
                 type: "OPEN_SUCCESS",
-                composedPageCount: layout.composedPageCount,
+                pageCount: layout.pageCount ?? null,
+                firstUncomposedPage: layout.firstUncomposedPage,
                 scrollSize: layout.scrollSize,
                 features: client.entitlements?.features ?? [],
                 ...(layout.docType !== undefined ? { docType: layout.docType } : {}),
@@ -1550,7 +1552,8 @@ export function mountUIShell(
         const layout = await run();
         store.dispatch({
             type: "DOC_RELAYOUT",
-            composedPageCount: layout.composedPageCount,
+            pageCount: layout.pageCount ?? null,
+            firstUncomposedPage: layout.firstUncomposedPage,
             scrollSize: layout.scrollSize,
         });
         for (const listener of editListeners) listener();
@@ -1580,7 +1583,8 @@ export function mountUIShell(
         const layout = await client.goToPlane(plane);
         store.dispatch({
             type: "DOC_RELAYOUT",
-            composedPageCount: layout.composedPageCount,
+            pageCount: layout.pageCount ?? null,
+            firstUncomposedPage: layout.firstUncomposedPage,
             scrollSize: layout.scrollSize,
         });
     }
@@ -1828,7 +1832,7 @@ export function mountUIShell(
             } else goToSlide(target.slide.slideIndex, page);
             return;
         }
-        const last = store.getState().composedPageCount - 1;
+        const last = store.getState().pageCount - 1;
         const index =
             jump === "firstSlide"
                 ? 0
@@ -1899,15 +1903,17 @@ export function mountUIShell(
                 const { batch, layout } = await client.search(query, options, state.searchScope, from);
                 if (run !== searchGeneration) return [];
                 // A search lays out the pages its matches are drawn on.
-                const { composedPageCount, scrollSize } = store.getState();
+                const { pageCount, firstUncomposedPage, scrollSize } = store.getState();
                 if (
-                    layout.composedPageCount !== composedPageCount ||
+                    (layout.pageCount ?? layout.firstUncomposedPage) !== pageCount ||
+                    layout.firstUncomposedPage !== firstUncomposedPage ||
                     layout.scrollSize.width !== scrollSize.width ||
                     layout.scrollSize.height !== scrollSize.height
                 ) {
                     store.dispatch({
                         type: "DOC_RELAYOUT",
-                        composedPageCount: layout.composedPageCount,
+                        pageCount: layout.pageCount ?? null,
+                        firstUncomposedPage: layout.firstUncomposedPage,
                         scrollSize: layout.scrollSize,
                     });
                 }
@@ -2240,34 +2246,41 @@ export function mountUIShell(
 
     /** Compose every page left to compose, as compose-ahead would, without waiting for the reader to pause. */
     async function composeAll(): Promise<void> {
-        let count = store.getState().composedPageCount;
+        let count = store.getState().firstUncomposedPage;
         for (;;) {
             const layout = await client.updateLayout(count + COMPOSE_BATCH - 1);
             store.dispatch({
                 type: "DOC_RELAYOUT",
-                composedPageCount: layout.composedPageCount,
+                pageCount: layout.pageCount ?? null,
+                firstUncomposedPage: layout.firstUncomposedPage,
                 scrollSize: layout.scrollSize,
             });
             // The pump's safety net: a page that fails to compose never reports
             // complete.
-            const grew = layout.composedPageCount > count;
-            count = layout.composedPageCount;
+            const grew = layout.firstUncomposedPage > count;
+            count = layout.firstUncomposedPage;
             if (layout.complete || !grew) return;
         }
     }
 
-    /** Compose through page index `page` if it isn't yet, and check there is one: what `method` needs of a page first. */
+    /**
+     * Compose through page index `page` where the document's page count isn't
+     * known to reach it, and check there is one: what `method` needs of a page
+     * first. Where the engine knows the count up front, the page composes when
+     * `method` asks for it.
+     */
     async function composeThrough(method: string, page: number): Promise<void> {
-        let pageCount = store.getState().composedPageCount;
-        // A page is known only once composed: compose through it first.
+        let { pageCount } = store.getState();
+        // Elsewhere a page is known only once composed: compose through it first.
         if (Number.isInteger(page) && page >= pageCount) {
             const layout = await client.updateLayout(page);
             store.dispatch({
                 type: "DOC_RELAYOUT",
-                composedPageCount: layout.composedPageCount,
+                pageCount: layout.pageCount ?? null,
+                firstUncomposedPage: layout.firstUncomposedPage,
                 scrollSize: layout.scrollSize,
             });
-            pageCount = layout.composedPageCount;
+            pageCount = layout.pageCount ?? layout.firstUncomposedPage;
         }
         if (!Number.isInteger(page) || page < 0 || page >= pageCount) {
             throw new Error(`${method}: there is no page at index ${page}, of ${pageCount}`);
@@ -2322,7 +2335,7 @@ export function mountUIShell(
         // A page is known only once composed, so every page must be to count
         // them, or to print them all.
         if (!(await busyModal.hold(i18n.t("busy.preparingPrint"), composeAll()))) return;
-        const { composedPageCount: pageCount, pageIndex } = store.getState();
+        const { pageCount, pageIndex } = store.getState();
         if (pageCount === 0) throw new Error("print: the open document has no pages to print");
         if (options === undefined) {
             printModal.open({
@@ -2339,7 +2352,7 @@ export function mountUIShell(
 
     /** Print the pages `options` names, every page composed. */
     async function printPages(options: PrintOptions): Promise<void> {
-        const { composedPageCount: pageCount, sourceFormat } = store.getState();
+        const { pageCount, sourceFormat } = store.getState();
         const pages = options.pages ?? Array.from({ length: pageCount }, (_, i) => i);
         if (pages.length === 0) throw new Error("print: no pages to print");
         const missing = pages.find((page) => !Number.isInteger(page) || page < 0 || page >= pageCount);
@@ -2510,7 +2523,8 @@ export function mountUIShell(
         const layout = await client.mergeOpaqueParts(data);
         store.dispatch({
             type: "DOC_RELAYOUT",
-            composedPageCount: layout.composedPageCount,
+            pageCount: layout.pageCount ?? null,
+            firstUncomposedPage: layout.firstUncomposedPage,
             scrollSize: layout.scrollSize,
         });
     }
@@ -2520,7 +2534,8 @@ export function mountUIShell(
         const layout = await client.merge(data);
         store.dispatch({
             type: "DOC_RELAYOUT",
-            composedPageCount: layout.composedPageCount,
+            pageCount: layout.pageCount ?? null,
+            firstUncomposedPage: layout.firstUncomposedPage,
             scrollSize: layout.scrollSize,
         });
         // Note: deliberately no editListeners fire — a merge is a remote edit,

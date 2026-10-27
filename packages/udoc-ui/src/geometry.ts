@@ -122,28 +122,33 @@ export interface RgbColor {
 // gaps are document points and pass through.
 
 /**
- * A snapshot of a document's layout: composed page count and total scrollable
- * size.
+ * A snapshot of a document's layout: its page count, how far it has composed,
+ * and its total scrollable size.
  *
- * Both are **dynamic** — editing can add/remove pages or grow/shrink the
+ * All are **dynamic** — editing can add/remove pages or grow/shrink the
  * content — so this is a snapshot the worker reports (on open, and again after
  * any re-layout), never a constant captured once at open time.
  */
 export interface DocumentLayout {
     /**
-     * Pages **composed so far** (0 for doc types without pagination) — not the
-     * document's total, which is unknown until composition finishes: a page is
-     * known only once composed. It grows as the compose-ahead pump advances,
-     * and is the document's page count once a compose step reports
-     * {@link DocumentLayout.complete}.
+     * The document's page count once known — a PDF's pages and a
+     * presentation's slides from the open, a flow document's once a compose
+     * step reports {@link DocumentLayout.complete} — so a page not composed yet
+     * can be gone to; absent before.
      */
-    composedPageCount: number;
+    pageCount?: number;
+    /**
+     * The first page not composed (0 for doc types without pagination) — where
+     * the compose-ahead pump goes on from, and the document's page count once
+     * every page is composed.
+     */
+    firstUncomposedPage: number;
     /** Total scrollable size in document space. */
     scrollSize: Size;
     /**
-     * Whether the document is now **fully composed** — `composedPageCount` is
-     * its final page count and there is nothing left to compose ahead. Set only
-     * on the `updateLayout` reply, absent on open and re-layout reports.
+     * Whether the document is now **fully composed** — there is nothing left to
+     * compose ahead. Set only on the `updateLayout` reply, absent on open and
+     * re-layout reports.
      */
     complete?: boolean;
     /**

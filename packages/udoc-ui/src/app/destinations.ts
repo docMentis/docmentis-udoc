@@ -103,7 +103,7 @@ function uriOf(action: PdfAction | null): string | null {
  *  viewer that doesn't know a name takes no action (§12.6.4.12). */
 function namedPage(state: UIState, action: PdfAction | null): number | null {
     const name = typeof action === "object" && action && "named" in action ? action.named.name : null;
-    const count = state.composedPageCount;
+    const count = state.pageCount;
     switch (name) {
         case "NextPage":
             return pageStep(state, 1);

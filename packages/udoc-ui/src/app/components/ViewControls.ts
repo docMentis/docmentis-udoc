@@ -22,7 +22,7 @@ import type { I18n, MessageKey } from "../i18n/index.js";
 
 interface ViewControlsSlice {
     pageIndex: number;
-    composedPageCount: number;
+    pageCount: number;
     /** The page index the previous / next buttons go to, or null for none. */
     previousPage: number | null;
     nextPage: number | null;
@@ -39,7 +39,7 @@ interface ViewControlsSlice {
 function sliceEqual(a: ViewControlsSlice, b: ViewControlsSlice): boolean {
     return (
         a.pageIndex === b.pageIndex &&
-        a.composedPageCount === b.composedPageCount &&
+        a.pageCount === b.pageCount &&
         a.previousPage === b.previousPage &&
         a.nextPage === b.nextPage &&
         a.zoom === b.zoom &&
@@ -69,7 +69,7 @@ function sameZoomList(a: ViewControlsSlice, b: ViewControlsSlice): boolean {
 function selectSlice(state: UIState): ViewControlsSlice {
     return {
         pageIndex: state.pageIndex,
-        composedPageCount: state.composedPageCount,
+        pageCount: state.pageCount,
         previousPage: pageStep(state, -1),
         nextPage: pageStep(state, 1),
         zoom: state.zoom,
@@ -258,7 +258,7 @@ export function createViewControls(i18n: I18n) {
                 // The field holds a page number as a reader counts pages, from 1.
                 const value = parseInt(pageInput.value, 10);
                 const state = store.getState();
-                if (!isNaN(value) && value >= 1 && value <= state.composedPageCount) {
+                if (!isNaN(value) && value >= 1 && value <= state.pageCount) {
                     store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: value - 1 });
                 } else {
                     pageInput.value = String(state.pageIndex + 1);
@@ -369,7 +369,7 @@ export function createViewControls(i18n: I18n) {
         const applyState = (slice: ViewControlsSlice, prev?: ViewControlsSlice) => {
             if (slice.pageNoun !== pageNoun) namePageNavigation(slice.pageNoun);
             if (document.activeElement !== pageInput) pageInput.value = String(slice.pageIndex + 1);
-            pageTotal.textContent = ` / ${slice.composedPageCount}`;
+            pageTotal.textContent = ` / ${slice.pageCount}`;
             if (document.activeElement !== zoomInput) {
                 zoomInput.value = formatZoomPercent(getDisplayZoom(slice), i18n);
             }

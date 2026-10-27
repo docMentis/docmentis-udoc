@@ -109,10 +109,10 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 if (!(await updateLayoutSettled(s, WHOLE_DOCUMENT))) {
                     throw new UDocError(
                         "malformed",
-                        `the page count is unknown: a page failed to compose after ${s.composedPageCount()} page(s)`,
+                        `the page count is unknown: a page failed to compose after ${s.firstUncomposedPage()} page(s)`,
                     );
                 }
-                return { id, ok: true, result: s.composedPageCount() };
+                return { id, ok: true, result: s.firstUncomposedPage() };
             }
             case "saveToBytes":
                 return {
@@ -135,7 +135,7 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 // one asked for — not the whole document. If the pass finishes
                 // the document short of it, the page doesn't exist.
                 const complete = await updateLayoutSettled(s, request.index);
-                const count = s.composedPageCount();
+                const count = s.firstUncomposedPage();
                 if (request.index >= count) {
                     if (complete) {
                         // Says what the document has, not which page was asked

@@ -320,7 +320,7 @@ export interface UDocEvents {
      * merges, so a sync listener that pushes a snapshot to a peer can't loop.
      * Wire it to `peer.merge(await this.snapshot())` to keep two instances in sync.
      */
-    "document:edited": { composedPageCount: number };
+    "document:edited": { pageCount: number };
     /**
      * Fires after a *local* selection change (click-select, clear) — not on
      * presence merges, so a sync listener can't loop. Wire it to
@@ -499,9 +499,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
                 (s) => s.activePanel,
                 (panel, previousPanel) => this.#emit("panel:changed", { panel, previousPanel }),
             ),
-            shell.onEdit(() =>
-                this.#emit("document:edited", { composedPageCount: shell.getState().composedPageCount }),
-            ),
+            shell.onEdit(() => this.#emit("document:edited", { pageCount: shell.getState().pageCount })),
             shell.onSelectionEdit(() => this.#emit("selection:changed", {})),
             shell.onDownload((filename) => this.#emit("document:downloaded", { filename })),
             shell.onPrint((pageCount) => this.#emit("document:printed", { pageCount })),
@@ -1390,12 +1388,13 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * The pages composed so far — not the document's total until composing
-     * finishes, so it grows as pages compose ahead. `0` with no document
-     * open, or for a doc type without pages.
+     * The open document's page count: its total where the engine knows it up
+     * front (a PDF, a presentation), else the pages composed so far — not the
+     * document's total until composing finishes, so it grows as pages compose
+     * ahead. `0` with no document open, or for a doc type without pages.
      */
     get pageCount(): number {
-        return this.shell.getState().composedPageCount;
+        return this.shell.getState().pageCount;
     }
 
     /** The current page's 0-based index, as {@link goToPage} takes it; `"currentPage:changed"` fires when it changes. */

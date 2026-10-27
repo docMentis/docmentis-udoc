@@ -847,7 +847,7 @@ function startComposeAhead(s: WasmSession): void {
 
 /** Start compose-ahead on `s`'s current plane over: a grid from its first row, a paged plane from its composed pages. */
 function composeAgain(s: WasmSession): void {
-    composeAt = composesByRows(s) ? { rows: 0 } : { pages: s.composedPageCount() };
+    composeAt = composesByRows(s) ? { rows: 0 } : { pages: s.firstUncomposedPage() };
     lanes.wake();
 }
 
@@ -880,12 +880,11 @@ function composeAhead(): void {
 /** A paged plane's compose-ahead step: a few pages more, and the layout they grew posted. */
 function composePagesAhead(s: WasmSession, from: number): void {
     const layout = composeThrough(s, from, from + COMPOSE_BATCH - 1);
-    // `complete` is the engine saying there is nothing left to compose — the
-    // only authority on the document's length, since a page is known only once
-    // composed. The no-growth check is the safety net: a page that fails to
-    // compose is left out and never reports complete, and without it
-    // compose-ahead would spin on it forever.
-    if (!layout.complete && layout.composedPageCount > from) composeAt = { pages: layout.composedPageCount };
+    // `complete` is the engine saying there is nothing left to compose. The
+    // no-growth check is the safety net: a page that fails to compose is left
+    // out and never reports complete, and without it compose-ahead would spin
+    // on it forever.
+    if (!layout.complete && layout.firstUncomposedPage > from) composeAt = { pages: layout.firstUncomposedPage };
     scope.postMessage({ type: "composed", layout });
 }
 
@@ -2092,18 +2091,20 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
 }
 
 /**
- * Read the session's current layout — composed page count + content extent —
- * into a plain {@link DocumentLayout}. Both are synchronous reads of live
- * session state, so calling this right after a mutation (open / edit / merge /
- * updateLayout) reflects that mutation. The extent rides `viewState` (indices
- * 3–4 = `scroll_extent`), so this is its one home; `composedPageCount` is its
- * own pull. `complete` belongs to a compose *pass*, so only the `updateLayout`
- * reply adds it.
+ * Read the session's current layout — page count, first uncomposed page and
+ * content extent — into a plain {@link DocumentLayout}. All are synchronous
+ * reads of live session state, so calling this right after a mutation (open /
+ * edit / merge / updateLayout) reflects that mutation. The extent rides
+ * `viewState` (indices 3–4 = `scroll_extent`), so this is its one home;
+ * `pageCount` and `firstUncomposedPage` are their own pulls. `complete`
+ * belongs to a compose *pass*, so only the `updateLayout` reply adds it.
  */
 function layoutOf(s: WasmSession): DocumentLayout {
     const st = s.viewState();
+    const pageCount = s.pageCount();
     return {
-        composedPageCount: s.composedPageCount(),
+        ...(pageCount !== undefined && { pageCount }),
+        firstUncomposedPage: s.firstUncomposedPage(),
         scrollSize: { width: st[3] ?? 0, height: st[4] ?? 0 },
     };
 }

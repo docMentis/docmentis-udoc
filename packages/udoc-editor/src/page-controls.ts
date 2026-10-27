@@ -85,7 +85,7 @@ export function mountPageControls(host: UIShellHost, i18n: I18n): () => void {
 
     const pageEditAt = (edit: PageStructureEdit): Promise<void> =>
         host.commit(() => host.client.execute(pageCommand(edit)));
-    const composedPageCount = () => host.store.getState().composedPageCount;
+    const pageCount = () => host.store.getState().pageCount;
 
     function show(shown: boolean): void {
         if (!shown) {
@@ -98,7 +98,7 @@ export function mountPageControls(host: UIShellHost, i18n: I18n): () => void {
             pageInserts({
                 i18n,
                 gapPt: GAP_PT,
-                composedPageCount,
+                pageCount,
                 onInsert: (index) => void pageEditAt({ kind: "insert", index }),
                 // Yield the gap where a selection's resize/rotate handles
                 // floated into it, so the insert strip never sits under them.
@@ -111,7 +111,7 @@ export function mountPageControls(host: UIShellHost, i18n: I18n): () => void {
             "udoc:page-actions",
             pageActions({
                 i18n,
-                composedPageCount,
+                pageCount,
                 hoveredPage: () => host.hoveredPage(),
                 onMoveUp: (index) => void pageEditAt({ kind: "reorder", from: index, to: index - 1 }),
                 onMoveDown: (index) => void pageEditAt({ kind: "reorder", from: index, to: index + 1 }),

@@ -96,7 +96,7 @@ export function pageStep(state: UIState, by: 1 | -1): number | null {
     const { start, end } = state.shownPages;
     const bySpread = state.scrollMode === "spread" && end > start;
     const target = !bySpread ? state.pageIndex + by : by > 0 ? end : start - 1;
-    return target >= 0 && target < state.composedPageCount ? target : null;
+    return target >= 0 && target < state.pageCount ? target : null;
 }
 
 /** Discrete zoom steps the in/out buttons and the zoom dropdown snap to. */
@@ -325,14 +325,22 @@ export interface UIState {
     sourceFormat: FileFormat | null;
 
     /**
-     * Pages of the open document **composed so far** — the count the page
-     * chrome shows. **Not constant**: it grows as the idle compose-ahead pump
-     * fills the document in (a page is known only once composed, so this is the
-     * document's total only once a compose step reports complete), and editing
-     * can add or remove pages. Refreshed on load and on every re-layout; 0 when
-     * no document is open.
+     * The open document's page count — the count the page chrome shows and
+     * pages are gone to by. Its total where the engine knows it (a PDF or a
+     * presentation from the open, a flow document once a compose step reports
+     * complete), so a page not composed yet can be gone to, and it composes
+     * when reached; else {@link UIState.firstUncomposedPage}. Editing can add or
+     * remove pages; 0 when no document is open.
      */
-    composedPageCount: number;
+    pageCount: number;
+
+    /**
+     * The open document's first page not composed — where the idle
+     * compose-ahead pump goes on from. **Not constant**: it grows as the pump
+     * fills the document in, and editing can add or remove pages. Refreshed on
+     * load and on every re-layout; 0 when no document is open.
+     */
+    firstUncomposedPage: number;
 
     /**
      * Number of planes (a spreadsheet's sheets) — the sheet-tab count. `1` for
@@ -663,7 +671,8 @@ export const initialState: UIState = {
     refusal: null,
     docType: null,
     sourceFormat: null,
-    composedPageCount: 0,
+    pageCount: 0,
+    firstUncomposedPage: 0,
     planeCount: 0,
     currentPlane: 0,
     planeNames: [],

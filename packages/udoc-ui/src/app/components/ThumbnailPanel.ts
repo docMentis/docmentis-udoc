@@ -10,14 +10,16 @@ import type { I18n } from "../i18n/index.js";
 /**
  * The left panel's Thumbnails tab: a scrollable strip of page (slide) previews
  * that navigates the document. The counterpart of the previous udoc-viewer's
- * read-only panel, but built for a document whose page list is **not** known up
- * front — page count grows as the engine composes and page sizes change under
- * edits — so it can't pre-size one item per page like the viewer.
+ * read-only panel, but built for a document whose page list may **not** be
+ * known up front — a flow document's page count grows as the engine composes —
+ * and whose page sizes change under edits, so it can't pre-size one item per
+ * page like the viewer.
  *
  * Instead it virtual-scrolls incrementally:
  *
- *  - The scroll extent is sized from the composed prefix (`state.composedPageCount`) and
- *    grows with it; there is no final page count to allocate against.
+ *  - The scroll extent is sized from the page count (`state.pageCount`): the
+ *    document's total where the engine knows it up front (a PDF, a
+ *    presentation), else the composed prefix, growing with it.
  *  - Each item's height starts from a typical-aspect estimate and is corrected
  *    once its real page size arrives (lazily, from `pageSize`), so a
  *    uniform-size document settles to an exact extent after the first measure.
@@ -60,7 +62,7 @@ interface ThumbItem {
 }
 
 interface ThumbnailSlice {
-    composedPageCount: number;
+    pageCount: number;
     /** The current page's index (`state.pageIndex`). */
     currentPage: number;
     /** Bumped on each new document open — forces a full rebuild. */
@@ -69,7 +71,7 @@ interface ThumbnailSlice {
 
 function selectSlice(state: UIState): ThumbnailSlice {
     return {
-        composedPageCount: state.composedPageCount,
+        pageCount: state.pageCount,
         currentPage: state.pageIndex,
         generation: state.docGeneration,
     };
@@ -93,7 +95,7 @@ export function createThumbnailPanel(i18n: I18n) {
     let client: WorkerClient | null = null;
     let mounted = false;
 
-    let slice: ThumbnailSlice = { composedPageCount: 0, currentPage: 0, generation: -1 };
+    let slice: ThumbnailSlice = { pageCount: 0, currentPage: 0, generation: -1 };
     /** Mounted items by 0-based page index. */
     const items = new Map<number, ThumbItem>();
     /** Measured page sizes (document points) by page index — drives aspect + scale. */
@@ -104,7 +106,7 @@ export function createThumbnailPanel(i18n: I18n) {
     let typicalAspect = DEFAULT_ASPECT;
 
     /** Prefix-sum of item slot heights: `offsets[i]` is the top of item `i`,
-     *  `offsets[composedPageCount]` the total extent. Rebuilt when the geometry shifts. */
+     *  `offsets[pageCount]` the total extent. Rebuilt when the geometry shifts. */
     let offsets: number[] = [TOP_PAD];
     /** Thumbnail width in CSS px (panel inner width); tracks panel resize. */
     let thumbWidth = 0;
@@ -139,16 +141,16 @@ export function createThumbnailPanel(i18n: I18n) {
 
     /** Rebuild the offset prefix-sums from the current sizes and page count. */
     function rebuildOffsets(): void {
-        offsets = new Array(slice.composedPageCount + 1);
+        offsets = new Array(slice.pageCount + 1);
         offsets[0] = TOP_PAD;
-        for (let i = 0; i < slice.composedPageCount; i++) offsets[i + 1] = offsets[i]! + slotHeight(i);
-        sizer.style.height = `${offsets[slice.composedPageCount]! + TOP_PAD}px`;
+        for (let i = 0; i < slice.pageCount; i++) offsets[i + 1] = offsets[i]! + slotHeight(i);
+        sizer.style.height = `${offsets[slice.pageCount]! + TOP_PAD}px`;
     }
 
     /** First page whose bottom is past `y` (binary search over `offsets`). */
     function pageAt(y: number): number {
         let lo = 0;
-        let hi = slice.composedPageCount;
+        let hi = slice.pageCount;
         while (lo < hi) {
             const mid = (lo + hi) >> 1;
             if (offsets[mid + 1]! <= y) lo = mid + 1;
@@ -166,7 +168,7 @@ export function createThumbnailPanel(i18n: I18n) {
         const top = el.scrollTop;
         const viewH = el.clientHeight || 1;
         const start = Math.max(0, pageAt(top) - OVERSCAN);
-        const end = Math.min(slice.composedPageCount, pageAt(top + viewH) + 1 + OVERSCAN);
+        const end = Math.min(slice.pageCount, pageAt(top + viewH) + 1 + OVERSCAN);
 
         // Recycle items that scrolled out of the window.
         for (const [page, item] of items) {
@@ -190,7 +192,7 @@ export function createThumbnailPanel(i18n: I18n) {
 
         // The render queue fills nearest the strip's centre first.
         const center = pageAt(top + viewH / 2);
-        client?.boostThumbnails(Math.min(center, Math.max(0, slice.composedPageCount - 1)));
+        client?.boostThumbnails(Math.min(center, Math.max(0, slice.pageCount - 1)));
     }
 
     function positionItem(item: ThumbItem, page: number): void {
@@ -297,7 +299,7 @@ export function createThumbnailPanel(i18n: I18n) {
     /** Scroll the active page's slot into view (called when the viewport's
      *  current page changes). Cheap when it's already visible. */
     function scrollActiveIntoView(page: number): void {
-        if (page < 0 || page >= slice.composedPageCount) return;
+        if (page < 0 || page >= slice.pageCount) return;
         const top = offsets[page]!;
         const bottom = offsets[page + 1]!;
         if (top < el.scrollTop) el.scrollTop = top - TOP_PAD;
@@ -317,7 +319,7 @@ export function createThumbnailPanel(i18n: I18n) {
         let handled = true;
         switch (e.key) {
             case "ArrowDown":
-                focusedPage = Math.min(focusedPage + 1, slice.composedPageCount - 1);
+                focusedPage = Math.min(focusedPage + 1, slice.pageCount - 1);
                 break;
             case "ArrowUp":
                 focusedPage = Math.max(focusedPage - 1, 0);
@@ -326,7 +328,7 @@ export function createThumbnailPanel(i18n: I18n) {
                 focusedPage = 0;
                 break;
             case "End":
-                focusedPage = slice.composedPageCount - 1;
+                focusedPage = slice.pageCount - 1;
                 break;
             case "Enter":
             case " ":
@@ -345,7 +347,7 @@ export function createThumbnailPanel(i18n: I18n) {
 
     function applySlice(next: ThumbnailSlice): void {
         const docChanged = next.generation !== slice.generation;
-        const grew = next.composedPageCount !== slice.composedPageCount;
+        const grew = next.pageCount !== slice.pageCount;
         const pageMoved = next.currentPage !== slice.currentPage;
         slice = next;
 
@@ -438,13 +440,11 @@ export function createThumbnailPanel(i18n: I18n) {
         resizeObserver.observe(el);
 
         measureWidth();
-        slice = { composedPageCount: 0, currentPage: 0, generation: -1 };
+        slice = { pageCount: 0, currentPage: 0, generation: -1 };
         applySlice(selectSlice(s.getState()));
         unsub = subscribeSelector(s, selectSlice, applySlice, {
             equality: (a, b) =>
-                a.composedPageCount === b.composedPageCount &&
-                a.currentPage === b.currentPage &&
-                a.generation === b.generation,
+                a.pageCount === b.pageCount && a.currentPage === b.currentPage && a.generation === b.generation,
         });
     }
 

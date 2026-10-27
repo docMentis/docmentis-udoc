@@ -54,7 +54,7 @@ export interface PageActionsCallbacks {
     /** The language the controls' names are in. Default English. */
     i18n?: I18n;
     /** Total page count — bounds move-down and gates delete. */
-    composedPageCount: () => number;
+    pageCount: () => number;
     /**
      * The page the pointer is currently over (null when none) — the rail is
      * hidden until its page is hovered, so only that page's controls show.
@@ -134,7 +134,7 @@ export function pageActions(callbacks: PageActionsCallbacks): OverlaySource {
                     update: (el) => {
                         const index = view.index;
                         const page = index + 1;
-                        const count = callbacks.composedPageCount();
+                        const count = callbacks.pageCount();
                         el.setAttribute("aria-label", i18n.t("pageControls.label", { page }));
 
                         // Reveal only the hovered page's rail.
@@ -198,7 +198,7 @@ export interface PageInsertsOptions {
      */
     gapPt: number;
     /** Total page count (for the after-the-last-page strip). */
-    composedPageCount: () => number;
+    pageCount: () => number;
     /** Insert a blank page at `index` (`0` = before the first page). */
     onInsert: (index: number) => void;
     /**
@@ -245,7 +245,7 @@ export function pageInserts(options: PageInsertsOptions): OverlaySource {
             const btn = el.querySelector<HTMLButtonElement>(".udoc-ui__page-insert-btn")!;
             btn.setAttribute(
                 "aria-label",
-                insertIndex >= options.composedPageCount()
+                insertIndex >= options.pageCount()
                     ? i18n.t("pageControls.insertAtEnd")
                     : i18n.t("pageControls.insertBefore", { page: insertIndex + 1 }),
             );
@@ -280,7 +280,7 @@ export function pageInserts(options: PageInsertsOptions): OverlaySource {
                 items.push(stripItem(view.index, left, top, width, gapPx));
             }
             // Below the document's last page: "append at the end".
-            if (view.index === options.composedPageCount() - 1) {
+            if (view.index === options.pageCount() - 1) {
                 const tail = view.y + view.height;
                 if (clearOfSelection(left, tail, width, gapPx)) {
                     items.push(stripItem(view.index + 1, left, tail, width, gapPx));

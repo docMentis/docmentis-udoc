@@ -19,6 +19,12 @@ listed once, by package. Its major and minor version are those of the
 - The guide and the scrollbars beside a page take the toolbar's color,
   `--udoc-color-surface-container`, by default, where they took the canvas's,
   so `--udoc-canvas-background` no longer recolors them.
+- In a PDF or a presentation, the page count beside the page number, the
+  pages it accepts and the thumbnails cover every page from the open, where
+  they grew as pages composed ahead, and `pageCount` is the document's total.
+- `document:edited` carries `pageCount`, the document's page count, for
+  `composedPageCount`, and udoc-editor's `pageActions` and `pageInserts` take
+  a `pageCount` option for `composedPageCount`.
 
 #### Fixed
 

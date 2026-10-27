@@ -37,7 +37,9 @@ export type Action =
     | { type: "OPEN_START" }
     | {
           type: "OPEN_SUCCESS";
-          composedPageCount: number;
+          /** The document's page count once the engine knows it. */
+          pageCount: number | null;
+          firstUncomposedPage: number;
           scrollSize: Size;
           /** The features the document's session is entitled to. */
           features: readonly Feature[];
@@ -56,7 +58,7 @@ export type Action =
     // Layout changed on the *same* document (e.g. an edit added/removed pages or
     // resized content). Updates page count + content size without resetting the
     // viewport or bumping the document generation.
-    | { type: "DOC_RELAYOUT"; composedPageCount: number; scrollSize: Size }
+    | { type: "DOC_RELAYOUT"; pageCount: number | null; firstUncomposedPage: number; scrollSize: Size }
     // The document's plane roster (a spreadsheet's sheet tabs) — count, active
     // plane, and each plane's name, tab colour, kind and whether it is very
     // hidden. Pulled from the engine on open.

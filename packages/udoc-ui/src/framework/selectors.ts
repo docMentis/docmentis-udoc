@@ -15,7 +15,7 @@
  *
  * Example (render):
  * ```ts
- * const selectToolbar = (s: UIState) => ({ page: s.pageIndex, composedPageCount: s.composedPageCount });
+ * const selectToolbar = (s: UIState) => ({ page: s.pageIndex, pageCount: s.pageCount });
  * const off = subscribeSelector(store, selectToolbar, (next) => {
  *     pageInput.value = String(next.page + 1);
  * }, { equality: shallowEqual });

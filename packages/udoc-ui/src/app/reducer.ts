@@ -124,7 +124,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 features: action.features,
                 mode,
                 pointerMode: mode === state.mode ? state.pointerMode : { kind: "select" },
-                composedPageCount: action.composedPageCount,
+                pageCount: action.pageCount ?? action.firstUncomposedPage,
+                firstUncomposedPage: action.firstUncomposedPage,
                 scrollSize: action.scrollSize,
                 disabledPanels,
                 // Drop a now-disabled panel if it was the one open (e.g. the
@@ -168,7 +169,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 error: action.error,
                 loadProgress: null,
                 refusal: action.refusal ?? null,
-                composedPageCount: 0,
+                pageCount: 0,
+                firstUncomposedPage: 0,
                 docType: null,
                 sourceFormat: null,
             };
@@ -190,7 +192,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 refusal: null,
                 docType: null,
                 sourceFormat: null,
-                composedPageCount: 0,
+                pageCount: 0,
+                firstUncomposedPage: 0,
                 planeCount: 0,
                 currentPlane: 0,
                 planeNames: [],
@@ -209,7 +212,12 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             // Same document, new layout: refresh page count + content size and
             // re-clamp scroll against the new extent. Viewport and document
             // generation are untouched — this is not a new document.
-            const relaid = { ...state, composedPageCount: action.composedPageCount, scrollSize: action.scrollSize };
+            const relaid = {
+                ...state,
+                pageCount: action.pageCount ?? action.firstUncomposedPage,
+                firstUncomposedPage: action.firstUncomposedPage,
+                scrollSize: action.scrollSize,
+            };
             return { ...relaid, ...clampScroll(relaid, relaid.scrollX, relaid.scrollY) };
         }
 
@@ -375,7 +383,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...state, shownPages: { start: action.start, end: action.end } };
 
         case "NAVIGATE_TO_PAGE": {
-            const pageIndex = clamp(Math.round(action.pageIndex), 0, Math.max(0, state.composedPageCount - 1));
+            const pageIndex = clamp(Math.round(action.pageIndex), 0, Math.max(0, state.pageCount - 1));
             // Update the displayed page optimistically and raise a navRequest
             // the shell forwards to the worker (which owns per-page offsets and
             // does the actual scroll). The seq bumps even when the page is
