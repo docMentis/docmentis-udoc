@@ -13,6 +13,23 @@ listed once, by package. Its major and minor version are those of the
 - The search results group a presentation's matches by slide, where they
   named each group for a sheet, and a workbook's by sheet, where one with a
   single sheet grouped them by page.
+- In a presentation's warped text, bent into an arch or a wave, a selection
+  and a search match highlight the glyphs, the editor's caret sits among them,
+  and a click or a drag picks the text under the pointer, where all of them
+  landed on the text as laid out before the bend. A line that doesn't wrap
+  highlights across all its text, even where it hangs past its box.
+- Text in a font installed on the user's machine (`enableCanvasFonts`) bends
+  with a text warp and draws its effects, 3-D and perspective, where a warped
+  box in that font drew straight, a run of it among other fonts vanished, and
+  its effects drew nothing.
+
+### udoc-editor
+
+#### Added
+
+- A shape's text warp shows its adjust handles beside its outline's, and a
+  drag on one reshapes the warp: an arch's sweep, a wave's height. A shape's
+  adjust handles also stay, and drag, while its text is being edited.
 
 ## [0.8.4] - 2026-10-26
 
