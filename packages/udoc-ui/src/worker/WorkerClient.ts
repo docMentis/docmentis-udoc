@@ -469,7 +469,7 @@ export class WorkerClient {
     /**
      * Scroll so page `index` (0-based) is brought to the top of the viewport —
      * the "go to page N" intent. The worker composes the target page, moves the
-     * camera, and streams the resulting scroll + centered page back in the next
+     * camera, and streams the resulting scroll + current page back in the next
      * {@link PageViewsFrame} (which the shell adopts when `frame.fresh`). Shares
      * the viewport seq so that frame is recognized as fresh. Latest-wins,
      * fire-and-forget.

@@ -820,8 +820,8 @@ export interface PageViewsFrame {
     /** Authoritative (clamped/anchored) scroll, document points. */
     scroll: { x: number; y: number };
     /**
-     * 0-based index of the page the viewport is centered on — the engine's
-     * anchor for the page indicator — or `null` when no page is arranged.
+     * 0-based index of the engine's current page, the one the page indicator
+     * shows, or `null` when no page is arranged.
      */
     currentPage: number | null;
     /** The plane this frame shows — a spreadsheet's sheet, 0-based; `0` for a

@@ -174,7 +174,7 @@ export interface SetViewportRequest {
  * Scroll so page `index` (0-based) is brought to the top of the viewport — the
  * "go to page N" intent behind the page-number control. The worker composes
  * the target page first, then moves the camera; the resulting clamped scroll
- * and centered page ride back in the next {@link PageViewsReport}. Carries a
+ * and current page ride back in the next {@link PageViewsReport}. Carries a
  * `seq` like {@link SetViewportRequest} so that frame is recognized as fresh.
  * Latest-wins, fire-and-forget.
  */
@@ -1752,7 +1752,7 @@ export interface PageViewsReport {
      *  the whole framed plane in continuous, the current page in single-page. */
     scrollWidth: number;
     scrollHeight: number;
-    /** 0-based index of the page at the viewport center; `-1` when none. */
+    /** 0-based index of the engine's current page; `-1` when none. */
     currentPage: number;
     /** The plane this frame shows — a spreadsheet's sheet, 0-based; `0` for a
      *  single-plane doc type. */

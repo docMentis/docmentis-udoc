@@ -929,7 +929,7 @@ export function mountUIShell(
     // Forward "go to page N" requests to the worker. The page nav controls
     // dispatch NAVIGATE_TO_PAGE (raising a navRequest); the worker owns the
     // per-page offsets, composes the target, scrolls, and streams the resulting
-    // scroll + centered page back in the next frame (adopted via SYNC_VIEW /
+    // scroll + current page back in the next frame (adopted via SYNC_VIEW /
     // SET_PAGE_INDEX in Canvas). We watch the request seq, not pageIndex, so a
     // frame-driven page change can't loop back into a scroll.
     const unsubNav = subscribeSelector(

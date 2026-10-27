@@ -526,7 +526,11 @@ export interface UIState {
     viewportWidth: number;
     viewportHeight: number;
 
-    /** 0-based page index nearest the top of the viewport (derived, for UI). */
+    /**
+     * The current page, 0-based: the engine's, adopted from each painted frame,
+     * set ahead of it to the target of a "go to page" until the frame that
+     * lands it.
+     */
     pageIndex: number;
     /**
      * The pages the last painted frame showed, 0-based, `end` exclusive — in

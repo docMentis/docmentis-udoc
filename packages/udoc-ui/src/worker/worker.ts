@@ -1208,7 +1208,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                     // last-known view, so the setViewport the main thread
                     // echoes once it mirrors this scroll is a no-op rather than
                     // a redundant re-send. The next frame streams the new
-                    // scroll + centered page back (see emitPageViews).
+                    // scroll + current page back (see emitPageViews).
                     const st = session.viewState();
                     lastScrollX = st[1] ?? lastScrollX;
                     lastScrollY = st[2] ?? lastScrollY;

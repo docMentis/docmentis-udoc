@@ -1091,16 +1091,6 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     let pageFlipArmed = true;
     let lastWheelTs = 0;
 
-    // Page-navigation override for `syncCurrentPage`. An explicit "go to page N"
-    // scrolls N to the *top* of the viewport, which leaves a later page at the
-    // center — so the engine's centered `current_page` would otherwise yank the
-    // page-number control and thumbnail highlight forward to N+1 the instant the
-    // navigation lands. While the view stays parked at the scroll position the
-    // navigation landed on, hold the navigated page; release the moment the user
-    // scrolls away from it. Mirrors the viewer's `navigationPage` guard.
-    let navPageIndex: number | null = null;
-    let navScrollY: number | null = null;
-
     /** Factor a marquee-zoom *click* (no rubber-band) steps the zoom by. */
     const ZOOM_CLICK_STEP = 1.5;
 
@@ -1699,19 +1689,6 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         );
         cleanups.push(offRepaintArea);
 
-        // Arm the navigation override whenever a "go to page" request is raised
-        // (the reducer has already set `pageIndex` to the target). The landing
-        // scroll is captured from the next fresh frame in `syncCurrentPage`.
-        const offNav = subscribeSelector(
-            s,
-            (st) => st.navRequest.seq,
-            () => {
-                navPageIndex = s.getState().pageIndex;
-                navScrollY = null;
-            },
-        );
-        cleanups.push(offNav);
-
         // Adopt the selection state (local + peers) whenever the worker
         // reports it changed (a click-select, a clear, a presence merge, or
         // an edit that moved/deleted objects). A just-committed move clears the
@@ -1848,29 +1825,14 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     }
 
     /**
-     * Adopt the engine's centered page (the anchor `current_page` derives) so
-     * the page-number control follows the scroll position. The reducer no-ops
-     * when the index is unchanged, so this can run on every painted frame.
+     * Adopt the engine's current page so the page-number control follows the
+     * scroll position. A "go to page" needs no hold here: the engine pins the
+     * page it lands on while it stays in view, though a later page sits at the
+     * viewport's center. The reducer no-ops when the index is unchanged, so
+     * this can run on every painted frame.
      */
     function syncCurrentPage(s: Store<UIState, Action>, frame: PageViewsFrame): void {
-        const st = s.getState();
-        if (navPageIndex !== null) {
-            if (navScrollY === null) {
-                // First fresh frame after the navigation: the engine has scrolled
-                // the target to the top. Remember where it landed and hold the page.
-                navScrollY = frame.scroll.y;
-            } else if (Math.abs(frame.scroll.y - navScrollY) > SYNC_EPSILON) {
-                // Scrolled away from the navigation position — release the hold and
-                // fall through to centered-page detection on this same frame.
-                navPageIndex = null;
-                navScrollY = null;
-            }
-            if (navPageIndex !== null) {
-                if (navPageIndex !== st.pageIndex) s.dispatch({ type: "SET_PAGE_INDEX", pageIndex: navPageIndex });
-                return;
-            }
-        }
-        if (frame.currentPage === null || frame.currentPage === st.pageIndex) return;
+        if (frame.currentPage === null || frame.currentPage === s.getState().pageIndex) return;
         s.dispatch({ type: "SET_PAGE_INDEX", pageIndex: frame.currentPage });
     }
 
