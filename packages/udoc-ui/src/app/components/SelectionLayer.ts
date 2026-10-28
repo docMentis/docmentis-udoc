@@ -93,6 +93,18 @@ export interface KeepOutRect {
     bottom: number;
 }
 
+/**
+ * The region the local selection's boxes cover in viewport (CSS px,
+ * canvas-relative) space, along the screen's axes — `x0..x1` across, `y0..y1`
+ * down — as {@link SelectionLayer.extent} reports it for the ruler to mark.
+ */
+export interface SelectionExtent {
+    readonly x0: number;
+    readonly y0: number;
+    readonly x1: number;
+    readonly y1: number;
+}
+
 /** Render/hit-test order (corners then edge midpoints). */
 const HANDLE_ORDER: ResizeHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 
@@ -714,6 +726,43 @@ export class SelectionLayer {
         // not just the drawn square.
         const pad = Math.max(HANDLE_HIT, this.#extraChrome?.hitPad ?? 0);
         return { left: left - pad, top: top - pad, right: right + pad, bottom: bottom + pad };
+    }
+
+    /**
+     * The region the local selection's boxes cover this frame — its objects,
+     * annotations and cell blocks, the objects and annotations where the live
+     * preview carries them mid-drag — or null with none on screen. An
+     * annotation counts by its own rect, not the box standing off it. A text
+     * range or caret runs along its lines rather than framing a region, and
+     * adds nothing.
+     */
+    extent(): SelectionExtent | null {
+        const byPage = this.#pageMap();
+        const { objects, annotations, cells } = this.#state.local;
+        let x0 = Infinity;
+        let y0 = Infinity;
+        let x1 = -Infinity;
+        let y1 = -Infinity;
+        const cover = (items: SelectionBox[], previewed: boolean): void => {
+            for (const item of items) {
+                const view = byPage.get(item.page);
+                if (!view) continue; // page scrolled off
+                const place = itemPlacement(item);
+                const m = previewed ? this.#applyPreview(place.transform, place) : place.transform;
+                const lv = this.#localToViewport(m, view);
+                for (const [lx, ly] of cornersOf(place)) {
+                    const p = applyPoint(lv, lx, ly);
+                    x0 = Math.min(x0, p.x);
+                    y0 = Math.min(y0, p.y);
+                    x1 = Math.max(x1, p.x);
+                    y1 = Math.max(y1, p.y);
+                }
+            }
+        };
+        cover(objects, true);
+        cover(annotations, true);
+        cover(cells, false);
+        return x0 > x1 ? null : { x0, y0, x1, y1 };
     }
 
     /** Re-project the current selections against one painted frame's pages. */

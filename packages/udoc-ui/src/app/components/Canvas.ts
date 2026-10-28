@@ -32,10 +32,9 @@ import { SearchLayer } from "./SearchLayer.js";
 import { SelectionLayer } from "./SelectionLayer.js";
 import type { KeepOutRect, Preview, ResizeHandle, SelectionChrome, SelectionPlacement } from "./SelectionLayer.js";
 import { GuideBands } from "./GuideBands.js";
-import type { BandKind, GuideBand } from "./GuideBands.js";
+import type { BandKind, BandPalette, GuideBand } from "./GuideBands.js";
 import { SCROLLBAR_THICKNESS_PX, visibleSpan } from "./Scrollbar.js";
 import { MAC } from "./controls.js";
-import type { RgbColor } from "../../geometry.js";
 import { applyPoint, applyVector, invert, translate } from "./affine.js";
 import type { I18n } from "../i18n/index.js";
 
@@ -875,9 +874,11 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     // between paints (a click-select, a drag preview, an edit-mode toggle): the
     // page-insert strips read the selection's keep-out rect, so they must
     // re-evaluate the instant it changes, not wait for the next painted frame.
-    selection.onChromeChange(() =>
-        renderOverlays({ views: lastViews, scale: lastScale, branding: lastBrandingRect, sheet: lastSheet }),
-    );
+    // The ruler's span follows the selection the same way.
+    selection.onChromeChange(() => {
+        renderOverlays({ views: lastViews, scale: lastScale, branding: lastBrandingRect, sheet: lastSheet });
+        guideBands.setExtent(selection.extent());
+    });
     // The page the pointer is currently over (null over a gap or off-page). The
     // page-controls overlay reads this — via the accessor on the returned API —
     // to reveal only the hovered page's rail.
@@ -1657,7 +1658,10 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             // Paint the guide bands' content into the strips `applyBandLayout`
             // reserved; whether a band shows (and how thick) is host-static and
             // set there, so the per-frame paint only fills the reserved space.
-            guideBands.render(frame.guide);
+            // The selection's extent, just re-projected above, rides along for
+            // the ruler to mark its span, and the frame's zoom to lay out what
+            // the ruler measures in points.
+            guideBands.render(frame.guide, selection.extent(), frame.scale);
             // `null` on a frame that painted nothing (a report also rides an
             // idle frame that owes the client a seq echo) — hold the last real
             // box rather than blinking it off.
@@ -3581,14 +3585,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
 
     /** Recolor the guide bands (ruler / headers) to the host theme — the shell
      *  calls this on a theme flip, reading its `--udoc-guide-*` tokens. */
-    function setGuideColors(
-        band: RgbColor,
-        marker: RgbColor,
-        text: RgbColor,
-        highlight: RgbColor,
-        grid: RgbColor,
-    ): void {
-        guideBands.setColors(band, marker, text, highlight, grid);
+    function setGuideColors(palette: BandPalette): void {
+        guideBands.setColors(palette);
     }
 
     /**

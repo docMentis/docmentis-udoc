@@ -1137,8 +1137,8 @@ export function mountUIShell(
         // fallback until a strip's content lands.
         const band = resolveColor("var(--udoc-canvas-guide-background)");
         // Every structural mark the band draws — ticks, separators, framing edges —
-        // is the soft outline-variant `grid`. The stronger outline is reserved as
-        // `marker` for the future ruler markers; nothing draws with it yet.
+        // is the soft outline-variant `grid`. The stronger outline is the
+        // `marker` that outlines the ruler's indent markers.
         const marker = resolveColor("var(--udoc-color-outline)");
         const text = resolveColor("var(--udoc-color-on-surface-variant)");
         // The selected row / column: the selected overlay, composited opaque over
@@ -1147,8 +1147,13 @@ export function mountUIShell(
             "color-mix(in srgb, var(--udoc-color-primary) var(--udoc-state-selected-opacity), var(--udoc-canvas-guide-background))",
         );
         const grid = resolveColor("var(--udoc-color-outline-variant)");
-        if (band && marker && text && highlight && grid) {
-            canvas.setGuideColors(band, marker, text, highlight, grid);
+        // The ruler's active span and a text frame's margins: two rungs either
+        // side of the band's on the surface ladder, lighter and darker in both
+        // themes.
+        const range = resolveColor("var(--udoc-color-surface-container-highest)");
+        const margin = resolveColor("var(--udoc-color-surface)");
+        if (band && marker && text && highlight && grid && range && margin) {
+            canvas.setGuideColors({ band, marker, text, highlight, grid, range, margin });
         }
     }
     let systemDarkQuery: MediaQueryList | null = null;

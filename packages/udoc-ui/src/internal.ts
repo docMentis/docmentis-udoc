@@ -32,6 +32,7 @@ export type {
     KeepOutRect,
     Preview,
     SelectionChrome,
+    SelectionExtent,
     SelectionPlacement,
 } from "./app/components/SelectionLayer.js";
 export { applyPoint, fromComponents, invert } from "./app/components/affine.js";

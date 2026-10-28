@@ -6,6 +6,32 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-editor
+
+#### Added
+
+- The ruler lights up the span the selection covers, across the top and down
+  the side: a selected object's, an annotation's or a block of table cells'.
+  It follows a move or a resize as it's dragged.
+- While text is being edited, the ruler measures from its margins, as Word's
+  does: the text area lights up between the darker margins of the page or the
+  text box, and the paragraph the caret is in shows its indents (the first
+  line's marker along the top edge, the left and right indents' along the
+  bottom) and its tab stops, a mark for each by its alignment and a tick for
+  each default stop past them. Word documents and presentations show indents
+  and tabs; a PDF text object shows its margins. Text turned on the page shows
+  none of them.
+
+#### Changed
+
+- The ruler ticks eighths of an inch where the zoom leaves room for them, and
+  thins its figures out to every 2, 5 or more inches as it zooms out, where it
+  ticked quarters and numbered every inch at any zoom.
+- A presentation's ruler counts from the left edge of the text, inside the
+  text box's margin, while that text is being edited, and a PDF's from the
+  text object's own box, where they counted from the shape's or the object's
+  origin.
+
 ## [0.8.5] - 2026-10-27
 
 Built on `@docmentis/udoc-wasm` 0.8.7.

@@ -47,7 +47,10 @@ import type {
     Color,
     Guide,
     RulerAxis,
-    RulerMark,
+    RulerSpan,
+    RulerText,
+    RulerTab,
+    RulerTabAlign,
     HeaderCell,
 } from "@docmentis/udoc-wasm";
 
@@ -75,7 +78,10 @@ export type {
     TextParagraphAlign,
     Guide,
     RulerAxis,
-    RulerMark,
+    RulerSpan,
+    RulerText,
+    RulerTab,
+    RulerTabAlign,
     HeaderCell,
 };
 
@@ -790,12 +796,14 @@ export interface HistoryState {
  * reflects the latest viewport this client sent — only then is adopting safe
  * (a stale frame would yank the view back under rapid input).
  */
-// The guide chrome (`Guide` and its `RulerAxis` / `RulerMark` / `HeaderCell`,
+// The guide chrome (`Guide` and its `RulerAxis` / `RulerText` / `HeaderCell`,
 // with the per-kind `HeaderGuide` arm) is re-exported from the
 // schema at the top of this file — the `core::viewer` types, reused directly.
-// The viewer projects them in device px (origin at the content pane's top-left);
-// the wasm boundary divides by the dpr, so they reach the frame in **CSS px**,
-// where a track's `start` still aligns with the gridline painted at the same x.
+// The viewer projects a header's tracks and a ruler's origins in device px
+// (origin at the content pane's top-left); the wasm boundary divides by the
+// dpr, so they reach the frame in **CSS px**, where a track's `start` still
+// aligns with the gridline painted at the same x. What a ruler measures is
+// points from its origin, which the frame's `scale` places.
 
 /** Which scrollbars show, one per axis — the engine's `Scrollbars`. */
 export interface Scrollbars {

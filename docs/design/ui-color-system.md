@@ -44,11 +44,11 @@ The `--udoc-color-` prefix is dropped in the tables.
 | Role                        | Light     | Dark      | Paints                                                                                                                                   |
 | --------------------------- | --------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `surface-container-lowest`  | `#e0e0e0` | `#121212` | Nothing yet: a well sunk below the canvas                                                                                                |
-| `surface`                   | `#e6e6e6` | `#181818` | The canvas, via `--udoc-canvas-background`; the slide picker's preview well                                                              |
+| `surface`                   | `#e6e6e6` | `#181818` | The canvas, via `--udoc-canvas-background`; the slide picker's preview well; the ruler's text margins                                    |
 | `surface-container-low`     | `#ececec` | `#1e1e1e` | Nothing yet: a frame below the chrome, such as the toolbar stepping down from the ribbon                                                 |
 | `surface-container`         | `#f3f3f3` | `#252525` | The chrome around the canvas, via the [region tokens](#component-tokens): toolbar, ribbon, panels, status bar, guide, scrollbar tracks   |
 | `surface-container-high`    | `#f9f9f9` | `#2c2c2c` | Cards and text boxes inside a panel; the chrome floating over the canvas: floating toolbar, comment popup, annotation bar, page controls |
-| `surface-container-highest` | `#ffffff` | `#333333` | Menus, tooltips, dialogs                                                                                                                 |
+| `surface-container-highest` | `#ffffff` | `#333333` | Menus, tooltips, dialogs; the ruler's selected span and text area                                                                        |
 
 The ladder is M3's `surface` and its five containers, ordered the way M3 orders
 them in its dark theme, in both of our themes: each rung is a height, and a
@@ -75,7 +75,7 @@ alike.
 
 | Role              | Light     | Dark      | Paints                                                                         |
 | ----------------- | --------- | --------- | ------------------------------------------------------------------------------ |
-| `outline`         | `#7f7f7f` | `#808080` | Field outlines (at least 3:1 on every rung); the guide band's marker color     |
+| `outline`         | `#7f7f7f` | `#808080` | Field outlines (at least 3:1 on every rung); the ruler's indent markers        |
 | `outline-variant` | `#cccccc` | `#444444` | Dividers, panel / menu / dialog frames, the page border, guide-band grid marks |
 
 ### Primary: the one hue
@@ -159,8 +159,12 @@ directly, so the ladder stays one decision.
 guide bands and the scrollbar tracks, which frame the canvas and fill from their
 region tokens. The bands draw their grid in `outline-variant` and their numbers
 in `on-surface-variant`, and mark the selected row or column with the selected
-overlay. The page border is `outline-variant`. The page controls, the comment
-popup and the annotation bar are `surface-container-high`. The scrollbar thumb
+overlay. The ruler steps two rungs either way off the band: the selection's
+span and a text frame's text area light to `surface-container-highest`, the
+frame's margins darken to `surface`, and its indent markers are filled with
+the first and outlined in `outline`. The page border is `outline-variant`. The
+page controls, the comment popup and the annotation bar are
+`surface-container-high`. The scrollbar thumb
 is the one color here that is not a role: `--udoc-scrollbar-thumb` and
 `--udoc-scrollbar-thumb-hover`, `on-surface` at 30% and 50%.
 

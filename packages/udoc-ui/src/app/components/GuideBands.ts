@@ -14,9 +14,11 @@
 // falls back to its CSS band background until its content arrives.
 //
 // Static for now: the bands render but don't yet handle hover / resize /
-// dropdowns / ruler markers — those compose over the same track list later.
+// dropdowns / a drag on the ruler's indent markers — those compose over the
+// same track list later.
 
 import type { Guide, HeaderBands, HeaderCell, HeaderGuide, RgbColor } from "../../geometry.js";
+import type { SelectionExtent } from "./SelectionLayer.js";
 
 /** One band strip, sized and filled, with a context that draws in CSS px. */
 export interface BandStrip {
@@ -34,6 +36,13 @@ export interface BandCanvas {
     /** How far the top band's marks ride the content canvas mid-resize, in CSS
      *  px — see {@link GuideBands.setContentShift}. */
     readonly shiftX: number;
+    /** CSS px per document point — the zoom the frame was painted at, which
+     *  lays out what a ruler measures in points. */
+    readonly scale: number;
+    /** The region the local selection covers on screen, in the strips' CSS px
+     *  — `x0..x1` its span along the top band, `y0..y1` along the left — or
+     *  null with nothing selected there. */
+    readonly extent: SelectionExtent | null;
 }
 
 /**
@@ -61,18 +70,25 @@ const UI_FONT = `-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-
 
 export interface BandColors {
     band: string;
-    /** The ruler's indent / tab-stop markers — reserved for a future ruler; not
-     *  yet drawn. The strong end of the outline pair; every mark currently drawn
-     *  uses the softer `grid` instead. */
+    /** The outline of the ruler's indent markers — the strong end of the
+     *  outline pair, where every structural mark uses the softer `grid`. */
     marker: string;
     text: string;
     /** The fill behind a selected column's / row's header (spreadsheet only). */
     highlight: string;
     /** Every structural line the band draws — the ruler's ticks and framing edge,
      *  and the spreadsheet header's cell grid and outer border. Soft by design;
-     *  the stronger `marker` is held back for the future ruler markers. */
+     *  the stronger `marker` outlines the ruler's indent markers. */
     grid: string;
+    /** The ruler's active span, a step lighter than `band`: the selection's,
+     *  and a text frame's text area — the fill inside the indent markers too. */
+    range: string;
+    /** A text frame's margins on the ruler, a step darker than `band`. */
+    margin: string;
 }
+
+/** The bands' colors as the theme resolves them — see {@link BandColors}. */
+export type BandPalette = Record<keyof BandColors, RgbColor>;
 
 const DEFAULT_COLORS: BandColors = {
     band: "#f1f2f4",
@@ -80,6 +96,8 @@ const DEFAULT_COLORS: BandColors = {
     text: "#404040",
     highlight: "#c9ddf7",
     grid: "#d4d6da",
+    range: "#ffffff",
+    margin: "#e6e6e6",
 };
 
 export class GuideBands {
@@ -96,6 +114,13 @@ export class GuideBands {
      *  `null` for no cell selection. Updated on a selection change, not per
      *  frame; combined with the per-frame {@link #guide} tracks in {@link #draw}. */
     #selection: HeaderBands | null = null;
+    /** The region the local selection covers on screen, for an extension's band
+     *  to mark (the ruler's span), or `null` for none. Re-projected each frame
+     *  in {@link render}, and between frames by {@link setExtent}. */
+    #extent: SelectionExtent | null = null;
+    /** CSS px per document point the latest frame painted at — see
+     *  {@link BandCanvas.scale}. */
+    #scale = 1;
     /** Horizontal shift (CSS px) applied to the top band's marks while a resize
      *  is in flight — see {@link setContentShift}. `0` when settled. */
     #shiftX = 0;
@@ -107,16 +132,16 @@ export class GuideBands {
         this.#left = left;
     }
 
-    /** Recolor the bands to the host theme (five sRGB triples — band fill, the
-     *  future markers' color, labels, the selected-header highlight, and the
-     *  structural grid the ticks / separators / edges all share) and redraw. */
-    setColors(band: RgbColor, marker: RgbColor, text: RgbColor, highlight: RgbColor, grid: RgbColor): void {
+    /** Recolor the bands to the host theme's `palette` and redraw. */
+    setColors(palette: BandPalette): void {
         this.#colors = {
-            band: css(band),
-            marker: css(marker),
-            text: css(text),
-            highlight: css(highlight),
-            grid: css(grid),
+            band: css(palette.band),
+            marker: css(palette.marker),
+            text: css(palette.text),
+            highlight: css(palette.highlight),
+            grid: css(palette.grid),
+            range: css(palette.range),
+            margin: css(palette.margin),
         };
         this.#draw();
     }
@@ -132,6 +157,19 @@ export class GuideBands {
     setSelection(selection: HeaderBands | null): void {
         this.#selection = selection;
         this.#draw();
+    }
+
+    /**
+     * Adopt the region the local selection covers on screen (or `null` for
+     * none), and redraw an extension's band when it moved. Driven between
+     * frames — a select, a drag's live preview — which repaint no engine pixels;
+     * a painted frame hands its own to {@link render}. The header band doesn't
+     * mark it, so it draws nothing new for it.
+     */
+    setExtent(extent: SelectionExtent | null): void {
+        if (sameExtent(extent, this.#extent)) return;
+        this.#extent = extent;
+        if (this.#kind !== null && this.#kind !== "header") this.#draw();
     }
 
     /**
@@ -155,13 +193,17 @@ export class GuideBands {
 
     /**
      * Paint the per-frame `guide` projection into the already-reserved bands
-     * (see {@link layout}). A payload that doesn't match the reserved kind — or a
-     * `null`, during a transient with no current page — leaves the reserved strip
-     * cleared (its CSS band background shows) rather than collapsing it, so the
-     * content pane never jumps between frames.
+     * (see {@link layout}), with the selection's `extent` projected against the
+     * same frame and the `scale` (CSS px per point) it was painted at. A
+     * payload that doesn't match the reserved kind — or a `null`, during a
+     * transient with no current page — leaves the reserved strip cleared (its
+     * CSS band background shows) rather than collapsing it, so the content pane
+     * never jumps between frames.
      */
-    render(guide: Guide | null): void {
+    render(guide: Guide | null, extent: SelectionExtent | null, scale: number): void {
         this.#guide = guide;
+        this.#extent = extent;
+        this.#scale = scale;
         this.#draw();
     }
 
@@ -236,6 +278,8 @@ export class GuideBands {
                     this.#prepare(which === "top" ? this.#top : which === "left" ? this.#left : this.#corner),
                 colors: this.#colors,
                 shiftX: this.#shiftX,
+                scale: this.#scale,
+                extent: this.#extent,
             });
         }
     }
@@ -375,6 +419,11 @@ function boundaryAt(cells: HeaderCell[], pos: number, tol: number): Boundary | n
         }
     }
     return best;
+}
+
+function sameExtent(a: SelectionExtent | null, b: SelectionExtent | null): boolean {
+    if (a === null || b === null) return a === b;
+    return a.x0 === b.x0 && a.y0 === b.y0 && a.x1 === b.x1 && a.y1 === b.y1;
 }
 
 function css(color: RgbColor): string {
