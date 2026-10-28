@@ -123,8 +123,9 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
     });
 
     /** Whether this field may (re)take the keyboard: it holds it already, or
-     *  nothing else editable does — never steal from a real text control, or
-     *  from a list a form field's items are picked from. */
+     *  nothing else editable does — never steal from a real text control, from
+     *  a list a form field's items are picked from, or from a list whose arrow
+     *  keys pick its items, as the thumbnails' do. */
     function mayTakeKeyboard(): boolean {
         const active = document.activeElement;
         if (active === el) return true;
@@ -133,7 +134,8 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
             active.tagName === "INPUT" ||
             active.tagName === "TEXTAREA" ||
             active.tagName === "SELECT" ||
-            active.isContentEditable;
+            active.isContentEditable ||
+            active.getAttribute("role") === "listbox";
         return !editable;
     }
 
