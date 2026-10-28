@@ -66,17 +66,19 @@ In light, the rungs between the canvas and the top sit about 6 levels apart, so
 | `on-surface-variant` | `#5f5f5f` | `#a8a8a8` | Secondary content: labels and section titles, metadata (comment author and date, page labels, the page total), placeholders, carets and close glyphs, unselected tabs, guide-band numbers |
 
 One ink pair serves every rung. The rungs are neutrals a few steps apart, and
-both inks hold at least 4.8:1 on each. `on-surface-variant` is a resting level,
+both inks hold at least 4.8:1 on each. The root sets `color: on-surface`, so
+content that sets no ink of its own, and the hover and pressed overlays that are
+its ink, never take the host page's text color. `on-surface-variant` is a resting level,
 not a state. Disabled is the control dimming itself (see [States](#states)), so a
 secondary label inside a disabled control dims further and the two never look
 alike.
 
 ### Outline: lines
 
-| Role              | Light     | Dark      | Paints                                                                         |
-| ----------------- | --------- | --------- | ------------------------------------------------------------------------------ |
-| `outline`         | `#7f7f7f` | `#808080` | Field outlines (at least 3:1 on every rung); the ruler's indent markers        |
-| `outline-variant` | `#cccccc` | `#444444` | Dividers, panel / menu / dialog frames, the page border, guide-band grid marks |
+| Role              | Light     | Dark      | Paints                                                                                              |
+| ----------------- | --------- | --------- | --------------------------------------------------------------------------------------------------- |
+| `outline`         | `#7f7f7f` | `#808080` | Field outlines (at least 3:1 on every rung); the ruler's indent markers; a hovered thumbnail's ring |
+| `outline-variant` | `#cccccc` | `#444444` | Dividers, panel / menu / dialog frames, the page border, guide-band grid marks                      |
 
 ### Primary: the one hue
 
@@ -244,7 +246,9 @@ a free `::after` instead. `:hover` sits behind `@media (hover: hover)`.
 One shared rule in `styles.ts` lists every selectable control in an `:is()` and
 sets the selected fill once. A component keeps only selection idioms that are
 genuinely its own: the ribbon and sheet tabs show selection by joining the plane
-beneath them, the panel tab by its indicator bar, the thumbnail by its ring.
+beneath them, the panel tab by its indicator bar, the thumbnail by its ring. The
+thumbnail is ringed under the pointer too, in `outline`: the page covers most of
+the card, and the hover tint alone is lost beside it.
 
 At the defaults, selected sits a step darker than hover, and selected-and-hovered
 a step darker again. Pressed and selected land within a few levels of each other,

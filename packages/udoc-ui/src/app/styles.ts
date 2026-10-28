@@ -159,6 +159,10 @@ export const uiStyles = css`
         --udoc-menu-pad-y: 4px; /* panel top/bottom padding */
         --udoc-menu-item-pad: 8px 14px;
 
+        /* The UI's own ink, so whatever sets none of its own — a thumbnail, a
+       panel's text — never takes the host page's, and nor do the hover and
+       pressed overlays, which are that ink (currentColor). */
+        color: var(--udoc-color-on-surface);
         position: relative;
         display: flex;
         flex-direction: column;
@@ -782,6 +786,14 @@ export const uiStyles = css`
 
     .udoc-ui-root .udoc-thumbnail-item:hover {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+
+    /* The page shows through most of a card, so the hover tint alone is lost
+   beside it: an unselected card under the pointer is ringed in outline too,
+   the gray a selected card's primary ring stands apart from. */
+    .udoc-ui-root .udoc-thumbnail-item:not(.udoc-thumbnail-item--selected):hover {
+        outline: 2px solid var(--udoc-color-outline);
+        outline-offset: -2px;
     }
 
     /* Fill + ink + hover come from the shared selected rule; the ring is this

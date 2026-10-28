@@ -23,6 +23,12 @@ listed once, by package. Its major and minor version are those of the
 - A turned page's thumbnail shows the page turned, in its turned shape, where
   it was squeezed into the shape of the upright page: a PDF page with its own
   rotation, and every page while the view is rotated.
+- A thumbnail under the pointer is ringed in gray, as a selected one is in the
+  primary color: the hover tint alone was lost beside the page.
+- Hovering a thumbnail shows in dark mode. The UI's text took the host page's
+  color wherever a part of it set none of its own, and the thumbnails' hover
+  was tinted with it, which on a host with dark text showed nothing in dark
+  mode.
 
 ### udoc-editor
 
