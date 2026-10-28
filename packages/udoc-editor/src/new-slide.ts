@@ -12,7 +12,9 @@ import { ICON_PAGE_ADD } from "./icons.js";
  *  placeholders. `layout` is the slide-layout id to build on; omit it to copy
  *  the neighbor slide's layout. */
 function createSlide(index: number, layout?: string): UDocCommand {
-    return { presentation: { insertSlide: layout == null ? { index } : { index, layout } } };
+    return {
+        presentation: { editSlide: { command: { insertSlide: layout == null ? { index } : { index, layout } } } },
+    };
 }
 
 /** The layout picker, mounted into a shell. */

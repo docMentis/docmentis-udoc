@@ -4,6 +4,7 @@
 // like its own; with the roomier spacing they sit in, and the page settings
 // dialog the rail opens.
 import type { UDocCommand, UDocType } from "@docmentis/udoc-ui";
+import type { PageCommand } from "@docmentis/udoc-wasm";
 import { arrangementFor, subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { PageSpacing, UIShellHost, UIState } from "@docmentis/udoc-ui/internal";
 import { pageActions, pageInserts } from "./components/PageControls.js";
@@ -39,21 +40,35 @@ type PageStructureEdit =
     // are kept — the page rectangle changes around them.
     | { kind: "resize"; index: number; width: number; height: number };
 
-/** The `UDocCommand` for a page-structure edit. */
-function pageCommand(edit: PageStructureEdit): UDocCommand {
+/** The index of the existing page `edit` addresses, or `null` for an insert,
+ *  whose index is only where the new page lands. */
+function addressedPage(edit: PageStructureEdit): number | null {
     switch (edit.kind) {
         case "insert":
-            return { portable: { insertPage: { index: edit.index } } };
-        case "delete":
-            return { portable: { deletePage: { index: edit.index } } };
+            return null;
         case "reorder":
-            return { portable: { reorderPage: { from: edit.from, to: edit.to } } };
+            return edit.from;
+        default:
+            return edit.index;
+    }
+}
+
+/** The `UDocCommand` for a page-structure edit, the page it addresses named by
+ *  `id` (its {@link addressedPage}'s id; unused by an insert). `to` is the index
+ *  the moved page takes in the resulting order. */
+function pageCommand(edit: PageStructureEdit, id: string): UDocCommand {
+    const editPage = (command: PageCommand): UDocCommand => ({ portable: { editPage: { command } } });
+    switch (edit.kind) {
+        case "insert":
+            return editPage({ insertPage: { index: edit.index } });
+        case "delete":
+            return editPage({ deletePages: { ids: [id] } });
+        case "reorder":
+            return editPage({ reorderPages: { ids: [id], to: edit.to } });
         case "rotate":
-            return { portable: { rotatePage: { index: edit.index, clockwise: edit.clockwise } } };
+            return editPage({ rotatePages: { ids: [id], clockwise: edit.clockwise } });
         case "resize":
-            return {
-                portable: { resizePage: { index: edit.index, size: { width: edit.width, height: edit.height } } },
-            };
+            return editPage({ resizePage: { id, size: { width: edit.width, height: edit.height } } });
     }
 }
 
@@ -83,8 +98,14 @@ export function mountPageControls(host: UIShellHost, i18n: I18n): () => void {
     const settings = createPageSettingsModal(i18n);
     settings.mount(host.root);
 
-    const pageEditAt = (edit: PageStructureEdit): Promise<void> =>
-        host.commit(() => host.client.execute(pageCommand(edit)));
+    // Commands address a page by id: read the addressed page's id first, and
+    // skip the edit when that page is gone.
+    const pageEditAt = async (edit: PageStructureEdit): Promise<void> => {
+        const page = addressedPage(edit);
+        const id = page === null ? "" : await host.client.portable.pageIdByIndex(page);
+        if (id === undefined) return;
+        await host.commit(() => host.client.execute(pageCommand(edit, id)));
+    };
     const pageCount = () => host.store.getState().pageCount;
 
     function show(shown: boolean): void {
