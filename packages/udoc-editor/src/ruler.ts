@@ -5,9 +5,12 @@
 // in points: the page, and while a caret edits text, that text's margins and
 // its indents and tab stops. This graduates the rulers at the frame's zoom and
 // draws them into the bands udoc-ui reserves, over the span the selection
-// covers on each axis.
-import type { Guide, RulerAxis, RulerTab, RulerText, UDocType } from "@docmentis/udoc-wasm";
-import type { Action, BandCanvas, GuideBand, Store, UIState } from "@docmentis/udoc-ui/internal";
+// covers on each axis, and stands the controls a drag takes — the margins'
+// edges, the indent markers and the tab stops — over them (ruler-controls.ts).
+import type { Guide, RulerAxis, UDocType } from "@docmentis/udoc-wasm";
+import type { Action, BandCanvas, BandStrip, GuideBand, Store, UIState } from "@docmentis/udoc-ui/internal";
+import { createRulerControls } from "./ruler-controls.js";
+import type { RulerControls, RulerPlacement } from "./ruler-controls.js";
 import { editState, updateEditState } from "./state.js";
 
 /** The ruler arm of the engine's guide projection. */
@@ -15,6 +18,9 @@ type RulerGuide = Extract<Guide, { type: "ruler" }>;
 
 /** The doc types the engine measures with a ruler: the paged ones. */
 const RULED: ReadonlySet<UDocType> = new Set<UDocType>(["portable", "presentation", "wordprocessing"]);
+
+/** The rulers' depth, top and left alike, CSS px. */
+const THICKNESS = 22;
 
 /** A screen-fixed UI font for the labels — not the document's fonts. */
 const UI_FONT = `-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`;
@@ -39,22 +45,59 @@ function stroke(ctx: CanvasRenderingContext2D, color: string, x0: number, y0: nu
     ctx.stroke();
 }
 
-/** `x` on a pixel's centre, so a straight edge through it strokes crisp. */
-function crisp(x: number): number {
-    return Math.floor(x) + 0.5;
+/** `v` CSS px along `ctx`'s `axis`, moved onto the nearest device pixel edge. */
+function snap(ctx: CanvasRenderingContext2D, v: number, axis: "x" | "y"): number {
+    const m = ctx.getTransform();
+    const [k, offset] = axis === "x" ? [m.a, m.e] : [m.d, m.f];
+    return (Math.round(v * k + offset) - offset) / k;
+}
+
+/**
+ * Where a tick at `p` CSS px along the ruler stands: its `start` and `width`
+ * along it in CSS px, whole device pixels — as many as a CSS px holds, one at
+ * least — so every tick lands as sharp and as dark as the next however the
+ * zoom and the dpr place it.
+ */
+function tickSpan(ctx: CanvasRenderingContext2D, p: number, orient: "h" | "v"): { start: number; width: number } {
+    const k = ctx.getTransform().a;
+    const width = Math.max(1, Math.round(k)) / k;
+    return { start: snap(ctx, p - width / 2, orient === "h" ? "x" : "y"), width };
+}
+
+/** The centre of the tick at `p` — where a control standing on it centres. */
+function tickCenter(ctx: CanvasRenderingContext2D, p: number, orient: "h" | "v"): number {
+    const { start, width } = tickSpan(ctx, p, orient);
+    return start + width / 2;
+}
+
+/** Fill a tick at `p`, `len` CSS px long, hanging from the inner edge of a strip
+ *  `thickness` deep — its ends on device pixel edges too. */
+function tick(
+    ctx: CanvasRenderingContext2D,
+    color: string,
+    p: number,
+    len: number,
+    thickness: number,
+    orient: "h" | "v",
+): void {
+    const { start, width } = tickSpan(ctx, p, orient);
+    const across = orient === "h" ? "y" : "x";
+    const top = snap(ctx, thickness - len, across);
+    const bottom = snap(ctx, thickness, across);
+    ctx.fillStyle = color;
+    if (orient === "h") ctx.fillRect(start, top, width, bottom - top);
+    else ctx.fillRect(top, start, bottom - top, width);
 }
 
 /**
  * Draw one ruler into its strip, `length` CSS px long and `thickness` deep: the
  * selection's span and the margins of the text a caret edits behind it, then
- * its graduation over the page — and on the horizontal one, the `text`'s
- * indent and tab markers.
+ * its graduation over the page.
  */
 function drawAxis(
     canvas: BandCanvas,
     ctx: CanvasRenderingContext2D,
     axis: RulerAxis,
-    text: RulerText | null,
     length: number,
     thickness: number,
     orient: "h" | "v",
@@ -68,11 +111,16 @@ function drawAxis(
     ctx.translate(shift, 0);
     /** Where `points` from the origin falls in the strip, CSS px. */
     const at = (points: number): number => axis.origin + points * scale;
+    // Each span ends on device pixel edges, so a margin's edge meets its fill
+    // without a sliver of another between them.
     const span = (from: number, to: number, color: string): void => {
-        if (to <= from) return;
+        const along = orient === "h" ? "x" : "y";
+        const start = snap(ctx, from, along);
+        const end = snap(ctx, to, along);
+        if (end <= start) return;
         ctx.fillStyle = color;
-        if (orient === "h") ctx.fillRect(from, 0, to - from, thickness);
-        else ctx.fillRect(0, from, thickness, to - from);
+        if (orient === "h") ctx.fillRect(start, 0, end - start, thickness);
+        else ctx.fillRect(0, start, thickness, end - start);
     };
     // The selection's span lights up behind the marks; while a caret edits
     // text, its text area does, between the darker margins of the page. All
@@ -86,6 +134,11 @@ function drawAxis(
         span(at(page.start), at(margins.start), colors.margin);
         span(at(margins.start), at(margins.end), colors.range);
         span(at(margins.end), at(page.end), colors.margin);
+        // Each margin's edge, a line the ruler's depth on the tick its fill
+        // ends at, in the soft `grid` of the ticks — drawn here with the fills
+        // it bounds, the strip a drag takes it by over it (ruler-controls.ts).
+        tick(ctx, colors.grid, at(margins.start), thickness, thickness, orient);
+        tick(ctx, colors.grid, at(margins.end), thickness, thickness, orient);
     }
     // Graduate the page in inches, as finely as the zoom leaves room for, the
     // figures counting outward from the origin — only where the strip shows.
@@ -99,127 +152,39 @@ function drawAxis(
     ctx.font = `${size}px ${UI_FONT}`;
     const inchLen = thickness * 0.3;
     const figCenter = (thickness - inchLen) / 2;
-    ctx.fillStyle = colors.text;
     for (let n = Math.ceil(from / step); n <= Math.floor(to / step); n++) {
         const p = at(n * step);
-        // An inch, a half, a quarter or an eighth — each a shorter tick.
+        // An inch, a half, or a short tick at each finer division — as Word
+        // and Google Docs graduate, three lengths a glance tells apart.
         const len =
-            n % subdivisions === 0
-                ? inchLen
-                : n % (subdivisions / 2) === 0
-                  ? thickness * 0.22
-                  : n % (subdivisions / 4) === 0
-                    ? thickness * 0.16
-                    : thickness * 0.1;
+            n % subdivisions === 0 ? inchLen : n % (subdivisions / 2) === 0 ? thickness * 0.22 : thickness * 0.14;
         // Ticks hang from the inner (content) edge toward the outer, on the
         // soft `grid` they share with the ruler edge and the header separators.
-        if (orient === "h") stroke(ctx, colors.grid, p, thickness, p, thickness - len);
-        else stroke(ctx, colors.grid, thickness, p, thickness - len, p);
+        tick(ctx, colors.grid, p, len, thickness, orient);
         const inches = n / subdivisions;
         if (n % subdivisions === 0 && inches % figureStep === 0) {
             const figure = String(Math.abs(inches));
-            if (orient === "h") ctx.fillText(figure, p, figCenter);
-            else ctx.fillText(figure, figCenter, p);
+            const c = tickCenter(ctx, p, orient);
+            ctx.fillStyle = colors.text;
+            if (orient === "h") ctx.fillText(figure, c, figCenter);
+            else ctx.fillText(figure, figCenter, c);
         }
     }
-    if (text) drawText(canvas, ctx, text, at, thickness);
     ctx.restore();
 }
 
-/** Half an indent marker's width, CSS px. */
-const MARKER_HALF = 4;
-/** How far an indent marker's triangle reaches from its base, CSS px. */
-const MARKER_TIP = 5;
-/** The height of the box under the left indent's triangle, CSS px. */
-const MARKER_BOX = 4;
-/** Half a tab mark's foot, and the height of its stem, CSS px. */
-const TAB_HALF = 3.5;
-const TAB_STEM = 5;
-/** The length of a default tab stop's tick, CSS px. */
-const DEFAULT_TAB_TICK = 2;
-
 /**
- * Draw the markers of the `text` a caret edits on the horizontal ruler, as
- * Word does: the first-line indent's triangle hanging from the band's outer
- * edge, and toward its inner edge the left indent's triangle standing on a box,
- * the right indent's on its own, each tab stop's mark and, past the last of
- * them, the default stops' ticks. `at` places points from the origin.
+ * Where the controls stand along the ruler `axis` drew in `strip`: on its
+ * ticks, riding the top ruler's shift with them (see {@link drawAxis}).
  */
-function drawText(
-    canvas: BandCanvas,
-    ctx: CanvasRenderingContext2D,
-    text: RulerText,
-    at: (points: number) => number,
-    thickness: number,
-): void {
-    const { colors } = canvas;
-    const floor = thickness - 1.5;
-    const base = floor - MARKER_BOX;
-    // The default stops: a tick on the inner edge at each, past the explicit
-    // stops and short of the right indent — the grid the text tabs to there.
-    const last = text.tabs.reduce((max, tab) => Math.max(max, tab.position), 0);
-    if (text.defaultTab > 0) {
-        for (let p = (Math.floor(last / text.defaultTab) + 1) * text.defaultTab; p < text.right; p += text.defaultTab) {
-            const x = crisp(at(p));
-            stroke(ctx, colors.marker, x, thickness, x, thickness - DEFAULT_TAB_TICK);
-        }
-    }
-    for (const tab of text.tabs) drawTab(ctx, colors.text, tab, crisp(at(tab.position)), base);
-    // The indent markers, filled with the light `range` and outlined in the
-    // strong `marker`.
-    ctx.fillStyle = colors.range;
-    ctx.strokeStyle = colors.marker;
-    ctx.lineWidth = 1;
-    ctx.lineJoin = "round";
-    const shape = (points: readonly (readonly [number, number])[]): void => {
-        ctx.beginPath();
-        for (const [x, y] of points) ctx.lineTo(x, y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
+function placement(canvas: BandCanvas, strip: BandStrip, axis: RulerAxis, orient: "h" | "v"): RulerPlacement {
+    const shift = orient === "h" ? canvas.shiftX : 0;
+    return {
+        layer: canvas.layer(orient === "h" ? "top" : "left"),
+        pane: canvas.layer("pane"),
+        axis,
+        at: (points) => tickCenter(strip.ctx, axis.origin + points * canvas.scale + shift, orient),
     };
-    const standing = (x: number): void =>
-        shape([
-            [x - MARKER_HALF, base],
-            [x, base - MARKER_TIP],
-            [x + MARKER_HALF, base],
-        ]);
-    standing(crisp(at(text.right)));
-    const left = crisp(at(text.left));
-    standing(left);
-    shape([
-        [left - MARKER_HALF, base],
-        [left + MARKER_HALF, base],
-        [left + MARKER_HALF, floor],
-        [left - MARKER_HALF, floor],
-    ]);
-    const first = crisp(at(text.firstLine));
-    const top = 0.5;
-    shape([
-        [first - MARKER_HALF, top],
-        [first + MARKER_HALF, top],
-        [first, top + MARKER_TIP],
-    ]);
-}
-
-/**
- * Draw `tab`'s mark at `x`, standing on `base`, as Word does: a stem, and a
- * foot running the way the text runs from the stop — right of a left stop,
- * left of a right one, both ways under a center or a decimal one (a decimal's
- * point beside its stem) — or for a bar, the stem alone.
- */
-function drawTab(ctx: CanvasRenderingContext2D, color: string, tab: RulerTab, x: number, base: number): void {
-    const foot = crisp(base) - 1;
-    stroke(ctx, color, x, foot, x, foot - TAB_STEM);
-    const { alignment } = tab;
-    if (alignment === "bar") return;
-    const start = alignment === "right" || alignment === "center" || alignment === "decimal" ? x - TAB_HALF : x;
-    const end = alignment === "left" || alignment === "center" || alignment === "decimal" ? x + TAB_HALF : x;
-    stroke(ctx, color, start, foot, end, foot);
-    if (alignment === "decimal") {
-        ctx.fillStyle = color;
-        ctx.fillRect(x + 1.5, foot - 3, 1, 1);
-    }
 }
 
 /**
@@ -238,11 +203,12 @@ function drawCorner(canvas: BandCanvas): void {
     ctx.fillRect(w - 1, h - 1, 1, 1);
 }
 
-function drawRuler(guide: RulerGuide, canvas: BandCanvas): void {
+/** Draw `guide`'s rulers into `canvas`'s strips, and stand `controls` over them. */
+function drawRuler(guide: RulerGuide, canvas: BandCanvas, controls: RulerControls): void {
     const { colors } = canvas;
     const top = canvas.prepare("top");
     if (top) {
-        drawAxis(canvas, top.ctx, guide.horizontal, guide.text ?? null, top.w, top.h, "h");
+        drawAxis(canvas, top.ctx, guide.horizontal, top.w, top.h, "h");
         // The ruler's inner (content-facing) edge line — a baseline the ticks
         // hang from, framing the ruler off the page below (mirrors the header
         // band's bottom border). The same soft `grid` as the ticks.
@@ -250,20 +216,29 @@ function drawRuler(guide: RulerGuide, canvas: BandCanvas): void {
     }
     const left = canvas.prepare("left");
     if (left) {
-        drawAxis(canvas, left.ctx, guide.vertical, null, left.h, left.w, "v");
+        drawAxis(canvas, left.ctx, guide.vertical, left.h, left.w, "v");
         stroke(left.ctx, colors.grid, left.w - 0.5, 0, left.w - 0.5, left.h);
     }
     drawCorner(canvas);
+    controls.place(
+        top && placement(canvas, top, guide.horizontal, "h"),
+        left && placement(canvas, left, guide.vertical, "v"),
+        guide.text ?? null,
+    );
 }
 
-/** The ruler band. Paints only a ruler projection; any other leaves the strips
- *  cleared to their band background until one lands. */
-export const RULER: GuideBand = {
-    thickness: 22,
-    draw(guide, canvas) {
-        if (guide.type === "ruler") drawRuler(guide, canvas);
-    },
-};
+/** The ruler band, with controls of its own — one per editor. Paints only a
+ *  ruler projection; any other leaves the strips cleared to their band
+ *  background until one lands. */
+export function createRuler(): GuideBand {
+    const controls = createRulerControls(THICKNESS);
+    return {
+        thickness: THICKNESS,
+        draw(guide, canvas) {
+            if (guide.type === "ruler") drawRuler(guide, canvas, controls);
+        },
+    };
+}
 
 /** Whether the ruler shows in `state`: a ruled doc type in edit mode, with the
  *  preference on. */

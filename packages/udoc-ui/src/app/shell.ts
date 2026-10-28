@@ -1137,9 +1137,7 @@ export function mountUIShell(
         // fallback until a strip's content lands.
         const band = resolveColor("var(--udoc-canvas-guide-background)");
         // Every structural mark the band draws — ticks, separators, framing edges —
-        // is the soft outline-variant `grid`. The stronger outline is the
-        // `marker` that outlines the ruler's indent markers.
-        const marker = resolveColor("var(--udoc-color-outline)");
+        // is the soft outline-variant `grid`.
         const text = resolveColor("var(--udoc-color-on-surface-variant)");
         // The selected row / column: the selected overlay, composited opaque over
         // the band, since the renderer paints solid colors.
@@ -1152,8 +1150,8 @@ export function mountUIShell(
         // themes.
         const range = resolveColor("var(--udoc-color-surface-container-highest)");
         const margin = resolveColor("var(--udoc-color-surface)");
-        if (band && marker && text && highlight && grid && range && margin) {
-            canvas.setGuideColors({ band, marker, text, highlight, grid, range, margin });
+        if (band && text && highlight && grid && range && margin) {
+            canvas.setGuideColors({ band, text, highlight, grid, range, margin });
         }
     }
     let systemDarkQuery: MediaQueryList | null = null;

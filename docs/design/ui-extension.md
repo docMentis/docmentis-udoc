@@ -36,7 +36,9 @@ Where the extension decides in the shell's place, the shell asks it:
 - `contextMenu` — a right-click in edit mode, once the canvas has settled the
   selection it acts on.
 - `guideBand` — a band the canvas reserves around the pages and the extension
-  draws, as edit mode's ruler is.
+  draws, with controls of its own in a layer over each strip and what they
+  draw across the pages in one over the content pane, as edit mode's ruler is
+  with its margin edges, indent markers and tab stops, and a drag's guide line.
 - `placedShape` / `place` — a place tool of the extension's
   (`{ kind: "extension", tool }`) is dragged out as the shape `placedShape`
   names and handed to `place` on release, as Insert ▸ Shapes is.

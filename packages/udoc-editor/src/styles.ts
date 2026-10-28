@@ -755,4 +755,95 @@ export const editorStyles = css`
         border: 1.5px solid #b8860b;
         will-change: transform;
     }
+
+    /* The ruler's controls (ruler-controls.ts), in the layers over its strips:
+   each margin's edge, and the indent markers and tab stops of the paragraph a
+   caret is in. Each takes its own press, where the layer under them takes
+   none; placed along the ruler each frame by left (or top) in CSS px. */
+    .udoc-ui-root .udoc-ui__ruler-control {
+        position: absolute;
+        pointer-events: auto;
+        touch-action: none;
+    }
+    /* A margin's edge: a strip a few px wide to grab, over the line the band's
+   canvas draws at rest — with the fills it bounds, so the two meet without a
+   seam. While dragged, the strip carries a line of its own down its middle,
+   in the same soft outline as the ticks. */
+    .udoc-ui-root .udoc-ui__ruler-edge--h {
+        top: 0;
+        bottom: 0;
+        width: 7px;
+        cursor: col-resize;
+    }
+    .udoc-ui-root .udoc-ui__ruler-edge--v {
+        left: 0;
+        right: 0;
+        height: 7px;
+        cursor: row-resize;
+    }
+    .udoc-ui-root .udoc-ui__ruler-edge::after {
+        content: "";
+        position: absolute;
+        background: var(--udoc-color-outline-variant);
+        display: none;
+    }
+    .udoc-ui-root .udoc-ui__ruler-control--dragging::after {
+        display: block;
+    }
+    .udoc-ui-root .udoc-ui__ruler-edge--h::after {
+        top: 0;
+        bottom: 0;
+        left: 3px;
+        width: 1px;
+    }
+    .udoc-ui-root .udoc-ui__ruler-edge--v::after {
+        left: 0;
+        right: 0;
+        top: 3px;
+        height: 1px;
+    }
+    /* The dashed line a drag on a ruler control draws across the content pane
+   at it, as Word's does — down from the horizontal ruler, across from the
+   vertical — in the outline that reads over a page and the canvas alike. */
+    .udoc-ui-root .udoc-ui__ruler-guide {
+        position: absolute;
+        pointer-events: none;
+    }
+    .udoc-ui-root .udoc-ui__ruler-guide--h {
+        top: 0;
+        bottom: 0;
+        border-left: 1px dashed var(--udoc-color-outline);
+    }
+    .udoc-ui-root .udoc-ui__ruler-guide--v {
+        left: 0;
+        right: 0;
+        border-top: 1px dashed var(--udoc-color-outline);
+    }
+    .udoc-ui-root .udoc-ui__ruler-marker svg {
+        display: block;
+        overflow: visible;
+    }
+    /* An indent marker: filled as the text area it stands on, outlined. Its box
+   runs the ruler's depth, and takes a press only on the shape, so beside the
+   hourglass's narrow waist one reaches the margin's edge under it. */
+    .udoc-ui-root .udoc-ui__ruler-marker--indent {
+        top: 0;
+        pointer-events: none;
+    }
+    .udoc-ui-root .udoc-ui__ruler-marker--indent path {
+        fill: var(--udoc-color-surface-container-highest);
+        stroke: var(--udoc-color-outline);
+        stroke-width: 1px;
+        stroke-linejoin: round;
+        pointer-events: visiblePainted;
+    }
+    /* A tab stop's mark, in the ruler's figures' ink. */
+    .udoc-ui-root .udoc-ui__ruler-marker--tab path {
+        fill: none;
+        stroke: var(--udoc-color-on-surface-variant);
+        stroke-width: 1px;
+    }
+    .udoc-ui-root .udoc-ui__ruler-marker--tab rect {
+        fill: var(--udoc-color-on-surface-variant);
+    }
 `;

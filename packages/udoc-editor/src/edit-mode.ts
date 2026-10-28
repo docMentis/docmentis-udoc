@@ -25,7 +25,7 @@ import { mountPageControls, PAGE_CONTROLS_SPACING, pageControlsShown } from "./p
 import { ALL_MODES, EDIT_MODE } from "./mode.js";
 import type { EditorMode } from "./mode.js";
 import { editState, INITIAL_EDIT_STATE, updateEditState } from "./state.js";
-import { RULER, rulerShown, setShowRuler } from "./ruler.js";
+import { createRuler, rulerShown, setShowRuler } from "./ruler.js";
 import { editorStyles } from "./styles.js";
 import { editTabs } from "./tabs.js";
 import { createEditTools } from "./tools.js";
@@ -161,6 +161,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
     let tools: EditTools | null = null;
     let newSlide: NewSlide | null = null;
     const grips = createGrips(() => tools);
+    const ruler = createRuler();
     const mountedTools = (): EditTools => {
         if (!tools) throw new Error("udoc: edit mode is not mounted");
         return tools;
@@ -195,7 +196,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
         // Edit mode's acts on the selection, a table's rows added over one; view
         // mode keeps the shell's.
         contextMenuItems: (state, inTable) => (editing(state) ? (inTable ? TABLE_CONTEXT_MENU : CONTEXT_MENU) : null),
-        guideBand: (state) => (rulerShown(state) ? RULER : null),
+        guideBand: (state) => (rulerShown(state) ? ruler : null),
         placedShape,
         selectionChrome: grips.chrome,
         pressCanvas: (x, y, _ev, canvas) => grips.press(x, y, canvas),

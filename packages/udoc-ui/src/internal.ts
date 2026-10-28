@@ -23,7 +23,7 @@ export {
 } from "./app/components/controls.js";
 export type { DropdownButton, SplitButton } from "./app/components/controls.js";
 export { applyPaintBar, displayToActivePaint, paintSwatch } from "./app/components/Ribbon.js";
-export type { BandCanvas, BandColors, BandStrip, GuideBand } from "./app/components/GuideBands.js";
+export type { BandCanvas, BandColors, BandLayer, BandStrip, GuideBand } from "./app/components/GuideBands.js";
 export { DRAG_THRESHOLD } from "./app/components/Canvas.js";
 export type { CanvasGesture, CanvasGestureHost } from "./app/components/Canvas.js";
 export type {

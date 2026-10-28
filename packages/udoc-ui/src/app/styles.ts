@@ -1705,6 +1705,32 @@ export const uiStyles = css`
         grid-column: 1;
         grid-row: 2;
     }
+    /* The layer over a band strip an extension's band places its controls in
+   (edit mode's ruler markers): the strip's own cell, positioned so it paints
+   over the canvas and its controls place against it, clipped to the strip.
+   It takes no press itself, so one between its controls reaches the band. */
+    .udoc-ui-root .udoc-ui__band-layer {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .udoc-ui-root .udoc-ui__band-layer--top {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    .udoc-ui-root .udoc-ui__band-layer--left {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    /* Over the content pane, for what a band's controls draw across it (a
+   drag's guide line): above the pages, as the header's resize guide is. */
+    .udoc-ui-root .udoc-ui__band-layer--pane {
+        grid-column: 2;
+        grid-row: 2;
+        z-index: 3;
+    }
     /* ---- Scrollbar strips (every doc type but the spreadsheet; see the
    profile's scrollbarGutters) -------------------------------------------------
    The engine keeps a strip clear along the content pane's right edge while the

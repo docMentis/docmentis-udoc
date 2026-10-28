@@ -319,8 +319,7 @@ A component token that names a role is declared once, in the base block. Its
 the guide bands are drawn on a canvas, so `shell.ts` pushes their colors on every
 theme change: `--udoc-canvas-background` (`setBackdrop`),
 `--udoc-canvas-guide-background` (the band background), `outline-variant`
-(`setPageBorder`, the band grid), `outline` (the band marker),
-`on-surface-variant` (the band text), and the selected highlight resolved opaque
+(`setPageBorder`, the band grid), `on-surface-variant` (the band text), and the selected highlight resolved opaque
 over the band:
 `color-mix(in srgb, var(--udoc-color-primary) var(--udoc-state-selected-opacity), var(--udoc-canvas-guide-background))`.
 `getComputedStyle` does not resolve `var()` inside a custom property, so each

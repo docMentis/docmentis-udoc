@@ -13,12 +13,16 @@
 // the per-frame projection into the already-reserved strips; a cleared strip
 // falls back to its CSS band background until its content arrives.
 //
-// Static for now: the bands render but don't yet handle hover / resize /
-// dropdowns / a drag on the ruler's indent markers — those compose over the
-// same track list later.
+// An extension's band places its own controls — the ruler's margin edges and
+// indent markers — as elements in a layer over each strip, which keeps them
+// across frames, so a drag on one outlives the repaints under it. The header's
+// own presses are the canvas's (Canvas' band handlers), hit-tested here.
 
 import type { Guide, HeaderBands, HeaderCell, HeaderGuide, RgbColor } from "../../geometry.js";
 import type { SelectionExtent } from "./SelectionLayer.js";
+
+/** A layer an extension's band places elements in — see {@link BandCanvas.layer}. */
+export type BandLayer = "top" | "left" | "pane";
 
 /** One band strip, sized and filled, with a context that draws in CSS px. */
 export interface BandStrip {
@@ -32,6 +36,13 @@ export interface BandCanvas {
     /** The strip `which`, sized and filled with the band color — null when it
      *  collapsed to nothing. */
     prepare(which: "top" | "left" | "corner"): BandStrip | null;
+    /** The layer over the strip `which`, for the band's own controls — or with
+     *  `"pane"`, over the content pane, for what they draw across it (a drag's
+     *  guide line), its x the top strip's and its y the left one's. Laid out in
+     *  CSS px and clipped to its strip or pane, kept across frames, emptied
+     *  when another band is reserved. It takes no press itself; its children
+     *  may. */
+    layer(which: BandLayer): HTMLElement;
     readonly colors: BandColors;
     /** How far the top band's marks ride the content canvas mid-resize, in CSS
      *  px — see {@link GuideBands.setContentShift}. */
@@ -70,18 +81,14 @@ const UI_FONT = `-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-
 
 export interface BandColors {
     band: string;
-    /** The outline of the ruler's indent markers — the strong end of the
-     *  outline pair, where every structural mark uses the softer `grid`. */
-    marker: string;
     text: string;
     /** The fill behind a selected column's / row's header (spreadsheet only). */
     highlight: string;
     /** Every structural line the band draws — the ruler's ticks and framing edge,
-     *  and the spreadsheet header's cell grid and outer border. Soft by design;
-     *  the stronger `marker` outlines the ruler's indent markers. */
+     *  and the spreadsheet header's cell grid and outer border. Soft by design. */
     grid: string;
     /** The ruler's active span, a step lighter than `band`: the selection's,
-     *  and a text frame's text area — the fill inside the indent markers too. */
+     *  and a text frame's text area. */
     range: string;
     /** A text frame's margins on the ruler, a step darker than `band`. */
     margin: string;
@@ -92,7 +99,6 @@ export type BandPalette = Record<keyof BandColors, RgbColor>;
 
 const DEFAULT_COLORS: BandColors = {
     band: "#f1f2f4",
-    marker: "#aaaaaa",
     text: "#404040",
     highlight: "#c9ddf7",
     grid: "#d4d6da",
@@ -105,6 +111,9 @@ export class GuideBands {
     readonly #corner: HTMLCanvasElement;
     readonly #top: HTMLCanvasElement;
     readonly #left: HTMLCanvasElement;
+    /** The layers over the top and left strips and the content pane — see
+     *  {@link BandCanvas.layer}. */
+    readonly #layers: Readonly<Record<BandLayer, HTMLElement>>;
     #colors: BandColors = DEFAULT_COLORS;
     /** The reserved band layout (host-static) — drives the grid tracks. */
     #kind: BandKind = null;
@@ -125,18 +134,24 @@ export class GuideBands {
      *  is in flight — see {@link setContentShift}. `0` when settled. */
     #shiftX = 0;
 
-    constructor(root: HTMLElement, corner: HTMLCanvasElement, top: HTMLCanvasElement, left: HTMLCanvasElement) {
+    constructor(
+        root: HTMLElement,
+        corner: HTMLCanvasElement,
+        top: HTMLCanvasElement,
+        left: HTMLCanvasElement,
+        layers: Readonly<Record<BandLayer, HTMLElement>>,
+    ) {
         this.#root = root;
         this.#corner = corner;
         this.#top = top;
         this.#left = left;
+        this.#layers = layers;
     }
 
     /** Recolor the bands to the host theme's `palette` and redraw. */
     setColors(palette: BandPalette): void {
         this.#colors = {
             band: css(palette.band),
-            marker: css(palette.marker),
             text: css(palette.text),
             highlight: css(palette.highlight),
             grid: css(palette.grid),
@@ -183,6 +198,8 @@ export class GuideBands {
     layout(kind: BandKind): void {
         if (kind === this.#kind) return;
         this.#kind = kind;
+        // The controls belong to the band that placed them.
+        for (const layer of Object.values(this.#layers)) layer.replaceChildren();
         this.#draw();
     }
 
@@ -266,16 +283,21 @@ export class GuideBands {
         clear(this.#corner);
         clear(this.#top);
         clear(this.#left);
+        // An extension band's controls show over what it painted, and with it
+        // stand down until a guide lands.
+        const guide = this.#guide;
+        const controls = kind !== null && kind !== "header" && guide !== null;
+        for (const layer of Object.values(this.#layers)) layer.style.display = controls ? "" : "none";
         if (kind === null) return;
         // Paint only a payload that matches the reserved band; otherwise the
         // strip stays cleared to its CSS background until its content lands.
-        const guide = this.#guide;
         if (kind === "header") {
             if (guide?.type === "header") this.#drawHeader(guide);
         } else if (guide) {
             kind.draw(guide, {
                 prepare: (which) =>
                     this.#prepare(which === "top" ? this.#top : which === "left" ? this.#left : this.#corner),
+                layer: (which) => this.#layers[which],
                 colors: this.#colors,
                 shiftX: this.#shiftX,
                 scale: this.#scale,

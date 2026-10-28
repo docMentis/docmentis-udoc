@@ -823,8 +823,17 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     const bandCorner = makeBand("corner");
     const bandTop = makeBand("top");
     const bandLeft = makeBand("left");
-    root.append(bandCorner, bandTop, bandLeft, el);
-    const guideBands = new GuideBands(root, bandCorner, bandTop, bandLeft);
+    // The layers over the top and left strips an extension's band places its
+    // controls in (the ruler's markers), and over the content pane what they
+    // draw across it (a drag's guide line) — see `BandCanvas.layer`.
+    const makeBandLayer = (kind: string): HTMLElement => {
+        const layer = document.createElement("div");
+        layer.className = `udoc-ui__band-layer udoc-ui__band-layer--${kind}`;
+        return layer;
+    };
+    const bandLayers = { top: makeBandLayer("top"), left: makeBandLayer("left"), pane: makeBandLayer("pane") };
+    root.append(bandCorner, bandTop, bandLeft, bandLayers.top, bandLayers.left, el, bandLayers.pane);
+    const guideBands = new GuideBands(root, bandCorner, bandTop, bandLeft, bandLayers);
 
     // The header resize guide: a transient line the user drags along a column /
     // row header boundary, previewing the new track size; on release the drag
