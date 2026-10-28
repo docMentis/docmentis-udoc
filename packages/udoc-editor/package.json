@@ -1,6 +1,6 @@
 {
     "name": "@docmentis/udoc-editor",
-    "version": "0.8.5",
+    "version": "0.8.6",
     "description": "Embeddable document editor with rich editing and real-time collaboration for the web.",
     "keywords": [
         "document-editor",
@@ -61,7 +61,7 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-ui": "0.8.5",
+        "@docmentis/udoc-ui": "0.8.6",
         "@docmentis/udoc-wasm": "0.8.8"
     },
     "devDependencies": {

@@ -1,6 +1,6 @@
 {
     "name": "@docmentis/udoc-viewer",
-    "version": "0.8.5",
+    "version": "0.8.6",
     "description": "Embeddable, high-fidelity document viewer for PDF, Word, PowerPoint, Excel, and more.",
     "keywords": [
         "document-viewer",
@@ -60,7 +60,7 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-ui": "0.8.5"
+        "@docmentis/udoc-ui": "0.8.6"
     },
     "devDependencies": {
         "esbuild": "^0.25.12"
