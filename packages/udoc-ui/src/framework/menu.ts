@@ -102,13 +102,18 @@ export function createMenuController(
     const onDocClick = (e: MouseEvent) => {
         if (open && !isInside(e.target as Node)) setOpen(false);
     };
+    // Escape closes the open menu and goes no further: heard first (on the
+    // capture pass) and stopped there, so the shell's own Escape — close the
+    // side panel, drop the armed tool — waits for the next press.
     const onKeydown = (e: KeyboardEvent) => {
-        if (open && e.key === "Escape") setOpen(false);
+        if (!open || e.key !== "Escape") return;
+        setOpen(false);
+        e.stopPropagation();
     };
 
     trigger?.addEventListener("click", onTriggerClick);
     document.addEventListener("click", onDocClick);
-    document.addEventListener("keydown", onKeydown);
+    document.addEventListener("keydown", onKeydown, true);
 
     panel.style.display = "none";
     trigger?.setAttribute("aria-expanded", "false");
@@ -124,7 +129,7 @@ export function createMenuController(
             openMenus.delete(forceClose);
             trigger?.removeEventListener("click", onTriggerClick);
             document.removeEventListener("click", onDocClick);
-            document.removeEventListener("keydown", onKeydown);
+            document.removeEventListener("keydown", onKeydown, true);
         },
     };
 }

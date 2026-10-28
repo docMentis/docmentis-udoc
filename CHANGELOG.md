@@ -6,6 +6,13 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Fixed
+
+- Escape closes an open menu and nothing else, where it also closed the side
+  panel, or put down the armed tool, behind it.
+
 ### udoc-editor
 
 #### Added
