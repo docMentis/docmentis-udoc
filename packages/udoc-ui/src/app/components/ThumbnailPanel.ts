@@ -84,13 +84,12 @@ const LABEL_H = 18;
 /** Padding inside the card, around the page and below the label — the gap
  *  between the card edge and the page (matches the `padding` in styles.ts). */
 const CARD_PAD = 12;
-/** Gap between cards: part of the slot height, but outside the card box so the
- *  hover/active fill never touches the neighbouring card. */
+/** Gap between rows — cards, and a section's header and its first slide: part
+ *  of the slot height, but outside the card box so the hover/active fill never
+ *  touches the neighbouring card. */
 const GAP = 12;
 /** Height of a section's header (matches the `height` in styles.ts). */
 const SECTION_H = 24;
-/** Gap between a section's header and the row below it. */
-const SECTION_GAP = 4;
 /** Fallback aspect (width / height) before any page is measured — US Letter
  *  portrait, a reasonable guess that self-corrects on the first real measure. */
 const DEFAULT_ASPECT = 612 / 792;
@@ -317,12 +316,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     /** Slot height of one row: a page's card, or a section's header, and the
      *  gap below it. */
     function rowHeight(row: ThumbnailRow): number {
-        return row.kind === "page" ? slotHeight(row.page) : SECTION_H + SECTION_GAP;
-    }
-
-    /** The gap below one row, the end of its slot. */
-    function rowGap(row: ThumbnailRow): number {
-        return row.kind === "page" ? GAP : SECTION_GAP;
+        return row.kind === "page" ? slotHeight(row.page) : SECTION_H + GAP;
     }
 
     /** Rebuild the rows from the page count, the sections and their folds. */
@@ -1078,9 +1072,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         const index = rowOf[Math.max(gap - 1, 0)] ?? 0;
         const row = rows[index];
         if (!row) return offsets[0]! - GAP / 2;
-        if (gap > 0 || row.kind === "section") return offsets[index + 1]! - rowGap(row) / 2;
-        const above = rows[index - 1];
-        return offsets[index]! - (above ? rowGap(above) : GAP) / 2;
+        return (gap > 0 || row.kind === "section" ? offsets[index + 1]! : offsets[index]!) - GAP / 2;
     }
 
     /** The px a drag scrolls the strip by this frame: towards the edge whose
