@@ -20,6 +20,13 @@ listed once, by package. Its major and minor version are those of the
   bottom) and its tab stops, a mark for each by its alignment. Word documents
   and presentations show indents and tabs; a PDF text object shows its
   margins. Text turned on the page shows none of them.
+- The ruler's margin edges, indent markers and tab stops can be dragged, as
+  in Word: a dashed line follows the drag across the page, the drop lands on
+  the nearest sixteenth of an inch (hold Alt to place it freely), and each
+  drop is one undo step. A margin edge sets a Word section's page margins, a
+  slide shape's text insets or a PDF text box's side; the indent markers and
+  tab stops set the paragraphs'. A marker the selected paragraphs disagree on
+  stays put.
 
 #### Changed
 

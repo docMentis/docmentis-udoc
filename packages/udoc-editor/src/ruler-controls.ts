@@ -4,12 +4,14 @@
 // keeps over the ruler's strips (`BandCanvas.layer`), where the graduation
 // under them is pixels on the band's canvas, so each takes its own press and
 // keeps its drag across the frames that repaint the ruler. A drag slides a
-// control along its ruler within the page, carrying what Word's carries with
-// it, and a dashed line across the content pane marks where the pressed one
-// is, as Word's does. It edits nothing yet: on release the controls return to
-// where the guide places them. The default tab stops go unmarked, as Google Docs leaves them:
-// they fall on the graduation's half inches, where a mark of their own would
-// only double its ticks.
+// control along its ruler within the page, on the nearest sixteenth of an inch
+// unless Alt is held, carrying what Word's carries with it, and a dashed line
+// across the content pane marks where the pressed one is, as Word's does. A
+// drop hands what moved, and how far, to the ruler (ruler-edits.ts), and the
+// controls hold where it left them until the edit it sends comes back. The
+// default tab stops go unmarked, as Google Docs leaves them: they fall on the
+// graduation's half inches, where a mark of their own would only double its
+// ticks.
 import type { RulerAxis, RulerTabAlign, RulerText } from "@docmentis/udoc-wasm";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -23,6 +25,12 @@ const TAB_HALF = 4.5;
 const INDENT_BOX = 5;
 /** Half the width of the strip a margin's edge is grabbed by, CSS px. */
 const EDGE_HALF = 3.5;
+/** What a drag snaps to, in points: a sixteenth of an inch from the ruler's
+ *  zero, as Word's ruler does. */
+const SNAP = 72 / 16;
+/** How long the controls a drop left hold where it left them with no frame
+ *  arriving after its edit, ms — they settle on the next frame otherwise. */
+const HOLD = 500;
 
 /** A tab stop's mark by its alignment, as Word's: a stem, and a foot running
  *  the way the text runs from the stop — right of a left stop, left of a right
@@ -36,6 +44,25 @@ const TAB_MARKS: Record<RulerTabAlign, string> = {
     bar: "M4.5 0V6",
 };
 
+/** A margin's edge: the text area's side it bounds. */
+export type RulerEdge = "left" | "top" | "right" | "bottom";
+
+/** An indent marker, as Word's ruler names them. */
+export type RulerIndent = "firstLine" | "hanging" | "left" | "right";
+
+/** Which of the ruler's controls — a margin's edge, an indent marker, or the
+ *  tab stop at `index` in the guide's list. */
+export type RulerControl =
+    | { readonly kind: "margin"; readonly edge: RulerEdge }
+    | { readonly kind: "indent"; readonly indent: RulerIndent }
+    | { readonly kind: "tab"; readonly index: number };
+
+/** A control dropped `by` points along its ruler from where the guide put it. */
+export interface RulerDrop {
+    readonly control: RulerControl;
+    readonly by: number;
+}
+
 /** One ruler, as the guide places the controls along it this frame. */
 export interface RulerPlacement {
     /** The layer over the ruler's strip the controls stand in. */
@@ -45,6 +72,10 @@ export interface RulerPlacement {
     readonly pane: HTMLElement;
     /** What the ruler measures, in points from its origin. */
     readonly axis: RulerAxis;
+    /** Where the ruler's zero falls along the strip, CSS px, and the CSS px a
+     *  point spans — what a drag measures its points by. */
+    readonly origin: number;
+    readonly scale: number;
     /** Where `points` from the origin falls along the strip, CSS px — on the
      *  tick there. */
     readonly at: (points: number) => number;
@@ -56,19 +87,31 @@ export interface RulerControls {
      * Stand the controls where the guide places them — the margins' edges along
      * each ruler, `text`'s indent markers and tab stops along the horizontal
      * one — and hide those it places nowhere. A ruler whose strip collapsed is
-     * null.
+     * null. Those `movable` refuses stay put under a press.
      */
-    place(horizontal: RulerPlacement | null, vertical: RulerPlacement | null, text: RulerText | null): void;
+    place(
+        horizontal: RulerPlacement | null,
+        vertical: RulerPlacement | null,
+        text: RulerText | null,
+        movable: (control: RulerControl) => boolean,
+    ): void;
 }
 
 /** A control, and where the guide last placed it. */
 interface Control {
     readonly el: HTMLElement;
+    /** Which control it is. */
+    readonly name: RulerControl;
     /** Whether it slides along the horizontal ruler or the vertical one. */
     readonly orient: "h" | "v";
     /** Half its box along its ruler, CSS px: from its position to the box's edge. */
     readonly half: number;
-    /** Where the guide placed it along its ruler, CSS px, or null for nowhere. */
+    /** The ruler it last stood on. */
+    ruler: RulerPlacement | null;
+    /** Where the guide placed it along its ruler, points from the ruler's zero,
+     *  or null for nowhere. */
+    points: number | null;
+    /** The same, CSS px along the strip, on the tick there. */
     home: number | null;
     /** The page's span along its ruler, CSS px — where a drag keeps it. */
     page: { readonly start: number; readonly end: number } | null;
@@ -86,7 +129,10 @@ interface Drag {
     readonly pointerId: number;
     /** The pointer's client position along the ruler at the press. */
     readonly from: number;
-    /** Where the pressed control stood at the press, CSS px along its ruler. */
+    /** The ruler the pressed control stands on. */
+    readonly ruler: RulerPlacement;
+    /** Where the pressed control stood at the press, points and CSS px. */
+    readonly points: number;
     readonly home: number;
     /** What the drag carries, the pressed control among them, each from where it
      *  stood at the press. */
@@ -94,6 +140,8 @@ interface Drag {
     /** How far it may carry them each way and keep the pressed one on the page. */
     readonly min: number;
     readonly max: number;
+    /** How far it has carried them, in points. */
+    by: number;
 }
 
 /** An SVG `width` × `height` CSS px in `el`, its one path drawn by `d`. */
@@ -120,32 +168,55 @@ function settle(c: Control): void {
     if (c.home !== null) move(c, c.home);
 }
 
-/** The ruler's controls for a ruler `thickness` CSS px deep. */
-export function createRulerControls(thickness: number): RulerControls {
+/** The ruler's controls for a ruler `thickness` CSS px deep, handing what a
+ *  drop moved to `drop` — the edit it sends, settling when that is done, or
+ *  `null` for none, which returns the controls to where they stood. */
+export function createRulerControls(
+    thickness: number,
+    drop: (drop: RulerDrop) => Promise<unknown> | null,
+): RulerControls {
     let drag: Drag | null = null;
+    /** The controls a drop left where it left them, until its edit is done. */
+    let held = new Set<Control>();
+    /** Whether that edit is done, so the next frame settles them. */
+    let released = false;
 
-    /** Make a control of `className`, and let a drag take it. */
-    const control = (className: string, orient: "h" | "v", half: number): Control => {
+    /** Make control `name` of `className`, and let a drag take it. */
+    const control = (name: RulerControl, className: string, orient: "h" | "v", half: number): Control => {
         const el = document.createElement("div");
         el.className = `udoc-ui__ruler-control ${className}`;
-        const c: Control = { el, orient, half, home: null, page: null };
+        const c: Control = { el, name, orient, half, ruler: null, points: null, home: null, page: null };
         grab(c);
         return c;
     };
-    /** A margin's edge: the strip it is grabbed by, the full depth of its ruler,
-     *  over the line the band's canvas draws for it. */
-    const edge = (orient: "h" | "v"): Control =>
-        control(`udoc-ui__ruler-edge udoc-ui__ruler-edge--${orient}`, orient, EDGE_HALF);
-    /** An indent marker drawn by `d`, in a box the full depth of the ruler that
-     *  takes a press only on the shape — the edge under it takes the rest. */
-    const indent = (d: string): Control => {
-        const c = control("udoc-ui__ruler-marker udoc-ui__ruler-marker--indent", "h", INDENT_HALF);
+    /** A margin's `edge`: the strip it is grabbed by, the full depth of its
+     *  ruler, over the line the band's canvas draws for it. */
+    const edge = (edge: RulerEdge): Control => {
+        const orient = edge === "left" || edge === "right" ? "h" : "v";
+        return control(
+            { kind: "margin", edge },
+            `udoc-ui__ruler-edge udoc-ui__ruler-edge--${orient}`,
+            orient,
+            EDGE_HALF,
+        );
+    };
+    /** Indent marker `indent` drawn by `d`, in a box the full depth of the
+     *  ruler that takes a press only on the shape — the edge under it takes the
+     *  rest. */
+    const indent = (indent: RulerIndent, d: string): Control => {
+        const c = control(
+            { kind: "indent", indent },
+            "udoc-ui__ruler-marker udoc-ui__ruler-marker--indent",
+            "h",
+            INDENT_HALF,
+        );
         svg(c.el, INDENT_HALF * 2, thickness, d);
         return c;
     };
-    /** A tab stop, its mark's foot level with the hanging indent's base. */
-    const tab = (): TabControl => {
-        const c = control("udoc-ui__ruler-marker udoc-ui__ruler-marker--tab", "h", TAB_HALF);
+    /** The tab stop at `index`, its mark's foot level with the hanging indent's
+     *  base. */
+    const tab = (index: number): TabControl => {
+        const c = control({ kind: "tab", index }, "udoc-ui__ruler-marker udoc-ui__ruler-marker--tab", "h", TAB_HALF);
         c.el.style.top = `${thickness - 12}px`;
         const mark = svg(c.el, TAB_HALF * 2, 6, TAB_MARKS.left);
         const point = document.createElementNS(SVG_NS, "rect");
@@ -159,10 +230,10 @@ export function createRulerControls(thickness: number): RulerControls {
 
     // The margins' edges come first, so the markers standing on one take a
     // press on their shapes, and the edge the press beside them.
-    const leftMargin = edge("h");
-    const rightMargin = edge("h");
-    const topMargin = edge("v");
-    const bottomMargin = edge("v");
+    const leftMargin = edge("left");
+    const rightMargin = edge("right");
+    const topMargin = edge("top");
+    const bottomMargin = edge("bottom");
     // The left indent's box sits a pixel above the ruler's baseline, the
     // hanging indent's triangle stands on it, and the first-line indent's hangs
     // from the outer edge to meet it tip to tip; the right indent's stands
@@ -172,10 +243,10 @@ export function createRulerControls(thickness: number): RulerControls {
     const tip = (base + 0.5) / 2;
     const right = INDENT_HALF * 2 - 0.5;
     const standing = `M0.5 ${base}L${INDENT_HALF} ${tip}L${right} ${base}Z`;
-    const firstLine = indent(`M0.5 0.5H${right}L${INDENT_HALF} ${tip}Z`);
-    const hanging = indent(standing);
-    const leftIndent = indent(`M0.5 ${base}H${right}V${floor}H0.5Z`);
-    const rightIndent = indent(standing);
+    const firstLine = indent("firstLine", `M0.5 0.5H${right}L${INDENT_HALF} ${tip}Z`);
+    const hanging = indent("hanging", standing);
+    const leftIndent = indent("left", `M0.5 ${base}H${right}V${floor}H0.5Z`);
+    const rightIndent = indent("right", standing);
     const tabs: TabControl[] = [];
     /** The dashed line a drag draws across the content pane at the pressed
      *  control — down from the horizontal ruler, across from the vertical. */
@@ -204,10 +275,19 @@ export function createRulerControls(thickness: number): RulerControls {
         return [c];
     }
 
+    /** Let the controls a drop held go back to where the guide stands them. */
+    function release(): void {
+        released = false;
+        const was = held;
+        held = new Set();
+        for (const c of was) settle(c);
+    }
+
     function grab(c: Control): void {
         const along = (ev: PointerEvent): number => (c.orient === "h" ? ev.clientX : ev.clientY);
         c.el.addEventListener("pointerdown", (ev) => {
-            if (drag || ev.button !== 0 || c.home === null || !c.page) return;
+            if (drag || held.size > 0 || ev.button !== 0) return;
+            if (c.home === null || c.points === null || !c.page || !c.ruler) return;
             ev.preventDefault();
             ev.stopPropagation();
             c.el.setPointerCapture(ev.pointerId);
@@ -215,31 +295,52 @@ export function createRulerControls(thickness: number): RulerControls {
             drag = {
                 pointerId: ev.pointerId,
                 from: along(ev),
+                ruler: c.ruler,
+                points: c.points,
                 home: c.home,
                 carried,
                 min: c.page.start - c.home,
                 max: c.page.end - c.home,
+                by: 0,
             };
             c.el.classList.add("udoc-ui__ruler-control--dragging");
             drawLine(c, c.home);
         });
         c.el.addEventListener("pointermove", (ev) => {
             if (drag?.pointerId !== ev.pointerId) return;
+            const { ruler } = drag;
+            // Where it lands, in points from the ruler's zero — on the nearest
+            // sixteenth of an inch unless Alt is held.
+            const free = drag.points + (along(ev) - drag.from) / ruler.scale;
+            const to = ev.altKey ? free : Math.round(free / SNAP) * SNAP;
+            const target = ruler.origin + to * ruler.scale - drag.home;
+            const offset = Math.min(drag.max, Math.max(drag.min, target));
+            drag.by = offset === target ? to - drag.points : offset / ruler.scale;
             // Whole device pixels, so the shapes keep their crisp strokes.
             const dpr = globalThis.devicePixelRatio || 1;
-            const by = Math.round((along(ev) - drag.from) * dpr) / dpr;
-            const clamped = Math.min(drag.max, Math.max(drag.min, by));
-            for (const { control, from } of drag.carried) move(control, from + clamped);
-            drawLine(c, drag.home + clamped);
+            const shown = Math.round(offset * dpr) / dpr;
+            for (const { control, from } of drag.carried) move(control, from + shown);
+            drawLine(c, drag.home + shown);
         });
         const end = (ev: PointerEvent): void => {
             if (drag?.pointerId !== ev.pointerId) return;
-            const { carried } = drag;
+            const { carried, by } = drag;
             drag = null;
             c.el.classList.remove("udoc-ui__ruler-control--dragging");
             drawLine(c, null);
-            // Nothing takes the drop yet: back to where the guide stands them.
-            for (const { control } of carried) settle(control);
+            // A cancelled gesture drops nothing.
+            const sent = by !== 0 && ev.type === "pointerup" ? drop({ control: c.name, by }) : null;
+            if (!sent) {
+                for (const { control } of carried) settle(control);
+                return;
+            }
+            held = new Set(carried.map(({ control }) => control));
+            void sent.finally(() => {
+                released = true;
+                setTimeout(() => {
+                    if (released) release();
+                }, HOLD);
+            });
         };
         c.el.addEventListener("pointerup", end);
         c.el.addEventListener("pointercancel", end);
@@ -247,7 +348,7 @@ export function createRulerControls(thickness: number): RulerControls {
     }
 
     return {
-        place(horizontal, vertical, text) {
+        place(horizontal, vertical, text, movable) {
             /** The page's span along `ruler`, CSS px. */
             const pageOf = (ruler: RulerPlacement | null) =>
                 ruler && { start: ruler.at(ruler.axis.page.start), end: ruler.at(ruler.axis.page.end) };
@@ -255,13 +356,18 @@ export function createRulerControls(thickness: number): RulerControls {
             const pane = (horizontal ?? vertical)?.pane;
             if (pane && line.parentElement !== pane) pane.append(line);
             /** Place `c` at `points` along `ruler`, or nowhere for none — but
-             *  leave it where a drag carries it. */
+             *  leave it where a drag carries it, or a drop left it. */
             const stand = (c: Control, ruler: RulerPlacement | null, points: number | null | undefined): void => {
                 if (ruler && c.el.parentElement !== ruler.layer) ruler.layer.append(c.el);
+                c.ruler = ruler;
+                c.points = ruler && points != null ? points : null;
                 c.home = ruler && points != null ? ruler.at(points) : null;
                 c.page = pages[c.orient];
-                if (!drag?.carried.some((k) => k.control === c)) settle(c);
+                c.el.classList.toggle("udoc-ui__ruler-control--fixed", !movable(c.name));
+                if (!drag?.carried.some((k) => k.control === c) && !held.has(c)) settle(c);
             };
+            // The edit a drop sent is done, and this frame is what it brought.
+            if (released) release();
             stand(leftMargin, horizontal, horizontal?.axis.margins?.start);
             stand(rightMargin, horizontal, horizontal?.axis.margins?.end);
             stand(topMargin, vertical, vertical?.axis.margins?.start);
@@ -271,7 +377,7 @@ export function createRulerControls(thickness: number): RulerControls {
             stand(leftIndent, horizontal, text?.left);
             stand(rightIndent, horizontal, text?.right);
             const stops = text?.tabs ?? [];
-            while (tabs.length < stops.length) tabs.push(tab());
+            while (tabs.length < stops.length) tabs.push(tab(tabs.length));
             tabs.forEach((t, i) => {
                 const stop = stops[i];
                 if (stop) {

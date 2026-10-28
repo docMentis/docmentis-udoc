@@ -46,6 +46,7 @@ import type {
 import { UDocError } from "@docmentis/udoc-wasm/error";
 import type {
     AcroForm,
+    SectionSelectionEditType,
     ShapeSelectionEditType,
     TextSelectionEditType,
     UDocCommand,
@@ -2351,7 +2352,7 @@ function taggedSelectionEdit(edit: SelectionEdit, docType: UDocType | undefined)
         case "presentation":
             return { presentation: { common: drawingEdit(edit) } } as UDocSelectionEdit;
         case "wordprocessing":
-            return { wordprocessing: { common: drawingEdit(edit) } } as UDocSelectionEdit;
+            return { wordprocessing: wordprocessingEdit(edit) } as UDocSelectionEdit;
         case "spreadsheet":
             return { spreadsheet: edit } as UDocSelectionEdit;
         case "image":
@@ -2388,6 +2389,7 @@ const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     flipShapes: "shape",
     setShapeFill: "shape",
     setShapeLine: "shape",
+    setShapeTextBodyProperties: "shape",
     adjustShapeHandle: "shape",
     adjustTextWarpHandle: "shape",
     pasteShapes: "shape",
@@ -2408,6 +2410,23 @@ function drawingEdit(edit: SelectionEdit): unknown {
     const family = DRAWING_FAMILY[edit.kind];
     if (!family) throw new Error(`engine worker: ${edit.kind} is not a drawing edit`);
     return { [family]: byKind(edit) };
+}
+
+/** The kinds of a word document's own section family, the tag their wire form
+ *  is wrapped in — typed against the gate union tsify declares, as the drawing
+ *  ones are. */
+const SECTION_KINDS: Record<SectionSelectionEditType, "section"> = {
+    setSectionPageMargins: "section",
+};
+
+/** A word document's edit: an edit of the section the caret is in under
+ *  `section` — `{ section: { setSectionPageMargins: { … } } }` — and any other
+ *  a drawing edit under `common`. */
+function wordprocessingEdit(edit: SelectionEdit): unknown {
+    if (typeof edit !== "string" && "kind" in edit && edit.kind in SECTION_KINDS) {
+        return { section: byKind(edit) };
+    }
+    return { common: drawingEdit(edit) };
 }
 
 /** A PDF's edit, which the shell already sends in its family's wrapper —

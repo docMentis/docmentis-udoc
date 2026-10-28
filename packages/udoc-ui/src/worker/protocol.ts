@@ -14,6 +14,8 @@ import type {
     SessionConfig,
     PaintFill,
     PaintLine,
+    Rect as CornerRect,
+    TextBodyProperties,
     TextCharacterProperty,
     TextCharacterPropertyKey,
     TextParagraphProperty,
@@ -1219,6 +1221,18 @@ export type SelectionEdit =
     | { kind: "setShapeFill"; fill: PaintFill }
     /** Presentation: set the shapes' outline. */
     | { kind: "setShapeLine"; line: PaintLine }
+    /** Shapes: overlay `properties` onto the text body of the selected shapes, or
+     *  of the shape whose text the caret is in — its insets (a ruler's margin
+     *  edges), anchor, autofit. */
+    | { kind: "setShapeTextBodyProperties"; properties: TextBodyProperties }
+    /** Word: set the page margins of the section the caret is in, in points —
+     *  the edges given, the rest and the header and footer offsets as they
+     *  stand (a ruler's margin edges). */
+    | { kind: "setSectionPageMargins"; left?: number; top?: number; right?: number; bottom?: number }
+    /** PDF: set the box the text caret is in to `frame`, in page-local points
+     *  (a ruler's margin edges), inside an `object` edit. The engine's
+     *  corner-to-corner rect. */
+    | { kind: "resizeTextBox"; frame: CornerRect }
     /** Presentation: drag adjust handle `index` of the selected shape to `to`, a
      *  point in that shape's **own local space** — the geometry-reshaping drag
      *  (a rounded rectangle's corner, an arrow's head). Reshapes one geometry,

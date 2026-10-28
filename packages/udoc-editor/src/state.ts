@@ -13,6 +13,8 @@ import type {
 } from "@docmentis/udoc-ui/internal";
 import { ALL_MODES } from "./mode.js";
 import type { EditorMode } from "./mode.js";
+import { EMPTY_SELECTION_RULER } from "./ruler-edits.js";
+import type { SelectionRuler } from "./ruler-edits.js";
 
 export interface EditState {
     /**
@@ -82,6 +84,13 @@ export interface EditState {
      */
     selectionPaint: SelectionPaint;
 
+    /**
+     * What a drop on the ruler moves from — the selection's resolved indents
+     * and tab stops, and its shape's text insets. Pushed from the worker's
+     * selection reports, projected from the engine's selection properties.
+     */
+    selectionRuler: SelectionRuler;
+
     /** The modes the host lets the user switch between (drives the mode
      *  switcher, which offers those the session is entitled to —
      *  `modeEntitled`). */
@@ -106,6 +115,7 @@ export const INITIAL_EDIT_STATE: EditState = {
     loadedFontFamilyNames: [],
     selectionText: EMPTY_SELECTION_TEXT_FORMAT,
     selectionPaint: EMPTY_SELECTION_PAINT,
+    selectionRuler: EMPTY_SELECTION_RULER,
     allowedModes: ALL_MODES,
     showModeSwitch: true,
     alignToPage: false,

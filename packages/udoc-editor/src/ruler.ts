@@ -6,11 +6,14 @@
 // its indents and tab stops. This graduates the rulers at the frame's zoom and
 // draws them into the bands udoc-ui reserves, over the span the selection
 // covers on each axis, and stands the controls a drag takes — the margins'
-// edges, the indent markers and the tab stops — over them (ruler-controls.ts).
+// edges, the indent markers and the tab stops — over them (ruler-controls.ts),
+// sending the edit a drop on one means (ruler-edits.ts).
 import type { Guide, RulerAxis, UDocType } from "@docmentis/udoc-wasm";
 import type { Action, BandCanvas, BandStrip, GuideBand, Store, UIState } from "@docmentis/udoc-ui/internal";
+import type { EditHost } from "./edit-client.js";
 import { createRulerControls } from "./ruler-controls.js";
-import type { RulerControls, RulerPlacement } from "./ruler-controls.js";
+import type { RulerControl, RulerControls, RulerDrop, RulerPlacement } from "./ruler-controls.js";
+import { rulerEdit, rulerMovable } from "./ruler-edits.js";
 import { editState, updateEditState } from "./state.js";
 
 /** The ruler arm of the engine's guide projection. */
@@ -183,6 +186,8 @@ function placement(canvas: BandCanvas, strip: BandStrip, axis: RulerAxis, orient
         layer: canvas.layer(orient === "h" ? "top" : "left"),
         pane: canvas.layer("pane"),
         axis,
+        origin: axis.origin + shift,
+        scale: canvas.scale,
         at: (points) => tickCenter(strip.ctx, axis.origin + points * canvas.scale + shift, orient),
     };
 }
@@ -203,8 +208,14 @@ function drawCorner(canvas: BandCanvas): void {
     ctx.fillRect(w - 1, h - 1, 1, 1);
 }
 
-/** Draw `guide`'s rulers into `canvas`'s strips, and stand `controls` over them. */
-function drawRuler(guide: RulerGuide, canvas: BandCanvas, controls: RulerControls): void {
+/** Draw `guide`'s rulers into `canvas`'s strips, and stand `controls` over them,
+ *  those `movable` refuses fixed. */
+function drawRuler(
+    guide: RulerGuide,
+    canvas: BandCanvas,
+    controls: RulerControls,
+    movable: (control: RulerControl) => boolean,
+): void {
     const { colors } = canvas;
     const top = canvas.prepare("top");
     if (top) {
@@ -224,18 +235,40 @@ function drawRuler(guide: RulerGuide, canvas: BandCanvas, controls: RulerControl
         top && placement(canvas, top, guide.horizontal, "h"),
         left && placement(canvas, left, guide.vertical, "v"),
         guide.text ?? null,
+        movable,
     );
 }
 
-/** The ruler band, with controls of its own — one per editor. Paints only a
- *  ruler projection; any other leaves the strips cleared to their band
- *  background until one lands. */
-export function createRuler(): GuideBand {
-    const controls = createRulerControls(THICKNESS);
+/** The ruler band, with controls of its own — one per editor, whose edits run
+ *  through the `host` edit mode lends once it is mounted. Paints only a ruler
+ *  projection; any other leaves the strips cleared to their band background
+ *  until one lands. */
+export function createRuler(host: () => EditHost | null): GuideBand {
+    /** The projection the controls last stood on — what a drop is read off. */
+    let placed: RulerGuide | null = null;
+    /** Send the edit `drop` means to the open document, as one undo step; null
+     *  where it means none. */
+    const drop = (drop: RulerDrop): Promise<void> | null => {
+        const lent = host();
+        const state = lent?.store.getState();
+        const edit =
+            placed && state?.docType && rulerEdit(drop, placed, state.docType, editState(state).selectionRuler);
+        if (!lent || !edit) return null;
+        return lent.commit(() => lent.client.executeOnSelection(edit));
+    };
+    const controls = createRulerControls(THICKNESS, drop);
     return {
         thickness: THICKNESS,
         draw(guide, canvas) {
-            if (guide.type === "ruler") drawRuler(guide, canvas, controls);
+            if (guide.type !== "ruler") return;
+            placed = guide;
+            const state = host()?.store.getState();
+            const docType = state?.docType;
+            const movable = (control: RulerControl): boolean =>
+                !!state &&
+                !!docType &&
+                rulerMovable(control, guide, docType, state.selectionCaps, editState(state).selectionRuler);
+            drawRuler(guide, canvas, controls, movable);
         },
     };
 }

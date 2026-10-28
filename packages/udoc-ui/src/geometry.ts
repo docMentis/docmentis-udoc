@@ -330,7 +330,10 @@ export type SelectionEditKind =
     | "ungroupShapes"
     | "reorderShapes"
     | "setShapeFill"
-    | "setShapeLine";
+    | "setShapeLine"
+    | "setShapeTextBodyProperties"
+    | "resizeTextBox"
+    | "setSectionPageMargins";
 
 /** Whether `caps` allows a selection edit of any of `kinds` — no per-doc-type
  *  branch: pass every name the control's edit goes by (`deleteObjects`,

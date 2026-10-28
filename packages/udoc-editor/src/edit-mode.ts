@@ -26,6 +26,7 @@ import { ALL_MODES, EDIT_MODE } from "./mode.js";
 import type { EditorMode } from "./mode.js";
 import { editState, INITIAL_EDIT_STATE, updateEditState } from "./state.js";
 import { createRuler, rulerShown, setShowRuler } from "./ruler.js";
+import { selectionRuler } from "./ruler-edits.js";
 import { editorStyles } from "./styles.js";
 import { editTabs } from "./tabs.js";
 import { createEditTools } from "./tools.js";
@@ -111,6 +112,7 @@ function mountDocumentState(host: EditHost): () => void {
             updateEditState(store, {
                 selectionText: selectionTextFormat(state.properties),
                 selectionPaint: selectionPaint(state.properties),
+                selectionRuler: selectionRuler(state.properties),
             }),
         ),
     ];
@@ -161,7 +163,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
     let tools: EditTools | null = null;
     let newSlide: NewSlide | null = null;
     const grips = createGrips(() => tools);
-    const ruler = createRuler();
+    const ruler = createRuler(() => host);
     const mountedTools = (): EditTools => {
         if (!tools) throw new Error("udoc: edit mode is not mounted");
         return tools;

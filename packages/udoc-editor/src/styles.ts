@@ -846,4 +846,12 @@ export const editorStyles = css`
     .udoc-ui-root .udoc-ui__ruler-marker--tab rect {
         fill: var(--udoc-color-on-surface-variant);
     }
+    /* A control the open document can't move now — the engine gates its edit
+   off, or the selected paragraphs disagree on what it shows: it stands where
+   the guide puts it and takes no press. After the indent's path rule, which
+   it outranks at the same specificity. */
+    .udoc-ui-root .udoc-ui__ruler-control--fixed,
+    .udoc-ui-root .udoc-ui__ruler-control--fixed path {
+        pointer-events: none;
+    }
 `;
