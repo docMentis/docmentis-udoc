@@ -648,10 +648,15 @@ export class WorkerClient {
      * Turn every page `quarterTurns` quarter turns clockwise (`0`–`3`) on top of
      * its own rotation — a view setting, never a document edit. Sticky across
      * opens in the worker like the spacing; the re-stacked arrangement rides
-     * back in the next {@link PageViewsFrame}. Latest-wins, fire-and-forget.
+     * back in the next {@link PageViewsFrame}. The thumbnails render turned
+     * alike, so they redraw ({@link invalidateThumbnails}). Latest-wins,
+     * fire-and-forget.
      */
     setPageRotation(quarterTurns: number): void {
         this.#post({ type: "setPageRotation", quarterTurns });
+        // After the post, as `#send` does for an edit, so a thumbnail the
+        // strip re-requests queues behind the turn.
+        this.invalidateThumbnails();
     }
 
     /**
@@ -1577,13 +1582,15 @@ export class WorkerClient {
     }
 
     /**
-     * The size of page `index` (0-based) in document points — doc-type-agnostic
-     * (slides, PDF pages, image frames all answer), so the thumbnail strip can
-     * shape and scale a preview of any open document. A pure read; resolves to
-     * a zero size when the page is out of range or not yet composed.
+     * The size page `index` (0-based) takes as displayed, in document points —
+     * turned by its rotation, the page's own and the view's, the shape its
+     * {@link requestThumbnail} comes out in. Doc-type-agnostic (slides, PDF
+     * pages, image frames all answer), so the thumbnail strip can shape and
+     * scale a preview of any open document. A pure read; resolves to a zero
+     * size when the page is out of range or not yet composed.
      */
-    async pageSize(index: number): Promise<Size> {
-        return (await this.#send({ type: "pageSize", index })) as Size;
+    async pageDisplaySize(index: number): Promise<Size> {
+        return (await this.#send({ type: "pageDisplaySize", index })) as Size;
     }
 
     /**

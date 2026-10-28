@@ -12,6 +12,9 @@ listed once, by package. Its major and minor version are those of the
 
 - Escape closes an open menu and nothing else, where it also closed the side
   panel, or put down the armed tool, behind it.
+- A turned page's thumbnail shows the page turned, in its turned shape, where
+  it was squeezed into the shape of the upright page: a PDF page with its own
+  rotation, and every page while the view is rotated.
 
 ### udoc-editor
 

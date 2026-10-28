@@ -29,7 +29,7 @@ import { MAC } from "./controls.js";
  *    document's total where the engine knows it up front (a PDF, a
  *    presentation), else the composed prefix, growing with it.
  *  - Each item's height starts from a typical-aspect estimate and is corrected
- *    once its real page size arrives (lazily, from `pageSize`), so a
+ *    once its real page size arrives (lazily, from `pageDisplaySize`), so a
  *    uniform-size document settles to an exact extent after the first measure.
  *  - Only the items in (or near) the viewport are in the DOM and only those
  *    request renders; the rest are spacer-backed offsets. Off-window items
@@ -200,7 +200,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     const measured = new Set<number>();
     /** Bumped on each document change, so a size read sent before it is dropped. */
     let sizeGeneration = 0;
-    /** In-flight `pageSize` size probes, so we don't fire duplicates. */
+    /** In-flight `pageDisplaySize` size probes, so we don't fire duplicates. */
     const sizing = new Set<number>();
     /** Most recent measured aspect — the estimate for not-yet-measured pages. */
     let typicalAspect = DEFAULT_ASPECT;
@@ -349,16 +349,17 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
 
     // --- sizing + rendering ----------------------------------------------
 
-    /** Probe one page's size (document points) so its aspect and render scale
-     *  are exact; corrects the extent when it differs from the estimate. Uses
-     *  the doc-type-agnostic `pageSize`, so slides size like PDF pages. */
+    /** Probe one page's size as displayed (document points, turned by its
+     *  rotation, as its render comes out) so its aspect and render scale are
+     *  exact; corrects the extent when it differs from the estimate. Uses the
+     *  doc-type-agnostic `pageDisplaySize`, so slides size like PDF pages. */
     async function ensureSize(page: number): Promise<void> {
         if (measured.has(page) || sizing.has(page) || !client) return;
         sizing.add(page);
         const generation = sizeGeneration;
         let stale = false;
         try {
-            const { width: w, height: h } = await client.pageSize(page);
+            const { width: w, height: h } = await client.pageDisplaySize(page);
             if (!mounted || w <= 0 || h <= 0) return;
             // Read before the document last changed: re-read it.
             if (generation !== sizeGeneration) {

@@ -921,14 +921,16 @@ export interface HideAnnotationsRequest {
 }
 
 /**
- * Read the size (document points) of page `index` — a doc-type-agnostic pure
- * read (slides, PDF pages, image frames all answer). Replies with a
- * {@link import("../geometry.js").Size}; the thumbnail strip shapes and scales
- * a preview from it. Composes the page if needed. Returns a zero size when the
- * page is out of range / not composed, so a read degrades to "unknown".
+ * Read the size (document points) page `index` takes as displayed — turned by
+ * its rotation, the page's own and the view's — a doc-type-agnostic pure read
+ * (slides, PDF pages, image frames all answer). Replies with a
+ * {@link import("../geometry.js").Size}, the shape a thumbnail render comes
+ * out in; the thumbnail strip shapes and scales a preview from it. Composes the
+ * page if needed. Returns a zero size when the page is out of range / not
+ * composed, so a read degrades to "unknown".
  */
-export interface PageSizeRequest {
-    type: "pageSize";
+export interface PageDisplaySizeRequest {
+    type: "pageDisplaySize";
     index: number;
 }
 
@@ -1702,7 +1704,7 @@ export type WorkerRequest =
     | OptionalContentOffRequest
     | SetOptionalContentGroupOnRequest
     | HideAnnotationsRequest
-    | PageSizeRequest
+    | PageDisplaySizeRequest
     | SelectObjectsByIdRequest
     | SelectedObjectsRequest
     | SelectedAnnotationsRequest

@@ -1773,15 +1773,16 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, changed);
                 break;
             }
-            case "pageSize": {
-                // A doc-type-agnostic pure read: the page's size in document
-                // points (for the thumbnail strip). Zero when there's no doc or
-                // the page is out of range / not composed — a read degrades to
-                // "unknown" rather than rejecting.
+            case "pageDisplaySize": {
+                // A doc-type-agnostic pure read: the page's size as displayed,
+                // turned by its rotation, in document points (for the thumbnail
+                // strip, whose render comes out turned alike). Zero when there's
+                // no doc or the page is out of range / not composed — a read
+                // degrades to "unknown" rather than rejecting.
                 let size = { width: 0, height: 0 };
                 try {
                     // The strip only ever sizes slide-plane pages — plane 0.
-                    if (session) size = session.pageSize(0, msg.index);
+                    if (session) size = session.pageDisplaySize(0, msg.index);
                 } catch {
                     // out of range / not composed — fall through to zero.
                 }
@@ -2430,6 +2431,8 @@ const SLIDE_KINDS: Record<SlideSelectionEditType, "slide"> = {
     insertSlide: "slide",
     duplicateSlides: "slide",
     reorderSlides: "slide",
+    setSlidesShow: "slide",
+    insertSlideSection: "slide",
 };
 
 /** A deck's edit: an edit of the selected slides under `slide` —
