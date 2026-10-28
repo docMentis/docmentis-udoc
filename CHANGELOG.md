@@ -6,6 +6,32 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Fixed
+
+- Text in an SVG, EMF or WMF image draws in the fonts the image names, where
+  the viewer and the editor drew none of it, leaving a metafile's tables and
+  an SVG's labels blank, and udoc-node drew it in whatever font the machine
+  had installed.
+- A shape's text set in columns, once it overflows them, is leveled across
+  them as PowerPoint does, each column as deep as its share needs, where the
+  first column filled to the foot of the box and the rest of the text spilled
+  into the last, far past it.
+- A doughnut chart's data label moved from its place on the ring lands where
+  PowerPoint puts it, where it landed farther out, as if moved from the ring's
+  outer edge.
+
+### udoc-viewer and udoc-editor
+
+#### Fixed
+
+- With several pages to a screen, `currentPage` and the page box give the
+  first page at the top of the scroll and the last at its end, and the first
+  page of a document that fits the screen, where they gave the page nearest
+  the middle of the screen: a presentation opened in a tall pane started on
+  slide 2, and the editor inserted, pasted and added slides there.
+
 ### udoc-editor
 
 #### Added
