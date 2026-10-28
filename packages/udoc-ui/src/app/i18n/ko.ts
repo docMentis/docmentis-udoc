@@ -232,6 +232,18 @@ export const ko: Messages = {
     "thumbnails.duplicateSlide": "슬라이드 복제",
     "thumbnails.hideSlide": "슬라이드 숨기기",
     "thumbnails.deleteSlide": "슬라이드 삭제",
+    "thumbnails.section": "구역 {name}",
+    "thumbnails.collapseSection": "구역 축소",
+    "thumbnails.expandSection": "구역 확장",
+    "thumbnails.sectionName": "구역 이름",
+    "thumbnails.addSection": "구역 추가",
+    "thumbnails.untitledSection": "제목 없는 구역",
+    "thumbnails.renameSection": "구역 이름 바꾸기",
+    "thumbnails.moveSectionUp": "구역을 위로 이동",
+    "thumbnails.moveSectionDown": "구역을 아래로 이동",
+    "thumbnails.collapseAll": "모두 축소",
+    "thumbnails.expandAll": "모두 확장",
+    "thumbnails.removeSection": "구역 제거",
 
     // Outline panel
     "outline.loading": "개요를 불러오는 중…",

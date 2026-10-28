@@ -96,6 +96,11 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 refusal: null,
                 docType: null,
                 sourceFormat: null,
+                // The sections are read back once the open is sent; the folds
+                // and a rename were the last document's.
+                slideSections: [],
+                collapsedSlideSections: new Set(),
+                renamingSlideSection: null,
             };
 
         case "OPEN_SUCCESS": {
@@ -195,6 +200,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 refusal: null,
                 docType: null,
                 sourceFormat: null,
+                slideSections: [],
+                collapsedSlideSections: new Set(),
+                renamingSlideSection: null,
                 pageCount: 0,
                 firstUncomposedPage: 0,
                 planeCount: 0,
@@ -280,6 +288,20 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...state, selectedPages: action.pages };
         case "SET_SELECTED_SLIDES_HIDDEN":
             return { ...state, selectedSlidesHidden: action.hidden };
+        case "SET_SLIDE_SECTIONS":
+            return { ...state, slideSections: action.sections };
+        case "SET_SELECTED_SLIDE_SECTIONS":
+            return { ...state, selectedSlideSections: action.ids };
+        case "SET_SLIDE_SECTIONS_COLLAPSED": {
+            const collapsed = new Set(state.collapsedSlideSections);
+            for (const id of action.ids) {
+                if (action.collapsed) collapsed.add(id);
+                else collapsed.delete(id);
+            }
+            return { ...state, collapsedSlideSections: collapsed };
+        }
+        case "SET_RENAMING_SLIDE_SECTION":
+            return { ...state, renamingSlideSection: action.id };
 
         case "SYNC_VIEW":
             // The engine's authoritative values, adopted verbatim — no

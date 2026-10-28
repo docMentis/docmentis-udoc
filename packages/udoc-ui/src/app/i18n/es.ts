@@ -232,6 +232,18 @@ export const es: Messages = {
     "thumbnails.duplicateSlide": "Duplicar diapositiva",
     "thumbnails.hideSlide": "Ocultar diapositiva",
     "thumbnails.deleteSlide": "Eliminar diapositiva",
+    "thumbnails.section": "Sección {name}",
+    "thumbnails.collapseSection": "Contraer sección",
+    "thumbnails.expandSection": "Expandir sección",
+    "thumbnails.sectionName": "Nombre de la sección",
+    "thumbnails.addSection": "Agregar sección",
+    "thumbnails.untitledSection": "Sección sin título",
+    "thumbnails.renameSection": "Cambiar nombre de sección",
+    "thumbnails.moveSectionUp": "Subir sección",
+    "thumbnails.moveSectionDown": "Bajar sección",
+    "thumbnails.collapseAll": "Contraer todo",
+    "thumbnails.expandAll": "Expandir todo",
+    "thumbnails.removeSection": "Quitar sección",
 
     // Outline panel
     "outline.loading": "Cargando índice…",

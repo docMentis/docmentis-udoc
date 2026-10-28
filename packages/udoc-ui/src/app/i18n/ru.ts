@@ -232,6 +232,18 @@ export const ru: Messages = {
     "thumbnails.duplicateSlide": "Дублировать слайд",
     "thumbnails.hideSlide": "Скрыть слайд",
     "thumbnails.deleteSlide": "Удалить слайд",
+    "thumbnails.section": "Раздел {name}",
+    "thumbnails.collapseSection": "Свернуть раздел",
+    "thumbnails.expandSection": "Развернуть раздел",
+    "thumbnails.sectionName": "Имя раздела",
+    "thumbnails.addSection": "Добавить раздел",
+    "thumbnails.untitledSection": "Раздел без заголовка",
+    "thumbnails.renameSection": "Переименовать раздел",
+    "thumbnails.moveSectionUp": "Переместить раздел вверх",
+    "thumbnails.moveSectionDown": "Переместить раздел вниз",
+    "thumbnails.collapseAll": "Свернуть все",
+    "thumbnails.expandAll": "Развернуть все",
+    "thumbnails.removeSection": "Удалить раздел",
 
     // Outline panel
     "outline.loading": "Загрузка оглавления…",

@@ -232,6 +232,18 @@ export const ptBR: Messages = {
     "thumbnails.duplicateSlide": "Duplicar Slide",
     "thumbnails.hideSlide": "Ocultar Slide",
     "thumbnails.deleteSlide": "Excluir Slide",
+    "thumbnails.section": "Seção {name}",
+    "thumbnails.collapseSection": "Recolher Seção",
+    "thumbnails.expandSection": "Expandir Seção",
+    "thumbnails.sectionName": "Nome da seção",
+    "thumbnails.addSection": "Adicionar Seção",
+    "thumbnails.untitledSection": "Seção sem Título",
+    "thumbnails.renameSection": "Renomear Seção",
+    "thumbnails.moveSectionUp": "Mover Seção para Cima",
+    "thumbnails.moveSectionDown": "Mover Seção para Baixo",
+    "thumbnails.collapseAll": "Recolher Tudo",
+    "thumbnails.expandAll": "Expandir Tudo",
+    "thumbnails.removeSection": "Remover Seção",
 
     // Outline panel
     "outline.loading": "Carregando sumário…",

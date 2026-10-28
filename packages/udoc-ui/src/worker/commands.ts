@@ -12,6 +12,7 @@ import type {
     AcroFormFieldFill,
     Annotation,
     PortableCommand,
+    PresentationCommand,
     SpreadsheetCommand,
     StandardFont,
     UDocCommand,
@@ -26,14 +27,19 @@ function portable(command: PortableCommand): UDocCommand {
     return { portable: command };
 }
 
+/** Wrap a presentation command in the doc-type-tagged `UDocCommand`. */
+function presentation(command: PresentationCommand): UDocCommand {
+    return { presentation: command };
+}
+
 /** Wrap a spreadsheet command in the doc-type-tagged `UDocCommand`. */
 function spreadsheet(command: SpreadsheetCommand): UDocCommand {
     return { spreadsheet: command };
 }
 
 /** Command builders for the document-structure edits the host issues by index —
- *  annotation insert, update and text, form fill-in, and a spreadsheet's
- *  column / row sizes.
+ *  annotation insert, update and text, form fill-in, a deck's section names,
+ *  and a spreadsheet's column / row sizes.
  *
  *  Selection-relative object/shape edits (move, delete, align, group, flip, …)
  *  are **not** here: the caller emits those format-blind, the worker tags them
@@ -86,6 +92,10 @@ export const Command = {
      *  field given, whole, and show it on its widgets. A read-only field and a
      *  signature field are skipped. */
     updateAcroFormFields: (fields: AcroFormField[]): UDocCommand => portable({ updateAcroFormFields: { fields } }),
+
+    /** Rename the deck's section `id` to `name`. */
+    renameSlideSection: (id: string, name: string): UDocCommand =>
+        presentation({ editSlideSection: { command: { renameSlideSection: { id, name } } } }),
 
     /** Resize columns `first..=last` (0-based inclusive) on sheet `sheetId` to
      *  `points` document points (PostScript points, 1/72 inch — *not* pixels): a

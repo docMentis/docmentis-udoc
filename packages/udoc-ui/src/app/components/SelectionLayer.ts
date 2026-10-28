@@ -336,6 +336,7 @@ export class SelectionLayer {
         peers: [],
         capabilities: EMPTY_SELECTION_CAPABILITIES,
         properties: null,
+        slideSections: [],
         localChanged: false,
     };
     #lastFrame: SelectionFrame = { views: [], scale: 1 };
@@ -1193,6 +1194,7 @@ export class SelectionLayer {
                 peers: [],
                 capabilities: EMPTY_SELECTION_CAPABILITIES,
                 properties: null,
+                slideSections: [],
                 localChanged: false,
             },
             true,

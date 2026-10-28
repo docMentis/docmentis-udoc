@@ -819,6 +819,85 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-thumbnail-item--hidden .udoc-thumbnail-item__label {
         text-decoration: line-through;
     }
+
+    /* A deck section's header, above its slides: a toggle folding them away,
+   its name, and how many it holds while folded. Placed like the cards
+   (ThumbnailPanel's SECTION_H is its height). */
+    .udoc-ui-root .udoc-thumbnail-section {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 4px 0 0;
+        box-sizing: border-box;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--udoc-color-on-surface);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-section:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+
+    .udoc-ui-root .udoc-thumbnail-section__toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: none;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--udoc-color-on-surface-variant);
+        cursor: pointer;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-section__toggle:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+
+    .udoc-ui-root .udoc-thumbnail-section__toggle > svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-section__name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-section__count {
+        flex: none;
+        font-weight: 400;
+        color: var(--udoc-color-on-surface-variant);
+    }
+
+    .udoc-ui-root .udoc-thumbnail-section__input {
+        flex: 1;
+        min-width: 0;
+        height: 20px;
+        padding: 0 4px;
+        border: 1px solid var(--udoc-color-primary);
+        border-radius: 3px;
+        box-sizing: border-box;
+        font: inherit;
+        color: var(--udoc-color-on-surface);
+        background: var(--udoc-color-surface-container-highest);
+        outline: none;
+        user-select: text;
+        cursor: text;
+    }
     /* The pages a drag is moving: lifted out of the strip, so their places
    fade, and the strip holds the grabbing hand wherever it goes. */
     .udoc-ui-root .udoc-thumbnail-item.udoc-dragging {
@@ -1269,6 +1348,7 @@ export const uiStyles = css`
             .udoc-view-mode-menu__option--selected,
             .udoc-left-panel__tab--selected,
             .udoc-thumbnail-item--selected,
+            .udoc-thumbnail-section--selected,
             .udoc-btn--selected,
             .udoc-split--selected,
             .udoc-paintpanel__none--selected,

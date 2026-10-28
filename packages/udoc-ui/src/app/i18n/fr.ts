@@ -232,6 +232,18 @@ export const fr: Messages = {
     "thumbnails.duplicateSlide": "Dupliquer la diapositive",
     "thumbnails.hideSlide": "Masquer la diapositive",
     "thumbnails.deleteSlide": "Supprimer la diapositive",
+    "thumbnails.section": "Section {name}",
+    "thumbnails.collapseSection": "Réduire la section",
+    "thumbnails.expandSection": "Développer la section",
+    "thumbnails.sectionName": "Nom de la section",
+    "thumbnails.addSection": "Ajouter une section",
+    "thumbnails.untitledSection": "Section sans titre",
+    "thumbnails.renameSection": "Renommer la section",
+    "thumbnails.moveSectionUp": "Monter la section",
+    "thumbnails.moveSectionDown": "Descendre la section",
+    "thumbnails.collapseAll": "Réduire tout",
+    "thumbnails.expandAll": "Développer tout",
+    "thumbnails.removeSection": "Supprimer la section",
 
     // Outline panel
     "outline.loading": "Chargement du sommaire…",

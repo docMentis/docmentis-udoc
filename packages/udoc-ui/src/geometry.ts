@@ -320,6 +320,10 @@ export type SelectionEditKind =
     | "duplicateSlides"
     | "reorderSlides"
     | "setSlidesShow"
+    | "insertSlideSection"
+    | "renameSlideSection"
+    | "deleteSlideSections"
+    | "reorderSlideSections"
     | "deleteObjects"
     | "translateObjects"
     | "rotateEachObject"
@@ -784,6 +788,9 @@ export interface SelectionState {
     /** The current values of the selection's editable properties (the resolved
      *  text format a text selection carries); `null` with no document open. */
     properties: UDocSelectionProperties | null;
+    /** The sections the selection holds, by id — a deck's section selection;
+     *  its slides are `local.pages`. Empty for any other selection. */
+    slideSections: string[];
     localChanged: boolean;
 }
 

@@ -1,7 +1,7 @@
 import { EMPTY_SELECTION_CAPABILITIES } from "../geometry.js";
 import type { Peer, Scrollbars, SelectionCapabilities, Size } from "../geometry.js";
 import { defaultDpiForDocType } from "../worker/protocol.js";
-import type { PageComments, SelectedAnnotations } from "../worker/protocol.js";
+import type { PageComments, SelectedAnnotations, SlideSectionRun } from "../worker/protocol.js";
 import type { AnnotationStyles } from "./annotations.js";
 import type { MessageKey } from "./i18n/index.js";
 import type {
@@ -437,6 +437,28 @@ export interface UIState {
     selectedSlidesHidden: boolean;
 
     /**
+     * The open deck's sections, in order, each with the run of slides it holds
+     * — what the thumbnails group the slides under. Read back after each change
+     * of the document; empty for a deck without sections, or any other
+     * document.
+     */
+    slideSections: readonly SlideSectionRun[];
+
+    /**
+     * The sections the selection holds, by id — picked by their headers in the
+     * thumbnails. Pushed from the worker's selection reports; empty for any
+     * other selection.
+     */
+    selectedSlideSections: readonly string[];
+
+    /** The sections whose slides the thumbnails fold away under their header,
+     *  by id. A view of this session's, reset on each open. */
+    collapsedSlideSections: ReadonlySet<string>;
+
+    /** The section whose name the thumbnails are editing, by id, or `null`. */
+    renamingSlideSection: string | null;
+
+    /**
      * The annotations the selection holds, with their page — read back after
      * each of the worker's selection reports, for the Annotate tab's Format
      * controls to show and restyle. Null when it holds none.
@@ -716,6 +738,10 @@ export const initialState: UIState = {
     selectionCaps: EMPTY_SELECTION_CAPABILITIES,
     selectedPages: [],
     selectedSlidesHidden: false,
+    slideSections: [],
+    selectedSlideSections: [],
+    collapsedSlideSections: new Set(),
+    renamingSlideSection: null,
     selectedAnnotations: null,
     comments: new Map(),
     allCommentsRead: false,

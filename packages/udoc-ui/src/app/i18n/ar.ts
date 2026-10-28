@@ -232,6 +232,18 @@ export const ar: Messages = {
     "thumbnails.duplicateSlide": "تكرار الشريحة",
     "thumbnails.hideSlide": "إخفاء الشريحة",
     "thumbnails.deleteSlide": "حذف الشريحة",
+    "thumbnails.section": "المقطع {name}",
+    "thumbnails.collapseSection": "طي المقطع",
+    "thumbnails.expandSection": "توسيع المقطع",
+    "thumbnails.sectionName": "اسم المقطع",
+    "thumbnails.addSection": "إضافة مقطع",
+    "thumbnails.untitledSection": "مقطع بلا عنوان",
+    "thumbnails.renameSection": "إعادة تسمية المقطع",
+    "thumbnails.moveSectionUp": "نقل المقطع لأعلى",
+    "thumbnails.moveSectionDown": "نقل المقطع لأسفل",
+    "thumbnails.collapseAll": "طي الكل",
+    "thumbnails.expandAll": "توسيع الكل",
+    "thumbnails.removeSection": "إزالة المقطع",
 
     // Outline panel
     "outline.loading": "جارٍ تحميل المخطط التفصيلي…",

@@ -232,6 +232,18 @@ export const ja: Messages = {
     "thumbnails.duplicateSlide": "スライドの複製",
     "thumbnails.hideSlide": "非表示スライドに設定",
     "thumbnails.deleteSlide": "スライドの削除",
+    "thumbnails.section": "セクション {name}",
+    "thumbnails.collapseSection": "セクションを折りたたむ",
+    "thumbnails.expandSection": "セクションを展開",
+    "thumbnails.sectionName": "セクション名",
+    "thumbnails.addSection": "セクションの追加",
+    "thumbnails.untitledSection": "タイトルなしのセクション",
+    "thumbnails.renameSection": "セクション名の変更",
+    "thumbnails.moveSectionUp": "セクションを上へ移動",
+    "thumbnails.moveSectionDown": "セクションを下へ移動",
+    "thumbnails.collapseAll": "すべて折りたたみ",
+    "thumbnails.expandAll": "すべて展開",
+    "thumbnails.removeSection": "セクションの削除",
 
     // Outline panel
     "outline.loading": "アウトラインを読み込み中…",

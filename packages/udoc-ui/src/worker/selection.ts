@@ -44,6 +44,14 @@ function annotations(selection: UDocSelection | undefined): PortableObjects | nu
     return ids.length > 0 ? { page, ids } : null;
 }
 
+/** The section ids read from a `UDocSelection` — a deck's section selection —
+ *  or `[]` for any other selection, or with no document open. */
+function slideSections(selection: UDocSelection | undefined): string[] {
+    if (!selection || !("presentation" in selection)) return [];
+    const presentation = selection.presentation;
+    return presentation !== "none" && "slideSections" in presentation ? presentation.slideSections.ids : [];
+}
+
 /** The page + object ids read from a `UDocSelection`, or `null` when nothing is
  *  selected, it isn't a portable object selection, or no document is open. */
 function portableObjects(selection: UDocSelection | undefined): PortableObjects | null {
@@ -56,8 +64,8 @@ function portableObjects(selection: UDocSelection | undefined): PortableObjects 
 
 /** Selection codec for the presence channel — build a `setSelection` payload
  *  ({@link objects}) and read ids back from a `selection()` JSON
- *  ({@link objectIds}, {@link annotations}). Resolving the selection to a *command* (which slide /
+ *  ({@link objectIds}, {@link annotations}, {@link slideSections}). Resolving the selection to a *command* (which slide /
  *  page, which ids) is no longer the worker's job — a `SelectionEdit` crosses
  *  the boundary id-free and the engine binds it (see
  *  `session.executeOnSelection`). */
-export const Selection = { objects, objectIds, annotations };
+export const Selection = { objects, objectIds, annotations, slideSections };

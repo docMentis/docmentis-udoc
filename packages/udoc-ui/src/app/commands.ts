@@ -17,6 +17,13 @@ import {
     ICON_PAGE_DUPLICATE,
     ICON_ROTATE_LEFT,
     ICON_ROTATE_RIGHT,
+    ICON_SECTION_ADD,
+    ICON_SECTION_DOWN,
+    ICON_SECTION_REMOVE,
+    ICON_SECTION_RENAME,
+    ICON_SECTION_UP,
+    ICON_SECTIONS_COLLAPSE,
+    ICON_SECTIONS_EXPAND,
     ICON_SLIDE_HIDE,
     ICON_UNDO,
     ICON_REDO,
@@ -62,6 +69,10 @@ export interface CommandContext {
     /** Whether every selected slide is hidden ({@link UIState.selectedSlidesHidden})
      *  — what Hide Slide reads checked by. */
     slidesHidden: boolean;
+    /** The open deck's sections as the section menu reads them: how many there
+     *  are, the selected ones' indices in section order (ascending), and how
+     *  many the thumbnails fold away. */
+    slideSections: { count: number; selected: readonly number[]; collapsed: number };
     /** The extension's own state ({@link UIState.extension}) — what its
      *  commands' and menu rows' predicates read beyond the shell's. */
     extension: unknown;
@@ -83,6 +94,13 @@ export function commandContext(state: UIState): CommandContext {
         canCopy: state.selectionCaps.copyable && copyAllowed(state),
         selection: state.selectionCaps,
         slidesHidden: state.selectedSlidesHidden,
+        slideSections: {
+            count: state.slideSections.length,
+            selected: state.slideSections.flatMap((section, index) =>
+                state.selectedSlideSections.includes(section.id) ? [index] : [],
+            ),
+            collapsed: state.slideSections.filter((section) => state.collapsedSlideSections.has(section.id)).length,
+        },
         extension: state.extension,
         docType: state.docType,
         annotation: annotationFormat(state),
@@ -107,14 +125,23 @@ const whenReady: EnabledWhen = (c) => c.ready;
  * is a switch on `kind` with no side lookup tables. `copy` puts the selection
  * on the system clipboard. `selectionEdit` commits an edit on the selection.
  * `toggleSlidesHidden` is Hide Slide: it hides the selected slides, or shows
- * them again when every one is hidden. `extension` carries an extension's own
- * intent, which the shell hands back to it (`UIExtension.menuAction`).
+ * them again when every one is hidden. A deck's sections: `addSlideSection`
+ * starts an untitled one at the selected slides and edits its name,
+ * `renameSlideSection` edits the selected one's, `moveSlideSections` moves the
+ * selected ones `by` a place, and `collapseSlideSections` folds every one's
+ * slides away in the thumbnails, or unfolds them. `extension` carries an
+ * extension's own intent, which the shell hands back to it
+ * (`UIExtension.menuAction`).
  */
 export type MenuAction =
     | { kind: "annotationStyle"; change: AnnotationStyleChange }
     | { kind: "copy" }
     | { kind: "selectionEdit"; edit: SelectionEdit }
     | { kind: "toggleSlidesHidden" }
+    | { kind: "addSlideSection" }
+    | { kind: "renameSlideSection" }
+    | { kind: "moveSlideSections"; by: -1 | 1 }
+    | { kind: "collapseSlideSections"; collapsed: boolean }
     | { kind: "extension"; action: unknown };
 
 /** One entry in a command's dropdown menu (see the `menu` {@link CommandRun}).
@@ -220,10 +247,16 @@ export const PAGE_MENU: readonly MenuItem[] = [
 ];
 
 /** A deck's thumbnail menu — {@link PAGE_MENU}'s twin for its slides, with
- *  Hide Slide, checked while every selected slide is hidden. */
+ *  Add Section, and Hide Slide, checked while every selected slide is hidden. */
 export const SLIDE_MENU: readonly MenuItem[] = [
     slideRow("thumbnails.newSlide", ICON_PAGE_ADD, { kind: "insertSlide" }),
     slideRow("thumbnails.duplicateSlide", ICON_PAGE_DUPLICATE, { kind: "duplicateSlides" }),
+    {
+        action: { kind: "addSlideSection" },
+        label: "thumbnails.addSection",
+        icon: ICON_SECTION_ADD,
+        enabledWhen: (c) => allowsEdit(c.selection, "insertSlideSection"),
+    },
     {
         action: { kind: "toggleSlidesHidden" },
         label: "thumbnails.hideSlide",
@@ -233,6 +266,55 @@ export const SLIDE_MENU: readonly MenuItem[] = [
         separatorBefore: true,
     },
     { ...slideRow("thumbnails.deleteSlide", ICON_DELETE, { kind: "deleteSlides" }), separatorBefore: true },
+];
+
+/**
+ * A deck's section menu — what a right-click on a section's header in the
+ * thumbnails offers outside view mode, on the sections selected. A move takes
+ * them, with their slides, a place up or down; Remove Section keeps the slides,
+ * in the section before.
+ */
+export const SECTION_MENU: readonly MenuItem[] = [
+    {
+        action: { kind: "renameSlideSection" },
+        label: "thumbnails.renameSection",
+        icon: ICON_SECTION_RENAME,
+        enabledWhen: (c) => allowsEdit(c.selection, "renameSlideSection"),
+    },
+    {
+        action: { kind: "moveSlideSections", by: -1 },
+        label: "thumbnails.moveSectionUp",
+        icon: ICON_SECTION_UP,
+        enabledWhen: (c) => allowsEdit(c.selection, "reorderSlideSections") && c.slideSections.selected[0]! > 0,
+        separatorBefore: true,
+    },
+    {
+        action: { kind: "moveSlideSections", by: 1 },
+        label: "thumbnails.moveSectionDown",
+        icon: ICON_SECTION_DOWN,
+        enabledWhen: ({ selection, slideSections: { count, selected } }) =>
+            allowsEdit(selection, "reorderSlideSections") && selected[0]! < count - selected.length,
+    },
+    {
+        action: { kind: "collapseSlideSections", collapsed: true },
+        label: "thumbnails.collapseAll",
+        icon: ICON_SECTIONS_COLLAPSE,
+        enabledWhen: (c) => c.slideSections.collapsed < c.slideSections.count,
+        separatorBefore: true,
+    },
+    {
+        action: { kind: "collapseSlideSections", collapsed: false },
+        label: "thumbnails.expandAll",
+        icon: ICON_SECTIONS_EXPAND,
+        enabledWhen: (c) => c.slideSections.collapsed > 0,
+    },
+    {
+        action: { kind: "selectionEdit", edit: { kind: "deleteSlideSections" } },
+        label: "thumbnails.removeSection",
+        icon: ICON_SECTION_REMOVE,
+        enabledWhen: (c) => allowsEdit(c.selection, "deleteSlideSections"),
+        separatorBefore: true,
+    },
 ];
 
 /** Which paint channel a Fill / Line split button edits. Decides the swatch

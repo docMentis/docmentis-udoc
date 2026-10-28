@@ -232,6 +232,18 @@ export const zhTW: Messages = {
     "thumbnails.duplicateSlide": "複製投影片",
     "thumbnails.hideSlide": "隱藏投影片",
     "thumbnails.deleteSlide": "刪除投影片",
+    "thumbnails.section": "章節 {name}",
+    "thumbnails.collapseSection": "摺疊章節",
+    "thumbnails.expandSection": "展開章節",
+    "thumbnails.sectionName": "章節名稱",
+    "thumbnails.addSection": "新增章節",
+    "thumbnails.untitledSection": "未命名的章節",
+    "thumbnails.renameSection": "重新命名章節",
+    "thumbnails.moveSectionUp": "章節上移",
+    "thumbnails.moveSectionDown": "章節下移",
+    "thumbnails.collapseAll": "全部摺疊",
+    "thumbnails.expandAll": "全部展開",
+    "thumbnails.removeSection": "移除章節",
 
     // Outline panel
     "outline.loading": "正在載入大綱…",

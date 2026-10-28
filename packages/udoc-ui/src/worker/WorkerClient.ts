@@ -66,6 +66,7 @@ import type {
     SearchReply,
     SelectedAnnotations,
     SelectionEdit,
+    SlideSectionRun,
     ThumbnailResult,
     WorkerOutbound,
     ExtensionRequest,
@@ -1244,6 +1245,14 @@ export class WorkerClient {
          */
         slidesShow: (indices: readonly number[]): Promise<boolean[]> =>
             this.#send({ type: "slidesShow", indices: [...indices] }) as Promise<boolean[]>,
+
+        /**
+         * The open deck's sections, in order, each with the run of the slide
+         * order it holds; none for a deck without sections, or any other
+         * document. A read: what the thumbnails group the slides under.
+         */
+        slideSections: (): Promise<SlideSectionRun[]> =>
+            this.#send({ type: "slideSections" }) as Promise<SlideSectionRun[]>,
     };
 
     /**
@@ -1857,6 +1866,7 @@ export class WorkerClient {
                         // not entitled to — so no control offers a refused edit.
                         capabilities: entitledCapabilities(msg.capabilities, this.#entitlements?.features ?? []),
                         properties: msg.properties,
+                        slideSections: msg.slideSections,
                         localChanged: msg.localChanged,
                     };
                     for (const listener of this.#selectionListeners) listener(state);

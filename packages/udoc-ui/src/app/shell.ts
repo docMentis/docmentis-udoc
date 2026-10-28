@@ -42,7 +42,7 @@ import { createStore, shallowEqual, subscribeSelector } from "../framework/index
 import type { Store } from "../framework/index.js";
 import type { PageSpacing, UIExtension } from "../extension.js";
 import type { Action } from "./actions.js";
-import { CONTEXT_MENU } from "./commands.js";
+import { CONTEXT_MENU, commandContext } from "./commands.js";
 import type { MenuAction } from "./commands.js";
 import { createClipboardCopy } from "./clipboard.js";
 import { createCanvas } from "./components/Canvas.js";
@@ -601,6 +601,7 @@ export function mountUIShell(
         { openUrl: (url) => openUrl(url) },
         {
             onSelectionEdit: (edit) => editPages(edit),
+            onRenameSection: (id, name) => renameSlideSection(id, name),
             onContextMenu: (x, y, rows) => contextMenu.open(x, y, rows),
         },
     );
@@ -1528,6 +1529,12 @@ export function mountUIShell(
         if (pages.length !== before.length || pages.some((page, i) => page !== before[i])) {
             store.dispatch({ type: "SET_SELECTED_PAGES", pages });
         }
+        // The sections it holds, for the headers to tint and the section menu.
+        const sections = state.slideSections;
+        const sectionsBefore = store.getState().selectedSlideSections;
+        if (sections.length !== sectionsBefore.length || sections.some((id, i) => id !== sectionsBefore[i])) {
+            store.dispatch({ type: "SET_SELECTED_SLIDE_SECTIONS", ids: sections });
+        }
         // Read back whether the selected slides are hidden, for Hide Slide's
         // check — every report, since an edit echo is how a hide arrives.
         refreshSelectedSlidesHidden(store.getState().docType === "presentation" ? pages : []);
@@ -1538,6 +1545,30 @@ export function mountUIShell(
         if (!state.localChanged) return;
         for (const listener of selectionEditListeners) listener();
     });
+
+    // The open deck's sections, read back after each change of the document and
+    // each open — what the thumbnails group the slides under. The latest read
+    // wins.
+    let slideSectionsGeneration = 0;
+    function refreshSlideSections(): void {
+        const generation = ++slideSectionsGeneration;
+        void client.presentation
+            .slideSections()
+            .then((sections) => {
+                if (generation === slideSectionsGeneration) store.dispatch({ type: "SET_SLIDE_SECTIONS", sections });
+            })
+            .catch(() => {
+                // Worker gone or document closed — the next open reads afresh.
+            });
+    }
+    const unsubSlideSectionsEdited = client.onDocumentChanged(refreshSlideSections);
+    const unsubSlideSectionsOpened = subscribeSelector(
+        store,
+        (s) => (s.status === "ready" ? s.docGeneration : -1),
+        (generation) => {
+            if (generation >= 0) refreshSlideSections();
+        },
+    );
 
     // The latest selected-slides read wins, as the annotations' does below.
     let slidesHiddenGeneration = 0;
@@ -2200,9 +2231,29 @@ export function mountUIShell(
         if (pages.length > 0) store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: Math.min(...pages) });
     }
 
+    /** Rename section `id` to `name` — addressed by id, as the header being
+     *  edited names it whatever is selected by the time it commits. */
+    function renameSlideSection(id: string, name: string): Promise<void> {
+        return commit(() => client.execute(Command.renameSlideSection(id, name)));
+    }
+
+    /** Start an untitled section at the selected slides, then edit its name in
+     *  its header, as the engine leaves it selected. */
+    async function addSlideSection(): Promise<void> {
+        await editPages({ kind: "insertSlideSection", name: i18n.t("thumbnails.untitledSection") });
+        const [id] = store.getState().selectedSlideSections;
+        if (id !== undefined) store.dispatch({ type: "SET_RENAMING_SLIDE_SECTION", id });
+    }
+
     function deleteSelection(): Promise<void> {
         let edit: SelectionEdit;
         const state = store.getState();
+        // A section selection holds its slides' pages too: Delete removes the
+        // sections, their slides joining the section before.
+        if (state.selectedSlideSections.length > 0) {
+            if (!allowsEdit(state.selectionCaps, "deleteSlideSections")) return Promise.resolve();
+            return editPages({ kind: "deleteSlideSections" });
+        }
         if (state.selectedPages.length > 0) {
             // The engine keeps a PDF's last page: with every page selected the
             // delete isn't offered, and Delete does nothing.
@@ -2757,6 +2808,26 @@ export function mountUIShell(
                 // them all — a selection of both hides the shown ones.
                 void editPages({ kind: "setSlidesShow", show: store.getState().selectedSlidesHidden });
                 break;
+            case "addSlideSection":
+                void addSlideSection();
+                break;
+            case "renameSlideSection": {
+                const [id] = store.getState().selectedSlideSections;
+                if (id !== undefined) store.dispatch({ type: "SET_RENAMING_SLIDE_SECTION", id });
+                break;
+            }
+            case "moveSlideSections": {
+                // The first selected section a place up or down, the rest
+                // following it as one run.
+                const [first] = commandContext(store.getState()).slideSections.selected;
+                if (first !== undefined) void editPages({ kind: "reorderSlideSections", to: first + action.by });
+                break;
+            }
+            case "collapseSlideSections": {
+                const ids = store.getState().slideSections.map((section) => section.id);
+                store.dispatch({ type: "SET_SLIDE_SECTIONS_COLLAPSED", ids, collapsed: action.collapsed });
+                break;
+            }
         }
     }
 
@@ -2832,6 +2903,8 @@ export function mountUIShell(
         unsubCommentsShown();
         if (commentsPending !== null) cancelAnimationFrame(commentsPending);
         unsubSearchEdited();
+        unsubSlideSectionsEdited();
+        unsubSlideSectionsOpened();
         unsubSearchFonts();
         unsubSearchOpened();
         unsubSearchNav();

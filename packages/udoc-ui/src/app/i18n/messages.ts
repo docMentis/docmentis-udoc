@@ -423,6 +423,30 @@ export interface Messages {
     "thumbnails.hideSlide": string;
     /** Delete Slide */
     "thumbnails.deleteSlide": string;
+    /** Section {name} */
+    "thumbnails.section": string;
+    /** Collapse Section */
+    "thumbnails.collapseSection": string;
+    /** Expand Section */
+    "thumbnails.expandSection": string;
+    /** Section name */
+    "thumbnails.sectionName": string;
+    /** Add Section */
+    "thumbnails.addSection": string;
+    /** Untitled Section */
+    "thumbnails.untitledSection": string;
+    /** Rename Section */
+    "thumbnails.renameSection": string;
+    /** Move Section Up */
+    "thumbnails.moveSectionUp": string;
+    /** Move Section Down */
+    "thumbnails.moveSectionDown": string;
+    /** Collapse All */
+    "thumbnails.collapseAll": string;
+    /** Expand All */
+    "thumbnails.expandAll": string;
+    /** Remove Section */
+    "thumbnails.removeSection": string;
 
     // Outline panel
     /** Loading outline… */

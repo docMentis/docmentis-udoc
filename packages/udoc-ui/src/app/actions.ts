@@ -8,7 +8,7 @@ import type {
     UDocSearchScope,
     UDocType,
 } from "@docmentis/udoc-wasm";
-import type { PageComments, SelectedAnnotations } from "../worker/protocol.js";
+import type { PageComments, SelectedAnnotations, SlideSectionRun } from "../worker/protocol.js";
 import type { AnnotationStyle } from "./annotations.js";
 import type { Peer, Scrollbars, SelectionCapabilities, Size } from "../geometry.js";
 import type {
@@ -99,6 +99,16 @@ export type Action =
     // Whether every selected slide is hidden (read back after the worker's
     // selection reports). Drives Hide Slide's check.
     | { type: "SET_SELECTED_SLIDES_HIDDEN"; hidden: boolean }
+    // The open deck's sections (read back after each change of the document).
+    // Drives the thumbnails' section headers.
+    | { type: "SET_SLIDE_SECTIONS"; sections: readonly SlideSectionRun[] }
+    // The sections the selection holds (pushed from the worker's selection
+    // reports). Drives the headers' tint and the section menu.
+    | { type: "SET_SELECTED_SLIDE_SECTIONS"; ids: readonly string[] }
+    // Fold the slides of the sections `ids` under their headers, or unfold them.
+    | { type: "SET_SLIDE_SECTIONS_COLLAPSED"; ids: readonly string[]; collapsed: boolean }
+    // Edit the name of section `id` in its header, or stop editing (`null`).
+    | { type: "SET_RENAMING_SLIDE_SECTION"; id: string | null }
     // The current selection's resolved character format (font / bold / italic),
     // projected from the engine's selection properties — the Text tab mirrors it.
     // Pushed on the same cadence as the capabilities.

@@ -232,6 +232,18 @@ export const de: Messages = {
     "thumbnails.duplicateSlide": "Folie duplizieren",
     "thumbnails.hideSlide": "Folie ausblenden",
     "thumbnails.deleteSlide": "Folie löschen",
+    "thumbnails.section": "Abschnitt {name}",
+    "thumbnails.collapseSection": "Abschnitt reduzieren",
+    "thumbnails.expandSection": "Abschnitt erweitern",
+    "thumbnails.sectionName": "Abschnittsname",
+    "thumbnails.addSection": "Abschnitt hinzufügen",
+    "thumbnails.untitledSection": "Unbenannter Abschnitt",
+    "thumbnails.renameSection": "Abschnitt umbenennen",
+    "thumbnails.moveSectionUp": "Abschnitt nach oben",
+    "thumbnails.moveSectionDown": "Abschnitt nach unten",
+    "thumbnails.collapseAll": "Alle reduzieren",
+    "thumbnails.expandAll": "Alle erweitern",
+    "thumbnails.removeSection": "Abschnitt entfernen",
 
     // Outline panel
     "outline.loading": "Gliederung wird geladen…",

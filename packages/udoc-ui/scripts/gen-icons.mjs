@@ -138,6 +138,15 @@ const ICONS = {
     ICON_ROTATE_RIGHT: "rotate_90_degrees_cw",
     ICON_SLIDE_HIDE: "visibility_off",
 
+    // Sections — a deck's, in the thumbnails' menus
+    ICON_SECTION_ADD: "new_label",
+    ICON_SECTION_RENAME: "edit",
+    ICON_SECTION_REMOVE: "label_off",
+    ICON_SECTION_UP: "arrow_upward",
+    ICON_SECTION_DOWN: "arrow_downward",
+    ICON_SECTIONS_COLLAPSE: "unfold_less",
+    ICON_SECTIONS_EXPAND: "unfold_more",
+
     // Collaboration
     ICON_PEOPLE: "group",
     ICON_PAUSE: "pause",

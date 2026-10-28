@@ -28,6 +28,7 @@ import type {
     SelectedAnnotations,
     SelectionEdit,
     SelectionReport,
+    SlideSectionRun,
     ThumbnailFocusRequest,
     ThumbnailResult,
     WorkerOutbound,
@@ -48,6 +49,7 @@ import type {
     AcroForm,
     SectionSelectionEditType,
     ShapeSelectionEditType,
+    SlideSectionSelectionEditType,
     SlideSelectionEditType,
     TextSelectionEditType,
     UDocCommand,
@@ -57,6 +59,7 @@ import type {
 import { createLanes } from "./lanes.js";
 import type { Job, Task } from "./lanes.js";
 import { Selection } from "./selection.js";
+import { slideSectionRuns } from "./slide-sections.js";
 
 interface WorkerScope {
     onmessage: ((ev: MessageEvent<EngineRequestEnvelope>) => void) | null;
@@ -453,6 +456,7 @@ function readSelection(geometry?: SelectionGeometry): SelectionReportBody {
         peers: session?.peerSelectionGeometry() ?? [],
         capabilities: session?.selectionCapabilities() ?? EMPTY_SELECTION_CAPABILITIES,
         properties: session?.selectionProperties() ?? null,
+        slideSections: session ? Selection.slideSections(session.selection()) : [],
     };
 }
 
@@ -1870,6 +1874,12 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, session ? slidesShow(session, msg.indices) : msg.indices.map(() => true));
                 break;
             }
+            case "slideSections": {
+                // A pure read of the deck's root. None with no open /
+                // non-presentation doc.
+                reply(id, session ? slideSections(session) : []);
+                break;
+            }
             case "sheetIdByIndex": {
                 // A pure read: one sheet's id. Undefined past the last sheet, or
                 // with no open / non-spreadsheet doc.
@@ -2288,6 +2298,17 @@ function slidesShow(s: WasmSession, indices: readonly number[]): boolean[] {
     });
 }
 
+/** The open deck's sections, each as the run of the slide order it holds —
+ *  none for a deck without, or any other document. */
+function slideSections(s: WasmSession): SlideSectionRun[] {
+    const list = safeRead(() => s.presentation.model.root.slideSectionList(), undefined);
+    if (!list || list.sections.length === 0) return [];
+    return slideSectionRuns(
+        list.sections,
+        safeRead(() => s.presentation.model.root.slideIds(), []),
+    );
+}
+
 /** The media file `media` names, its bytes copied out of wasm memory into a
  *  standalone buffer the reply transfers — `null` when it doesn't load. */
 function mediaData(s: WasmSession, media: string): MediaFile | null {
@@ -2452,12 +2473,21 @@ const SLIDE_KINDS: Record<SlideSelectionEditType, "slide"> = {
     insertSlideSection: "slide",
 };
 
+/** The kinds of a deck's section family, the tag their wire form is wrapped
+ *  in — typed against the gate union tsify declares, as the slide ones are. */
+const SLIDE_SECTION_KINDS: Record<SlideSectionSelectionEditType, "slideSection"> = {
+    renameSlideSection: "slideSection",
+    deleteSlideSections: "slideSection",
+    reorderSlideSections: "slideSection",
+};
+
 /** A deck's edit: an edit of the selected slides under `slide` —
- *  `{ slide: { reorderSlides: { to } } }` — and any other a drawing edit under
- *  `common`. */
+ *  `{ slide: { reorderSlides: { to } } }` — one of the selected sections under
+ *  `slideSection`, and any other a drawing edit under `common`. */
 function presentationEdit(edit: SelectionEdit): unknown {
-    if (typeof edit !== "string" && "kind" in edit && edit.kind in SLIDE_KINDS) {
-        return { slide: byKind(edit) };
+    if (typeof edit !== "string" && "kind" in edit) {
+        if (edit.kind in SLIDE_KINDS) return { slide: byKind(edit) };
+        if (edit.kind in SLIDE_SECTION_KINDS) return { slideSection: byKind(edit) };
     }
     return { common: drawingEdit(edit) };
 }

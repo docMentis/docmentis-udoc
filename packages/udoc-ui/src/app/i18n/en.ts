@@ -233,6 +233,18 @@ export const en: Messages = {
     "thumbnails.duplicateSlide": "Duplicate Slide",
     "thumbnails.hideSlide": "Hide Slide",
     "thumbnails.deleteSlide": "Delete Slide",
+    "thumbnails.section": "Section {name}",
+    "thumbnails.collapseSection": "Collapse Section",
+    "thumbnails.expandSection": "Expand Section",
+    "thumbnails.sectionName": "Section name",
+    "thumbnails.addSection": "Add Section",
+    "thumbnails.untitledSection": "Untitled Section",
+    "thumbnails.renameSection": "Rename Section",
+    "thumbnails.moveSectionUp": "Move Section Up",
+    "thumbnails.moveSectionDown": "Move Section Down",
+    "thumbnails.collapseAll": "Collapse All",
+    "thumbnails.expandAll": "Expand All",
+    "thumbnails.removeSection": "Remove Section",
 
     // Outline panel
     "outline.loading": "Loading outline…",

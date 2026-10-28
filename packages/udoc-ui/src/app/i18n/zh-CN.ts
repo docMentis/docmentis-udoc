@@ -232,6 +232,18 @@ export const zhCN: Messages = {
     "thumbnails.duplicateSlide": "复制幻灯片",
     "thumbnails.hideSlide": "隐藏幻灯片",
     "thumbnails.deleteSlide": "删除幻灯片",
+    "thumbnails.section": "节 {name}",
+    "thumbnails.collapseSection": "折叠节",
+    "thumbnails.expandSection": "展开节",
+    "thumbnails.sectionName": "节名称",
+    "thumbnails.addSection": "新增节",
+    "thumbnails.untitledSection": "无标题节",
+    "thumbnails.renameSection": "重命名节",
+    "thumbnails.moveSectionUp": "向上移动节",
+    "thumbnails.moveSectionDown": "向下移动节",
+    "thumbnails.collapseAll": "全部折叠",
+    "thumbnails.expandAll": "全部展开",
+    "thumbnails.removeSection": "删除节",
 
     // Outline panel
     "outline.loading": "正在加载大纲…",

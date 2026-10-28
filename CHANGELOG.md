@@ -12,6 +12,9 @@ listed once, by package. Its major and minor version are those of the
 
 - A presentation's hidden slides, which its slide show skips, show faded in
   the thumbnails, their number struck through.
+- A presentation's sections head their slides in the thumbnails. Each header
+  folds its slides away or back, and counts them while they're folded; Left
+  and Right fold the section of the slide the arrow keys are on.
 
 #### Fixed
 
@@ -38,6 +41,13 @@ listed once, by package. Its major and minor version are those of the
   after the last of them.
 - Hide Slide in the thumbnails' menu hides the selected slides from the slide
   show, and shows them again when every one is hidden, in one undo step.
+- A presentation's sections are edited in the thumbnails. A click on a
+  section's header selects it, Ctrl+click and Shift+click as on slides, and a
+  double-click edits its name. A right-click offers Rename Section, Move
+  Section Up and Down, which take its slides along, Collapse All, Expand All,
+  and Remove Section, which leaves its slides to the section before it, as
+  Delete does. Add Section in the slide menu starts an untitled section at the
+  selected slides and edits its name. Each edit is one undo step.
 
 ## [0.8.6] - 2026-10-27
 

@@ -1081,6 +1081,28 @@ export interface SlidesShowRequest {
     indices: number[];
 }
 
+/**
+ * Read the open deck's sections, in order, each as the run of the slide order
+ * it holds — what the thumbnails group the slides under. Replies with a
+ * {@link SlideSectionRun}`[]`, empty for a deck without sections and for any
+ * other document.
+ */
+export interface SlideSectionsRequest {
+    type: "slideSections";
+}
+
+/**
+ * A deck's section as the thumbnails group its slides: its id and name, and
+ * the run of the slide order it holds — `count` slides from index `start`. An
+ * empty section's `start` is where the section before it ends.
+ */
+export interface SlideSectionRun {
+    id: string;
+    name: string;
+    start: number;
+    count: number;
+}
+
 /** A media file as a player takes it: its bytes, and the content type the
  *  package declared for them. */
 export interface MediaFile {
@@ -1316,6 +1338,21 @@ export type SelectionEdit =
     /** Presentation: set whether a slide show shows the selected slides —
      *  Hide Slide is `show: false`. They stay selected. */
     | { kind: "setSlidesShow"; show: boolean }
+    /** Presentation: start a section named `name` at the first selected slide,
+     *  taking it and the slides after it in its section, and select the new
+     *  section. */
+    | { kind: "insertSlideSection"; name: string }
+    // A deck's sections — the edits of a section selection, picked by the
+    // headers in the thumbnails.
+    /** Presentation: rename the selected section. */
+    | { kind: "renameSlideSection"; name: string }
+    /** Presentation: delete the selected sections, each one's slides joining
+     *  the section before it; nothing is selected after. */
+    | { kind: "deleteSlideSections" }
+    /** Presentation: move the selected sections with their slides, as one run
+     *  in section order, so the first takes index `to` of the resulting
+     *  section order. They stay selected. */
+    | { kind: "reorderSlideSections"; to: number }
     /** PDF: a page edit (`deletePages`, `reorderPages`, …) on the selected pages. */
     | { kind: "page"; edit: SelectionEdit }
     /** PDF: an object edit (`translateObjects`, `insertObjectText`, …) on the
@@ -1730,6 +1767,7 @@ export type WorkerRequest =
     | PageMediaRequest
     | MediaDataRequest
     | SlidesShowRequest
+    | SlideSectionsRequest
     | SheetIdByIndexRequest
     | SetSelectionRequest
     | SelectionReadRequest
@@ -1879,6 +1917,10 @@ export interface SelectionReport {
      *  Text tab to mirror. Recomputed with the geometry; `null` with no document
      *  open. */
     properties: UDocSelectionProperties | null;
+    /** The sections the selection holds, by id — a deck's section selection,
+     *  picked by the headers in the thumbnails. Its slides are the geometry's
+     *  `pages`. Empty for any other selection. */
+    slideSections: string[];
     localChanged: boolean;
 }
 
