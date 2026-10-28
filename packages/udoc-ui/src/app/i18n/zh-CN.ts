@@ -222,6 +222,14 @@ export const zhCN: Messages = {
     "thumbnails.slides": "幻灯片缩略图",
     "thumbnails.page": "第 {page} 页",
     "thumbnails.slide": "第 {page} 张幻灯片",
+    "thumbnails.insertPage": "插入页面",
+    "thumbnails.duplicatePage": "复制页面",
+    "thumbnails.rotateRight": "向右旋转",
+    "thumbnails.rotateLeft": "向左旋转",
+    "thumbnails.deletePage": "删除页面",
+    "thumbnails.newSlide": "新建幻灯片",
+    "thumbnails.duplicateSlide": "复制幻灯片",
+    "thumbnails.deleteSlide": "删除幻灯片",
 
     // Outline panel
     "outline.loading": "正在加载大纲…",

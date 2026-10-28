@@ -1,6 +1,7 @@
-import type { HistoryOp } from "../worker/protocol.js";
+import type { HistoryOp, SelectionEdit } from "../worker/protocol.js";
 import type { StampIcon, UDocType } from "@docmentis/udoc-wasm";
-import type { SelectionCapabilities } from "../geometry.js";
+import { allowsEdit } from "../geometry.js";
+import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
 import { copyAllowed } from "./state.js";
 import type { AnnotationTool, CommandId, UIState, MarkupTool, PlaceTool } from "./state.js";
 import type { Store } from "../framework/index.js";
@@ -11,6 +12,11 @@ import type { AnnotationFormat, AnnotationStyleChange } from "./annotations.js";
 import type { Message, MessageKey } from "./i18n/index.js";
 import {
     ICON_COPY,
+    ICON_DELETE,
+    ICON_PAGE_ADD,
+    ICON_PAGE_DUPLICATE,
+    ICON_ROTATE_LEFT,
+    ICON_ROTATE_RIGHT,
     ICON_UNDO,
     ICON_REDO,
     ICON_SUBTOOL_TEXTBOX,
@@ -94,12 +100,14 @@ const whenReady: EnabledWhen = (c) => c.ready;
  * What activating a menu item does — the intent the shell turns into an edit
  * (or a UI toggle). Each variant carries its full payload, so the shell handler
  * is a switch on `kind` with no side lookup tables. `copy` puts the selection
- * on the system clipboard. `extension` carries an extension's own intent, which
- * the shell hands back to it (`UIExtension.menuAction`).
+ * on the system clipboard. `selectionEdit` commits an edit on the selection.
+ * `extension` carries an extension's own intent, which the shell hands back to
+ * it (`UIExtension.menuAction`).
  */
 export type MenuAction =
     | { kind: "annotationStyle"; change: AnnotationStyleChange }
     | { kind: "copy" }
+    | { kind: "selectionEdit"; edit: SelectionEdit }
     | { kind: "extension"; action: unknown };
 
 /** One entry in a command's dropdown menu (see the `menu` {@link CommandRun}).
@@ -164,6 +172,52 @@ export const COPY_MENU_ITEM: MenuItem = {
  * of text, so they belong beside the selection rather than on a toolbar tab.
  */
 export const CONTEXT_MENU: readonly MenuItem[] = [COPY_MENU_ITEM];
+
+/** A thumbnail menu row running the page edit `edit` (a PDF's, so wrapped in
+ *  its `page` family), live while the selection allows its kind. */
+function pageRow(label: MessageKey, icon: string, edit: SelectionEdit & { kind: SelectionEditKind }): MenuItem {
+    return {
+        action: { kind: "selectionEdit", edit: { kind: "page", edit } },
+        label,
+        icon,
+        enabledWhen: (c) => allowsEdit(c.selection, edit.kind),
+    };
+}
+
+/** A thumbnail menu row running the slide edit `edit`, live while the
+ *  selection allows its kind. */
+function slideRow(label: MessageKey, icon: string, edit: SelectionEdit & { kind: SelectionEditKind }): MenuItem {
+    return {
+        action: { kind: "selectionEdit", edit },
+        label,
+        icon,
+        enabledWhen: (c) => allowsEdit(c.selection, edit.kind),
+    };
+}
+
+/**
+ * A PDF's thumbnail menu — what a right-click on its page thumbnails offers
+ * outside view mode, on the pages selected. An insert and a duplicate land
+ * after the last of them. Delete is greyed with every page selected: a PDF
+ * keeps one.
+ */
+export const PAGE_MENU: readonly MenuItem[] = [
+    pageRow("thumbnails.insertPage", ICON_PAGE_ADD, { kind: "insertPage" }),
+    pageRow("thumbnails.duplicatePage", ICON_PAGE_DUPLICATE, { kind: "duplicatePages" }),
+    {
+        ...pageRow("thumbnails.rotateRight", ICON_ROTATE_RIGHT, { kind: "rotatePages", clockwise: true }),
+        separatorBefore: true,
+    },
+    pageRow("thumbnails.rotateLeft", ICON_ROTATE_LEFT, { kind: "rotatePages", clockwise: false }),
+    { ...pageRow("thumbnails.deletePage", ICON_DELETE, { kind: "deletePages" }), separatorBefore: true },
+];
+
+/** A deck's thumbnail menu — {@link PAGE_MENU}'s twin for its slides. */
+export const SLIDE_MENU: readonly MenuItem[] = [
+    slideRow("thumbnails.newSlide", ICON_PAGE_ADD, { kind: "insertSlide" }),
+    slideRow("thumbnails.duplicateSlide", ICON_PAGE_DUPLICATE, { kind: "duplicateSlides" }),
+    { ...slideRow("thumbnails.deleteSlide", ICON_DELETE, { kind: "deleteSlides" }), separatorBefore: true },
+];
 
 /** Which paint channel a Fill / Line split button edits. Decides the swatch
  *  glyph and the "No Fill" / "No Line" wording of its (later) picker panel. */

@@ -222,6 +222,14 @@ export const zhTW: Messages = {
     "thumbnails.slides": "投影片縮圖",
     "thumbnails.page": "第 {page} 頁",
     "thumbnails.slide": "投影片 {page}",
+    "thumbnails.insertPage": "插入頁面",
+    "thumbnails.duplicatePage": "複製頁面",
+    "thumbnails.rotateRight": "向右旋轉",
+    "thumbnails.rotateLeft": "向左旋轉",
+    "thumbnails.deletePage": "刪除頁面",
+    "thumbnails.newSlide": "新投影片",
+    "thumbnails.duplicateSlide": "複製投影片",
+    "thumbnails.deleteSlide": "刪除投影片",
 
     // Outline panel
     "outline.loading": "正在載入大綱…",

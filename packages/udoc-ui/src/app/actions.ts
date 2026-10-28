@@ -93,6 +93,9 @@ export type Action =
     // The engine's selection-command capability verdict (pushed from the worker's
     // selection reports). Drives every selection-gated control (Delete, Arrange).
     | { type: "SET_SELECTION_CAPABILITIES"; capabilities: SelectionCapabilities }
+    // The whole pages the selection holds (pushed from the worker's selection
+    // reports). Drives the thumbnails' tint.
+    | { type: "SET_SELECTED_PAGES"; pages: readonly number[] }
     // The current selection's resolved character format (font / bold / italic),
     // projected from the engine's selection properties — the Text tab mirrors it.
     // Pushed on the same cadence as the capabilities.

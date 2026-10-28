@@ -423,6 +423,13 @@ export interface UIState {
     selectionCaps: SelectionCapabilities;
 
     /**
+     * The whole pages (a deck's slides) the selection holds, as indices in page
+     * order — what the thumbnails tint. Pushed from the worker's selection
+     * reports; empty for any selection but a page selection.
+     */
+    selectedPages: readonly number[];
+
+    /**
      * The annotations the selection holds, with their page — read back after
      * each of the worker's selection reports, for the Annotate tab's Format
      * controls to show and restyle. Null when it holds none.
@@ -700,6 +707,7 @@ export const initialState: UIState = {
     peers: [],
     userName: null,
     selectionCaps: EMPTY_SELECTION_CAPABILITIES,
+    selectedPages: [],
     selectedAnnotations: null,
     comments: new Map(),
     allCommentsRead: false,

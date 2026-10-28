@@ -625,6 +625,20 @@ export interface SelectObjectsRequest {
 }
 
 /**
+ * Set a **page** selection from a thumbnail gesture — the whole pages (a deck's
+ * slides) from page `anchor` to page `focus`, indices in the page order, either
+ * way round. `mode` is how they combine with the current selection. Geometry
+ * rides back in a {@link SelectionReport}, its `pages` the indices to tint.
+ * Fire-and-forget.
+ */
+export interface SelectPagesRequest {
+    type: "selectPages";
+    anchor: number;
+    focus: number;
+    mode: SelectMode;
+}
+
+/**
  * Set a **cell** selection from a pointer gesture (CSS px) — a block on the
  * active sheet of a spreadsheet. `options` ({@link GridCellSelectOptions} —
  * `extend`) is optional. Geometry rides back in a {@link SelectionReport}.
@@ -1156,8 +1170,8 @@ export type EditAxis = "horizontal" | "vertical";
  * Each edit is named after what it acts on, as its command is: a PDF's page
  * objects (`translateObjects`) or annotations (`translateAnnotations`), a
  * drawing's shapes (`translateShapes`) — a slide's shapes, or a docx drawing's.
- * A PDF's edits travel in their family's wrapper — `{ kind: "object", edit }`,
- * `{ kind: "annotation", edit }` — a free text's drawing text edits in a
+ * A PDF's edits travel in their family's wrapper — `{ kind: "page", edit }`,
+ * `{ kind: "object", edit }`, `{ kind: "annotation", edit }` — a free text's drawing text edits in a
  * `{ kind: "common", edit }` inside the annotation one. The shell emits the one
  * matching the open doc type and the selection.
  */
@@ -1261,6 +1275,32 @@ export type SelectionEdit =
     | { kind: "insertObjectText"; text: string }
     /** PDF: delete at the caret / range in a page text object, like `deleteText`. */
     | { kind: "deleteObjectText"; forward: boolean }
+    // Whole pages and slides — the thumbnails' edits, on a page selection.
+    // Each lands one undo step and leaves a selection: a delete the page that
+    // took the first deleted one's place, an insert the new page, a duplicate
+    // the copies; a rotate and a reorder keep it.
+    /** PDF: delete the selected pages, inside a `page` edit. */
+    | { kind: "deletePages" }
+    /** PDF: rotate the selected pages a quarter turn, inside a `page` edit. */
+    | { kind: "rotatePages"; clockwise: boolean }
+    /** PDF: insert a blank page after the last selected one, inside a `page` edit. */
+    | { kind: "insertPage" }
+    /** PDF: copy the selected pages in after the last of them, inside a `page` edit. */
+    | { kind: "duplicatePages" }
+    /** PDF: move the selected pages, as one run in document order, to `to` —
+     *  the index the first of them takes in the resulting order — inside a
+     *  `page` edit. */
+    | { kind: "reorderPages"; to: number }
+    /** Presentation: the twin of `deletePages`. */
+    | { kind: "deleteSlides" }
+    /** Presentation: the twin of `insertPage`. */
+    | { kind: "insertSlide" }
+    /** Presentation: the twin of `duplicatePages`. */
+    | { kind: "duplicateSlides" }
+    /** Presentation: the twin of `reorderPages`. */
+    | { kind: "reorderSlides"; to: number }
+    /** PDF: a page edit (`deletePages`, `reorderPages`, …) on the selected pages. */
+    | { kind: "page"; edit: SelectionEdit }
     /** PDF: an object edit (`translateObjects`, `insertObjectText`, …) on the
      *  selected objects, or at the caret in a page text object. */
     | { kind: "object"; edit: SelectionEdit }
@@ -1636,6 +1676,7 @@ export type WorkerRequest =
     | HistoryRequest
     | SelectTextRequest
     | SelectObjectsRequest
+    | SelectPagesRequest
     | SelectCellsRequest
     | SelectTableCellsRequest
     | SelectTableRowsRequest

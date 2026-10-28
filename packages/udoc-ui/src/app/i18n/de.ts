@@ -222,6 +222,14 @@ export const de: Messages = {
     "thumbnails.slides": "Folienminiaturen",
     "thumbnails.page": "Seite {page}",
     "thumbnails.slide": "Folie {page}",
+    "thumbnails.insertPage": "Seite einfügen",
+    "thumbnails.duplicatePage": "Seite duplizieren",
+    "thumbnails.rotateRight": "Nach rechts drehen",
+    "thumbnails.rotateLeft": "Nach links drehen",
+    "thumbnails.deletePage": "Seite löschen",
+    "thumbnails.newSlide": "Neue Folie",
+    "thumbnails.duplicateSlide": "Folie duplizieren",
+    "thumbnails.deleteSlide": "Folie löschen",
 
     // Outline panel
     "outline.loading": "Gliederung wird geladen…",

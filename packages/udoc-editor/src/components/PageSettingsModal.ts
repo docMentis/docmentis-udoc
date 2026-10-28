@@ -9,8 +9,7 @@
 // `open(ctx)` seeds it with a page's current geometry and the callbacks that
 // turn an Apply / rotate into a page edit; it owns no document state of its own.
 
-import { ICON_CLEAR, on } from "@docmentis/udoc-ui/internal";
-import { ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT } from "../icons.js";
+import { ICON_CLEAR, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT, on } from "@docmentis/udoc-ui/internal";
 import type { I18n, MessageKey } from "../i18n/index.js";
 
 /** The unit the width/height fields are shown and entered in. */

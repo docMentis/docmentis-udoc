@@ -222,6 +222,14 @@ export const ru: Messages = {
     "thumbnails.slides": "Миниатюры слайдов",
     "thumbnails.page": "Страница {page}",
     "thumbnails.slide": "Слайд {page}",
+    "thumbnails.insertPage": "Вставить страницу",
+    "thumbnails.duplicatePage": "Дублировать страницу",
+    "thumbnails.rotateRight": "Повернуть вправо",
+    "thumbnails.rotateLeft": "Повернуть влево",
+    "thumbnails.deletePage": "Удалить страницу",
+    "thumbnails.newSlide": "Создать слайд",
+    "thumbnails.duplicateSlide": "Дублировать слайд",
+    "thumbnails.deleteSlide": "Удалить слайд",
 
     // Outline panel
     "outline.loading": "Загрузка оглавления…",

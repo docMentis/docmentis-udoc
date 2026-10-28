@@ -302,13 +302,23 @@ export type { Peer, Pointer, PeerPointer };
  * distinct — a shape `deleteShapes` never collides with a text `deleteText` — so
  * the name alone says which edit it gates, wherever the selection sits.
  *
- * Each kind names what it acts on: a PDF's page objects (`deleteObjects`) or
- * annotations (`deleteAnnotations`), a drawing's shapes (`deleteShapes`). The
- * reorder kinds gate all four z-order moves (Bring to Front / Forward / Send
- * Backward / to Back); align / distribute / flip have no kind of their own —
+ * Each kind names what it acts on: a PDF's whole pages (`deletePages`), its page
+ * objects (`deleteObjects`) or annotations (`deleteAnnotations`), a deck's
+ * slides (`deleteSlides`), a drawing's shapes (`deleteShapes`). The object,
+ * annotation and shape reorder kinds gate all four z-order moves (Bring to
+ * Front / Forward / Send Backward / to Back); align / distribute / flip have no kind of their own —
  * the host gates them from the translate / scale-each kinds + `count`.
  */
 export type SelectionEditKind =
+    | "deletePages"
+    | "rotatePages"
+    | "insertPage"
+    | "duplicatePages"
+    | "reorderPages"
+    | "deleteSlides"
+    | "insertSlide"
+    | "duplicateSlides"
+    | "reorderSlides"
     | "deleteObjects"
     | "translateObjects"
     | "rotateEachObject"

@@ -223,6 +223,14 @@ export const en: Messages = {
     "thumbnails.slides": "Slide thumbnails",
     "thumbnails.page": "Page {page}",
     "thumbnails.slide": "Slide {page}",
+    "thumbnails.insertPage": "Insert Page",
+    "thumbnails.duplicatePage": "Duplicate Page",
+    "thumbnails.rotateRight": "Rotate Right",
+    "thumbnails.rotateLeft": "Rotate Left",
+    "thumbnails.deletePage": "Delete Page",
+    "thumbnails.newSlide": "New Slide",
+    "thumbnails.duplicateSlide": "Duplicate Slide",
+    "thumbnails.deleteSlide": "Delete Slide",
 
     // Outline panel
     "outline.loading": "Loading outline…",

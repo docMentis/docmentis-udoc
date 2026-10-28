@@ -403,6 +403,22 @@ export interface Messages {
     "thumbnails.page": string;
     /** Slide {page} */
     "thumbnails.slide": string;
+    /** Insert Page */
+    "thumbnails.insertPage": string;
+    /** Duplicate Page */
+    "thumbnails.duplicatePage": string;
+    /** Rotate Right */
+    "thumbnails.rotateRight": string;
+    /** Rotate Left */
+    "thumbnails.rotateLeft": string;
+    /** Delete Page */
+    "thumbnails.deletePage": string;
+    /** New Slide */
+    "thumbnails.newSlide": string;
+    /** Duplicate Slide */
+    "thumbnails.duplicateSlide": string;
+    /** Delete Slide */
+    "thumbnails.deleteSlide": string;
 
     // Outline panel
     /** Loading outline… */

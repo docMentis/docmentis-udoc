@@ -222,6 +222,14 @@ export const ar: Messages = {
     "thumbnails.slides": "صور مصغرة للشرائح",
     "thumbnails.page": "صفحة {page}",
     "thumbnails.slide": "شريحة {page}",
+    "thumbnails.insertPage": "إدراج صفحة",
+    "thumbnails.duplicatePage": "تكرار الصفحة",
+    "thumbnails.rotateRight": "تدوير لليمين",
+    "thumbnails.rotateLeft": "تدوير لليسار",
+    "thumbnails.deletePage": "حذف الصفحة",
+    "thumbnails.newSlide": "شريحة جديدة",
+    "thumbnails.duplicateSlide": "تكرار الشريحة",
+    "thumbnails.deleteSlide": "حذف الشريحة",
 
     // Outline panel
     "outline.loading": "جارٍ تحميل المخطط التفصيلي…",

@@ -48,6 +48,7 @@ import type {
     AcroForm,
     SectionSelectionEditType,
     ShapeSelectionEditType,
+    SlideSelectionEditType,
     TextSelectionEditType,
     UDocCommand,
     UDocSelectionEdit,
@@ -1535,6 +1536,16 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 }
                 break;
             }
+            case "selectPages": {
+                // Whole pages from a thumbnail gesture. Only a PDF and a deck
+                // respond; any other doc type leaves its selection as it was.
+                if (session) {
+                    const before = session.viewState()[5] ?? -1;
+                    emitSelection(true, session.selectPages(msg.anchor, msg.focus, msg.mode));
+                    refreshChrome(session, before);
+                }
+                break;
+            }
             case "selectSheetCells": {
                 if (session) {
                     emitSelection(
@@ -2350,7 +2361,7 @@ function exec(s: WasmSession, command: UDocCommand): void {
 function taggedSelectionEdit(edit: SelectionEdit, docType: UDocType | undefined): UDocSelectionEdit {
     switch (docType) {
         case "presentation":
-            return { presentation: { common: drawingEdit(edit) } } as UDocSelectionEdit;
+            return { presentation: presentationEdit(edit) } as UDocSelectionEdit;
         case "wordprocessing":
             return { wordprocessing: wordprocessingEdit(edit) } as UDocSelectionEdit;
         case "spreadsheet":
@@ -2412,6 +2423,25 @@ function drawingEdit(edit: SelectionEdit): unknown {
     return { [family]: byKind(edit) };
 }
 
+/** The kinds of a deck's own slide family, the tag their wire form is wrapped
+ *  in — typed against the gate union tsify declares, as the drawing ones are. */
+const SLIDE_KINDS: Record<SlideSelectionEditType, "slide"> = {
+    deleteSlides: "slide",
+    insertSlide: "slide",
+    duplicateSlides: "slide",
+    reorderSlides: "slide",
+};
+
+/** A deck's edit: an edit of the selected slides under `slide` —
+ *  `{ slide: { reorderSlides: { to } } }` — and any other a drawing edit under
+ *  `common`. */
+function presentationEdit(edit: SelectionEdit): unknown {
+    if (typeof edit !== "string" && "kind" in edit && edit.kind in SLIDE_KINDS) {
+        return { slide: byKind(edit) };
+    }
+    return { common: drawingEdit(edit) };
+}
+
 /** The kinds of a word document's own section family, the tag their wire form
  *  is wrapped in — typed against the gate union tsify declares, as the drawing
  *  ones are. */
@@ -2430,11 +2460,14 @@ function wordprocessingEdit(edit: SelectionEdit): unknown {
 }
 
 /** A PDF's edit, which the shell already sends in its family's wrapper —
- *  `{ kind: "object", edit }` or `{ kind: "annotation", edit }` — and, for a
- *  free text's text, a `{ kind: "common", edit }` inside the annotation one. */
+ *  `{ kind: "page", edit }`, `{ kind: "object", edit }` or
+ *  `{ kind: "annotation", edit }` — and, for a free text's text, a
+ *  `{ kind: "common", edit }` inside the annotation one. */
 function portableEdit(edit: SelectionEdit): unknown {
     if (typeof edit !== "string" && "kind" in edit && "edit" in edit) {
         switch (edit.kind) {
+            case "page":
+                return { page: { edit: byKind(edit.edit as { kind: string }) } };
             case "object":
                 return { object: { edit: byKind(edit.edit as { kind: string }) } };
             case "annotation":

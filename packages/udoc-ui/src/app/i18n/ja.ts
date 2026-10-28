@@ -222,6 +222,14 @@ export const ja: Messages = {
     "thumbnails.slides": "スライドサムネイル",
     "thumbnails.page": "{page}ページ",
     "thumbnails.slide": "スライド {page}",
+    "thumbnails.insertPage": "ページを挿入",
+    "thumbnails.duplicatePage": "ページを複製",
+    "thumbnails.rotateRight": "右へ回転",
+    "thumbnails.rotateLeft": "左へ回転",
+    "thumbnails.deletePage": "ページを削除",
+    "thumbnails.newSlide": "新しいスライド",
+    "thumbnails.duplicateSlide": "スライドの複製",
+    "thumbnails.deleteSlide": "スライドの削除",
 
     // Outline panel
     "outline.loading": "アウトラインを読み込み中…",

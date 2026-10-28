@@ -87,6 +87,13 @@ export interface DocProfile {
      */
     pageArrangement: boolean;
     /**
+     * Whether the thumbnails pick whole pages outside view mode — the pages a
+     * PDF, and the slides a deck, are selected and edited as: deleted,
+     * duplicated, moved. A flow document's pages are where its text fell, and
+     * a sheet or an image has none to pick.
+     */
+    pageSelection: boolean;
+    /**
      * The guide band this doc type reserves around the content pane — a
      * spreadsheet's row/column `"header"` — or `null` for one with none of its
      * own (an extension's band may still be drawn there). Host-static: it's
@@ -130,6 +137,7 @@ export const FALLBACK_PROFILE: DocProfile = {
     textEditing: false,
     pagedViewControls: true,
     pageArrangement: false,
+    pageSelection: false,
     // No band for an unprofiled type; a known paged type opts into the ruler
     // explicitly below.
     guide: null,
@@ -153,6 +161,7 @@ export const IMAGE_PROFILE: DocProfile = {
     textEditing: false,
     pagedViewControls: true,
     pageArrangement: false,
+    pageSelection: false,
     // An image projects no guide.
     guide: null,
     // Gutters, like the page stacks.
@@ -173,6 +182,7 @@ export const PORTABLE_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,
+    pageSelection: true,
     guide: null,
     scrollbarGutters: true,
     // PDF carries device colors, not a DrawingML theme — standard swatches only.
@@ -193,6 +203,7 @@ export const PRESENTATION_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
+    pageSelection: true,
     guide: null,
     scrollbarGutters: true,
     // A deck re-themes per slide; the picker shows the current slide's palette.
@@ -219,6 +230,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
     textEditing: false,
     pagedViewControls: false,
     pageArrangement: false,
+    pageSelection: false,
     guide: "header",
     // The sheet fills the pane edge to edge, so its bars float over the grid
     // rather than carving gutters out of it.
@@ -244,6 +256,7 @@ export const WORDPROCESSING_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,
+    pageSelection: false,
     guide: null,
     scrollbarGutters: true,
     // Word carries a single DrawingML theme (`w:clrSchemeMapping`); the Text

@@ -785,7 +785,8 @@ export const uiStyles = css`
     }
 
     /* Fill + ink + hover come from the shared selected rule; the ring is this
-   thumbnail's own — the page it marks is the navigator's whole point. */
+   thumbnail's own — the page it marks is the navigator's whole point. The
+   current page wears it, and so does each page picked outside view mode. */
     .udoc-ui-root .udoc-thumbnail-item--selected {
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: -2px;
@@ -808,11 +809,91 @@ export const uiStyles = css`
         color: var(--udoc-color-on-surface);
         font-weight: 500;
     }
-    /* The reorder ghost, at the pressed overlay. Ready hook: the slide navigator
-   adds .udoc-dragging to a thumbnail while it is being dragged (drag-reorder is
-   not wired yet, so this is currently unreached). */
+    /* The pages a drag is moving: lifted out of the strip, so their places
+   fade, and the strip holds the grabbing hand wherever it goes. */
     .udoc-ui-root .udoc-thumbnail-item.udoc-dragging {
-        background-image: linear-gradient(var(--udoc-state-pressed) 0 0);
+        opacity: 0.35;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-panel--dragging,
+    .udoc-ui-root .udoc-thumbnail-panel--dragging * {
+        cursor: grabbing;
+    }
+
+    /* The lifted stack: the selected pages' thumbnails, the pressed one on top
+   and the rest fanned down and right behind it, following the pointer over the
+   whole shell (ThumbnailPanel places it by its transform). It rises from the
+   strip a little larger and tilted, on the menus' elevation. */
+    .udoc-ui-root .udoc-thumbnail-ghost {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 90;
+        pointer-events: none;
+        will-change: transform;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-ghost__stack {
+        position: relative;
+        transform: rotate(-3deg) scale(1.04);
+        transform-origin: top left;
+        animation: udoc-thumbnail-lift 0.15s ease-out;
+    }
+
+    @keyframes udoc-thumbnail-lift {
+        from {
+            transform: none;
+        }
+    }
+
+    .udoc-ui-root .udoc-thumbnail-ghost__card {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: block;
+        background: white;
+        border-radius: 2px;
+        box-shadow: var(--udoc-elevation-3);
+    }
+
+    /* The first card is in the flow, so the stack takes its size. */
+    .udoc-ui-root .udoc-thumbnail-ghost__card:first-child {
+        position: relative;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-ghost__count {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        box-sizing: border-box;
+        border-radius: 10px;
+        background: var(--udoc-color-primary);
+        color: var(--udoc-color-on-primary);
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 20px;
+        text-align: center;
+        box-shadow: var(--udoc-elevation-2);
+    }
+
+    /* Where a drag would drop the pages: a line across the gap, centred on the
+   top ThumbnailPanel sets. */
+    .udoc-ui-root .udoc-thumbnail-drop {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        height: 2px;
+        transform: translateY(-50%);
+        border-radius: 1px;
+        background: var(--udoc-color-primary);
+        pointer-events: none;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-drop[hidden] {
+        display: none;
     }
 
     .udoc-ui-root .udoc-toolbar {
@@ -1616,6 +1697,10 @@ export const uiStyles = css`
     @media (forced-colors: active) {
         .udoc-ui-root .udoc-thumbnail-item--selected {
             outline: 3px solid Highlight;
+        }
+
+        .udoc-ui-root .udoc-thumbnail-drop {
+            background: Highlight;
         }
 
         .udoc-ui-root .udoc-btn,

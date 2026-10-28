@@ -10,7 +10,7 @@ import type { LayersPanelComponent } from "./LayersPanel.js";
 import { createOutlinePanel } from "./OutlinePanel.js";
 import type { OutlinePanelCallbacks, OutlinePanelComponent } from "./OutlinePanel.js";
 import { createThumbnailPanel } from "./ThumbnailPanel.js";
-import type { ThumbnailPanelComponent } from "./ThumbnailPanel.js";
+import type { ThumbnailPanelCallbacks, ThumbnailPanelComponent } from "./ThumbnailPanel.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
 
 interface TabConfig {
@@ -45,7 +45,7 @@ interface LeftPanelSlice {
  * A port of the previous udoc-viewer's panel — the chrome is complete; the thumbnails,
  * the outline and the layers are live, the other tabs placeholders for now.
  */
-export function createLeftPanel(i18n: I18n, outline: OutlinePanelCallbacks) {
+export function createLeftPanel(i18n: I18n, outline: OutlinePanelCallbacks, thumbnails: ThumbnailPanelCallbacks) {
     const el = document.createElement("div");
     el.className = "udoc-left-panel";
 
@@ -135,7 +135,7 @@ export function createLeftPanel(i18n: I18n, outline: OutlinePanelCallbacks) {
         content.innerHTML = "";
         if (!activeTab) return;
         if (activeTab === "thumbnail" && storeRef && clientRef) {
-            thumbnailPanel = createThumbnailPanel(i18n);
+            thumbnailPanel = createThumbnailPanel(i18n, thumbnails);
             thumbnailPanel.mount(content, storeRef, clientRef);
             return;
         }

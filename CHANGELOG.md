@@ -6,6 +6,22 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-editor
+
+#### Added
+
+- A PDF's pages and a presentation's slides are selected and edited in the
+  thumbnails: a click selects a page, Ctrl+click (Cmd+click on a Mac) adds or
+  removes one, and Shift+click selects the run from the last click, the arrow
+  keys with Shift extending it. A right-click offers Insert Page, Duplicate
+  Page, Rotate Right, Rotate Left and Delete Page (for a deck New Slide,
+  Duplicate Slide and Delete Slide) on the selection, Delete deletes it, and
+  dragging lifts the selected pages out of the thumbnails, stacked, and moves
+  them to where they're dropped, in order. Each edit is one undo step, and the
+  view follows the pages it leaves selected.
+- New Slide shows with slides selected in the thumbnails, and adds the slide
+  after the last of them.
+
 ## [0.8.6] - 2026-10-27
 
 Built on `@docmentis/udoc-wasm` 0.8.8.

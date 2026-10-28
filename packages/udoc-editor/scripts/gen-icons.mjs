@@ -31,8 +31,7 @@ const ICONS = {
     // Text tab
     ICON_FORMATTING_MARKS: "format_paragraph",
 
-    // Home and Insert tabs
-    ICON_PAGE_ADD: "note_add",
+    // Insert tab
     ICON_IMAGE: "image",
 
     // Text tab
@@ -72,8 +71,6 @@ const ICONS = {
     ICON_DISTRIBUTE_H: "horizontal_distribute",
     ICON_DISTRIBUTE_V: "vertical_distribute",
     ICON_FLIP: "flip",
-    ICON_ROTATE_LEFT: "rotate_90_degrees_ccw",
-    ICON_ROTATE_RIGHT: "rotate_90_degrees_cw",
     ICON_GROUP: "stack_group",
     ICON_UNGROUP: "stack",
 

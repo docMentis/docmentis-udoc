@@ -131,6 +131,12 @@ const ICONS = {
     // Delete
     ICON_DELETE: "delete",
 
+    // Pages — the thumbnails' menu and edit mode's page controls
+    ICON_PAGE_ADD: "note_add",
+    ICON_PAGE_DUPLICATE: "file_copy",
+    ICON_ROTATE_LEFT: "rotate_90_degrees_ccw",
+    ICON_ROTATE_RIGHT: "rotate_90_degrees_cw",
+
     // Collaboration
     ICON_PEOPLE: "group",
     ICON_PAUSE: "pause",

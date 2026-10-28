@@ -222,6 +222,14 @@ export const ko: Messages = {
     "thumbnails.slides": "슬라이드 축소판 그림",
     "thumbnails.page": "{page}페이지",
     "thumbnails.slide": "슬라이드 {page}",
+    "thumbnails.insertPage": "페이지 삽입",
+    "thumbnails.duplicatePage": "페이지 복제",
+    "thumbnails.rotateRight": "오른쪽으로 회전",
+    "thumbnails.rotateLeft": "왼쪽으로 회전",
+    "thumbnails.deletePage": "페이지 삭제",
+    "thumbnails.newSlide": "새 슬라이드",
+    "thumbnails.duplicateSlide": "슬라이드 복제",
+    "thumbnails.deleteSlide": "슬라이드 삭제",
 
     // Outline panel
     "outline.loading": "개요를 불러오는 중…",

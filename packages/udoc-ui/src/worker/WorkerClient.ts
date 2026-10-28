@@ -889,6 +889,20 @@ export class WorkerClient {
     }
 
     /**
+     * Set a **page** selection from a thumbnail gesture — the whole pages (a
+     * deck's slides) from page `anchor` to page `focus`, indices in the page
+     * order, either way round. `mode` is how they combine with the current
+     * selection: a press is `(i, i, "replace")`, a Ctrl/Cmd press
+     * `(i, i, "toggle")`, a Shift press `(anchor, i, "replace")` from the
+     * caller's own anchor. Only a PDF and a deck respond. Geometry arrives via
+     * {@link onSelection}, its `pages` the indices to tint. Latest-wins,
+     * fire-and-forget.
+     */
+    selectPages(anchor: number, focus: number, mode: SelectMode): void {
+        this.#post({ type: "selectPages", anchor, focus, mode });
+    }
+
+    /**
      * Set a **cell** selection from a pointer gesture (CSS px) — a block on the
      * active sheet of a spreadsheet, `anchor` the active cell and `focus` the
      * live corner. `options` ({@link GridCellSelectOptions} — `extend`) is optional.

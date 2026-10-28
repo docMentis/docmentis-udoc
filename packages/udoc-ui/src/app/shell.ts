@@ -594,7 +594,16 @@ export function mountUIShell(
     toolbar.tabStripSlot.appendChild(ribbon.tabStrip);
     ribbon.mount(ribbonSlot, store);
 
-    const leftPanel = createLeftPanel(i18n, { openUrl: (url) => openUrl(url) });
+    // The thumbnails' edits commit like the canvas's, and their menu is the
+    // canvas's context menu, handed the page rows.
+    const leftPanel = createLeftPanel(
+        i18n,
+        { openUrl: (url) => openUrl(url) },
+        {
+            onSelectionEdit: (edit) => editPages(edit),
+            onContextMenu: (x, y, rows) => contextMenu.open(x, y, rows),
+        },
+    );
     leftPanel.mount(leftPanelSlot, store, client);
 
     // The open PDF's form: each of its widgets, with how a press fills its field
@@ -1512,6 +1521,13 @@ export function mountUIShell(
         // edit echo (localChanged:false) can change the selection or its z-order
         // (e.g. after a delete or reorder), so don't gate this.
         store.dispatch({ type: "SET_SELECTION_CAPABILITIES", capabilities: state.capabilities });
+        // The whole pages it holds, for the thumbnails to tint — only when they
+        // changed, so an object pick doesn't re-run the strip.
+        const pages = state.local.pages ?? [];
+        const before = store.getState().selectedPages;
+        if (pages.length !== before.length || pages.some((page, i) => page !== before[i])) {
+            store.dispatch({ type: "SET_SELECTED_PAGES", pages });
+        }
         // Read back the annotations the selection holds, for the Annotate
         // tab's Format controls — every report, since an edit echo is how a
         // restyle's new values arrive. Only a PDF has annotations to read.
@@ -2150,8 +2166,28 @@ export function mountUIShell(
     // selection, so they ride the agnostic `executeOnSelection` seam — a no-op
     // worker-side when the selection doesn't suit the edit, so safe to call
     // unconditionally.
+    // A page edit from the thumbnails — their menu, a drop, Delete — then the
+    // first page it leaves selected brought into view: the page that took a
+    // deleted one's place, a new page, the copies, the pages moved.
+    async function editPages(edit: SelectionEdit): Promise<void> {
+        await commit(() => client.executeOnSelection(edit));
+        const pages = store.getState().selectedPages;
+        if (pages.length > 0) store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: Math.min(...pages) });
+    }
+
     function deleteSelection(): Promise<void> {
         let edit: SelectionEdit;
+        const state = store.getState();
+        if (state.selectedPages.length > 0) {
+            // The engine keeps a PDF's last page: with every page selected the
+            // delete isn't offered, and Delete does nothing.
+            if (!allowsEdit(state.selectionCaps, "deleteSlides", "deletePages")) return Promise.resolve();
+            return editPages(
+                state.docType === "presentation"
+                    ? { kind: "deleteSlides" }
+                    : { kind: "page", edit: { kind: "deletePages" } },
+            );
+        }
         if (shapeDocType()) edit = { kind: "deleteShapes" };
         else if (annotationsSelected()) edit = { kind: "annotation", edit: { kind: "deleteAnnotations" } };
         else edit = { kind: "object", edit: { kind: "deleteObjects" } };
@@ -2687,6 +2723,9 @@ export function mountUIShell(
                 break;
             case "copy":
                 clipboard.copy();
+                break;
+            case "selectionEdit":
+                void editPages(action.edit);
                 break;
         }
     }

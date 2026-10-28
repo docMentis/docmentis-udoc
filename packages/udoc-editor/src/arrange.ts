@@ -1,7 +1,7 @@
 // Arrange: the Shape and Object tabs' Arrange menus — z-order, align and
 // distribute, rotate and flip, group — and the edits they make of the
 // selection.
-import { allowsEdit } from "@docmentis/udoc-ui/internal";
+import { allowsEdit, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT } from "@docmentis/udoc-ui/internal";
 import type {
     AlignEdge,
     EditAxis,
@@ -26,8 +26,6 @@ import {
     ICON_FLIP,
     ICON_GROUP,
     ICON_ORDER,
-    ICON_ROTATE_LEFT,
-    ICON_ROTATE_RIGHT,
     ICON_SEND_BACKWARD,
     ICON_SEND_TO_BACK,
     ICON_UNGROUP,

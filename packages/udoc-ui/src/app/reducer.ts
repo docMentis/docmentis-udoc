@@ -276,6 +276,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_SELECTION_CAPABILITIES":
             return { ...state, selectionCaps: action.capabilities };
+        case "SET_SELECTED_PAGES":
+            return { ...state, selectedPages: action.pages };
 
         case "SYNC_VIEW":
             // The engine's authoritative values, adopted verbatim — no

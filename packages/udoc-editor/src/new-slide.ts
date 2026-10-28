@@ -1,12 +1,12 @@
 // New Slide: the presentation Home tab's document-level action, and the layout
 // picker it opens.
 import type { UDocCommand } from "@docmentis/udoc-ui";
+import { allowsEdit, ICON_PAGE_ADD } from "@docmentis/udoc-ui/internal";
 import type { CommandDef } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
 import { createNewSlideModal } from "./components/NewSlideModal.js";
 import type { LayoutOption } from "./components/NewSlideModal.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
-import { ICON_PAGE_ADD } from "./icons.js";
 
 /** Create a slide at `index` (clamped), seeded with its layout's content
  *  placeholders. `layout` is the slide-layout id to build on; omit it to copy
@@ -34,11 +34,13 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
         // Pull every slide master's summary, flatten it to pickable options
         // (each slide layout previews on its slide master's plane at page
         // `1 + its index`), and open. Falls back to the copy-neighbor default
-        // when no slide layouts are available. The 0-based page index nearest
-        // the viewport top is the current slide; +1 lands the new slide right
-        // after it, PowerPoint-style.
+        // when no slide layouts are available. The new slide lands right after
+        // the last slide selected in the thumbnails, else after the current
+        // slide — the 0-based page index nearest the viewport top —
+        // PowerPoint-style.
         async open() {
-            const insertIndex = host.store.getState().pageIndex + 1;
+            const { selectedPages, pageIndex } = host.store.getState();
+            const insertIndex = (selectedPages.length > 0 ? Math.max(...selectedPages) : pageIndex) + 1;
             const slideMasters = await host.edit.slideMastersSummary();
             const options: LayoutOption[] = slideMasters.flatMap((slideMaster) =>
                 slideMaster.slideLayouts.map((slideLayout, index) => ({
@@ -65,10 +67,10 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
 
 /**
  * The New Slide command, opening the picker with `open` — a document-level
- * action shown only with nothing selected: it sits where the selection's
- * property controls go, so it shows on the empty canvas and yields to those
- * controls the moment a shape or text is selected. Labeled, as its page-add
- * glyph reads "slide" only once you know.
+ * action shown with nothing selected, or slides: it sits where the selection's
+ * property controls go, so it shows on the empty canvas and with slides picked
+ * in the thumbnails, and yields to those controls the moment a shape or text
+ * is selected. Labeled, as its page-add glyph reads "slide" only once you know.
  */
 export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
     return {
@@ -78,6 +80,6 @@ export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
         group: "slide",
         labeled: true,
         run: { kind: "action", press: open },
-        enabledWhen: (c) => c.ready && c.selection.count === 0,
+        enabledWhen: (c) => c.ready && (c.selection.count === 0 || allowsEdit(c.selection, "insertSlide")),
     };
 }

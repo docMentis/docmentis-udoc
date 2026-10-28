@@ -222,6 +222,14 @@ export const fr: Messages = {
     "thumbnails.slides": "Miniatures des diapositives",
     "thumbnails.page": "Page {page}",
     "thumbnails.slide": "Diapositive {page}",
+    "thumbnails.insertPage": "Insérer une page",
+    "thumbnails.duplicatePage": "Dupliquer la page",
+    "thumbnails.rotateRight": "Faire pivoter à droite",
+    "thumbnails.rotateLeft": "Faire pivoter à gauche",
+    "thumbnails.deletePage": "Supprimer la page",
+    "thumbnails.newSlide": "Nouvelle diapositive",
+    "thumbnails.duplicateSlide": "Dupliquer la diapositive",
+    "thumbnails.deleteSlide": "Supprimer la diapositive",
 
     // Outline panel
     "outline.loading": "Chargement du sommaire…",

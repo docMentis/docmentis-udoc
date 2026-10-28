@@ -222,6 +222,14 @@ export const ptBR: Messages = {
     "thumbnails.slides": "Miniaturas dos slides",
     "thumbnails.page": "Página {page}",
     "thumbnails.slide": "Slide {page}",
+    "thumbnails.insertPage": "Inserir Página",
+    "thumbnails.duplicatePage": "Duplicar Página",
+    "thumbnails.rotateRight": "Girar para a Direita",
+    "thumbnails.rotateLeft": "Girar para a Esquerda",
+    "thumbnails.deletePage": "Excluir Página",
+    "thumbnails.newSlide": "Novo Slide",
+    "thumbnails.duplicateSlide": "Duplicar Slide",
+    "thumbnails.deleteSlide": "Excluir Slide",
 
     // Outline panel
     "outline.loading": "Carregando sumário…",

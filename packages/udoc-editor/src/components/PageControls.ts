@@ -19,8 +19,14 @@
 //   "+" button. Inserting in the gap above page N is "before N" and "after
 //   N−1" at once, so there is no before/after question to ask.
 
-import { ICON_CHEVRON_DOWN, ICON_CHEVRON_UP, ICON_DELETE, ICON_MORE } from "@docmentis/udoc-ui/internal";
-import { ICON_PAGE_ADD, ICON_ROTATE_RIGHT } from "../icons.js";
+import {
+    ICON_CHEVRON_DOWN,
+    ICON_CHEVRON_UP,
+    ICON_DELETE,
+    ICON_MORE,
+    ICON_PAGE_ADD,
+    ICON_ROTATE_RIGHT,
+} from "@docmentis/udoc-ui/internal";
 import type { OverlayItem, OverlaySource } from "@docmentis/udoc-ui";
 import { createI18n } from "../i18n/index.js";
 import type { I18n } from "../i18n/index.js";
