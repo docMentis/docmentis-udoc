@@ -1528,6 +1528,9 @@ export function mountUIShell(
         if (pages.length !== before.length || pages.some((page, i) => page !== before[i])) {
             store.dispatch({ type: "SET_SELECTED_PAGES", pages });
         }
+        // Read back whether the selected slides are hidden, for Hide Slide's
+        // check — every report, since an edit echo is how a hide arrives.
+        refreshSelectedSlidesHidden(store.getState().docType === "presentation" ? pages : []);
         // Read back the annotations the selection holds, for the Annotate
         // tab's Format controls — every report, since an edit echo is how a
         // restyle's new values arrive. Only a PDF has annotations to read.
@@ -1535,6 +1538,28 @@ export function mountUIShell(
         if (!state.localChanged) return;
         for (const listener of selectionEditListeners) listener();
     });
+
+    // The latest selected-slides read wins, as the annotations' does below.
+    let slidesHiddenGeneration = 0;
+    function refreshSelectedSlidesHidden(slides: readonly number[]): void {
+        const generation = ++slidesHiddenGeneration;
+        const set = (hidden: boolean) => {
+            if (generation !== slidesHiddenGeneration) return;
+            if (hidden !== store.getState().selectedSlidesHidden) {
+                store.dispatch({ type: "SET_SELECTED_SLIDES_HIDDEN", hidden });
+            }
+        };
+        if (slides.length === 0) {
+            set(false);
+            return;
+        }
+        void client.presentation
+            .slidesShow(slides)
+            .then((show) => set(show.every((shown) => !shown)))
+            .catch(() => {
+                // Worker gone or document closed — nothing is selected any more.
+            });
+    }
 
     // The latest selected-annotations read wins: a reply a newer selection report
     // has superseded is dropped, so a slow read can't show a stale style.
@@ -2726,6 +2751,11 @@ export function mountUIShell(
                 break;
             case "selectionEdit":
                 void editPages(action.edit);
+                break;
+            case "toggleSlidesHidden":
+                // Show the slides again when every one is hidden, else hide
+                // them all — a selection of both hides the shown ones.
+                void editPages({ kind: "setSlidesShow", show: store.getState().selectedSlidesHidden });
                 break;
         }
     }

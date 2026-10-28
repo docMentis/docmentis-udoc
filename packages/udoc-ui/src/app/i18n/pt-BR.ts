@@ -222,6 +222,7 @@ export const ptBR: Messages = {
     "thumbnails.slides": "Miniaturas dos slides",
     "thumbnails.page": "Página {page}",
     "thumbnails.slide": "Slide {page}",
+    "thumbnails.hiddenSlide": "Slide {page}, oculto",
     "thumbnails.insertPage": "Inserir Página",
     "thumbnails.duplicatePage": "Duplicar Página",
     "thumbnails.rotateRight": "Girar para a Direita",
@@ -229,6 +230,7 @@ export const ptBR: Messages = {
     "thumbnails.deletePage": "Excluir Página",
     "thumbnails.newSlide": "Novo Slide",
     "thumbnails.duplicateSlide": "Duplicar Slide",
+    "thumbnails.hideSlide": "Ocultar Slide",
     "thumbnails.deleteSlide": "Excluir Slide",
 
     // Outline panel

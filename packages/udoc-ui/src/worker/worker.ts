@@ -1863,6 +1863,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, file, undefined, file ? [file.bytes] : undefined);
                 break;
             }
+            case "slidesShow": {
+                // A read that loads each slide on first use. Shown where there
+                // is none to read: no open / non-presentation doc, or past the
+                // last slide.
+                reply(id, session ? slidesShow(session, msg.indices) : msg.indices.map(() => true));
+                break;
+            }
             case "sheetIdByIndex": {
                 // A pure read: one sheet's id. Undefined past the last sheet, or
                 // with no open / non-spreadsheet doc.
@@ -2271,6 +2278,16 @@ const EMPTY_ACRO_FORM: AcroForm = {
 /** The field the widget annotation `widget` on page `page` belongs to, as the
  *  form holds it, with the widget's page index, its rect and its on state —
  *  or `null` when no field lists it, or the page's annotations don't. */
+/** Whether a slide show shows each slide at `indices` — `true` for an index
+ *  past the last slide, or one that won't read. */
+function slidesShow(s: WasmSession, indices: readonly number[]): boolean[] {
+    const ids = safeRead(() => s.presentation.model.root.slideIds(), []);
+    return indices.map((index) => {
+        const id = ids[index];
+        return id === undefined || safeRead(() => s.presentation.model.slide(id).show(), true);
+    });
+}
+
 /** The media file `media` names, its bytes copied out of wasm memory into a
  *  standalone buffer the reply transfers — `null` when it doesn't load. */
 function mediaData(s: WasmSession, media: string): MediaFile | null {

@@ -278,6 +278,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...state, selectionCaps: action.capabilities };
         case "SET_SELECTED_PAGES":
             return { ...state, selectedPages: action.pages };
+        case "SET_SELECTED_SLIDES_HIDDEN":
+            return { ...state, selectedSlidesHidden: action.hidden };
 
         case "SYNC_VIEW":
             // The engine's authoritative values, adopted verbatim — no

@@ -222,6 +222,7 @@ export const ko: Messages = {
     "thumbnails.slides": "슬라이드 축소판 그림",
     "thumbnails.page": "{page}페이지",
     "thumbnails.slide": "슬라이드 {page}",
+    "thumbnails.hiddenSlide": "슬라이드 {page}, 숨김",
     "thumbnails.insertPage": "페이지 삽입",
     "thumbnails.duplicatePage": "페이지 복제",
     "thumbnails.rotateRight": "오른쪽으로 회전",
@@ -229,6 +230,7 @@ export const ko: Messages = {
     "thumbnails.deletePage": "페이지 삭제",
     "thumbnails.newSlide": "새 슬라이드",
     "thumbnails.duplicateSlide": "슬라이드 복제",
+    "thumbnails.hideSlide": "슬라이드 숨기기",
     "thumbnails.deleteSlide": "슬라이드 삭제",
 
     // Outline panel

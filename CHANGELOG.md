@@ -8,6 +8,11 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- A presentation's hidden slides, which its slide show skips, show faded in
+  the thumbnails, their number struck through.
+
 #### Fixed
 
 - Escape closes an open menu and nothing else, where it also closed the side
@@ -31,6 +36,8 @@ listed once, by package. Its major and minor version are those of the
   view follows the pages it leaves selected.
 - New Slide shows with slides selected in the thumbnails, and adds the slide
   after the last of them.
+- Hide Slide in the thumbnails' menu hides the selected slides from the slide
+  show, and shows them again when every one is hidden, in one undo step.
 
 ## [0.8.6] - 2026-10-27
 

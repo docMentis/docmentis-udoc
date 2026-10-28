@@ -17,6 +17,7 @@ import {
     ICON_PAGE_DUPLICATE,
     ICON_ROTATE_LEFT,
     ICON_ROTATE_RIGHT,
+    ICON_SLIDE_HIDE,
     ICON_UNDO,
     ICON_REDO,
     ICON_SUBTOOL_TEXTBOX,
@@ -58,6 +59,9 @@ export interface CommandContext {
     /** Whether the selection copies and the mode lets it ({@link copyAllowed}). */
     canCopy: boolean;
     selection: SelectionCapabilities;
+    /** Whether every selected slide is hidden ({@link UIState.selectedSlidesHidden})
+     *  — what Hide Slide reads checked by. */
+    slidesHidden: boolean;
     /** The extension's own state ({@link UIState.extension}) — what its
      *  commands' and menu rows' predicates read beyond the shell's. */
     extension: unknown;
@@ -78,6 +82,7 @@ export function commandContext(state: UIState): CommandContext {
         canRedo: state.canRedo,
         canCopy: state.selectionCaps.copyable && copyAllowed(state),
         selection: state.selectionCaps,
+        slidesHidden: state.selectedSlidesHidden,
         extension: state.extension,
         docType: state.docType,
         annotation: annotationFormat(state),
@@ -101,13 +106,15 @@ const whenReady: EnabledWhen = (c) => c.ready;
  * (or a UI toggle). Each variant carries its full payload, so the shell handler
  * is a switch on `kind` with no side lookup tables. `copy` puts the selection
  * on the system clipboard. `selectionEdit` commits an edit on the selection.
- * `extension` carries an extension's own intent, which the shell hands back to
- * it (`UIExtension.menuAction`).
+ * `toggleSlidesHidden` is Hide Slide: it hides the selected slides, or shows
+ * them again when every one is hidden. `extension` carries an extension's own
+ * intent, which the shell hands back to it (`UIExtension.menuAction`).
  */
 export type MenuAction =
     | { kind: "annotationStyle"; change: AnnotationStyleChange }
     | { kind: "copy" }
     | { kind: "selectionEdit"; edit: SelectionEdit }
+    | { kind: "toggleSlidesHidden" }
     | { kind: "extension"; action: unknown };
 
 /** One entry in a command's dropdown menu (see the `menu` {@link CommandRun}).
@@ -212,10 +219,19 @@ export const PAGE_MENU: readonly MenuItem[] = [
     { ...pageRow("thumbnails.deletePage", ICON_DELETE, { kind: "deletePages" }), separatorBefore: true },
 ];
 
-/** A deck's thumbnail menu — {@link PAGE_MENU}'s twin for its slides. */
+/** A deck's thumbnail menu — {@link PAGE_MENU}'s twin for its slides, with
+ *  Hide Slide, checked while every selected slide is hidden. */
 export const SLIDE_MENU: readonly MenuItem[] = [
     slideRow("thumbnails.newSlide", ICON_PAGE_ADD, { kind: "insertSlide" }),
     slideRow("thumbnails.duplicateSlide", ICON_PAGE_DUPLICATE, { kind: "duplicateSlides" }),
+    {
+        action: { kind: "toggleSlidesHidden" },
+        label: "thumbnails.hideSlide",
+        icon: ICON_SLIDE_HIDE,
+        enabledWhen: (c) => allowsEdit(c.selection, "setSlidesShow"),
+        checked: (c) => c.slidesHidden,
+        separatorBefore: true,
+    },
     { ...slideRow("thumbnails.deleteSlide", ICON_DELETE, { kind: "deleteSlides" }), separatorBefore: true },
 ];
 

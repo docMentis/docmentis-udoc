@@ -222,6 +222,7 @@ export const fr: Messages = {
     "thumbnails.slides": "Miniatures des diapositives",
     "thumbnails.page": "Page {page}",
     "thumbnails.slide": "Diapositive {page}",
+    "thumbnails.hiddenSlide": "Diapositive {page}, masquée",
     "thumbnails.insertPage": "Insérer une page",
     "thumbnails.duplicatePage": "Dupliquer la page",
     "thumbnails.rotateRight": "Faire pivoter à droite",
@@ -229,6 +230,7 @@ export const fr: Messages = {
     "thumbnails.deletePage": "Supprimer la page",
     "thumbnails.newSlide": "Nouvelle diapositive",
     "thumbnails.duplicateSlide": "Dupliquer la diapositive",
+    "thumbnails.hideSlide": "Masquer la diapositive",
     "thumbnails.deleteSlide": "Supprimer la diapositive",
 
     // Outline panel

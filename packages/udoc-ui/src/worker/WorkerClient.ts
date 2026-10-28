@@ -1234,6 +1234,16 @@ export class WorkerClient {
          */
         mediaData: (media: string): Promise<MediaFile | null> =>
             this.#send({ type: "mediaData", media }) as Promise<MediaFile | null>,
+
+        /**
+         * Whether a slide show shows each slide at `indices` (0-based, in slide
+         * order) — `false` for a slide hidden — one answer per index, loading
+         * each slide on first read; `true` where there is none to read. A read:
+         * what the thumbnails dim hidden slides by, and Hide Slide reads its
+         * state from.
+         */
+        slidesShow: (indices: readonly number[]): Promise<boolean[]> =>
+            this.#send({ type: "slidesShow", indices: [...indices] }) as Promise<boolean[]>,
     };
 
     /**

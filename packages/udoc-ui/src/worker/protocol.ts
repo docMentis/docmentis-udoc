@@ -1069,6 +1069,18 @@ export interface MediaDataRequest {
     media: string;
 }
 
+/**
+ * Read whether a slide show shows each slide at `indices` (0-based, in slide
+ * order) — its `@show`, `false` for a slide hidden — loading each slide on
+ * first read. Replies with a `boolean[]`, one per index: `true` where there is
+ * none to read (no presentation open, past the last slide), as a slide shows
+ * unless hidden.
+ */
+export interface SlidesShowRequest {
+    type: "slidesShow";
+    indices: number[];
+}
+
 /** A media file as a player takes it: its bytes, and the content type the
  *  package declared for them. */
 export interface MediaFile {
@@ -1301,6 +1313,9 @@ export type SelectionEdit =
     | { kind: "duplicateSlides" }
     /** Presentation: the twin of `reorderPages`. */
     | { kind: "reorderSlides"; to: number }
+    /** Presentation: set whether a slide show shows the selected slides —
+     *  Hide Slide is `show: false`. They stay selected. */
+    | { kind: "setSlidesShow"; show: boolean }
     /** PDF: a page edit (`deletePages`, `reorderPages`, …) on the selected pages. */
     | { kind: "page"; edit: SelectionEdit }
     /** PDF: an object edit (`translateObjects`, `insertObjectText`, …) on the
@@ -1714,6 +1729,7 @@ export type WorkerRequest =
     | SelectionGeometryRequest
     | PageMediaRequest
     | MediaDataRequest
+    | SlidesShowRequest
     | SheetIdByIndexRequest
     | SetSelectionRequest
     | SelectionReadRequest

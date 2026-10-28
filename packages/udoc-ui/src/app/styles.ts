@@ -809,6 +809,16 @@ export const uiStyles = css`
         color: var(--udoc-color-on-surface);
         font-weight: 500;
     }
+
+    /* A hidden slide, which the slide show skips: its page fades and its
+   number is struck through. */
+    .udoc-ui-root .udoc-thumbnail-item--hidden .udoc-thumbnail-item__canvas {
+        opacity: 0.5;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-item--hidden .udoc-thumbnail-item__label {
+        text-decoration: line-through;
+    }
     /* The pages a drag is moving: lifted out of the strip, so their places
    fade, and the strip holds the grabbing hand wherever it goes. */
     .udoc-ui-root .udoc-thumbnail-item.udoc-dragging {

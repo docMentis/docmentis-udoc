@@ -222,6 +222,7 @@ export const ru: Messages = {
     "thumbnails.slides": "Миниатюры слайдов",
     "thumbnails.page": "Страница {page}",
     "thumbnails.slide": "Слайд {page}",
+    "thumbnails.hiddenSlide": "Слайд {page}, скрыт",
     "thumbnails.insertPage": "Вставить страницу",
     "thumbnails.duplicatePage": "Дублировать страницу",
     "thumbnails.rotateRight": "Повернуть вправо",
@@ -229,6 +230,7 @@ export const ru: Messages = {
     "thumbnails.deletePage": "Удалить страницу",
     "thumbnails.newSlide": "Создать слайд",
     "thumbnails.duplicateSlide": "Дублировать слайд",
+    "thumbnails.hideSlide": "Скрыть слайд",
     "thumbnails.deleteSlide": "Удалить слайд",
 
     // Outline panel

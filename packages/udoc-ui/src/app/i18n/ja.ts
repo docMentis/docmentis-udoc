@@ -222,6 +222,7 @@ export const ja: Messages = {
     "thumbnails.slides": "スライドサムネイル",
     "thumbnails.page": "{page}ページ",
     "thumbnails.slide": "スライド {page}",
+    "thumbnails.hiddenSlide": "スライド {page} (非表示)",
     "thumbnails.insertPage": "ページを挿入",
     "thumbnails.duplicatePage": "ページを複製",
     "thumbnails.rotateRight": "右へ回転",
@@ -229,6 +230,7 @@ export const ja: Messages = {
     "thumbnails.deletePage": "ページを削除",
     "thumbnails.newSlide": "新しいスライド",
     "thumbnails.duplicateSlide": "スライドの複製",
+    "thumbnails.hideSlide": "非表示スライドに設定",
     "thumbnails.deleteSlide": "スライドの削除",
 
     // Outline panel

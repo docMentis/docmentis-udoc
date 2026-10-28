@@ -403,6 +403,8 @@ export interface Messages {
     "thumbnails.page": string;
     /** Slide {page} */
     "thumbnails.slide": string;
+    /** Slide {page}, hidden */
+    "thumbnails.hiddenSlide": string;
     /** Insert Page */
     "thumbnails.insertPage": string;
     /** Duplicate Page */
@@ -417,6 +419,8 @@ export interface Messages {
     "thumbnails.newSlide": string;
     /** Duplicate Slide */
     "thumbnails.duplicateSlide": string;
+    /** Hide Slide */
+    "thumbnails.hideSlide": string;
     /** Delete Slide */
     "thumbnails.deleteSlide": string;
 

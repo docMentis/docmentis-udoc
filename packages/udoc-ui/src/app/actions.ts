@@ -96,6 +96,9 @@ export type Action =
     // The whole pages the selection holds (pushed from the worker's selection
     // reports). Drives the thumbnails' tint.
     | { type: "SET_SELECTED_PAGES"; pages: readonly number[] }
+    // Whether every selected slide is hidden (read back after the worker's
+    // selection reports). Drives Hide Slide's check.
+    | { type: "SET_SELECTED_SLIDES_HIDDEN"; hidden: boolean }
     // The current selection's resolved character format (font / bold / italic),
     // projected from the engine's selection properties — the Text tab mirrors it.
     // Pushed on the same cadence as the capabilities.

@@ -222,6 +222,7 @@ export const ar: Messages = {
     "thumbnails.slides": "صور مصغرة للشرائح",
     "thumbnails.page": "صفحة {page}",
     "thumbnails.slide": "شريحة {page}",
+    "thumbnails.hiddenSlide": "شريحة {page}، مخفية",
     "thumbnails.insertPage": "إدراج صفحة",
     "thumbnails.duplicatePage": "تكرار الصفحة",
     "thumbnails.rotateRight": "تدوير لليمين",
@@ -229,6 +230,7 @@ export const ar: Messages = {
     "thumbnails.deletePage": "حذف الصفحة",
     "thumbnails.newSlide": "شريحة جديدة",
     "thumbnails.duplicateSlide": "تكرار الشريحة",
+    "thumbnails.hideSlide": "إخفاء الشريحة",
     "thumbnails.deleteSlide": "حذف الشريحة",
 
     // Outline panel

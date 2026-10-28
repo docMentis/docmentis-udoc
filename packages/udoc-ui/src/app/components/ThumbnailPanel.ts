@@ -47,6 +47,9 @@ import { MAC } from "./controls.js";
  * selection, and its `pages` come back marked as the current page is. A
  * right-click opens the page menu on the selection, and a drag lifts the
  * selected pages out of the strip, stacked, to drop them in a gap.
+ *
+ * A deck's hidden slides, which its slide show skips, are faded in every mode,
+ * their number struck through — read, like the sizes, as their items mount.
  */
 
 /** The edits the strip makes and the menu it opens, run by the shell. */
@@ -198,10 +201,18 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
      *  last changed. An edit can resize a page (a rotate) or put another one at
      *  its index (a move, an insert), so each change re-reads them as they show. */
     const measured = new Set<number>();
-    /** Bumped on each document change, so a size read sent before it is dropped. */
-    let sizeGeneration = 0;
+    /** Bumped on each document change, so a size or show read sent before it
+     *  is dropped. */
+    let changeGeneration = 0;
     /** In-flight `pageDisplaySize` size probes, so we don't fire duplicates. */
     const sizing = new Set<number>();
+    /** A deck's slides read hidden from its slide show, by page index. */
+    const hidden = new Set<number>();
+    /** The slides whose show has been read since the deck last changed — a hide
+     *  changes it, and a move or an insert puts another slide at the index. */
+    const showRead = new Set<number>();
+    /** Slides whose show is being read, so a read isn't sent twice. */
+    const showReading = new Set<number>();
     /** Most recent measured aspect — the estimate for not-yet-measured pages. */
     let typicalAspect = DEFAULT_ASPECT;
 
@@ -289,6 +300,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
             positionItem(item, page);
             void renderItem(page, item);
         }
+        void readShow();
 
         // The render queue fills nearest the strip's centre first.
         const center = pageAt(top + viewH / 2);
@@ -308,12 +320,21 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     /** Mark `item` selected — one look for the current page and, picking, each
      *  page the engine's selection holds. For assistive tech the two stay
      *  apart: `aria-current` names the current page, `aria-selected` the
-     *  selection (the current page, when not picking). */
+     *  selection (the current page, when not picking). A hidden slide is
+     *  marked, and named, hidden. */
     function markItem(item: ThumbItem, page: number): void {
         const current = page === slice.currentPage;
         const isSelected = slice.picking ? selected.has(page) : current;
+        const isHidden = hidden.has(page);
         item.container.classList.toggle("udoc-thumbnail-item--selected", current || isSelected);
         item.container.classList.toggle("udoc-dragging", isSelected && press?.dragging === true);
+        item.container.classList.toggle("udoc-thumbnail-item--hidden", isHidden);
+        item.container.setAttribute(
+            "aria-label",
+            i18n.t(isHidden ? "thumbnails.hiddenSlide" : slides() ? "thumbnails.slide" : "thumbnails.page", {
+                page: page + 1,
+            }),
+        );
         item.container.setAttribute("aria-selected", String(isSelected));
         if (current) item.container.setAttribute("aria-current", "page");
         else item.container.removeAttribute("aria-current");
@@ -324,10 +345,6 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         container.className = "udoc-thumbnail-item";
         container.id = `udoc-thumb-${page}`;
         container.setAttribute("role", "option");
-        container.setAttribute(
-            "aria-label",
-            i18n.t(slides() ? "thumbnails.slide" : "thumbnails.page", { page: page + 1 }),
-        );
         container.dataset.page = String(page);
 
         const canvas = document.createElement("canvas");
@@ -356,13 +373,13 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     async function ensureSize(page: number): Promise<void> {
         if (measured.has(page) || sizing.has(page) || !client) return;
         sizing.add(page);
-        const generation = sizeGeneration;
+        const generation = changeGeneration;
         let stale = false;
         try {
             const { width: w, height: h } = await client.pageDisplaySize(page);
             if (!mounted || w <= 0 || h <= 0) return;
             // Read before the document last changed: re-read it.
-            if (generation !== sizeGeneration) {
+            if (generation !== changeGeneration) {
                 stale = true;
                 return;
             }
@@ -376,6 +393,38 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
             renderWindow();
         } finally {
             sizing.delete(page);
+            if (stale && mounted) renderWindow();
+        }
+    }
+
+    /** Read whether a slide show shows each mounted slide not read since the
+     *  deck last changed, in one round trip, and mark the hidden ones. */
+    async function readShow(): Promise<void> {
+        if (!client || !slides() || store?.getState().status !== "ready") return;
+        const pages = [...items.keys()].filter((page) => !showRead.has(page) && !showReading.has(page));
+        if (pages.length === 0) return;
+        for (const page of pages) showReading.add(page);
+        const generation = changeGeneration;
+        let stale = false;
+        try {
+            const show = await client.presentation.slidesShow(pages);
+            if (!mounted) return;
+            // Read before the deck last changed: re-read them.
+            if (generation !== changeGeneration) {
+                stale = true;
+                return;
+            }
+            pages.forEach((page, i) => {
+                showRead.add(page);
+                if (show[i]) hidden.delete(page);
+                else hidden.add(page);
+                const item = items.get(page);
+                if (item) markItem(item, page);
+            });
+        } catch {
+            // Worker gone or document closed — the next open reads afresh.
+        } finally {
+            for (const page of pages) showReading.delete(page);
             if (stale && mounted) renderWindow();
         }
     }
@@ -751,6 +800,9 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
             sizes.clear();
             measured.clear();
             sizing.clear();
+            hidden.clear();
+            showRead.clear();
+            showReading.clear();
             typicalAspect = DEFAULT_ASPECT;
             focusedPage = next.currentPage;
             anchorPage = null;
@@ -779,15 +831,16 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
 
     /** The document changed and the bitmap cache was dropped: forget what each
      *  item drew (a stale `drawnKey` would suppress the redraw) and which page
-     *  sizes are current, and re-request the visible window against the new
-     *  pixels. Coalesced to the next frame —
+     *  sizes and slide shows are current, and re-request the visible window
+     *  against the new pixels. Coalesced to the next frame —
      *  a burst of edits refreshes once, and a refresh raced by a `close` runs
      *  after the resulting `CLOSE_DOC` has cleared the strip (no render of a
      *  shut document). */
     function onInvalidated(): void {
         for (const item of items.values()) item.drawnKey = null;
         measured.clear();
-        sizeGeneration++;
+        showRead.clear();
+        changeGeneration++;
         if (refreshRaf !== null) return;
         refreshRaf = requestAnimationFrame(() => {
             refreshRaf = null;

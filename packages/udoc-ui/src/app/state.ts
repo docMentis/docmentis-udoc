@@ -430,6 +430,13 @@ export interface UIState {
     selectedPages: readonly number[];
 
     /**
+     * Whether every slide the selection holds is hidden from the slide show —
+     * what Hide Slide reads checked by. Read back after each of the worker's
+     * selection reports holding slides; `false` for any other selection.
+     */
+    selectedSlidesHidden: boolean;
+
+    /**
      * The annotations the selection holds, with their page — read back after
      * each of the worker's selection reports, for the Annotate tab's Format
      * controls to show and restyle. Null when it holds none.
@@ -708,6 +715,7 @@ export const initialState: UIState = {
     userName: null,
     selectionCaps: EMPTY_SELECTION_CAPABILITIES,
     selectedPages: [],
+    selectedSlidesHidden: false,
     selectedAnnotations: null,
     comments: new Map(),
     allCommentsRead: false,

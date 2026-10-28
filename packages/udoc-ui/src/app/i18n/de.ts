@@ -222,6 +222,7 @@ export const de: Messages = {
     "thumbnails.slides": "Folienminiaturen",
     "thumbnails.page": "Seite {page}",
     "thumbnails.slide": "Folie {page}",
+    "thumbnails.hiddenSlide": "Folie {page}, ausgeblendet",
     "thumbnails.insertPage": "Seite einfügen",
     "thumbnails.duplicatePage": "Seite duplizieren",
     "thumbnails.rotateRight": "Nach rechts drehen",
@@ -229,6 +230,7 @@ export const de: Messages = {
     "thumbnails.deletePage": "Seite löschen",
     "thumbnails.newSlide": "Neue Folie",
     "thumbnails.duplicateSlide": "Folie duplizieren",
+    "thumbnails.hideSlide": "Folie ausblenden",
     "thumbnails.deleteSlide": "Folie löschen",
 
     // Outline panel

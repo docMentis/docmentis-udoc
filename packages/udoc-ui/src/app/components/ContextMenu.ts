@@ -45,14 +45,16 @@ const EDGE_MARGIN = 8;
 interface ContextMenuSlice {
     ready: boolean;
     selectionCaps: SelectionCapabilities;
+    /** Hide Slide's check, read back a round trip after the selection. */
+    slidesHidden: boolean;
 }
 
 function selectSlice(s: UIState): ContextMenuSlice {
-    return { ready: s.status === "ready", selectionCaps: s.selectionCaps };
+    return { ready: s.status === "ready", selectionCaps: s.selectionCaps, slidesHidden: s.selectedSlidesHidden };
 }
 
 function sliceEqual(a: ContextMenuSlice, b: ContextMenuSlice): boolean {
-    return a.ready === b.ready && a.selectionCaps === b.selectionCaps;
+    return a.ready === b.ready && a.selectionCaps === b.selectionCaps && a.slidesHidden === b.slidesHidden;
 }
 
 export function createContextMenu(i18n: I18n) {

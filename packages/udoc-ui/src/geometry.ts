@@ -319,6 +319,7 @@ export type SelectionEditKind =
     | "insertSlide"
     | "duplicateSlides"
     | "reorderSlides"
+    | "setSlidesShow"
     | "deleteObjects"
     | "translateObjects"
     | "rotateEachObject"
