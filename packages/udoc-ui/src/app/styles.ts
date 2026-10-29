@@ -2036,15 +2036,16 @@ export const uiStyles = css`
 
     /* A deck's notes pane, under the slides: the notes viewer's canvas, its
    caret and scrollbar over it, and the splitter that resizes it lying along
-   its top edge. White in either theme, as the page its text is set for is. */
+   its top edge. On the canvas's ground, as the engine paints the notes; its
+   height, the edge included, is set inline. */
     .udoc-ui-root .udoc-ui__notes {
         position: relative;
         flex: 0 0 auto;
         display: flex;
         flex-direction: column;
-        height: 140px;
+        box-sizing: border-box;
         border-top: 1px solid var(--udoc-color-outline-variant);
-        background: #ffffff;
+        background: var(--udoc-canvas-background);
         --udoc-scrollbar-size: 12px;
     }
     .udoc-ui-root .udoc-ui__notes-splitter {
@@ -2077,7 +2078,16 @@ export const uiStyles = css`
         top: 0;
         left: 0;
     }
+    /* In the dark theme the notes show inverted, their dark text light, hues
+   kept: the pane hands the engine its ground inverted to match (NotesPane's
+   setBackdrop), so the ground still shows as the canvas's. */
+    .udoc-ui-root.udoc-ui-dark .udoc-ui__notes-canvas {
+        filter: invert(1) hue-rotate(180deg);
+    }
+    /* Its scrollbar, in the strip the engine keeps clear for it, as the
+   canvas's is (scrollbar gutters). */
     .udoc-ui-root .udoc-ui__notes-host .udoc-ui__scrollbar {
+        background: var(--udoc-canvas-scrollbar-background);
         cursor: default;
     }
 

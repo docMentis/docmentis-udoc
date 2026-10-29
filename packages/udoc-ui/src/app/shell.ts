@@ -354,9 +354,9 @@ export interface UIShell {
     openPanel: (panel: PanelTab) => void;
     /** Close the open side panel. */
     closePanel: () => void;
-    /** Show a deck's notes pane under its slides. */
+    /** Open a deck's notes pane under its slides, at its default height. */
     openNotes: () => void;
-    /** Hide a deck's notes pane. */
+    /** Close a deck's notes pane to its edge. */
     closeNotes: () => void;
     /** Dock the view-state controls in the top toolbar, the floating bar, or the status bar. */
     setViewControlsPlacement: (placement: ViewControlsPlacement) => void;
@@ -1120,19 +1120,22 @@ export function mountUIShell(
         // Pin color-scheme in lock-step with the class so native form controls /
         // scrollbars match the theme and a host's `light-dark()` overrides resolve.
         layout.style.colorScheme = isDark ? "dark" : "light";
-        syncBackdrop();
+        syncBackdrop(isDark);
         syncPageBorder();
         syncGuideColors();
     }
     // Push the canvas background (the Rust-painted gaps around the pages) to the
     // engine so it matches the theme, resolved through the probe (see above)
     // since it is a var() the chrome can't be read raw.
-    function syncBackdrop(): void {
+    function syncBackdrop(isDark: boolean): void {
         // The main editing area, on its own --udoc-canvas-background token
         // (defaults to `surface`, the ladder's canvas rung). White pages float on
         // it; the chrome frames it a rung higher, popups rise from there.
         const color = resolveColor("var(--udoc-canvas-background)");
-        if (color) client.setBackdrop(color);
+        if (!color) return;
+        client.setBackdrop(color);
+        // A deck's notes stand on the same ground, under the slides.
+        notesPane.setBackdrop(color, isDark);
     }
     // Push the page-border color (the Rust-painted 1px frame around each page) to
     // the engine so it tracks the theme. Outline-variant — the soft outline —

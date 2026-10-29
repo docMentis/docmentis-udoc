@@ -177,7 +177,8 @@ export type Action =
     | { type: "CLOSE_PANEL" }
     | { type: "SET_LEFT_PANEL_WIDTH"; width: number }
     | { type: "SET_RIGHT_PANEL_WIDTH"; width: number }
-    // A deck's notes pane: shown or hidden, and the height its splitter set
+    // A deck's notes pane: open (at its default height) or closed to its edge,
+    // and open at the height its splitter left
     | { type: "SET_NOTES_OPEN"; open: boolean }
     | { type: "SET_NOTES_HEIGHT"; height: number }
     | { type: "ENABLE_PANEL_TRANSITIONS" }

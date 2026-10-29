@@ -480,11 +480,14 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...state, rightPanelWidth: action.width };
 
         case "SET_NOTES_OPEN":
-            if (action.open === state.notesOpen) return state;
-            return { ...state, notesOpen: action.open };
+            // Opened, it comes back at its default height.
+            if (action.open) return { ...state, notesOpen: true, notesHeight: null };
+            if (!state.notesOpen) return state;
+            return { ...state, notesOpen: false };
 
         case "SET_NOTES_HEIGHT":
-            return { ...state, notesHeight: action.height };
+            // A height the splitter left above the pane's edge: open at it.
+            return { ...state, notesOpen: true, notesHeight: action.height };
 
         case "ENABLE_PANEL_TRANSITIONS":
             if (!state.panelTransitionsDisabled) return state;

@@ -17,6 +17,30 @@ export const SCROLLBAR_THICKNESS_PX = 12;
  *  gap from the track's sides (its margin in styles.ts). */
 const THUMB_INSET_PX = 2;
 
+/** The shortest the thumb gets, CSS px, however much there is to scroll — on a
+ *  track long enough to hold it twice; a shorter one's thumb is half of it. */
+const MIN_THUMB_PX = 24;
+
+/**
+ * Where the thumb sits on a track `trackPx` long (CSS px): as long as the
+ * `fraction` of the content that shows, but no shorter than the minimum or half
+ * the track — so it travels in a short track too — and as far along its travel
+ * as `scroll` is along `maxScroll`.
+ */
+export function thumbPlacement(
+    trackPx: number,
+    fraction: number,
+    scroll: number,
+    maxScroll: number,
+): { thumbPx: number; thumbStartPx: number; travelPx: number } {
+    // The thumb runs between the insets at the track's two ends.
+    const spanPx = trackPx - 2 * THUMB_INSET_PX;
+    const thumbPx = Math.max(Math.min(MIN_THUMB_PX, spanPx / 2), spanPx * fraction);
+    const travelPx = spanPx - thumbPx;
+    const thumbStartPx = THUMB_INSET_PX + (maxScroll > 0 ? travelPx * (scroll / maxScroll) : 0);
+    return { thumbPx, thumbStartPx, travelPx };
+}
+
 /**
  * A virtual scrollbar for one axis. Because the canvas is pinned to the
  * viewport (synthetic scroll), the browser shows no native scrollbar — this bar
@@ -158,11 +182,7 @@ function geom(s: UIState, axis: Axis): Geom {
     const other: Axis = axis === "y" ? "x" : "y";
     const trackPx = viewportPx - (scrollbarShown(s, other) ? SCROLLBAR_THICKNESS_PX : 0);
     const fraction = content > 0 ? Math.min(1, visibleDoc / content) : 1;
-    // The thumb runs between the insets at the track's two ends.
-    const spanPx = trackPx - 2 * THUMB_INSET_PX;
-    const thumbPx = Math.max(24, spanPx * fraction);
-    const travelPx = spanPx - thumbPx;
-    const thumbStartPx = THUMB_INSET_PX + (maxScroll > 0 ? travelPx * (scroll / maxScroll) : 0);
+    const { thumbPx, thumbStartPx, travelPx } = thumbPlacement(trackPx, fraction, scroll, maxScroll);
     return { shown: scrollbarShown(s, axis), trackPx, thumbPx, thumbStartPx, travelPx, visibleDoc, maxScroll };
 }
 

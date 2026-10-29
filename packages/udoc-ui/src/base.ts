@@ -84,10 +84,12 @@ export interface UDocOptions {
      *  by its side's. Default `null`, none; {@link UDocBase.openPanel} and
      *  {@link UDocBase.closePanel} change it. */
     activePanel?: PanelTab | null;
-    /** Show a deck's speaker notes in a pane under its slides, as PowerPoint's
-     *  Normal view does. Default `true`; {@link UDocBase.openNotes},
-     *  {@link UDocBase.closeNotes} and the View tab's Notes change it. Other
-     *  document types have no notes, and show no pane whatever this says. */
+    /** Open the pane of a deck's speaker notes under its slides, as PowerPoint's
+     *  Normal view does; `false` starts it closed to its edge, which the reader
+     *  drags open. Default `true`; {@link UDocBase.openNotes},
+     *  {@link UDocBase.closeNotes}, the View tab's Notes and the pane's edge
+     *  change it. The pane shows while a deck's slides show one at a time;
+     *  other document types have no notes, and no pane. */
     showNotes?: boolean;
     /** Show the theme button in the toolbar's menu. Default `true`. */
     showThemeButton?: boolean;
@@ -330,7 +332,7 @@ export interface UDocEvents {
     "document:printed": { pageCount: number };
     /** Fires when a side panel opens, closes or switches — by the host, the user or a document asking for its outline. */
     "panel:changed": { panel: PanelTab | null; previousPanel: PanelTab | null };
-    /** Fires when the notes pane opens or closes — by the host or the View tab's Notes. */
+    /** Fires when the notes pane opens or closes — by the host, the View tab's Notes, or its edge dragged. */
     "notes:changed": { open: boolean };
     /**
      * Fires after a *local* edit is applied (page edits, undo/redo) — not on
@@ -1398,15 +1400,15 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Show a deck's speaker notes in a pane under its slides, as the View tab's
-     * Notes does. Kept while a document of another type, which has no notes,
-     * is open: the next deck opens with the pane.
+     * Open the pane of a deck's speaker notes under its slides, at its default
+     * height, as the View tab's Notes does. Kept while a document of another
+     * type, which has no notes, is open: the next deck opens with the pane.
      */
     openNotes(): void {
         this.shell.openNotes();
     }
 
-    /** Hide the notes pane. */
+    /** Close the notes pane to its edge, which the reader drags open again. */
     closeNotes(): void {
         this.shell.closeNotes();
     }
@@ -1546,7 +1548,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.getState().activePanel;
     }
 
-    /** Whether a deck's notes pane shows under its slides; `"notes:changed"` fires when it changes. */
+    /** Whether a deck's notes pane is open, not closed to its edge; `"notes:changed"` fires when it changes. */
     get notesOpen(): boolean {
         return this.shell.getState().notesOpen;
     }

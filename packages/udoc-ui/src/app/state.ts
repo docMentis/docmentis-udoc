@@ -278,8 +278,8 @@ export const ANNOTATE_COMMANDS: readonly CommandId[] = [
     "annotationOpacity",
 ];
 
-/** The View tab's commands — a deck's Notes toggle, which shows its speaker
- *  notes under the slides. */
+/** The View tab's commands — a deck's Notes toggle, which opens its speaker
+ *  notes' pane under the slides, or closes it to its edge. */
 export const VIEW_COMMANDS: readonly CommandId[] = ["notes"];
 
 // -----------------------------------------------------------------------------
@@ -648,12 +648,13 @@ export interface UIState {
     panelTransitionsDisabled: boolean;
 
     // --- Notes pane --------------------------------------------------------
-    /** Whether a deck's notes pane shows under its slides — the View tab's
-     *  Notes, the host's `showNotes`. Kept for every doc type; only a deck has
-     *  notes to show. */
+    /** Whether a deck's notes pane is open under its slides, or closed to its
+     *  edge — the View tab's Notes, the host's `showNotes`, the splitter
+     *  dragged to the edge. Kept for every doc type; only a deck has notes to
+     *  show, and only while its slides show one at a time. */
     notesOpen: boolean;
-    /** The notes pane's height in pixels, as its splitter left it (null = the
-     *  CSS default). */
+    /** The open notes pane's height in pixels, as its splitter left it (null =
+     *  its default, which opening it returns to). */
     notesHeight: number | null;
 
     // --- Toolbar / chrome visibility -------------------------------------

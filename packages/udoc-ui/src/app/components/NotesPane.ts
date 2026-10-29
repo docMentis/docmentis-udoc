@@ -4,6 +4,7 @@ import type {
     PageGap,
     PageViewsFrame,
     PeerSelectionGeometry,
+    RgbColor,
     SelectionGeometry,
     SelectionState,
     TextSelectOptions,
@@ -17,27 +18,29 @@ import type { UIState } from "../state.js";
 import { VIEW_MODE, viewDpi } from "../state.js";
 import type { I18n } from "../i18n/index.js";
 import { CLICK_CHAIN_MS, CLICK_CHAIN_RADIUS, granularityFor } from "./Canvas.js";
-import { SCROLLBAR_THICKNESS_PX } from "./Scrollbar.js";
+import { SCROLLBAR_THICKNESS_PX, thumbPlacement } from "./Scrollbar.js";
 import { SelectionLayer } from "./SelectionLayer.js";
 
 /** The zoom the notes show at: their text at its own size, as PowerPoint's
  *  notes pane opens. */
 const NOTES_ZOOM = 1;
 
-/** The pane's ground — white in either theme, as a page's is: the notes'
- *  text takes its colours from the deck, which sets them for a white page. */
-const NOTES_BACKDROP = { r: 255, g: 255, b: 255 };
-
 /** No room around the notes text: the body's own insets keep it off the edges. */
 const NOTES_PADDING: ContentPadding = { top: { px: 0 }, right: { px: 0 }, bottom: { px: 0 }, left: { px: 0 } };
 const NOTES_GAP: PageGap = { horizontal: 0, vertical: 0 };
 
-/** The heights the splitter keeps the pane between, CSS px — the most as a
- *  share of the viewport it splits with the slides. */
-const MIN_HEIGHT = 48;
+/** The pane's height, CSS px: open at first and when opened again, a few
+ *  lines of notes; closed, an edge the splitter drags it open from; and the
+ *  most it opens to, as a share of the viewport it splits with the slides. */
+const DEFAULT_HEIGHT = 32;
+const MIN_HEIGHT = 4;
 const MAX_SHARE = 0.7;
 /** How far an arrow key on the splitter moves it, CSS px. */
 const RESIZE_STEP = 20;
+
+/** The shortest pane that shows its scrollbar, CSS px: one closed to its edge,
+ *  or near it, would show only the end of the thumb. */
+const SCROLLBAR_MIN_TRACK_PX = 2 * SCROLLBAR_THICKNESS_PX;
 
 /** CSS px of a wheel tick that counts lines rather than pixels. */
 const WHEEL_LINE_PX = 16;
@@ -67,12 +70,13 @@ function peersTextOnly(peers: readonly PeerSelectionGeometry[]): PeerSelectionGe
 }
 
 /**
- * A deck's notes pane, under its slides: the current slide's speaker notes, as
- * a second viewer of the engine's shows them — the notes text plane, its pages
- * as wide as the pane, one at a time. A press places a caret there, which
- * types through the canvas's hidden text input as a caret on a slide does; in
- * edit mode a press into notes not written yet writes them. A splitter along
- * its top resizes it.
+ * A deck's notes pane, under its slides while they show one at a time: the
+ * current slide's speaker notes, as a second viewer of the engine's shows them
+ * — the notes text plane, its pages as wide as the pane, one at a time, on the
+ * canvas's ground. A press places a caret there, which types through the
+ * canvas's hidden text input as a caret on a slide does; in edit mode a press
+ * into notes not written yet writes them. A splitter along its top resizes it,
+ * down to an edge: the pane closed, which the View tab's Notes opens again.
  */
 export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPaneHooks) {
     const el = document.createElement("div");
@@ -107,7 +111,6 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
     el.append(splitter, host);
 
     const viewer: ViewerClient = client.addViewer(canvas);
-    viewer.setBackdrop(NOTES_BACKDROP);
     viewer.setPageBorder(null);
     viewer.setSpacing(NOTES_PADDING, NOTES_GAP);
     // One slide's notes at a time, scrolled within.
@@ -141,9 +144,16 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
     // right-click.
     let selectsText = false;
 
-    /** Whether the pane shows in `state`: a deck open, its notes asked for. */
+    /** Whether the pane shows in `state`: a deck open, its slides shown one at
+     *  a time — scrolled through, no one slide is the current one. */
     function showsIn(state: UIState): boolean {
-        return state.notesOpen && state.status === "ready" && state.docType === "presentation";
+        return state.status === "ready" && state.docType === "presentation" && state.scrollMode === "spread";
+    }
+
+    /** How tall the pane is in `state`, CSS px: as the splitter left it, or
+     *  its default, while open; its edge while closed. */
+    function heightIn(state: UIState): number {
+        return state.notesOpen ? (state.notesHeight ?? DEFAULT_HEIGHT) : MIN_HEIGHT;
     }
 
     /** CSS px per document point at the pane's zoom. */
@@ -214,17 +224,13 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
         thumb.style.transform = `translateY(${g.thumbStartPx}px)`;
     }
 
-    /** The scrollbar's thumb, CSS px, or null with no bar showing. */
+    /** The scrollbar's thumb, CSS px, or null with no bar showing — none on a
+     *  pane too short to hold one. */
     function scrollbarGeometry(): { thumbPx: number; thumbStartPx: number; travelPx: number } | null {
-        if (!frame || !frame.scrollbars.y || height <= 0) return null;
+        if (!frame || !frame.scrollbars.y || height < SCROLLBAR_MIN_TRACK_PX) return null;
         const content = frame.scrollSize.height;
-        const visible = height / frame.scale;
-        const inset = 2;
-        const span = height - 2 * inset;
-        const thumbPx = Math.max(24, span * (content > 0 ? Math.min(1, visible / content) : 1));
-        const travelPx = span - thumbPx;
-        const max = maxScroll();
-        return { thumbPx, thumbStartPx: inset + (max > 0 ? travelPx * (scrollY / max) : 0), travelPx };
+        const fraction = content > 0 ? Math.min(1, height / frame.scale / content) : 1;
+        return thumbPlacement(height, fraction, scrollY, maxScroll());
     }
 
     /** Bring the caret into view when it moved out of it — typing past the
@@ -381,20 +387,31 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
         return clamped;
     }
 
+    /** Keep the height the splitter left: down at its edge the pane closes,
+     *  anywhere above it the pane is open at that height. */
+    function settleHeight(next: number): void {
+        store?.dispatch(
+            next <= MIN_HEIGHT ? { type: "SET_NOTES_OPEN", open: false } : { type: "SET_NOTES_HEIGHT", height: next },
+        );
+    }
+
     const onSplitterDown = (ev: PointerEvent) => {
         if (ev.button !== 0) return;
         ev.preventDefault();
         const startY = ev.clientY;
         const startHeight = el.offsetHeight;
+        let dragged = startHeight;
         el.classList.add("udoc-ui__notes--resizing");
         splitter.setPointerCapture(ev.pointerId);
-        const onMove = (e: PointerEvent) => setHeight(startHeight - (e.clientY - startY));
+        const onMove = (e: PointerEvent) => {
+            dragged = setHeight(startHeight - (e.clientY - startY));
+        };
         const onUp = () => {
             splitter.removeEventListener("pointermove", onMove);
             splitter.removeEventListener("pointerup", onUp);
             splitter.removeEventListener("pointercancel", onUp);
             el.classList.remove("udoc-ui__notes--resizing");
-            store?.dispatch({ type: "SET_NOTES_HEIGHT", height: el.offsetHeight });
+            settleHeight(dragged);
         };
         splitter.addEventListener("pointermove", onMove);
         splitter.addEventListener("pointerup", onUp);
@@ -403,8 +420,7 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
     const onSplitterKey = (ev: KeyboardEvent) => {
         if (ev.key !== "ArrowUp" && ev.key !== "ArrowDown") return;
         ev.preventDefault();
-        const next = setHeight(el.offsetHeight + (ev.key === "ArrowUp" ? RESIZE_STEP : -RESIZE_STEP));
-        store?.dispatch({ type: "SET_NOTES_HEIGHT", height: next });
+        settleHeight(setHeight(el.offsetHeight + (ev.key === "ArrowUp" ? RESIZE_STEP : -RESIZE_STEP)));
     };
 
     function listen<K extends keyof HTMLElementEventMap>(
@@ -432,18 +448,19 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
         listen(splitter, "pointerdown", onSplitterDown);
         listen(splitter, "keydown", onSplitterKey);
 
-        // Shown or hidden, and as tall as the splitter left it. The viewport
-        // the slides keep above it lifts the floating toolbar by its height.
+        // Shown or hidden, and open or closed to its edge. The viewport the
+        // slides keep above it lifts the floating toolbar by its height.
         const applyShown = (state: UIState) => {
             shown = showsIn(state);
             el.style.display = shown ? "" : "none";
-            el.style.height = state.notesHeight !== null ? `${state.notesHeight}px` : "";
+            el.style.height = `${heightIn(state)}px`;
+            splitter.setAttribute("aria-valuenow", String(heightIn(state)));
         };
         applyShown(s.getState());
         cleanups.push(
             subscribeSelector(
                 s,
-                (state) => ({ shown: showsIn(state), height: state.notesHeight }),
+                (state) => ({ shown: showsIn(state), height: heightIn(state) }),
                 () => applyShown(s.getState()),
                 { equality: (a, b) => a.shown === b.shown && a.height === b.height },
             ),
@@ -524,11 +541,21 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
         cleanups.push(client.onSelection(adoptSelection));
     }
 
+    /**
+     * Lay the notes on `color`, the canvas's ground, as the slides are. On a
+     * `dark` one the notes canvas shows inverted (the styles' dark theme), so
+     * the deck's dark notes text reads light, as in PowerPoint's dark notes
+     * pane — and the engine paints the ground inverted, to show as `color`.
+     */
+    function setBackdrop(color: RgbColor, dark: boolean): void {
+        viewer.setBackdrop(dark ? { r: 255 - color.r, g: 255 - color.g, b: 255 - color.b } : color);
+    }
+
     function destroy(): void {
         for (const off of cleanups) off();
         cleanups.length = 0;
         el.remove();
     }
 
-    return { el, mount, destroy };
+    return { el, mount, setBackdrop, destroy };
 }

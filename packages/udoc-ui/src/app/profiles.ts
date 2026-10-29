@@ -30,9 +30,9 @@ export const ANNOTATE_TAB: ToolbarTab = {
 };
 
 /**
- * A deck's View tab — the Notes toggle, which shows its speaker notes in a pane
- * under the slides. A view setting, not an edit, so it serves view mode and
- * edit mode both: the last tab of each.
+ * A deck's View tab — the Notes toggle, which opens the pane of its speaker
+ * notes under the slides, or closes it to its edge. A view setting, not an
+ * edit, so it serves view mode and edit mode both: the last tab of each.
  */
 export const VIEW_TAB: ToolbarTab = {
     id: "view",

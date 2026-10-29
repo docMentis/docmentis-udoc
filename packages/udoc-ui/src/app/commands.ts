@@ -635,8 +635,8 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
     },
 
-    // View tab — a deck's notes pane under its slides, shown or hidden: a view
-    // setting, live whatever is selected.
+    // View tab — a deck's notes pane under its slides, opened or closed to its
+    // edge: a view setting, live whatever is selected.
     notes: {
         id: "notes",
         label: "command.notes",

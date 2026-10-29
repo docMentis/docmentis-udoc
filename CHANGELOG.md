@@ -15,12 +15,13 @@ listed once, by package. Its major and minor version are those of the
 - A presentation's sections head their slides in the thumbnails. Each header
   folds its slides away or back, and counts them while they're folded; Left
   and Right fold the section of the slide the arrow keys are on.
-- A presentation's speaker notes show in a pane under its slides, the current
-  slide's, and their text is selected and copied there. The View tab's Notes
-  shows and hides the pane, the `showNotes` option sets whether it shows at
-  start, `openNotes()` and `closeNotes()` show and hide it, `notesOpen` says
-  whether it shows, and `notes:changed` fires when that changes. Dragging its
-  top edge resizes it.
+- A presentation's speaker notes show in a pane under its slides while they
+  show one at a time, the current slide's, and their text is selected and
+  copied there. Dragging its top edge resizes it, down to the edge itself,
+  which closes it. The View tab's Notes opens it at its default height and
+  closes it to its edge, the `showNotes` option sets whether it starts open,
+  `openNotes()` and `closeNotes()` open and close it, `notesOpen` says whether
+  it is open, and `notes:changed` fires when that changes.
 
 #### Fixed
 
