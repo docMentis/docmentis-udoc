@@ -6,6 +6,14 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Fixed
+
+- A presentation saved by `"rewrite"` keeps its speaker notes, its notes
+  master and its sections, and its hidden slides stay hidden, where the save
+  dropped them all and showed every slide.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -19,10 +27,10 @@ listed once, by package. Its major and minor version are those of the
   show one at a time, the current slide's, and their text is selected and
   copied there. Dragging its top edge resizes it, down to the edge itself,
   which closes it. A click on that edge, or the View tab's Notes, opens it at
-  its default height and closes it to its edge. It starts closed; the `showNotesPanel` option starts
-  it open, `openNotesPanel()` and `closeNotesPanel()` open and close it,
-  `notesPanelOpen` says whether it is open, and `notesPanel:changed` fires
-  when that changes.
+  its default height and closes it to its edge. It starts closed; the
+  `showNotesPanel` option starts it open, `openNotesPanel()` and
+  `closeNotesPanel()` open and close it, `notesPanelOpen` says whether it is
+  open, and `notesPanel:changed` fires when that changes.
 - A presentation shows as notes pages, the page each slide's notes print on
   with the slide drawn above them, from the View tab's Notes Page, and as its
   slides again from Normal, each opening on the slide the other showed. The
@@ -81,6 +89,13 @@ listed once, by package. Its major and minor version are those of the
   and slides dropped on an empty section's header join it.
 - New Slide with a section selected adds the slide at the end of that section,
   an empty one too.
+
+#### Fixed
+
+- Duplicate Slide copies the slide's speaker notes, where the copy had none.
+- A presentation saved after slides are added, duplicated, deleted or moved
+  keeps its sections in step with them, where an added slide was saved in no
+  section and a deleted one stayed listed in its own.
 
 ## [0.8.6] - 2026-10-27
 
