@@ -447,6 +447,10 @@ export interface Messages {
     "thumbnails.expandAll": string;
     /** Remove Section */
     "thumbnails.removeSection": string;
+    /** Remove Section & Slides */
+    "thumbnails.removeSectionAndSlides": string;
+    /** Remove All Sections */
+    "thumbnails.removeAllSections": string;
 
     // Outline panel
     /** Loading outline… */

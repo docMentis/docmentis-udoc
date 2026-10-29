@@ -323,6 +323,7 @@ export type SelectionEditKind =
     | "insertSlideSection"
     | "renameSlideSection"
     | "deleteSlideSections"
+    | "deleteSlideSectionsWithSlides"
     | "reorderSlideSections"
     | "deleteObjects"
     | "translateObjects"

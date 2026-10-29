@@ -1333,8 +1333,11 @@ export type SelectionEdit =
     | { kind: "insertSlide" }
     /** Presentation: the twin of `duplicatePages`. */
     | { kind: "duplicateSlides" }
-    /** Presentation: the twin of `reorderPages`. */
-    | { kind: "reorderSlides"; to: number }
+    /** Presentation: the twin of `reorderPages`, the slides joining the section
+     *  at index `slideSection` of the section order where it names one, `to`
+     *  clamped into its run — a drop at a section's top, or into an empty one —
+     *  else the section of the slide they land behind. */
+    | { kind: "reorderSlides"; to: number; slideSection?: number }
     /** Presentation: set whether a slide show shows the selected slides —
      *  Hide Slide is `show: false`. They stay selected. */
     | { kind: "setSlidesShow"; show: boolean }
@@ -1347,8 +1350,12 @@ export type SelectionEdit =
     /** Presentation: rename the selected section. */
     | { kind: "renameSlideSection"; name: string }
     /** Presentation: delete the selected sections, each one's slides joining
-     *  the section before it; nothing is selected after. */
+     *  the section before it; nothing is selected after. Never the first
+     *  section while another remains: its slides have none before them. */
     | { kind: "deleteSlideSections" }
+    /** Presentation: delete the selected sections and their slides, the first
+     *  section too; nothing is selected after. */
+    | { kind: "deleteSlideSectionsWithSlides" }
     /** Presentation: move the selected sections with their slides, as one run
      *  in section order, so the first takes index `to` of the resulting
      *  section order. They stay selected. */

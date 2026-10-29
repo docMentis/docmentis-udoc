@@ -199,6 +199,9 @@ interface Press {
     /** The index the first of them would take, dropped where the line shows
      *  ({@link reorderTo}), or `null` where a drop moves nothing. */
     to: number | null;
+    /** The section a drop of a deck's slides puts them in, by index — `null`
+     *  where they join the section of the slide they land behind. */
+    toSection: number | null;
     /** The pointer's last viewport point, for the stack to follow and the
      *  autoscroll's re-aim. */
     clientX: number;
@@ -926,6 +929,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
             narrowOnRelease,
             dragging: false,
             to: null,
+            toSection: null,
             clientX: e.clientX,
             clientY: e.clientY,
             ghost: null,
@@ -968,6 +972,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
             narrowOnRelease,
             dragging: false,
             to: null,
+            toSection: null,
             clientX: e.clientX,
             clientY: e.clientY,
             ghost: null,
@@ -1105,10 +1110,10 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
 
     function onPointerUp(e: PointerEvent): void {
         if (!press || e.pointerId !== press.pointerId) return;
-        const { target, dragging, to, narrowOnRelease } = press;
+        const { target, dragging, to, toSection, narrowOnRelease } = press;
         endPress();
         if (dragging) {
-            if (to !== null) drop(target, to);
+            if (to !== null) drop(target, to, toSection);
             return;
         }
         if (target.kind === "page") {
@@ -1143,24 +1148,42 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     function aimDrop(): void {
         if (!press) return;
         const y = press.clientY - el.getBoundingClientRect().top + el.scrollTop;
-        const pages = press.target.kind === "page";
-        const gap = pages ? pageGap(y) : sectionGap(y);
-        press.to = reorderTo(pages ? slice.selectedPages : selectedSectionIndices(), gap);
+        let top: number;
+        if (press.target.kind === "section") {
+            const gap = sectionGap(y);
+            press.to = reorderTo(selectedSectionIndices(), gap);
+            press.toSection = null;
+            top = sectionDropY(gap);
+        } else {
+            const { gap, section } = pageDrop(y);
+            const regroups = section !== null && slice.selectedPages.some((page) => sectionOf(page) !== section);
+            press.to = reorderTo(slice.selectedPages, gap, regroups);
+            press.toSection = section;
+            top = dropY(gap, section);
+        }
         dropMarker.hidden = press.to === null;
-        if (press.to !== null) dropMarker.style.top = `${pages ? dropY(gap) : sectionDropY(gap)}px`;
+        if (press.to !== null) dropMarker.style.top = `${top}px`;
     }
 
-    /** The gap between pages nearest `y`: the one above the page whose upper
-     *  half it is over, or by a section's header the one at the section's start
-     *  (at its end, below a folded one's lower half). */
-    function pageGap(y: number): number {
+    /** Where a drop of pages at `y` lands: the gap above the page whose upper
+     *  half it is over, in that page's section. By a section's header, above
+     *  it, the end of the section before; below it, the section's start — its
+     *  end, folded away. `section` is `null` in a document without sections. */
+    function pageDrop(y: number): { gap: number; section: number | null } {
         const index = rowAt(y);
         const row = rows[index];
-        if (row?.kind === "page") return y < offsets[index]! + cardHeight(row.page) / 2 ? row.page : row.page + 1;
-        if (!row) return slice.pageCount;
+        if (row?.kind === "page") {
+            const gap = y < offsets[index]! + cardHeight(row.page) / 2 ? row.page : row.page + 1;
+            return { gap, section: sectionOf(row.page) };
+        }
+        const last = slice.sections.length - 1;
+        if (!row) return { gap: slice.pageCount, section: last < 0 ? null : last };
         const section = slice.sections[row.section]!;
-        const lower = y >= offsets[index]! + SECTION_H / 2;
-        return lower && slice.collapsed.has(section.id) ? section.start + section.count : section.start;
+        if (y < offsets[index]! + SECTION_H / 2) {
+            return { gap: section.start, section: Math.max(row.section - 1, 0) };
+        }
+        const end = slice.collapsed.has(section.id) ? section.start + section.count : section.start;
+        return { gap: end, section: row.section };
     }
 
     /** The gap between sections nearest `y`: before the section whose rows —
@@ -1183,11 +1206,14 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         return offsets[row]! - GAP / 2;
     }
 
-    /** Where the line for a drop at `gap` goes: midway down the gap below page
-     *  `gap - 1`, which the pages land behind and whose section they join — or
-     *  below its section's header, folded away — and above the first page for
-     *  a drop at the start. */
-    function dropY(gap: number): number {
+    /** Where the line for a drop at `gap` into `section` goes: right under the
+     *  section's header for a drop at its start; else midway down the gap below
+     *  page `gap - 1`, which the pages land behind — or below its section's
+     *  header, folded away — and above the first page for a drop at the start. */
+    function dropY(gap: number, section: number | null): number {
+        if (section !== null && gap === slice.sections[section]!.start) {
+            return offsets[sectionRows[section]! + 1]! - GAP / 2;
+        }
         const index = rowOf[Math.max(gap - 1, 0)] ?? 0;
         const row = rows[index];
         if (!row) return offsets[0]! - GAP / 2;
@@ -1218,13 +1244,14 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     }
 
     /** Move the selected pages, or sections with their slides, as one run in
-     *  their order, the first of them to `to`. */
-    function drop(target: PressTarget, to: number): void {
+     *  their order, the first of them to `to` — a deck's slides into section
+     *  `toSection`, where the drop names one. */
+    function drop(target: PressTarget, to: number, toSection: number | null): void {
         const edit: SelectionEdit =
             target.kind === "section"
                 ? { kind: "reorderSlideSections", to }
                 : slides()
-                  ? { kind: "reorderSlides", to }
+                  ? { kind: "reorderSlides", to, ...(toSection === null ? {} : { slideSection: toSection }) }
                   : { kind: "page", edit: { kind: "reorderPages", to } };
         void callbacks.onSelectionEdit(edit);
     }

@@ -244,6 +244,8 @@ export const es: Messages = {
     "thumbnails.collapseAll": "Contraer todo",
     "thumbnails.expandAll": "Expandir todo",
     "thumbnails.removeSection": "Quitar sección",
+    "thumbnails.removeSectionAndSlides": "Quitar sección y diapositivas",
+    "thumbnails.removeAllSections": "Quitar todas las secciones",
 
     // Outline panel
     "outline.loading": "Cargando índice…",

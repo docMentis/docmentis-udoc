@@ -244,6 +244,8 @@ export const ru: Messages = {
     "thumbnails.collapseAll": "Свернуть все",
     "thumbnails.expandAll": "Развернуть все",
     "thumbnails.removeSection": "Удалить раздел",
+    "thumbnails.removeSectionAndSlides": "Удалить раздел и слайды",
+    "thumbnails.removeAllSections": "Удалить все разделы",
 
     // Outline panel
     "outline.loading": "Загрузка оглавления…",

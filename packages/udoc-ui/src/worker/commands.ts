@@ -97,6 +97,12 @@ export const Command = {
     renameSlideSection: (id: string, name: string): UDocCommand =>
         presentation({ editSlideSection: { command: { renameSlideSection: { id, name } } } }),
 
+    /** Delete the deck's sections `ids`, and with them their slides where
+     *  `withSlides` is set; kept, each section's slides join the one before
+     *  it. Every section, keeping the slides, is Remove All Sections. */
+    deleteSlideSections: (ids: string[], withSlides: boolean): UDocCommand =>
+        presentation({ editSlideSection: { command: { deleteSlideSections: { ids, withSlides } } } }),
+
     /** Resize columns `first..=last` (0-based inclusive) on sheet `sheetId` to
      *  `points` document points (PostScript points, 1/72 inch — *not* pixels): a
      *  header-boundary drag, the pixel drag divided by the viewport's

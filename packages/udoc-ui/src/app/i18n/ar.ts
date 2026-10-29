@@ -244,6 +244,8 @@ export const ar: Messages = {
     "thumbnails.collapseAll": "طي الكل",
     "thumbnails.expandAll": "توسيع الكل",
     "thumbnails.removeSection": "إزالة المقطع",
+    "thumbnails.removeSectionAndSlides": "إزالة المقطع والشرائح",
+    "thumbnails.removeAllSections": "إزالة كافة المقاطع",
 
     // Outline panel
     "outline.loading": "جارٍ تحميل المخطط التفصيلي…",

@@ -128,8 +128,9 @@ const whenReady: EnabledWhen = (c) => c.ready;
  * them again when every one is hidden. A deck's sections: `addSlideSection`
  * starts an untitled one at the selected slides and edits its name,
  * `renameSlideSection` edits the selected one's, `moveSlideSections` moves the
- * selected ones `by` a place, and `collapseSlideSections` folds every one's
- * slides away in the thumbnails, or unfolds them. `extension` carries an
+ * selected ones `by` a place, `collapseSlideSections` folds every one's
+ * slides away in the thumbnails, or unfolds them, and `removeAllSlideSections`
+ * deletes them all, keeping the slides. `extension` carries an
  * extension's own intent, which the shell hands back to it
  * (`UIExtension.menuAction`).
  */
@@ -142,6 +143,7 @@ export type MenuAction =
     | { kind: "renameSlideSection" }
     | { kind: "moveSlideSections"; by: -1 | 1 }
     | { kind: "collapseSlideSections"; collapsed: boolean }
+    | { kind: "removeAllSlideSections" }
     | { kind: "extension"; action: unknown };
 
 /** One entry in a command's dropdown menu (see the `menu` {@link CommandRun}).
@@ -272,7 +274,9 @@ export const SLIDE_MENU: readonly MenuItem[] = [
  * A deck's section menu — what a right-click on a section's header in the
  * thumbnails offers outside view mode, on the sections selected. A move takes
  * them, with their slides, a place up or down; Remove Section keeps the slides,
- * in the section before.
+ * in the section before, so it is greyed on the first section while others
+ * remain; Remove Section & Slides deletes them too; Remove All Sections keeps
+ * every slide.
  */
 export const SECTION_MENU: readonly MenuItem[] = [
     {
@@ -314,6 +318,17 @@ export const SECTION_MENU: readonly MenuItem[] = [
         icon: ICON_SECTION_REMOVE,
         enabledWhen: (c) => allowsEdit(c.selection, "deleteSlideSections"),
         separatorBefore: true,
+    },
+    {
+        action: { kind: "selectionEdit", edit: { kind: "deleteSlideSectionsWithSlides" } },
+        label: "thumbnails.removeSectionAndSlides",
+        icon: ICON_DELETE,
+        enabledWhen: (c) => allowsEdit(c.selection, "deleteSlideSectionsWithSlides"),
+    },
+    {
+        action: { kind: "removeAllSlideSections" },
+        label: "thumbnails.removeAllSections",
+        enabledWhen: (c) => c.slideSections.count > 0,
     },
 ];
 

@@ -2828,6 +2828,13 @@ export function mountUIShell(
                 store.dispatch({ type: "SET_SLIDE_SECTIONS_COLLAPSED", ids, collapsed: action.collapsed });
                 break;
             }
+            case "removeAllSlideSections": {
+                // Every section by id, keeping the slides — a deck-wide act,
+                // whatever is selected.
+                const ids = store.getState().slideSections.map((section) => section.id);
+                void commit(() => client.execute(Command.deleteSlideSections(ids, false)));
+                break;
+            }
         }
     }
 

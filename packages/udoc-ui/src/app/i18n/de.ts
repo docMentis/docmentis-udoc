@@ -244,6 +244,8 @@ export const de: Messages = {
     "thumbnails.collapseAll": "Alle reduzieren",
     "thumbnails.expandAll": "Alle erweitern",
     "thumbnails.removeSection": "Abschnitt entfernen",
+    "thumbnails.removeSectionAndSlides": "Abschnitt und Folien entfernen",
+    "thumbnails.removeAllSections": "Alle Abschnitte entfernen",
 
     // Outline panel
     "outline.loading": "Gliederung wird geladen…",

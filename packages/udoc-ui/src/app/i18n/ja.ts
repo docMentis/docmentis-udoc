@@ -244,6 +244,8 @@ export const ja: Messages = {
     "thumbnails.collapseAll": "すべて折りたたみ",
     "thumbnails.expandAll": "すべて展開",
     "thumbnails.removeSection": "セクションの削除",
+    "thumbnails.removeSectionAndSlides": "セクションとスライドの削除",
+    "thumbnails.removeAllSections": "すべてのセクションの削除",
 
     // Outline panel
     "outline.loading": "アウトラインを読み込み中…",

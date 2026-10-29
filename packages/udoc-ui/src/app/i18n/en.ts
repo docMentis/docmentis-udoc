@@ -245,6 +245,8 @@ export const en: Messages = {
     "thumbnails.collapseAll": "Collapse All",
     "thumbnails.expandAll": "Expand All",
     "thumbnails.removeSection": "Remove Section",
+    "thumbnails.removeSectionAndSlides": "Remove Section & Slides",
+    "thumbnails.removeAllSections": "Remove All Sections",
 
     // Outline panel
     "outline.loading": "Loading outline…",

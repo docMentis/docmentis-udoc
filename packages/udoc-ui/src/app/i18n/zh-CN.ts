@@ -244,6 +244,8 @@ export const zhCN: Messages = {
     "thumbnails.collapseAll": "全部折叠",
     "thumbnails.expandAll": "全部展开",
     "thumbnails.removeSection": "删除节",
+    "thumbnails.removeSectionAndSlides": "删除节和幻灯片",
+    "thumbnails.removeAllSections": "删除所有节",
 
     // Outline panel
     "outline.loading": "正在加载大纲…",

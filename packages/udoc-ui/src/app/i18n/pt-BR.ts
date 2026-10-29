@@ -244,6 +244,8 @@ export const ptBR: Messages = {
     "thumbnails.collapseAll": "Recolher Tudo",
     "thumbnails.expandAll": "Expandir Tudo",
     "thumbnails.removeSection": "Remover Seção",
+    "thumbnails.removeSectionAndSlides": "Remover Seção e Slides",
+    "thumbnails.removeAllSections": "Remover Todas as Seções",
 
     // Outline panel
     "outline.loading": "Carregando sumário…",

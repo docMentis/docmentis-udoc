@@ -51,11 +51,17 @@ listed once, by package. Its major and minor version are those of the
   section's header selects it, Ctrl+click and Shift+click as on slides, and a
   double-click edits its name. A right-click offers Rename Section, Move
   Section Up and Down, which take its slides along, Collapse All, Expand All,
-  and Remove Section, which leaves its slides to the section before it, as
-  Delete does. Add Section in the slide menu starts an untitled section at the
-  selected slides and edits its name. Dragging a header lifts the selected
-  sections out of the thumbnails and moves them, with their slides, to where
-  they're dropped between two others. Each edit is one undo step.
+  Remove Section, which leaves its slides to the section before it, as Delete
+  does (so not on the first section while others remain), Remove Section &
+  Slides, and Remove All Sections, which keeps every slide. Add Section in the
+  slide menu starts an untitled section at the selected slides and edits its
+  name. Dragging a header lifts the selected sections out of the thumbnails
+  and moves them, with their slides, to where they're dropped between two
+  others. Each edit is one undo step.
+- Slides dropped just under a section's header join that section, at its top,
+  and slides dropped on an empty section's header join it.
+- New Slide with a section selected adds the slide at the end of that section,
+  an empty one too.
 
 ## [0.8.6] - 2026-10-27
 

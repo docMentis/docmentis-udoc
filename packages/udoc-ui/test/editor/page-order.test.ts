@@ -48,3 +48,10 @@ test("the selection's order doesn't matter", () => {
     assert.equal(reorderTo([3, 1], 0), 0);
     assert.equal(reorderTo([3, 1], 5), 3);
 });
+
+test("a drop into another section moves the pages even beside them", () => {
+    assert.equal(reorderTo([2], 3), null);
+    assert.equal(reorderTo([2], 3, true), 2);
+    assert.equal(reorderTo([2], 2, true), 2);
+    assert.equal(reorderTo([2, 3], 4, true), 2);
+});

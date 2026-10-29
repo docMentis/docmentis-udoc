@@ -244,6 +244,8 @@ export const zhTW: Messages = {
     "thumbnails.collapseAll": "全部摺疊",
     "thumbnails.expandAll": "全部展開",
     "thumbnails.removeSection": "移除章節",
+    "thumbnails.removeSectionAndSlides": "移除章節與投影片",
+    "thumbnails.removeAllSections": "移除所有章節",
 
     // Outline panel
     "outline.loading": "正在載入大綱…",

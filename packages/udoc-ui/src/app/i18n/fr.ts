@@ -244,6 +244,8 @@ export const fr: Messages = {
     "thumbnails.collapseAll": "Réduire tout",
     "thumbnails.expandAll": "Développer tout",
     "thumbnails.removeSection": "Supprimer la section",
+    "thumbnails.removeSectionAndSlides": "Supprimer la section et les diapositives",
+    "thumbnails.removeAllSections": "Supprimer toutes les sections",
 
     // Outline panel
     "outline.loading": "Chargement du sommaire…",

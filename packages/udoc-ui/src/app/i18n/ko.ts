@@ -244,6 +244,8 @@ export const ko: Messages = {
     "thumbnails.collapseAll": "모두 축소",
     "thumbnails.expandAll": "모두 확장",
     "thumbnails.removeSection": "구역 제거",
+    "thumbnails.removeSectionAndSlides": "구역 및 슬라이드 제거",
+    "thumbnails.removeAllSections": "모든 구역 제거",
 
     // Outline panel
     "outline.loading": "개요를 불러오는 중…",
