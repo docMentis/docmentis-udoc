@@ -19,8 +19,8 @@ listed once, by package. Its major and minor version are those of the
   show one at a time, the current slide's, and their text is selected and
   copied there. Dragging its top edge resizes it, down to the edge itself,
   which closes it. The View tab's Notes opens it at its default height and
-  closes it to its edge, the `showNotesPanel` option sets whether it starts
-  open, `openNotesPanel()` and `closeNotesPanel()` open and close it,
+  closes it to its edge. It starts closed; the `showNotesPanel` option starts
+  it open, `openNotesPanel()` and `closeNotesPanel()` open and close it,
   `notesPanelOpen` says whether it is open, and `notesPanel:changed` fires
   when that changes.
 

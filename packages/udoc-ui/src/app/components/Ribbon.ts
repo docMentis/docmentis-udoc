@@ -4,7 +4,7 @@ import type { Store } from "../../framework/index.js";
 import type { HistoryOp } from "../../worker/protocol.js";
 import type { Action } from "../actions.js";
 import type { SelectionCapabilities, PaintDisplay } from "../../geometry.js";
-import type { UIState, MarkupTool, PlaceTool, PointerMode, ToolbarTab } from "../state.js";
+import type { UIState, MarkupTool, PlaceTool, PointerMode, ScrollMode, ToolbarTab } from "../state.js";
 import { tabsFor } from "../profiles.js";
 import type { TabSource } from "../profiles.js";
 import { COMMAND_CATALOG, commandContext } from "../commands.js";
@@ -159,8 +159,9 @@ interface RibbonSlice {
     extension: unknown;
     selectedAnnotations: SelectedAnnotations | null;
     annotationStyles: AnnotationStyles;
-    /** What the View tab's Notes toggle reads pressed by. */
+    /** What the View tab's Notes toggle reads pressed by, and is live in. */
     notesOpen: boolean;
+    scrollMode: ScrollMode;
 }
 
 /** The color a display paints its bar with — a solid or theme color's own hex;
@@ -185,7 +186,8 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         // after a selection report, and the reducer keeps a null as it is.
         a.selectedAnnotations === b.selectedAnnotations &&
         a.annotationStyles === b.annotationStyles &&
-        a.notesOpen === b.notesOpen
+        a.notesOpen === b.notesOpen &&
+        a.scrollMode === b.scrollMode
     );
 }
 
@@ -204,6 +206,7 @@ function selectSlice(s: UIState): RibbonSlice {
         selectedAnnotations: s.selectedAnnotations,
         annotationStyles: s.annotationStyles,
         notesOpen: s.notesOpen,
+        scrollMode: s.scrollMode,
     };
 }
 

@@ -84,9 +84,9 @@ export interface UDocOptions {
      *  by its side's. Default `null`, none; {@link UDocBase.openPanel} and
      *  {@link UDocBase.closePanel} change it. */
     activePanel?: PanelTab | null;
-    /** Open the notes panel — a deck's speaker notes, under its slides — as
-     *  PowerPoint's Normal view does; `false` starts it closed to its edge,
-     *  which the reader drags open. Default `true`;
+    /** Start the notes panel — a deck's speaker notes, under its slides —
+     *  open, as PowerPoint's Normal view does. Default `false`: it starts
+     *  closed to its edge, which the reader drags open;
      *  {@link UDocBase.openNotesPanel}, {@link UDocBase.closeNotesPanel}, the
      *  View tab's Notes and the panel's edge change it. The panel shows while a
      *  deck's slides show one at a time; other document types have no notes,

@@ -820,7 +820,7 @@ export const initialState: UIState = {
     hostDisabledPanels: new Set(),
     panelTransitionsDisabled: false,
 
-    notesOpen: true,
+    notesOpen: false,
     notesHeight: null,
 
     toolbarVisible: true,

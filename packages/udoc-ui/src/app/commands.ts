@@ -3,7 +3,7 @@ import type { StampIcon, UDocType } from "@docmentis/udoc-wasm";
 import { allowsEdit } from "../geometry.js";
 import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
 import { copyAllowed } from "./state.js";
-import type { AnnotationTool, CommandId, UIState, MarkupTool, PlaceTool } from "./state.js";
+import type { AnnotationTool, CommandId, UIState, MarkupTool, PlaceTool, ScrollMode } from "./state.js";
 import type { Store } from "../framework/index.js";
 import type { Action } from "./actions.js";
 import type { Shortcut } from "./components/controls.js";
@@ -80,6 +80,9 @@ export interface CommandContext {
     /** The open document's type — the gate for a control that belongs to some
      *  doc types whatever is selected. */
     docType: UDocType | null;
+    /** How the pages scroll — a deck's notes panel shows only while its slides
+     *  show one at a time. */
+    scrollMode: ScrollMode;
     /** What the Annotate tab's Format controls act on and show — the armed
      *  annotation tool's style, else the selected annotations' — or null when
      *  there is neither. A control is live when its entry is present. */
@@ -104,6 +107,7 @@ export function commandContext(state: UIState): CommandContext {
         },
         extension: state.extension,
         docType: state.docType,
+        scrollMode: state.scrollMode,
         annotation: annotationFormat(state),
     };
 }
@@ -636,7 +640,8 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
     },
 
     // View tab — a deck's notes pane under its slides, opened or closed to its
-    // edge: a view setting, live whatever is selected.
+    // edge: a view setting, live whatever is selected, while the slides show
+    // one at a time — scrolled through, they show no pane.
     notes: {
         id: "notes",
         label: "command.notes",
@@ -648,6 +653,6 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             pressed: (state) => state.notesOpen,
             press: (store) => store.dispatch({ type: "SET_NOTES_OPEN", open: !store.getState().notesOpen }),
         },
-        enabledWhen: whenReady,
+        enabledWhen: (c) => c.ready && c.scrollMode === "spread",
     },
 };

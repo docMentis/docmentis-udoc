@@ -72,7 +72,7 @@ const OPTION_GROUPS: OptionGroup[] = [
     },
     {
         title: "Notes",
-        items: [{ kind: "toggle", id: "showNotesPanel", label: "Notes Panel", hint: "presentations", default: true }],
+        items: [{ kind: "toggle", id: "showNotesPanel", label: "Notes Panel", hint: "presentations", default: false }],
     },
     {
         title: "Features",
