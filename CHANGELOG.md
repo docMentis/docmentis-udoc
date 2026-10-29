@@ -15,7 +15,8 @@ listed once, by package. Its major and minor version are those of the
   `showFormulaBar` option hides it.
 - A workbook's active cell moves with the keyboard: an arrow moves it, Shift
   extends the selection, Ctrl or Cmd jumps to the edge of the data, and Enter
-  and Tab step down and right (Shift back).
+  and Tab step down and right (Shift back). A sheet shown from its tab opens
+  on the active cell its file keeps, A1 where it keeps none.
 
 ### udoc-editor
 
@@ -28,8 +29,9 @@ listed once, by package. Its major and minor version are those of the
   saves it and moves, or in an edit moves the caret, F2 switches between the
   two. Enter saves and steps down, Tab right, Ctrl or Cmd with Enter saves into
   every selected cell, Alt with Enter breaks the line, and Escape drops it.
-  Each save is one undo step, and a formula that doesn't parse says so under
-  the formula bar, the entry left open. Delete clears the selected cells, and
+  Showing another sheet saves it too. Each save is one undo step, and a
+  formula that doesn't parse says so under the formula bar, the entry left
+  open and its sheet shown. Delete clears the selected cells, and
   Backspace starts an empty entry.
 - A workbook's sheets are edited from their tabs. ⊕, beside the list of
   sheets, inserts a worksheet after the current one and shows it. A

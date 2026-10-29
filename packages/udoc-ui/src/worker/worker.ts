@@ -322,6 +322,12 @@ function renderViewerFrame(s: WasmSession, v: number): void {
         backgroundAfterPaint = false;
         startBackground(s);
     }
+    // A plane switched to composes in its first frame, which places the
+    // selection the switch moved there: a sheet's active cell.
+    if (v === VIEWER && painted && selectionAfterPaint) {
+        selectionAfterPaint = false;
+        emitChangedSelection();
+    }
     // An added viewer's frame can compose the page its selection lies on —
     // the notes a press just wrote — so the selection it projects is posted
     // again once it has moved.
@@ -921,6 +927,13 @@ function onSession<T>(job: (live: WasmSession) => T): Promise<T | undefined> {
  * it composes or loads.
  */
 let backgroundAfterPaint = false;
+
+/**
+ * Whether the selection was last reported before a frame composed the plane
+ * just switched to: the main viewer's next painted frame reports it again,
+ * placed on the plane as composed.
+ */
+let selectionAfterPaint = false;
 
 /**
  * The open workbook's sheets loaded so far, by {@link planeKey}: those whose
@@ -1655,6 +1668,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 }
                 const layout = layoutOf(session);
                 emitSelection(false);
+                selectionAfterPaint = true;
                 // The peers' pointers on the plane now shown.
                 emitPeerPointers();
                 scheduleFrame();

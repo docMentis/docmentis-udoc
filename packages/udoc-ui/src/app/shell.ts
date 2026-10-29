@@ -1906,6 +1906,16 @@ export function mountUIShell(
     async function switchPlane(plane: number): Promise<void> {
         const state = store.getState();
         if (state.status !== "ready") return;
+        // What's typed into a cell is saved before another sheet shows, as in
+        // Excel: the selection goes to the sheet shown, and the engine drops
+        // an entry it leaves behind. Refused, the entry stays open, and the
+        // sheet it's on stays shown.
+        if (state.activeCell?.entry != null && paintedPlane >= 0 && plane !== paintedPlane) {
+            if (!(await saveCellEntry(false, null))) {
+                store.dispatch({ type: "SET_CURRENT_PLANE", plane: paintedPlane });
+                return;
+            }
+        }
         const switched = client.goToPlane(plane);
         // A deck's views are each a page per slide: the one switched to opens
         // on the slide shown, where a sheet opens at its top.
