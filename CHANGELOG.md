@@ -15,8 +15,9 @@ listed once, by package. Its major and minor version are those of the
   `showFormulaBar` option hides it.
 - A workbook's active cell moves with the keyboard: an arrow moves it, Shift
   extends the selection, Ctrl or Cmd jumps to the edge of the data, and Enter
-  and Tab step down and right (Shift back). A sheet shown from its tab opens
-  on the active cell its file keeps, A1 where it keeps none.
+  and Tab step down and right (Shift back). A sheet shown from its tab comes
+  back with the cells it was left with selected, or, the first time, the
+  active cell its file keeps, A1 where it keeps none.
 
 ### udoc-editor
 
