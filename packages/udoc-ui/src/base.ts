@@ -84,6 +84,11 @@ export interface UDocOptions {
      *  by its side's. Default `null`, none; {@link UDocBase.openPanel} and
      *  {@link UDocBase.closePanel} change it. */
     activePanel?: PanelTab | null;
+    /** Show a deck's speaker notes in a pane under its slides, as PowerPoint's
+     *  Normal view does. Default `true`; {@link UDocBase.openNotes},
+     *  {@link UDocBase.closeNotes} and the View tab's Notes change it. Other
+     *  document types have no notes, and show no pane whatever this says. */
+    showNotes?: boolean;
     /** Show the theme button in the toolbar's menu. Default `true`. */
     showThemeButton?: boolean;
     /** Show the fullscreen button in the toolbar's menu. Default `true`. */
@@ -325,6 +330,8 @@ export interface UDocEvents {
     "document:printed": { pageCount: number };
     /** Fires when a side panel opens, closes or switches — by the host, the user or a document asking for its outline. */
     "panel:changed": { panel: PanelTab | null; previousPanel: PanelTab | null };
+    /** Fires when the notes pane opens or closes — by the host or the View tab's Notes. */
+    "notes:changed": { open: boolean };
     /**
      * Fires after a *local* edit is applied (page edits, undo/redo) — not on
      * merges, so a sync listener that pushes a snapshot to a peer can't loop.
@@ -508,6 +515,11 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
                 shell.store,
                 (s) => s.activePanel,
                 (panel, previousPanel) => this.#emit("panel:changed", { panel, previousPanel }),
+            ),
+            subscribeSelector(
+                shell.store,
+                (s) => s.notesOpen,
+                (open) => this.#emit("notes:changed", { open }),
             ),
             shell.onEdit(() => this.#emit("document:edited", { pageCount: shell.getState().pageCount })),
             shell.onSelectionEdit(() => this.#emit("selection:changed", {})),
@@ -1385,6 +1397,20 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         this.shell.closePanel();
     }
 
+    /**
+     * Show a deck's speaker notes in a pane under its slides, as the View tab's
+     * Notes does. Kept while a document of another type, which has no notes,
+     * is open: the next deck opens with the pane.
+     */
+    openNotes(): void {
+        this.shell.openNotes();
+    }
+
+    /** Hide the notes pane. */
+    closeNotes(): void {
+        this.shell.closeNotes();
+    }
+
     /** The open document's doc type, or `null` with no document open. */
     get docType(): UDocType | null {
         return this.shell.getState().docType;
@@ -1518,6 +1544,11 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     /** The open side panel, or `null` for none; `"panel:changed"` fires when it changes. */
     get activePanel(): PanelTab | null {
         return this.shell.getState().activePanel;
+    }
+
+    /** Whether a deck's notes pane shows under its slides; `"notes:changed"` fires when it changes. */
+    get notesOpen(): boolean {
+        return this.shell.getState().notesOpen;
     }
 
     /** Where a followed link or outline item, or a chosen comment, lands, as {@link setNavigationScrollAlignment} last set it. */

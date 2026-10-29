@@ -23,6 +23,7 @@ export const ko: Messages = {
     "shell.regionSidePanel": "사이드 패널",
     "shell.regionDocument": "문서",
     "shell.regionSearchComments": "검색 및 메모",
+    "shell.regionNotes": "슬라이드 노트",
 
     // Toolbar
     "toolbar.label": "문서 도구 모음",
@@ -59,6 +60,7 @@ export const ko: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "주석",
+    "ribbon.view": "보기",
 
     // Ribbon
     "ribbon.label": "도구 옵션",
@@ -82,6 +84,7 @@ export const ko: Messages = {
     "command.annotationColor": "색",
     "command.annotationFill": "채우기",
     "command.annotationOpacity": "불투명도",
+    "command.notes": "슬라이드 노트",
 
     // Shape pickers
     "shape.rectangle": "사각형",
@@ -216,6 +219,9 @@ export const ko: Messages = {
     "leftPanel.attachments": "첨부 파일",
     "leftPanel.resizeHandle": "사이드 패널 크기 조정",
     "leftPanel.placeholder": "{panel} — 아직 내용이 없습니다",
+
+    // Notes pane
+    "notes.resizeHandle": "슬라이드 노트 크기 조정",
 
     // Thumbnails
     "thumbnails.pages": "페이지 축소판 그림",

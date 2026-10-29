@@ -23,6 +23,7 @@ export const ar: Messages = {
     "shell.regionSidePanel": "اللوحة الجانبية",
     "shell.regionDocument": "المستند",
     "shell.regionSearchComments": "البحث والتعليقات",
+    "shell.regionNotes": "ملاحظات المتحدث",
 
     // Toolbar
     "toolbar.label": "شريط أدوات المستند",
@@ -59,6 +60,7 @@ export const ar: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "تعليق توضيحي",
+    "ribbon.view": "عرض",
 
     // Ribbon
     "ribbon.label": "خيارات الأداة",
@@ -82,6 +84,7 @@ export const ar: Messages = {
     "command.annotationColor": "اللون",
     "command.annotationFill": "تعبئة",
     "command.annotationOpacity": "العتامة",
+    "command.notes": "ملاحظات",
 
     // Shape pickers
     "shape.rectangle": "مستطيل",
@@ -216,6 +219,9 @@ export const ar: Messages = {
     "leftPanel.attachments": "المرفقات",
     "leftPanel.resizeHandle": "تغيير حجم اللوحة الجانبية",
     "leftPanel.placeholder": "{panel} — لا يوجد شيء هنا بعد",
+
+    // Notes pane
+    "notes.resizeHandle": "تغيير حجم الملاحظات",
 
     // Thumbnails
     "thumbnails.pages": "صور مصغرة للصفحات",

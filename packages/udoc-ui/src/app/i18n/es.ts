@@ -23,6 +23,7 @@ export const es: Messages = {
     "shell.regionSidePanel": "Panel lateral",
     "shell.regionDocument": "Documento",
     "shell.regionSearchComments": "Búsqueda y comentarios",
+    "shell.regionNotes": "Notas del orador",
 
     // Toolbar
     "toolbar.label": "Barra de herramientas del documento",
@@ -59,6 +60,7 @@ export const es: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Anotar",
+    "ribbon.view": "Vista",
 
     // Ribbon
     "ribbon.label": "Opciones de herramienta",
@@ -82,6 +84,7 @@ export const es: Messages = {
     "command.annotationColor": "Color",
     "command.annotationFill": "Relleno",
     "command.annotationOpacity": "Opacidad",
+    "command.notes": "Notas",
 
     // Shape pickers
     "shape.rectangle": "Rectángulo",
@@ -216,6 +219,9 @@ export const es: Messages = {
     "leftPanel.attachments": "Adjuntos",
     "leftPanel.resizeHandle": "Cambiar el tamaño del panel lateral",
     "leftPanel.placeholder": "{panel} — aún no hay nada aquí",
+
+    // Notes pane
+    "notes.resizeHandle": "Cambiar el tamaño de las notas",
 
     // Thumbnails
     "thumbnails.pages": "Miniaturas de páginas",

@@ -23,6 +23,7 @@ export const ptBR: Messages = {
     "shell.regionSidePanel": "Painel lateral",
     "shell.regionDocument": "Documento",
     "shell.regionSearchComments": "Pesquisa e comentários",
+    "shell.regionNotes": "Anotações do orador",
 
     // Toolbar
     "toolbar.label": "Barra de ferramentas do documento",
@@ -59,6 +60,7 @@ export const ptBR: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Anotar",
+    "ribbon.view": "Exibir",
 
     // Ribbon
     "ribbon.label": "Opções de ferramenta",
@@ -82,6 +84,7 @@ export const ptBR: Messages = {
     "command.annotationColor": "Cor",
     "command.annotationFill": "Preenchimento",
     "command.annotationOpacity": "Opacidade",
+    "command.notes": "Anotações",
 
     // Shape pickers
     "shape.rectangle": "Retângulo",
@@ -216,6 +219,9 @@ export const ptBR: Messages = {
     "leftPanel.attachments": "Anexos",
     "leftPanel.resizeHandle": "Redimensionar painel lateral",
     "leftPanel.placeholder": "{panel} — ainda não há nada aqui",
+
+    // Notes pane
+    "notes.resizeHandle": "Redimensionar anotações",
 
     // Thumbnails
     "thumbnails.pages": "Miniaturas das páginas",

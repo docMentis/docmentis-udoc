@@ -13,7 +13,7 @@
  * or not-yet-profiled doc type falls back to {@link FALLBACK_PROFILE}. Adding a
  * doc type is one entry here — the rest of the UI doesn't change.
  */
-import { ANNOTATE_COMMANDS, LEFT_PANEL_TABS, RIGHT_PANEL_TABS } from "./state.js";
+import { ANNOTATE_COMMANDS, LEFT_PANEL_TABS, RIGHT_PANEL_TABS, VIEW_COMMANDS } from "./state.js";
 import type { UIState, LayoutMode, LeftPanelTab, PanelTab, RightPanelTab, ToolbarTab } from "./state.js";
 import type { Feature, UDocType } from "@docmentis/udoc-wasm";
 
@@ -27,6 +27,17 @@ export const ANNOTATE_TAB: ToolbarTab = {
     label: "ribbon.annotate",
     commands: ANNOTATE_COMMANDS,
     feature: "annotation",
+};
+
+/**
+ * A deck's View tab — the Notes toggle, which shows its speaker notes in a pane
+ * under the slides. A view setting, not an edit, so it serves view mode and
+ * edit mode both: the last tab of each.
+ */
+export const VIEW_TAB: ToolbarTab = {
+    id: "view",
+    label: "ribbon.view",
+    commands: VIEW_COMMANDS,
 };
 
 /**
@@ -195,7 +206,7 @@ export const PORTABLE_PROFILE: DocProfile = {
  * the Thumbnails navigator, not a page-control strip.
  */
 export const PRESENTATION_PROFILE: DocProfile = {
-    viewTabs: [],
+    viewTabs: [VIEW_TAB],
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],

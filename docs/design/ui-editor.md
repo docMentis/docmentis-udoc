@@ -71,6 +71,18 @@ signals; the worker repaints the pending dirty area on its own
 `requestAnimationFrame` loop. State holds scroll/zoom in document space; pixels
 never enter the store and never cross the worker boundary.
 
+The engine's session holds several viewers, each a view of its own onto the
+one document, and the `WorkerClient`'s own verbs drive viewer 0, the canvas
+above. `addViewer(canvas)` adds another and returns its `ViewerClient`, the
+same verbs aimed at it: the worker keeps each one's canvas and last view, adds
+it to every session it starts under the same index, paints it in the same
+frame while its host gives it an area, and posts its frames and resize acks
+tagged with it; the selection report carries each one's projection. A deck's
+notes pane (`NotesPane`) is one: the notes text plane, a page per slide as
+wide as the pane, shown a page at a time and moved to the slide the canvas
+shows. A caret there types through the canvas's hidden text input, the one
+keyboard sink.
+
 The dirty-rect core is the Rust `WasmSession` (in `docmentis-udoc-facade-wasm`).
 It stacks pages into one document-space coordinate system and, on scroll, **blits
 the existing pixels by the (integer device-pixel) scroll delta and re-rasterizes

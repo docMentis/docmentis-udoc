@@ -110,6 +110,27 @@ export interface AttachRequest {
 }
 
 /**
+ * A request that acts on one of the session's viewers: `viewer` names it — `0`,
+ * the session's own, when absent, else one an {@link AddViewerRequest} added.
+ */
+export interface ViewerScoped {
+    viewer?: number;
+}
+
+/**
+ * Add viewer `viewer` — another view onto the open document, beside the
+ * session's own (a deck's notes pane), painting into `canvas`. Indices are
+ * handed out in order from `1`, and the worker adds the viewer to every
+ * session it starts from then on, in that order, so the index names it in
+ * each. Fire-and-forget.
+ */
+export interface AddViewerRequest {
+    type: "addViewer";
+    viewer: number;
+    canvas: OffscreenCanvas;
+}
+
+/**
  * Offer the host's own fonts to every document opened from here on: `local` as
  * font files' bytes, `url` fetched only when a document's text asks for one.
  * The worker holds them and registers them on each session a
@@ -154,7 +175,7 @@ export interface AuthenticateRequest {
 }
 
 /** Update the painted window (scroll / zoom / resize). Latest-wins. */
-export interface SetViewportRequest {
+export interface SetViewportRequest extends ViewerScoped {
     type: "setViewport";
     viewport: Viewport;
     /**
@@ -180,7 +201,7 @@ export interface SetViewportRequest {
  * `seq` like {@link SetViewportRequest} so that frame is recognized as fresh.
  * Latest-wins, fire-and-forget.
  */
-export interface GoToPageRequest {
+export interface GoToPageRequest extends ViewerScoped {
     type: "goToPage";
     index: number;
     seq: number;
@@ -273,7 +294,7 @@ export interface ZoomToRectRequest {
  * For the open document: the next opens in the default scroll mode
  * ({@link SetDefaultScrollModeRequest}). Latest-wins, fire-and-forget.
  */
-export interface SetScrollModeRequest {
+export interface SetScrollModeRequest extends ViewerScoped {
     type: "setScrollMode";
     mode: ScrollMode;
 }
@@ -331,7 +352,7 @@ export interface SetPerfRequest {
  * the worker re-applies it to every subsequently opened document. Latest-wins,
  * fire-and-forget.
  */
-export interface SetBackdropRequest {
+export interface SetBackdropRequest extends ViewerScoped {
     type: "setBackdrop";
     color: RgbColor;
 }
@@ -343,7 +364,7 @@ export interface SetBackdropRequest {
  * backdrop: re-applied to every subsequently opened document. Latest-wins,
  * fire-and-forget.
  */
-export interface SetPageBorderRequest {
+export interface SetPageBorderRequest extends ViewerScoped {
     type: "setPageBorder";
     color: RgbColor | null;
 }
@@ -371,7 +392,7 @@ export interface SetBrandingInsetRequest {
  * (page-fixed `pt` or screen-fixed `px`). Sticky like the backdrop: re-applied
  * to every subsequently opened document. Latest-wins, fire-and-forget.
  */
-export interface SetSpacingRequest {
+export interface SetSpacingRequest extends ViewerScoped {
     type: "setSpacing";
     contentPadding: ContentPadding;
     pageGap: PageGap;
@@ -385,9 +406,22 @@ export interface SetSpacingRequest {
  * spacing: re-applied to every subsequently opened document. Latest-wins,
  * fire-and-forget.
  */
-export interface SetScrollbarSizeRequest {
+export interface SetScrollbarSizeRequest extends ViewerScoped {
     type: "setScrollbarSize";
     size: number;
+}
+
+/**
+ * Lay the pages of the plane viewer `viewer` shows out at `width` document
+ * points, where they flow to the pane's width — a deck's notes text, as wide as
+ * the notes pane over its zoom. A view setting; planes whose pages take their
+ * size from the document ignore it. Sticky like the spacing. Latest-wins,
+ * fire-and-forget.
+ */
+export interface SetPageWidthRequest {
+    type: "setPageWidth";
+    viewer: number;
+    width: number;
 }
 
 /**
@@ -565,7 +599,7 @@ export interface PlaneInfoRequest {
  * open does — the frame that paints it reports its extent. A no-op for a
  * single-plane doc type.
  */
-export interface GoToPlaneRequest {
+export interface GoToPlaneRequest extends ViewerScoped {
     type: "goToPlane";
     plane: number;
 }
@@ -600,7 +634,7 @@ export interface HistoryRequest {
  * {@link HitTestRequest} says the anchor is over text. The resulting geometry
  * rides back in a {@link SelectionReport}. Fire-and-forget.
  */
-export interface SelectTextRequest {
+export interface SelectTextRequest extends ViewerScoped {
     type: "selectText";
     anchor: { x: number; y: number };
     focus: { x: number; y: number };
@@ -1695,6 +1729,7 @@ export type WorkerRequest =
     | InitRequest
     | StartRequest
     | AttachRequest
+    | AddViewerRequest
     | RegisterFontsRequest
     | OpenRequest
     | OpenRemoteRequest
@@ -1717,6 +1752,7 @@ export type WorkerRequest =
     | SetBrandingInsetRequest
     | SetSpacingRequest
     | SetScrollbarSizeRequest
+    | SetPageWidthRequest
     | SetFitRequest
     | SetDefaultFitRequest
     | SetDpiRequest
@@ -1852,6 +1888,9 @@ export interface PerfReport {
  */
 export interface PageViewsReport {
     type: "pageViews";
+    /** The viewer that painted the frame: `0`, the session's own, or one an
+     *  {@link AddViewerRequest} added. */
+    viewer: number;
     rects: Float64Array;
     /** Echo of the latest consumed {@link SetViewportRequest.seq} (0 before any). */
     seq: number;
@@ -1928,7 +1967,17 @@ export interface SelectionReport {
      *  picked by the headers in the thumbnails. Its slides are the geometry's
      *  `pages`. Empty for any other selection. */
     slideSections: string[];
+    /** The selection as each viewer an {@link AddViewerRequest} added
+     *  projects it — `geometry` and `peers` are the session's own viewer's. */
+    viewers: ViewerSelection[];
     localChanged: boolean;
+}
+
+/** The selection as one added viewer projects it onto the plane it shows. */
+export interface ViewerSelection {
+    viewer: number;
+    geometry: SelectionGeometry;
+    peers: PeerSelectionGeometry[];
 }
 
 /**
@@ -1977,6 +2026,8 @@ export interface HistoryReport {
  */
 export interface ResizedReport {
     type: "resized";
+    /** The viewer resized, as {@link PageViewsReport.viewer} names it. */
+    viewer: number;
     width: number;
     height: number;
 }

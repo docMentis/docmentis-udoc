@@ -3,7 +3,6 @@ import type {
     DocumentLayout,
     PlaneInfo,
     HistoryState,
-    PageView,
     PageViewsFrame,
     GridCellSelectOptions,
     ContentPadding,
@@ -72,6 +71,7 @@ import type {
     ExtensionRequest,
     WorkerRequest,
 } from "./protocol.js";
+import { pageViewsFrame, ViewerClient } from "./ViewerClient.js";
 import { resolveWasmCandidates } from "./wasm-loader.js";
 import type { WasmCandidate, WasmLocateOptions } from "./wasm-loader.js";
 
@@ -80,9 +80,8 @@ interface Pending {
     reject: (reason: unknown) => void;
 }
 
-/** Floats per page in a {@link PageViewsReport} buffer:
- *  `[index, x, y, w, h, rotation]`. */
-const PAGE_VIEW_STRIDE = 6;
+/** The session's own viewer, the one this client's view verbs drive. */
+const MAIN_VIEWER = 0;
 
 /**
  * Most decoded thumbnail bitmaps kept at once. Thumbnails are small, so the
@@ -272,6 +271,8 @@ export class WorkerClient {
     #lastBrandingRect: Rect | null | undefined = undefined;
     readonly #perfListeners = new Set<(summary: PerfSummary) => void>();
     #nextId = 1;
+    /** The viewers {@link addViewer} added, the worker's viewer `i + 1` at `i`. */
+    readonly #viewers: ViewerClient[] = [];
     /** Seq of the latest viewport sent; reports echoing it are `fresh`. */
     #viewportSeq = 0;
     /** The `anchorShift` of the latest fresh report — what the host's scroll,
@@ -367,6 +368,23 @@ export class WorkerClient {
     attach(canvas: HTMLCanvasElement): void {
         const offscreen = canvas.transferControlToOffscreen();
         this.#post({ type: "attach", canvas: offscreen }, [offscreen]);
+    }
+
+    /**
+     * Add a viewer beside the main one — another view onto the open document,
+     * as a deck's notes pane is — painting into `canvas` (transferred as an
+     * OffscreenCanvas), and return the handle that drives it. It joins every
+     * document opened from then on.
+     */
+    addViewer(canvas: HTMLCanvasElement): ViewerClient {
+        const offscreen = canvas.transferControlToOffscreen();
+        const viewer = new ViewerClient(this.#viewers.length + 1, {
+            post: (request, transfer) => this.#post(request, transfer),
+            send: (request) => this.#send(request),
+        });
+        this.#viewers.push(viewer);
+        this.#post({ type: "addViewer", viewer: viewer.index, canvas: offscreen }, [offscreen]);
+        return viewer;
     }
 
     /**
@@ -1856,7 +1874,8 @@ export class WorkerClient {
                     for (const listener of this.#perfListeners) listener(msg.summary);
                     return;
                 case "pageViews":
-                    this.#emitPageViews(msg);
+                    if (msg.viewer === MAIN_VIEWER) this.#emitPageViews(msg);
+                    else this.#viewers[msg.viewer - 1]?.receive(msg);
                     return;
                 case "selection": {
                     const state: SelectionState = {
@@ -1867,6 +1886,7 @@ export class WorkerClient {
                         capabilities: entitledCapabilities(msg.capabilities, this.#entitlements?.features ?? []),
                         properties: msg.properties,
                         slideSections: msg.slideSections,
+                        viewers: msg.viewers,
                         localChanged: msg.localChanged,
                     };
                     for (const listener of this.#selectionListeners) listener(state);
@@ -1884,6 +1904,10 @@ export class WorkerClient {
                     return;
                 }
                 case "resized":
+                    if (msg.viewer !== MAIN_VIEWER) {
+                        this.#viewers[msg.viewer - 1]?.receive(msg);
+                        return;
+                    }
                     for (const listener of this.#resizedListeners) {
                         listener({ width: msg.width, height: msg.height });
                     }
@@ -1920,33 +1944,9 @@ export class WorkerClient {
         // back at once, and it was read against this report.
         if (report.seq === this.#viewportSeq) this.#anchorShift = report.anchorShift;
         if (this.#pageViewListeners.size === 0) return;
-        const rects = report.rects;
-        const views: PageView[] = [];
-        for (let i = 0; i + PAGE_VIEW_STRIDE <= rects.length; i += PAGE_VIEW_STRIDE) {
-            views.push({
-                index: rects[i]!,
-                x: rects[i + 1]!,
-                y: rects[i + 2]!,
-                width: rects[i + 3]!,
-                height: rects[i + 4]!,
-                rotation: rects[i + 5]!,
-            });
-        }
-        const frame: PageViewsFrame = {
-            views,
-            scale: report.scale,
-            scrollSize: { width: report.scrollWidth, height: report.scrollHeight },
-            scrollUsedSize: { width: report.scrollUsedWidth, height: report.scrollUsedHeight },
-            scrollbars: { x: report.scrollbarX, y: report.scrollbarY },
-            scroll: { x: report.scrollX, y: report.scrollY },
-            currentPage: report.currentPage >= 0 ? report.currentPage : null,
-            plane: report.plane,
-            guide: report.guide,
-            repaintArea: report.repaintArea,
-            // Reflects the latest viewport we sent — older frames painted
-            // mid-burst must not be adopted as view state.
-            fresh: report.seq === this.#viewportSeq,
-        };
+        // Reflects the latest viewport we sent — older frames painted mid-burst
+        // must not be adopted as view state.
+        const frame = pageViewsFrame(report, report.seq === this.#viewportSeq);
         for (const listener of this.#pageViewListeners) listener(frame);
     }
 

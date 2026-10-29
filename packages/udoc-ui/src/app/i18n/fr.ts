@@ -23,6 +23,7 @@ export const fr: Messages = {
     "shell.regionSidePanel": "Panneau latéral",
     "shell.regionDocument": "Document",
     "shell.regionSearchComments": "Recherche et commentaires",
+    "shell.regionNotes": "Notes du présentateur",
 
     // Toolbar
     "toolbar.label": "Barre d'outils du document",
@@ -59,6 +60,7 @@ export const fr: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Annoter",
+    "ribbon.view": "Affichage",
 
     // Ribbon
     "ribbon.label": "Options d'outil",
@@ -82,6 +84,7 @@ export const fr: Messages = {
     "command.annotationColor": "Couleur",
     "command.annotationFill": "Remplissage",
     "command.annotationOpacity": "Opacité",
+    "command.notes": "Notes",
 
     // Shape pickers
     "shape.rectangle": "Rectangle",
@@ -216,6 +219,9 @@ export const fr: Messages = {
     "leftPanel.attachments": "Pièces jointes",
     "leftPanel.resizeHandle": "Redimensionner le panneau latéral",
     "leftPanel.placeholder": "{panel} — rien ici pour le moment",
+
+    // Notes pane
+    "notes.resizeHandle": "Redimensionner les notes",
 
     // Thumbnails
     "thumbnails.pages": "Miniatures des pages",

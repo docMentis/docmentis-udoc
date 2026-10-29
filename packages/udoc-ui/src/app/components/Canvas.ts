@@ -475,7 +475,7 @@ function linkKeyDown(ev: { ctrlKey: boolean; metaKey: boolean }): boolean {
 
 /** The text granularity a press's click-chain count encodes: a double click
  *  selects (and drags) by words, a triple click by paragraphs. */
-function granularityFor(count: number): TextGranularity {
+export function granularityFor(count: number): TextGranularity {
     return count >= 3 ? "paragraph" : count === 2 ? "word" : "character";
 }
 
@@ -538,9 +538,9 @@ function minCorners(tool: AnnotationTool): number {
 }
 
 /** A chained press must land within this of the previous one (CSS px). */
-const CLICK_CHAIN_RADIUS = 4;
+export const CLICK_CHAIN_RADIUS = 4;
 /** ... and within this of it (ms) — the platform double-click window. */
-const CLICK_CHAIN_MS = 500;
+export const CLICK_CHAIN_MS = 500;
 
 /** The held-fixed corner of `handle` as bounds fractions (the corner opposite
  *  the moved edges): `0` = top/left … `1` = bottom/right. The same fraction is
@@ -1026,8 +1026,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     let tableAnchor: string | null = null;
     // Whether the selection carries an editable text caret / range at all —
     // ObjectText (inside an object box) OR flow text with no object (a word
-    // processor's body caret). Drives the hidden text input, which a bare flow
-    // caret must claim too even though it has no object box.
+    // processor's body caret), here or in another viewer's text (a deck's
+    // notes pane). Drives the hidden text input, which a bare flow caret must
+    // claim too even though it has no object box.
     let editingText = false;
     // Whether the selection is annotations — a whole one, or a caret in a free
     // text's text. Annotations edit in view mode as in edit, so this opens the
@@ -1720,7 +1721,12 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             // reads the same way; flow text has the caret / text with no box.
             const g = state.local;
             inObjectText = (g.objects.length > 0 || g.annotations.length > 0) && (g.text.length > 0 || g.caret != null);
-            editingText = g.caret != null || g.text.length > 0;
+            // A caret in text another viewer shows — a deck's notes, in their
+            // pane — types here too: this field is the one keyboard sink.
+            editingText =
+                g.caret != null ||
+                g.text.length > 0 ||
+                state.viewers.some(({ geometry }) => geometry.caret != null || geometry.text.length > 0);
             annotationSelected = g.annotations.length > 0;
             copyable = state.capabilities.copyable;
             syncTextInput();

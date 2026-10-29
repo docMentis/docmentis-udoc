@@ -41,6 +41,8 @@ export interface Messages {
     "shell.regionDocument": string;
     /** Search and comments */
     "shell.regionSearchComments": string;
+    /** Speaker notes */
+    "shell.regionNotes": string;
 
     // Toolbar
     /** Document toolbar */
@@ -105,6 +107,8 @@ export interface Messages {
     // Ribbon tabs
     /** Annotate */
     "ribbon.annotate": string;
+    /** View */
+    "ribbon.view": string;
 
     // Ribbon
     /** Tool options */
@@ -147,6 +151,8 @@ export interface Messages {
     "command.annotationFill": string;
     /** Opacity */
     "command.annotationOpacity": string;
+    /** Notes */
+    "command.notes": string;
 
     // Shape pickers
     /** Rectangle */
@@ -393,6 +399,10 @@ export interface Messages {
     "leftPanel.resizeHandle": string;
     /** {panel} — nothing here yet */
     "leftPanel.placeholder": string;
+
+    // Notes pane
+    /** Resize notes */
+    "notes.resizeHandle": string;
 
     // Thumbnails
     /** Page thumbnails */

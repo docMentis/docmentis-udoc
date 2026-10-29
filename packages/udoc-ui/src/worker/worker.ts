@@ -30,6 +30,7 @@ import type {
     SelectionReport,
     SlideSectionRun,
     ThumbnailFocusRequest,
+    ViewerSelection,
     ThumbnailResult,
     WorkerOutbound,
     WorkerRequest,
@@ -39,6 +40,7 @@ import initEngine, { createFontFetchMemory, fetchFontBinaries, startSession } fr
 import type {
     CanvasText,
     FontLocation,
+    PresentationPlaneKind,
     GoogleFontFamily,
     SheetState,
     UrlFont,
@@ -87,27 +89,93 @@ let canvasText: CanvasText | null = null;
 const hostLocalFonts: Uint8Array[] = [];
 const hostUrlFonts: UrlFont[] = [];
 let session: WasmSession | null = null;
-/** The session's viewer — the one it is built with, which every viewer verb
- *  names first. The worker drives one. */
+/** The session's own viewer — the one it is built with, which every viewer
+ *  verb names first. The host adds others beside it (`addViewer`). */
 const VIEWER = 0;
-// The transferred canvas, held for the life of the worker. A canvas can only be
-// transferred once, so the main thread hands it over at mount and every session
-// after that is attached to this same one.
-let canvas: OffscreenCanvas | null = null;
+
+/**
+ * What the worker holds for one of the session's viewers: the canvas it paints
+ * into and the view last pushed to Rust for it.
+ */
+interface ViewerHost {
+    // The transferred canvas, held for the life of the worker. A canvas can
+    // only be transferred once, so the main thread hands it over at mount and
+    // every session after that is attached to this same one.
+    canvas: OffscreenCanvas | null;
+    // Last view pushed to Rust, so we only call resize() / set_view() on real
+    // changes (the main thread sends a full Viewport each time).
+    width: number;
+    height: number;
+    dpr: number;
+    scrollX: number;
+    scrollY: number;
+    zoom: number;
+    // How far, in document points, the engine has moved the view down by
+    // itself — a running total. A page composed above the one in view (after a
+    // jump past pages not composed yet) moves it, and the engine moves the view
+    // with it. Each report carries the total, and a viewport the client sends
+    // carries the total of the report its scroll was read from, so
+    // `applyViewport` adds the moves the client hadn't seen: its scroll was
+    // meant for the plane before them.
+    anchorShift: number;
+    // A resize that hasn't been acked yet. Set when `applyViewport` resizes the
+    // backing store; cleared (and posted) once the next frame has run, so the
+    // main thread only grows the canvas's CSS box after the pixels behind it
+    // are fresh.
+    resizeAck: { width: number; height: number } | null;
+    // Sequence number of the latest viewport message consumed (0 before any),
+    // echoed in each pageViews report so the client can tell which frames
+    // reflect its newest viewport.
+    viewportSeq: number;
+    // Seq last echoed in a pageViews frame — see the emit rule in `renderFrame`.
+    emittedSeq: number;
+}
+
+/** A viewer painting into `canvas`, with no view pushed to Rust yet. */
+function viewerHost(canvas: OffscreenCanvas | null): ViewerHost {
+    return {
+        canvas,
+        width: Number.NaN,
+        height: Number.NaN,
+        dpr: Number.NaN,
+        scrollX: Number.NaN,
+        scrollY: Number.NaN,
+        zoom: Number.NaN,
+        anchorShift: 0,
+        resizeAck: null,
+        viewportSeq: 0,
+        emittedSeq: -1,
+    };
+}
+
+/** The session's viewers, by index: its own, then each the host added. */
+const viewers: ViewerHost[] = [viewerHost(null)];
+
+/**
+ * Whether viewer `v` paints: the session's own always — a frame with no
+ * document still acks a resize — and an added one only while the host shows it,
+ * at a size of its own. A hidden pane sends an empty viewport and costs nothing.
+ */
+function painting(v: number): boolean {
+    const host = viewers[v]!;
+    return v === VIEWER || (host.canvas !== null && host.width > 0 && host.height > 0);
+}
 
 // Host presentation state that has to outlive a session.
 //
 // A session is now one document long, so everything the shell pushed before
 // this document existed — and everything it pushes while one is open — has to
-// be replayed into the next session. Recorded by message type (latest wins) and
-// replayed through this same handler, so a new sticky setting needs no second
-// implementation here and cannot silently stop surviving an open.
+// be replayed into the next session. Recorded by message type and the viewer it
+// names (latest wins) and replayed through this same handler, so a new sticky
+// setting needs no second implementation here and cannot silently stop
+// surviving an open.
 const STICKY_REQUESTS: ReadonlySet<string> = new Set<WorkerRequest["type"]>([
     "setBackdrop",
     "setPageBorder",
     "setBrandingInset",
     "setSpacing",
     "setScrollbarSize",
+    "setPageWidth",
     "setFit",
     "setDefaultFit",
     "setDpi",
@@ -117,6 +185,12 @@ const STICKY_REQUESTS: ReadonlySet<string> = new Set<WorkerRequest["type"]>([
     "setUserInfo",
 ]);
 const sticky = new Map<string, EngineRequestEnvelope>();
+
+/** What `request` is recorded under in {@link sticky}: its type, and the viewer it names past the session's own. */
+function stickyKey(request: EngineRequestEnvelope): string {
+    const viewer = "viewer" in request ? request.viewer : undefined;
+    return typeof viewer === "number" && viewer !== VIEWER ? `${request.type}:${viewer}` : request.type;
+}
 
 // Repaint timing. A real counter only while `setPerf` has it on; otherwise a
 // no-op so the hot path stays branchless. The summary is posted to the main
@@ -128,34 +202,9 @@ const PERF_REPORT_INTERVAL_MS = 1000;
 let perfReportTimer: ReturnType<typeof setTimeout> | null = null;
 let rafId: number | null = null;
 
-// Last view pushed to Rust, so we only call resize() / set_view() on real
-// changes (the main thread sends a full Viewport each time).
-let lastW = Number.NaN;
-let lastH = Number.NaN;
-let lastDpr = Number.NaN;
-let lastScrollX = Number.NaN;
-let lastScrollY = Number.NaN;
-let lastZoom = Number.NaN;
-// How far, in document points, the engine has moved the view down by itself
-// — a running total. A page composed above the one in view (after a jump past
-// pages not composed yet) moves it, and the engine moves the view with it.
-// Each report carries the total, and a viewport the client sends carries the
-// total of the report its scroll was read from, so `applyViewport` adds the
-// moves the client hadn't seen: its scroll was meant for the plane before them.
-let anchorShift = 0;
 // The screen's CSS px per physical inch (`setDpi`), which the engine's scale
 // is measured against — `null` for each doc type's default.
 let dpi: number | null = null;
-
-// A resize that hasn't been acked yet. Set when `applyViewport` resizes the
-// backing store; cleared (and posted) once the next frame has run, so the main
-// thread only grows the canvas's CSS box after the pixels behind it are fresh.
-let resizeAck: { width: number; height: number } | null = null;
-
-// Sequence number of the latest viewport message consumed (0 before any),
-// echoed in each pageViews report so the client can tell which frames reflect
-// its newest viewport.
-let viewportSeq = 0;
 
 // Set on `open`, cleared on the first `setSpacing`: holds the opening paint
 // until the host has applied this document's spacing. The padding is
@@ -206,19 +255,28 @@ function scheduleFrame(): void {
     });
 }
 
-/** Paint one frame, timing the repaint and periodically reporting a summary. */
+/** Paint one frame in every viewer that paints. */
 function renderFrame(): void {
     if (!session || renderPoisoned) return;
+    for (let v = 0; v < viewers.length; v++) {
+        if (painting(v)) renderViewerFrame(session, v);
+        if (renderPoisoned) return;
+    }
+}
+
+/** Paint one frame in viewer `v`, timing the session's own viewer's repaint and periodically reporting a summary. */
+function renderViewerFrame(s: WasmSession, v: number): void {
+    const host = viewers[v]!;
     // The frame's reconcile composes what the view needs, and a page composed
     // above the one in view moves the view with it.
-    const scrollBefore = session.viewState(VIEWER)[2];
+    const scrollBefore = s.viewState(v)[2];
     let painted: boolean;
     try {
-        if (!perf.enabled) {
-            painted = session.renderFrame(VIEWER);
+        if (!perf.enabled || v !== VIEWER) {
+            painted = s.renderFrame(v);
         } else {
             const start = performance.now();
-            painted = session.renderFrame(VIEWER);
+            painted = s.renderFrame(v);
             const now = performance.now();
             // Only count frames that actually painted — idle no-op frames are ~0ms
             // and would skew the average toward zero.
@@ -226,7 +284,7 @@ function renderFrame(): void {
                 perf.record("repaint", now - start);
                 // Pull the engine's in-frame phase split (reconcile / record /
                 // rasterize / composite) so the HUD shows where the time went.
-                const t = session.frameTimings(VIEWER);
+                const t = s.frameTimings(VIEWER);
                 perf.record("reconcile", t.reconcile);
                 perf.record("record", t.record);
                 perf.record("rasterize", t.rasterize);
@@ -248,18 +306,22 @@ function renderFrame(): void {
         });
         return;
     }
-    followView(session, scrollBefore);
-    if (painted || viewportSeq !== emittedSeq) emitPageViews(session);
-    if (painted && backgroundAfterPaint) {
+    followView(s, v, scrollBefore);
+    if (painted || host.viewportSeq !== host.emittedSeq) emitPageViews(s, v);
+    if (v === VIEWER && painted && backgroundAfterPaint) {
         backgroundAfterPaint = false;
-        startBackground(session);
+        startBackground(s);
     }
+    // An added viewer's frame can compose the page its selection lies on —
+    // the notes a press just wrote — so the selection it projects is posted
+    // again once it has moved.
+    if (v !== VIEWER && painted) emitMovedViewerSelection(s, v);
     // Ack any pending resize now that the backing store has been repainted at
     // the new size — this is the main thread's cue to commit the CSS size
     // without scaling stale pixels. Fired even on a no-op frame (e.g. no
     // document open): there are no painted pixels to stretch, and the canvas
     // still needs to track the container.
-    flushResizeAck(session);
+    flushResizeAck(s, v);
 }
 
 /**
@@ -285,15 +347,17 @@ function reportPerf(): void {
     perfReportAt = now;
 }
 
-/** Post the pending resize ack (if any) so the main thread commits the CSS size. */
-function flushResizeAck(s: WasmSession): void {
-    if (!resizeAck) return;
-    scope.postMessage({ type: "resized", width: resizeAck.width, height: resizeAck.height });
-    resizeAck = null;
+/** Post viewer `v`'s pending resize ack (if any) so the main thread commits the CSS size. */
+function flushResizeAck(s: WasmSession, v: number): void {
+    const host = viewers[v]!;
+    const ack = host.resizeAck;
+    if (!ack) return;
+    scope.postMessage({ type: "resized", viewer: v, width: ack.width, height: ack.height });
+    host.resizeAck = null;
     // The brand decal is screen-fixed, so its CSS rect changes only with the
     // viewport — re-post it on the same beat as the resize ack so the host can
     // reposition the attribution click target over the freshly-placed mark.
-    emitBrandingRect(s);
+    if (v === VIEWER) emitBrandingRect(s);
 }
 
 /**
@@ -309,9 +373,6 @@ function emitBrandingRect(s: WasmSession): void {
         rect: r.length === 4 ? { x: r[0]!, y: r[1]!, width: r[2]!, height: r[3]! } : null,
     });
 }
-
-/** Seq last echoed in a pageViews frame — see the emit rule in `renderFrame`. */
-let emittedSeq = -1;
 
 /**
  * JSON of the guide render list last posted on a frame — the change gate for
@@ -338,42 +399,45 @@ let lastGuideKey: string | null = null;
  * Empty (zero-length) frames still post — that's how the host clears overlays
  * when the last page scrolls off.
  */
-function emitPageViews(s: WasmSession): void {
-    const rects = s.pageViewRects(VIEWER);
+function emitPageViews(s: WasmSession, v: number): void {
+    const host = viewers[v]!;
+    const rects = s.pageViewRects(v);
     // [zoom, scrollX, scrollY, scrollWidth, scrollHeight, currentPage,
     // scrollUsedWidth, scrollUsedHeight, scrollbarX, scrollbarY]; empty before open.
     // currentPage is -1 when no page is arranged; the scrollbar slots are 1 / 0.
-    const state = s.viewState(VIEWER);
-    emittedSeq = viewportSeq;
+    const state = s.viewState(v);
+    host.emittedSeq = host.viewportSeq;
     // The guide render list (ruler / row-column headers) for this frame, pulled
     // beside the view state so the bands track scroll/zoom — and the selection,
     // whose text frame the ruler counts from. Already CSS px — the wasm boundary
-    // divides out the dpr. `null` for a doc with no chrome. Its JSON is cached so
-    // a later presence-only select can tell whether the guide moved (`refreshChrome`).
-    const guide = s.guide(VIEWER) ?? null;
-    lastGuideKey = guide === null ? null : JSON.stringify(guide);
+    // divides out the dpr. `null` for a doc with no chrome, and in an added
+    // viewer, which draws no bands. Its JSON is cached so a later presence-only
+    // select can tell whether the guide moved (`refreshChrome`).
+    const guide = v === VIEWER ? (s.guide(v) ?? null) : null;
+    if (v === VIEWER) lastGuideKey = guide === null ? null : JSON.stringify(guide);
     // The box this frame repainted ([x, y, w, h] CSS px, empty when it painted
     // nothing) — the developer repaint-area overlay's source. Four numbers on a
     // frame the host already receives, so it needs no toggle down here: whether
     // to draw is the host's call.
-    const painted = s.paintedArea(VIEWER);
+    const painted = s.paintedArea(v);
     scope.postMessage(
         {
             type: "pageViews",
+            viewer: v,
             rects,
             repaintArea:
                 painted.length === 4
                     ? { x: painted[0]!, y: painted[1]!, width: painted[2]!, height: painted[3]! }
                     : null,
-            seq: viewportSeq,
+            seq: host.viewportSeq,
             scale: state[0] ?? 1,
             scrollX: state[1] ?? 0,
             scrollY: state[2] ?? 0,
-            anchorShift,
+            anchorShift: host.anchorShift,
             scrollWidth: state[3] ?? 0,
             scrollHeight: state[4] ?? 0,
             currentPage: state[5] ?? -1,
-            plane: s.currentPlane(VIEWER),
+            plane: s.currentPlane(v),
             scrollUsedWidth: state[6] ?? 0,
             scrollUsedHeight: state[7] ?? 0,
             scrollbarX: state[8] === 1,
@@ -404,7 +468,7 @@ function refreshChrome(s: WasmSession, beforePage?: number): void {
     const pageMoved = beforePage !== undefined && (s.viewState(VIEWER)[5] ?? -1) !== beforePage;
     const guide = s.guide(VIEWER) ?? null;
     const guideMoved = (guide === null ? null : JSON.stringify(guide)) !== lastGuideKey;
-    if (pageMoved || guideMoved) emitPageViews(s);
+    if (pageMoved || guideMoved) emitPageViews(s, VIEWER);
 }
 
 /** The selection state a {@link SelectionReport} carries. */
@@ -460,7 +524,36 @@ function readSelection(geometry?: SelectionGeometry): SelectionReportBody {
         capabilities: session?.selectionCapabilities() ?? EMPTY_SELECTION_CAPABILITIES,
         properties: session?.selectionProperties() ?? null,
         slideSections: session ? Selection.slideSections(session.selection()) : [],
+        viewers: session ? viewerSelections(session) : [],
     };
+}
+
+/**
+ * The selection as each viewer the host added projects it onto the plane it
+ * shows — nothing for one hidden, which draws nothing and would only cost a
+ * projection with every report.
+ */
+function viewerSelections(s: WasmSession): ViewerSelection[] {
+    const selections: ViewerSelection[] = [];
+    for (let v = VIEWER + 1; v < viewers.length; v++) {
+        selections.push(
+            painting(v)
+                ? { viewer: v, geometry: s.selectionGeometry(v), peers: s.peerSelectionGeometry(v) }
+                : { viewer: v, geometry: EMPTY_SELECTION_GEOMETRY, peers: [] },
+        );
+    }
+    return selections;
+}
+
+/**
+ * Post the selection state again where added viewer `v` now projects it
+ * otherwise than last posted — after a frame of its own composed the page it
+ * lies on. Reads that one viewer's geometry, so a frame that moved nothing
+ * costs a read.
+ */
+function emitMovedViewerSelection(s: WasmSession, v: number): void {
+    const posted = lastSelection?.viewers.find((selection) => selection.viewer === v)?.geometry;
+    if (JSON.stringify(s.selectionGeometry(v)) !== JSON.stringify(posted)) emitSelection(false);
 }
 
 /** Post `selection`, keeping it as the state {@link emitChangedSelection} compares against. */
@@ -948,7 +1041,7 @@ function composeThrough(s: WasmSession, start: number, pageLimit: number): Docum
     const before = s.viewState(VIEWER);
     const complete = s.updateLayout(VIEWER, { pages: { start, limit: pageLimit } });
     const layout = { ...layoutOf(s), complete };
-    followView(s, before[2]);
+    followView(s, VIEWER, before[2]);
     const after = s.viewState(VIEWER);
     // A peer's selection can reference a page this side hadn't composed yet;
     // newly composed pages may resolve more of it.
@@ -1093,7 +1186,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
     const handler = handlers[request.type];
     // Recorded before it is applied, so the state survives even if this session
     // is the one being replaced. Latest wins.
-    if (STICKY_REQUESTS.has(request.type) || handler?.sticky) sticky.set(request.type, request);
+    if (STICKY_REQUESTS.has(request.type) || handler?.sticky) sticky.set(stickyKey(request), request);
     try {
         if (handler) {
             const result = await handler.handle(request as never, engineWorker);
@@ -1150,9 +1243,15 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // path sends one) must reach it even at an unchanged size —
                 // deduped against the old session's, it never would, and the
                 // document would paint nothing until the viewport resized.
-                lastW = lastH = lastDpr = Number.NaN;
-                lastScrollX = lastScrollY = lastZoom = Number.NaN;
-                if (canvas) session.attach(VIEWER, canvas);
+                // Each viewer the host added joins it, under the index it had,
+                // before the settings replayed below name it.
+                for (let v = 0; v < viewers.length; v++) {
+                    const host = viewers[v]!;
+                    host.width = host.height = host.dpr = Number.NaN;
+                    host.scrollX = host.scrollY = host.zoom = Number.NaN;
+                    if (v !== VIEWER) session.addViewer();
+                    if (host.canvas) session.attach(v, host.canvas);
+                }
                 // A fresh session clears any prior poisoned-render state.
                 renderPoisoned = false;
                 // Carry the perf toggle onto the new session, so its
@@ -1173,9 +1272,23 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "attach": {
                 // Held, not handed straight on: a canvas transfers once, and
                 // the session that paints into it is replaced per document.
-                canvas = msg.canvas;
-                session?.attach(VIEWER, canvas);
+                viewers[VIEWER]!.canvas = msg.canvas;
+                session?.attach(VIEWER, msg.canvas);
                 reply(id, undefined);
+                break;
+            }
+            case "addViewer": {
+                // Held like the session's own canvas, and added to the session
+                // open now as `start` adds it to each one after. The client
+                // hands out the indices in order, so the session's next viewer
+                // is the one named.
+                if (msg.viewer !== viewers.length)
+                    throw new Error(`engine worker: viewer ${msg.viewer} added out of order`);
+                viewers.push(viewerHost(msg.canvas));
+                if (session) {
+                    session.addViewer();
+                    session.attach(msg.viewer, msg.canvas);
+                }
                 break;
             }
             case "registerFonts": {
@@ -1208,42 +1321,40 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 break;
             }
             case "setViewport": {
-                viewportSeq = msg.seq;
-                if (session) applyViewport(session, msg.viewport, msg.anchorShift);
+                const v = msg.viewer ?? VIEWER;
+                viewers[v]!.viewportSeq = msg.seq;
+                if (session) applyViewport(session, v, msg.viewport, msg.anchorShift);
                 scheduleFrame();
                 break;
             }
             case "goToPage": {
-                viewportSeq = msg.seq;
+                const v = msg.viewer ?? VIEWER;
+                viewers[v]!.viewportSeq = msg.seq;
                 if (session) {
-                    session.goToPage(VIEWER, msg.index);
+                    session.goToPage(v, msg.index);
                     // Adopt the viewer's resulting (clamped) scroll as our
                     // last-known view, so the setViewport the main thread
                     // echoes once it mirrors this scroll is a no-op rather than
                     // a redundant re-send. The next frame streams the new
                     // scroll + current page back (see emitPageViews).
-                    const st = session.viewState(VIEWER);
-                    lastScrollX = st[1] ?? lastScrollX;
-                    lastScrollY = st[2] ?? lastScrollY;
+                    adoptScroll(session, v);
                 }
                 scheduleFrame();
                 break;
             }
             case "goToRect": {
-                viewportSeq = msg.seq;
+                viewers[VIEWER]!.viewportSeq = msg.seq;
                 if (session) {
                     const { x0, y0, x1, y1 } = msg.rect;
                     session.goToRect(VIEWER, msg.index, x0, y0, x1, y1, msg.alignment);
                     // Adopt the resulting scroll, as `goToPage` does.
-                    const st = session.viewState(VIEWER);
-                    lastScrollX = st[1] ?? lastScrollX;
-                    lastScrollY = st[2] ?? lastScrollY;
+                    adoptScroll(session, VIEWER);
                 }
                 scheduleFrame();
                 break;
             }
             case "goToDestination": {
-                viewportSeq = msg.seq;
+                viewers[VIEWER]!.viewportSeq = msg.seq;
                 // A destination the document can't resolve leaves the view; one
                 // that lands may set the zoom as well as the scroll, so adopt
                 // both, as `zoomToRect` does.
@@ -1251,37 +1362,35 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                     () => session?.portable.goToDestination(VIEWER, msg.destination, msg.alignment) ?? null,
                     null,
                 );
-                if (session) adoptView(session);
+                if (session) adoptView(session, VIEWER);
                 reply(id, view);
                 scheduleFrame();
                 break;
             }
             case "goToBookmark": {
-                viewportSeq = msg.seq;
+                viewers[VIEWER]!.viewportSeq = msg.seq;
                 if (session) {
                     session.wordprocessing.goToBookmark(VIEWER, msg.name, msg.alignment);
                     // Adopt the resulting scroll, as `goToRect` does.
-                    const st = session.viewState(VIEWER);
-                    lastScrollX = st[1] ?? lastScrollX;
-                    lastScrollY = st[2] ?? lastScrollY;
+                    adoptScroll(session, VIEWER);
                 }
                 scheduleFrame();
                 break;
             }
             case "zoomAtPoint": {
-                viewportSeq = msg.seq;
+                viewers[VIEWER]!.viewportSeq = msg.seq;
                 if (session) {
                     session.zoomAtPoint(VIEWER, msg.zoom, msg.x, msg.y);
-                    adoptView(session);
+                    adoptView(session, VIEWER);
                 }
                 scheduleFrame();
                 break;
             }
             case "zoomToRect": {
-                viewportSeq = msg.seq;
+                viewers[VIEWER]!.viewportSeq = msg.seq;
                 if (session) {
                     session.zoomToRect(VIEWER, msg.x, msg.y, msg.width, msg.height);
-                    adoptView(session);
+                    adoptView(session, VIEWER);
                 }
                 scheduleFrame();
                 break;
@@ -1295,15 +1404,16 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "setBackdrop": {
                 // Sticky in Rust: re-applied to every subsequent open, so a
                 // document opened later keeps the host's backdrop.
-                session?.setBackdropColor(VIEWER, msg.color.r, msg.color.g, msg.color.b);
+                session?.setBackdropColor(msg.viewer ?? VIEWER, msg.color.r, msg.color.g, msg.color.b);
                 scheduleFrame();
                 break;
             }
             case "setPageBorder": {
                 // Sticky in Rust, like the backdrop. Pure paint: the next frame
                 // reconciles and repaints the frame around each page, or drops it.
-                if (msg.color) session?.setPageBorderColor(VIEWER, msg.color.r, msg.color.g, msg.color.b);
-                else session?.clearPageBorder(VIEWER);
+                const v = msg.viewer ?? VIEWER;
+                if (msg.color) session?.setPageBorderColor(v, msg.color.r, msg.color.g, msg.color.b);
+                else session?.clearPageBorder(v);
                 scheduleFrame();
                 break;
             }
@@ -1327,17 +1437,26 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // Padding edges are CSS px and the gaps document points — the
                 // wasm boundary multiplies the `px` edges by the dpr into the
                 // viewer's device px. Sticky in Rust, like the backdrop.
-                session?.setSpacing(VIEWER, msg.contentPadding, msg.pageGap);
+                const v = msg.viewer ?? VIEWER;
+                session?.setSpacing(v, msg.contentPadding, msg.pageGap);
                 // The document's spacing is now applied — release the opening
                 // paint held since `open` so the first frame is correctly padded.
-                awaitingSpacing = false;
+                if (v === VIEWER) awaitingSpacing = false;
                 scheduleFrame();
                 break;
             }
             case "setScrollbarSize": {
                 // CSS px; the wasm boundary multiplies by the dpr. Sticky in
                 // Rust, like the spacing.
-                session?.setScrollbarSize(VIEWER, msg.size);
+                session?.setScrollbarSize(msg.viewer ?? VIEWER, msg.size);
+                scheduleFrame();
+                break;
+            }
+            case "setPageWidth": {
+                // A view setting of the viewer's, remembered across opens in
+                // Rust like the spacing; the next frame composes its pages
+                // again at the width.
+                session?.setPageWidth(msg.viewer, msg.width);
                 scheduleFrame();
                 break;
             }
@@ -1366,7 +1485,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "setScrollMode": {
                 // Sticky in Rust, until the next open applies the default.
-                session?.setScrollMode(VIEWER, msg.mode);
+                session?.setScrollMode(msg.viewer ?? VIEWER, msg.mode);
                 scheduleFrame();
                 break;
             }
@@ -1440,17 +1559,37 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 const colors: (string | null | undefined)[] = [];
                 const chartsheets: boolean[] = [];
                 const visibility: SheetState[] = [];
+                const kinds: (PresentationPlaneKind | null)[] = [];
                 for (let i = 0; i < count; i++) {
                     names.push(session.planeName(i) ?? "");
                     colors.push(loadedSheets.has(i) ? tabColorHex(session, i) : undefined);
                     chartsheets.push(session.planeIsChartsheet(i));
                     visibility.push(session.planeSheetState(i) ?? "visible");
+                    kinds.push(session.planeKind(i) ?? null);
                 }
-                reply(id, { count, current: session.currentPlane(VIEWER), names, colors, chartsheets, visibility });
+                reply(id, {
+                    count,
+                    current: session.currentPlane(VIEWER),
+                    names,
+                    colors,
+                    chartsheets,
+                    visibility,
+                    kinds,
+                });
                 break;
             }
             case "goToPlane": {
                 if (!session) throw new Error("engine worker: goToPlane before open");
+                if (msg.viewer !== undefined && msg.viewer !== VIEWER) {
+                    // An added viewer onto another view of the document — a
+                    // deck's notes text: it projects the selection there now,
+                    // and its own frame composes what it shows.
+                    session.goToPlane(msg.viewer, msg.plane);
+                    emitSelection(false);
+                    scheduleFrame();
+                    reply(id, layoutOf(session, msg.viewer));
+                    break;
+                }
                 // Switch the active sheet: the viewer resets to the new plane's
                 // top; refresh the selection (a new plane has its own), and
                 // repaint. The frame composes the sheet, as after an open, so
@@ -1520,12 +1659,28 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // two points + options to the open document's engine, which
                 // hit-tests its own layout and lands the caret / range.
                 if (session) {
+                    const v = msg.viewer ?? VIEWER;
                     const before = session.viewState(VIEWER)[5] ?? -1;
-                    emitSelection(
-                        true,
-                        session.selectText(VIEWER, msg.anchor.x, msg.anchor.y, msg.focus.x, msg.focus.y, msg.options),
+                    const geometry = session.selectText(
+                        v,
+                        msg.anchor.x,
+                        msg.anchor.y,
+                        msg.focus.x,
+                        msg.focus.y,
+                        msg.options,
                     );
+                    // The geometry a select answers is the viewer's it was made
+                    // in; the report's own is the session's viewer's, read
+                    // afresh for a select made in another.
+                    emitSelection(true, v === VIEWER ? geometry : undefined);
                     refreshChrome(session, before);
+                    // An edit-mode press into a deck's notes not written yet
+                    // writes them — an undo step, which composes and paints
+                    // again.
+                    if (v !== VIEWER) {
+                        emitHistory();
+                        scheduleFrame();
+                    }
                 }
                 break;
             }
@@ -2168,20 +2323,21 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
 }
 
 /**
- * Read the session's current layout — page count, first uncomposed page and
- * content extent — into a plain {@link DocumentLayout}. All are synchronous
+ * Read viewer `v`'s current layout — the session's own by default: page count,
+ * first uncomposed page and content extent of the plane it shows — into a plain
+ * {@link DocumentLayout}. All are synchronous
  * reads of live session state, so calling this right after a mutation (open /
  * edit / merge / updateLayout) reflects that mutation. The extent rides
  * `viewState` (indices 3–4 = `scroll_extent`), so this is its one home;
  * `pageCount` and `firstUncomposedPage` are their own pulls. `complete`
  * belongs to a compose *pass*, so only the `updateLayout` reply adds it.
  */
-function layoutOf(s: WasmSession): DocumentLayout {
-    const st = s.viewState(VIEWER);
-    const pageCount = s.pageCount(VIEWER);
+function layoutOf(s: WasmSession, v: number = VIEWER): DocumentLayout {
+    const st = s.viewState(v);
+    const pageCount = s.pageCount(v);
     return {
         ...(pageCount !== undefined && { pageCount }),
-        firstUncomposedPage: s.firstUncomposedPage(VIEWER),
+        firstUncomposedPage: s.firstUncomposedPage(v),
         scrollSize: { width: st[3] ?? 0, height: st[4] ?? 0 },
     };
 }
@@ -2592,53 +2748,74 @@ function viewDpiOf(s: WasmSession): number {
 }
 
 /**
- * Adopt the engine's resulting scroll + zoom as our last-known view after an
- * engine-driven camera move (zoomAtPoint / zoomToRect). Without this the
- * setViewport the main thread echoes once `SYNC_VIEW` mirrors the new scroll
- * and zoom would re-run `set_view` and clobber the engine's anchoring. Mirrors
- * the scroll adoption in the `goToPage` handler, plus the zoom these intents
- * also change. `viewState` reports the scale (`zoom × cssPxPerPt(dpi)`);
- * divide back to the faithful zoom `lastZoom` tracks.
+ * Adopt viewer `v`'s resulting scroll as our last-known view after the engine
+ * moved its camera (goToPage / goToRect), so the setViewport the main thread
+ * echoes once it mirrors this scroll is a no-op rather than a redundant
+ * re-send.
  */
-function adoptView(s: WasmSession): void {
-    const st = s.viewState(VIEWER);
-    lastScrollX = st[1] ?? lastScrollX;
-    lastScrollY = st[2] ?? lastScrollY;
-    if (st[0] !== undefined) lastZoom = st[0] / cssPxPerPt(viewDpiOf(s));
+function adoptScroll(s: WasmSession, v: number): void {
+    const host = viewers[v]!;
+    const st = s.viewState(v);
+    host.scrollX = st[1] ?? host.scrollX;
+    host.scrollY = st[2] ?? host.scrollY;
+}
+
+/**
+ * Adopt the engine's resulting scroll + zoom as viewer `v`'s last-known view
+ * after an engine-driven camera move (zoomAtPoint / zoomToRect). Without this
+ * the setViewport the main thread echoes once `SYNC_VIEW` mirrors the new
+ * scroll and zoom would re-run `set_view` and clobber the engine's anchoring.
+ * The scroll adoption of {@link adoptScroll}, plus the zoom these intents also
+ * change. `viewState` reports the scale (`zoom × cssPxPerPt(dpi)`); divide back
+ * to the faithful zoom the host tracks.
+ */
+function adoptView(s: WasmSession, v: number): void {
+    adoptScroll(s, v);
+    const scale = s.viewState(v)[0];
+    if (scale !== undefined) viewers[v]!.zoom = scale / cssPxPerPt(viewDpiOf(s));
 }
 
 /**
  * Route a full viewport into Rust's `resize` (size/dpr) and `set_view`
- * (scroll/zoom), its scroll carried over the view's moves since `shift`, the
- * {@link anchorShift} it was read against.
+ * (scroll/zoom) for viewer `v`, its scroll carried over the view's moves since
+ * `shift`, the {@link ViewerHost.anchorShift} it was read against. An added
+ * viewer given no area — its pane hidden — keeps its backing store and stops
+ * painting ({@link painting}) until it is given one again.
  */
-function applyViewport(s: WasmSession, v: Viewport, shift: number): void {
-    if (v.width !== lastW || v.height !== lastH || v.dpr !== lastDpr) {
-        s.resize(VIEWER, v.width, v.height, v.dpr);
-        lastW = v.width;
-        lastH = v.height;
-        lastDpr = v.dpr;
-        // Hold the CSS-px size for the ack the next frame posts (latest wins).
-        resizeAck = { width: v.width, height: v.height };
+function applyViewport(s: WasmSession, v: number, viewport: Viewport, shift: number): void {
+    const host = viewers[v]!;
+    if (viewport.width !== host.width || viewport.height !== host.height || viewport.dpr !== host.dpr) {
+        const wasHidden = !painting(v);
+        host.width = viewport.width;
+        host.height = viewport.height;
+        host.dpr = viewport.dpr;
+        if (painting(v)) {
+            s.resize(v, viewport.width, viewport.height, viewport.dpr);
+            // Hold the CSS-px size for the ack the next frame posts (latest wins).
+            host.resizeAck = { width: viewport.width, height: viewport.height };
+            // A viewer shown again projects the selection it skipped hidden.
+            if (wasHidden) emitChangedSelection();
+        }
     }
-    const scrollY = v.scrollY + anchorShift - shift;
-    if (v.scrollX !== lastScrollX || scrollY !== lastScrollY || v.zoom !== lastZoom) {
-        s.setView(VIEWER, v.scrollX, scrollY, v.zoom);
-        lastScrollX = v.scrollX;
-        lastScrollY = scrollY;
-        lastZoom = v.zoom;
+    const scrollY = viewport.scrollY + host.anchorShift - shift;
+    if (viewport.scrollX !== host.scrollX || scrollY !== host.scrollY || viewport.zoom !== host.zoom) {
+        s.setView(v, viewport.scrollX, scrollY, viewport.zoom);
+        host.scrollX = viewport.scrollX;
+        host.scrollY = scrollY;
+        host.zoom = viewport.zoom;
     }
 }
 
 /**
- * Add the scroll the engine moved by itself since it read `before` to
- * {@link anchorShift}, and adopt the view it moved to ({@link adoptView}).
+ * Add the scroll the engine moved viewer `v` by itself since it read `before`
+ * to its {@link ViewerHost.anchorShift}, and adopt the view it moved to
+ * ({@link adoptView}).
  */
-function followView(s: WasmSession, before: number | undefined): void {
-    const after = s.viewState(VIEWER)[2];
+function followView(s: WasmSession, v: number, before: number | undefined): void {
+    const after = s.viewState(v)[2];
     if (after === undefined || before === undefined || after === before) return;
-    anchorShift += after - before;
-    adoptView(s);
+    viewers[v]!.anchorShift += after - before;
+    adoptView(s, v);
 }
 
 function reply(id: number | undefined, result: unknown, error?: unknown, transfer?: Transferable[]): void {

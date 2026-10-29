@@ -337,6 +337,7 @@ export class SelectionLayer {
         capabilities: EMPTY_SELECTION_CAPABILITIES,
         properties: null,
         slideSections: [],
+        viewers: [],
         localChanged: false,
     };
     #lastFrame: SelectionFrame = { views: [], scale: 1 };
@@ -1195,6 +1196,7 @@ export class SelectionLayer {
                 capabilities: EMPTY_SELECTION_CAPABILITIES,
                 properties: null,
                 slideSections: [],
+                viewers: [],
                 localChanged: false,
             },
             true,

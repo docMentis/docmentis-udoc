@@ -23,6 +23,7 @@ export const de: Messages = {
     "shell.regionSidePanel": "Seitenleiste",
     "shell.regionDocument": "Dokument",
     "shell.regionSearchComments": "Suche und Kommentare",
+    "shell.regionNotes": "Notizen",
 
     // Toolbar
     "toolbar.label": "Dokument-Symbolleiste",
@@ -59,6 +60,7 @@ export const de: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Kommentieren",
+    "ribbon.view": "Ansicht",
 
     // Ribbon
     "ribbon.label": "Werkzeugoptionen",
@@ -82,6 +84,7 @@ export const de: Messages = {
     "command.annotationColor": "Farbe",
     "command.annotationFill": "Füllung",
     "command.annotationOpacity": "Deckkraft",
+    "command.notes": "Notizen",
 
     // Shape pickers
     "shape.rectangle": "Rechteck",
@@ -216,6 +219,9 @@ export const de: Messages = {
     "leftPanel.attachments": "Anhänge",
     "leftPanel.resizeHandle": "Größe der Seitenleiste ändern",
     "leftPanel.placeholder": "{panel} – noch nichts vorhanden",
+
+    // Notes pane
+    "notes.resizeHandle": "Größe der Notizen ändern",
 
     // Thumbnails
     "thumbnails.pages": "Seitenminiaturen",

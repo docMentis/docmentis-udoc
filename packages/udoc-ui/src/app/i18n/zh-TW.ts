@@ -23,6 +23,7 @@ export const zhTW: Messages = {
     "shell.regionSidePanel": "側邊面板",
     "shell.regionDocument": "文件",
     "shell.regionSearchComments": "搜尋與註解",
+    "shell.regionNotes": "演講者備忘稿",
 
     // Toolbar
     "toolbar.label": "文件工具列",
@@ -59,6 +60,7 @@ export const zhTW: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "註解",
+    "ribbon.view": "檢視",
 
     // Ribbon
     "ribbon.label": "工具選項",
@@ -82,6 +84,7 @@ export const zhTW: Messages = {
     "command.annotationColor": "色彩",
     "command.annotationFill": "填滿",
     "command.annotationOpacity": "不透明度",
+    "command.notes": "備忘稿",
 
     // Shape pickers
     "shape.rectangle": "矩形",
@@ -216,6 +219,9 @@ export const zhTW: Messages = {
     "leftPanel.attachments": "附件",
     "leftPanel.resizeHandle": "調整側邊面板大小",
     "leftPanel.placeholder": "{panel}：尚無內容",
+
+    // Notes pane
+    "notes.resizeHandle": "調整備忘稿大小",
 
     // Thumbnails
     "thumbnails.pages": "頁面縮圖",

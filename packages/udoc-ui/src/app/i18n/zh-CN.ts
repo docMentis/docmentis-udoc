@@ -23,6 +23,7 @@ export const zhCN: Messages = {
     "shell.regionSidePanel": "侧边面板",
     "shell.regionDocument": "文档",
     "shell.regionSearchComments": "搜索与批注",
+    "shell.regionNotes": "演讲者备注",
 
     // Toolbar
     "toolbar.label": "文档工具栏",
@@ -59,6 +60,7 @@ export const zhCN: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "注释",
+    "ribbon.view": "视图",
 
     // Ribbon
     "ribbon.label": "工具选项",
@@ -82,6 +84,7 @@ export const zhCN: Messages = {
     "command.annotationColor": "颜色",
     "command.annotationFill": "填充",
     "command.annotationOpacity": "不透明度",
+    "command.notes": "备注",
 
     // Shape pickers
     "shape.rectangle": "矩形",
@@ -216,6 +219,9 @@ export const zhCN: Messages = {
     "leftPanel.attachments": "附件",
     "leftPanel.resizeHandle": "调整侧边面板大小",
     "leftPanel.placeholder": "{panel}——暂无内容",
+
+    // Notes pane
+    "notes.resizeHandle": "调整备注大小",
 
     // Thumbnails
     "thumbnails.pages": "页面缩略图",

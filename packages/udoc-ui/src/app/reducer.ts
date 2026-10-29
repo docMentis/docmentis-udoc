@@ -167,6 +167,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeColors: [],
                 planeChartsheets: [],
                 planeVisibility: [],
+                planeKinds: [],
             };
         }
 
@@ -211,6 +212,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeColors: [],
                 planeChartsheets: [],
                 planeVisibility: [],
+                planeKinds: [],
                 scrollSize: { width: 0, height: 0 },
                 canUndo: false,
                 canRedo: false,
@@ -241,6 +243,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeColors: action.colors,
                 planeChartsheets: action.chartsheets,
                 planeVisibility: action.visibility,
+                planeKinds: action.kinds,
             };
 
         case "PLANE_LOADED": {
@@ -475,6 +478,13 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_RIGHT_PANEL_WIDTH":
             return { ...state, rightPanelWidth: action.width };
+
+        case "SET_NOTES_OPEN":
+            if (action.open === state.notesOpen) return state;
+            return { ...state, notesOpen: action.open };
+
+        case "SET_NOTES_HEIGHT":
+            return { ...state, notesHeight: action.height };
 
         case "ENABLE_PANEL_TRANSITIONS":
             if (!state.panelTransitionsDisabled) return state;

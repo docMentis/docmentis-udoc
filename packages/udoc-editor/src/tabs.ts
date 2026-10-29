@@ -2,7 +2,7 @@
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
 // order, and a strip opens on its Home.
 import type { UDocType } from "@docmentis/udoc-ui";
-import { ANNOTATE_TAB } from "@docmentis/udoc-ui/internal";
+import { ANNOTATE_TAB, VIEW_TAB } from "@docmentis/udoc-ui/internal";
 import type { CommandId, ToolbarTab } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
 
@@ -180,12 +180,14 @@ const DEFAULT_TABS: readonly EditTab[] = [HOME_TAB];
 const PORTABLE_TABS: readonly EditTab[] = [PORTABLE_HOME_TAB, PORTABLE_INSERT_TAB, OBJECT_TAB, ANNOTATE_TAB];
 
 /** The presentation strip: the slide-aware Home and its own Insert, then Text
- *  (character formatting) and Shape (free-floating graphics). */
+ *  (character formatting) and Shape (free-floating graphics), and udoc-ui's
+ *  View last (the notes pane), as view mode has it. */
 const PRESENTATION_TABS: readonly EditTab[] = [
     PRESENTATION_HOME_TAB,
     PRESENTATION_INSERT_TAB,
     PRESENTATION_TEXT_TAB,
     SHAPE_TAB,
+    VIEW_TAB,
 ];
 
 /** The wordprocessing strip: Home plus Text. No Shape tab yet — the flow

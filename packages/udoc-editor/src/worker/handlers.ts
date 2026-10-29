@@ -22,8 +22,11 @@ export const EDIT_HANDLERS: EditHandlers = {
         sticky: true,
         handle(request, worker) {
             // Sticky in Rust, like the backdrop. Only presentations draw
-            // prompts; a full repaint shows/clears them on the next frame.
-            worker.session?.setPlaceholderPrompts(worker.viewer, request.on);
+            // prompts — on every viewer, so empty notes prompt in their pane
+            // as an empty placeholder does on the slide; a full repaint
+            // shows/clears them on the next frame.
+            const session = worker.session;
+            if (session) for (let v = 0; v < session.viewerCount(); v++) session.setPlaceholderPrompts(v, request.on);
             worker.scheduleFrame();
         },
     },

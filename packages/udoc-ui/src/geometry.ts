@@ -7,7 +7,7 @@
 // Wire contract types declared from the Rust source (tsify → `udoc.d.ts`) are
 // re-exported here so host code keeps one geometry import surface. They are the
 // single definition — no hand-authored mirror.
-import type { Feature, FileFormat, SheetState, UDocType } from "@docmentis/udoc-wasm";
+import type { Feature, FileFormat, PresentationPlaneKind, SheetState, UDocType } from "@docmentis/udoc-wasm";
 import type {
     UDocSelectionCapabilities as SelectionCapabilities,
     SelectionBox,
@@ -215,6 +215,12 @@ export interface PlaneInfo {
      * every other sheet and every single-plane doc type.
      */
     visibility: SheetState[];
+    /**
+     * Which view of a deck each plane is, indexed by plane — its slides, their
+     * notes pages, their notes text, or a slide master's — and `null` for every
+     * plane of any other doc type.
+     */
+    kinds: (PresentationPlaneKind | null)[];
 }
 
 /**
@@ -792,7 +798,18 @@ export interface SelectionState {
     /** The sections the selection holds, by id — a deck's section selection;
      *  its slides are `local.pages`. Empty for any other selection. */
     slideSections: string[];
+    /** The selection as each added viewer — a deck's notes pane — projects it
+     *  onto the plane it shows; `local` and `peers` are the main viewer's. */
+    viewers: ViewerSelection[];
     localChanged: boolean;
+}
+
+/** The selection as one added viewer projects it: its own geometry, and the
+ *  peers'. */
+export interface ViewerSelection {
+    viewer: number;
+    geometry: SelectionGeometry;
+    peers: PeerSelectionGeometry[];
 }
 
 /**

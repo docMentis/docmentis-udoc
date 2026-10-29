@@ -67,7 +67,7 @@ export type {
     ThemePalette,
 } from "./geometry.js";
 export type { AlignEdge, EditAxis, SelectionEdit, ZOrder } from "./worker/protocol.js";
-export { ANNOTATE_TAB, arrangementFor, profileFor } from "./app/profiles.js";
+export { ANNOTATE_TAB, VIEW_TAB, arrangementFor, profileFor } from "./app/profiles.js";
 export { VIEW_MODE } from "./app/state.js";
 export type { CommandId, ShapeKind, ToolbarTab } from "./app/state.js";
 export { segmentsFor, STROKE as SHAPE_STROKE, STROKE_WIDTH as SHAPE_STROKE_WIDTH } from "./app/shapes.js";

@@ -226,7 +226,8 @@ export const uiStyles = css`
     /* Floating Toolbar */
     .udoc-ui-root .udoc-floating-toolbar {
         position: absolute;
-        bottom: 24px;
+        /* Over the slides, clear of a deck's notes pane under them. */
+        bottom: calc(24px + var(--udoc-notes-height, 0px));
         left: 50%;
         transform: translateX(-50%);
         display: flex;
@@ -2031,6 +2032,53 @@ export const uiStyles = css`
         display: block;
         position: absolute;
         inset: 0;
+    }
+
+    /* A deck's notes pane, under the slides: the notes viewer's canvas, its
+   caret and scrollbar over it, and the splitter that resizes it lying along
+   its top edge. White in either theme, as the page its text is set for is. */
+    .udoc-ui-root .udoc-ui__notes {
+        position: relative;
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        height: 140px;
+        border-top: 1px solid var(--udoc-color-outline-variant);
+        background: #ffffff;
+        --udoc-scrollbar-size: 12px;
+    }
+    .udoc-ui-root .udoc-ui__notes-splitter {
+        position: absolute;
+        top: -4px;
+        left: 0;
+        right: 0;
+        height: 7px;
+        cursor: row-resize;
+        z-index: 3;
+        outline: none;
+    }
+    .udoc-ui-root .udoc-ui__notes-splitter:hover,
+    .udoc-ui-root .udoc-ui__notes-splitter:focus-visible,
+    .udoc-ui-root .udoc-ui__notes--resizing .udoc-ui__notes-splitter {
+        background: var(--udoc-state-selected);
+    }
+    .udoc-ui-root .udoc-ui__notes-host {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        cursor: text;
+        /* Its scroll is synthetic, as the canvas's is. */
+        touch-action: none;
+    }
+    .udoc-ui-root .udoc-ui__notes-canvas {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    .udoc-ui-root .udoc-ui__notes-host .udoc-ui__scrollbar {
+        cursor: default;
     }
 
     /* Page-anchored HTML overlay layer (above the canvas, below the scrollbars). */

@@ -159,6 +159,8 @@ interface RibbonSlice {
     extension: unknown;
     selectedAnnotations: SelectedAnnotations | null;
     annotationStyles: AnnotationStyles;
+    /** What the View tab's Notes toggle reads pressed by. */
+    notesOpen: boolean;
 }
 
 /** The color a display paints its bar with — a solid or theme color's own hex;
@@ -182,7 +184,8 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         // Fresh only when they change: the shell reads the annotations back
         // after a selection report, and the reducer keeps a null as it is.
         a.selectedAnnotations === b.selectedAnnotations &&
-        a.annotationStyles === b.annotationStyles
+        a.annotationStyles === b.annotationStyles &&
+        a.notesOpen === b.notesOpen
     );
 }
 
@@ -200,6 +203,7 @@ function selectSlice(s: UIState): RibbonSlice {
         extension: s.extension,
         selectedAnnotations: s.selectedAnnotations,
         annotationStyles: s.annotationStyles,
+        notesOpen: s.notesOpen,
     };
 }
 

@@ -70,6 +70,7 @@ const ICONS = {
     ICON_VIEW_ROTATION: "draft",
     ICON_VIEW_GAP_ON: "grid_on",
     ICON_VIEW_GAP_OFF: "grid_off",
+    ICON_NOTES: "speaker_notes",
 
     // Pointer modes
     ICON_TOOL_POINTER: "arrow_selector_tool",

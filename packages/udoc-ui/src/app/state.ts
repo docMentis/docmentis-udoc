@@ -7,6 +7,7 @@ import type { MessageKey } from "./i18n/index.js";
 import type {
     Feature,
     FileFormat,
+    PresentationPlaneKind,
     SearchMatch,
     SheetState,
     StampIcon,
@@ -225,7 +226,8 @@ export type CommandId =
     | "annotateShape"
     | "annotationColor"
     | "annotationFill"
-    | "annotationOpacity";
+    | "annotationOpacity"
+    | "notes";
 
 /**
  * A tab in the ribbon's tab strip. Selecting a tab swaps the ribbon's tool
@@ -275,6 +277,10 @@ export const ANNOTATE_COMMANDS: readonly CommandId[] = [
     "annotationFill",
     "annotationOpacity",
 ];
+
+/** The View tab's commands — a deck's Notes toggle, which shows its speaker
+ *  notes under the slides. */
+export const VIEW_COMMANDS: readonly CommandId[] = ["notes"];
 
 // -----------------------------------------------------------------------------
 // UI state
@@ -364,6 +370,10 @@ export interface UIState {
     /** Each plane's sheet visibility, indexed by plane — a hidden or very
      *  hidden sheet has no tab. Empty with no document open. */
     planeVisibility: readonly SheetState[];
+    /** Which view of a deck each plane is, indexed by plane — its slides, their
+     *  notes pages or notes text, a slide master's — `null` for any other doc
+     *  type's. Empty with no document open. */
+    planeKinds: readonly (PresentationPlaneKind | null)[];
     /** Full scrollable document size; drives scroll clamping. Also dynamic. */
     scrollSize: Size;
     /** Used content size the scrollbar is drawn from. Equals `scrollSize` for
@@ -637,6 +647,15 @@ export interface UIState {
     /** When true, panel open/close skips CSS transitions (reset after one frame). */
     panelTransitionsDisabled: boolean;
 
+    // --- Notes pane --------------------------------------------------------
+    /** Whether a deck's notes pane shows under its slides — the View tab's
+     *  Notes, the host's `showNotes`. Kept for every doc type; only a deck has
+     *  notes to show. */
+    notesOpen: boolean;
+    /** The notes pane's height in pixels, as its splitter left it (null = the
+     *  CSS default). */
+    notesHeight: number | null;
+
     // --- Toolbar / chrome visibility -------------------------------------
     /**
      * Whether the top toolbar is visible. When hidden (chromeless / immersive
@@ -725,6 +744,7 @@ export const initialState: UIState = {
     planeColors: [],
     planeChartsheets: [],
     planeVisibility: [],
+    planeKinds: [],
     scrollSize: { width: 0, height: 0 },
     scrollUsedSize: { width: 0, height: 0 },
     scrollbars: { x: false, y: false },
@@ -798,6 +818,9 @@ export const initialState: UIState = {
     disabledPanels: new Set(),
     hostDisabledPanels: new Set(),
     panelTransitionsDisabled: false,
+
+    notesOpen: true,
+    notesHeight: null,
 
     toolbarVisible: true,
     fullscreenButtonVisible: true,

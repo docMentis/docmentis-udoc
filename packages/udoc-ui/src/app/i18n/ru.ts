@@ -23,6 +23,7 @@ export const ru: Messages = {
     "shell.regionSidePanel": "Боковая панель",
     "shell.regionDocument": "Документ",
     "shell.regionSearchComments": "Поиск и комментарии",
+    "shell.regionNotes": "Заметки докладчика",
 
     // Toolbar
     "toolbar.label": "Панель инструментов документа",
@@ -59,6 +60,7 @@ export const ru: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Аннотации",
+    "ribbon.view": "Вид",
 
     // Ribbon
     "ribbon.label": "Параметры инструмента",
@@ -82,6 +84,7 @@ export const ru: Messages = {
     "command.annotationColor": "Цвет",
     "command.annotationFill": "Заливка",
     "command.annotationOpacity": "Непрозрачность",
+    "command.notes": "Заметки",
 
     // Shape pickers
     "shape.rectangle": "Прямоугольник",
@@ -216,6 +219,9 @@ export const ru: Messages = {
     "leftPanel.attachments": "Вложения",
     "leftPanel.resizeHandle": "Изменить размер боковой панели",
     "leftPanel.placeholder": "{panel} — здесь пока ничего нет",
+
+    // Notes pane
+    "notes.resizeHandle": "Изменить размер заметок",
 
     // Thumbnails
     "thumbnails.pages": "Миниатюры страниц",

@@ -15,6 +15,12 @@ listed once, by package. Its major and minor version are those of the
 - A presentation's sections head their slides in the thumbnails. Each header
   folds its slides away or back, and counts them while they're folded; Left
   and Right fold the section of the slide the arrow keys are on.
+- A presentation's speaker notes show in a pane under its slides, the current
+  slide's, and their text is selected and copied there. The View tab's Notes
+  shows and hides the pane, the `showNotes` option sets whether it shows at
+  start, `openNotes()` and `closeNotes()` show and hide it, `notesOpen` says
+  whether it shows, and `notes:changed` fires when that changes. Dragging its
+  top edge resizes it.
 
 #### Fixed
 
@@ -45,6 +51,9 @@ listed once, by package. Its major and minor version are those of the
   view follows the pages it leaves selected.
 - New Slide shows with slides selected in the thumbnails, and adds the slide
   after the last of them.
+- A presentation's speaker notes are edited in the notes pane: a click places
+  the caret, writing a slide's notes if it has none yet, as one undo step, and
+  the Text tab formats them.
 - Hide Slide in the thumbnails' menu hides the selected slides from the slide
   show, and shows them again when every one is hidden, in one undo step.
 - A presentation's sections are edited in the thumbnails. A click on a

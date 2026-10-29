@@ -49,6 +49,7 @@ import { createCanvas } from "./components/Canvas.js";
 import { createContextMenu } from "./components/ContextMenu.js";
 import { createFloatingToolbar } from "./components/FloatingToolbar.js";
 import { createLeftPanel } from "./components/LeftPanel.js";
+import { createNotesPane } from "./components/NotesPane.js";
 import { createRightPanel } from "./components/RightPanel.js";
 import { createStatusBar } from "./components/StatusBar.js";
 import { createSheetTabs } from "./components/SheetTabs.js";
@@ -353,6 +354,10 @@ export interface UIShell {
     openPanel: (panel: PanelTab) => void;
     /** Close the open side panel. */
     closePanel: () => void;
+    /** Show a deck's notes pane under its slides. */
+    openNotes: () => void;
+    /** Hide a deck's notes pane. */
+    closeNotes: () => void;
     /** Dock the view-state controls in the top toolbar, the floating bar, or the status bar. */
     setViewControlsPlacement: (placement: ViewControlsPlacement) => void;
     /** Close the current document. */
@@ -388,6 +393,7 @@ export interface UIShellOptions {
     zoom?: number;
     dpi?: number;
     activePanel?: PanelTab | null;
+    showNotes?: boolean;
     showLoadingOverlay?: boolean;
     zoomSteps?: readonly number[];
     minZoom?: number;
@@ -540,6 +546,7 @@ export function mountUIShell(
         toolbarVisible: shellOptions.showToolbar ?? initialState.toolbarVisible,
         leftPanelVisible: shellOptions.showLeftPanel ?? initialState.leftPanelVisible,
         rightPanelVisible: shellOptions.showRightPanel ?? initialState.rightPanelVisible,
+        notesOpen: shellOptions.showNotes ?? initialState.notesOpen,
         disabledPanels: hostDisabledPanels,
         hostDisabledPanels,
         themeSwitchingDisabled: shellOptions.showThemeButton === false,
@@ -678,6 +685,16 @@ export function mountUIShell(
         pointerLeave: () => sharePointer(null),
     });
     canvas.mount(viewportSlot, store);
+
+    // A deck's speaker notes, in a pane under the slides: a second viewer on
+    // the document, whose caret types through the canvas's hidden text input
+    // and whose right-click opens the canvas's menu.
+    const notesPane = createNotesPane(i18n, client, {
+        focusTextInput: () => canvas.focusClipboardSink(),
+        onContextMenu: (x, y) =>
+            contextMenu.open(x, y, extension?.contextMenuItems(store.getState(), false) ?? CONTEXT_MENU),
+    });
+    notesPane.mount(viewportSlot, store);
 
     // The licensing refusal. On the root for the same reason as the busy hold:
     // without a session nothing the UI offers works, so it blocks its own
@@ -1422,6 +1439,7 @@ export function mountUIShell(
                     colors: planes.colors,
                     chartsheets: planes.chartsheets,
                     visibility: planes.visibility,
+                    kinds: planes.kinds,
                 });
             });
             // A PDF that asks to open with its outline showing opens the outline
@@ -2947,6 +2965,7 @@ export function mountUIShell(
         viewControls.destroy();
         floatingToolbar.destroy();
         sheetTabs.destroy();
+        notesPane.destroy();
         statusBar.destroy();
         rightPanel.destroy();
         leftPanel.destroy();
@@ -3064,6 +3083,8 @@ export function mountUIShell(
         setDpi: (dpi) => store.dispatch({ type: "SET_DPI", dpi }),
         openPanel: (panel) => store.dispatch({ type: "OPEN_PANEL", panel }),
         closePanel: () => store.dispatch({ type: "CLOSE_PANEL" }),
+        openNotes: () => store.dispatch({ type: "SET_NOTES_OPEN", open: true }),
+        closeNotes: () => store.dispatch({ type: "SET_NOTES_OPEN", open: false }),
         setViewControlsPlacement: (placement) => store.dispatch({ type: "SET_VIEW_CONTROLS_PLACEMENT", placement }),
         close,
         destroy,

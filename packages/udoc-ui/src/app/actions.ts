@@ -1,6 +1,7 @@
 import type {
     Feature,
     FileFormat,
+    PresentationPlaneKind,
     SearchMatch,
     SheetState,
     StampIcon,
@@ -70,6 +71,7 @@ export type Action =
           colors: readonly (string | null | undefined)[];
           chartsheets: readonly boolean[];
           visibility: readonly SheetState[];
+          kinds: readonly (PresentationPlaneKind | null)[];
       }
     // One plane's tab colour and whether it is a chartsheet — a sheet the
     // worker loaded in the background, after the open.
@@ -175,6 +177,9 @@ export type Action =
     | { type: "CLOSE_PANEL" }
     | { type: "SET_LEFT_PANEL_WIDTH"; width: number }
     | { type: "SET_RIGHT_PANEL_WIDTH"; width: number }
+    // A deck's notes pane: shown or hidden, and the height its splitter set
+    | { type: "SET_NOTES_OPEN"; open: boolean }
+    | { type: "SET_NOTES_HEIGHT"; height: number }
     | { type: "ENABLE_PANEL_TRANSITIONS" }
     // Theme & fullscreen
     | { type: "SET_THEME"; theme: ThemeMode }

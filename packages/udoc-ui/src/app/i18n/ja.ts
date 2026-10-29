@@ -23,6 +23,7 @@ export const ja: Messages = {
     "shell.regionSidePanel": "サイドパネル",
     "shell.regionDocument": "文書",
     "shell.regionSearchComments": "検索とコメント",
+    "shell.regionNotes": "ノート",
 
     // Toolbar
     "toolbar.label": "文書ツールバー",
@@ -59,6 +60,7 @@ export const ja: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "注釈",
+    "ribbon.view": "表示",
 
     // Ribbon
     "ribbon.label": "ツールオプション",
@@ -82,6 +84,7 @@ export const ja: Messages = {
     "command.annotationColor": "色",
     "command.annotationFill": "塗りつぶし",
     "command.annotationOpacity": "不透明度",
+    "command.notes": "ノート",
 
     // Shape pickers
     "shape.rectangle": "長方形",
@@ -216,6 +219,9 @@ export const ja: Messages = {
     "leftPanel.attachments": "添付ファイル",
     "leftPanel.resizeHandle": "サイドパネルのサイズ変更",
     "leftPanel.placeholder": "{panel} — まだ何もありません",
+
+    // Notes pane
+    "notes.resizeHandle": "ノートのサイズ変更",
 
     // Thumbnails
     "thumbnails.pages": "ページサムネイル",

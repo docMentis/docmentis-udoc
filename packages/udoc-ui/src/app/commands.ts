@@ -35,6 +35,7 @@ import {
     ICON_SUBTOOL_POLYGON,
     ICON_SUBTOOL_POLYLINE,
     ICON_SUBTOOL_CLOUD,
+    ICON_NOTES,
     ICON_TEXT_HIGHLIGHT,
     ICON_FILL,
     ICON_STROKE,
@@ -632,5 +633,21 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         group: "format",
         run: { kind: "menu", menu: ANNOTATION_OPACITY_MENU },
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
+    },
+
+    // View tab — a deck's notes pane under its slides, shown or hidden: a view
+    // setting, live whatever is selected.
+    notes: {
+        id: "notes",
+        label: "command.notes",
+        icon: ICON_NOTES,
+        group: "show",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            pressed: (state) => state.notesOpen,
+            press: (store) => store.dispatch({ type: "SET_NOTES_OPEN", open: !store.getState().notesOpen }),
+        },
+        enabledWhen: whenReady,
     },
 };
