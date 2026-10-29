@@ -17,7 +17,7 @@ import type { Action } from "../actions.js";
 import type { UIState } from "../state.js";
 import { VIEW_MODE, viewDpi } from "../state.js";
 import type { I18n } from "../i18n/index.js";
-import { CLICK_CHAIN_MS, CLICK_CHAIN_RADIUS, granularityFor } from "./Canvas.js";
+import { CLICK_CHAIN_MS, CLICK_CHAIN_RADIUS, DRAG_THRESHOLD, granularityFor } from "./Canvas.js";
 import { SCROLLBAR_THICKNESS_PX, thumbPlacement } from "./Scrollbar.js";
 import { SelectionLayer } from "./SelectionLayer.js";
 
@@ -76,7 +76,8 @@ function peersTextOnly(peers: readonly PeerSelectionGeometry[]): PeerSelectionGe
  * canvas's ground. A press places a caret there, which types through the
  * canvas's hidden text input as a caret on a slide does; in edit mode a press
  * into notes not written yet writes them. A splitter along its top resizes it,
- * down to an edge: the pane closed, which the View tab's Notes opens again.
+ * down to an edge: the pane closed, which a click on the splitter or the View
+ * tab's Notes opens again, and closes.
  */
 export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPaneHooks) {
     const el = document.createElement("div");
@@ -387,37 +388,54 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
         return clamped;
     }
 
-    /** Keep the height the splitter left: down at its edge the pane closes,
-     *  anywhere above it the pane is open at that height. */
+    /** Keep the height a drag on the splitter left: down at its edge the pane
+     *  closes, anywhere above it the pane is open at that height. */
     function settleHeight(next: number): void {
         store?.dispatch(
             next <= MIN_HEIGHT ? { type: "SET_NOTES_OPEN", open: false } : { type: "SET_NOTES_HEIGHT", height: next },
         );
     }
 
+    /** Open the pane at its default height, or close it to its edge — a
+     *  click on the splitter, as the View tab's Notes does. */
+    function toggleOpen(): void {
+        if (store) store.dispatch({ type: "SET_NOTES_OPEN", open: !store.getState().notesOpen });
+    }
+
+    // A drag on the splitter resizes the pane; a click, which moves it less
+    // than a drag's threshold, opens or closes it.
     const onSplitterDown = (ev: PointerEvent) => {
         if (ev.button !== 0) return;
         ev.preventDefault();
         const startY = ev.clientY;
         const startHeight = el.offsetHeight;
-        let dragged = startHeight;
+        let dragged: number | null = null;
         el.classList.add("udoc-ui__notes--resizing");
         splitter.setPointerCapture(ev.pointerId);
         const onMove = (e: PointerEvent) => {
+            if (dragged === null && Math.abs(e.clientY - startY) <= DRAG_THRESHOLD) return;
             dragged = setHeight(startHeight - (e.clientY - startY));
         };
-        const onUp = () => {
+        const onUp = (e: PointerEvent) => {
             splitter.removeEventListener("pointermove", onMove);
             splitter.removeEventListener("pointerup", onUp);
             splitter.removeEventListener("pointercancel", onUp);
             el.classList.remove("udoc-ui__notes--resizing");
-            settleHeight(dragged);
+            if (dragged !== null) settleHeight(dragged);
+            else if (e.type === "pointerup") toggleOpen();
         };
         splitter.addEventListener("pointermove", onMove);
         splitter.addEventListener("pointerup", onUp);
         splitter.addEventListener("pointercancel", onUp);
     };
+    // The arrow keys resize the pane; Enter and Space open or close it, as a
+    // click does.
     const onSplitterKey = (ev: KeyboardEvent) => {
+        if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            toggleOpen();
+            return;
+        }
         if (ev.key !== "ArrowUp" && ev.key !== "ArrowDown") return;
         ev.preventDefault();
         settleHeight(setHeight(el.offsetHeight + (ev.key === "ArrowUp" ? RESIZE_STEP : -RESIZE_STEP)));
