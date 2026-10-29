@@ -50,6 +50,7 @@ export function buildMenuInto(panel: HTMLElement, items: readonly MenuItem<strin
     const closeSub = (): void => {
         if (!openSub) return;
         openSub.panel.classList.remove("udoc-submenu--open", "udoc-submenu--left");
+        openSub.panel.style.removeProperty("top");
         openSub.row.setAttribute("aria-expanded", "false");
         openSub = null;
     };
@@ -94,8 +95,17 @@ export function buildMenuInto(panel: HTMLElement, items: readonly MenuItem<strin
                 // Flip the fly-out left if opening right would overflow the
                 // root's bounds (mirrors alignMenuToBounds for the top panel).
                 const root = sub.closest(".udoc-ui-root");
-                if (root && sub.getBoundingClientRect().right > root.getBoundingClientRect().right - 8) {
-                    sub.classList.add("udoc-submenu--left");
+                if (!root) return;
+                const bounds = root.getBoundingClientRect();
+                const box = sub.getBoundingClientRect();
+                if (box.right > bounds.right - 8) sub.classList.add("udoc-submenu--left");
+                // And up, by as much as it runs past the root's foot — a menu
+                // opened near the bottom, as the sheet tabs' is — no higher
+                // than the root's top.
+                const below = box.bottom - (bounds.bottom - 8);
+                if (below > 0) {
+                    const up = Math.min(below, box.top - (bounds.top + 8));
+                    sub.style.top = `${Number.parseFloat(getComputedStyle(sub).top) - Math.max(0, up)}px`;
                 }
             };
             // Hover opens; moving onto the fly-out stays inside the wrap (the

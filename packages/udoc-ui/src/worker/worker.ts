@@ -14,7 +14,16 @@
 import { NoOpPerformanceCounter, PerformanceCounter } from "../performance/index.js";
 import type { IPerformanceCounter, PerfEvent } from "../performance/index.js";
 import { EMPTY_SELECTION_CAPABILITIES, cssPxPerPt } from "../geometry.js";
-import type { DocumentLayout, Fit, Peer, PeerPointer, ScrollMode, SelectionGeometry, Viewport } from "../geometry.js";
+import type {
+    DocumentLayout,
+    Fit,
+    Peer,
+    PeerPointer,
+    PlaneInfo,
+    ScrollMode,
+    SelectionGeometry,
+    Viewport,
+} from "../geometry.js";
 import { createCanvasText } from "../fonts/canvas-text.js";
 import { createFontPump } from "../fonts/pump.js";
 import { defaultDpiForDocType, defaultFitForDocType, defaultScrollModeForDocType } from "./protocol.js";
@@ -825,6 +834,7 @@ const engineWorker: EngineWorker = {
         const layout = layoutOf(s);
         emitSelection(false);
         emitHistory();
+        emitPlanes(s);
         scheduleFrame();
         startComposeAhead(s);
         return layout;
@@ -913,17 +923,34 @@ function onSession<T>(job: (live: WasmSession) => T): Promise<T | undefined> {
 let backgroundAfterPaint = false;
 
 /**
- * The open workbook's sheets loaded so far, by plane: those whose tab colour
- * the engine can read, and the host has been told.
+ * The open workbook's sheets loaded so far, by {@link planeKey}: those whose
+ * tab colour the engine can read, and the host has been told. Keyed by sheet,
+ * not by plane, so a sheet inserted, deleted or moved ahead of another leaves
+ * it loaded.
  */
-const loadedSheets = new Set<number>();
+const loadedSheets = new Set<string>();
+
+/**
+ * What {@link loadedSheets} knows plane `plane` of `s` by: its sheet's id in a
+ * workbook, its index in any other document.
+ */
+function planeKey(s: WasmSession, plane: number): string {
+    return safeRead(() => s.spreadsheet.model.root.sheetIdByIndex(plane), String(plane));
+}
+
+/**
+ * The sheet tabs the host was last told of ({@link emitPlanes}), as their
+ * count, names, colours and visibility — `null` before it was told any.
+ */
+let rosterKey: string | null = null;
 
 /** A document was just opened on `s`: drop the last one's background work, and start its own once it paints. */
 function opened(s: WasmSession): void {
     stopBackground();
     backgroundAfterPaint = true;
+    rosterKey = null;
     // The open loaded the sheet it shows, and no other yet.
-    loadedSheets.add(s.currentPlane(VIEWER));
+    loadedSheets.add(planeKey(s, s.currentPlane(VIEWER)));
 }
 
 /** Start the background work `s`'s document leaves: composing ahead, and loading a workbook's other sheets. */
@@ -1072,7 +1099,7 @@ function walkSheet(): void {
     walkFrom = null;
     if (!session || plane === null) return;
     const count = session.planeCount();
-    while (plane < count && loadedSheets.has(plane)) plane++;
+    while (plane < count && loadedSheets.has(planeKey(session, plane))) plane++;
     if (plane >= count) return;
     loadSheet(session, plane);
     if (plane + 1 < count) walkFrom = plane + 1;
@@ -1081,7 +1108,7 @@ function walkSheet(): void {
 /** Load sheet `plane` of the open workbook, and post its tab colour and kind. */
 function loadSheet(s: WasmSession, plane: number): void {
     s.spreadsheet.loadSheet(plane);
-    loadedSheets.add(plane);
+    loadedSheets.add(planeKey(s, plane));
     scope.postMessage({
         type: "planeLoaded",
         plane,
@@ -1124,6 +1151,49 @@ function rasterPage(s: WasmSession, plane: number, index: number, scale: number,
     const rgba = img.takeData().slice().buffer;
     img.free();
     return { rgba, width, height };
+}
+
+/**
+ * The plane roster of `s` (the sheet tabs): count + active + each plane's name,
+ * tab colour, kind and visibility — the colour and kind of the sheets loaded so
+ * far, the rest following from the sheet walk. A pure read — no compose, no
+ * repaint.
+ */
+function planesOf(s: WasmSession): PlaneInfo {
+    const count = s.planeCount();
+    const names: string[] = [];
+    const colors: (string | null | undefined)[] = [];
+    const chartsheets: boolean[] = [];
+    const visibility: SheetState[] = [];
+    const kinds: (PresentationPlaneKind | null)[] = [];
+    for (let i = 0; i < count; i++) {
+        names.push(s.planeName(i) ?? "");
+        colors.push(loadedSheets.has(planeKey(s, i)) ? tabColorHex(s, i) : undefined);
+        chartsheets.push(s.planeIsChartsheet(i));
+        visibility.push(s.planeSheetState(i) ?? "visible");
+        kinds.push(s.planeKind(i) ?? null);
+    }
+    return { count, current: s.currentPlane(VIEWER), names, colors, chartsheets, visibility, kinds };
+}
+
+/** What tells one roster from another: its tabs, not which one is current. */
+function planesKey(planes: PlaneInfo): string {
+    return JSON.stringify([planes.names, planes.colors, planes.chartsheets, planes.visibility]);
+}
+
+/**
+ * Tell the host of the open workbook's sheet tabs, where an edit, an undo or a
+ * merge changed them — a sheet inserted, deleted, moved, renamed, hidden or
+ * coloured — with the sheet shown now, which the engine's viewer moved with
+ * them.
+ */
+function emitPlanes(s: WasmSession): void {
+    if (s.docType() !== "spreadsheet") return;
+    const planes = planesOf(s);
+    const key = planesKey(planes);
+    if (key === rosterKey) return;
+    rosterKey = key;
+    scope.postMessage({ type: "planes", ...planes });
 }
 
 /** Plane `plane`'s tab colour as `#rrggbb`, or `null` for a tab in none. */
@@ -1555,32 +1625,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "planeInfo": {
                 if (!session) throw new Error("engine worker: planeInfo before open");
-                // The plane roster (sheet tabs): count + active + each plane's
-                // name, tab colour, kind and visibility — the
-                // colour and kind of the sheets loaded so far, the rest following
-                // from the sheet walk. A pure read — no compose, no repaint.
-                const count = session.planeCount();
-                const names: string[] = [];
-                const colors: (string | null | undefined)[] = [];
-                const chartsheets: boolean[] = [];
-                const visibility: SheetState[] = [];
-                const kinds: (PresentationPlaneKind | null)[] = [];
-                for (let i = 0; i < count; i++) {
-                    names.push(session.planeName(i) ?? "");
-                    colors.push(loadedSheets.has(i) ? tabColorHex(session, i) : undefined);
-                    chartsheets.push(session.planeIsChartsheet(i));
-                    visibility.push(session.planeSheetState(i) ?? "visible");
-                    kinds.push(session.planeKind(i) ?? null);
-                }
-                reply(id, {
-                    count,
-                    current: session.currentPlane(VIEWER),
-                    names,
-                    colors,
-                    chartsheets,
-                    visibility,
-                    kinds,
-                });
+                const planes = planesOf(session);
+                rosterKey = planesKey(planes);
+                reply(id, planes);
                 break;
             }
             case "goToPlane": {
@@ -1603,7 +1650,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 session.goToPlane(VIEWER, msg.plane);
                 // A sheet shown before the walk reached it loads now, and the
                 // host learns its tab's colour at once.
-                if (session.docType() === "spreadsheet" && !loadedSheets.has(msg.plane)) loadSheet(session, msg.plane);
+                if (session.docType() === "spreadsheet" && !loadedSheets.has(planeKey(session, msg.plane))) {
+                    loadSheet(session, msg.plane);
+                }
                 const layout = layoutOf(session);
                 emitSelection(false);
                 // The peers' pointers on the plane now shown.
@@ -1651,6 +1700,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // selected objects — refresh the selection overlay.
                 emitSelection(false);
                 emitHistory();
+                emitPlanes(session);
                 scheduleFrame();
                 startComposeAhead(session);
                 reply(id, layout);
@@ -2176,6 +2226,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 const layout = layoutOf(session);
                 emitSelection(false);
                 emitHistory();
+                emitPlanes(session);
                 scheduleFrame();
                 startComposeAhead(session);
                 reply(id, layout);
@@ -2307,6 +2358,8 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 emitSelection(false);
                 // Merged remote edits land on the local undo history.
                 emitHistory();
+                // And may have inserted, deleted, moved or renamed a sheet.
+                emitPlanes(session);
                 scheduleFrame();
                 startComposeAhead(session);
                 reply(id, layout);

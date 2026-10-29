@@ -217,6 +217,16 @@ export const ja: Messages = {
     "sheet.scrollLeft": "タブを左にスクロール",
     "sheet.scrollRight": "タブを右にスクロール",
     "sheet.unnamed": "Sheet{sheet}",
+    "sheet.new": "新しいシート",
+    "sheet.insert": "シートの挿入",
+    "sheet.delete": "削除",
+    "sheet.rename": "名前の変更",
+    "sheet.nameInput": "シート名",
+    "sheet.tabColor": "シート見出しの色",
+    "sheet.noColor": "色なし",
+    "sheet.hide": "非表示",
+    "sheet.unhide": "再表示",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "パネルタブ",

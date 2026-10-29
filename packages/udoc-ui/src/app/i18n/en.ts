@@ -218,6 +218,16 @@ export const en: Messages = {
     "sheet.scrollLeft": "Scroll tabs left",
     "sheet.scrollRight": "Scroll tabs right",
     "sheet.unnamed": "Sheet {sheet}",
+    "sheet.new": "New sheet",
+    "sheet.insert": "Insert Sheet",
+    "sheet.delete": "Delete",
+    "sheet.rename": "Rename",
+    "sheet.nameInput": "Sheet name",
+    "sheet.tabColor": "Tab Color",
+    "sheet.noColor": "No Color",
+    "sheet.hide": "Hide",
+    "sheet.unhide": "Unhide",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "Panel tabs",

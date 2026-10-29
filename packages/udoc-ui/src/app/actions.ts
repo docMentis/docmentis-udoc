@@ -116,6 +116,8 @@ export type Action =
     | { type: "SET_SLIDE_SECTIONS_COLLAPSED"; ids: readonly string[]; collapsed: boolean }
     // Edit the name of section `id` in its header, or stop editing (`null`).
     | { type: "SET_RENAMING_SLIDE_SECTION"; id: string | null }
+    // Edit the name of the sheet on `plane` in its tab, or stop editing (`null`).
+    | { type: "SET_RENAMING_SHEET"; plane: number | null }
     // The current selection's resolved character format (font / bold / italic),
     // projected from the engine's selection properties — the Text tab mirrors it.
     // Pushed on the same cadence as the capabilities.

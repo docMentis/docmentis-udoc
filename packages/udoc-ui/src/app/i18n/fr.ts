@@ -217,6 +217,16 @@ export const fr: Messages = {
     "sheet.scrollLeft": "Faire défiler les onglets vers la gauche",
     "sheet.scrollRight": "Faire défiler les onglets vers la droite",
     "sheet.unnamed": "Feuille {sheet}",
+    "sheet.new": "Nouvelle feuille",
+    "sheet.insert": "Insérer une feuille",
+    "sheet.delete": "Supprimer",
+    "sheet.rename": "Renommer",
+    "sheet.nameInput": "Nom de la feuille",
+    "sheet.tabColor": "Couleur d’onglet",
+    "sheet.noColor": "Aucune couleur",
+    "sheet.hide": "Masquer",
+    "sheet.unhide": "Afficher",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "Onglets du panneau",

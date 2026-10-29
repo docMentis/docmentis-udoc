@@ -3436,6 +3436,8 @@ export const uiStyles = css`
         align-self: stretch;
         display: flex;
         align-items: stretch;
+        /* What the sheet tabs' refusal stands above. */
+        position: relative;
     }
 
     .udoc-ui-root .udoc-status-bar__left {
@@ -3475,6 +3477,60 @@ export const uiStyles = css`
        fold fillets (the ::before/::after that extend past the tab, which give
        it the ribbon's folder-tab join), and a tab's focus ring. */
         clip-path: inset(-8px 0 -8px -8px);
+        /* What a dragged tab's drop marker stands in. */
+        position: relative;
+    }
+    /* A dragged tab: the hand holds it, and the marker shows where its sheet
+   lands — a bar between the tabs, in the primary colour. */
+    .udoc-ui-root .udoc-sheet-tabs--dragging,
+    .udoc-ui-root .udoc-sheet-tabs--dragging .udoc-sheet-tab {
+        cursor: grabbing;
+    }
+    .udoc-ui-root .udoc-sheet-tabs__drop {
+        position: absolute;
+        top: 0;
+        bottom: 4px;
+        width: 2px;
+        margin-left: -2px;
+        background: var(--udoc-color-primary);
+        pointer-events: none;
+        z-index: 2;
+    }
+    .udoc-ui-root .udoc-sheet-tabs__drop[hidden] {
+        display: none;
+    }
+    /* The field a sheet's name is edited in, in place of its tab. */
+    .udoc-ui-root .udoc-sheet-tab__input {
+        flex: none;
+        height: 26px;
+        margin-top: 4px;
+        padding: 0 8px;
+        border: 1px solid var(--udoc-color-primary);
+        border-radius: 3px;
+        box-sizing: border-box;
+        font: inherit;
+        font-size: 13px;
+        color: var(--udoc-color-on-surface);
+        background: var(--udoc-color-surface-container-highest);
+        outline: none;
+        user-select: text;
+    }
+    /* Why the engine refused a name, above the field. */
+    .udoc-ui-root .udoc-sheet-tabs__refusal {
+        position: absolute;
+        bottom: 100%;
+        margin-bottom: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        white-space: nowrap;
+        color: var(--udoc-color-error);
+        background: var(--udoc-status-bar-background);
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 4px;
+        z-index: 3;
+    }
+    .udoc-ui-root .udoc-sheet-tabs__refusal[hidden] {
+        display: none;
     }
     /* Excel's sheet navigation before the strip, shown with it: the arrows
    scrolling the strip a tab at a time, then the list of every sheet. */

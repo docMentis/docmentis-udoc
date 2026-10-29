@@ -217,6 +217,16 @@ export const ko: Messages = {
     "sheet.scrollLeft": "탭을 왼쪽으로 스크롤",
     "sheet.scrollRight": "탭을 오른쪽으로 스크롤",
     "sheet.unnamed": "시트 {sheet}",
+    "sheet.new": "새 시트",
+    "sheet.insert": "시트 삽입",
+    "sheet.delete": "삭제",
+    "sheet.rename": "이름 바꾸기",
+    "sheet.nameInput": "시트 이름",
+    "sheet.tabColor": "탭 색",
+    "sheet.noColor": "색 없음",
+    "sheet.hide": "숨기기",
+    "sheet.unhide": "숨기기 취소",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "패널 탭",

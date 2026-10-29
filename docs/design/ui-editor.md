@@ -93,6 +93,16 @@ faster than reports land where the worker will have put them. The formula bar
 (`FormulaBar`) shows the active cell the reports carry and edits the same
 entry, whole, from its own field.
 
+A workbook's sheets are edited from their tabs (`SheetTabs`): ⊕, the tab
+menu (`sheetTabMenu`, opened in the canvas's context menu), a rename in the
+tab (`renamingSheet`) and a drag along the strip, each one of the engine's
+workbook commands on the sheet a tab names, by its id. The tabs follow from
+the worker's report of them: after an edit, an undo or a merge that changed
+the sheets, it posts the roster again (`planes`), with the sheet the engine's
+viewer now shows — the engine keeps it to its sheet, or moves it on from one
+deleted or hidden, before the edit's reply — and keeps track of the sheets it
+has loaded by id, not by plane.
+
 A deck's views are planes of viewer 0 too: Normal its slides, Notes Page its
 notes pages, a page per slide on each. The store's `presentationView` names
 the one shown, `currentPlane` follows it once the plane roster names its plane

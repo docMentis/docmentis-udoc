@@ -18,6 +18,7 @@ import type { Shortcut } from "./components/controls.js";
 import { annotationFormat } from "./annotations.js";
 import type { AnnotationFormat, AnnotationStyleChange } from "./annotations.js";
 import type { Message, MessageKey } from "./i18n/index.js";
+import { STANDARD_COLORS } from "./components/PaintPanel.js";
 import {
     ICON_COPY,
     ICON_DELETE,
@@ -32,6 +33,11 @@ import {
     ICON_SECTION_UP,
     ICON_SECTIONS_COLLAPSE,
     ICON_SECTIONS_EXPAND,
+    ICON_SHEET_ADD,
+    ICON_SHEET_HIDE,
+    ICON_SHEET_RENAME,
+    ICON_SHEET_TAB_COLOR,
+    ICON_SHEET_UNHIDE,
     ICON_SLIDE_HIDE,
     ICON_UNDO,
     ICON_REDO,
@@ -84,6 +90,10 @@ export interface CommandContext {
      *  are, the selected ones' indices in section order (ascending), and how
      *  many the thumbnails fold away. */
     slideSections: { count: number; selected: readonly number[]; collapsed: number };
+    /** The open workbook's sheets as the sheet tab menu reads them: how many
+     *  show a tab, how many are hidden (not very hidden), and the current
+     *  sheet's tab colour — `#rrggbb`, `null` for none. */
+    sheets: { visible: number; hidden: number; color: string | null };
     /** The extension's own state ({@link UIState.extension}) — what its
      *  commands' and menu rows' predicates read beyond the shell's. */
     extension: unknown;
@@ -118,6 +128,11 @@ export function commandContext(state: UIState): CommandContext {
             ),
             collapsed: state.slideSections.filter((section) => state.collapsedSlideSections.has(section.id)).length,
         },
+        sheets: {
+            visible: state.planeVisibility.filter((state) => state === "visible").length,
+            hidden: state.planeVisibility.filter((state) => state === "hidden").length,
+            color: state.planeColors[state.currentPlane] ?? null,
+        },
         extension: state.extension,
         docType: state.docType,
         scrollMode: state.scrollMode,
@@ -149,9 +164,13 @@ const whenReady: EnabledWhen = (c) => c.ready;
  * `renameSlideSection` edits the selected one's, `moveSlideSections` moves the
  * selected ones `by` a place, `collapseSlideSections` folds every one's
  * slides away in the thumbnails, or unfolds them, and `removeAllSlideSections`
- * deletes them all, keeping the slides. `extension` carries an
- * extension's own intent, which the shell hands back to it
- * (`UIExtension.menuAction`).
+ * deletes them all, keeping the slides. A workbook's sheet tab menu acts on
+ * the current sheet: `insertSheet` inserts a worksheet before it,
+ * `deleteSheet` deletes it, `renameSheet` edits its name in its tab,
+ * `setSheetTabColor` colours its tab `#rrggbb` or takes its colour away,
+ * `hideSheet` hides it, and `unhideSheet` shows the hidden sheet on `plane`.
+ * `extension` carries an extension's own intent, which the shell hands back
+ * to it (`UIExtension.menuAction`).
  */
 export type MenuAction =
     | { kind: "annotationStyle"; change: AnnotationStyleChange }
@@ -163,6 +182,12 @@ export type MenuAction =
     | { kind: "moveSlideSections"; by: -1 | 1 }
     | { kind: "collapseSlideSections"; collapsed: boolean }
     | { kind: "removeAllSlideSections" }
+    | { kind: "insertSheet" }
+    | { kind: "deleteSheet" }
+    | { kind: "renameSheet" }
+    | { kind: "setSheetTabColor"; color: string | null }
+    | { kind: "hideSheet" }
+    | { kind: "unhideSheet"; plane: number }
     | { kind: "extension"; action: unknown };
 
 /** One entry in a command's dropdown menu (see the `menu` {@link CommandRun}).
@@ -350,6 +375,70 @@ export const SECTION_MENU: readonly MenuItem[] = [
         enabledWhen: (c) => c.slideSections.count > 0,
     },
 ];
+
+/** A colour swatch a menu row shows as its icon: `hex`, filled, in a hairline
+ *  frame so a light one shows on the menu. */
+function swatchIcon(hex: string): string {
+    return (
+        `<svg viewBox="0 0 20 20"><rect x="3" y="3" width="14" height="14" rx="2" fill="${hex}" ` +
+        `stroke="currentColor" stroke-opacity="0.3"/></svg>`
+    );
+}
+
+/**
+ * A workbook's sheet tab menu — what a right-click on a sheet's tab offers
+ * outside view mode, on that sheet, which the click makes current: Insert puts
+ * a worksheet before it, as Excel's does; Delete and Hide are greyed while it
+ * is the one sheet showing a tab, as Excel refuses them; Tab Color offers
+ * Excel's standard colours; Unhide lists the hidden sheets of `state`, greyed
+ * with none.
+ */
+export function sheetTabMenu(state: UIState): readonly MenuItem[] {
+    const hidden = state.planeVisibility.flatMap((visibility, plane) =>
+        visibility === "hidden" ? [{ plane, name: state.planeNames[plane] ?? "" }] : [],
+    );
+    const color = (hex: string | null, label: MessageKey): MenuItem => ({
+        action: { kind: "setSheetTabColor", color: hex },
+        label,
+        ...(hex !== null && { icon: swatchIcon(hex) }),
+        enabledWhen: whenReady,
+        activeWhen: (c) => c.sheets.color === hex,
+    });
+    return [
+        { action: { kind: "insertSheet" }, label: "sheet.insert", icon: ICON_SHEET_ADD, enabledWhen: whenReady },
+        {
+            action: { kind: "deleteSheet" },
+            label: "sheet.delete",
+            icon: ICON_DELETE,
+            enabledWhen: (c) => c.ready && c.sheets.visible > 1,
+        },
+        { action: { kind: "renameSheet" }, label: "sheet.rename", icon: ICON_SHEET_RENAME, enabledWhen: whenReady },
+        {
+            submenu: [color(null, "sheet.noColor"), ...STANDARD_COLORS.map((swatch) => color(swatch.hex, swatch.name))],
+            label: "sheet.tabColor",
+            icon: ICON_SHEET_TAB_COLOR,
+            enabledWhen: whenReady,
+            separatorBefore: true,
+        },
+        {
+            action: { kind: "hideSheet" },
+            label: "sheet.hide",
+            icon: ICON_SHEET_HIDE,
+            enabledWhen: (c) => c.ready && c.sheets.visible > 1,
+            separatorBefore: true,
+        },
+        {
+            submenu: hidden.map(({ plane, name }) => ({
+                action: { kind: "unhideSheet", plane },
+                label: ["sheet.hiddenName", { name }],
+                enabledWhen: whenReady,
+            })),
+            label: "sheet.unhide",
+            icon: ICON_SHEET_UNHIDE,
+            enabledWhen: (c) => c.ready && c.sheets.hidden > 0,
+        },
+    ];
+}
 
 /** Which paint channel a Fill / Line split button edits. Decides the swatch
  *  glyph and the "No Fill" / "No Line" wording of its (later) picker panel. */

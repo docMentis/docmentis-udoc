@@ -302,6 +302,7 @@ export class WorkerClient {
     readonly #fontsRefreshedListeners = new Set<() => void>();
     /** Notified when a sheet loaded in the background, with its tab's colour. */
     readonly #planeLoadedListeners = new Set<(plane: number, color: string | null, chartsheet: boolean) => void>();
+    readonly #planesListeners = new Set<(planes: PlaneInfo) => void>();
     /** Notified when the worker composed more of the document ahead of the reader. */
     readonly #composedListeners = new Set<(layout: DocumentLayout) => void>();
 
@@ -1809,6 +1810,17 @@ export class WorkerClient {
     }
 
     /**
+     * Subscribe to sheet tab changes — fired when an edit, an undo or a merge
+     * changes the open workbook's sheets (one inserted, deleted, moved,
+     * renamed, hidden or coloured), with its roster as {@link planeInfo} reads
+     * it, the sheet shown now included. Returns an unsubscribe function.
+     */
+    onPlanes(listener: (planes: PlaneInfo) => void): () => void {
+        this.#planesListeners.add(listener);
+        return () => this.#planesListeners.delete(listener);
+    }
+
+    /**
      * Subscribe to compose-ahead — fired as the worker composes more of the
      * document ahead of the reader, in the background, with the layout that
      * grew: composed page count, content size, and whether it is complete. It
@@ -1947,6 +1959,11 @@ export class WorkerClient {
                         listener(msg.plane, msg.color, msg.chartsheet);
                     }
                     return;
+                case "planes": {
+                    const { type: _, ...planes } = msg;
+                    for (const listener of this.#planesListeners) listener(planes);
+                    return;
+                }
                 case "composed":
                     for (const listener of this.#composedListeners) listener(msg.layout);
                     return;

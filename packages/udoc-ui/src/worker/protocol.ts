@@ -54,6 +54,7 @@ import type {
     Peer,
     PeerPointer,
     PeerSelectionGeometry,
+    PlaneInfo,
     Rect,
     RgbColor,
     SelectMode,
@@ -2127,6 +2128,14 @@ export interface PlaneLoadedReport {
 }
 
 /**
+ * Unsolicited sheet tabs: an edit, an undo or a merge changed the open
+ * workbook's sheets — one inserted, deleted, moved, renamed, hidden or
+ * coloured — and this is its roster now, as `planeInfo` reads it, with the
+ * sheet the viewer shows now, which follows its sheet through the change.
+ */
+export type PlanesReport = { type: "planes" } & PlaneInfo;
+
+/**
  * Unsolicited layout growth: the worker composed more of the document ahead of
  * the reader, in the background, and this is its layout now — the composed
  * page count and content size the host's scroll bounds follow, and whether it
@@ -2153,6 +2162,7 @@ export type WorkerOutbound =
     | BrandingRectReport
     | FontsRefreshedReport
     | PlaneLoadedReport
+    | PlanesReport
     | ComposedReport
     | RenderErrorReport;
 

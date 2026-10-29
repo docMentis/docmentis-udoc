@@ -217,6 +217,16 @@ export const zhCN: Messages = {
     "sheet.scrollLeft": "向左滚动标签",
     "sheet.scrollRight": "向右滚动标签",
     "sheet.unnamed": "Sheet{sheet}",
+    "sheet.new": "新建工作表",
+    "sheet.insert": "插入工作表",
+    "sheet.delete": "删除",
+    "sheet.rename": "重命名",
+    "sheet.nameInput": "工作表名称",
+    "sheet.tabColor": "工作表标签颜色",
+    "sheet.noColor": "无颜色",
+    "sheet.hide": "隐藏",
+    "sheet.unhide": "取消隐藏",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "面板选项卡",

@@ -3,11 +3,30 @@ import type { SheetState, UDocType } from "@docmentis/udoc-wasm";
 import type { MenuController, Store } from "../../framework/index.js";
 import type { Action } from "../actions.js";
 import type { UIState } from "../state.js";
+import { VIEW_MODE } from "../state.js";
 import { profileFor } from "../profiles.js";
 import { setupRovingTabindex } from "../a11y.js";
-import { ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT, ICON_MENU } from "../icons.js";
+import { ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT, ICON_MENU, ICON_SHEET_ADD } from "../icons.js";
 import { alignMenuToBounds, createButton, createMenuItem } from "./controls.js";
 import type { I18n } from "../i18n/index.js";
+
+/** What the sheet tabs ask of the shell — a workbook's sheet edits, outside
+ *  view mode. */
+export interface SheetTabsHooks {
+    /** Insert a worksheet after the current sheet, and show it — the ⊕. */
+    insert: () => void;
+    /** Open the sheet tab menu at viewport `(x, y)` on the sheet on `plane`. */
+    contextMenu: (plane: number, x: number, y: number) => void;
+    /** Name the sheet on `plane` `name`; resolves with why the engine refused
+     *  it, or `null` once it is renamed. */
+    rename: (plane: number, name: string) => Promise<string | null>;
+    /** Move the sheet on `plane` to stand before the sheet on `before`, or
+     *  last with `null`. */
+    move: (plane: number, before: number | null) => void;
+}
+
+/** How far (px) a press on a tab travels before it drags the tab. */
+const DRAG_SLOP = 4;
 
 /**
  * The bottom sheet-tab bar — one tab per layout plane (a workbook's sheets),
@@ -22,6 +41,14 @@ import type { I18n } from "../i18n/index.js";
  * flips it (rounded *bottom* corners) and colors it to the viewport backdrop so
  * the active sheet blends into the page area above it. Tabs that overrun the
  * room the status bar leaves it scroll, as Excel's do (see `fit`).
+ *
+ * Outside view mode the tabs edit the workbook's sheets: ⊕, beside the sheet
+ * list as in Excel for the web, inserts a worksheet after the current one; a
+ * right-click opens the sheet tab menu on the sheet it is on; a double-click
+ * edits the sheet's name in its tab, Enter or leaving it renaming the sheet and
+ * Escape dropping the edit — a name the engine refuses says why above the tab,
+ * and the edit goes on; and a tab dragged along the strip moves its sheet to
+ * where the marker stands.
  */
 interface SheetTabsSlice {
     docType: UDocType | null;
@@ -29,6 +56,10 @@ interface SheetTabsSlice {
     currentPlane: number;
     planeNames: readonly string[];
     planeVisibility: readonly SheetState[];
+    /** Whether the mode edits the sheets. */
+    editable: boolean;
+    /** The sheet whose name its tab is editing, by plane. */
+    renaming: number | null;
 }
 
 function selectSlice(s: UIState): SheetTabsSlice {
@@ -38,6 +69,8 @@ function selectSlice(s: UIState): SheetTabsSlice {
         currentPlane: s.currentPlane,
         planeNames: s.planeNames,
         planeVisibility: s.planeVisibility,
+        editable: s.mode !== VIEW_MODE,
+        renaming: s.renamingSheet,
     };
 }
 
@@ -47,7 +80,9 @@ function sliceEqual(a: SheetTabsSlice, b: SheetTabsSlice): boolean {
         a.planeCount === b.planeCount &&
         a.currentPlane === b.currentPlane &&
         a.planeNames === b.planeNames &&
-        a.planeVisibility === b.planeVisibility
+        a.planeVisibility === b.planeVisibility &&
+        a.editable === b.editable &&
+        a.renaming === b.renaming
     );
 }
 
@@ -71,7 +106,7 @@ function tabLabelColor(hex: string): string {
     return brightness < 128 ? "#fff" : "#000";
 }
 
-export function createSheetTabs(i18n: I18n) {
+export function createSheetTabs(i18n: I18n, hooks: SheetTabsHooks) {
     const el = document.createElement("div");
     el.className = "udoc-sheet-tabs";
     el.setAttribute("role", "tablist");
@@ -100,7 +135,18 @@ export function createSheetTabs(i18n: I18n) {
     allList.className = "udoc-sheet-tabs__menu-list";
     allMenu.append(allList);
     all.append(allBtn, allMenu);
-    nav.append(prev, next, all);
+    const add = createButton({ icon: ICON_SHEET_ADD, label: i18n.t("sheet.new") });
+    add.addEventListener("click", () => hooks.insert());
+    nav.append(prev, next, all, add);
+
+    // The marker a dragged tab drops at, and why a name was refused.
+    const drop = document.createElement("div");
+    drop.className = "udoc-sheet-tabs__drop";
+    drop.hidden = true;
+    const refusal = document.createElement("div");
+    refusal.className = "udoc-sheet-tabs__refusal";
+    refusal.setAttribute("role", "alert");
+    refusal.hidden = true;
 
     let unsubRender: (() => void) | null = null;
     let unsubColors: (() => void) | null = null;
@@ -159,9 +205,95 @@ export function createSheetTabs(i18n: I18n) {
         fit(null);
     });
 
+    /** The tab of the sheet on `plane`, if it shows one. */
+    const tabOf = (plane: number): HTMLButtonElement | undefined =>
+        tabs.find((tab) => Number(tab.dataset.plane) === plane);
+
     function mount(container: HTMLElement, store: Store<UIState, Action>): void {
-        container.append(nav, el);
+        container.append(nav, el, refusal);
+        el.append(drop);
         roving = setupRovingTabindex(el, ".udoc-sheet-tab");
+        const editable = (): boolean => store.getState().mode !== VIEW_MODE;
+
+        // The field editing a sheet's name, in place of its tab, while it is
+        // renamed.
+        let field: { plane: number; input: HTMLInputElement; tab: HTMLButtonElement } | null = null;
+
+        /** Put the name field away, its tab back in its place. */
+        const closeField = (): void => {
+            if (!field) return;
+            const { input, tab } = field;
+            field = null;
+            refusal.hidden = true;
+            const refocus = document.activeElement === input;
+            input.replaceWith(tab);
+            if (refocus) tab.focus({ preventScroll: true });
+        };
+
+        /** Show the field editing the name of the sheet on `plane` in place of
+         *  its tab — focused, the name selected — or put it away. */
+        const editName = (plane: number | null): void => {
+            if (field && field.plane !== plane) closeField();
+            if (plane === null || field) return;
+            const tab = tabOf(plane);
+            if (!tab) {
+                store.dispatch({ type: "SET_RENAMING_SHEET", plane: null });
+                return;
+            }
+            const input = document.createElement("input");
+            input.className = "udoc-sheet-tab__input";
+            input.value = store.getState().planeNames[plane] ?? "";
+            input.size = Math.max(4, input.value.length + 1);
+            input.spellcheck = false;
+            input.setAttribute("aria-label", i18n.t("sheet.nameInput"));
+            let saving = false;
+            const finish = async (rename: boolean): Promise<void> => {
+                if (saving || field?.input !== input) return;
+                const name = input.value;
+                if (!rename || name === (store.getState().planeNames[plane] ?? "")) {
+                    store.dispatch({ type: "SET_RENAMING_SHEET", plane: null });
+                    return;
+                }
+                saving = true;
+                const refused = await hooks.rename(plane, name);
+                saving = false;
+                if (refused === null || document.activeElement !== input) {
+                    store.dispatch({ type: "SET_RENAMING_SHEET", plane: null });
+                    return;
+                }
+                // Refused: say why above the field, and go on editing.
+                refusal.textContent = refused;
+                refusal.hidden = false;
+                const room = container.getBoundingClientRect();
+                refusal.style.left = `${input.getBoundingClientRect().left - room.left}px`;
+                input.select();
+            };
+            input.addEventListener("keydown", (e) => {
+                // The field's keys are its own, not the strip's or the shell's.
+                e.stopPropagation();
+                if (e.isComposing) return;
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    void finish(true);
+                } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    store.dispatch({ type: "SET_RENAMING_SHEET", plane: null });
+                }
+            });
+            input.addEventListener("input", () => {
+                refusal.hidden = true;
+                input.size = Math.max(4, input.value.length + 1);
+            });
+            // Leaving it renames the sheet, or drops a name refused.
+            input.addEventListener("blur", () => {
+                if (refusal.hidden) void finish(true);
+                else store.dispatch({ type: "SET_RENAMING_SHEET", plane: null });
+            });
+            tab.replaceWith(input);
+            field = { plane, input, tab };
+            input.focus({ preventScroll: true });
+            input.select();
+        };
 
         menu = createMenuController(allBtn, allMenu, {
             onOpen: () => {
@@ -189,7 +321,8 @@ export function createSheetTabs(i18n: I18n) {
         }
 
         const build = (slice: SheetTabsSlice): void => {
-            el.innerHTML = "";
+            closeField();
+            el.replaceChildren(drop);
             tabs.length = 0;
             first = 0;
             for (let i = 0; i < slice.planeCount; i++) {
@@ -231,8 +364,10 @@ export function createSheetTabs(i18n: I18n) {
             const show = profileFor(slice.docType).sheetTabs && slice.planeCount > 0;
             el.style.display = show ? "" : "none";
             nav.style.display = show ? "" : "none";
+            add.style.display = slice.editable ? "" : "none";
             if (!show) {
                 menu?.close();
+                closeField();
                 builtKey = "";
                 return;
             }
@@ -245,13 +380,78 @@ export function createSheetTabs(i18n: I18n) {
             applyActive(slice.currentPlane);
             // The current sheet's tab scrolls into view.
             fit(tabs.findIndex((tab) => Number(tab.dataset.plane) === slice.currentPlane));
+            editName(slice.editable ? slice.renaming : null);
         };
+
+        // A press on a tab that travels drags it: the sheet moves to where the
+        // marker stands when it lets go, and the click it ends in switches
+        // nothing.
+        let press: { plane: number; x: number; pointer: number; dragging: boolean } | null = null;
+        let dragged = false;
+        /** Where a tab dropped at viewport `x` lands: before the first shown
+         *  tab whose middle is past `x`, else after the last; and the marker's
+         *  place in the strip. */
+        const dropAt = (x: number): { before: number | null; left: number } => {
+            const shown = tabs.filter((tab) => tab.isConnected && tab.style.display !== "none");
+            const strip = el.getBoundingClientRect();
+            for (const tab of shown) {
+                const box = tab.getBoundingClientRect();
+                if (x < box.left + box.width / 2)
+                    return { before: Number(tab.dataset.plane), left: box.left - strip.left };
+            }
+            const last = shown[shown.length - 1]?.getBoundingClientRect();
+            return { before: null, left: (last?.right ?? strip.left) - strip.left };
+        };
+        el.addEventListener("pointerdown", (e) => {
+            const tab = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>(".udoc-sheet-tab");
+            dragged = false;
+            if (!tab || e.button !== 0 || !editable()) return;
+            press = { plane: Number(tab.dataset.plane), x: e.clientX, pointer: e.pointerId, dragging: false };
+        });
+        el.addEventListener("pointermove", (e) => {
+            if (!press || e.pointerId !== press.pointer) return;
+            if (!press.dragging) {
+                if (Math.abs(e.clientX - press.x) < DRAG_SLOP) return;
+                press.dragging = true;
+                el.setPointerCapture(e.pointerId);
+                el.classList.add("udoc-sheet-tabs--dragging");
+            }
+            drop.style.left = `${dropAt(e.clientX).left}px`;
+            drop.hidden = false;
+        });
+        const endPress = (e: PointerEvent, moved: boolean): void => {
+            if (!press || e.pointerId !== press.pointer) return;
+            const { plane, dragging } = press;
+            press = null;
+            drop.hidden = true;
+            el.classList.remove("udoc-sheet-tabs--dragging");
+            if (!dragging) return;
+            dragged = true;
+            if (moved) hooks.move(plane, dropAt(e.clientX).before);
+        };
+        el.addEventListener("pointerup", (e) => endPress(e, true));
+        el.addEventListener("pointercancel", (e) => endPress(e, false));
 
         // A tab click switches the active plane. Delegated so it survives rebuilds.
         el.addEventListener("click", (e) => {
+            if (dragged) {
+                dragged = false;
+                return;
+            }
             const btn = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>(".udoc-sheet-tab");
             if (!btn) return;
             store.dispatch({ type: "SET_CURRENT_PLANE", plane: Number(btn.dataset.plane) });
+        });
+        el.addEventListener("dblclick", (e) => {
+            const btn = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>(".udoc-sheet-tab");
+            if (!btn || !editable()) return;
+            store.dispatch({ type: "SET_RENAMING_SHEET", plane: Number(btn.dataset.plane) });
+        });
+        el.addEventListener("contextmenu", (e) => {
+            const btn = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>(".udoc-sheet-tab");
+            if (!btn || !editable()) return;
+            e.preventDefault();
+            hooks.contextMenu(Number(btn.dataset.plane), e.clientX, e.clientY);
         });
         // A tab the keyboard reaches past the strip's end scrolls into view.
         el.addEventListener("focusin", (e) => {
@@ -278,6 +478,7 @@ export function createSheetTabs(i18n: I18n) {
         menu?.destroy();
         nav.remove();
         el.remove();
+        refusal.remove();
     }
 
     return { el, mount, destroy };

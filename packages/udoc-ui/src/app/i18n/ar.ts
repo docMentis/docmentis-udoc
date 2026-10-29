@@ -217,6 +217,16 @@ export const ar: Messages = {
     "sheet.scrollLeft": "تمرير علامات التبويب لليسار",
     "sheet.scrollRight": "تمرير علامات التبويب لليمين",
     "sheet.unnamed": "ورقة {sheet}",
+    "sheet.new": "ورقة جديدة",
+    "sheet.insert": "إدراج ورقة",
+    "sheet.delete": "حذف",
+    "sheet.rename": "إعادة تسمية",
+    "sheet.nameInput": "اسم الورقة",
+    "sheet.tabColor": "لون علامة التبويب",
+    "sheet.noColor": "بلا لون",
+    "sheet.hide": "إخفاء",
+    "sheet.unhide": "إظهار",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "علامات تبويب اللوحة",

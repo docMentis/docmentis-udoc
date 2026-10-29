@@ -399,6 +399,26 @@ export interface Messages {
     "sheet.scrollRight": string;
     /** Sheet {sheet} */
     "sheet.unnamed": string;
+    /** New sheet */
+    "sheet.new": string;
+    /** Insert Sheet */
+    "sheet.insert": string;
+    /** Delete */
+    "sheet.delete": string;
+    /** Rename */
+    "sheet.rename": string;
+    /** Sheet name */
+    "sheet.nameInput": string;
+    /** Tab Color */
+    "sheet.tabColor": string;
+    /** No Color */
+    "sheet.noColor": string;
+    /** Hide */
+    "sheet.hide": string;
+    /** Unhide */
+    "sheet.unhide": string;
+    /** {name} — a hidden sheet, in the Unhide menu */
+    "sheet.hiddenName": string;
 
     // Left panel
     /** Panel tabs */

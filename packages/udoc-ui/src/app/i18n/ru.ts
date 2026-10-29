@@ -217,6 +217,16 @@ export const ru: Messages = {
     "sheet.scrollLeft": "Прокрутить вкладки влево",
     "sheet.scrollRight": "Прокрутить вкладки вправо",
     "sheet.unnamed": "Лист {sheet}",
+    "sheet.new": "Новый лист",
+    "sheet.insert": "Вставить лист",
+    "sheet.delete": "Удалить",
+    "sheet.rename": "Переименовать",
+    "sheet.nameInput": "Имя листа",
+    "sheet.tabColor": "Цвет ярлычка",
+    "sheet.noColor": "Нет цвета",
+    "sheet.hide": "Скрыть",
+    "sheet.unhide": "Показать",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "Вкладки панели",

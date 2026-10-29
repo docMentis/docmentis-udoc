@@ -519,6 +519,9 @@ export interface UIState {
     /** The section whose name the thumbnails are editing, by id, or `null`. */
     renamingSlideSection: string | null;
 
+    /** The sheet whose name its tab is editing, by plane, or `null`. */
+    renamingSheet: number | null;
+
     /**
      * The annotations the selection holds, with their page — read back after
      * each of the worker's selection reports, for the Annotate tab's Format
@@ -824,6 +827,7 @@ export const initialState: UIState = {
     selectedSlideSections: [],
     collapsedSlideSections: new Set(),
     renamingSlideSection: null,
+    renamingSheet: null,
     selectedAnnotations: null,
     comments: new Map(),
     allCommentsRead: false,

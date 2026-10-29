@@ -217,6 +217,16 @@ export const es: Messages = {
     "sheet.scrollLeft": "Desplazar pestañas a la izquierda",
     "sheet.scrollRight": "Desplazar pestañas a la derecha",
     "sheet.unnamed": "Hoja {sheet}",
+    "sheet.new": "Nueva hoja",
+    "sheet.insert": "Insertar hoja",
+    "sheet.delete": "Eliminar",
+    "sheet.rename": "Cambiar nombre",
+    "sheet.nameInput": "Nombre de la hoja",
+    "sheet.tabColor": "Color de pestaña",
+    "sheet.noColor": "Sin color",
+    "sheet.hide": "Ocultar",
+    "sheet.unhide": "Mostrar",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "Pestañas del panel",

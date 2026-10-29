@@ -217,6 +217,16 @@ export const de: Messages = {
     "sheet.scrollLeft": "Registerkarten nach links scrollen",
     "sheet.scrollRight": "Registerkarten nach rechts scrollen",
     "sheet.unnamed": "Tabelle {sheet}",
+    "sheet.new": "Neues Blatt",
+    "sheet.insert": "Blatt einfügen",
+    "sheet.delete": "Löschen",
+    "sheet.rename": "Umbenennen",
+    "sheet.nameInput": "Blattname",
+    "sheet.tabColor": "Registerfarbe",
+    "sheet.noColor": "Keine Farbe",
+    "sheet.hide": "Ausblenden",
+    "sheet.unhide": "Einblenden",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "Bereichsregisterkarten",

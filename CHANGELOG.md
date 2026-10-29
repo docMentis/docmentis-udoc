@@ -6,6 +6,41 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Added
+
+- A workbook has a formula bar above its grid: the Name Box, the active cell's
+  reference, and its contents, `=` and its formula or its value. The
+  `showFormulaBar` option hides it.
+- A workbook's active cell moves with the keyboard: an arrow moves it, Shift
+  extends the selection, Ctrl or Cmd jumps to the edge of the data, and Enter
+  and Tab step down and right (Shift back).
+
+### udoc-editor
+
+#### Added
+
+- A workbook's cells are typed into as in Excel. A typed character starts an
+  entry in place of what the cell holds, and F2, a double-click or a click in
+  the formula bar edits its contents. What is typed shows over the cell in its
+  font, widening across the columns beside it, and in the formula bar; an arrow
+  saves it and moves, or in an edit moves the caret, F2 switches between the
+  two. Enter saves and steps down, Tab right, Ctrl or Cmd with Enter saves into
+  every selected cell, Alt with Enter breaks the line, and Escape drops it.
+  Each save is one undo step, and a formula that doesn't parse says so under
+  the formula bar, the entry left open. Delete clears the selected cells, and
+  Backspace starts an empty entry.
+- A workbook's sheets are edited from their tabs. ⊕, beside the list of
+  sheets, inserts a worksheet after the current one and shows it. A
+  right-click on a tab opens its menu: Insert Sheet, Delete, Rename, Tab Color
+  in Excel's standard colours, Hide, and Unhide for each hidden sheet. A
+  double-click on a tab renames it there, a name Excel refuses saying why above
+  it, and a tab dragged along the strip moves its sheet. Each is one undo step,
+  a delete's too, and the sheet shown stays shown or, deleted or hidden, gives
+  way to the next one. A rename rewrites the formulas naming the sheet, and a
+  delete turns them to `#REF!`.
+
 ## [0.8.7] - 2026-10-28
 
 Built on `@docmentis/udoc-wasm` 0.8.9.
@@ -42,12 +77,6 @@ Built on `@docmentis/udoc-wasm` 0.8.9.
   `presentationView` option opens decks in either, `setPresentationView()`
   switches, `presentationView` says which shows, and
   `presentationView:changed` fires when it changes.
-- A workbook has a formula bar above its grid: the Name Box, the active cell's
-  reference, and its contents, `=` and its formula or its value. The
-  `showFormulaBar` option hides it.
-- A workbook's active cell moves with the keyboard: an arrow moves it, Shift
-  extends the selection, Ctrl or Cmd jumps to the edge of the data, and Enter
-  and Tab step down and right (Shift back).
 
 #### Fixed
 
@@ -78,16 +107,6 @@ Built on `@docmentis/udoc-wasm` 0.8.9.
   view follows the pages it leaves selected.
 - New Slide shows with slides selected in the thumbnails, and adds the slide
   after the last of them.
-- A workbook's cells are typed into as in Excel. A typed character starts an
-  entry in place of what the cell holds, and F2, a double-click or a click in
-  the formula bar edits its contents. What is typed shows over the cell in its
-  font, widening across the columns beside it, and in the formula bar; an arrow
-  saves it and moves, or in an edit moves the caret, F2 switches between the
-  two. Enter saves and steps down, Tab right, Ctrl or Cmd with Enter saves into
-  every selected cell, Alt with Enter breaks the line, and Escape drops it.
-  Each save is one undo step, and a formula that doesn't parse says so under
-  the formula bar, the entry left open. Delete clears the selected cells, and
-  Backspace starts an empty entry.
 - A presentation's speaker notes are edited in the notes panel: a click places
   the caret, writing a slide's notes if it has none yet, as one undo step, and
   the Text tab formats them. They're edited on the notes pages alike, where

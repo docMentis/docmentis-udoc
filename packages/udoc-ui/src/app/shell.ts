@@ -45,7 +45,8 @@ import { createStore, shallowEqual, subscribeSelector } from "../framework/index
 import type { Store } from "../framework/index.js";
 import type { PageSpacing, UIExtension } from "../extension.js";
 import type { Action } from "./actions.js";
-import { CONTEXT_MENU, commandContext } from "./commands.js";
+import { CONTEXT_MENU, commandContext, sheetTabMenu } from "./commands.js";
+import { reorderTo } from "./page-order.js";
 import type { MenuAction } from "./commands.js";
 import { createClipboardCopy } from "./clipboard.js";
 import { createCanvas } from "./components/Canvas.js";
@@ -1054,8 +1055,19 @@ export function mountUIShell(
     statusBar.mount(layout);
 
     // The bottom sheet-tab bar (spreadsheet plane switcher), docked in the
-    // status bar's left edge. Empty for single-plane doc types.
-    const sheetTabs = createSheetTabs(i18n);
+    // status bar's left edge. Empty for single-plane doc types. Outside view
+    // mode it edits the workbook's sheets.
+    const sheetTabs = createSheetTabs(i18n, {
+        insert: () => void insertSheet(store.getState().currentPlane + 1),
+        contextMenu: (plane, x, y) => {
+            // A right-click makes its sheet current, as Excel's does, and the
+            // menu acts on it.
+            store.dispatch({ type: "SET_CURRENT_PLANE", plane });
+            contextMenu.open(x, y, sheetTabMenu(store.getState()));
+        },
+        rename: (plane, name) => renameSheet(plane, name),
+        move: (plane, before) => void moveSheet(plane, before),
+    });
     sheetTabs.mount(statusBar.sheetTabsSlot, store);
 
     // The Comments tab lists every comment's thread, written as the popup's is;
@@ -1843,6 +1855,11 @@ export function mountUIShell(
         store.dispatch({ type: "PLANE_LOADED", plane, color, chartsheet });
     });
 
+    // A workbook's sheet tabs as an edit, an undo or a peer's left them, and
+    // the sheet shown now — the engine's viewer keeps to its sheet through
+    // them, or moves on from one deleted or hidden.
+    const unsubPlanes = client.onPlanes((planes) => store.dispatch({ type: "SET_PLANES", ...planes }));
+
     // Run a committing edit: adopt the worker's new layout (which it composes
     // ahead from, on its own), and fire the local-edit cue (which a sync
     // transport turns into a snapshot push) — the shared ceremony behind every
@@ -1955,6 +1972,54 @@ export function mountUIShell(
         const sheet = await client.spreadsheet.sheetIdByIndex(store.getState().currentPlane);
         if (sheet === undefined) return;
         await commit(() => client.execute(Command.resizeRows(sheet, index, index, points)));
+    }
+
+    // A workbook's sheet edits — the sheet tabs' and their menu's. Each names
+    // its sheet by id, read off its plane, and commits as any edit does; the
+    // tabs then follow from the worker's report of them.
+
+    /** Insert a worksheet at `index` and show it. */
+    async function insertSheet(index: number): Promise<void> {
+        await commit(() => client.execute(Command.insertWorksheet(index)));
+        store.dispatch({ type: "SET_CURRENT_PLANE", plane: index });
+    }
+
+    /** Run the sheet command `command` builds for the sheet on `plane`. */
+    async function editSheet(plane: number, command: (id: string) => UDocCommand): Promise<void> {
+        const id = await client.spreadsheet.sheetIdByIndex(plane);
+        if (id !== undefined) await commit(() => client.execute(command(id)));
+    }
+
+    /** Name the sheet on `plane` `name`; resolves with why the engine refused
+     *  it, or `null` once it is renamed. */
+    async function renameSheet(plane: number, name: string): Promise<string | null> {
+        try {
+            await editSheet(plane, (id) => Command.renameSheet(id, name));
+            return null;
+        } catch (error) {
+            return error instanceof Error ? error.message : String(error);
+        }
+    }
+
+    /** Move the sheet on `plane` to stand before the sheet on `before`, or
+     *  last with `null` — a drop beside it moving nothing. */
+    async function moveSheet(plane: number, before: number | null): Promise<void> {
+        const to = reorderTo([plane], before ?? store.getState().planeCount);
+        if (to !== null) await editSheet(plane, (id) => Command.reorderSheets([id], to));
+    }
+
+    /** Colour the tab of the sheet on `plane` `color` (`#rrggbb`), or with
+     *  `null` take its colour away. */
+    async function colorSheetTab(plane: number, color: string | null): Promise<void> {
+        const rgb =
+            color === null ? null : { value: { rgb: 0xff000000 + Number.parseInt(color.slice(1), 16) }, tint: 0 };
+        await editSheet(plane, (id) => Command.setSheetsTabColor([id], rgb));
+    }
+
+    /** Show the hidden sheet on `plane`, and go to it, as Excel's Unhide does. */
+    async function unhideSheet(plane: number): Promise<void> {
+        await editSheet(plane, (id) => Command.setSheetsState([id], "visible"));
+        store.dispatch({ type: "SET_CURRENT_PLANE", plane });
     }
 
     // Execute an arbitrary UDocCommand — the generic write seam a host drives
@@ -3061,6 +3126,26 @@ export function mountUIShell(
                 void commit(() => client.execute(Command.deleteSlideSections(ids, false)));
                 break;
             }
+            // The sheet tab menu's, on the current sheet. Insert puts the
+            // worksheet before it, as Excel's does.
+            case "insertSheet":
+                void insertSheet(store.getState().currentPlane);
+                break;
+            case "deleteSheet":
+                void editSheet(store.getState().currentPlane, (id) => Command.deleteSheets([id]));
+                break;
+            case "renameSheet":
+                store.dispatch({ type: "SET_RENAMING_SHEET", plane: store.getState().currentPlane });
+                break;
+            case "setSheetTabColor":
+                void colorSheetTab(store.getState().currentPlane, action.color);
+                break;
+            case "hideSheet":
+                void editSheet(store.getState().currentPlane, (id) => Command.setSheetsState([id], "hidden"));
+                break;
+            case "unhideSheet":
+                void unhideSheet(action.plane);
+                break;
         }
     }
 
@@ -3146,6 +3231,7 @@ export function mountUIShell(
         unsubPeers();
         unsubPointerSharing();
         unsubPlaneLoaded();
+        unsubPlanes();
         unsubPlacement();
         unsubViewControlsComposition();
         unsubStatusBar();

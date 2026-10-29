@@ -217,6 +217,16 @@ export const zhTW: Messages = {
     "sheet.scrollLeft": "向左捲動索引標籤",
     "sheet.scrollRight": "向右捲動索引標籤",
     "sheet.unnamed": "工作表{sheet}",
+    "sheet.new": "新增工作表",
+    "sheet.insert": "插入工作表",
+    "sheet.delete": "刪除",
+    "sheet.rename": "重新命名",
+    "sheet.nameInput": "工作表名稱",
+    "sheet.tabColor": "索引標籤色彩",
+    "sheet.noColor": "無色彩",
+    "sheet.hide": "隱藏",
+    "sheet.unhide": "取消隱藏",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "面板索引標籤",

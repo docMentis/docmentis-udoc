@@ -217,6 +217,16 @@ export const ptBR: Messages = {
     "sheet.scrollLeft": "Rolar guias para a esquerda",
     "sheet.scrollRight": "Rolar guias para a direita",
     "sheet.unnamed": "Planilha {sheet}",
+    "sheet.new": "Nova planilha",
+    "sheet.insert": "Inserir planilha",
+    "sheet.delete": "Excluir",
+    "sheet.rename": "Renomear",
+    "sheet.nameInput": "Nome da planilha",
+    "sheet.tabColor": "Cor da guia",
+    "sheet.noColor": "Sem cor",
+    "sheet.hide": "Ocultar",
+    "sheet.unhide": "Reexibir",
+    "sheet.hiddenName": "{name}",
 
     // Left panel
     "leftPanel.tabs": "Guias do painel",

@@ -13,10 +13,13 @@ import type {
     Annotation,
     PortableCommand,
     PresentationCommand,
+    GridColor,
     SheetId,
+    SheetState,
     SpreadsheetCommand,
     StandardFont,
     UDocCommand,
+    WorkbookCommand,
     WorksheetCommand,
 } from "@docmentis/udoc-wasm";
 
@@ -39,6 +42,11 @@ function spreadsheet(command: SpreadsheetCommand): UDocCommand {
     return { spreadsheet: command };
 }
 
+/** Wrap a command on the workbook's sheets in its spreadsheet's `UDocCommand`. */
+function workbook(command: WorkbookCommand): UDocCommand {
+    return spreadsheet({ editWorkbook: { command } });
+}
+
 /** Wrap a command on the worksheet `sheet` in its spreadsheet's `UDocCommand`. */
 function worksheet(sheet: SheetId, command: WorksheetCommand): UDocCommand {
     return spreadsheet({ editWorksheet: { sheet, command } });
@@ -46,7 +54,7 @@ function worksheet(sheet: SheetId, command: WorksheetCommand): UDocCommand {
 
 /** Command builders for the document-structure edits the host issues by index —
  *  annotation insert, update and text, form fill-in, a deck's section names,
- *  and a spreadsheet's column / row sizes.
+ *  a workbook's sheets, and a spreadsheet's column / row sizes.
  *
  *  Selection-relative object/shape edits (move, delete, align, group, flip, …)
  *  are **not** here: the caller emits those format-blind, the worker tags them
@@ -109,6 +117,30 @@ export const Command = {
      *  it. Every section, keeping the slides, is Remove All Sections. */
     deleteSlideSections: (ids: string[], withSlides: boolean): UDocCommand =>
         presentation({ editSlideSection: { command: { deleteSlideSections: { ids, withSlides } } } }),
+
+    /** Insert an empty worksheet at `index` (0-based, clamped to the sheet
+     *  count), named the next `SheetN`. */
+    insertWorksheet: (index: number): UDocCommand => workbook({ insertWorksheet: { index } }),
+
+    /** Delete the sheets `ids`; the engine refuses one that would leave no
+     *  sheet visible. */
+    deleteSheets: (ids: SheetId[]): UDocCommand => workbook({ deleteSheets: { ids } }),
+
+    /** Move the sheets `ids` to `to` (0-based), as one run: the first at index
+     *  `to` of the resulting order. */
+    reorderSheets: (ids: SheetId[], to: number): UDocCommand => workbook({ reorderSheets: { ids, to } }),
+
+    /** Name sheet `id` `name`; the engine refuses a name Excel takes for no
+     *  sheet, saying why. */
+    renameSheet: (id: SheetId, name: string): UDocCommand => workbook({ renameSheet: { id, name } }),
+
+    /** Give the sheets `ids` the visibility `state` — Hide and Unhide. */
+    setSheetsState: (ids: SheetId[], state: SheetState): UDocCommand => workbook({ setSheetsState: { ids, state } }),
+
+    /** Colour the tabs of the sheets `ids` `color`, or with `null` take their
+     *  colour away. */
+    setSheetsTabColor: (ids: SheetId[], color: GridColor | null): UDocCommand =>
+        workbook({ setSheetsTabColor: { ids, color } }),
 
     /** Resize columns `first..=last` (0-based inclusive) on sheet `sheetId` to
      *  `points` document points (PostScript points, 1/72 inch — *not* pixels): a

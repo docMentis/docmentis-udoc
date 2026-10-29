@@ -151,6 +151,13 @@ const ICONS = {
     ICON_SECTIONS_COLLAPSE: "unfold_less",
     ICON_SECTIONS_EXPAND: "unfold_more",
 
+    // Sheets — a workbook's sheet tabs and their menu
+    ICON_SHEET_ADD: "add",
+    ICON_SHEET_RENAME: "edit",
+    ICON_SHEET_TAB_COLOR: "format_color_fill",
+    ICON_SHEET_HIDE: "visibility_off",
+    ICON_SHEET_UNHIDE: "visibility",
+
     // Collaboration
     ICON_PEOPLE: "group",
     ICON_PAUSE: "pause",

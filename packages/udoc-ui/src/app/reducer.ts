@@ -110,6 +110,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 slideSections: [],
                 collapsedSlideSections: new Set(),
                 renamingSlideSection: null,
+                renamingSheet: null,
             };
 
         case "OPEN_SUCCESS": {
@@ -214,6 +215,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 slideSections: [],
                 collapsedSlideSections: new Set(),
                 renamingSlideSection: null,
+                renamingSheet: null,
                 pageCount: 0,
                 firstUncomposedPage: 0,
                 planeCount: 0,
@@ -343,6 +345,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         }
         case "SET_RENAMING_SLIDE_SECTION":
             return { ...state, renamingSlideSection: action.id };
+        case "SET_RENAMING_SHEET":
+            return { ...state, renamingSheet: action.plane };
 
         case "SYNC_VIEW":
             // The engine's authoritative values, adopted verbatim — no
