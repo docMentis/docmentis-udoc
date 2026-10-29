@@ -62,6 +62,13 @@ listed once, by package. Its major and minor version are those of the
   way to the next one. A rename rewrites the formulas naming the sheet, and a
   delete turns them to `#REF!`.
 
+#### Fixed
+
+- New Slide shows the slide layouts again, where it showed the slides' notes
+  pages in their place, stretched, and nothing past the deck's last slide.
+  Each shows in the shape of the deck's slides, where a deck that isn't 16:9,
+  a 4:3 or a portrait one, had them stretched to 16:9.
+
 ## [0.8.7] - 2026-10-28
 
 Built on `@docmentis/udoc-wasm` 0.8.9.

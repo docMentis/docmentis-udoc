@@ -1699,9 +1699,9 @@ export interface MergeOpaquePartsRequest {
 export interface RenderThumbnailRequest {
     type: "renderThumbnail";
     /** The layout plane to render — `0` is the slide plane (the thumbnail
-     *  strip); `1..` a slide-master plane (the New-Slide picker's layout
-     *  previews). Required, mirroring the plane-leading wasm `renderPageToRgba`;
-     *  the slide-plane strip passes `0` explicitly. */
+     *  strip); the New-Slide picker's layout previews are on a slide master's,
+     *  after the notes planes. Required, mirroring the plane-leading wasm
+     *  `renderPageToRgba`; the slide-plane strip passes `0` explicitly. */
     plane: number;
     index: number;
     scale: number;

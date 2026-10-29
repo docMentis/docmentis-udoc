@@ -48,7 +48,8 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
     return {
         // Pull every slide master's summary, flatten it to pickable options
         // (each slide layout previews on its slide master's plane at page
-        // `1 + its index`), and open. Falls back to the copy-neighbor default
+        // `1 + its index`), and open — with the current slide's size, which
+        // every slide layout shares. Falls back to the copy-neighbor default
         // when no slide layouts are available. The new slide lands at the end
         // of the last section selected in the thumbnails — an empty one too —
         // else right after the last slide selected there, else after the
@@ -61,7 +62,10 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
                 section !== undefined
                     ? APPEND_INDEX
                     : (selectedPages.length > 0 ? Math.max(...selectedPages) : pageIndex) + 1;
-            const slideMasters = await host.edit.slideMastersSummary();
+            const [slideMasters, slideSize] = await Promise.all([
+                host.edit.slideMastersSummary(),
+                host.client.pageDisplaySize(pageIndex),
+            ]);
             const options: LayoutOption[] = slideMasters.flatMap((slideMaster) =>
                 slideMaster.slideLayouts.map((slideLayout, index) => ({
                     layout: slideLayout.id,
@@ -77,6 +81,8 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
             modal.open({
                 insertIndex,
                 options,
+                // Zero in a deck with no slides yet.
+                slideSize: slideSize.width > 0 && slideSize.height > 0 ? slideSize : null,
                 renderPreview: (plane, page, scale) => host.client.renderPagePreview(plane, page, scale),
                 onPick: (layout) => void execute(createSlide(insertIndex, layout, section)),
             });

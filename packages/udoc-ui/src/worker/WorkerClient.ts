@@ -1705,7 +1705,7 @@ export class WorkerClient {
     /**
      * Render a one-shot preview of page `page` on `plane` at `scale`, resolving
      * with a decoded {@link ImageBitmap} — for the New-Slide layout picker, which
-     * previews slide layouts on their slide-master planes (plane `1..`), and for
+     * previews slide layouts on their slide masters' planes, and for
      * printing, which renders each page to print at its quality's DPI. Unlike
      * {@link requestThumbnail} this bypasses the slide-plane strip's queue and
      * cache, and runs as a request rather than as background work: the picker

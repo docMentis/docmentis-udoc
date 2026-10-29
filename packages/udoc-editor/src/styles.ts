@@ -439,7 +439,6 @@ export const editorStyles = css`
         display: block;
         width: 100%;
         height: auto;
-        aspect-ratio: 16 / 9;
         border-radius: 3px;
         background: var(--udoc-color-surface);
         box-shadow: 0 0 0 1px var(--udoc-color-outline-variant) inset;

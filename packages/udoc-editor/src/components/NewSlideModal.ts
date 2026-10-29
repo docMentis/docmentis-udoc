@@ -12,6 +12,7 @@
 // plane) via the plane-aware paged render path, so opening the picker never
 // disturbs the slide plane the user is editing.
 
+import type { Size } from "@docmentis/udoc-ui";
 import { ICON_CLEAR, on } from "@docmentis/udoc-ui/internal";
 import type { I18n } from "../i18n/index.js";
 
@@ -19,13 +20,17 @@ import type { I18n } from "../i18n/index.js";
  *  (a 960-pt slide → 240 px), downscaled by CSS into its grid cell. */
 const PREVIEW_SCALE = 0.25;
 
+/** The slide size a cell is shaped as when the deck's isn't known — a 16:9
+ *  slide, PowerPoint's default, in points. */
+const DEFAULT_SLIDE_SIZE: Size = { width: 960, height: 540 };
+
 /** One pickable slide layout: the id a slide is created on, plus where its
- *  preview renders — the plane (a slide master's, `1..`) and the page within it
+ *  preview renders — the plane (its slide master's) and the page within it
  *  (`1 + its index`; page 0 of that plane is the master). */
 export interface LayoutOption {
     /** The slide-layout id (hex key) — passed to `createSlide(index, layout)`. */
     layout: string;
-    /** The layout plane the preview renders on (`1..`). */
+    /** The slide master's plane the preview renders on. */
     plane: number;
     /** The page index within that plane (`1..`; page 0 is the master). */
     page: number;
@@ -41,6 +46,10 @@ export interface NewSlideContext {
     insertIndex: number;
     /** The layouts to offer, in roster order. */
     options: LayoutOption[];
+    /** The deck's slide size in points, which every slide layout shares — the
+     *  shape of the cells before their previews land; null when unknown, for a
+     *  16:9 slide's. */
+    slideSize: Size | null;
     /** Render a one-shot preview of a page on a plane, at `scale` output px per
      *  point — resolves with a bitmap the caller owns. */
     renderPreview: (plane: number, page: number, scale: number) => Promise<ImageBitmap>;
@@ -100,8 +109,9 @@ export function createNewSlideModal(i18n: I18n) {
         chosen?.onPick(layout);
     }
 
-    /** Build one layout cell: a button holding a canvas the preview draws into. */
-    function buildCell(option: LayoutOption, index: number, myEpoch: number): HTMLButtonElement {
+    /** Build one layout cell: a button holding a canvas the preview draws into,
+     *  sized as the preview will be, so the cell takes its shape from the start. */
+    function buildCell(option: LayoutOption, index: number, slideSize: Size, myEpoch: number): HTMLButtonElement {
         const cell = document.createElement("button");
         cell.type = "button";
         cell.className = "udoc-slide-picker__cell";
@@ -111,6 +121,8 @@ export function createNewSlideModal(i18n: I18n) {
         cell.setAttribute("aria-label", name);
         const canvas = document.createElement("canvas");
         canvas.className = "udoc-slide-picker__canvas";
+        canvas.width = Math.round(slideSize.width * PREVIEW_SCALE);
+        canvas.height = Math.round(slideSize.height * PREVIEW_SCALE);
         cell.appendChild(canvas);
         on(cell, "click", () => pick(option.layout));
 
@@ -140,8 +152,9 @@ export function createNewSlideModal(i18n: I18n) {
         epoch++;
         const myEpoch = epoch;
         grid.replaceChildren();
+        const slideSize = context.slideSize ?? DEFAULT_SLIDE_SIZE;
         context.options.forEach((option, index) => {
-            grid.appendChild(buildCell(option, index, myEpoch));
+            grid.appendChild(buildCell(option, index, slideSize, myEpoch));
         });
         isOpen = true;
         el.style.display = "";
