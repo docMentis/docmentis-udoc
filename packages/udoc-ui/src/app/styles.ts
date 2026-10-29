@@ -2280,6 +2280,11 @@ export const uiStyles = css`
        on every caret move so a keystroke shows the caret at once. */
         animation: udoc-ui__caret-blink 1.06s steps(1, end) infinite;
     }
+    /* Typing goes to a field outside the canvas that edits the same text — a
+   workbook's formula bar: its caret is the one shown. */
+    .udoc-ui-root .udoc-ui__canvas-host--caret-elsewhere .udoc-ui__selection-caret--local {
+        visibility: hidden;
+    }
     @keyframes udoc-ui__caret-blink {
         0%,
         50% {

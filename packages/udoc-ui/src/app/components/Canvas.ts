@@ -3720,5 +3720,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
          *  "cut")` dispatches its synthetic clipboard event onto it (a click
          *  fires no native clipboard event of its own). */
         focusClipboardSink: () => textInput.focus(),
+        /** Show the local caret, or hide it while a field outside the canvas
+         *  types into the same text — a workbook's formula bar, whose own
+         *  caret is the one shown. */
+        setCaretShown: (shown: boolean) => el.classList.toggle("udoc-ui__canvas-host--caret-elsewhere", !shown),
     };
 }

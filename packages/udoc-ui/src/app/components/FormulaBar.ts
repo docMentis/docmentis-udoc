@@ -35,6 +35,9 @@ export interface FormulaBarHooks {
     cancel: () => void;
     /** Hand the keyboard back to the grid. */
     focusGrid: () => void;
+    /** The bar takes the keyboard (`true`) or leaves it: while it holds it,
+     *  the caret is the bar's, and the cell shows none, as in Excel. */
+    keyboard: (held: boolean) => void;
 }
 
 /** What the bar shows of `state`: the active cell where a workbook is open,
@@ -107,6 +110,9 @@ export function createFormulaBar(i18n: I18n, hooks: FormulaBarHooks) {
     function render(next: FormulaBarSlice): void {
         slice = next;
         el.hidden = !next.shown;
+        // Hidden, with no workbook open, it holds no keyboard, whether or not
+        // its field's blur fired as it went.
+        if (!next.shown) hooks.keyboard(false);
         const cell = next.cell;
         name.textContent = cell?.reference ?? "";
         const typing = cell?.entry != null;
@@ -133,8 +139,10 @@ export function createFormulaBar(i18n: I18n, hooks: FormulaBarHooks) {
     }
 
     input.addEventListener("focus", () => {
+        hooks.keyboard(true);
         if (!input.readOnly && slice.cell?.entry == null) hooks.begin();
     });
+    input.addEventListener("blur", () => hooks.keyboard(false));
     input.addEventListener("input", () => {
         refusal.hidden = true;
         hooks.replace(input.value, caret());

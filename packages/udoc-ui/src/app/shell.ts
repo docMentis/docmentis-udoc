@@ -749,6 +749,7 @@ export function mountUIShell(
         save: (fill, then) => saveCellEntry(fill, then),
         cancel: () => runCellKey({ kind: "cancel" }),
         focusGrid: () => canvas.focusClipboardSink(),
+        keyboard: (held) => canvas.setCaretShown(!held),
     });
     formulaBar.mount(viewportSlot, store);
 
