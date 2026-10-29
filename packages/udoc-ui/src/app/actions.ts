@@ -13,6 +13,7 @@ import type { PageComments, SelectedAnnotations, SlideSectionRun } from "../work
 import type { AnnotationStyle } from "./annotations.js";
 import type { Peer, Scrollbars, SelectionCapabilities, Size } from "../geometry.js";
 import type {
+    ActiveCell,
     AnnotationTool,
     CollaborationStatus,
     DeveloperOptions,
@@ -96,6 +97,9 @@ export type Action =
     // The engine's selection-command capability verdict (pushed from the worker's
     // selection reports). Drives every selection-gated control (Delete, Arrange).
     | { type: "SET_SELECTION_CAPABILITIES"; capabilities: SelectionCapabilities }
+    // A workbook's active cell as the formula bar shows it (pushed from the
+    // worker's selection reports).
+    | { type: "SET_ACTIVE_CELL"; cell: ActiveCell | null }
     // The whole pages the selection holds (pushed from the worker's selection
     // reports). Drives the thumbnails' tint.
     | { type: "SET_SELECTED_PAGES"; pages: readonly number[] }

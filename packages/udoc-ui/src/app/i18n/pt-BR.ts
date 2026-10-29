@@ -87,6 +87,11 @@ export const ptBR: Messages = {
     "command.normalView": "Normal",
     "command.notesPageView": "Página de anotações",
     "command.notes": "Anotações",
+    "formulaBar.label": "Barra de fórmulas",
+    "formulaBar.nameBox": "Caixa de Nome",
+    "formulaBar.cancel": "Cancelar",
+    "formulaBar.enter": "Inserir",
+    "formulaBar.input": "Conteúdo",
 
     // Shape pickers
     "shape.rectangle": "Retângulo",

@@ -46,6 +46,13 @@ const OPTION_GROUPS: OptionGroup[] = [
             },
             {
                 kind: "toggle",
+                id: "showFormulaBar",
+                label: "Formula Bar",
+                hint: "spreadsheets",
+                default: true,
+            },
+            {
+                kind: "toggle",
                 id: "showPageControls",
                 label: "Page Controls",
                 hint: "Edit mode",

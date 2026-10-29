@@ -480,6 +480,9 @@ type SelectionReportBody = Omit<SelectionReport, "type" | "localChanged">;
  * {@link emitChangedSelection}. `null` before the first report.
  */
 let lastSelection: SelectionReportBody | null = null;
+/** How many requests editing or saving a workbook cell's entry this worker has
+ *  read — what each selection report tells the host it has caught up with. */
+let cellEntries = 0;
 
 /**
  * Post the current selection state: the local geometry plus every peer's
@@ -526,6 +529,7 @@ function readSelection(geometry?: SelectionGeometry): SelectionReportBody {
         properties: session?.selectionProperties() ?? null,
         slideSections: session ? Selection.slideSections(session.selection()) : [],
         viewers: session ? viewerSelections(session) : [],
+        cellEntries,
     };
 }
 
@@ -1830,6 +1834,21 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 }
                 break;
             }
+            case "moveCellSelection": {
+                // An arrow on the grid: presence only, as a caret move is.
+                if (session) emitSelection(true, session.moveCellSelection(VIEWER, msg.movement, msg.extend));
+                break;
+            }
+            case "editCellEntry": {
+                // The text being typed into a cell: no document edit, but the
+                // grid draws it over the cell, so the frame paints it.
+                cellEntries++;
+                if (session) {
+                    emitSelection(true, session.editCellEntry(VIEWER, msg.edit));
+                    scheduleFrame();
+                }
+                break;
+            }
             case "clearSelection": {
                 if (session) {
                     emitSelection(true, session.clearSelection(VIEWER));
@@ -2119,6 +2138,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 break;
             }
             case "executeOnSelection": {
+                if (typeof msg.edit === "object" && "kind" in msg.edit && msg.edit.kind === "commitCellEntry") {
+                    cellEntries++;
+                }
                 if (!session) throw new Error("engine worker: executeOnSelection before open");
                 // A committing edit on the current selection. The edit names no
                 // ids: the open document's engine binds it to the live selection
@@ -2740,6 +2762,7 @@ function imageEdit(edit: SelectionEdit): unknown {
 const WORKSHEET_KINDS: Record<WorksheetSelectionEditType, "worksheet"> = {
     enterCellText: "worksheet",
     clearCellContents: "worksheet",
+    commitCellEntry: "worksheet",
 };
 
 function spreadsheetEdit(edit: SelectionEdit): unknown {

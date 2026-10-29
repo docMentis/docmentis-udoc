@@ -97,6 +97,10 @@ export interface UDocOptions {
      *  Default `"normal"`; {@link UDocBase.setPresentationView} and the View
      *  tab change it. Other document types keep it for the next deck. */
     presentationView?: PresentationView;
+    /** Show a workbook's formula bar above its grid: the active cell's
+     *  reference and its contents, which in edit mode it edits. Default
+     *  `true`. */
+    showFormulaBar?: boolean;
     /** Show the theme button in the toolbar's menu. Default `true`. */
     showThemeButton?: boolean;
     /** Show the fullscreen button in the toolbar's menu. Default `true`. */

@@ -87,6 +87,11 @@ export const zhCN: Messages = {
     "command.normalView": "普通",
     "command.notesPageView": "备注页",
     "command.notes": "备注",
+    "formulaBar.label": "编辑栏",
+    "formulaBar.nameBox": "名称框",
+    "formulaBar.cancel": "取消",
+    "formulaBar.enter": "输入",
+    "formulaBar.input": "内容",
 
     // Shape pickers
     "shape.rectangle": "矩形",

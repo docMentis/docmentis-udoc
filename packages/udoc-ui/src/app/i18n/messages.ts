@@ -158,6 +158,18 @@ export interface Messages {
     /** Notes */
     "command.notes": string;
 
+    // Formula bar
+    /** Formula bar */
+    "formulaBar.label": string;
+    /** Name Box */
+    "formulaBar.nameBox": string;
+    /** Cancel */
+    "formulaBar.cancel": string;
+    /** Enter */
+    "formulaBar.enter": string;
+    /** Contents */
+    "formulaBar.input": string;
+
     // Shape pickers
     /** Rectangle */
     "shape.rectangle": string;

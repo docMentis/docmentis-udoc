@@ -338,6 +338,7 @@ export class SelectionLayer {
         properties: null,
         slideSections: [],
         viewers: [],
+        cellEntries: 0,
         localChanged: false,
     };
     #lastFrame: SelectionFrame = { views: [], scale: 1 };
@@ -1197,6 +1198,7 @@ export class SelectionLayer {
                 properties: null,
                 slideSections: [],
                 viewers: [],
+                cellEntries: 0,
                 localChanged: false,
             },
             true,

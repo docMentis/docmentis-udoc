@@ -10,6 +10,8 @@ import type {
     AcroFormField,
     ActionHideTarget,
     Annotation,
+    CellEntryEdit,
+    GridCellSelectionMove,
     Destination,
     SessionConfig,
     PaintFill,
@@ -771,6 +773,29 @@ export interface MoveTextCaretRequest {
 }
 
 /**
+ * Move a spreadsheet's cell selection per a keyboard `movement` — an arrow, or
+ * Ctrl and one — moving the block's focus corner instead when `extend`
+ * (Shift). Presence only, like {@link MoveTextCaretRequest}.
+ */
+export interface MoveCellSelectionRequest {
+    type: "moveCellSelection";
+    movement: GridCellSelectionMove;
+    extend: boolean;
+}
+
+/**
+ * Edit the text being typed into a spreadsheet cell — begin it, type into it,
+ * replace it from the formula bar, switch its mode, drop it. Not a document
+ * edit: the grid draws the entry over its cell, and nothing is written until a
+ * `commitCellEntry` selection edit saves it. The fresh geometry arrives via
+ * the selection stream.
+ */
+export interface EditCellEntryRequest {
+    type: "editCellEntry";
+    edit: CellEntryEdit;
+}
+
+/**
  * Clear the selection (e.g. on leaving edit mode). The now-empty geometry
  * rides back in a {@link SelectionReport}. Fire-and-forget.
  */
@@ -1405,6 +1430,11 @@ export type SelectionEdit =
     /** Spreadsheet: empty the selected cells — values and formulas — keeping
      *  their formats (Delete). Refused for part of an array formula. */
     | { kind: "clearCellContents" }
+    /** Spreadsheet: save the text being typed into the active cell as
+     *  `enterCellText` enters it — with `fill`, into every selected cell —
+     *  close the entry and move `then`. Refused as `enterCellText` is, the
+     *  entry staying open. */
+    | { kind: "commitCellEntry"; fill: boolean; then: GridCellSelectionMove | null }
     /** PDF: a page edit (`deletePages`, `reorderPages`, …) on the selected pages. */
     | { kind: "page"; edit: SelectionEdit }
     /** PDF: an object edit (`translateObjects`, `insertObjectText`, …) on the
@@ -1794,6 +1824,8 @@ export type WorkerRequest =
     | SelectRowsRequest
     | SelectAllRequest
     | MoveTextCaretRequest
+    | MoveCellSelectionRequest
+    | EditCellEntryRequest
     | ClearSelectionRequest
     | HitTestRequest
     | MintIdRequest
@@ -1981,6 +2013,10 @@ export interface SelectionReport {
     /** The selection as each viewer an {@link AddViewerRequest} added
      *  projects it — `geometry` and `peers` are the session's own viewer's. */
     viewers: ViewerSelection[];
+    /** How many requests editing or saving a workbook cell's entry the worker
+     *  has read — an {@link EditCellEntryRequest}, a `commitCellEntry` edit —
+     *  so the host knows the report has caught up with what it asked. */
+    cellEntries: number;
     localChanged: boolean;
 }
 

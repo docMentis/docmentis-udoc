@@ -83,6 +83,16 @@ wide as the pane, shown a page at a time and moved to the slide the canvas
 shows. A caret there types through the canvas's hidden text input, the one
 keyboard sink.
 
+A workbook's cells are typed into through the same hidden text input. Its keys
+map to Excel's in `cell-keys` (a pure table the shell runs); what is typed is
+the engine's cell entry, which the grid draws over the cell and the worker's
+`editCellEntry` edits, and a `commitCellEntry` selection edit saves it. The
+shell tracks the entry as it last asked for it until a selection report has
+read as many entry requests as it sent (`cellEntries`), so keys pressed
+faster than reports land where the worker will have put them. The formula bar
+(`FormulaBar`) shows the active cell the reports carry and edits the same
+entry, whole, from its own field.
+
 A deck's views are planes of viewer 0 too: Normal its slides, Notes Page its
 notes pages, a page per slide on each. The store's `presentationView` names
 the one shown, `currentPlane` follows it once the plane roster names its plane

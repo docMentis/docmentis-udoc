@@ -274,6 +274,7 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
             properties: null,
             slideSections: [],
             viewers: [],
+            cellEntries: 0,
             localChanged: state.localChanged,
         });
         const key = geometry.caret ? JSON.stringify(geometry.caret) : null;

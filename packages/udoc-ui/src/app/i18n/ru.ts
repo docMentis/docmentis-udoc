@@ -87,6 +87,11 @@ export const ru: Messages = {
     "command.normalView": "Обычный",
     "command.notesPageView": "Страница заметок",
     "command.notes": "Заметки",
+    "formulaBar.label": "Строка формул",
+    "formulaBar.nameBox": "Поле имени",
+    "formulaBar.cancel": "Отмена",
+    "formulaBar.enter": "Ввод",
+    "formulaBar.input": "Содержимое",
 
     // Shape pickers
     "shape.rectangle": "Прямоугольник",

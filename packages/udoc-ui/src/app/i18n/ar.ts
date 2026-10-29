@@ -87,6 +87,11 @@ export const ar: Messages = {
     "command.normalView": "عادي",
     "command.notesPageView": "صفحة الملاحظات",
     "command.notes": "ملاحظات",
+    "formulaBar.label": "شريط الصيغة",
+    "formulaBar.nameBox": "مربع الاسم",
+    "formulaBar.cancel": "إلغاء",
+    "formulaBar.enter": "إدخال",
+    "formulaBar.input": "المحتوى",
 
     // Shape pickers
     "shape.rectangle": "مستطيل",

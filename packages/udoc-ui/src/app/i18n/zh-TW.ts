@@ -87,6 +87,11 @@ export const zhTW: Messages = {
     "command.normalView": "標準模式",
     "command.notesPageView": "備忘稿頁",
     "command.notes": "備忘稿",
+    "formulaBar.label": "資料編輯列",
+    "formulaBar.nameBox": "名稱方塊",
+    "formulaBar.cancel": "取消",
+    "formulaBar.enter": "輸入",
+    "formulaBar.input": "內容",
 
     // Shape pickers
     "shape.rectangle": "矩形",

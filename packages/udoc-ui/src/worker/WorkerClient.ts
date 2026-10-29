@@ -30,6 +30,7 @@ import type {
     AcroForm,
     ActionHideTarget,
     Annotation,
+    CellEntryEdit,
     Destination,
     DestinationView,
     Entitlements,
@@ -44,6 +45,7 @@ import type {
     PageExportFormat,
     SaveStrategy,
     GoogleFontFamily,
+    GridCellSelectionMove,
     ComposedShapeMedia,
     UDocCommand,
     UDocFragment,
@@ -1031,6 +1033,26 @@ export class WorkerClient {
     }
 
     /**
+     * Move a spreadsheet's cell selection per a keyboard `movement` — an arrow,
+     * or Ctrl and one — moving the block's focus corner instead when `extend`
+     * (Shift). Presence only; the fresh geometry arrives via
+     * {@link onSelection}. Fire-and-forget.
+     */
+    moveCellSelection(movement: GridCellSelectionMove, extend: boolean): void {
+        this.#post({ type: "moveCellSelection", movement, extend });
+    }
+
+    /**
+     * Edit the text being typed into a spreadsheet cell — see
+     * `CellEntryEdit`. Not a document edit: nothing is written until a
+     * `commitCellEntry` selection edit saves it. The fresh geometry arrives
+     * via {@link onSelection}. Fire-and-forget.
+     */
+    editCellEntry(edit: CellEntryEdit): void {
+        this.#post({ type: "editCellEntry", edit });
+    }
+
+    /**
      * Clear the selection (e.g. on leaving edit mode). Doc-type-agnostic
      * presence, so it stays on the root. The now-empty geometry arrives via
      * {@link onSelection}. Fire-and-forget.
@@ -1887,6 +1909,7 @@ export class WorkerClient {
                         properties: msg.properties,
                         slideSections: msg.slideSections,
                         viewers: msg.viewers,
+                        cellEntries: msg.cellEntries,
                         localChanged: msg.localChanged,
                     };
                     for (const listener of this.#selectionListeners) listener(state);

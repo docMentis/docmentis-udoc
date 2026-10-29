@@ -87,6 +87,11 @@ export const ko: Messages = {
     "command.normalView": "기본",
     "command.notesPageView": "노트 페이지",
     "command.notes": "슬라이드 노트",
+    "formulaBar.label": "수식 입력줄",
+    "formulaBar.nameBox": "이름 상자",
+    "formulaBar.cancel": "취소",
+    "formulaBar.enter": "입력",
+    "formulaBar.input": "내용",
 
     // Shape pickers
     "shape.rectangle": "사각형",

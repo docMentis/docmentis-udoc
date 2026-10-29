@@ -3343,6 +3343,78 @@ export const uiStyles = css`
     }
 
     /* Status bar — a thin bottom bar; the view controls dock at its right edge. */
+    /* A workbook's formula bar, above the grid, as tall as the toolbar: the Name
+   Box, the ✕ / ✓ of an entry being typed (greyed while there is none), and the
+   contents field. The field is a bordered one, as every field here is; the
+   refusal of a save shows under the bar. */
+    .udoc-ui-root .udoc-formula-bar {
+        position: relative;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 40px;
+        padding: 0 4px;
+        background: var(--udoc-status-bar-background);
+        border-bottom: 1px solid var(--udoc-color-outline-variant);
+        z-index: 12;
+    }
+    .udoc-ui-root .udoc-formula-bar[hidden] {
+        display: none;
+    }
+    .udoc-ui-root .udoc-formula-bar__name {
+        flex: 0 0 auto;
+        width: 72px;
+        height: 24px;
+        line-height: 22px;
+        box-sizing: border-box;
+        padding: 0 6px;
+        border: 1px solid var(--udoc-color-outline);
+        border-radius: 3px;
+        font-size: 13px;
+        background: var(--udoc-color-surface-container-high);
+        color: var(--udoc-color-on-surface);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .udoc-ui-root .udoc-formula-bar__input {
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 24px;
+        box-sizing: border-box;
+        padding: 3px 6px;
+        border: 1px solid var(--udoc-color-outline);
+        border-radius: 3px;
+        font: inherit;
+        font-size: 13px;
+        line-height: 16px;
+        resize: none;
+        overflow: hidden;
+        white-space: pre;
+        background: var(--udoc-color-surface-container-high);
+        color: var(--udoc-color-on-surface);
+    }
+    .udoc-ui-root .udoc-formula-bar__input:focus {
+        outline: none;
+        border-color: var(--udoc-color-on-surface-variant);
+    }
+    .udoc-ui-root .udoc-formula-bar__refusal {
+        position: absolute;
+        top: 100%;
+        right: 4px;
+        left: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        color: var(--udoc-color-error);
+        background: var(--udoc-status-bar-background);
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-top: none;
+    }
+    .udoc-ui-root .udoc-formula-bar__refusal[hidden] {
+        display: none;
+    }
+
     .udoc-ui-root .udoc-status-bar {
         flex: 0 0 auto;
         display: flex;

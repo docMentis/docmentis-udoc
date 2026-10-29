@@ -438,6 +438,7 @@ What the new viewer offers that the legacy one has no row for.
 | event `notesPanel:changed`                         | as above                                                            |
 | `setPresentationView(view)`, `presentationView`    | a deck as its slides or its notes pages                             |
 | option `presentationView`                          | as above                                                            |
+| option `showFormulaBar`                            | a workbook's formula bar                                            |
 | event `presentationView:changed`                   | as above                                                            |
 | `removeOverlay(id)`                                | drop an overlay, the built-ins included                             |
 | event `document:edited`                            |                                                                     |

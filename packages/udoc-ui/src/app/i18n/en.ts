@@ -88,6 +88,11 @@ export const en: Messages = {
     "command.normalView": "Normal",
     "command.notesPageView": "Notes Page",
     "command.notes": "Notes",
+    "formulaBar.label": "Formula bar",
+    "formulaBar.nameBox": "Name Box",
+    "formulaBar.cancel": "Cancel",
+    "formulaBar.enter": "Enter",
+    "formulaBar.input": "Contents",
 
     // Shape pickers
     "shape.rectangle": "Rectangle",

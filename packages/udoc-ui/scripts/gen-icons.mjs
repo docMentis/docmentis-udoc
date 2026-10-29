@@ -32,6 +32,7 @@ const OPSZ = 20;
 const ICONS = {
     // Chrome
     ICON_CLEAR: "close",
+    ICON_CHECK: "check",
     ICON_MORE: "more_horiz",
     ICON_MORE_VERT: "more_vert",
     ICON_MENU: "menu",

@@ -105,8 +105,9 @@ export interface CommandContext {
 export function commandContext(state: UIState): CommandContext {
     return {
         ready: state.status === "ready",
-        canUndo: state.canUndo,
-        canRedo: state.canRedo,
+        // Typing into a cell isn't on the history, which waits for its save.
+        canUndo: state.canUndo && state.activeCell?.entry == null,
+        canRedo: state.canRedo && state.activeCell?.entry == null,
         canCopy: state.selectionCaps.copyable && copyAllowed(state),
         selection: state.selectionCaps,
         slidesHidden: state.selectedSlidesHidden,

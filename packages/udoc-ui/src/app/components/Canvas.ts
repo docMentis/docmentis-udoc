@@ -152,7 +152,13 @@ function shapeHitText(shapeHit: ShapeHit, global: boolean): boolean {
  *  starts / extends a cell block (no marquee band; the range fill is the
  *  feedback). False for every other hit, including `"none"`. */
 function hitCell(hit: UDocHit): boolean {
-    return hit !== "none" && "spreadsheet" in hit;
+    return hit !== "none" && "spreadsheet" in hit && hit.spreadsheet !== "cellEntry";
+}
+
+/** Whether a picked {@link UDocHit} landed on the text being typed into a
+ *  workbook's cell — its box, which stands over the cells it widens across. */
+function hitCellEntry(hit: UDocHit): boolean {
+    return hit !== "none" && "spreadsheet" in hit && hit.spreadsheet === "cellEntry";
 }
 
 /** The innermost table a picked {@link UDocHit} landed in, by id — the table a
@@ -328,6 +334,16 @@ export interface CanvasHooks {
     /** Delete at the live text caret (Backspace / Delete) — routed through the
      *  shell like {@link insertText}. */
     deleteText?: (forward: boolean) => void;
+    /** A key on a workbook's grid — its arrows, Enter, Tab, Escape, F2 —
+     *  taken before the hidden text input edits with it; answers whether the
+     *  grid took it. */
+    cellKey?: (ev: KeyboardEvent) => boolean;
+    /** Text typed on a workbook's selected cell, which begins an entry in it
+     *  in place of what it holds. */
+    beginCellEntry?: (text: string) => void;
+    /** Save the text being typed into a workbook's cell — a press on the grid
+     *  outside it, before the press selects. */
+    commitCellEntry?: () => void;
     /**
      * A right-click landed on the canvas: open the context menu at viewport
      * `(clientX, clientY)`. The canvas has already settled the selection the
@@ -691,6 +707,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         insertText: (text) => hooks.insertText?.(text),
         deleteText: (forward) => hooks.deleteText?.(forward),
         moveCaret: (movement, extend) => client.moveTextCaret(movement, extend),
+        key: (ev) => (store?.getState().docType === "spreadsheet" && hooks.cellKey?.(ev)) || false,
+        beginTyping: (text) => hooks.beginCellEntry?.(text),
     });
     el.appendChild(textInput.el);
 
@@ -707,8 +725,14 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             return;
         }
         const editable = st.mode !== VIEW_MODE || annotationSelected;
-        textInput.setFocused(editable || (copyable && copyAllowed(st)));
-        textInput.setEditingText(editable && editingText && profileFor(st.docType).textEditing === true);
+        // A workbook types into a cell where an entry is open, and a character
+        // typed on a selected cell opens one.
+        const cell = st.docType === "spreadsheet" ? st.activeCell : null;
+        textInput.setFocused(editable || (copyable && copyAllowed(st)) || cell !== null);
+        textInput.setEditingText(
+            editable && editingText && (profileFor(st.docType).textEditing === true || cell?.entry != null),
+        );
+        textInput.setTypingBegins(st.mode !== VIEW_MODE && cell !== null && cell.entry === null);
     }
 
     // The HTML overlay layer: a sibling above the canvas (and below the
@@ -1528,6 +1552,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         const offMode = subscribeSelector(s, (st) => st.mode, applyModeSelection);
         cleanups.push(offMode);
         applyModeSelection(s.getState().mode);
+        // A workbook's active cell decides what the hidden field types into.
+        cleanups.push(subscribeSelector(s, (st) => st.activeCell, syncTextInput));
 
         // The search's matches, redrawn when they grow, the current one moves,
         // or another sheet is shown — a highlight draws on its own plane only.
@@ -3032,6 +3058,20 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
                       : { kind: "object", mode: selectModeFor(ev) };
             gesture = touchScrollGesture(ev, x, y, tap);
             el.setPointerCapture(ev.pointerId);
+            return;
+        }
+        // A press in the text being typed into a cell places the caret in it, a
+        // drag selects; a press elsewhere on the grid saves it first, and a
+        // double press on a cell edits its contents, the caret where it fell.
+        if (hitCellEntry(hit)) {
+            gesture = textGesture(x, y, ev, false);
+            el.setPointerCapture(ev.pointerId);
+            return;
+        }
+        if (st.docType === "spreadsheet" && st.activeCell?.entry != null) hooks.commitCellEntry?.();
+        if (st.docType === "spreadsheet" && !ev.shiftKey && chainClick(x, y) === 2) {
+            client.editCellEntry({ begin: { mode: "edit" } });
+            client.selectText({ x, y }, { x, y }, {});
             return;
         }
         if (st.docType === "spreadsheet" || hitCell(hit)) {

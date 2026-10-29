@@ -5,6 +5,7 @@ import type { PageComments, SelectedAnnotations, SlideSectionRun } from "../work
 import type { AnnotationStyles } from "./annotations.js";
 import type { MessageKey } from "./i18n/index.js";
 import type {
+    CellEntryMode,
     Feature,
     FileFormat,
     PresentationPlaneKind,
@@ -113,6 +114,21 @@ export type LeftPanelTab = "thumbnail" | "outline" | "layers" | "attachments";
 export type RightPanelTab = "search" | "comments";
 /** A side panel's tab, left or right. */
 export type PanelTab = LeftPanelTab | RightPanelTab;
+
+// -----------------------------------------------------------------------------
+// Cells
+// -----------------------------------------------------------------------------
+
+/** A workbook's active cell, as the formula bar shows it. */
+export interface ActiveCell {
+    /** Its reference — `B3`, a merge's its anchor's. */
+    reference: string;
+    /** Its contents — `=` and its formula, else its value — or what is typed
+     *  into it while an entry is open. */
+    input: string;
+    /** How it is being typed into, or `null` while it isn't. */
+    entry: CellEntryMode | null;
+}
 
 // -----------------------------------------------------------------------------
 // Presentation views
@@ -476,6 +492,12 @@ export interface UIState {
     selectedSlidesHidden: boolean;
 
     /**
+     * A workbook's active cell as the formula bar shows it, from the worker's
+     * selection reports — `null` with no cell selected, or another doc type.
+     */
+    activeCell: ActiveCell | null;
+
+    /**
      * The open deck's sections, in order, each with the run of slides it holds
      * — what the thumbnails group the slides under. Read back after each change
      * of the document; empty for a deck without sections, or any other
@@ -691,6 +713,10 @@ export interface UIState {
      *  its default, which opening it returns to). */
     notesHeight: number | null;
 
+    /** Whether a workbook shows its formula bar above the grid — the host's
+     *  `showFormulaBar`. */
+    formulaBarVisible: boolean;
+
     // --- Toolbar / chrome visibility -------------------------------------
     /**
      * Whether the top toolbar is visible. When hidden (chromeless / immersive
@@ -793,6 +819,7 @@ export const initialState: UIState = {
     selectionCaps: EMPTY_SELECTION_CAPABILITIES,
     selectedPages: [],
     selectedSlidesHidden: false,
+    activeCell: null,
     slideSections: [],
     selectedSlideSections: [],
     collapsedSlideSections: new Set(),
@@ -857,6 +884,7 @@ export const initialState: UIState = {
     presentationView: "normal",
     notesOpen: false,
     notesHeight: null,
+    formulaBarVisible: true,
 
     toolbarVisible: true,
     fullscreenButtonVisible: true,

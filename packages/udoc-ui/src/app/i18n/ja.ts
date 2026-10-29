@@ -87,6 +87,11 @@ export const ja: Messages = {
     "command.normalView": "標準",
     "command.notesPageView": "ノート ページ",
     "command.notes": "ノート",
+    "formulaBar.label": "数式バー",
+    "formulaBar.nameBox": "名前ボックス",
+    "formulaBar.cancel": "キャンセル",
+    "formulaBar.enter": "入力",
+    "formulaBar.input": "内容",
 
     // Shape pickers
     "shape.rectangle": "長方形",

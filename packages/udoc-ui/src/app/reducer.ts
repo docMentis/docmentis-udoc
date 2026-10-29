@@ -177,6 +177,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeChartsheets: [],
                 planeVisibility: [],
                 planeKinds: [],
+                activeCell: null,
             };
         }
 
@@ -222,6 +223,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeChartsheets: [],
                 planeVisibility: [],
                 planeKinds: [],
+                activeCell: null,
                 scrollSize: { width: 0, height: 0 },
                 canUndo: false,
                 canRedo: false,
@@ -312,6 +314,17 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_SELECTION_CAPABILITIES":
             return { ...state, selectionCaps: action.capabilities };
+        case "SET_ACTIVE_CELL": {
+            const [now, was] = [action.cell, state.activeCell];
+            const same =
+                now === was ||
+                (now !== null &&
+                    was !== null &&
+                    now.reference === was.reference &&
+                    now.input === was.input &&
+                    now.entry === was.entry);
+            return same ? state : { ...state, activeCell: action.cell };
+        }
         case "SET_SELECTED_PAGES":
             return { ...state, selectedPages: action.pages };
         case "SET_SELECTED_SLIDES_HIDDEN":

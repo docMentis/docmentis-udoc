@@ -21,10 +21,13 @@ import type {
     UrlFont,
     UDocSearchScope,
     Destination,
+    CellEntryEdit,
+    CellEntryMode,
+    GridCellSelectionMove,
     ScrollAlignment,
     TextHyperlink,
 } from "@docmentis/udoc-wasm";
-import { allowsEdit } from "../geometry.js";
+import { allowsEdit, cssPxPerPt } from "../geometry.js";
 import type {
     ContentPadding,
     DocumentLayout,
@@ -50,6 +53,10 @@ import { createContextMenu } from "./components/ContextMenu.js";
 import { createFloatingToolbar } from "./components/FloatingToolbar.js";
 import { createLeftPanel } from "./components/LeftPanel.js";
 import { createNotesPane } from "./components/NotesPane.js";
+import { createFormulaBar } from "./components/FormulaBar.js";
+import { visibleSpan } from "./components/Scrollbar.js";
+import { cellKeyAction } from "./cell-keys.js";
+import type { CellKeyAction } from "./cell-keys.js";
 import { createRightPanel } from "./components/RightPanel.js";
 import { createStatusBar } from "./components/StatusBar.js";
 import { createSheetTabs } from "./components/SheetTabs.js";
@@ -76,7 +83,16 @@ import { PRINT_DPI, printImages, printPageOf, printPdf } from "./print.js";
 import type { PrintOptions, PrintPage } from "./print.js";
 import { createEffects } from "./effects.js";
 import { createReducer } from "./reducer.js";
-import { LEFT_PANEL_TABS, RIGHT_PANEL_TABS, VIEW_MODE, initialState, planeOfView, viewOfPlane } from "./state.js";
+import {
+    LEFT_PANEL_TABS,
+    RIGHT_PANEL_TABS,
+    VIEW_MODE,
+    initialState,
+    planeOfView,
+    renderZoom,
+    viewDpi,
+    viewOfPlane,
+} from "./state.js";
 import { arrangementFor, defaultTab, profileFor } from "./profiles.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
 import type {
@@ -406,6 +422,7 @@ export interface UIShellOptions {
     activePanel?: PanelTab | null;
     showNotesPanel?: boolean;
     presentationView?: PresentationView;
+    showFormulaBar?: boolean;
     showLoadingOverlay?: boolean;
     zoomSteps?: readonly number[];
     minZoom?: number;
@@ -560,6 +577,7 @@ export function mountUIShell(
         rightPanelVisible: shellOptions.showRightPanel ?? initialState.rightPanelVisible,
         notesOpen: shellOptions.showNotesPanel ?? initialState.notesOpen,
         presentationView: shellOptions.presentationView ?? initialState.presentationView,
+        formulaBarVisible: shellOptions.showFormulaBar ?? initialState.formulaBarVisible,
         disabledPanels: hostDisabledPanels,
         hostDisabledPanels,
         themeSwitchingDisabled: shellOptions.showThemeButton === false,
@@ -684,8 +702,21 @@ export function mountUIShell(
         followTextLink: (link, page) => followTextLink(link, page),
         annotationHover: (annotation, clientX, clientY) => pageAnnotations.hover(annotation, clientX, clientY),
         annotationClick: (annotation, clientX, clientY) => pageAnnotations.click(annotation, clientX, clientY),
-        insertText: (text) => void insertSelectionText(text),
-        deleteText: (forward) => void deleteSelectionText(forward),
+        insertText: (text) => {
+            if (store.getState().docType !== "spreadsheet") void insertSelectionText(text);
+            else if (typingCell()) editCellEntry({ text: { edit: { insertText: { text } } } });
+            else beginCellEntry("enter", text);
+        },
+        deleteText: (forward) => {
+            // A workbook's grid takes Backspace and Delete as keys where no cell
+            // is typed into (see `cellKey`).
+            if (store.getState().docType !== "spreadsheet") void deleteSelectionText(forward);
+            else if (typingCell()) editCellEntry({ text: { edit: { deleteText: { forward } } } });
+        },
+        cellKey: (ev) => cellKey(ev),
+        beginCellEntry: (text) =>
+            typingCell() ? editCellEntry({ text: { edit: { insertText: { text } } } }) : beginCellEntry("enter", text),
+        commitCellEntry: () => void saveCellEntry(false, null),
         resizeColumn: (index, points) => void resizeColumn(index, points),
         resizeRow: (index, points) => void resizeRow(index, points),
         onContextMenu: (x, y, inTable) =>
@@ -708,6 +739,139 @@ export function mountUIShell(
             contextMenu.open(x, y, extension?.contextMenuItems(store.getState(), false) ?? CONTEXT_MENU),
     });
     notesPane.mount(viewportSlot, store);
+
+    // A workbook's formula bar, above its grid: the active cell's reference
+    // and contents, which it edits as the cell's entry.
+    const formulaBar = createFormulaBar(i18n, {
+        begin: () => beginCellEntry("edit", null),
+        replace: (text, caret) => editCellEntry({ replace: { text, caret } }),
+        save: (fill, then) => saveCellEntry(fill, then),
+        cancel: () => runCellKey({ kind: "cancel" }),
+        focusGrid: () => canvas.focusClipboardSink(),
+    });
+    formulaBar.mount(viewportSlot, store);
+
+    // --- a workbook's cells ---------------------------------------------
+    //
+    // The keys on the grid move the active cell and type into it (see
+    // `cell-keys`); what is typed stays an entry the grid draws over the cell
+    // until it is saved, which writes it as one undo step.
+
+    // The entry as this side last asked for it — begun in a mode, or saved or
+    // dropped (`null`) — until the selection report that follows; `undefined`
+    // where the reports say. What is typed and pressed before that report
+    // lands as it will by the time the worker reads it: into an entry just
+    // begun, or after one just saved, beginning the next.
+    let entryAsked: CellEntryMode | null | undefined;
+    // How many requests editing or saving the entry this side has sent: a
+    // report that has read fewer was sent before the last of them landed.
+    let entryRequests = 0;
+
+    /** Send `edit` to the entry, counted. */
+    function editCellEntry(edit: CellEntryEdit): void {
+        entryRequests++;
+        client.editCellEntry(edit);
+    }
+
+    /** How a workbook's active cell is being typed into, or `null`. */
+    function cellEntryMode(): CellEntryMode | null {
+        const state = store.getState();
+        if (state.docType !== "spreadsheet") return null;
+        return entryAsked !== undefined ? entryAsked : (state.activeCell?.entry ?? null);
+    }
+
+    /** Whether a workbook's active cell is being typed into. */
+    function typingCell(): boolean {
+        return cellEntryMode() !== null;
+    }
+
+    /** Begin typing into the active cell in `mode` — `text` in place of what it
+     *  holds, or with none its contents (Edit) or nothing (Enter). */
+    function beginCellEntry(mode: CellEntryMode, text: string | null): void {
+        entryAsked = mode;
+        editCellEntry({ begin: { mode, text } });
+    }
+
+    // Set by a move the keyboard makes, so the selection it reports is
+    // scrolled into view.
+    let followCell = false;
+
+    /** Take a key pressed on a workbook's grid, answering whether it did. */
+    function cellKey(ev: KeyboardEvent): boolean {
+        const state = store.getState();
+        // A key pressed before the report of the press that selected the cell
+        // reaches the worker after that press, and takes the cell it selected.
+        if (state.status !== "ready") return false;
+        const action = cellKeyAction(ev, cellEntryMode(), state.mode !== VIEW_MODE);
+        if (!action) return false;
+        runCellKey(action);
+        return true;
+    }
+
+    function runCellKey(action: CellKeyAction): void {
+        switch (action.kind) {
+            case "move":
+                followCell = true;
+                client.moveCellSelection(action.movement, action.extend);
+                return;
+            case "begin":
+                beginCellEntry(action.mode, action.text);
+                return;
+            case "clear":
+                void commit(() => client.executeOnSelection({ kind: "clearCellContents" }));
+                return;
+            case "commit":
+                void saveCellEntry(action.fill, action.then);
+                return;
+            case "lineBreak":
+                editCellEntry({ text: { edit: { insertText: { text: "\n" } } } });
+                return;
+            case "switchMode":
+                editCellEntry("switchMode");
+                return;
+            case "cancel":
+                entryAsked = null;
+                editCellEntry("cancel");
+                return;
+        }
+    }
+
+    /** Save what is typed into the active cell — into every selected cell with
+     *  `fill` — and move `then`. Resolves whether it was saved: a refusal (a
+     *  formula that doesn't parse) shows under the formula bar, the entry
+     *  left open. */
+    async function saveCellEntry(fill: boolean, then: GridCellSelectionMove | null): Promise<boolean> {
+        followCell = then !== null;
+        entryAsked = null;
+        entryRequests++;
+        try {
+            await commit(() => client.executeOnSelection({ kind: "commitCellEntry", fill, then }));
+            return true;
+        } catch (error) {
+            // Refused, the entry stays open, as the reports say.
+            entryAsked = undefined;
+            followCell = false;
+            formulaBar.showRefusal(error instanceof Error ? error.message : String(error));
+            return false;
+        }
+    }
+
+    /** Scroll a cell block the keyboard moved to into view — the least that
+     *  shows it, its top-left where it is larger than the view. */
+    function followCellBlock(box: { rect: { x0: number; y0: number; x1: number; y1: number } } | undefined): void {
+        if (!followCell || !box) return;
+        followCell = false;
+        const state = store.getState();
+        const perPt = renderZoom(state) * cssPxPerPt(viewDpi(state));
+        const width = visibleSpan(state, "x") / perPt;
+        const height = visibleSpan(state, "y") / perPt;
+        const { x0, y0, x1, y1 } = box.rect;
+        const into = (scroll: number, near: number, far: number, span: number) =>
+            near < scroll ? near : far > scroll + span ? Math.min(near, far - span) : scroll;
+        const x = into(state.scrollX, x0, x1, width);
+        const y = into(state.scrollY, y0, y1, height);
+        if (x !== state.scrollX || y !== state.scrollY) store.dispatch({ type: "SCROLL_TO", x, y });
+    }
 
     // The licensing refusal. On the root for the same reason as the busy hold:
     // without a session nothing the UI offers works, so it blocks its own
@@ -1582,6 +1746,17 @@ export function mountUIShell(
         // tab's Format controls — every report, since an edit echo is how a
         // restyle's new values arrive. Only a PDF has annotations to read.
         if (store.getState().docType === "portable") refreshSelectedAnnotations();
+        // A workbook's active cell, for the formula bar and the keys.
+        const cell = state.properties && "spreadsheet" in state.properties ? state.properties.spreadsheet : null;
+        if (state.cellEntries >= entryRequests) entryAsked = undefined;
+        store.dispatch({
+            type: "SET_ACTIVE_CELL",
+            cell:
+                cell?.reference != null && cell.input != null
+                    ? { reference: cell.reference, input: cell.input, entry: cell.entry ?? null }
+                    : null,
+        });
+        followCellBlock(state.local.cells[0]);
         if (!state.localChanged) return;
         for (const listener of selectionEditListeners) listener();
     });
@@ -1696,6 +1871,11 @@ export function mountUIShell(
     // it would pop is empty.
     function requestHistory(op: HistoryOp): void {
         const state = store.getState();
+        // Typing into a cell isn't on the history: an undo drops it.
+        if (typingCell()) {
+            if (op === "undo") runCellKey({ kind: "cancel" });
+            return;
+        }
         if (!(op === "undo" ? state.canUndo : state.canRedo)) return;
         void history(op);
     }
@@ -2994,6 +3174,7 @@ export function mountUIShell(
         floatingToolbar.destroy();
         sheetTabs.destroy();
         notesPane.destroy();
+        formulaBar.destroy();
         statusBar.destroy();
         rightPanel.destroy();
         leftPanel.destroy();

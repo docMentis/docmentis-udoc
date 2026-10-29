@@ -87,6 +87,11 @@ export const de: Messages = {
     "command.normalView": "Normal",
     "command.notesPageView": "Notizenseite",
     "command.notes": "Notizen",
+    "formulaBar.label": "Bearbeitungsleiste",
+    "formulaBar.nameBox": "Namenfeld",
+    "formulaBar.cancel": "Abbrechen",
+    "formulaBar.enter": "Eingeben",
+    "formulaBar.input": "Inhalt",
 
     // Shape pickers
     "shape.rectangle": "Rechteck",

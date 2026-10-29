@@ -801,6 +801,10 @@ export interface SelectionState {
     /** The selection as each added viewer — a deck's notes pane — projects it
      *  onto the plane it shows; `local` and `peers` are the main viewer's. */
     viewers: ViewerSelection[];
+    /** How many requests editing or saving a workbook cell's entry the worker
+     *  had read when it reported this — see the worker client's
+     *  `editCellEntry`. */
+    cellEntries: number;
     localChanged: boolean;
 }
 

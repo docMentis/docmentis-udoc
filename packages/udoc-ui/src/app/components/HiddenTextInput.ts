@@ -8,6 +8,13 @@ export interface HiddenTextInputHooks {
     insertText: (text: string) => void;
     deleteText: (forward: boolean) => void;
     moveCaret: (movement: TextCaretMove, extend: boolean) => void;
+    /** A key the field's owner takes before the field does — a workbook's
+     *  arrows, Enter, Tab, Escape, F2 — answering whether it took it. */
+    key?: (ev: KeyboardEvent) => boolean;
+    /** Text typed with no caret live where typing begins one (see
+     *  `setTypingBegins`) — a character typed on a selected cell, which starts
+     *  an entry in it. */
+    beginTyping?: (text: string) => void;
 }
 
 /** Keyboard → caret-move vocabulary (arrows, Home/End). */
@@ -30,7 +37,7 @@ const CARET_MOVES: Record<string, TextCaretMove> = {
  * the system clipboard. Whoever wires those events lives outside this field (the
  * shell, via the canvas).
  *
- * Two modes, tracked separately:
+ * Three modes, tracked separately:
  * - **focused** ([`setFocused`]) — the field owns the keyboard. On for all of
  *   edit mode, and in view mode while the selection is copyable, so clipboard
  *   events land here whether or not a caret is live.
@@ -38,6 +45,9 @@ const CARET_MOVES: Record<string, TextCaretMove> = {
  *   the field consume keystrokes (caret moves, edits, IME); otherwise it's a
  *   pure sink and lets every key bubble to the document shortcuts (object
  *   delete, arrows, escape), swallowing nothing but stray typed characters.
+ * - **typing begins** ([`setTypingBegins`]) — with no caret live, typed text
+ *   begins one instead of being dropped: a workbook's selected cell, which a
+ *   typed character starts an entry in.
  *
  * Positioned at the caret (see `SelectionLayer.caretViewportRect`) so the IME's
  * candidate window opens beside the text being composed. During a composition
@@ -60,11 +70,17 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
 
     let focused = false;
     let editingText = false;
+    let typingBegins = false;
     let composing = false;
 
     el.addEventListener("keydown", (ev) => {
         // The IME owns its keystrokes (229 = "Process").
         if (composing || ev.isComposing) return;
+        if (hooks.key?.(ev)) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            return;
+        }
         if (ev.metaKey || ev.ctrlKey) return; // shortcuts (undo, zoom) + native clipboard events
         // No caret: a pure sink. Consume nothing — every key bubbles to the
         // document-level object shortcuts (Delete, arrows, Escape). Stray typed
@@ -91,9 +107,10 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
         if (composing) return;
         const value = el.value;
         el.value = "";
-        // Only a live caret turns typed text into a document edit; in the
-        // pure-sink mode a stray character is just cleared and ignored.
-        if (editingText && value) hooks.insertText(value);
+        // Only a live caret turns typed text into a document edit, or typing
+        // that begins one; in the pure-sink mode a stray character is just
+        // cleared and ignored.
+        typed(value);
     });
 
     el.addEventListener("compositionstart", () => {
@@ -105,8 +122,16 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
         composing = false;
         const value = el.value;
         el.value = "";
-        if (editingText && value) hooks.insertText(value);
+        typed(value);
     });
+
+    /** Route text typed or composed: an edit at a live caret, else the start of
+     *  one where typing begins it. */
+    function typed(value: string): void {
+        if (!value) return;
+        if (editingText) hooks.insertText(value);
+        else if (typingBegins) hooks.beginTyping?.(value);
+    }
 
     el.addEventListener("blur", (ev) => {
         // A press on the canvas (or its focusable host) blurs this field —
@@ -169,11 +194,19 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
      *  bubble. Independent of [`setFocused`]: the field stays focused as the
      *  clipboard sink even with no caret. */
     function setEditingText(next: boolean): void {
-        editingText = next;
-        if (!next) {
+        // Leaving a caret drops what a composition left; a report that keeps
+        // none leaves one typing begins alone.
+        if (!next && editingText) {
             composing = false;
             el.value = "";
         }
+        editingText = next;
+    }
+
+    /** Whether text typed with no caret live begins one — see the hooks'
+     *  `beginTyping`. */
+    function setTypingBegins(next: boolean): void {
+        typingBegins = next;
     }
 
     /** Park the field at the caret's viewport spot (CSS px); `null` (caret
@@ -185,5 +218,5 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
         el.style.height = `${Math.max(1, rect.height)}px`;
     }
 
-    return { el, setFocused, setEditingText, focus: reclaim, setPosition };
+    return { el, setFocused, setEditingText, setTypingBegins, focus: reclaim, setPosition };
 }
