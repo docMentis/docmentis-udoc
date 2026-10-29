@@ -84,6 +84,8 @@ export const ja: Messages = {
     "command.annotationColor": "色",
     "command.annotationFill": "塗りつぶし",
     "command.annotationOpacity": "不透明度",
+    "command.normalView": "標準",
+    "command.notesPageView": "ノート ページ",
     "command.notes": "ノート",
 
     // Shape pickers

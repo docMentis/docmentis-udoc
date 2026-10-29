@@ -84,6 +84,8 @@ export const ru: Messages = {
     "command.annotationColor": "Цвет",
     "command.annotationFill": "Заливка",
     "command.annotationOpacity": "Непрозрачность",
+    "command.normalView": "Обычный",
+    "command.notesPageView": "Страница заметок",
     "command.notes": "Заметки",
 
     // Shape pickers

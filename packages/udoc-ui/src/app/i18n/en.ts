@@ -85,6 +85,8 @@ export const en: Messages = {
     "command.annotationColor": "Color",
     "command.annotationFill": "Fill",
     "command.annotationOpacity": "Opacity",
+    "command.normalView": "Normal",
+    "command.notesPageView": "Notes Page",
     "command.notes": "Notes",
 
     // Shape pickers

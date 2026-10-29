@@ -151,6 +151,10 @@ export interface Messages {
     "command.annotationFill": string;
     /** Opacity */
     "command.annotationOpacity": string;
+    /** Normal */
+    "command.normalView": string;
+    /** Notes Page */
+    "command.notesPageView": string;
     /** Notes */
     "command.notes": string;
 

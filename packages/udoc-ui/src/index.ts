@@ -10,7 +10,7 @@ export type { AnnotationPatch } from "./app/annotation-patch.js";
 export type { LocalCollaborationServiceOptions } from "./worker/LocalCollaborationService.js";
 export type { PrintOptions, PrintQuality } from "./app/print.js";
 export type { RemoteCheckpointResponse } from "./app/remote.js";
-export type { LeftPanelTab, PanelTab, RightPanelTab, ThemeMode } from "./app/state.js";
+export type { LeftPanelTab, PanelTab, PresentationView, RightPanelTab, ThemeMode } from "./app/state.js";
 // The chrome's words: `Messages` keys the `translations` option.
 export type { Messages } from "./app/i18n/index.js";
 // The error every failure is reported as.

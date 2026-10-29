@@ -19,6 +19,7 @@ import type {
     PanelTab,
     PlaceTool,
     PointerMode,
+    PresentationView,
     ThemeMode,
     LayoutMode,
     ScrollMode,
@@ -177,6 +178,8 @@ export type Action =
     | { type: "CLOSE_PANEL" }
     | { type: "SET_LEFT_PANEL_WIDTH"; width: number }
     | { type: "SET_RIGHT_PANEL_WIDTH"; width: number }
+    // How a deck shows: its slides, or its notes pages
+    | { type: "SET_PRESENTATION_VIEW"; view: PresentationView }
     // A deck's notes pane: open (at its default height) or closed to its edge,
     // and open at the height its splitter left
     | { type: "SET_NOTES_OPEN"; open: boolean }

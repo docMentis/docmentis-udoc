@@ -146,9 +146,15 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
     let selectsText = false;
 
     /** Whether the pane shows in `state`: a deck open, its slides shown one at
-     *  a time — scrolled through, no one slide is the current one. */
+     *  a time — scrolled through, no one slide is the current one; as notes
+     *  pages, the page shows the notes. */
     function showsIn(state: UIState): boolean {
-        return state.status === "ready" && state.docType === "presentation" && state.scrollMode === "spread";
+        return (
+            state.status === "ready" &&
+            state.docType === "presentation" &&
+            state.scrollMode === "spread" &&
+            state.presentationView === "normal"
+        );
     }
 
     /** How tall the pane is in `state`, CSS px: as the splitter left it, or

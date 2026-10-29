@@ -84,6 +84,8 @@ export const zhCN: Messages = {
     "command.annotationColor": "颜色",
     "command.annotationFill": "填充",
     "command.annotationOpacity": "不透明度",
+    "command.normalView": "普通",
+    "command.notesPageView": "备注页",
     "command.notes": "备注",
 
     // Shape pickers

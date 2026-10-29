@@ -3,7 +3,15 @@ import type { StampIcon, UDocType } from "@docmentis/udoc-wasm";
 import { allowsEdit } from "../geometry.js";
 import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
 import { copyAllowed } from "./state.js";
-import type { AnnotationTool, CommandId, UIState, MarkupTool, PlaceTool, ScrollMode } from "./state.js";
+import type {
+    AnnotationTool,
+    CommandId,
+    UIState,
+    MarkupTool,
+    PlaceTool,
+    PresentationView,
+    ScrollMode,
+} from "./state.js";
 import type { Store } from "../framework/index.js";
 import type { Action } from "./actions.js";
 import type { Shortcut } from "./components/controls.js";
@@ -36,6 +44,8 @@ import {
     ICON_SUBTOOL_POLYLINE,
     ICON_SUBTOOL_CLOUD,
     ICON_NOTES,
+    ICON_NOTES_PAGE_VIEW,
+    ICON_NORMAL_VIEW,
     ICON_TEXT_HIGHLIGHT,
     ICON_FILL,
     ICON_STROKE,
@@ -83,6 +93,8 @@ export interface CommandContext {
     /** How the pages scroll — a deck's notes panel shows only while its slides
      *  show one at a time. */
     scrollMode: ScrollMode;
+    /** How a deck shows — its notes panel shows only in its Normal view. */
+    presentationView: PresentationView;
     /** What the Annotate tab's Format controls act on and show — the armed
      *  annotation tool's style, else the selected annotations' — or null when
      *  there is neither. A control is live when its entry is present. */
@@ -108,6 +120,7 @@ export function commandContext(state: UIState): CommandContext {
         extension: state.extension,
         docType: state.docType,
         scrollMode: state.scrollMode,
+        presentationView: state.presentationView,
         annotation: annotationFormat(state),
     };
 }
@@ -421,7 +434,9 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  *   its neighbours of the same {@link ClusterKind} into one segmented group.
  * - `toggle` → a button that reads as pressed while `pressed` says so, and
  *   `press`es on a click — for a setting of an extension's (Show Formatting
- *   Marks), which mirrors its state, not the selection.
+ *   Marks), which mirrors its state, not the selection. `cluster` bunches it
+ *   as a `control`'s does: a deck's Normal and Notes Page, one of which is
+ *   always pressed.
  * - `markup` → an Annotate-tab text markup, through the ribbon's `onMarkup`:
  *   with text selected it marks it at once; else it arms its tool to mark the
  *   text the next drag selects, returning to `select` once it has. Pressing it
@@ -437,7 +452,12 @@ export type CommandRun<K extends string = MessageKey> =
     | { kind: "armPicker"; options: readonly PickerOption<K>[] }
     | { kind: "menu"; menu: readonly MenuItem<K>[]; cluster?: ClusterKind }
     | { kind: "control"; cluster?: ClusterKind; create(env: RibbonControlEnv): RibbonControl }
-    | { kind: "toggle"; pressed(state: UIState): boolean; press(store: Store<UIState, Action>): void }
+    | {
+          kind: "toggle";
+          cluster?: ClusterKind;
+          pressed(state: UIState): boolean;
+          press(store: Store<UIState, Action>): void;
+      }
     | { kind: "markup"; tool: MarkupTool }
     | { kind: "annotationPaint"; channel: "color" | "fill" };
 
@@ -639,9 +659,40 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
     },
 
-    // View tab — a deck's notes pane under its slides, opened or closed to its
-    // edge: a view setting, live whatever is selected, while the slides show
-    // one at a time — scrolled through, they show no pane.
+    // View tab — a deck's views, one segmented group: its slides, or the
+    // pages its notes print on, the one shown pressed.
+    normalView: {
+        id: "normalView",
+        label: "command.normalView",
+        icon: ICON_NORMAL_VIEW,
+        group: "views",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            cluster: "toggle",
+            pressed: (state) => state.presentationView === "normal",
+            press: (store) => store.dispatch({ type: "SET_PRESENTATION_VIEW", view: "normal" }),
+        },
+        enabledWhen: whenReady,
+    },
+    notesPageView: {
+        id: "notesPageView",
+        label: "command.notesPageView",
+        icon: ICON_NOTES_PAGE_VIEW,
+        group: "views",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            cluster: "toggle",
+            pressed: (state) => state.presentationView === "notesPage",
+            press: (store) => store.dispatch({ type: "SET_PRESENTATION_VIEW", view: "notesPage" }),
+        },
+        enabledWhen: whenReady,
+    },
+    // Then its notes pane under its slides, opened or closed to its edge: a
+    // view setting, live whatever is selected, while the slides show one at a
+    // time in the Normal view — scrolled through, or as notes pages, they show
+    // no pane.
     notes: {
         id: "notes",
         label: "command.notes",
@@ -653,6 +704,6 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             pressed: (state) => state.notesOpen,
             press: (store) => store.dispatch({ type: "SET_NOTES_OPEN", open: !store.getState().notesOpen }),
         },
-        enabledWhen: (c) => c.ready && c.scrollMode === "spread",
+        enabledWhen: (c) => c.ready && c.scrollMode === "spread" && c.presentationView === "normal",
     },
 };

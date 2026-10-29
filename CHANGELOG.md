@@ -23,6 +23,13 @@ listed once, by package. Its major and minor version are those of the
   it open, `openNotesPanel()` and `closeNotesPanel()` open and close it,
   `notesPanelOpen` says whether it is open, and `notesPanel:changed` fires
   when that changes.
+- A presentation shows as notes pages, the page each slide's notes print on
+  with the slide drawn above them, from the View tab's Notes Page, and as its
+  slides again from Normal, each opening on the slide the other showed. The
+  thumbnails stay its slides, and the notes panel shows in Normal only. The
+  `presentationView` option opens decks in either, `setPresentationView()`
+  switches, `presentationView` says which shows, and
+  `presentationView:changed` fires when it changes.
 
 #### Fixed
 
@@ -55,7 +62,8 @@ listed once, by package. Its major and minor version are those of the
   after the last of them.
 - A presentation's speaker notes are edited in the notes panel: a click places
   the caret, writing a slide's notes if it has none yet, as one undo step, and
-  the Text tab formats them.
+  the Text tab formats them. They're edited on the notes pages alike, where
+  Insert Image is off: it inserts onto the slide.
 - Hide Slide in the thumbnails' menu hides the selected slides from the slide
   show, and shows them again when every one is hidden, in one undo step.
 - A presentation's sections are edited in the thumbnails. A click on a

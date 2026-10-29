@@ -83,6 +83,13 @@ wide as the pane, shown a page at a time and moved to the slide the canvas
 shows. A caret there types through the canvas's hidden text input, the one
 keyboard sink.
 
+A deck's views are planes of viewer 0 too: Normal its slides, Notes Page its
+notes pages, a page per slide on each. The store's `presentationView` names
+the one shown, `currentPlane` follows it once the plane roster names its plane
+(`planeOfView`), and a move to the other plane — a search match on the slides
+— moves it back. The shell's plane switch lands a deck's on the page the last
+one showed, where a sheet opens at its top.
+
 The dirty-rect core is the Rust `WasmSession` (in `docmentis-udoc-facade-wasm`).
 It stacks pages into one document-space coordinate system and, on scroll, **blits
 the existing pixels by the (integer device-pixel) scroll delta and re-rasterizes

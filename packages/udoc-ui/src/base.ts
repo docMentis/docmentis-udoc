@@ -7,7 +7,7 @@ import type { UIShell } from "./app/shell.js";
 import type { RemoteCheckpointResponse } from "./app/remote.js";
 import type { AnnotationPatch } from "./app/annotation-patch.js";
 import { pageStep, renderZoom, viewDpi } from "./app/state.js";
-import type { PanelTab, ThemeMode, UIState, ViewControlsPlacement } from "./app/state.js";
+import type { PanelTab, PresentationView, ThemeMode, UIState, ViewControlsPlacement } from "./app/state.js";
 import { profileFor } from "./app/profiles.js";
 import { cssPxPerPt } from "./geometry.js";
 import type { Fit, LayoutMode, PageGap, PageViewsFrame, ScrollAlignment, ScrollMode } from "./geometry.js";
@@ -89,9 +89,14 @@ export interface UDocOptions {
      *  closed to its edge, which the reader drags open;
      *  {@link UDocBase.openNotesPanel}, {@link UDocBase.closeNotesPanel}, the
      *  View tab's Notes and the panel's edge change it. The panel shows while a
-     *  deck's slides show one at a time; other document types have no notes,
-     *  and no panel. */
+     *  deck's slides show one at a time in its Normal view; other document
+     *  types have no notes, and no panel. */
     showNotesPanel?: boolean;
+    /** How a deck shows: `"normal"`, its slides, or `"notesPage"`, the page
+     *  each slide's notes print on, as PowerPoint's views of those names do.
+     *  Default `"normal"`; {@link UDocBase.setPresentationView} and the View
+     *  tab change it. Other document types keep it for the next deck. */
+    presentationView?: PresentationView;
     /** Show the theme button in the toolbar's menu. Default `true`. */
     showThemeButton?: boolean;
     /** Show the fullscreen button in the toolbar's menu. Default `true`. */
@@ -335,6 +340,8 @@ export interface UDocEvents {
     "panel:changed": { panel: PanelTab | null; previousPanel: PanelTab | null };
     /** Fires when the notes panel opens or closes — by the host, the View tab's Notes, or its edge dragged. */
     "notesPanel:changed": { open: boolean };
+    /** Fires when a deck's view changes — by the host, the View tab, or a search match on the slides from its notes pages. */
+    "presentationView:changed": { view: PresentationView; previousView: PresentationView };
     /**
      * Fires after a *local* edit is applied (page edits, undo/redo) — not on
      * merges, so a sync listener that pushes a snapshot to a peer can't loop.
@@ -523,6 +530,11 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
                 shell.store,
                 (s) => s.notesOpen,
                 (open) => this.#emit("notesPanel:changed", { open }),
+            ),
+            subscribeSelector(
+                shell.store,
+                (s) => s.presentationView,
+                (view, previousView) => this.#emit("presentationView:changed", { view, previousView }),
             ),
             shell.onEdit(() => this.#emit("document:edited", { pageCount: shell.getState().pageCount })),
             shell.onSelectionEdit(() => this.#emit("selection:changed", {})),
@@ -1415,6 +1427,16 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         this.shell.closeNotesPanel();
     }
 
+    /**
+     * Show a deck as `view` — its slides, or the pages their notes print on —
+     * as the View tab's Normal and Notes Page do, on the slide it shows.
+     * Resolves once the view has painted. Kept while a document of another
+     * type is open, which resolves at once: the next deck opens in it.
+     */
+    setPresentationView(view: PresentationView): Promise<void> {
+        return this.shell.setPresentationView(view);
+    }
+
     /** The open document's doc type, or `null` with no document open. */
     get docType(): UDocType | null {
         return this.shell.getState().docType;
@@ -1553,6 +1575,11 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     /** Whether the notes panel is open, not closed to its edge; `"notesPanel:changed"` fires when it changes. */
     get notesPanelOpen(): boolean {
         return this.shell.getState().notesOpen;
+    }
+
+    /** How a deck shows, as {@link setPresentationView} last set it; `"presentationView:changed"` fires when it changes. */
+    get presentationView(): PresentationView {
+        return this.shell.getState().presentationView;
     }
 
     /** Where a followed link or outline item, or a chosen comment, lands, as {@link setNavigationScrollAlignment} last set it. */

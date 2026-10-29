@@ -84,6 +84,8 @@ export const ko: Messages = {
     "command.annotationColor": "색",
     "command.annotationFill": "채우기",
     "command.annotationOpacity": "불투명도",
+    "command.normalView": "기본",
+    "command.notesPageView": "노트 페이지",
     "command.notes": "슬라이드 노트",
 
     // Shape pickers

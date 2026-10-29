@@ -71,6 +71,8 @@ const ICONS = {
     ICON_VIEW_GAP_ON: "grid_on",
     ICON_VIEW_GAP_OFF: "grid_off",
     ICON_NOTES: "speaker_notes",
+    ICON_NORMAL_VIEW: "crop_landscape",
+    ICON_NOTES_PAGE_VIEW: "article",
 
     // Pointer modes
     ICON_TOOL_POINTER: "arrow_selector_tool",

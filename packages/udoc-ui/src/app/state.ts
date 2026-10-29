@@ -114,6 +114,32 @@ export type RightPanelTab = "search" | "comments";
 /** A side panel's tab, left or right. */
 export type PanelTab = LeftPanelTab | RightPanelTab;
 
+// -----------------------------------------------------------------------------
+// Presentation views
+// -----------------------------------------------------------------------------
+
+/**
+ * How a deck shows: `"normal"`, its slides, as PowerPoint's Normal view does;
+ * `"notesPage"`, the page each slide's notes print on, the slide drawn above
+ * them, as its Notes Page view does.
+ */
+export type PresentationView = "normal" | "notesPage";
+
+/** The plane of a deck that shows `view` — its slides', or its notes pages' —
+ *  or `-1` when no plane in `kinds` does: not a deck, or no roster yet. */
+export function planeOfView(kinds: UIState["planeKinds"], view: PresentationView): number {
+    return kinds.indexOf(view === "notesPage" ? "notesPages" : "slides");
+}
+
+/** The view of a deck its plane `plane` shows, or null for a plane that
+ *  shows neither its slides nor its notes pages. */
+export function viewOfPlane(kinds: UIState["planeKinds"], plane: number): PresentationView | null {
+    const kind = kinds[plane];
+    if (kind === "slides") return "normal";
+    if (kind === "notesPages") return "notesPage";
+    return null;
+}
+
 /** Canonical render order for the left-panel tab strip. */
 export const LEFT_PANEL_TABS: readonly LeftPanelTab[] = ["thumbnail", "outline", "layers", "attachments"];
 
@@ -227,6 +253,8 @@ export type CommandId =
     | "annotationColor"
     | "annotationFill"
     | "annotationOpacity"
+    | "normalView"
+    | "notesPageView"
     | "notes";
 
 /**
@@ -278,9 +306,10 @@ export const ANNOTATE_COMMANDS: readonly CommandId[] = [
     "annotationOpacity",
 ];
 
-/** The View tab's commands — a deck's Notes toggle, which opens its speaker
- *  notes' pane under the slides, or closes it to its edge. */
-export const VIEW_COMMANDS: readonly CommandId[] = ["notes"];
+/** The View tab's commands — a deck's views, Normal and Notes Page; then its
+ *  Notes toggle, which opens its speaker notes' pane under the slides, or
+ *  closes it to its edge. */
+export const VIEW_COMMANDS: readonly CommandId[] = ["normalView", "notesPageView", "notes"];
 
 // -----------------------------------------------------------------------------
 // UI state
@@ -647,11 +676,16 @@ export interface UIState {
     /** When true, panel open/close skips CSS transitions (reset after one frame). */
     panelTransitionsDisabled: boolean;
 
-    // --- Notes pane --------------------------------------------------------
+    // --- Notes ---------------------------------------------------------------
+    /** How a deck shows — the View tab's Normal and Notes Page, the host's
+     *  `presentationView`. Kept for every doc type, and across documents; a
+     *  deck shows it on the plane {@link planeOfView} names, which
+     *  `currentPlane` follows, and a move to another plane follows back. */
+    presentationView: PresentationView;
     /** Whether a deck's notes pane is open under its slides, or closed to its
      *  edge — the View tab's Notes, the host's `showNotesPanel`, the splitter
      *  dragged to the edge. Kept for every doc type; only a deck has notes to
-     *  show, and only while its slides show one at a time. */
+     *  show, and only while its slides show one at a time in its Normal view. */
     notesOpen: boolean;
     /** The open notes pane's height in pixels, as its splitter left it (null =
      *  its default, which opening it returns to). */
@@ -820,6 +854,7 @@ export const initialState: UIState = {
     hostDisabledPanels: new Set(),
     panelTransitionsDisabled: false,
 
+    presentationView: "normal",
     notesOpen: false,
     notesHeight: null,
 

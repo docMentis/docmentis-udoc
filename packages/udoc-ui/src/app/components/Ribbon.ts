@@ -4,7 +4,15 @@ import type { Store } from "../../framework/index.js";
 import type { HistoryOp } from "../../worker/protocol.js";
 import type { Action } from "../actions.js";
 import type { SelectionCapabilities, PaintDisplay } from "../../geometry.js";
-import type { UIState, MarkupTool, PlaceTool, PointerMode, ScrollMode, ToolbarTab } from "../state.js";
+import type {
+    UIState,
+    MarkupTool,
+    PlaceTool,
+    PointerMode,
+    PresentationView,
+    ScrollMode,
+    ToolbarTab,
+} from "../state.js";
 import { tabsFor } from "../profiles.js";
 import type { TabSource } from "../profiles.js";
 import { COMMAND_CATALOG, commandContext } from "../commands.js";
@@ -159,9 +167,10 @@ interface RibbonSlice {
     extension: unknown;
     selectedAnnotations: SelectedAnnotations | null;
     annotationStyles: AnnotationStyles;
-    /** What the View tab's Notes toggle reads pressed by, and is live in. */
+    /** What the View tab's toggles read pressed by, and are live in. */
     notesOpen: boolean;
     scrollMode: ScrollMode;
+    presentationView: PresentationView;
 }
 
 /** The color a display paints its bar with — a solid or theme color's own hex;
@@ -187,7 +196,8 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.selectedAnnotations === b.selectedAnnotations &&
         a.annotationStyles === b.annotationStyles &&
         a.notesOpen === b.notesOpen &&
-        a.scrollMode === b.scrollMode
+        a.scrollMode === b.scrollMode &&
+        a.presentationView === b.presentationView
     );
 }
 
@@ -207,16 +217,19 @@ function selectSlice(s: UIState): RibbonSlice {
         annotationStyles: s.annotationStyles,
         notesOpen: s.notesOpen,
         scrollMode: s.scrollMode,
+        presentationView: s.presentationView,
     };
 }
 
 /** Whether a command bunches into a segmented `.udoc-btn-group`, and with which
  *  of its kind: the Annotate tab's markups cluster as `"toggle"`, its Color /
  *  Fill as `"paint"` — with its Opacity, since it styles the same annotation —
- *  and an extension's controls and menus as their `cluster` says. Consecutive
+ *  and controls, menus and toggles as their `cluster` says. Consecutive
  *  same-kind commands share one group; anything else stands alone. */
 function clusterKind(def: CommandDef<string>): ClusterKind | null {
-    if (def.run.kind === "control" || def.run.kind === "menu") return def.run.cluster ?? null;
+    if (def.run.kind === "control" || def.run.kind === "menu" || def.run.kind === "toggle") {
+        return def.run.cluster ?? null;
+    }
     if (def.run.kind === "markup") return "toggle";
     if (def.run.kind === "annotationPaint") return "paint";
     if (def.id === "annotationOpacity") return "paint";

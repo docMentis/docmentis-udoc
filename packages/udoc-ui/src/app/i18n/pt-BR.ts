@@ -84,6 +84,8 @@ export const ptBR: Messages = {
     "command.annotationColor": "Cor",
     "command.annotationFill": "Preenchimento",
     "command.annotationOpacity": "Opacidade",
+    "command.normalView": "Normal",
+    "command.notesPageView": "Página de anotações",
     "command.notes": "Anotações",
 
     // Shape pickers

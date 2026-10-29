@@ -84,6 +84,8 @@ export const zhTW: Messages = {
     "command.annotationColor": "色彩",
     "command.annotationFill": "填滿",
     "command.annotationOpacity": "不透明度",
+    "command.normalView": "標準模式",
+    "command.notesPageView": "備忘稿頁",
     "command.notes": "備忘稿",
 
     // Shape pickers

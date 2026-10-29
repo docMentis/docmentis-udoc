@@ -84,6 +84,8 @@ export const ar: Messages = {
     "command.annotationColor": "اللون",
     "command.annotationFill": "تعبئة",
     "command.annotationOpacity": "العتامة",
+    "command.normalView": "عادي",
+    "command.notesPageView": "صفحة الملاحظات",
     "command.notes": "ملاحظات",
 
     // Shape pickers

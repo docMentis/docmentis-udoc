@@ -123,7 +123,8 @@ export function pickImage(host: EditHost): void {
     input.click();
 }
 
-/** The Insert tab's commands, Image asking for its file with `pickImage`. */
+/** The Insert tab's commands, Image asking for its file with `pickImage` —
+ *  live on a deck's slides, which it inserts onto: not on its notes pages. */
 export function insertCommands(pickImage: () => void): Readonly<Record<string, CommandDef<MessageKey>>> {
     return {
         insertImage: {
@@ -133,7 +134,7 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             group: "insert",
             labeled: true,
             run: { kind: "action", press: pickImage },
-            enabledWhen: (c) => c.ready && c.docType === "presentation",
+            enabledWhen: (c) => c.ready && c.docType === "presentation" && c.presentationView === "normal",
         },
         insertShape: {
             id: "insertShape",

@@ -436,6 +436,9 @@ What the new viewer offers that the legacy one has no row for.
 | `openNotesPanel()`, `closeNotesPanel()`            | a deck's speaker notes, in a panel under the slides                 |
 | `notesPanelOpen`, option `showNotesPanel`          | as above                                                            |
 | event `notesPanel:changed`                         | as above                                                            |
+| `setPresentationView(view)`, `presentationView`    | a deck as its slides or its notes pages                             |
+| option `presentationView`                          | as above                                                            |
+| event `presentationView:changed`                   | as above                                                            |
 | `removeOverlay(id)`                                | drop an overlay, the built-ins included                             |
 | event `document:edited`                            |                                                                     |
 | event `selection:changed`                          |                                                                     |

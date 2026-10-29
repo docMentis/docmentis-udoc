@@ -1,7 +1,16 @@
 import { cssPxPerPt } from "../geometry.js";
 import type { Action } from "./actions.js";
 import type { UIState, PanelTab } from "./state.js";
-import { NO_FIT, VIEW_MODE, initialState, isLeftPanelTab, renderZoom, viewDpi } from "./state.js";
+import {
+    NO_FIT,
+    VIEW_MODE,
+    initialState,
+    isLeftPanelTab,
+    planeOfView,
+    renderZoom,
+    viewDpi,
+    viewOfPlane,
+} from "./state.js";
 import { defaultTab, profileDisabledPanels } from "./profiles.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
 import { visibleSpan } from "./components/Scrollbar.js";
@@ -234,17 +243,20 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...relaid, ...clampScroll(relaid, relaid.scrollX, relaid.scrollY) };
         }
 
-        case "SET_PLANES":
+        case "SET_PLANES": {
+            // A deck opens in the view it was last shown in.
+            const shown = planeOfView(action.kinds, state.presentationView);
             return {
                 ...state,
                 planeCount: action.count,
-                currentPlane: action.current,
+                currentPlane: shown < 0 ? action.current : shown,
                 planeNames: action.names,
                 planeColors: action.colors,
                 planeChartsheets: action.chartsheets,
                 planeVisibility: action.visibility,
                 planeKinds: action.kinds,
             };
+        }
 
         case "PLANE_LOADED": {
             // A sheet that lands before the roster does is in the roster's own.
@@ -262,9 +274,22 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...state, planeColors, planeChartsheets };
         }
 
-        case "SET_CURRENT_PLANE":
+        case "SET_CURRENT_PLANE": {
             if (action.plane === state.currentPlane) return state;
-            return { ...state, currentPlane: action.plane };
+            // A move to a deck's other view — to a match on its slides — is a
+            // move to that view.
+            const view = viewOfPlane(state.planeKinds, action.plane) ?? state.presentationView;
+            return { ...state, currentPlane: action.plane, presentationView: view };
+        }
+
+        case "SET_PRESENTATION_VIEW": {
+            // A deck shows it on its plane; one still opening, once its roster
+            // is in (SET_PLANES).
+            const plane = planeOfView(state.planeKinds, action.view);
+            const currentPlane = plane < 0 ? state.currentPlane : plane;
+            if (action.view === state.presentationView && currentPlane === state.currentPlane) return state;
+            return { ...state, presentationView: action.view, currentPlane };
+        }
 
         case "HISTORY_CHANGED":
             if (action.canUndo === state.canUndo && action.canRedo === state.canRedo) return state;

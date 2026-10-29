@@ -76,10 +76,18 @@ import { PRINT_DPI, printImages, printPageOf, printPdf } from "./print.js";
 import type { PrintOptions, PrintPage } from "./print.js";
 import { createEffects } from "./effects.js";
 import { createReducer } from "./reducer.js";
-import { LEFT_PANEL_TABS, RIGHT_PANEL_TABS, VIEW_MODE, initialState } from "./state.js";
+import { LEFT_PANEL_TABS, RIGHT_PANEL_TABS, VIEW_MODE, initialState, planeOfView, viewOfPlane } from "./state.js";
 import { arrangementFor, defaultTab, profileFor } from "./profiles.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
-import type { AnnotationTool, UIState, MarkupTool, PanelTab, ThemeMode, ViewControlsPlacement } from "./state.js";
+import type {
+    AnnotationTool,
+    UIState,
+    MarkupTool,
+    PanelTab,
+    PresentationView,
+    ThemeMode,
+    ViewControlsPlacement,
+} from "./state.js";
 import type { ShapePoint } from "./shapes.js";
 import {
     annotationFor,
@@ -358,6 +366,9 @@ export interface UIShell {
     openNotesPanel: () => void;
     /** Close a deck's notes panel to its edge. */
     closeNotesPanel: () => void;
+    /** Show a deck as `view`, resolving once a frame shows it — at once for
+     *  a document that is not a deck, which keeps it for the next one. */
+    setPresentationView: (view: PresentationView) => Promise<void>;
     /** Dock the view-state controls in the top toolbar, the floating bar, or the status bar. */
     setViewControlsPlacement: (placement: ViewControlsPlacement) => void;
     /** Close the current document. */
@@ -394,6 +405,7 @@ export interface UIShellOptions {
     dpi?: number;
     activePanel?: PanelTab | null;
     showNotesPanel?: boolean;
+    presentationView?: PresentationView;
     showLoadingOverlay?: boolean;
     zoomSteps?: readonly number[];
     minZoom?: number;
@@ -547,6 +559,7 @@ export function mountUIShell(
         leftPanelVisible: shellOptions.showLeftPanel ?? initialState.leftPanelVisible,
         rightPanelVisible: shellOptions.showRightPanel ?? initialState.rightPanelVisible,
         notesOpen: shellOptions.showNotesPanel ?? initialState.notesOpen,
+        presentationView: shellOptions.presentationView ?? initialState.presentationView,
         disabledPanels: hostDisabledPanels,
         hostDisabledPanels,
         themeSwitchingDisabled: shellOptions.showThemeButton === false,
@@ -1074,6 +1087,12 @@ export function mountUIShell(
             };
             planeWaiters.set(settle, plane);
         });
+    }
+
+    async function setPresentationView(view: PresentationView): Promise<void> {
+        store.dispatch({ type: "SET_PRESENTATION_VIEW", view });
+        const plane = planeOfView(store.getState().planeKinds, view);
+        if (plane >= 0) await goToPlane(plane);
     }
 
     // Performance counter: the toggle both enables the worker's counter and
@@ -1681,14 +1700,20 @@ export function mountUIShell(
         void history(op);
     }
 
-    // Switch the active plane (a sheet-tab click): tell the worker, and adopt
-    // the layout it replies with — the new sheet's extent the frame that paints
-    // it reports, and the worker composes ahead on it from there. Not a
-    // document edit (no `onEdit` cue) — it's a view change, like a page nav; the
-    // worker resets the camera to the new sheet's top and repaints.
+    // Switch the active plane (a sheet-tab click, a deck's other view): tell
+    // the worker, and adopt the layout it replies with — the new sheet's
+    // extent the frame that paints it reports, and the worker composes ahead
+    // on it from there. Not a document edit (no `onEdit` cue) — it's a view
+    // change, like a page nav; the worker resets the camera to the new sheet's
+    // top and repaints.
     async function switchPlane(plane: number): Promise<void> {
-        if (store.getState().status !== "ready") return;
-        const layout = await client.goToPlane(plane);
+        const state = store.getState();
+        if (state.status !== "ready") return;
+        const switched = client.goToPlane(plane);
+        // A deck's views are each a page per slide: the one switched to opens
+        // on the slide shown, where a sheet opens at its top.
+        if (viewOfPlane(state.planeKinds, plane) !== null) client.goToPage(state.pageIndex);
+        const layout = await switched;
         store.dispatch({
             type: "DOC_RELAYOUT",
             pageCount: layout.pageCount ?? null,
@@ -3088,6 +3113,7 @@ export function mountUIShell(
         closePanel: () => store.dispatch({ type: "CLOSE_PANEL" }),
         openNotesPanel: () => store.dispatch({ type: "SET_NOTES_OPEN", open: true }),
         closeNotesPanel: () => store.dispatch({ type: "SET_NOTES_OPEN", open: false }),
+        setPresentationView,
         setViewControlsPlacement: (placement) => store.dispatch({ type: "SET_VIEW_CONTROLS_PLACEMENT", placement }),
         close,
         destroy,
