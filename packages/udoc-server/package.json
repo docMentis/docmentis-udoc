@@ -1,6 +1,6 @@
 {
     "name": "@docmentis/udoc-server",
-    "version": "0.8.6",
+    "version": "0.8.7",
     "description": "Self-hosted document server for remote access, rendering, and collaboration.",
     "keywords": [
         "document-server",
@@ -63,7 +63,7 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-node": "0.8.6",
+        "@docmentis/udoc-node": "0.8.7",
         "smol-toml": "^1.9.0",
         "ws": "^8.21.3",
         "yauzl": "^3.4.0"
