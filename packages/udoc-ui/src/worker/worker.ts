@@ -2601,7 +2601,7 @@ function taggedSelectionEdit(edit: SelectionEdit, docType: UDocType | undefined)
         case "spreadsheet":
             return { spreadsheet: edit } as UDocSelectionEdit;
         case "image":
-            return { image: edit } as UDocSelectionEdit;
+            return { image: imageEdit(edit) } as UDocSelectionEdit;
         default:
             return { portable: portableEdit(edit) } as UDocSelectionEdit;
     }
@@ -2721,6 +2721,17 @@ function portableEdit(edit: SelectionEdit): unknown {
         }
     }
     throw new Error("engine worker: a PDF edit travels in its family's wrapper");
+}
+
+/** An image document's edit: one of the selected pages, which the shell sends
+ *  in its family's wrapper as a PDF's — `{ kind: "page", edit }` — under
+ *  `page`, and any other a drawing edit, of the shapes drawn over a page, under
+ *  `common`. */
+function imageEdit(edit: SelectionEdit): unknown {
+    if (typeof edit !== "string" && "kind" in edit && edit.kind === "page" && "edit" in edit) {
+        return { page: { edit: byKind(edit.edit as { kind: string }) } };
+    }
+    return { common: { edit: drawingEdit(edit) } };
 }
 
 function annotationEdit(edit: SelectionEdit): unknown {
