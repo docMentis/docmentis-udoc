@@ -649,7 +649,7 @@ export interface UIState {
 
     // --- Notes pane --------------------------------------------------------
     /** Whether a deck's notes pane is open under its slides, or closed to its
-     *  edge — the View tab's Notes, the host's `showNotes`, the splitter
+     *  edge — the View tab's Notes, the host's `showNotesPanel`, the splitter
      *  dragged to the edge. Kept for every doc type; only a deck has notes to
      *  show, and only while its slides show one at a time. */
     notesOpen: boolean;

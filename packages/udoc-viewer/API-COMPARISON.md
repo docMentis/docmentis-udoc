@@ -433,8 +433,9 @@ What the new viewer offers that the legacy one has no row for.
 | option `showDeveloperButton`                       | the menu's Developer item: performance counter, repaint area        |
 | `setDpi(dpi)`, `dpi`                               | the screen's CSS px per inch, calibrated while the viewer runs      |
 | `activePanel`                                      | the open side panel, which `panel:changed` reports                  |
-| `openNotes()`, `closeNotes()`, `notesOpen`         | a deck's speaker notes, in a pane under the slides                  |
-| option `showNotes`, event `notes:changed`          | as above                                                            |
+| `openNotesPanel()`, `closeNotesPanel()`            | a deck's speaker notes, in a panel under the slides                 |
+| `notesPanelOpen`, option `showNotesPanel`          | as above                                                            |
+| event `notesPanel:changed`                         | as above                                                            |
 | `removeOverlay(id)`                                | drop an overlay, the built-ins included                             |
 | event `document:edited`                            |                                                                     |
 | event `selection:changed`                          |                                                                     |

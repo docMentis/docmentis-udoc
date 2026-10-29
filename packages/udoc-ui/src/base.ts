@@ -84,13 +84,14 @@ export interface UDocOptions {
      *  by its side's. Default `null`, none; {@link UDocBase.openPanel} and
      *  {@link UDocBase.closePanel} change it. */
     activePanel?: PanelTab | null;
-    /** Open the pane of a deck's speaker notes under its slides, as PowerPoint's
-     *  Normal view does; `false` starts it closed to its edge, which the reader
-     *  drags open. Default `true`; {@link UDocBase.openNotes},
-     *  {@link UDocBase.closeNotes}, the View tab's Notes and the pane's edge
-     *  change it. The pane shows while a deck's slides show one at a time;
-     *  other document types have no notes, and no pane. */
-    showNotes?: boolean;
+    /** Open the notes panel — a deck's speaker notes, under its slides — as
+     *  PowerPoint's Normal view does; `false` starts it closed to its edge,
+     *  which the reader drags open. Default `true`;
+     *  {@link UDocBase.openNotesPanel}, {@link UDocBase.closeNotesPanel}, the
+     *  View tab's Notes and the panel's edge change it. The panel shows while a
+     *  deck's slides show one at a time; other document types have no notes,
+     *  and no panel. */
+    showNotesPanel?: boolean;
     /** Show the theme button in the toolbar's menu. Default `true`. */
     showThemeButton?: boolean;
     /** Show the fullscreen button in the toolbar's menu. Default `true`. */
@@ -332,8 +333,8 @@ export interface UDocEvents {
     "document:printed": { pageCount: number };
     /** Fires when a side panel opens, closes or switches — by the host, the user or a document asking for its outline. */
     "panel:changed": { panel: PanelTab | null; previousPanel: PanelTab | null };
-    /** Fires when the notes pane opens or closes — by the host, the View tab's Notes, or its edge dragged. */
-    "notes:changed": { open: boolean };
+    /** Fires when the notes panel opens or closes — by the host, the View tab's Notes, or its edge dragged. */
+    "notesPanel:changed": { open: boolean };
     /**
      * Fires after a *local* edit is applied (page edits, undo/redo) — not on
      * merges, so a sync listener that pushes a snapshot to a peer can't loop.
@@ -521,7 +522,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
             subscribeSelector(
                 shell.store,
                 (s) => s.notesOpen,
-                (open) => this.#emit("notes:changed", { open }),
+                (open) => this.#emit("notesPanel:changed", { open }),
             ),
             shell.onEdit(() => this.#emit("document:edited", { pageCount: shell.getState().pageCount })),
             shell.onSelectionEdit(() => this.#emit("selection:changed", {})),
@@ -1400,17 +1401,18 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Open the pane of a deck's speaker notes under its slides, at its default
-     * height, as the View tab's Notes does. Kept while a document of another
-     * type, which has no notes, is open: the next deck opens with the pane.
+     * Open the notes panel — a deck's speaker notes, under its slides — at its
+     * default height, as the View tab's Notes does. Kept while a document of
+     * another type, which has no notes, is open: the next deck opens with the
+     * panel.
      */
-    openNotes(): void {
-        this.shell.openNotes();
+    openNotesPanel(): void {
+        this.shell.openNotesPanel();
     }
 
-    /** Close the notes pane to its edge, which the reader drags open again. */
-    closeNotes(): void {
-        this.shell.closeNotes();
+    /** Close the notes panel to its edge, which the reader drags open again. */
+    closeNotesPanel(): void {
+        this.shell.closeNotesPanel();
     }
 
     /** The open document's doc type, or `null` with no document open. */
@@ -1548,8 +1550,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.getState().activePanel;
     }
 
-    /** Whether a deck's notes pane is open, not closed to its edge; `"notes:changed"` fires when it changes. */
-    get notesOpen(): boolean {
+    /** Whether the notes panel is open, not closed to its edge; `"notesPanel:changed"` fires when it changes. */
+    get notesPanelOpen(): boolean {
         return this.shell.getState().notesOpen;
     }
 

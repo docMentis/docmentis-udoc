@@ -354,10 +354,10 @@ export interface UIShell {
     openPanel: (panel: PanelTab) => void;
     /** Close the open side panel. */
     closePanel: () => void;
-    /** Open a deck's notes pane under its slides, at its default height. */
-    openNotes: () => void;
-    /** Close a deck's notes pane to its edge. */
-    closeNotes: () => void;
+    /** Open a deck's notes panel under its slides, at its default height. */
+    openNotesPanel: () => void;
+    /** Close a deck's notes panel to its edge. */
+    closeNotesPanel: () => void;
     /** Dock the view-state controls in the top toolbar, the floating bar, or the status bar. */
     setViewControlsPlacement: (placement: ViewControlsPlacement) => void;
     /** Close the current document. */
@@ -393,7 +393,7 @@ export interface UIShellOptions {
     zoom?: number;
     dpi?: number;
     activePanel?: PanelTab | null;
-    showNotes?: boolean;
+    showNotesPanel?: boolean;
     showLoadingOverlay?: boolean;
     zoomSteps?: readonly number[];
     minZoom?: number;
@@ -546,7 +546,7 @@ export function mountUIShell(
         toolbarVisible: shellOptions.showToolbar ?? initialState.toolbarVisible,
         leftPanelVisible: shellOptions.showLeftPanel ?? initialState.leftPanelVisible,
         rightPanelVisible: shellOptions.showRightPanel ?? initialState.rightPanelVisible,
-        notesOpen: shellOptions.showNotes ?? initialState.notesOpen,
+        notesOpen: shellOptions.showNotesPanel ?? initialState.notesOpen,
         disabledPanels: hostDisabledPanels,
         hostDisabledPanels,
         themeSwitchingDisabled: shellOptions.showThemeButton === false,
@@ -3086,8 +3086,8 @@ export function mountUIShell(
         setDpi: (dpi) => store.dispatch({ type: "SET_DPI", dpi }),
         openPanel: (panel) => store.dispatch({ type: "OPEN_PANEL", panel }),
         closePanel: () => store.dispatch({ type: "CLOSE_PANEL" }),
-        openNotes: () => store.dispatch({ type: "SET_NOTES_OPEN", open: true }),
-        closeNotes: () => store.dispatch({ type: "SET_NOTES_OPEN", open: false }),
+        openNotesPanel: () => store.dispatch({ type: "SET_NOTES_OPEN", open: true }),
+        closeNotesPanel: () => store.dispatch({ type: "SET_NOTES_OPEN", open: false }),
         setViewControlsPlacement: (placement) => store.dispatch({ type: "SET_VIEW_CONTROLS_PLACEMENT", placement }),
         close,
         destroy,
