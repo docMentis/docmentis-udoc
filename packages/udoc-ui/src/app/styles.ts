@@ -912,7 +912,8 @@ export const uiStyles = css`
     }
     /* The pages a drag is moving: lifted out of the strip, so their places
    fade, and the strip holds the grabbing hand wherever it goes. */
-    .udoc-ui-root .udoc-thumbnail-item.udoc-dragging {
+    .udoc-ui-root .udoc-thumbnail-item.udoc-dragging,
+    .udoc-ui-root .udoc-thumbnail-section.udoc-dragging {
         opacity: 0.35;
     }
 
@@ -921,10 +922,11 @@ export const uiStyles = css`
         cursor: grabbing;
     }
 
-    /* The lifted stack: the selected pages' thumbnails, the pressed one on top
-   and the rest fanned down and right behind it, following the pointer over the
-   whole shell (ThumbnailPanel places it by its transform). It rises from the
-   strip a little larger and tilted, on the menus' elevation. */
+    /* The lifted stack: the selected pages' thumbnails, or sections' headers,
+   the pressed one on top and the rest fanned down and right behind it,
+   following the pointer over the whole shell (ThumbnailPanel places it by its
+   transform). It rises from the strip a little larger and tilted, on the
+   menus' elevation. */
     .udoc-ui-root .udoc-thumbnail-ghost {
         position: absolute;
         left: 0;
@@ -955,6 +957,21 @@ export const uiStyles = css`
         background: white;
         border-radius: 2px;
         box-shadow: var(--udoc-elevation-3);
+    }
+
+    /* A lifted section is its header — name and slide count — on a card of the
+   menus' plane. */
+    .udoc-ui-root .udoc-thumbnail-ghost__section {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 0 8px;
+        box-sizing: border-box;
+        border-radius: 4px;
+        background: var(--udoc-color-surface-container-highest);
+        color: var(--udoc-color-on-surface);
+        font-size: 12px;
+        font-weight: 500;
     }
 
     /* The first card is in the flow, so the stack takes its size. */

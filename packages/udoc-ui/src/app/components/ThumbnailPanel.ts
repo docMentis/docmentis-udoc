@@ -57,8 +57,9 @@ import { MAC } from "./controls.js";
  * A deck's sections head their slides in every mode, each header folding its
  * slides away or back — so the strip is a list of rows, a page's or a header's,
  * not of pages. Picking, a press on a header selects the section, with the
- * toggle key and Shift as on a page; a right-click opens the section menu, and
- * a double-click edits its name in place.
+ * toggle key and Shift as on a page; a right-click opens the section menu, a
+ * double-click edits its name in place, and a drag lifts the selected sections
+ * out, stacked, to drop them with their slides between two others.
  */
 
 /** The edits the strip makes and the menu it opens, run by the shell. */
@@ -177,32 +178,39 @@ function selectSlice(state: UIState): ThumbnailSlice {
 /** No modifier keys: a press that selects one page or section alone. */
 const NO_KEYS = { ctrlKey: false, metaKey: false, shiftKey: false };
 
-/** A press on a thumbnail, while it may still become a drag. */
+/** What a press is on: a page's thumbnail, or a section's header — the
+ *  section by its index. */
+type PressTarget = { kind: "page"; page: number } | { kind: "section"; section: number };
+
+/** A press on a thumbnail or a section's header, while it may still become a
+ *  drag. */
 interface Press {
     pointerId: number;
-    page: number;
+    target: PressTarget;
     startX: number;
     startY: number;
     /** No Shift or toggle key: only a plain press drags. */
     plain: boolean;
-    /** A plain press on a page already selected: on release without a drag it
-     *  narrows the selection to that page; a drag moves the whole selection. */
+    /** A plain press on a page (a section) already selected: on release without
+     *  a drag it narrows the selection to it; a drag moves the whole selection. */
     narrowOnRelease: boolean;
-    /** Past the threshold: moving the selected pages. */
+    /** Past the threshold: moving the selected pages, or sections. */
     dragging: boolean;
-    /** The index the first selected page would take, dropped where the line
-     *  shows ({@link reorderTo}), or `null` where a drop moves nothing. */
+    /** The index the first of them would take, dropped where the line shows
+     *  ({@link reorderTo}), or `null` where a drop moves nothing. */
     to: number | null;
     /** The pointer's last viewport point, for the stack to follow and the
      *  autoscroll's re-aim. */
     clientX: number;
     clientY: number;
-    /** The stack of the selected pages a drag lifts out of the strip. */
+    /** The stack of the selected pages, or sections, a drag lifts out of the
+     *  strip. */
     ghost: Ghost | null;
 }
 
-/** The selected pages lifted out of the strip by a drag: their stacked
- *  thumbnails, following the pointer over the whole shell. */
+/** The selected pages, or sections, lifted out of the strip by a drag: their
+ *  stacked thumbnails, or headers, following the pointer over the whole
+ *  shell. */
 interface Ghost {
     el: HTMLElement;
     /** The shell root it is parented on and placed against. */
@@ -258,6 +266,8 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     /** The row each page shows in, or the header's of the section folding it
      *  away ({@link pageRows}). */
     let rowOf: number[] = [];
+    /** The row of each section's header, by section index. */
+    let sectionRows: number[] = [];
     /** Page sizes (document points) by page index — drives aspect + scale. */
     const sizes = new Map<number, { w: number; h: number }>();
     /** The pages whose size in {@link sizes} has been read since the document
@@ -323,6 +333,10 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     function rebuildRows(): void {
         rows = thumbnailRows(slice.pageCount, slice.sections, slice.collapsed);
         rowOf = pageRows(slice.pageCount, rows, slice.sections);
+        sectionRows = slice.sections.map(() => -1);
+        rows.forEach((row, index) => {
+            if (row.kind === "section") sectionRows[row.section] = index;
+        });
     }
 
     /** Rebuild the offset prefix-sums from the current rows and sizes. */
@@ -535,10 +549,12 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         editName(header, section);
     }
 
-    /** Mark `header` selected while the selection holds its section. */
+    /** Mark `header` selected while the selection holds its section, and
+     *  faded while a drag moves it. */
     function markHeader(header: SectionHeader, id: string): void {
         const isSelected = slice.selectedSections.includes(id);
         header.container.classList.toggle("udoc-thumbnail-section--selected", isSelected);
+        header.container.classList.toggle("udoc-dragging", isSelected && press?.dragging === true);
         header.container.setAttribute("aria-selected", String(isSelected));
     }
 
@@ -855,11 +871,26 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         return e.target instanceof Element && e.target.closest(".udoc-thumbnail-section__input") !== null;
     }
 
-    /** Whether the selection may be moved — the engine's gate, which a session
-     *  not entitled to edit never has. */
-    function reorderable(): boolean {
+    /** The selected sections' indices, in section order. */
+    function selectedSectionIndices(): number[] {
+        return slice.sections.flatMap((section, index) => (slice.selectedSections.includes(section.id) ? [index] : []));
+    }
+
+    /** Whether a drag from `target` may move the selection: `target` is in it —
+     *  the press's own pick lands a round trip later — and the engine allows
+     *  the move, which it never does for a session not entitled to edit. */
+    function liftable(target: PressTarget): boolean {
         const caps = store?.getState().selectionCaps;
-        return caps !== undefined && allowsEdit(caps, slides() ? "reorderSlides" : "reorderPages");
+        if (caps === undefined) return false;
+        if (target.kind === "page") {
+            return selected.has(target.page) && allowsEdit(caps, slides() ? "reorderSlides" : "reorderPages");
+        }
+        const section = slice.sections[target.section];
+        return (
+            section !== undefined &&
+            slice.selectedSections.includes(section.id) &&
+            allowsEdit(caps, "reorderSlideSections")
+        );
     }
 
     function onPointerDown(e: PointerEvent): void {
@@ -888,7 +919,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         else pick(page, e);
         press = {
             pointerId: e.pointerId,
-            page,
+            target: { kind: "page", page },
             startX: e.clientX,
             startY: e.clientY,
             plain,
@@ -904,7 +935,8 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
 
     /** A press on section `index`'s header: on its toggle it folds the slides
      *  away or back, in every mode; elsewhere it goes to the section's first
-     *  slide and, picking, selects the section. */
+     *  slide and, picking, selects the section — as a press on a page does, so
+     *  it may become a drag of the selected sections. */
     function onHeaderDown(e: PointerEvent, index: number): void {
         const section = slice.sections[index];
         if (!section) return;
@@ -917,8 +949,30 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         }
         // A Mac's Ctrl+click is its right-click: the menu takes it.
         if (MAC && e.ctrlKey) return;
-        if (slice.picking) pickSection(index, e);
-        if (section.count > 0) navigateTo(section.start);
+        if (!slice.picking) {
+            if (section.count > 0) navigateTo(section.start);
+            return;
+        }
+        const plain = !e.shiftKey && !toggles(e);
+        // A plain press on a selected section may start a drag of them all, so
+        // it narrows to the section only on release.
+        const narrowOnRelease = plain && slice.selectedSections.includes(section.id);
+        if (narrowOnRelease) anchorSection = index;
+        else pickSection(index, e);
+        press = {
+            pointerId: e.pointerId,
+            target: { kind: "section", section: index },
+            startX: e.clientX,
+            startY: e.clientY,
+            plain,
+            narrowOnRelease,
+            dragging: false,
+            to: null,
+            clientX: e.clientX,
+            clientY: e.clientY,
+            ghost: null,
+        };
+        el.setPointerCapture(e.pointerId);
     }
 
     /** A double-click on a section's header, picking, edits its name. */
@@ -936,8 +990,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         if (!press.dragging) {
             const moved = Math.hypot(e.clientX - press.startX, e.clientY - press.startY);
             if (!press.plain || moved < DRAG_THRESHOLD) return;
-            // The press's own pick lands a round trip later: drag once it has.
-            if (!selected.has(press.page) || !reorderable()) return;
+            if (!liftable(press.target)) return;
             press.dragging = true;
             press.ghost = liftGhost(press);
             el.classList.add("udoc-thumbnail-panel--dragging");
@@ -948,21 +1001,28 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         autoscroll();
     }
 
-    /** Lift the selected pages out of the strip: a stack of their thumbnails —
-     *  the pressed page on top, the selected pages nearest it behind, up to
-     *  {@link GHOST_CARDS} in all, and how many there are when more than one —
-     *  parented on the shell root, so it can follow the pointer anywhere over
-     *  it. `null` when the pressed page's thumbnail isn't in the strip. */
+    /** Lift the selection out of the strip: a stack of the selected pages'
+     *  thumbnails, or the selected sections' headers — the pressed one on top,
+     *  those nearest it behind, up to {@link GHOST_CARDS} in all, and how many
+     *  there are when more than one — parented on the shell root, so it can
+     *  follow the pointer anywhere over it. `null` when the pressed thumbnail
+     *  or header isn't in the strip. */
     function liftGhost(p: Press): Ghost | null {
         const root = el.closest<HTMLElement>(".udoc-ui-root");
-        const top = items.get(p.page)?.canvas;
+        const target = p.target;
+        let top: HTMLElement | undefined;
+        let keys: number[];
+        let card: (key: number, width: number, height: number) => HTMLElement;
+        if (target.kind === "page") {
+            top = items.get(target.page)?.canvas;
+            keys = nearestFirst(target.page, [...selected]);
+            card = ghostCard;
+        } else {
+            top = headers.get(slice.sections[target.section]?.id ?? "")?.container;
+            keys = nearestFirst(target.section, selectedSectionIndices());
+            card = sectionCard;
+        }
         if (!root || !top) return null;
-        const pages = [
-            p.page,
-            ...[...selected]
-                .filter((page) => page !== p.page)
-                .sort((a, b) => Math.abs(a - p.page) - Math.abs(b - p.page)),
-        ];
         const { left, top: y, width, height } = top.getBoundingClientRect();
 
         const ghost = document.createElement("div");
@@ -971,37 +1031,65 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         const stack = document.createElement("div");
         stack.className = "udoc-thumbnail-ghost__stack";
         ghost.appendChild(stack);
-        // Back to front, so the pressed page lands on top.
-        for (let depth = Math.min(pages.length, GHOST_CARDS) - 1; depth >= 0; depth--) {
-            stack.appendChild(ghostCard(pages[depth]!, depth, width, height));
+        // Back to front, so the pressed one lands on top.
+        for (let depth = Math.min(keys.length, GHOST_CARDS) - 1; depth >= 0; depth--) {
+            const next = card(keys[depth]!, width, height);
+            next.style.transform = `translate(${depth * GHOST_STEP}px, ${depth * GHOST_STEP}px) rotate(${depth * GHOST_FAN}deg)`;
+            stack.appendChild(next);
         }
-        if (pages.length > 1) {
+        if (keys.length > 1) {
             const count = document.createElement("span");
             count.className = "udoc-thumbnail-ghost__count";
-            count.textContent = String(pages.length);
+            count.textContent = String(keys.length);
             stack.appendChild(count);
         }
         root.appendChild(ghost);
-        // Held where the press caught the page, clamped onto the card.
+        // Held where the press caught the card, clamped onto it.
         const grabX = Math.min(Math.max(p.startX - left, 0), width);
         const grabY = Math.min(Math.max(p.startY - y, 0), height);
         return { el: ghost, root, grabX, grabY };
     }
 
-    /** One card of the lifted stack: `page`'s thumbnail as the strip drew it,
-     *  or a blank sheet when it isn't in the strip, `depth` cards down. */
-    function ghostCard(page: number, depth: number, width: number, height: number): HTMLCanvasElement {
+    /** `first`, then the rest of `keys` nearest it first — the order a lifted
+     *  stack shows them in, from the top. */
+    function nearestFirst(first: number, keys: readonly number[]): number[] {
+        return [
+            first,
+            ...keys.filter((key) => key !== first).sort((a, b) => Math.abs(a - first) - Math.abs(b - first)),
+        ];
+    }
+
+    /** One card of a lifted stack of pages: `page`'s thumbnail as the strip
+     *  drew it, or a blank sheet when it isn't in the strip. */
+    function ghostCard(page: number, width: number, height: number): HTMLElement {
         const card = document.createElement("canvas");
         card.className = "udoc-thumbnail-ghost__card";
         card.style.width = `${width}px`;
         card.style.height = `${height}px`;
-        card.style.transform = `translate(${depth * GHOST_STEP}px, ${depth * GHOST_STEP}px) rotate(${depth * GHOST_FAN}deg)`;
         const source = items.get(page)?.canvas;
         if (source && source.width > 0 && source.height > 0) {
             card.width = source.width;
             card.height = source.height;
             card.getContext("2d")?.drawImage(source, 0, 0);
         }
+        return card;
+    }
+
+    /** One card of a lifted stack of sections: section `index`'s header — its
+     *  name, and how many slides it carries along. */
+    function sectionCard(index: number, width: number, height: number): HTMLElement {
+        const section = slice.sections[index]!;
+        const card = document.createElement("div");
+        card.className = "udoc-thumbnail-ghost__card udoc-thumbnail-ghost__section";
+        card.style.width = `${width}px`;
+        card.style.height = `${height}px`;
+        const name = document.createElement("span");
+        name.className = "udoc-thumbnail-section__name";
+        name.textContent = section.name;
+        const count = document.createElement("span");
+        count.className = "udoc-thumbnail-section__count";
+        count.textContent = `(${section.count})`;
+        card.append(name, count);
         return card;
     }
 
@@ -1017,18 +1105,24 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
 
     function onPointerUp(e: PointerEvent): void {
         if (!press || e.pointerId !== press.pointerId) return;
-        const { page, dragging, to, narrowOnRelease } = press;
+        const { target, dragging, to, narrowOnRelease } = press;
         endPress();
         if (dragging) {
-            if (to !== null) drop(to);
+            if (to !== null) drop(target, to);
             return;
         }
-        if (narrowOnRelease) client?.selectPages(page, page, "replace");
-        navigateTo(page);
+        if (target.kind === "page") {
+            if (narrowOnRelease) client?.selectPages(target.page, target.page, "replace");
+            navigateTo(target.page);
+            return;
+        }
+        if (narrowOnRelease) pickSection(target.section, NO_KEYS);
+        const section = slice.sections[target.section];
+        if (section && section.count > 0) navigateTo(section.start);
     }
 
     /** End the press, a drag with it: put the lifted stack and the drop line
-     *  away, stop scrolling, and take the drag's look off the selected pages. */
+     *  away, stop scrolling, and take the drag's look off the selection. */
     function endPress(): void {
         if (!press) return;
         if (el.hasPointerCapture(press.pointerId)) el.releasePointerCapture(press.pointerId);
@@ -1042,26 +1136,51 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         if (dragging) updateHighlight();
     }
 
-    /** Aim the drop at the gap nearest the pointer — the one above the page
-     *  whose upper half it is over, or by a section's header the one at the
-     *  section's start (at its end, below a folded one's lower half) — and draw
-     *  the line there, hidden where a drop would leave the pages where they
-     *  are. */
+    /** Aim the drop at the gap nearest the pointer — between pages for a drag
+     *  of pages ({@link pageGap}), between sections for one of sections
+     *  ({@link sectionGap}) — and draw the line there, hidden where a drop
+     *  would leave them where they are. */
     function aimDrop(): void {
         if (!press) return;
         const y = press.clientY - el.getBoundingClientRect().top + el.scrollTop;
+        const pages = press.target.kind === "page";
+        const gap = pages ? pageGap(y) : sectionGap(y);
+        press.to = reorderTo(pages ? slice.selectedPages : selectedSectionIndices(), gap);
+        dropMarker.hidden = press.to === null;
+        if (press.to !== null) dropMarker.style.top = `${pages ? dropY(gap) : sectionDropY(gap)}px`;
+    }
+
+    /** The gap between pages nearest `y`: the one above the page whose upper
+     *  half it is over, or by a section's header the one at the section's start
+     *  (at its end, below a folded one's lower half). */
+    function pageGap(y: number): number {
         const index = rowAt(y);
         const row = rows[index];
-        let gap = slice.pageCount;
-        if (row?.kind === "page") gap = y < offsets[index]! + cardHeight(row.page) / 2 ? row.page : row.page + 1;
-        else if (row) {
-            const section = slice.sections[row.section]!;
-            const lower = y >= offsets[index]! + SECTION_H / 2;
-            gap = lower && slice.collapsed.has(section.id) ? section.start + section.count : section.start;
+        if (row?.kind === "page") return y < offsets[index]! + cardHeight(row.page) / 2 ? row.page : row.page + 1;
+        if (!row) return slice.pageCount;
+        const section = slice.sections[row.section]!;
+        const lower = y >= offsets[index]! + SECTION_H / 2;
+        return lower && slice.collapsed.has(section.id) ? section.start + section.count : section.start;
+    }
+
+    /** The gap between sections nearest `y`: before the section whose rows —
+     *  its header and its slides — `y` is in the upper half of, after it in the
+     *  lower half. */
+    function sectionGap(y: number): number {
+        const count = slice.sections.length;
+        for (let index = 0; index < count; index++) {
+            const top = offsets[sectionRows[index]!]!;
+            const bottom = index + 1 < count ? offsets[sectionRows[index + 1]!]! : offsets[rows.length]!;
+            if (y < bottom) return y < (top + bottom) / 2 ? index : index + 1;
         }
-        press.to = reorderTo(slice.selectedPages, gap);
-        dropMarker.hidden = press.to === null;
-        if (press.to !== null) dropMarker.style.top = `${dropY(gap)}px`;
+        return count;
+    }
+
+    /** Where the line for a drop of sections at `gap` goes: midway down the gap
+     *  above the header of section `gap`, or below the last row at the end. */
+    function sectionDropY(gap: number): number {
+        const row = gap < slice.sections.length ? sectionRows[gap]! : rows.length;
+        return offsets[row]! - GAP / 2;
     }
 
     /** Where the line for a drop at `gap` goes: midway down the gap below page
@@ -1098,12 +1217,15 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         });
     }
 
-    /** Move the selected pages, as one run in document order, the first of
-     *  them to `to`. */
-    function drop(to: number): void {
-        const edit: SelectionEdit = slides()
-            ? { kind: "reorderSlides", to }
-            : { kind: "page", edit: { kind: "reorderPages", to } };
+    /** Move the selected pages, or sections with their slides, as one run in
+     *  their order, the first of them to `to`. */
+    function drop(target: PressTarget, to: number): void {
+        const edit: SelectionEdit =
+            target.kind === "section"
+                ? { kind: "reorderSlideSections", to }
+                : slides()
+                  ? { kind: "reorderSlides", to }
+                  : { kind: "page", edit: { kind: "reorderPages", to } };
         void callbacks.onSelectionEdit(edit);
     }
 

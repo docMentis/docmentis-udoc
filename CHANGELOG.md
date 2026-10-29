@@ -53,7 +53,9 @@ listed once, by package. Its major and minor version are those of the
   Section Up and Down, which take its slides along, Collapse All, Expand All,
   and Remove Section, which leaves its slides to the section before it, as
   Delete does. Add Section in the slide menu starts an untitled section at the
-  selected slides and edits its name. Each edit is one undo step.
+  selected slides and edits its name. Dragging a header lifts the selected
+  sections out of the thumbnails and moves them, with their slides, to where
+  they're dropped between two others. Each edit is one undo step.
 
 ## [0.8.6] - 2026-10-27
 
