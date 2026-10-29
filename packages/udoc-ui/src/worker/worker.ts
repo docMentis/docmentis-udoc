@@ -323,7 +323,8 @@ function renderViewerFrame(s: WasmSession, v: number): void {
         startBackground(s);
     }
     // A plane switched to, or a document opened, composes in its first frame,
-    // which places the selection it was shown with: a sheet's active cell.
+    // which places the selection it was shown with: a sheet's active cell. A
+    // re-shape against fonts that landed places it again.
     // Posted whether or not it moved: an open's first paint waits on the
     // host's spacing, so this lands after the host has taken the document up,
     // which clears what it knew of the last one's selection.
@@ -912,6 +913,9 @@ const fetchFontOrders = createFontPump({
         fontsReshaped();
         // Text may sit elsewhere now; what the host placed by it is placed again.
         scope.postMessage({ type: "fontsRefreshed" });
+        // So may the selection: a workbook's columns are as wide as its Normal
+        // font's digits, and its rows as tall as their text.
+        selectionAfterPaint = true;
     },
     fetch: (order) => fetchFontBinaries(order, fetch, fontMemory, googleFontEndpoint),
     schedule: (callback, ms) => void setTimeout(callback, ms),
@@ -933,8 +937,9 @@ let backgroundAfterPaint = false;
 
 /**
  * Whether the selection was last reported before a frame composed the plane
- * just switched to, or the document just opened: the main viewer's next
- * painted frame reports it again, placed on the plane as composed.
+ * just switched to, or the document just opened, or before fonts that landed
+ * re-shaped it: the main viewer's next painted frame reports it again, placed
+ * on the plane as composed.
  */
 let selectionAfterPaint = false;
 

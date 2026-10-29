@@ -21,6 +21,12 @@ listed once, by package. Its major and minor version are those of the
   left, with the cells it was left with selected, or, the first time, from its
   top with the active cell its file keeps, A1 where it keeps none.
 
+#### Fixed
+
+- The selection moves with what it selects when a web font the document uses
+  lands after it is shown: text that reflows, or a workbook's cells, whose
+  columns and rows the font sizes.
+
 ### udoc-editor
 
 #### Added
