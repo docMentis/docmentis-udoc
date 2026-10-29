@@ -92,6 +92,7 @@ export const fr: Messages = {
     "formulaBar.cancel": "Annuler",
     "formulaBar.enter": "Entrer",
     "formulaBar.input": "Contenu",
+    "formulaBar.resize": "Redimensionner la barre de formule",
 
     // Shape pickers
     "shape.rectangle": "Rectangle",

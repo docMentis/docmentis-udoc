@@ -92,6 +92,7 @@ export const zhTW: Messages = {
     "formulaBar.cancel": "取消",
     "formulaBar.enter": "輸入",
     "formulaBar.input": "內容",
+    "formulaBar.resize": "調整資料編輯列大小",
 
     // Shape pickers
     "shape.rectangle": "矩形",

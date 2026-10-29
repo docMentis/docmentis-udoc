@@ -92,6 +92,7 @@ export const ptBR: Messages = {
     "formulaBar.cancel": "Cancelar",
     "formulaBar.enter": "Inserir",
     "formulaBar.input": "Conteúdo",
+    "formulaBar.resize": "Redimensionar a barra de fórmulas",
 
     // Shape pickers
     "shape.rectangle": "Retângulo",

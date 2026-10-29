@@ -92,6 +92,7 @@ export const ar: Messages = {
     "formulaBar.cancel": "إلغاء",
     "formulaBar.enter": "إدخال",
     "formulaBar.input": "المحتوى",
+    "formulaBar.resize": "تغيير حجم شريط الصيغة",
 
     // Shape pickers
     "shape.rectangle": "مستطيل",

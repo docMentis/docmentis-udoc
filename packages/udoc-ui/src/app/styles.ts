@@ -3351,18 +3351,45 @@ export const uiStyles = css`
     /* A workbook's formula bar, above the grid, as tall as the toolbar: the Name
    Box, the ✕ / ✓ of an entry being typed (greyed while there is none), and the
    contents field. The field is a bordered one, as every field here is; the
-   refusal of a save shows under the bar. */
+   refusal of a save shows under the bar. Its bottom edge drags it taller (the
+   height FormulaBar.ts sets, at most 70% of the viewport): the Name Box and
+   ✕ / ✓ keep to a head row the toolbar's height, and the field grows. */
     .udoc-ui-root .udoc-formula-bar {
         position: relative;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
+        box-sizing: border-box;
+        height: 41px;
+        max-height: 70%;
+        padding: 0 4px;
+        background: var(--udoc-status-bar-background);
+        border-bottom: 1px solid var(--udoc-color-outline-variant);
+        z-index: 12;
+    }
+    .udoc-ui-root .udoc-formula-bar__head {
         flex: 0 0 auto;
         display: flex;
         align-items: center;
         gap: 4px;
         height: 40px;
-        padding: 0 4px;
-        background: var(--udoc-status-bar-background);
-        border-bottom: 1px solid var(--udoc-color-outline-variant);
-        z-index: 12;
+    }
+    /* The bottom edge's drag band, over the border, as the notes pane's is. */
+    .udoc-ui-root .udoc-formula-bar__grip {
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        right: 0;
+        height: 7px;
+        cursor: row-resize;
+        z-index: 1;
+        outline: none;
+    }
+    .udoc-ui-root .udoc-formula-bar__grip:hover,
+    .udoc-ui-root .udoc-formula-bar__grip:focus-visible,
+    .udoc-ui-root .udoc-formula-bar--resizing .udoc-formula-bar__grip {
+        background: var(--udoc-state-selected);
     }
     .udoc-ui-root .udoc-formula-bar[hidden] {
         display: none;
@@ -3385,8 +3412,9 @@ export const uiStyles = css`
     }
     .udoc-ui-root .udoc-formula-bar__input {
         flex: 1 1 auto;
+        align-self: stretch;
         min-width: 0;
-        height: 24px;
+        margin: 8px 0;
         box-sizing: border-box;
         padding: 3px 6px;
         border: 1px solid var(--udoc-color-outline);
@@ -3403,6 +3431,12 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-formula-bar__input:focus {
         outline: none;
         border-color: var(--udoc-color-on-surface-variant);
+    }
+    /* Taller than a line, the field wraps what it holds and scrolls past it. */
+    .udoc-ui-root .udoc-formula-bar--expanded .udoc-formula-bar__input {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        overflow-y: auto;
     }
     .udoc-ui-root .udoc-formula-bar__refusal {
         position: absolute;

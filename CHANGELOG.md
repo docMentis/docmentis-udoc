@@ -11,13 +11,15 @@ listed once, by package. Its major and minor version are those of the
 #### Added
 
 - A workbook has a formula bar above its grid: the Name Box, the active cell's
-  reference, and its contents, `=` and its formula or its value. The
-  `showFormulaBar` option hides it.
+  reference, and its contents, `=` and its formula or its value. Its bottom
+  edge drags it taller, the contents wrapping in it while the Name Box stays
+  at the top. The `showFormulaBar` option hides it.
 - A workbook's active cell moves with the keyboard: an arrow moves it, Shift
   extends the selection, Ctrl or Cmd jumps to the edge of the data, and Enter
-  and Tab step down and right (Shift back). A sheet shown from its tab comes
-  back with the cells it was left with selected, or, the first time, the
-  active cell its file keeps, A1 where it keeps none.
+  and Tab step down and right (Shift back). A workbook opens with its active
+  cell selected, and a sheet shown from its tab comes back scrolled as it was
+  left, with the cells it was left with selected, or, the first time, from its
+  top with the active cell its file keeps, A1 where it keeps none.
 
 ### udoc-editor
 
@@ -35,7 +37,8 @@ listed once, by package. Its major and minor version are those of the
   open and its sheet shown. Delete clears the selected cells, and
   Backspace starts an empty entry.
 - A workbook's sheets are edited from their tabs. ⊕, beside the list of
-  sheets, inserts a worksheet after the current one and shows it. A
+  sheets, inserts a worksheet after the current one and shows it, and Shift
+  with F11 inserts one before it. A
   right-click on a tab opens its menu: Insert Sheet, Delete, Rename, Tab Color
   in Excel's standard colours, Hide, and Unhide for each hidden sheet. A
   double-click on a tab renames it there, a name Excel refuses saying why above

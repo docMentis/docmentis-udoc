@@ -43,6 +43,13 @@ test("F2, Backspace and Delete edit only in edit mode", () => {
     for (const name of ["F2", "Backspace", "Delete"]) assert.equal(cellKeyAction(key(name), null, false), null);
 });
 
+test("Shift with F11 inserts a sheet, only in edit mode and not while typing", () => {
+    assert.deepEqual(cellKeyAction(key("F11", { shiftKey: true }), null, true), { kind: "insertSheet" });
+    assert.equal(cellKeyAction(key("F11"), null, true), null);
+    assert.equal(cellKeyAction(key("F11", { shiftKey: true }), null, false), null);
+    assert.equal(cellKeyAction(key("F11", { shiftKey: true }), "enter", true), null);
+});
+
 test("a shortcut and a typed character are left to the rest", () => {
     assert.equal(cellKeyAction(key("z", { metaKey: true }), null, true), null);
     assert.equal(cellKeyAction(key("a"), null, true), null);

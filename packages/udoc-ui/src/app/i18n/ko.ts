@@ -92,6 +92,7 @@ export const ko: Messages = {
     "formulaBar.cancel": "취소",
     "formulaBar.enter": "입력",
     "formulaBar.input": "내용",
+    "formulaBar.resize": "수식 입력줄 크기 조정",
 
     // Shape pickers
     "shape.rectangle": "사각형",

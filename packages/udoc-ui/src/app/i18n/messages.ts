@@ -169,6 +169,8 @@ export interface Messages {
     "formulaBar.enter": string;
     /** Contents */
     "formulaBar.input": string;
+    /** Resize formula bar */
+    "formulaBar.resize": string;
 
     // Shape pickers
     /** Rectangle */

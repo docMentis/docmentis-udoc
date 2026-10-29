@@ -4,7 +4,8 @@
 // Ready — no cell being typed into — an arrow moves the active cell (Shift
 // extends the block, Ctrl or Cmd jumps to the edge of the data), Enter and Tab
 // step down and right (Shift back), and in edit mode F2 edits the cell's
-// contents, Backspace starts an empty entry and Delete clears the cells. A
+// contents, Backspace starts an empty entry, Delete clears the cells and
+// Shift with F11 inserts a worksheet before the current sheet. A
 // typed character starts an entry in Enter mode in place of what the cell
 // holds; that is the hidden text input's, not a key's.
 //
@@ -32,6 +33,8 @@ export type CellKeyAction =
     | { kind: "lineBreak" }
     /** Switch between Enter and Edit mode. */
     | { kind: "switchMode" }
+    /** Insert a worksheet before the current sheet. */
+    | { kind: "insertSheet" }
     /** Drop what is typed. */
     | { kind: "cancel" };
 
@@ -99,6 +102,8 @@ export function cellKeyAction(ev: CellKey, entry: CellEntryMode | null, editable
             return { kind: "begin", mode: "enter", text: "" };
         case "Delete":
             return { kind: "clear" };
+        case "F11":
+            return ev.shiftKey ? { kind: "insertSheet" } : null;
     }
     return null;
 }

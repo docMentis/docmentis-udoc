@@ -92,6 +92,7 @@ export const de: Messages = {
     "formulaBar.cancel": "Abbrechen",
     "formulaBar.enter": "Eingeben",
     "formulaBar.input": "Inhalt",
+    "formulaBar.resize": "Größe der Bearbeitungsleiste ändern",
 
     // Shape pickers
     "shape.rectangle": "Rechteck",

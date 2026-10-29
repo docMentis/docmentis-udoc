@@ -89,9 +89,11 @@ the engine's cell entry, which the grid draws over the cell and the worker's
 `editCellEntry` edits, and a `commitCellEntry` selection edit saves it. The
 shell tracks the entry as it last asked for it until a selection report has
 read as many entry requests as it sent (`cellEntries`), so keys pressed
-faster than reports land where the worker will have put them. The formula bar
-(`FormulaBar`) shows the active cell the reports carry and edits the same
-entry, whole, from its own field.
+faster than reports land where the worker will have put them, F2's mode
+switch included. The formula bar (`FormulaBar`) shows the active cell the
+reports carry and edits the same entry, whole, from its own field; while it
+holds the keyboard the grid draws no caret in the cell, and its bottom edge
+drags it taller, its field wrapping and its Name Box kept at the top.
 
 A workbook's sheets are edited from their tabs (`SheetTabs`): ⊕, the tab
 menu (`sheetTabMenu`, opened in the canvas's context menu), a rename in the

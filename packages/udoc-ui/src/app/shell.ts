@@ -828,8 +828,16 @@ export function mountUIShell(
             case "lineBreak":
                 editCellEntry({ text: { edit: { insertText: { text: "\n" } } } });
                 return;
-            case "switchMode":
+            case "switchMode": {
+                // What is pressed before the report lands in the mode switched
+                // to, as with a begin.
+                const mode = cellEntryMode();
+                if (mode !== null) entryAsked = mode === "enter" ? "edit" : "enter";
                 editCellEntry("switchMode");
+                return;
+            }
+            case "insertSheet":
+                void insertSheet(store.getState().currentPlane);
                 return;
             case "cancel":
                 entryAsked = null;

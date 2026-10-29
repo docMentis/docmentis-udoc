@@ -92,6 +92,7 @@ export const ru: Messages = {
     "formulaBar.cancel": "Отмена",
     "formulaBar.enter": "Ввод",
     "formulaBar.input": "Содержимое",
+    "formulaBar.resize": "Изменить размер строки формул",
 
     // Shape pickers
     "shape.rectangle": "Прямоугольник",

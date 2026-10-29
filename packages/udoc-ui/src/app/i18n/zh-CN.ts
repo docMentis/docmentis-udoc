@@ -92,6 +92,7 @@ export const zhCN: Messages = {
     "formulaBar.cancel": "取消",
     "formulaBar.enter": "输入",
     "formulaBar.input": "内容",
+    "formulaBar.resize": "调整编辑栏大小",
 
     // Shape pickers
     "shape.rectangle": "矩形",

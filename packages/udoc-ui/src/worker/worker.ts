@@ -322,11 +322,14 @@ function renderViewerFrame(s: WasmSession, v: number): void {
         backgroundAfterPaint = false;
         startBackground(s);
     }
-    // A plane switched to composes in its first frame, which places the
-    // selection the switch moved there: a sheet's active cell.
+    // A plane switched to, or a document opened, composes in its first frame,
+    // which places the selection it was shown with: a sheet's active cell.
+    // Posted whether or not it moved: an open's first paint waits on the
+    // host's spacing, so this lands after the host has taken the document up,
+    // which clears what it knew of the last one's selection.
     if (v === VIEWER && painted && selectionAfterPaint) {
         selectionAfterPaint = false;
-        emitChangedSelection();
+        emitSelection(false);
     }
     // An added viewer's frame can compose the page its selection lies on —
     // the notes a press just wrote — so the selection it projects is posted
@@ -930,8 +933,8 @@ let backgroundAfterPaint = false;
 
 /**
  * Whether the selection was last reported before a frame composed the plane
- * just switched to: the main viewer's next painted frame reports it again,
- * placed on the plane as composed.
+ * just switched to, or the document just opened: the main viewer's next
+ * painted frame reports it again, placed on the plane as composed.
  */
 let selectionAfterPaint = false;
 
@@ -961,6 +964,9 @@ let rosterKey: string | null = null;
 function opened(s: WasmSession): void {
     stopBackground();
     backgroundAfterPaint = true;
+    // What it opens with selected — a workbook's active cell — is reported
+    // once the frame has placed it.
+    selectionAfterPaint = true;
     rosterKey = null;
     // The open loaded the sheet it shows, and no other yet.
     loadedSheets.add(planeKey(s, s.currentPlane(VIEWER)));

@@ -92,6 +92,7 @@ export const ja: Messages = {
     "formulaBar.cancel": "キャンセル",
     "formulaBar.enter": "入力",
     "formulaBar.input": "内容",
+    "formulaBar.resize": "数式バーのサイズ変更",
 
     // Shape pickers
     "shape.rectangle": "長方形",

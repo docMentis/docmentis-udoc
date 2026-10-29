@@ -11,6 +11,10 @@
 // and ✓ drop and save, greyed while no entry is open. A save the engine refuses shows
 // why under the bar, and editing goes on there. In view mode the bar only
 // shows.
+//
+// Its bottom edge drags it taller, as Excel's does: the contents field grows
+// with it, wrapping what it holds, while the Name Box and ✕ / ✓ stay at the
+// top.
 
 import type { GridCellSelectionMove } from "@docmentis/udoc-wasm";
 import type { Store } from "../../framework/index.js";
@@ -21,6 +25,13 @@ import { ICON_CHECK, ICON_CLEAR } from "../icons.js";
 import { createButton } from "./controls.js";
 import { VIEW_MODE } from "../state.js";
 import type { ActiveCell, UIState } from "../state.js";
+
+/** The bar's height, CSS px: one line of contents, which it can't be dragged
+ *  below, and the most it grows to, as a share of the viewport it sits in. */
+const LINE_HEIGHT = 41;
+const MAX_SHARE = 0.7;
+/** How far an arrow key on the bar's edge moves it, CSS px — a line. */
+const RESIZE_STEP = 16;
 
 export interface FormulaBarHooks {
     /** Begin editing the active cell's contents — a press in the bar. */
@@ -96,7 +107,60 @@ export function createFormulaBar(i18n: I18n, hooks: FormulaBarHooks) {
     refusal.setAttribute("role", "alert");
     refusal.hidden = true;
 
-    el.append(name, cancel, enter, input, refusal);
+    // The Name Box and ✕ / ✓, at the bar's top however tall it is.
+    const head = document.createElement("div");
+    head.className = "udoc-formula-bar__head";
+    head.append(name, cancel, enter);
+
+    const grip = document.createElement("div");
+    grip.className = "udoc-formula-bar__grip";
+    grip.setAttribute("role", "separator");
+    grip.setAttribute("aria-orientation", "horizontal");
+    grip.setAttribute("aria-label", i18n.t("formulaBar.resize"));
+    grip.tabIndex = 0;
+
+    el.append(head, input, refusal, grip);
+
+    /** The tallest the bar may be: a share of the viewport it sits in. */
+    function maxHeight(): number {
+        const container = el.parentElement;
+        return container ? Math.max(LINE_HEIGHT, container.clientHeight * MAX_SHARE) : Infinity;
+    }
+
+    /** Make the bar `next` px tall, kept between one line and its most; the
+     *  contents wrap once it holds more than one. */
+    function setHeight(next: number): void {
+        const height = Math.round(Math.max(LINE_HEIGHT, Math.min(maxHeight(), next)));
+        el.style.height = `${height}px`;
+        el.classList.toggle("udoc-formula-bar--expanded", height > LINE_HEIGHT);
+        grip.setAttribute("aria-valuenow", String(height));
+    }
+
+    // A drag on the edge resizes the bar, the keyboard staying where it was.
+    grip.addEventListener("pointerdown", (ev) => {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        const startY = ev.clientY;
+        const startHeight = el.offsetHeight;
+        el.classList.add("udoc-formula-bar--resizing");
+        grip.setPointerCapture(ev.pointerId);
+        const onMove = (e: PointerEvent) => setHeight(startHeight + e.clientY - startY);
+        const onUp = () => {
+            grip.removeEventListener("pointermove", onMove);
+            grip.removeEventListener("pointerup", onUp);
+            grip.removeEventListener("pointercancel", onUp);
+            el.classList.remove("udoc-formula-bar--resizing");
+        };
+        grip.addEventListener("pointermove", onMove);
+        grip.addEventListener("pointerup", onUp);
+        grip.addEventListener("pointercancel", onUp);
+    });
+    // The arrow keys on it resize it a line at a time.
+    grip.addEventListener("keydown", (ev) => {
+        if (ev.key !== "ArrowUp" && ev.key !== "ArrowDown") return;
+        ev.preventDefault();
+        setHeight(el.offsetHeight + (ev.key === "ArrowDown" ? RESIZE_STEP : -RESIZE_STEP));
+    });
 
     let slice: FormulaBarSlice = { shown: false, cell: null, editable: false };
 

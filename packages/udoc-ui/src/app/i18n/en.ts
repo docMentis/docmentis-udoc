@@ -93,6 +93,7 @@ export const en: Messages = {
     "formulaBar.cancel": "Cancel",
     "formulaBar.enter": "Enter",
     "formulaBar.input": "Contents",
+    "formulaBar.resize": "Resize formula bar",
 
     // Shape pickers
     "shape.rectangle": "Rectangle",
