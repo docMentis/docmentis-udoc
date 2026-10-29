@@ -13,9 +13,11 @@ import type {
     Annotation,
     PortableCommand,
     PresentationCommand,
+    SheetId,
     SpreadsheetCommand,
     StandardFont,
     UDocCommand,
+    WorksheetCommand,
 } from "@docmentis/udoc-wasm";
 
 /** A large insert index that clamps to "append on top" in the engine (kept well
@@ -35,6 +37,11 @@ function presentation(command: PresentationCommand): UDocCommand {
 /** Wrap a spreadsheet command in the doc-type-tagged `UDocCommand`. */
 function spreadsheet(command: SpreadsheetCommand): UDocCommand {
     return { spreadsheet: command };
+}
+
+/** Wrap a command on the worksheet `sheet` in its spreadsheet's `UDocCommand`. */
+function worksheet(sheet: SheetId, command: WorksheetCommand): UDocCommand {
+    return spreadsheet({ editWorksheet: { sheet, command } });
 }
 
 /** Command builders for the document-structure edits the host issues by index —
@@ -109,12 +116,12 @@ export const Command = {
      *  CSS-px-per-point scale. The engine converts to the model's stored character
      *  units. */
     resizeColumns: (sheetId: string, first: number, last: number, points: number): UDocCommand =>
-        spreadsheet({ resizeColumns: { sheet: sheetId, first, last, width: { points: points } } }),
+        worksheet(sheetId, { resizeColumns: { first, last, width: { points } } }),
 
     /** Resize rows `first..=last` (0-based inclusive) on sheet `sheetId` to
      *  `points` document points (1/72 inch) — the row twin of
      *  {@link resizeColumns}. Row heights are already points, stored as an exact
      *  (custom) height. */
     resizeRows: (sheetId: string, first: number, last: number, points: number): UDocCommand =>
-        spreadsheet({ resizeRows: { sheet: sheetId, first, last, height: { exact: points } } }),
+        worksheet(sheetId, { resizeRows: { first, last, height: { exact: points } } }),
 };

@@ -1394,6 +1394,17 @@ export type SelectionEdit =
      *  in section order, so the first takes index `to` of the resulting
      *  section order. They stay selected. */
     | { kind: "reorderSlideSections"; to: number }
+    // A worksheet's cells — the edits of a cell selection, bound to its sheet,
+    // its active cell and its block.
+    /** Spreadsheet: enter `text` in the active cell as Excel parses an entry —
+     *  `=` and a formula, `'` and text, else a value — or, with `fill`
+     *  (Ctrl+Enter), in every selected cell, a formula's relative references
+     *  moved per cell. Refused for a formula that doesn't parse, or part of an
+     *  array formula. */
+    | { kind: "enterCellText"; text: string; fill: boolean }
+    /** Spreadsheet: empty the selected cells — values and formulas — keeping
+     *  their formats (Delete). Refused for part of an array formula. */
+    | { kind: "clearCellContents" }
     /** PDF: a page edit (`deletePages`, `reorderPages`, …) on the selected pages. */
     | { kind: "page"; edit: SelectionEdit }
     /** PDF: an object edit (`translateObjects`, `insertObjectText`, …) on the

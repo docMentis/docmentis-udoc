@@ -57,6 +57,7 @@ import type {
     UDocCommand,
     UDocSelectionEdit,
     UDocType,
+    WorksheetSelectionEditType,
 } from "@docmentis/udoc-wasm";
 import { createLanes } from "./lanes.js";
 import type { Job, Task } from "./lanes.js";
@@ -2599,7 +2600,7 @@ function taggedSelectionEdit(edit: SelectionEdit, docType: UDocType | undefined)
         case "wordprocessing":
             return { wordprocessing: wordprocessingEdit(edit) } as UDocSelectionEdit;
         case "spreadsheet":
-            return { spreadsheet: edit } as UDocSelectionEdit;
+            return { spreadsheet: spreadsheetEdit(edit) } as UDocSelectionEdit;
         case "image":
             return { image: imageEdit(edit) } as UDocSelectionEdit;
         default:
@@ -2732,6 +2733,20 @@ function imageEdit(edit: SelectionEdit): unknown {
         return { page: { edit: byKind(edit.edit as { kind: string }) } };
     }
     return { common: { edit: drawingEdit(edit) } };
+}
+
+/** A spreadsheet's edit: one of the selected cells', in the worksheet
+ *  family, its kinds typed against the gate tsify declares. */
+const WORKSHEET_KINDS: Record<WorksheetSelectionEditType, "worksheet"> = {
+    enterCellText: "worksheet",
+    clearCellContents: "worksheet",
+};
+
+function spreadsheetEdit(edit: SelectionEdit): unknown {
+    if (typeof edit !== "string" && "kind" in edit && edit.kind in WORKSHEET_KINDS) {
+        return { worksheet: { edit: byKind(edit) } };
+    }
+    throw new Error("engine worker: a spreadsheet edit is a worksheet edit");
 }
 
 function annotationEdit(edit: SelectionEdit): unknown {
