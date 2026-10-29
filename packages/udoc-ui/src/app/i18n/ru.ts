@@ -45,6 +45,7 @@ export const ru: Messages = {
     "collaboration.paused": "Совместное редактирование приостановлено",
     "collaboration.reconnecting": "Повторное подключение…",
     "collaboration.you": "{name} (вы)",
+    "collaboration.showPeerPointers": "Показывать указатели соавторов",
     "collaboration.sharePointer": "Показывать мой указатель",
     "collaboration.pause": "Приостановить совместное редактирование",
     "collaboration.resume": "Возобновить совместное редактирование",

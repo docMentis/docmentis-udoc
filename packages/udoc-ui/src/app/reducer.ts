@@ -314,6 +314,10 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             if (action.enabled === state.pointerSharing) return state;
             return { ...state, pointerSharing: action.enabled };
 
+        case "SET_PEER_POINTERS_VISIBLE":
+            if (action.visible === state.peerPointersVisible) return state;
+            return { ...state, peerPointersVisible: action.visible };
+
         case "SET_SELECTION_CAPABILITIES":
             return { ...state, selectionCaps: action.capabilities };
         case "SET_ACTIVE_CELL": {

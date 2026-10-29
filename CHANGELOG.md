@@ -20,12 +20,21 @@ listed once, by package. Its major and minor version are those of the
   cell selected, and a sheet shown from its tab comes back scrolled as it was
   left, with the cells it was left with selected, or, the first time, from its
   top with the active cell its file keeps, A1 where it keeps none.
+- The people button's menu has a Show Collaborators' Pointers switch, on to
+  start with, that hides the pointers the others share. The
+  `showPeerPointers` option and `setShowPeerPointers` set it.
+
+#### Changed
+
+- The people button's Share My Pointer switch is named Show My Pointer.
 
 #### Fixed
 
 - The selection moves with what it selects when a web font the document uses
   lands after it is shown: text that reflows, or a workbook's cells, whose
   columns and rows the font sizes.
+- A menu's on/off switch stands clear of its label, where it sat almost
+  against it in a menu no wider than that row.
 
 ### udoc-editor
 

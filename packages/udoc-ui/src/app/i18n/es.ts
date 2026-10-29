@@ -45,7 +45,8 @@ export const es: Messages = {
     "collaboration.paused": "Coedición en pausa",
     "collaboration.reconnecting": "Reconectando…",
     "collaboration.you": "{name} (tú)",
-    "collaboration.sharePointer": "Compartir mi puntero",
+    "collaboration.showPeerPointers": "Mostrar los punteros de los colaboradores",
+    "collaboration.sharePointer": "Mostrar mi puntero",
     "collaboration.pause": "Pausar coedición",
     "collaboration.resume": "Reanudar coedición",
 

@@ -45,7 +45,8 @@ export const ar: Messages = {
     "collaboration.paused": "التحرير المشترك متوقف مؤقتًا",
     "collaboration.reconnecting": "جارٍ إعادة الاتصال…",
     "collaboration.you": "{name} (أنت)",
-    "collaboration.sharePointer": "مشاركة مؤشري",
+    "collaboration.showPeerPointers": "إظهار مؤشرات المتعاونين",
+    "collaboration.sharePointer": "إظهار مؤشري",
     "collaboration.pause": "إيقاف التحرير المشترك مؤقتًا",
     "collaboration.resume": "استئناف التحرير المشترك",
 

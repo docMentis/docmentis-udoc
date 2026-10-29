@@ -2958,10 +2958,13 @@ export const uiStyles = css`
         flex: 1;
     }
     /* A checkable row (the Align reference toggle) carries an on/off switch — a pill
-   track with a sliding knob — so it reads as stateful, not as an action. */
+   track with a sliding knob — so it reads as stateful, not as an action. It
+   stands 16px clear of the label with the row's gap, so a menu as wide as that
+   row's label leaves it room. */
     .udoc-ui-root .udoc-toolbar__menu-switch {
         flex: none;
         position: relative;
+        margin-left: calc(16px - var(--udoc-btn-gap));
         width: 26px;
         height: 15px;
         border-radius: 999px;

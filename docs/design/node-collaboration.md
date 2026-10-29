@@ -104,9 +104,10 @@ the `collaboration:joined`, `interrupted`, `failed` and `left` events — which 
 after 1 s, then twice as long after each attempt that fails, up to 30 s, refreshes the
 presence every 10 s, sends a pointer shared with `enablePointerSharing`, and
 withdraws the presence as it leaves; its people button at the head of the top
-toolbar's right zone, shown while in a collaboration — who is present, a switch
-sharing the pointer, and Pause / Resume, which leaves the collaboration and joins it
-again (a paused client still holds a local collaboration service); and the demo,
+toolbar's right zone, shown while in a collaboration — who is present, switches
+showing the others' pointers (`showPeerPointers`) and sharing this one's, and
+Pause / Resume, which leaves the collaboration and joins it again (a paused client
+still holds a local collaboration service); and the demo,
 which joins every editor open on a `?document=<id>` to its collaboration — so the same
 URL open in two browsers edits one document.
 

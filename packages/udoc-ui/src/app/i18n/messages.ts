@@ -81,7 +81,9 @@ export interface Messages {
     "collaboration.reconnecting": string;
     /** {name} (you) */
     "collaboration.you": string;
-    /** Share My Pointer */
+    /** Show Collaborators' Pointers */
+    "collaboration.showPeerPointers": string;
+    /** Show My Pointer */
     "collaboration.sharePointer": string;
     /** Pause Co-editing */
     "collaboration.pause": string;

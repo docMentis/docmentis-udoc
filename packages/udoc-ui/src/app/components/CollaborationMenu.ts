@@ -16,6 +16,7 @@ type CollaborationSlice = {
     collaboration: CollaborationStatus;
     peers: readonly Peer[];
     userName: string | null;
+    peerPointersVisible: boolean;
     pointerSharing: boolean;
 };
 
@@ -24,6 +25,7 @@ function selectSlice(state: UIState): CollaborationSlice {
         collaboration: state.collaboration,
         peers: state.peers,
         userName: state.userName,
+        peerPointersVisible: state.peerPointersVisible,
         pointerSharing: state.pointerSharing,
     };
 }
@@ -43,7 +45,8 @@ export interface CollaborationMenuCallbacks {
  * own color (the color of its selection and its pointer), the rest counted, or
  * the people glyph while no one else is there; a pause glyph marks it paused,
  * and a spinner while it rejoins. Its menu lists who is present, this one
- * first; then the switch sharing this one's pointer, and the pause or resume.
+ * first; then the switches showing the others' pointers and sharing this
+ * one's, and the pause or resume.
  *
  * Names are a peer's own words, so they reach the DOM as text, never markup.
  */
@@ -111,7 +114,7 @@ export function createCollaborationMenu(i18n: I18n) {
         );
     }
 
-    /** Who is present, this one first; then the pointer switch and the pause or resume. */
+    /** Who is present, this one first; then the pointer switches and the pause or resume. */
     function renderMenu(
         slice: CollaborationSlice,
         store: Store<UIState, Action>,
@@ -122,21 +125,16 @@ export function createCollaborationMenu(i18n: I18n) {
         rows.push(person(face(you, null), i18n.t("collaboration.you", { name: you })));
         for (const peer of slice.peers) rows.push(person(face(peer.name, peerColor(peer.id)), peer.name ?? peer.id));
 
-        const share = document.createElement("button");
-        share.className = "udoc-toolbar__menu-item udoc-toolbar__menu-item--divider udoc-toolbar__menu-item--checkable";
-        share.classList.toggle("udoc-toolbar__menu-item--checked", slice.pointerSharing);
-        share.setAttribute("role", "menuitemcheckbox");
-        share.setAttribute("aria-checked", String(slice.pointerSharing));
-        share.innerHTML =
-            `<span class="udoc-toolbar__menu-icon">${ICON_TOOL_POINTER}</span>` +
-            `<span class="udoc-toolbar__menu-label">${i18n.t("collaboration.sharePointer")}</span>` +
-            `<span class="udoc-toolbar__menu-switch" aria-hidden="true"></span>`;
-        // The menu stays open, rebuilt with the switch in its new position.
-        share.addEventListener("click", (e) => {
-            e.stopPropagation();
-            store.dispatch({ type: "SET_POINTER_SHARING", enabled: !slice.pointerSharing });
-        });
-        rows.push(share);
+        const showPeers = toggle(ICON_PEOPLE, i18n.t("collaboration.showPeerPointers"), slice.peerPointersVisible, () =>
+            store.dispatch({ type: "SET_PEER_POINTERS_VISIBLE", visible: !slice.peerPointersVisible }),
+        );
+        showPeers.classList.add("udoc-toolbar__menu-item--divider");
+        rows.push(showPeers);
+        rows.push(
+            toggle(ICON_TOOL_POINTER, i18n.t("collaboration.sharePointer"), slice.pointerSharing, () =>
+                store.dispatch({ type: "SET_POINTER_SHARING", enabled: !slice.pointerSharing }),
+            ),
+        );
 
         const paused = slice.collaboration === "paused";
         const pause = document.createElement("button");
@@ -175,6 +173,28 @@ function face(name: string | null, color: string | null): HTMLElement {
     if (color) disc.style.background = color;
     disc.textContent = Array.from(name?.trim() ?? "")[0]?.toUpperCase() ?? "?";
     return disc;
+}
+
+/**
+ * A switch row: `icon`, `label` and the switch, on while `checked`. A click
+ * calls `flip`, and the menu stays open, rebuilt with the switch in its new
+ * position.
+ */
+function toggle(icon: string, label: string, checked: boolean, flip: () => void): HTMLElement {
+    const row = document.createElement("button");
+    row.className = "udoc-toolbar__menu-item udoc-toolbar__menu-item--checkable";
+    row.classList.toggle("udoc-toolbar__menu-item--checked", checked);
+    row.setAttribute("role", "menuitemcheckbox");
+    row.setAttribute("aria-checked", String(checked));
+    row.innerHTML =
+        `<span class="udoc-toolbar__menu-icon">${icon}</span>` +
+        `<span class="udoc-toolbar__menu-label">${label}</span>` +
+        `<span class="udoc-toolbar__menu-switch" aria-hidden="true"></span>`;
+    row.addEventListener("click", (e) => {
+        e.stopPropagation();
+        flip();
+    });
+    return row;
 }
 
 /** A roster row: someone's face and their name, which is not a command. */

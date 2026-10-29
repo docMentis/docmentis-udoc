@@ -338,6 +338,8 @@ export interface UIShell {
      * it — then the others' copy of it is deleted.
      */
     setEnablePointerSharing: (enabled: boolean) => void;
+    /** Draw the pointers the others in the collaboration share, or hide them here. */
+    setShowPeerPointers: (show: boolean) => void;
     /**
      * Register (or replace) a page-anchored HTML overlay under `id` — DOM
      * chrome positioned over the canvas and kept in sync with scroll/zoom from
@@ -412,6 +414,7 @@ export interface UIShellOptions {
     showDeveloperButton?: boolean;
     enableCopy?: boolean;
     enablePointerSharing?: boolean;
+    showPeerPointers?: boolean;
     viewControlsPlacement?: ViewControlsPlacement;
     scrollMode?: ScrollMode;
     layoutMode?: LayoutMode;
@@ -588,6 +591,7 @@ export function mountUIShell(
         developerButtonVisible: shellOptions.showDeveloperButton ?? initialState.developerButtonVisible,
         copyEnabled: shellOptions.enableCopy ?? initialState.copyEnabled,
         pointerSharing: shellOptions.enablePointerSharing ?? initialState.pointerSharing,
+        peerPointersVisible: shellOptions.showPeerPointers ?? initialState.peerPointersVisible,
         viewControlsPlacement: shellOptions.viewControlsPlacement ?? initialState.viewControlsPlacement,
         scrollMode: shellOptions.scrollMode ?? initialState.scrollMode,
         defaultScrollMode: shellOptions.scrollMode ?? initialState.defaultScrollMode,
@@ -2928,6 +2932,10 @@ export function mountUIShell(
         store.dispatch({ type: "SET_POINTER_SHARING", enabled });
     }
 
+    function setShowPeerPointers(show: boolean): void {
+        store.dispatch({ type: "SET_PEER_POINTERS_VISIBLE", visible: show });
+    }
+
     // Sharing stopped — by the host or the people menu — clears the pointer
     // for the others.
     const unsubPointerSharing = subscribeSelector(
@@ -3363,6 +3371,7 @@ export function mountUIShell(
         resumeCollaboration,
         onCollaboration,
         setEnablePointerSharing,
+        setShowPeerPointers,
         setOverlay: canvas.setOverlay,
         removeOverlay: canvas.removeOverlay,
         setTheme: (theme) => store.dispatch({ type: "SET_THEME", theme }),

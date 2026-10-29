@@ -45,7 +45,8 @@ export const ko: Messages = {
     "collaboration.paused": "공동 편집 일시 중지됨",
     "collaboration.reconnecting": "다시 연결하는 중…",
     "collaboration.you": "{name}(나)",
-    "collaboration.sharePointer": "내 포인터 공유",
+    "collaboration.showPeerPointers": "공동 작업자의 포인터 표시",
+    "collaboration.sharePointer": "내 포인터 표시",
     "collaboration.pause": "공동 편집 일시 중지",
     "collaboration.resume": "공동 편집 재개",
 

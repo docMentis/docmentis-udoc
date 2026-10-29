@@ -11,7 +11,15 @@ import type {
     WordprocessingHit,
 } from "@docmentis/udoc-wasm";
 import { cssPxPerPt } from "../../geometry.js";
-import type { PageView, PageViewsFrame, Rect, SelectMode, TextGranularity, Viewport } from "../../geometry.js";
+import type {
+    PageView,
+    PageViewsFrame,
+    PeerPointer,
+    Rect,
+    SelectMode,
+    TextGranularity,
+    Viewport,
+} from "../../geometry.js";
 import { applyContentClip } from "./overlayClip.js";
 import { shallowEqual, subscribeSelector } from "../../framework/index.js";
 import type { Store } from "../../framework/index.js";
@@ -1760,7 +1768,27 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         });
         cleanups.push(offSelection);
         // The peers' pointers, placed on their own: one moving re-projects no box.
-        cleanups.push(client.onPeerPointers((pointers) => selection.setPeerPointers(pointers)));
+        // Hidden by the people menu's switch, the last reported are kept, to
+        // show again at once where they rest.
+        let peerPointers: PeerPointer[] = [];
+        let peerPointersVisible = s.getState().peerPointersVisible;
+        const placePeerPointers = (): void => selection.setPeerPointers(peerPointersVisible ? peerPointers : []);
+        cleanups.push(
+            client.onPeerPointers((pointers) => {
+                peerPointers = pointers;
+                if (peerPointersVisible) placePeerPointers();
+            }),
+        );
+        cleanups.push(
+            subscribeSelector(
+                s,
+                (st) => st.peerPointersVisible,
+                (visible) => {
+                    peerPointersVisible = visible;
+                    placePeerPointers();
+                },
+            ),
+        );
 
         // Commit the canvas's CSS size only once the worker has repainted the
         // backing store at the new size, so the browser never scales stale

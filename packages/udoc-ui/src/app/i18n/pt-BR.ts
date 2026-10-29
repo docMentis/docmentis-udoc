@@ -45,7 +45,8 @@ export const ptBR: Messages = {
     "collaboration.paused": "Coedição Pausada",
     "collaboration.reconnecting": "Reconectando…",
     "collaboration.you": "{name} (você)",
-    "collaboration.sharePointer": "Compartilhar Meu Ponteiro",
+    "collaboration.showPeerPointers": "Mostrar Ponteiros dos Colaboradores",
+    "collaboration.sharePointer": "Mostrar Meu Ponteiro",
     "collaboration.pause": "Pausar Coedição",
     "collaboration.resume": "Retomar Coedição",
 

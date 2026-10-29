@@ -94,6 +94,8 @@ export type Action =
     | { type: "SET_USER_NAME"; name: string }
     // Share this one's pointer, or stop — the host's setter, the people menu's toggle.
     | { type: "SET_POINTER_SHARING"; enabled: boolean }
+    // Draw the others' pointers, or not — the host's setter, the people menu's toggle.
+    | { type: "SET_PEER_POINTERS_VISIBLE"; visible: boolean }
     // The engine's selection-command capability verdict (pushed from the worker's
     // selection reports). Drives every selection-gated control (Delete, Arrange).
     | { type: "SET_SELECTION_CAPABILITIES"; capabilities: SelectionCapabilities }

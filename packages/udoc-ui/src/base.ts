@@ -131,6 +131,10 @@ export interface UDocOptions {
      *  Default `false`; the people button's menu and
      *  {@link UDocBase.setEnablePointerSharing} change it. */
     enablePointerSharing?: boolean;
+    /** Show the pointers the others in the collaboration share, each under
+     *  its name. Default `true`; the people button's menu and
+     *  {@link UDocBase.setShowPeerPointers} change it. */
+    showPeerPointers?: boolean;
     /** Where the view controls (page nav + zoom + view settings) dock. Default
      *  `"floating"`; {@link UDocBase.setViewControlsPlacement} changes it. */
     viewControlsPlacement?: ViewControlsPlacement;
@@ -1266,6 +1270,16 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      */
     setEnablePointerSharing(enabled: boolean): void {
         this.shell.setEnablePointerSharing(enabled);
+    }
+
+    /**
+     * Show the pointers the others in the collaboration share, or hide them
+     * here — they go on sharing them, and each shows again where it is now.
+     * The initial value is set at construction via `showPeerPointers`; the
+     * people button's menu switches it too.
+     */
+    setShowPeerPointers(show: boolean): void {
+        this.shell.setShowPeerPointers(show);
     }
 
     /**

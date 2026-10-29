@@ -45,7 +45,8 @@ export const zhTW: Messages = {
     "collaboration.paused": "共同編輯已暫停",
     "collaboration.reconnecting": "正在重新連線…",
     "collaboration.you": "{name}（我）",
-    "collaboration.sharePointer": "分享我的指標",
+    "collaboration.showPeerPointers": "顯示協作者的指標",
+    "collaboration.sharePointer": "顯示我的指標",
     "collaboration.pause": "暫停共同編輯",
     "collaboration.resume": "繼續共同編輯",
 

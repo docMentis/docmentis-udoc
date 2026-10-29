@@ -45,7 +45,8 @@ export const de: Messages = {
     "collaboration.paused": "Gemeinsame Bearbeitung pausiert",
     "collaboration.reconnecting": "Verbindung wird wiederhergestellt…",
     "collaboration.you": "{name} (Sie)",
-    "collaboration.sharePointer": "Meinen Zeiger teilen",
+    "collaboration.showPeerPointers": "Zeiger der Mitbearbeitenden anzeigen",
+    "collaboration.sharePointer": "Meinen Zeiger anzeigen",
     "collaboration.pause": "Gemeinsame Bearbeitung pausieren",
     "collaboration.resume": "Gemeinsame Bearbeitung fortsetzen",
 

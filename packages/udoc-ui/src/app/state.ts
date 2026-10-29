@@ -765,6 +765,10 @@ export interface UIState {
     /** Whether this one's pointer is shared with the collaboration — the host's
      *  `enablePointerSharing` to start with, then the people menu's toggle. */
     pointerSharing: boolean;
+    /** Whether the pointers the others in the collaboration share are drawn —
+     *  the host's `showPeerPointers` to start with, then the people menu's
+     *  toggle. */
+    peerPointersVisible: boolean;
     /** The style each annotation tool draws with, as the Format controls set it
      *  while the tool is armed; a tool not here draws with its default. */
     annotationStyles: AnnotationStyles;
@@ -908,6 +912,7 @@ export const initialState: UIState = {
     disabledCommands: new Set(),
     copyEnabled: true,
     pointerSharing: false,
+    peerPointersVisible: true,
     annotationStyles: {},
     stamp: "draft",
     commentPopup: null,

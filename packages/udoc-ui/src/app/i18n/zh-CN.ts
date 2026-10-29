@@ -45,7 +45,8 @@ export const zhCN: Messages = {
     "collaboration.paused": "协同编辑已暂停",
     "collaboration.reconnecting": "正在重新连接…",
     "collaboration.you": "{name}（我）",
-    "collaboration.sharePointer": "共享我的指针",
+    "collaboration.showPeerPointers": "显示协作者的指针",
+    "collaboration.sharePointer": "显示我的指针",
     "collaboration.pause": "暂停协同编辑",
     "collaboration.resume": "继续协同编辑",
 

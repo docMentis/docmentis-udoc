@@ -45,7 +45,8 @@ export const ja: Messages = {
     "collaboration.paused": "共同編集を一時停止中",
     "collaboration.reconnecting": "再接続しています…",
     "collaboration.you": "{name}（自分）",
-    "collaboration.sharePointer": "自分のポインターを共有",
+    "collaboration.showPeerPointers": "共同編集者のポインターを表示",
+    "collaboration.sharePointer": "自分のポインターを表示",
     "collaboration.pause": "共同編集を一時停止",
     "collaboration.resume": "共同編集を再開",
 
