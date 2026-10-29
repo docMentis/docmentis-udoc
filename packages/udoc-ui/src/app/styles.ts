@@ -3543,7 +3543,9 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-sheet-tab {
         display: flex;
         align-items: center;
-        height: 34px;
+        /* The open tab's, less the 1px it lifts over the bar's border, so
+       every tab's foot is on one line. */
+        height: 33px;
         padding: 12px;
         border: 1px solid transparent;
         /* Flipped from the ribbon tab: the open edge faces up (toward the
@@ -3587,6 +3589,7 @@ export const uiStyles = css`
         color: var(--udoc-color-on-surface);
         font-weight: 500;
         /* Lift over the status bar's top border so the tab joins the viewport. */
+        height: 34px;
         margin-top: -1px;
         position: relative;
         z-index: 1;
@@ -3610,7 +3613,7 @@ export const uiStyles = css`
             transparent 6px,
             var(--udoc-color-outline-variant) 6px,
             var(--udoc-color-outline-variant) 7px,
-            var(--udoc-canvas-background) 7px
+            var(--sheet-tab-top, var(--udoc-canvas-background)) 7px
         );
     }
     .udoc-ui-root .udoc-sheet-tab--selected::after {
@@ -3620,7 +3623,7 @@ export const uiStyles = css`
             transparent 6px,
             var(--udoc-color-outline-variant) 6px,
             var(--udoc-color-outline-variant) 7px,
-            var(--udoc-canvas-background) 7px
+            var(--sheet-tab-top, var(--udoc-canvas-background)) 7px
         );
     }
     /* A tab its sheet gives a colour (the sheet's tabColor, set on the tab as
@@ -3638,10 +3641,12 @@ export const uiStyles = css`
     }
     /* Selected, it keeps the page it opens onto and is washed in its colour from
    there down, as Excel's gradient runs: faint where it meets the viewport,
-   deepest at its foot. */
+   deepest at its foot. Its fold fillets take the faint top, so they and the
+   tab are one shape. */
     .udoc-ui-root .udoc-sheet-tab--colored.udoc-sheet-tab--selected {
+        --sheet-tab-top: color-mix(in srgb, var(--sheet-tab-color) 8%, var(--udoc-canvas-background));
         background: linear-gradient(
-            color-mix(in srgb, var(--sheet-tab-color) 8%, var(--udoc-canvas-background)),
+            var(--sheet-tab-top),
             color-mix(in srgb, var(--sheet-tab-color) 45%, var(--udoc-canvas-background))
         );
     }
