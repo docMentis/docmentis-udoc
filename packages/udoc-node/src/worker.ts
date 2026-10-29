@@ -39,6 +39,9 @@ const port = parentPort!;
 
 /** The document's session, once `open` has started one. */
 let session: WasmSession | null = null;
+/** The session's viewer — the one it is built with, which every viewer verb
+ *  names first. */
+const VIEWER = 0;
 
 /** The page limit that composes every page: the largest wasm32 `usize`. */
 const WHOLE_DOCUMENT = 2 ** 32 - 1;
@@ -109,10 +112,10 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 if (!(await updateLayoutSettled(s, WHOLE_DOCUMENT))) {
                     throw new UDocError(
                         "malformed",
-                        `the page count is unknown: a page failed to compose after ${s.firstUncomposedPage()} page(s)`,
+                        `the page count is unknown: a page failed to compose after ${s.firstUncomposedPage(VIEWER)} page(s)`,
                     );
                 }
-                return { id, ok: true, result: s.firstUncomposedPage() };
+                return { id, ok: true, result: s.firstUncomposedPage(VIEWER) };
             }
             case "saveToBytes":
                 return {
@@ -135,7 +138,7 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 // one asked for — not the whole document. If the pass finishes
                 // the document short of it, the page doesn't exist.
                 const complete = await updateLayoutSettled(s, request.index);
-                const count = s.firstUncomposedPage();
+                const count = s.firstUncomposedPage(VIEWER);
                 if (request.index >= count) {
                     if (complete) {
                         // Says what the document has, not which page was asked
@@ -211,7 +214,7 @@ function registerHostFonts(s: WasmSession): void {
  * is finite.
  */
 async function updateLayoutSettled(s: WasmSession, index: number): Promise<boolean> {
-    let complete = s.updateLayout({ pages: { start: 0, limit: index } });
+    let complete = s.updateLayout(VIEWER, { pages: { start: 0, limit: index } });
     for (let orders = s.takeFontRequests(); orders.length > 0; orders = s.takeFontRequests()) {
         const settled = await Promise.all(
             orders.map(
@@ -226,7 +229,7 @@ async function updateLayoutSettled(s: WasmSession, index: number): Promise<boole
         s.refreshFonts();
         // Re-shaping can move page breaks, so the page asked for may sit
         // beyond what is composed now.
-        complete = s.updateLayout({ pages: { start: 0, limit: index } });
+        complete = s.updateLayout(VIEWER, { pages: { start: 0, limit: index } });
     }
     return complete;
 }

@@ -14,7 +14,7 @@ export const EDIT_HANDLERS: EditHandlers = {
         handle(request, worker) {
             // Sticky in Rust, like the scroll mode. Only the clip changes, so
             // a full repaint paints off-page content in (or clips it out).
-            worker.session?.setOverflowVisible(request.visible);
+            worker.session?.setOverflowVisible(worker.viewer, request.visible);
             worker.scheduleFrame();
         },
     },
@@ -23,7 +23,7 @@ export const EDIT_HANDLERS: EditHandlers = {
         handle(request, worker) {
             // Sticky in Rust, like the backdrop. Only presentations draw
             // prompts; a full repaint shows/clears them on the next frame.
-            worker.session?.setPlaceholderPrompts(request.on);
+            worker.session?.setPlaceholderPrompts(worker.viewer, request.on);
             worker.scheduleFrame();
         },
     },
@@ -32,7 +32,7 @@ export const EDIT_HANDLERS: EditHandlers = {
         handle(request, worker) {
             // Sticky in Rust, like the backdrop; a full repaint shows or
             // clears the marks on the next frame.
-            worker.session?.setFormattingMarks(request.on);
+            worker.session?.setFormattingMarks(worker.viewer, request.on);
             worker.scheduleFrame();
         },
     },
@@ -41,8 +41,8 @@ export const EDIT_HANDLERS: EditHandlers = {
         // single document theme for a word doc — a pure read. `null` when no
         // document is open or the doc type carries no theme (PDF / image); the
         // host then keeps its stand-in.
-        handle(_request, { session }) {
-            const json = session?.themePalette();
+        handle(_request, { session, viewer }) {
+            const json = session?.themePalette(viewer);
             return json !== undefined ? (JSON.parse(json) as ThemePalette) : null;
         },
     },
@@ -94,9 +94,10 @@ export const EDIT_HANDLERS: EditHandlers = {
         // guide, so the host can draw the grip on its own track instead of under
         // the raw cursor. A pure read, no edit, no repaint; `null` when the
         // selection offers no such handle.
-        handle: (request, { session }) =>
+        handle: (request, { session, viewer }) =>
             session
-                ? (session.selectionHandlePreview(request.textWarp, request.index, request.x, request.y) ?? null)
+                ? (session.selectionHandlePreview(viewer, request.textWarp, request.index, request.x, request.y) ??
+                  null)
                 : null,
     },
     slideMastersSummary: {
@@ -122,7 +123,7 @@ export const EDIT_HANDLERS: EditHandlers = {
             // already doc-type-tagged (from `copy`), so it crosses as-is. A
             // committing edit like `execute`: the layout rides back, the
             // selection re-posts, history updates, repaint.
-            session.paste(request.fragment);
+            session.paste(worker.viewer, request.fragment);
             return worker.committed(session);
         },
     },
@@ -133,7 +134,7 @@ export const EDIT_HANDLERS: EditHandlers = {
             // A committing edit like `execute`: the picture lands on the
             // current page and is selected, so the layout rides back, the
             // selection re-posts, history updates, and a repaint redraws.
-            session.insertImage(new Uint8Array(request.bytes), request.contentType);
+            session.insertImage(worker.viewer, new Uint8Array(request.bytes), request.contentType);
             return worker.committed(session);
         },
     },

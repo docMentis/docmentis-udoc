@@ -87,6 +87,9 @@ let canvasText: CanvasText | null = null;
 const hostLocalFonts: Uint8Array[] = [];
 const hostUrlFonts: UrlFont[] = [];
 let session: WasmSession | null = null;
+/** The session's viewer — the one it is built with, which every viewer verb
+ *  names first. The worker drives one. */
+const VIEWER = 0;
 // The transferred canvas, held for the life of the worker. A canvas can only be
 // transferred once, so the main thread hands it over at mount and every session
 // after that is attached to this same one.
@@ -208,14 +211,14 @@ function renderFrame(): void {
     if (!session || renderPoisoned) return;
     // The frame's reconcile composes what the view needs, and a page composed
     // above the one in view moves the view with it.
-    const scrollBefore = session.viewState()[2];
+    const scrollBefore = session.viewState(VIEWER)[2];
     let painted: boolean;
     try {
         if (!perf.enabled) {
-            painted = session.renderFrame();
+            painted = session.renderFrame(VIEWER);
         } else {
             const start = performance.now();
-            painted = session.renderFrame();
+            painted = session.renderFrame(VIEWER);
             const now = performance.now();
             // Only count frames that actually painted — idle no-op frames are ~0ms
             // and would skew the average toward zero.
@@ -223,7 +226,7 @@ function renderFrame(): void {
                 perf.record("repaint", now - start);
                 // Pull the engine's in-frame phase split (reconcile / record /
                 // rasterize / composite) so the HUD shows where the time went.
-                const t = session.frameTimings();
+                const t = session.frameTimings(VIEWER);
                 perf.record("reconcile", t.reconcile);
                 perf.record("record", t.record);
                 perf.record("rasterize", t.rasterize);
@@ -300,7 +303,7 @@ function flushResizeAck(s: WasmSession): void {
  * otherwise screen-fixed.
  */
 function emitBrandingRect(s: WasmSession): void {
-    const r = s.brandingRect();
+    const r = s.brandingRect(VIEWER);
     scope.postMessage({
         type: "brandingRect",
         rect: r.length === 4 ? { x: r[0]!, y: r[1]!, width: r[2]!, height: r[3]! } : null,
@@ -336,24 +339,24 @@ let lastGuideKey: string | null = null;
  * when the last page scrolls off.
  */
 function emitPageViews(s: WasmSession): void {
-    const rects = s.pageViewRects();
+    const rects = s.pageViewRects(VIEWER);
     // [zoom, scrollX, scrollY, scrollWidth, scrollHeight, currentPage,
     // scrollUsedWidth, scrollUsedHeight, scrollbarX, scrollbarY]; empty before open.
     // currentPage is -1 when no page is arranged; the scrollbar slots are 1 / 0.
-    const state = s.viewState();
+    const state = s.viewState(VIEWER);
     emittedSeq = viewportSeq;
     // The guide render list (ruler / row-column headers) for this frame, pulled
     // beside the view state so the bands track scroll/zoom — and the selection,
     // whose text frame the ruler counts from. Already CSS px — the wasm boundary
     // divides out the dpr. `null` for a doc with no chrome. Its JSON is cached so
     // a later presence-only select can tell whether the guide moved (`refreshChrome`).
-    const guide = s.guide() ?? null;
+    const guide = s.guide(VIEWER) ?? null;
     lastGuideKey = guide === null ? null : JSON.stringify(guide);
     // The box this frame repainted ([x, y, w, h] CSS px, empty when it painted
     // nothing) — the developer repaint-area overlay's source. Four numbers on a
     // frame the host already receives, so it needs no toggle down here: whether
     // to draw is the host's call.
-    const painted = s.paintedArea();
+    const painted = s.paintedArea(VIEWER);
     scope.postMessage(
         {
             type: "pageViews",
@@ -370,7 +373,7 @@ function emitPageViews(s: WasmSession): void {
             scrollWidth: state[3] ?? 0,
             scrollHeight: state[4] ?? 0,
             currentPage: state[5] ?? -1,
-            plane: s.currentPlane(),
+            plane: s.currentPlane(VIEWER),
             scrollUsedWidth: state[6] ?? 0,
             scrollUsedHeight: state[7] ?? 0,
             scrollbarX: state[8] === 1,
@@ -398,8 +401,8 @@ function emitPageViews(s: WasmSession): void {
  * for a change that cannot move the page (a keyboard caret move, a clear).
  */
 function refreshChrome(s: WasmSession, beforePage?: number): void {
-    const pageMoved = beforePage !== undefined && (s.viewState()[5] ?? -1) !== beforePage;
-    const guide = s.guide() ?? null;
+    const pageMoved = beforePage !== undefined && (s.viewState(VIEWER)[5] ?? -1) !== beforePage;
+    const guide = s.guide(VIEWER) ?? null;
     const guideMoved = (guide === null ? null : JSON.stringify(guide)) !== lastGuideKey;
     if (pageMoved || guideMoved) emitPageViews(s);
 }
@@ -445,7 +448,7 @@ function emitChangedSelection(): void {
 function readSelection(geometry?: SelectionGeometry): SelectionReportBody {
     return {
         geometry: geometry ??
-            session?.selectionGeometry() ?? {
+            session?.selectionGeometry(VIEWER) ?? {
                 objects: [],
                 annotations: [],
                 cells: [],
@@ -453,7 +456,7 @@ function readSelection(geometry?: SelectionGeometry): SelectionReportBody {
                 caret: null,
                 headers: null,
             },
-        peers: session?.peerSelectionGeometry() ?? [],
+        peers: session?.peerSelectionGeometry(VIEWER) ?? [],
         capabilities: session?.selectionCapabilities() ?? EMPTY_SELECTION_CAPABILITIES,
         properties: session?.selectionProperties() ?? null,
         slideSections: session ? Selection.slideSections(session.selection()) : [],
@@ -498,7 +501,7 @@ let lastPeerPointers: PeerPointer[] = [];
  * name changes no pointer, and is posted nothing.
  */
 function emitPeerPointers(): void {
-    const pointers = session?.peerPointers() ?? [];
+    const pointers = session?.peerPointers(VIEWER) ?? [];
     if (JSON.stringify(pointers) === JSON.stringify(lastPeerPointers)) return;
     lastPeerPointers = pointers;
     scope.postMessage({ type: "peerPointers", pointers });
@@ -679,6 +682,9 @@ type EngineRequestEnvelope = WorkerRequestEnvelope | (ExtensionRequest & { reado
 export interface EngineWorker {
     /** The open document's session, or null with none open. */
     readonly session: WasmSession | null;
+    /** The session's viewer this worker drives, which every viewer verb on
+     *  `session` names first. */
+    readonly viewer: number;
     /**
      * Finish a committing edit just made on `session`, as the engine's own
      * edits finish: re-post the selection and the history, repaint, and return
@@ -716,6 +722,7 @@ const engineWorker: EngineWorker = {
     get session() {
         return session;
     },
+    viewer: VIEWER,
     committed(s) {
         const layout = layoutOf(s);
         emitSelection(false);
@@ -818,7 +825,7 @@ function opened(s: WasmSession): void {
     stopBackground();
     backgroundAfterPaint = true;
     // The open loaded the sheet it shows, and no other yet.
-    loadedSheets.add(s.currentPlane());
+    loadedSheets.add(s.currentPlane(VIEWER));
 }
 
 /** Start the background work `s`'s document leaves: composing ahead, and loading a workbook's other sheets. */
@@ -856,13 +863,13 @@ function startComposeAhead(s: WasmSession): void {
 
 /** Start compose-ahead on `s`'s current plane over: a grid from its first row, a paged plane from its composed pages. */
 function composeAgain(s: WasmSession): void {
-    composeAt = composesByRows(s) ? { rows: 0 } : { pages: s.firstUncomposedPage() };
+    composeAt = composesByRows(s) ? { rows: 0 } : { pages: s.firstUncomposedPage(VIEWER) };
     lanes.wake();
 }
 
 /** Whether `s` shows a worksheet's grid, which composes by rows, rather than pages. */
 function composesByRows(s: WasmSession): boolean {
-    return s.docType() === "spreadsheet" && !s.planeIsChartsheet(s.currentPlane());
+    return s.docType() === "spreadsheet" && !s.planeIsChartsheet(s.currentPlane(VIEWER));
 }
 
 /**
@@ -905,14 +912,14 @@ function composePagesAhead(s: WasmSession, from: number): void {
  * grid reports every row composed.
  */
 function composeRowsAhead(s: WasmSession, from: number): void {
-    const before = s.composedRowCount();
+    const before = s.composedRowCount(VIEWER);
     let row = from;
     let done = false;
     for (let asked = 0; asked < ROW_ASKS_PER_STEP && !done; asked++) {
-        done = s.updateLayout({ rows: { start: row, limit: row + COMPOSE_ROWS - 1 } });
+        done = s.updateLayout(VIEWER, { rows: { start: row, limit: row + COMPOSE_ROWS - 1 } });
         row += COMPOSE_ROWS;
         done ||= row >= SHEET_ROWS;
-        if (s.composedRowCount() !== before) break;
+        if (s.composedRowCount(VIEWER) !== before) break;
     }
     if (!done) composeAt = { rows: row };
     // The rows just composed may name families nothing has asked for yet.
@@ -938,11 +945,11 @@ function composeThrough(s: WasmSession, start: number, pageLimit: number): Docum
     // the engine moves the view with it. Capture the scale and scroll across
     // the step and repaint only when one moved, so the frame hands the host
     // the scroll to adopt.
-    const before = s.viewState();
-    const complete = s.updateLayout({ pages: { start, limit: pageLimit } });
+    const before = s.viewState(VIEWER);
+    const complete = s.updateLayout(VIEWER, { pages: { start, limit: pageLimit } });
     const layout = { ...layoutOf(s), complete };
     followView(s, before[2]);
-    const after = s.viewState();
+    const after = s.viewState(VIEWER);
     // A peer's selection can reference a page this side hadn't composed yet;
     // newly composed pages may resolve more of it.
     emitChangedSelection();
@@ -1145,7 +1152,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // document would paint nothing until the viewport resized.
                 lastW = lastH = lastDpr = Number.NaN;
                 lastScrollX = lastScrollY = lastZoom = Number.NaN;
-                if (canvas) session.attach(canvas);
+                if (canvas) session.attach(VIEWER, canvas);
                 // A fresh session clears any prior poisoned-render state.
                 renderPoisoned = false;
                 // Carry the perf toggle onto the new session, so its
@@ -1167,7 +1174,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // Held, not handed straight on: a canvas transfers once, and
                 // the session that paints into it is replaced per document.
                 canvas = msg.canvas;
-                session?.attach(canvas);
+                session?.attach(VIEWER, canvas);
                 reply(id, undefined);
                 break;
             }
@@ -1209,13 +1216,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "goToPage": {
                 viewportSeq = msg.seq;
                 if (session) {
-                    session.goToPage(msg.index);
+                    session.goToPage(VIEWER, msg.index);
                     // Adopt the viewer's resulting (clamped) scroll as our
                     // last-known view, so the setViewport the main thread
                     // echoes once it mirrors this scroll is a no-op rather than
                     // a redundant re-send. The next frame streams the new
                     // scroll + current page back (see emitPageViews).
-                    const st = session.viewState();
+                    const st = session.viewState(VIEWER);
                     lastScrollX = st[1] ?? lastScrollX;
                     lastScrollY = st[2] ?? lastScrollY;
                 }
@@ -1226,9 +1233,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 viewportSeq = msg.seq;
                 if (session) {
                     const { x0, y0, x1, y1 } = msg.rect;
-                    session.goToRect(msg.index, x0, y0, x1, y1, msg.alignment);
+                    session.goToRect(VIEWER, msg.index, x0, y0, x1, y1, msg.alignment);
                     // Adopt the resulting scroll, as `goToPage` does.
-                    const st = session.viewState();
+                    const st = session.viewState(VIEWER);
                     lastScrollX = st[1] ?? lastScrollX;
                     lastScrollY = st[2] ?? lastScrollY;
                 }
@@ -1241,7 +1248,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // that lands may set the zoom as well as the scroll, so adopt
                 // both, as `zoomToRect` does.
                 const view = safeRead(
-                    () => session?.portable.goToDestination(msg.destination, msg.alignment) ?? null,
+                    () => session?.portable.goToDestination(VIEWER, msg.destination, msg.alignment) ?? null,
                     null,
                 );
                 if (session) adoptView(session);
@@ -1252,9 +1259,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "goToBookmark": {
                 viewportSeq = msg.seq;
                 if (session) {
-                    session.wordprocessing.goToBookmark(msg.name, msg.alignment);
+                    session.wordprocessing.goToBookmark(VIEWER, msg.name, msg.alignment);
                     // Adopt the resulting scroll, as `goToRect` does.
-                    const st = session.viewState();
+                    const st = session.viewState(VIEWER);
                     lastScrollX = st[1] ?? lastScrollX;
                     lastScrollY = st[2] ?? lastScrollY;
                 }
@@ -1264,7 +1271,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "zoomAtPoint": {
                 viewportSeq = msg.seq;
                 if (session) {
-                    session.zoomAtPoint(msg.zoom, msg.x, msg.y);
+                    session.zoomAtPoint(VIEWER, msg.zoom, msg.x, msg.y);
                     adoptView(session);
                 }
                 scheduleFrame();
@@ -1273,30 +1280,30 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "zoomToRect": {
                 viewportSeq = msg.seq;
                 if (session) {
-                    session.zoomToRect(msg.x, msg.y, msg.width, msg.height);
+                    session.zoomToRect(VIEWER, msg.x, msg.y, msg.width, msg.height);
                     adoptView(session);
                 }
                 scheduleFrame();
                 break;
             }
             case "invalidate": {
-                if (msg.rect) session?.invalidateRect(msg.rect.x, msg.rect.y, msg.rect.width, msg.rect.height);
-                else session?.invalidate();
+                if (msg.rect) session?.invalidateRect(VIEWER, msg.rect.x, msg.rect.y, msg.rect.width, msg.rect.height);
+                else session?.invalidate(VIEWER);
                 scheduleFrame();
                 break;
             }
             case "setBackdrop": {
                 // Sticky in Rust: re-applied to every subsequent open, so a
                 // document opened later keeps the host's backdrop.
-                session?.setBackdropColor(msg.color.r, msg.color.g, msg.color.b);
+                session?.setBackdropColor(VIEWER, msg.color.r, msg.color.g, msg.color.b);
                 scheduleFrame();
                 break;
             }
             case "setPageBorder": {
                 // Sticky in Rust, like the backdrop. Pure paint: the next frame
                 // reconciles and repaints the frame around each page, or drops it.
-                if (msg.color) session?.setPageBorderColor(msg.color.r, msg.color.g, msg.color.b);
-                else session?.clearPageBorder();
+                if (msg.color) session?.setPageBorderColor(VIEWER, msg.color.r, msg.color.g, msg.color.b);
+                else session?.clearPageBorder(VIEWER);
                 scheduleFrame();
                 break;
             }
@@ -1304,7 +1311,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // Sticky in Rust, like the backdrop. The decal moves, so re-post
                 // its rect for the attribution link as well as repainting it.
                 if (session) {
-                    session.setBrandingInset(msg.inset);
+                    session.setBrandingInset(VIEWER, msg.inset);
                     emitBrandingRect(session);
                 }
                 scheduleFrame();
@@ -1320,7 +1327,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // Padding edges are CSS px and the gaps document points — the
                 // wasm boundary multiplies the `px` edges by the dpr into the
                 // viewer's device px. Sticky in Rust, like the backdrop.
-                session?.setSpacing(msg.contentPadding, msg.pageGap);
+                session?.setSpacing(VIEWER, msg.contentPadding, msg.pageGap);
                 // The document's spacing is now applied — release the opening
                 // paint held since `open` so the first frame is correctly padded.
                 awaitingSpacing = false;
@@ -1330,13 +1337,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "setScrollbarSize": {
                 // CSS px; the wasm boundary multiplies by the dpr. Sticky in
                 // Rust, like the spacing.
-                session?.setScrollbarSize(msg.size);
+                session?.setScrollbarSize(VIEWER, msg.size);
                 scheduleFrame();
                 break;
             }
             case "setFit": {
                 // Sticky in Rust: the derived zoom re-fits on every resize.
-                session?.setFit(msg.fit);
+                session?.setFit(VIEWER, msg.fit);
                 scheduleFrame();
                 break;
             }
@@ -1359,7 +1366,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "setScrollMode": {
                 // Sticky in Rust, until the next open applies the default.
-                session?.setScrollMode(msg.mode);
+                session?.setScrollMode(VIEWER, msg.mode);
                 scheduleFrame();
                 break;
             }
@@ -1370,13 +1377,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "setLayoutMode": {
                 // Sticky in Rust, like the spacing; the next frame re-stacks.
-                session?.setLayoutMode(msg.mode);
+                session?.setLayoutMode(VIEWER, msg.mode);
                 scheduleFrame();
                 break;
             }
             case "setPageRotation": {
                 // Sticky in Rust, like the spacing; the next frame re-stacks.
-                session?.setPageRotation(msg.quarterTurns);
+                session?.setPageRotation(VIEWER, msg.quarterTurns);
                 scheduleFrame();
                 break;
             }
@@ -1439,7 +1446,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                     chartsheets.push(session.planeIsChartsheet(i));
                     visibility.push(session.planeSheetState(i) ?? "visible");
                 }
-                reply(id, { count, current: session.currentPlane(), names, colors, chartsheets, visibility });
+                reply(id, { count, current: session.currentPlane(VIEWER), names, colors, chartsheets, visibility });
                 break;
             }
             case "goToPlane": {
@@ -1449,7 +1456,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // repaint. The frame composes the sheet, as after an open, so
                 // the layout replied is the one known before it — the frame
                 // reports the sheet's extent once it has painted.
-                session.goToPlane(msg.plane);
+                session.goToPlane(VIEWER, msg.plane);
                 // A sheet shown before the walk reached it loads now, and the
                 // host learns its tab's colour at once.
                 if (session.docType() === "spreadsheet" && !loadedSheets.has(msg.plane)) loadSheet(session, msg.plane);
@@ -1513,10 +1520,10 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // two points + options to the open document's engine, which
                 // hit-tests its own layout and lands the caret / range.
                 if (session) {
-                    const before = session.viewState()[5] ?? -1;
+                    const before = session.viewState(VIEWER)[5] ?? -1;
                     emitSelection(
                         true,
-                        session.selectText(msg.anchor.x, msg.anchor.y, msg.focus.x, msg.focus.y, msg.options),
+                        session.selectText(VIEWER, msg.anchor.x, msg.anchor.y, msg.focus.x, msg.focus.y, msg.options),
                     );
                     refreshChrome(session, before);
                 }
@@ -1524,10 +1531,11 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "selectObjects": {
                 if (session) {
-                    const before = session.viewState()[5] ?? -1;
+                    const before = session.viewState(VIEWER)[5] ?? -1;
                     emitSelection(
                         true,
                         session.selectObjects(
+                            VIEWER,
                             msg.anchor.x,
                             msg.anchor.y,
                             msg.focus.x,
@@ -1544,8 +1552,8 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // Whole pages from a thumbnail gesture. Only a PDF and a deck
                 // respond; any other doc type leaves its selection as it was.
                 if (session) {
-                    const before = session.viewState()[5] ?? -1;
-                    emitSelection(true, session.selectPages(msg.anchor, msg.focus, msg.mode));
+                    const before = session.viewState(VIEWER)[5] ?? -1;
+                    emitSelection(true, session.selectPages(VIEWER, msg.anchor, msg.focus, msg.mode));
                     refreshChrome(session, before);
                 }
                 break;
@@ -1554,7 +1562,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (session) {
                     emitSelection(
                         true,
-                        session.selectSheetCells(msg.anchor.x, msg.anchor.y, msg.focus.x, msg.focus.y, msg.options),
+                        session.selectSheetCells(
+                            VIEWER,
+                            msg.anchor.x,
+                            msg.anchor.y,
+                            msg.focus.x,
+                            msg.focus.y,
+                            msg.options,
+                        ),
                     );
                 }
                 break;
@@ -1565,10 +1580,17 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // because leaving a shape's text moves the ruler origin back off
                 // that frame (a caret in a *cell* anchors no ruler).
                 if (session) {
-                    const before = session.viewState()[5] ?? -1;
+                    const before = session.viewState(VIEWER)[5] ?? -1;
                     emitSelection(
                         true,
-                        session.selectTableCells(msg.anchor.x, msg.anchor.y, msg.focus.x, msg.focus.y, msg.options),
+                        session.selectTableCells(
+                            VIEWER,
+                            msg.anchor.x,
+                            msg.anchor.y,
+                            msg.focus.x,
+                            msg.focus.y,
+                            msg.options,
+                        ),
                     );
                     refreshChrome(session, before);
                 }
@@ -1582,14 +1604,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // shape, same chrome refresh, and each declines on its own when
                 // the selection is not in a table.
                 if (session) {
-                    const before = session.viewState()[5] ?? -1;
+                    const before = session.viewState(VIEWER)[5] ?? -1;
                     emitSelection(
                         true,
                         msg.type === "selectTableRows"
-                            ? session.selectTableRows()
+                            ? session.selectTableRows(VIEWER)
                             : msg.type === "selectTableColumns"
-                              ? session.selectTableColumns()
-                              : session.selectTable(),
+                              ? session.selectTableColumns(VIEWER)
+                              : session.selectTable(VIEWER),
                     );
                     refreshChrome(session, before);
                 }
@@ -1601,7 +1623,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (session) {
                     emitSelection(
                         true,
-                        session.selectSheetColumns(msg.anchor.x, msg.anchor.y, msg.focus.x, msg.focus.y, msg.options),
+                        session.selectSheetColumns(
+                            VIEWER,
+                            msg.anchor.x,
+                            msg.anchor.y,
+                            msg.focus.x,
+                            msg.focus.y,
+                            msg.options,
+                        ),
                     );
                 }
                 break;
@@ -1610,7 +1639,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (session) {
                     emitSelection(
                         true,
-                        session.selectSheetRows(msg.anchor.x, msg.anchor.y, msg.focus.x, msg.focus.y, msg.options),
+                        session.selectSheetRows(
+                            VIEWER,
+                            msg.anchor.x,
+                            msg.anchor.y,
+                            msg.focus.x,
+                            msg.focus.y,
+                            msg.options,
+                        ),
                     );
                 }
                 break;
@@ -1618,7 +1654,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "selectSheet": {
                 // The corner box: the whole sheet.
                 if (session) {
-                    emitSelection(true, session.selectSheet());
+                    emitSelection(true, session.selectSheet(VIEWER));
                     // Selecting all leaves any text edit, so the ruler's "0"
                     // returns from the frame to the page origin.
                     refreshChrome(session);
@@ -1631,7 +1667,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (session) {
                     // `movement` is the declared `TextCaretMove` string; it decodes
                     // straight into the engine's caret-move enum at the boundary.
-                    emitSelection(true, session.moveTextCaret(msg.movement, msg.extend));
+                    emitSelection(true, session.moveTextCaret(VIEWER, msg.movement, msg.extend));
                     // A caret that crosses into another text frame moves the
                     // ruler's "0"; within one frame this no-ops on the gate.
                     refreshChrome(session);
@@ -1640,7 +1676,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "clearSelection": {
                 if (session) {
-                    emitSelection(true, session.clearSelection());
+                    emitSelection(true, session.clearSelection(VIEWER));
                     // Clearing a text edit returns the ruler's "0" to the page origin.
                     refreshChrome(session);
                 }
@@ -1652,7 +1688,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // routing. A pure read over the live layout — no edit, no repaint.
                 // The wasm returns the doc-tagged `UDocHit` object directly (like
                 // `selection`) — the typed boundary, no parse.
-                reply(id, session ? session.hitTest(msg.x, msg.y) : "none");
+                reply(id, session ? session.hitTest(VIEWER, msg.x, msg.y) : "none");
                 break;
             }
             case "mintId": {
@@ -1803,7 +1839,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (session) {
                     const pageId = msg.ids.length === 0 ? "" : session.portable.model.root.pageIdByIndex(msg.page);
                     if (pageId !== undefined) {
-                        emitSelection(true, session.setSelection(Selection.objects(pageId, msg.ids)));
+                        emitSelection(true, session.setSelection(VIEWER, Selection.objects(pageId, msg.ids)));
                         // An object selection leaves any text edit, so the ruler's
                         // "0" returns from the frame to the page origin.
                         refreshChrome(session);
@@ -1822,7 +1858,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // select sent before it.
                 reply(
                     id,
-                    safeRead(() => session?.selectionGeometry(), EMPTY_SELECTION_GEOMETRY),
+                    safeRead(() => session?.selectionGeometry(VIEWER), EMPTY_SELECTION_GEOMETRY),
                 );
                 break;
             }
@@ -1856,7 +1892,10 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // open / non-presentation doc, or a page not composed.
                 reply(
                     id,
-                    safeRead(() => session?.presentation.layout.page(msg.page).media(), []),
+                    safeRead(
+                        () => session?.presentation.layout.plane(session.currentPlane(VIEWER)).page(msg.page).media(),
+                        [],
+                    ),
                 );
                 break;
             }
@@ -1895,7 +1934,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // localChanged: true (the cue to broadcast presence) and nothing
                 // repaints. The doc-type-neutral twin of `selectObjectsById`.
                 if (session) {
-                    emitSelection(true, session.setSelection(msg.selection));
+                    emitSelection(true, session.setSelection(VIEWER, msg.selection));
                     // The set selection may enter or leave a text edit, moving the
                     // ruler's "0" between the frame and the page origin.
                     refreshChrome(session);
@@ -1937,7 +1976,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 const layout = layoutOf(session);
                 const kind = typeof msg.edit === "object" && "kind" in msg.edit ? msg.edit.kind : undefined;
                 if (kind === "deleteObjects" || kind === "deleteAnnotations" || kind === "deleteShapes") {
-                    session.clearSelection();
+                    session.clearSelection(VIEWER);
                 }
                 emitSelection(false);
                 emitHistory();
@@ -2037,13 +2076,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "setPointer": {
                 if (!session) throw new Error("engine worker: setPointer before open");
                 // Presence only, and never a selection: no report.
-                const buffer = session.setPointer(msg.x, msg.y).slice().buffer;
+                const buffer = session.setPointer(VIEWER, msg.x, msg.y).slice().buffer;
                 reply(id, buffer, undefined, [buffer]);
                 break;
             }
             case "clearPointer": {
                 if (!session) throw new Error("engine worker: clearPointer before open");
-                const buffer = session.clearPointer().slice().buffer;
+                const buffer = session.clearPointer(VIEWER).slice().buffer;
                 reply(id, buffer, undefined, [buffer]);
                 break;
             }
@@ -2138,11 +2177,11 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
  * belongs to a compose *pass*, so only the `updateLayout` reply adds it.
  */
 function layoutOf(s: WasmSession): DocumentLayout {
-    const st = s.viewState();
-    const pageCount = s.pageCount();
+    const st = s.viewState(VIEWER);
+    const pageCount = s.pageCount(VIEWER);
     return {
         ...(pageCount !== undefined && { pageCount }),
-        firstUncomposedPage: s.firstUncomposedPage(),
+        firstUncomposedPage: s.firstUncomposedPage(VIEWER),
         scrollSize: { width: st[3] ?? 0, height: st[4] ?? 0 },
     };
 }
@@ -2177,12 +2216,12 @@ function openedLayout(s: WasmSession): DocumentLayout {
     s.setDpi(dpi ?? defaultDpiForDocType(layout.docType));
     // Its scroll mode too, unless the host set one: a deck's first frame
     // already shows one slide.
-    s.setScrollMode(defaultScrollMode ?? defaultScrollModeForDocType(layout.docType));
+    s.setScrollMode(VIEWER, defaultScrollMode ?? defaultScrollModeForDocType(layout.docType));
     const fit = defaultFit ?? defaultFitForDocType(layout.docType);
-    s.setFit(fit);
+    s.setFit(VIEWER, fit);
     // Without a fit the zoom is the host's explicit one, applied here for the
     // same reason; anchored at the top-left, which the opening scroll shows.
-    if (fit.mode === "none") s.zoomAtPoint(defaultZoom, 0, 0);
+    if (fit.mode === "none") s.zoomAtPoint(VIEWER, defaultZoom, 0, 0);
     // A fresh document starts unselected; clear any stale overlay.
     emitSelection(false);
     emitPeers();
@@ -2478,6 +2517,7 @@ const SLIDE_KINDS: Record<SlideSelectionEditType, "slide"> = {
 const SLIDE_SECTION_KINDS: Record<SlideSectionSelectionEditType, "slideSection"> = {
     renameSlideSection: "slideSection",
     deleteSlideSections: "slideSection",
+    deleteSlideSectionsWithSlides: "slideSection",
     reorderSlideSections: "slideSection",
 };
 
@@ -2561,7 +2601,7 @@ function viewDpiOf(s: WasmSession): number {
  * divide back to the faithful zoom `lastZoom` tracks.
  */
 function adoptView(s: WasmSession): void {
-    const st = s.viewState();
+    const st = s.viewState(VIEWER);
     lastScrollX = st[1] ?? lastScrollX;
     lastScrollY = st[2] ?? lastScrollY;
     if (st[0] !== undefined) lastZoom = st[0] / cssPxPerPt(viewDpiOf(s));
@@ -2574,7 +2614,7 @@ function adoptView(s: WasmSession): void {
  */
 function applyViewport(s: WasmSession, v: Viewport, shift: number): void {
     if (v.width !== lastW || v.height !== lastH || v.dpr !== lastDpr) {
-        s.resize(v.width, v.height, v.dpr);
+        s.resize(VIEWER, v.width, v.height, v.dpr);
         lastW = v.width;
         lastH = v.height;
         lastDpr = v.dpr;
@@ -2583,7 +2623,7 @@ function applyViewport(s: WasmSession, v: Viewport, shift: number): void {
     }
     const scrollY = v.scrollY + anchorShift - shift;
     if (v.scrollX !== lastScrollX || scrollY !== lastScrollY || v.zoom !== lastZoom) {
-        s.setView(v.scrollX, scrollY, v.zoom);
+        s.setView(VIEWER, v.scrollX, scrollY, v.zoom);
         lastScrollX = v.scrollX;
         lastScrollY = scrollY;
         lastZoom = v.zoom;
@@ -2595,7 +2635,7 @@ function applyViewport(s: WasmSession, v: Viewport, shift: number): void {
  * {@link anchorShift}, and adopt the view it moved to ({@link adoptView}).
  */
 function followView(s: WasmSession, before: number | undefined): void {
-    const after = s.viewState()[2];
+    const after = s.viewState(VIEWER)[2];
     if (after === undefined || before === undefined || after === before) return;
     anchorShift += after - before;
     adoptView(s);
