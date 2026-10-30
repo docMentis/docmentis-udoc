@@ -88,6 +88,8 @@ export const ja: Messages = {
     "command.annotationOpacity": "不透明度",
     "command.normalView": "標準",
     "command.notesPageView": "ノート ページ",
+    "command.pagesView": "ページ分けあり",
+    "command.pagelessView": "ページ分けなし",
     "command.notes": "ノート",
     "formulaBar.label": "数式バー",
     "formulaBar.nameBox": "名前ボックス",

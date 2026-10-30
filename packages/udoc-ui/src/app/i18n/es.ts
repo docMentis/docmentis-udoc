@@ -88,6 +88,8 @@ export const es: Messages = {
     "command.annotationOpacity": "Opacidad",
     "command.normalView": "Normal",
     "command.notesPageView": "Página de notas",
+    "command.pagesView": "Páginas",
+    "command.pagelessView": "Sin páginas",
     "command.notes": "Notas",
     "formulaBar.label": "Barra de fórmulas",
     "formulaBar.nameBox": "Cuadro de nombres",

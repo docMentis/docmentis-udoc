@@ -88,6 +88,8 @@ export const ptBR: Messages = {
     "command.annotationOpacity": "Opacidade",
     "command.normalView": "Normal",
     "command.notesPageView": "Página de anotações",
+    "command.pagesView": "Páginas",
+    "command.pagelessView": "Sem páginas",
     "command.notes": "Anotações",
     "formulaBar.label": "Barra de fórmulas",
     "formulaBar.nameBox": "Caixa de Nome",

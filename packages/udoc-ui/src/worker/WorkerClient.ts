@@ -599,6 +599,16 @@ export class WorkerClient {
     }
 
     /**
+     * Lay the pages of the plane on screen out at `width` document points,
+     * where they flow to the pane's width — a word document's pageless view.
+     * Planes whose pages take their size from the document ignore it. Sticky
+     * across opens like the spacing. Latest-wins, fire-and-forget.
+     */
+    setPageWidth(width: number): void {
+        this.#post({ type: "setPageWidth", viewer: MAIN_VIEWER, width });
+    }
+
+    /**
      * Set the fit: the viewer derives its own zoom to fit the current spread
      * into the viewport and re-derives it on resize. Its `mode` is `"none"`,
      * `"width"`, `"height"`, `"both"` (contain) or `"either"` (cover); its

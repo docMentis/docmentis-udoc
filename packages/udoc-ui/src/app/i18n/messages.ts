@@ -159,6 +159,10 @@ export interface Messages {
     "command.normalView": string;
     /** Notes Page */
     "command.notesPageView": string;
+    /** Pages */
+    "command.pagesView": string;
+    /** Pageless */
+    "command.pagelessView": string;
     /** Notes */
     "command.notes": string;
 

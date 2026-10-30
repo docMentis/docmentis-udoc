@@ -55,7 +55,7 @@ import { createFloatingToolbar } from "./components/FloatingToolbar.js";
 import { createLeftPanel } from "./components/LeftPanel.js";
 import { createNotesPane } from "./components/NotesPane.js";
 import { createFormulaBar } from "./components/FormulaBar.js";
-import { visibleSpan } from "./components/Scrollbar.js";
+import { SCROLLBAR_THICKNESS_PX, visibleSpan } from "./components/Scrollbar.js";
 import { cellKeyAction } from "./cell-keys.js";
 import type { CellKeyAction } from "./cell-keys.js";
 import { createRightPanel } from "./components/RightPanel.js";
@@ -91,6 +91,7 @@ import {
     initialState,
     planeOfView,
     renderZoom,
+    showsPageless,
     viewDpi,
     viewOfPlane,
 } from "./state.js";
@@ -1341,18 +1342,41 @@ export function mountUIShell(
         // it; the chrome frames it a rung higher, popups rise from there.
         const color = resolveColor("var(--udoc-canvas-background)");
         if (!color) return;
-        client.setBackdrop(color);
+        // A word document shown pageless lays no page under its text: the pane
+        // is its page, white like the pages it shows otherwise.
+        client.setBackdrop(showsPageless(store.getState()) ? { r: 255, g: 255, b: 255 } : color);
         // A deck's notes stand on the same ground, under the slides.
         notesPane.setBackdrop(color, isDark);
     }
+    const unsubPagelessBackdrop = subscribeSelector(store, showsPageless, () =>
+        syncBackdrop(resolveIsDark(store.getState().theme)),
+    );
+    // A word document shown pageless flows its body to the pane's width at the
+    // zoom, less the scrollbar's strip so a bar showing never turns a line;
+    // sent again as the pane or the zoom changes it. The engine shows a page
+    // whose width the host sets at 100% under a fit, with no content padding,
+    // so the zoom is that or the explicit one — known before the engine
+    // reports it, so the first width sent is the one that shows.
+    const unsubPageWidth = subscribeSelector(
+        store,
+        (s) =>
+            showsPageless(s) && s.viewportWidth > SCROLLBAR_THICKNESS_PX
+                ? (s.viewportWidth - SCROLLBAR_THICKNESS_PX) /
+                  ((s.fit.mode === "none" ? s.zoom : 1) * cssPxPerPt(viewDpi(s)))
+                : null,
+        (width) => {
+            if (width !== null) client.setPageWidth(width);
+        },
+    );
     // Push the page-border color (the Rust-painted 1px frame around each page) to
     // the engine so it tracks the theme. Outline-variant — the soft outline —
     // reads as a page edge against the canvas background without competing with
     // page content, matching the guide grid marks. Where the pages touch (the
     // view settings' Page Gap off) there is no edge to mark, only a line ruled
-    // between pages, so none is drawn.
+    // between pages, so none is drawn; nor around a word document shown
+    // pageless, whose pane is its page.
     function syncPageBorder(): void {
-        if (pagesTouch(store.getState())) {
+        if (unbordered(store.getState())) {
             client.setPageBorder(null);
             return;
         }
@@ -1364,7 +1388,11 @@ export function mountUIShell(
         const { gap } = spacingFor(s);
         return gap.horizontal === 0 && gap.vertical === 0;
     }
-    const unsubPageBorder = subscribeSelector(store, pagesTouch, () => syncPageBorder());
+    /** Whether the pages show no edge: touching, or one pageless page. */
+    function unbordered(s: UIState): boolean {
+        return pagesTouch(s) || showsPageless(s);
+    }
+    const unsubPageBorder = subscribeSelector(store, unbordered, () => syncPageBorder());
     // Recolor the host-rendered guide bands (the ruler / spreadsheet headers) to
     // the theme: resolve the colors the bands map onto through the probe and
     // hand them to the band renderer (drawn on the main thread now, not by the
@@ -3280,6 +3308,8 @@ export function mountUIShell(
         unsubPaintedPlane();
         unsubPlaneStatus();
         unsubPageBorder();
+        unsubPagelessBackdrop();
+        unsubPageWidth();
         unsubPerf();
         unsubPerfToggle();
         effects.destroy();

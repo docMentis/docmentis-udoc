@@ -13,7 +13,13 @@
  * or not-yet-profiled doc type falls back to {@link FALLBACK_PROFILE}. Adding a
  * doc type is one entry here — the rest of the UI doesn't change.
  */
-import { ANNOTATE_COMMANDS, LEFT_PANEL_TABS, RIGHT_PANEL_TABS, VIEW_COMMANDS } from "./state.js";
+import {
+    ANNOTATE_COMMANDS,
+    LEFT_PANEL_TABS,
+    RIGHT_PANEL_TABS,
+    VIEW_COMMANDS,
+    WORDPROCESSING_VIEW_COMMANDS,
+} from "./state.js";
 import type { UIState, LayoutMode, LeftPanelTab, PanelTab, RightPanelTab, ToolbarTab } from "./state.js";
 import type { Feature, UDocType } from "@docmentis/udoc-wasm";
 
@@ -38,6 +44,17 @@ export const VIEW_TAB: ToolbarTab = {
     id: "view",
     label: "ribbon.view",
     commands: VIEW_COMMANDS,
+};
+
+/**
+ * A word document's View tab — its pages, or its body pageless, flowed to the
+ * pane's width. A view setting like the deck's, in view mode and edit mode
+ * both.
+ */
+export const WORDPROCESSING_VIEW_TAB: ToolbarTab = {
+    id: "view",
+    label: "ribbon.view",
+    commands: WORDPROCESSING_VIEW_COMMANDS,
 };
 
 /**
@@ -273,7 +290,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
  * from the flow, they don't reorder).
  */
 export const WORDPROCESSING_PROFILE: DocProfile = {
-    viewTabs: [],
+    viewTabs: [WORDPROCESSING_VIEW_TAB],
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],

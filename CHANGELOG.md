@@ -28,6 +28,10 @@ listed once, by package. Its major and minor version are those of the
   they make, which can be typed instead, and an eyedropper where the browser
   has one. OK applies it and adds it to Recent Colors; Cancel goes back to the
   swatches.
+- A word document has a View tab that shows it as Pages, or Pageless: its body
+  flowed to the pane's width on one page as tall as its text, with no headers,
+  footers or page breaks, wrapping again as the pane or the zoom changes. A
+  document saved in Word's Web Layout opens pageless.
 
 #### Changed
 

@@ -2,7 +2,7 @@ import type { HistoryOp, SelectionEdit } from "../worker/protocol.js";
 import type { StampIcon, UDocType } from "@docmentis/udoc-wasm";
 import { allowsEdit } from "../geometry.js";
 import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
-import { copyAllowed } from "./state.js";
+import { copyAllowed, PAGELESS_PLANE } from "./state.js";
 import type {
     AnnotationTool,
     CommandId,
@@ -52,6 +52,8 @@ import {
     ICON_NOTES,
     ICON_NOTES_PAGE_VIEW,
     ICON_NORMAL_VIEW,
+    ICON_PAGES_VIEW,
+    ICON_PAGELESS_VIEW,
     ICON_TEXT_HIGHLIGHT,
     ICON_FILL,
     ICON_STROKE,
@@ -800,5 +802,36 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             press: (store) => store.dispatch({ type: "SET_NOTES_OPEN", open: !store.getState().notesOpen }),
         },
         enabledWhen: (c) => c.ready && c.scrollMode === "spread" && c.presentationView === "normal",
+    },
+
+    // View tab — a word document's views, one segmented group like the
+    // deck's: its pages, or its body pageless, flowed to the pane's width.
+    pagesView: {
+        id: "pagesView",
+        label: "command.pagesView",
+        icon: ICON_PAGES_VIEW,
+        group: "views",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            cluster: "toggle",
+            pressed: (state) => state.currentPlane !== PAGELESS_PLANE,
+            press: (store) => store.dispatch({ type: "SET_CURRENT_PLANE", plane: 0 }),
+        },
+        enabledWhen: whenReady,
+    },
+    pagelessView: {
+        id: "pagelessView",
+        label: "command.pagelessView",
+        icon: ICON_PAGELESS_VIEW,
+        group: "views",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            cluster: "toggle",
+            pressed: (state) => state.currentPlane === PAGELESS_PLANE,
+            press: (store) => store.dispatch({ type: "SET_CURRENT_PLANE", plane: PAGELESS_PLANE }),
+        },
+        enabledWhen: whenReady,
     },
 };

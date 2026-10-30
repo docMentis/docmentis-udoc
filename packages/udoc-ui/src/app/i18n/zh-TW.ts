@@ -88,6 +88,8 @@ export const zhTW: Messages = {
     "command.annotationOpacity": "不透明度",
     "command.normalView": "標準模式",
     "command.notesPageView": "備忘稿頁",
+    "command.pagesView": "分頁",
+    "command.pagelessView": "不分頁",
     "command.notes": "備忘稿",
     "formulaBar.label": "資料編輯列",
     "formulaBar.nameBox": "名稱方塊",

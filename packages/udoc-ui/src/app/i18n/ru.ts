@@ -88,6 +88,8 @@ export const ru: Messages = {
     "command.annotationOpacity": "Непрозрачность",
     "command.normalView": "Обычный",
     "command.notesPageView": "Страница заметок",
+    "command.pagesView": "Страницы",
+    "command.pagelessView": "Без страниц",
     "command.notes": "Заметки",
     "formulaBar.label": "Строка формул",
     "formulaBar.nameBox": "Поле имени",

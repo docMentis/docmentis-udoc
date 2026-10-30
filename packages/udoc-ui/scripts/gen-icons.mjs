@@ -74,6 +74,8 @@ const ICONS = {
     ICON_NOTES: "speaker_notes",
     ICON_NORMAL_VIEW: "crop_landscape",
     ICON_NOTES_PAGE_VIEW: "article",
+    ICON_PAGES_VIEW: "description",
+    ICON_PAGELESS_VIEW: "subject",
 
     // Pointer modes
     ICON_TOOL_POINTER: "arrow_selector_tool",

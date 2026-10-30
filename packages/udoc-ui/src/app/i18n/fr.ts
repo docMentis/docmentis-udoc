@@ -88,6 +88,8 @@ export const fr: Messages = {
     "command.annotationOpacity": "Opacité",
     "command.normalView": "Normal",
     "command.notesPageView": "Page de notes",
+    "command.pagesView": "Pages",
+    "command.pagelessView": "Sans pages",
     "command.notes": "Notes",
     "formulaBar.label": "Barre de formule",
     "formulaBar.nameBox": "Zone Nom",

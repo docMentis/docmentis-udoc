@@ -156,6 +156,16 @@ export function viewOfPlane(kinds: UIState["planeKinds"], plane: number): Presen
     return null;
 }
 
+/** The plane a word document shows pageless: its body flowed to the pane's
+ *  width, on one page as tall as its text, with no headers, footers or page
+ *  breaks. Its pages are plane 0. */
+export const PAGELESS_PLANE = 1;
+
+/** Whether `state` shows a word document pageless. */
+export function showsPageless(state: { docType: UDocType | null; currentPlane: number }): boolean {
+    return state.docType === "wordprocessing" && state.currentPlane === PAGELESS_PLANE;
+}
+
 /** Canonical render order for the left-panel tab strip. */
 export const LEFT_PANEL_TABS: readonly LeftPanelTab[] = ["thumbnail", "outline", "layers", "attachments"];
 
@@ -271,7 +281,9 @@ export type CommandId =
     | "annotationOpacity"
     | "normalView"
     | "notesPageView"
-    | "notes";
+    | "notes"
+    | "pagesView"
+    | "pagelessView";
 
 /**
  * A tab in the ribbon's tab strip. Selecting a tab swaps the ribbon's tool
@@ -326,6 +338,10 @@ export const ANNOTATE_COMMANDS: readonly CommandId[] = [
  *  Notes toggle, which opens its speaker notes' pane under the slides, or
  *  closes it to its edge. */
 export const VIEW_COMMANDS: readonly CommandId[] = ["normalView", "notesPageView", "notes"];
+
+/** A word document's View tab's commands — its views, its pages or its body
+ *  pageless. */
+export const WORDPROCESSING_VIEW_COMMANDS: readonly CommandId[] = ["pagesView", "pagelessView"];
 
 // -----------------------------------------------------------------------------
 // UI state

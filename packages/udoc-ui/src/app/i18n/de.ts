@@ -88,6 +88,8 @@ export const de: Messages = {
     "command.annotationOpacity": "Deckkraft",
     "command.normalView": "Normal",
     "command.notesPageView": "Notizenseite",
+    "command.pagesView": "Seiten",
+    "command.pagelessView": "Seitenlos",
     "command.notes": "Notizen",
     "formulaBar.label": "Bearbeitungsleiste",
     "formulaBar.nameBox": "Namenfeld",

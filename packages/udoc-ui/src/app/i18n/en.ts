@@ -89,6 +89,8 @@ export const en: Messages = {
     "command.annotationOpacity": "Opacity",
     "command.normalView": "Normal",
     "command.notesPageView": "Notes Page",
+    "command.pagesView": "Pages",
+    "command.pagelessView": "Pageless",
     "command.notes": "Notes",
     "formulaBar.label": "Formula bar",
     "formulaBar.nameBox": "Name Box",

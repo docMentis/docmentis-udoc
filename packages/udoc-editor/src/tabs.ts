@@ -2,7 +2,7 @@
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
 // order, and a strip opens on its Home.
 import type { UDocType } from "@docmentis/udoc-ui";
-import { ANNOTATE_TAB, VIEW_TAB } from "@docmentis/udoc-ui/internal";
+import { ANNOTATE_TAB, VIEW_TAB, WORDPROCESSING_VIEW_TAB } from "@docmentis/udoc-ui/internal";
 import type { CommandId, ToolbarTab } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
 
@@ -232,9 +232,10 @@ const PRESENTATION_TABS: readonly EditTab[] = [
     VIEW_TAB,
 ];
 
-/** The wordprocessing strip: Home plus Text. No Shape tab yet — the flow
+/** The wordprocessing strip: Home plus Text, then udoc-ui's View last (its
+ *  pages or pageless), as view mode has it. No Shape tab yet — the flow
  *  document has no free-floating shapes. */
-const WORDPROCESSING_TABS: readonly EditTab[] = [HOME_TAB, TEXT_TAB];
+const WORDPROCESSING_TABS: readonly EditTab[] = [HOME_TAB, TEXT_TAB, WORDPROCESSING_VIEW_TAB];
 
 /** The image strip: its own Home and Insert, then the Text and Shape tabs of
  *  the shapes drawn over its pages — a deck's, as they are a slide's shapes. */

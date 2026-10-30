@@ -88,6 +88,8 @@ export const ko: Messages = {
     "command.annotationOpacity": "불투명도",
     "command.normalView": "기본",
     "command.notesPageView": "노트 페이지",
+    "command.pagesView": "페이지",
+    "command.pagelessView": "페이지 없음",
     "command.notes": "슬라이드 노트",
     "formulaBar.label": "수식 입력줄",
     "formulaBar.nameBox": "이름 상자",

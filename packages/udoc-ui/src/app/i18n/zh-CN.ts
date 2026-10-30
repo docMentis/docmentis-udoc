@@ -88,6 +88,8 @@ export const zhCN: Messages = {
     "command.annotationOpacity": "不透明度",
     "command.normalView": "普通",
     "command.notesPageView": "备注页",
+    "command.pagesView": "分页",
+    "command.pagelessView": "无分页",
     "command.notes": "备注",
     "formulaBar.label": "编辑栏",
     "formulaBar.nameBox": "名称框",

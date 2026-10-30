@@ -88,6 +88,8 @@ export const ar: Messages = {
     "command.annotationOpacity": "العتامة",
     "command.normalView": "عادي",
     "command.notesPageView": "صفحة الملاحظات",
+    "command.pagesView": "صفحات",
+    "command.pagelessView": "بلا صفحات",
     "command.notes": "ملاحظات",
     "formulaBar.label": "شريط الصيغة",
     "formulaBar.nameBox": "مربع الاسم",
