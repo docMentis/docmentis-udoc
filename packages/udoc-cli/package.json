@@ -1,6 +1,6 @@
 {
     "name": "@docmentis/udoc-cli",
-    "version": "0.8.7",
+    "version": "0.8.8",
     "description": "Inspect, render, and export documents from the command line.",
     "keywords": [
         "cli",
@@ -51,6 +51,6 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-node": "0.8.7"
+        "@docmentis/udoc-node": "0.8.8"
     }
 }
