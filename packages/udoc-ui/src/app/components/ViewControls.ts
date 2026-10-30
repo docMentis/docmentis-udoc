@@ -397,8 +397,10 @@ export function createViewControls(i18n: I18n) {
      * width/height/page) — leaving the zoom steps standalone. A grid document
      * (spreadsheet) has no page stack to scroll, group or turn, and no page to
      * fit, so the shell strips all three and docks the bare zoom control
-     * in the status bar. Safe to call before {@link mount}; re-runs the roving
-     * tabindex so the now-hidden buttons drop out of the arrow-key order.
+     * in the status bar; a word document shown pageless, one page flowed to
+     * the pane, strips them where they are. Safe to call before
+     * {@link mount}; re-runs the roving tabindex so the now-hidden buttons
+     * drop out of the arrow-key order.
      */
     function setPagedSections(visible: boolean): void {
         pagedSectionsVisible = visible;

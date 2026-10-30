@@ -31,7 +31,9 @@ listed once, by package. Its major and minor version are those of the
 - A word document has a View tab that shows it as Pages, or Pageless: its body
   flowed to the pane's width on one page as tall as its text, with no headers,
   footers or page breaks, wrapping again as the pane or the zoom changes. A
-  document saved in Word's Web Layout opens pageless.
+  document saved in Word's Web Layout opens pageless. While it shows pageless
+  the view controls are zoom alone: the page navigation, the view settings and
+  the fit options come back with its pages.
 - A `.txt` file opens, as a word document shown pageless.
 
 #### Changed

@@ -1133,8 +1133,10 @@ export function mountUIShell(
 
     // Strip the paged sections (page nav + view mode) for grid documents, leaving
     // the bare zoom control. Keyed on the profile flag so it tracks the loaded
-    // doc type (unknown until the first document loads).
-    const pagedViewControls = (s: UIState) => profileFor(s.docType).pagedViewControls;
+    // doc type (unknown until the first document loads). A word document shown
+    // pageless strips them too: its one page flows to the pane, with no other
+    // to go to, no arrangement, and no fit but 100%.
+    const pagedViewControls = (s: UIState) => profileFor(s.docType).pagedViewControls && !showsPageless(s);
     viewControls.setPagedSections(pagedViewControls(store.getState()));
     const unsubViewControlsComposition = subscribeSelector(
         store,
