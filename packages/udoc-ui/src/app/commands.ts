@@ -598,17 +598,6 @@ export interface CommandDef<K extends string = MessageKey> {
     /** Visual grouping key — consecutive commands sharing a group sit together. */
     group: string;
     run: CommandRun<K>;
-    /**
-     * Show the {@link label} beside the glyph. Off by default: a tool band is
-     * read by shape, and a labeled control costs several times an icon's width.
-     * Set it only where the glyph alone doesn't say what the command *does* —
-     * New Slide's page-add glyph reads "slide" only once you know, where an
-     * alignment or a bulleted list is exactly what its glyph draws.
-     *
-     * A command that arms a place tool is labeled without this: an insert
-     * command's glyph names the *thing*, not the act.
-     */
-    labeled?: boolean;
     /** The key that runs it — the shell's own handler, which the tooltip names. */
     shortcut?: Shortcut;
     /** When this command is enabled, given the current {@link CommandContext}
@@ -763,7 +752,6 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.normalView",
         icon: ICON_NORMAL_VIEW,
         group: "views",
-        labeled: true,
         run: {
             kind: "toggle",
             cluster: "toggle",
@@ -777,7 +765,6 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.notesPageView",
         icon: ICON_NOTES_PAGE_VIEW,
         group: "views",
-        labeled: true,
         run: {
             kind: "toggle",
             cluster: "toggle",
@@ -795,7 +782,6 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.notes",
         icon: ICON_NOTES,
         group: "show",
-        labeled: true,
         run: {
             kind: "toggle",
             pressed: (state) => state.notesOpen,
@@ -811,7 +797,6 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.pagesView",
         icon: ICON_PAGES_VIEW,
         group: "views",
-        labeled: true,
         run: {
             kind: "toggle",
             cluster: "toggle",
@@ -825,7 +810,6 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.pagelessView",
         icon: ICON_PAGELESS_VIEW,
         group: "views",
-        labeled: true,
         run: {
             kind: "toggle",
             cluster: "toggle",

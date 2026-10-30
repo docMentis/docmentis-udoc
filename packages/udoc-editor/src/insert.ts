@@ -137,7 +137,6 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             label: "command.insertImage",
             icon: ICON_IMAGE,
             group: "insert",
-            labeled: true,
             run: { kind: "action", press: pickImage },
             enabledWhen: (c) => c.ready && c.docType === "presentation" && c.presentationView === "normal",
         },

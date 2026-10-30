@@ -639,14 +639,10 @@ export function createRibbon(
             const label = labelOf(def.label);
             if (def.run.kind === "menu") {
                 const items = def.run.menu;
-                // Icon-only unless the command asks for its label (see
-                // `CommandDef.labeled`).
-                const content = def.labeled ? { icon: def.icon, text: label, label } : { icon: def.icon, label };
-                const dd = createDropdownButton(content, {
-                    menuLabel: label,
-                    menuRole: "menu",
-                    onOpen: () => fillMenu(dd, items),
-                });
+                const dd = createDropdownButton(
+                    { icon: def.icon, label },
+                    { menuLabel: label, menuRole: "menu", onOpen: () => fillMenu(dd, items) },
+                );
                 dd.trigger.dataset.command = def.id;
                 dropdowns.push(dd);
                 return dd.el;
@@ -660,7 +656,7 @@ export function createRibbon(
             if (def.run.kind === "armPicker") {
                 const options = def.run.options;
                 const dd = createDropdownButton(
-                    { icon: def.icon, text: label, label },
+                    { icon: def.icon, label },
                     { menuLabel: label, menuRole: "menu", onOpen: () => fillShapes(dd, options) },
                 );
                 dd.trigger.dataset.command = def.id;
@@ -690,15 +686,10 @@ export function createRibbon(
                 dropdowns.push(dd);
                 return dd.el;
             }
-            // Placement commands keep their label, as does a command that asks
-            // for it — their glyphs are ambiguous (a rectangle reads as "shape",
-            // a page-add as "slide", only once you know). Anything else is
-            // icon-only with a tooltip.
-            const labeled = def.run.kind === "arm" || def.labeled === true;
+            // Icon-only, its label in the tooltip.
             const btn = createButton({
                 icon: def.icon,
                 label,
-                ...(labeled && { text: label }),
                 ...(def.shortcut && { shortcut: nameShortcut(def.shortcut, i18n) }),
             });
             btn.dataset.command = def.id;

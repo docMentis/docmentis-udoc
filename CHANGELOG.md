@@ -6,6 +6,14 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Changed
+
+- The ribbon's commands show their icons alone, each named in its tooltip,
+  where the View tab's views and Notes, the Insert tab's tools, New Slide and
+  the crop controls showed their names beside their icons.
+
 ## [0.8.8] - 2026-10-29
 
 Built on `@docmentis/udoc-wasm` 0.8.10.

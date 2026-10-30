@@ -96,8 +96,7 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
  * action shown with nothing selected, or slides or sections: it sits where the
  * selection's property controls go, so it shows on the empty canvas and with
  * slides or sections picked in the thumbnails, and yields to those controls the
- * moment a shape or text is selected. Labeled, as its page-add glyph reads
- * "slide" only once you know.
+ * moment a shape or text is selected.
  */
 export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
     return {
@@ -105,7 +104,6 @@ export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
         label: "command.createSlide",
         icon: ICON_PAGE_ADD,
         group: "slide",
-        labeled: true,
         run: { kind: "action", press: open },
         enabledWhen: (c) =>
             c.ready &&
