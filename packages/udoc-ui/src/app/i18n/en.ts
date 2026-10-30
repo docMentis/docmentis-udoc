@@ -29,8 +29,9 @@ export const en: Messages = {
 
     // Toolbar
     "toolbar.label": "Document toolbar",
+    "toolbar.showSidePanel": "Show Side Panel",
+    "toolbar.hideSidePanel": "Hide Side Panel",
     "toolbar.menu": "Menu",
-    "toolbar.more": "More",
     "toolbar.search": "Search",
     "toolbar.comments": "Comments",
     "toolbar.print": "Print",

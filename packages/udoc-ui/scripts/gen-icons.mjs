@@ -36,6 +36,8 @@ const ICONS = {
     ICON_MORE: "more_horiz",
     ICON_MORE_VERT: "more_vert",
     ICON_MENU: "menu",
+    ICON_SIDE_PANEL_OPEN: "left_panel_open",
+    ICON_SIDE_PANEL_CLOSE: "left_panel_close",
     ICON_CODE: "code",
     ICON_SEARCH: "search",
     ICON_COMMENTS: "comment",

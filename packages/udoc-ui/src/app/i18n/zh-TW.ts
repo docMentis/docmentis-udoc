@@ -28,8 +28,9 @@ export const zhTW: Messages = {
 
     // Toolbar
     "toolbar.label": "文件工具列",
+    "toolbar.showSidePanel": "顯示側邊面板",
+    "toolbar.hideSidePanel": "隱藏側邊面板",
     "toolbar.menu": "選單",
-    "toolbar.more": "更多",
     "toolbar.search": "搜尋",
     "toolbar.comments": "註解",
     "toolbar.print": "列印",

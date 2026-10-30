@@ -80,7 +80,7 @@ export interface DocProfile {
      * image only the thumbnails, the rest reading PDF parts they don't have; a
      * spreadsheet offers none — its navigation is the bottom sheet-tab bar (see
      * {@link sheetTabs}) and the page/PDF-shaped navigators don't map to a grid —
-     * so its left panel and the toolbar's panel menu button drop out entirely.
+     * so its left panel and the toolbar's side panel button drop out entirely.
      * Any tab outside this list is treated as disabled (hidden from the UI).
      */
     leftPanels: readonly LeftPanelTab[];
@@ -265,7 +265,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
     // No left-panel navigators — a workbook is a grid, not a page/slide stack, so
     // thumbnails / outline / layers / attachments don't apply; its navigation is
     // the bottom sheet-tab bar (`sheetTabs`). With every tab omitted the left
-    // panel and its toolbar menu button drop out entirely.
+    // panel and its toolbar side panel button drop out entirely.
     leftPanels: [],
     rightPanels: ["search"],
     textEditing: false,

@@ -30,7 +30,7 @@ function pointerOf(mode: SelectableMode): PointerMode {
  * ported from the viewer's top-bar tool split button. Built on the shared
  * {@link createSplitButton}: the main button wears the active tool's icon and
  * re-asserts it on click; the caret opens a vertical menu to switch tools. It
- * leads the top toolbar's left zone (after the menu button), so the menu opens
+ * leads the top toolbar's left zone (after the side panel button), so the menu opens
  * downward like the viewer's.
  *
  * The transient `place` mode (armed by an Insert command) isn't one of these

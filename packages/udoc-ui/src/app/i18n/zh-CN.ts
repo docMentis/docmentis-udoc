@@ -28,8 +28,9 @@ export const zhCN: Messages = {
 
     // Toolbar
     "toolbar.label": "文档工具栏",
+    "toolbar.showSidePanel": "显示侧边面板",
+    "toolbar.hideSidePanel": "隐藏侧边面板",
     "toolbar.menu": "菜单",
-    "toolbar.more": "更多",
     "toolbar.search": "搜索",
     "toolbar.comments": "批注",
     "toolbar.print": "打印",

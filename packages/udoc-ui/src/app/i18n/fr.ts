@@ -28,8 +28,9 @@ export const fr: Messages = {
 
     // Toolbar
     "toolbar.label": "Barre d'outils du document",
+    "toolbar.showSidePanel": "Afficher le panneau latéral",
+    "toolbar.hideSidePanel": "Masquer le panneau latéral",
     "toolbar.menu": "Menu",
-    "toolbar.more": "Plus",
     "toolbar.search": "Rechercher",
     "toolbar.comments": "Commentaires",
     "toolbar.print": "Imprimer",

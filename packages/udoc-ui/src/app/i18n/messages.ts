@@ -49,10 +49,12 @@ export interface Messages {
     // Toolbar
     /** Document toolbar */
     "toolbar.label": string;
+    /** Show Side Panel */
+    "toolbar.showSidePanel": string;
+    /** Hide Side Panel */
+    "toolbar.hideSidePanel": string;
     /** Menu */
     "toolbar.menu": string;
-    /** More */
-    "toolbar.more": string;
     /** Search */
     "toolbar.search": string;
     /** Comments */

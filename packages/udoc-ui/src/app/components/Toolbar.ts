@@ -1,7 +1,7 @@
 import { on, subscribeSelector, createMenuController } from "../../framework/index.js";
 import type { Store } from "../../framework/index.js";
 import type { Feature, UDocType } from "@docmentis/udoc-wasm";
-import { createButton, createMenuItem, nameShortcut } from "./controls.js";
+import { createButton, createMenuItem, nameButton, nameShortcut } from "./controls.js";
 import type { HistoryOp } from "../../worker/protocol.js";
 import type { Action } from "../actions.js";
 import type { UIState, PanelTab, ThemeMode } from "../state.js";
@@ -11,8 +11,9 @@ import { tabsFor } from "../profiles.js";
 import type { TabSource } from "../profiles.js";
 import { setupRovingTabindex } from "../a11y.js";
 import {
+    ICON_SIDE_PANEL_OPEN,
+    ICON_SIDE_PANEL_CLOSE,
     ICON_MENU,
-    ICON_MORE,
     ICON_SEARCH,
     ICON_COMMENTS,
     ICON_FULLSCREEN,
@@ -51,6 +52,8 @@ interface ToolbarSlice {
     theme: ThemeMode;
     themeSwitchingDisabled: boolean;
     leftPanelVisible: boolean;
+    /** Whether one of the side panel's tabs is open. */
+    sidePanelOpen: boolean;
     rightPanelVisible: boolean;
     disabledPanels: ReadonlySet<PanelTab>;
     docType: UDocType | null;
@@ -72,6 +75,7 @@ function sliceEqual(a: ToolbarSlice, b: ToolbarSlice): boolean {
         a.theme === b.theme &&
         a.themeSwitchingDisabled === b.themeSwitchingDisabled &&
         a.leftPanelVisible === b.leftPanelVisible &&
+        a.sidePanelOpen === b.sidePanelOpen &&
         a.rightPanelVisible === b.rightPanelVisible &&
         a.disabledPanels === b.disabledPanels &&
         a.docType === b.docType &&
@@ -94,6 +98,7 @@ function selectSlice(state: UIState): ToolbarSlice {
         theme: state.theme,
         themeSwitchingDisabled: state.themeSwitchingDisabled,
         leftPanelVisible: state.leftPanelVisible,
+        sidePanelOpen: state.activePanel !== null && isLeftPanelTab(state.activePanel),
         rightPanelVisible: state.rightPanelVisible,
         disabledPanels: state.disabledPanels,
         docType: state.docType,
@@ -109,7 +114,7 @@ function selectSlice(state: UIState): ToolbarSlice {
 /**
  * The top command bar. Two zones with the ribbon's tab strip centered in the
  * space between them:
- * - **left** — `[menu] [view-controls slot] [divider] [pointer selector]
+ * - **left** — `[side panel] [view-controls slot] [divider] [pointer selector]
  *   [undo/redo]`. The view-controls slot (zoom + page nav + view mode) leads the
  *   navigation group, fenced from the pointer selector (select / pan / zoom) by a
  *   divider. The slot holds the shared {@link createViewControls} instance only
@@ -138,10 +143,12 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
     // --- Left section --------------------------------------------------
     const leftSection = document.createElement("div");
     leftSection.className = "udoc-toolbar__left";
-    const menuBtn = createButton({
-        icon: ICON_MENU,
-        label: i18n.t("toolbar.menu"),
-        className: "udoc-toolbar__btn--menu",
+    // Shows or hides the side panel — its arrow and its name, set per render,
+    // say which.
+    const sidePanelBtn = createButton({
+        icon: ICON_SIDE_PANEL_OPEN,
+        label: i18n.t("toolbar.showSidePanel"),
+        className: "udoc-toolbar__btn--side-panel",
     });
 
     const pointerModeMenu = createPointerModeMenu(i18n);
@@ -179,7 +186,7 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
     const viewControlsDivider = document.createElement("div");
     viewControlsDivider.className = "udoc-divider";
 
-    leftSection.append(menuBtn, viewControlsSlot, viewControlsDivider, pointerModeMenu.el, historySection);
+    leftSection.append(sidePanelBtn, viewControlsSlot, viewControlsDivider, pointerModeMenu.el, historySection);
 
     // Host for the ribbon's tab strip: it takes the space between the navigation
     // controls and the right section and centers the strip in it. The shell
@@ -197,9 +204,9 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
     const appMenuContainer = document.createElement("div");
     appMenuContainer.className = "udoc-app-menu udoc-dropdown";
     const appMenuBtn = createButton({
-        icon: ICON_MORE,
-        label: i18n.t("toolbar.more"),
-        className: "udoc-toolbar__btn--more",
+        icon: ICON_MENU,
+        label: i18n.t("toolbar.menu"),
+        className: "udoc-toolbar__btn--menu",
     });
     appMenuBtn.setAttribute("aria-haspopup", "true");
     const appMenuDropdown = document.createElement("div");
@@ -241,8 +248,8 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
         // whenever the slot's content changes, so its buttons join it.
         slotObserver.observe(modeSlot, { childList: true, subtree: true });
 
-        // --- Menu button: toggle the first available left panel tab ---
-        const onMenuClick = () => {
+        // --- Side panel button: open its first available tab, or close it ---
+        const onSidePanelClick = () => {
             const state = store.getState();
             if (state.activePanel !== null && isLeftPanelTab(state.activePanel)) {
                 store.dispatch({ type: "CLOSE_PANEL" });
@@ -251,7 +258,7 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
             const firstTab = LEFT_PANEL_TABS.find((t) => !state.disabledPanels.has(t));
             if (firstTab) store.dispatch({ type: "TOGGLE_PANEL", panel: firstTab });
         };
-        unsubEvents.push(on(menuBtn, "click", onMenuClick));
+        unsubEvents.push(on(sidePanelBtn, "click", onSidePanelClick));
 
         // --- Undo / redo history buttons ---
         unsubEvents.push(on(undoBtn, "click", () => callbacks.onHistory?.("undo")));
@@ -335,7 +342,9 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
             el.style.display = slice.toolbarVisible ? "" : "none";
 
             const allLeftDisabled = LEFT_PANEL_TABS.every((t) => slice.disabledPanels.has(t));
-            menuBtn.style.display = !slice.leftPanelVisible || allLeftDisabled ? "none" : "";
+            sidePanelBtn.style.display = !slice.leftPanelVisible || allLeftDisabled ? "none" : "";
+            sidePanelBtn.innerHTML = slice.sidePanelOpen ? ICON_SIDE_PANEL_CLOSE : ICON_SIDE_PANEL_OPEN;
+            nameButton(sidePanelBtn, i18n.t(slice.sidePanelOpen ? "toolbar.hideSidePanel" : "toolbar.showSidePanel"));
 
             // Undo/redo: visible where the mode has tabs — the tabs' commands
             // are its edits; greyed when the respective history stack is empty

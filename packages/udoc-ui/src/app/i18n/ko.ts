@@ -28,8 +28,9 @@ export const ko: Messages = {
 
     // Toolbar
     "toolbar.label": "문서 도구 모음",
+    "toolbar.showSidePanel": "사이드 패널 표시",
+    "toolbar.hideSidePanel": "사이드 패널 숨기기",
     "toolbar.menu": "메뉴",
-    "toolbar.more": "더 보기",
     "toolbar.search": "검색",
     "toolbar.comments": "메모",
     "toolbar.print": "인쇄",

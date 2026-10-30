@@ -25,6 +25,13 @@ listed once, by package. Its major and minor version are those of the
   together, square but for its two rounded ends, one of them pressed. The
   menu's rows were separate rounded buttons 2px apart, its icons in the muted
   color.
+- The toolbar's first button, which shows or hides the side panel, shows a
+  window with its panel and an arrow the way a click moves it, and is named
+  Show Side Panel or Hide Side Panel, where it was a ☰ named Menu. Its last
+  button, the menu of Search, Comments, Print and the rest, is the ☰ named
+  Menu, where it was a ⋯ named More. The `translations` keys
+  `toolbar.showSidePanel` and `toolbar.hideSidePanel` name the first,
+  `toolbar.menu` the last; `toolbar.more` is gone.
 
 ## [0.8.8] - 2026-10-29
 

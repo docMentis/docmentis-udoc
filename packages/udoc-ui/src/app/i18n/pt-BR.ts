@@ -28,8 +28,9 @@ export const ptBR: Messages = {
 
     // Toolbar
     "toolbar.label": "Barra de ferramentas do documento",
+    "toolbar.showSidePanel": "Mostrar painel lateral",
+    "toolbar.hideSidePanel": "Ocultar painel lateral",
     "toolbar.menu": "Menu",
-    "toolbar.more": "Mais",
     "toolbar.search": "Pesquisar",
     "toolbar.comments": "Comentários",
     "toolbar.print": "Imprimir",

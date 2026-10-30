@@ -28,8 +28,9 @@ export const de: Messages = {
 
     // Toolbar
     "toolbar.label": "Dokument-Symbolleiste",
+    "toolbar.showSidePanel": "Seitenleiste einblenden",
+    "toolbar.hideSidePanel": "Seitenleiste ausblenden",
     "toolbar.menu": "Menü",
-    "toolbar.more": "Mehr",
     "toolbar.search": "Suchen",
     "toolbar.comments": "Kommentare",
     "toolbar.print": "Drucken",

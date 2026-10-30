@@ -28,8 +28,9 @@ export const ja: Messages = {
 
     // Toolbar
     "toolbar.label": "文書ツールバー",
+    "toolbar.showSidePanel": "サイドパネルを表示",
+    "toolbar.hideSidePanel": "サイドパネルを非表示",
     "toolbar.menu": "メニュー",
-    "toolbar.more": "その他",
     "toolbar.search": "検索",
     "toolbar.comments": "コメント",
     "toolbar.print": "印刷",

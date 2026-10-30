@@ -28,8 +28,9 @@ export const ar: Messages = {
 
     // Toolbar
     "toolbar.label": "شريط أدوات المستند",
+    "toolbar.showSidePanel": "إظهار اللوحة الجانبية",
+    "toolbar.hideSidePanel": "إخفاء اللوحة الجانبية",
     "toolbar.menu": "القائمة",
-    "toolbar.more": "المزيد",
     "toolbar.search": "بحث",
     "toolbar.comments": "تعليقات",
     "toolbar.print": "طباعة",

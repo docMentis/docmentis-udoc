@@ -20,6 +20,12 @@ export const ICON_MORE_VERT = `<svg viewBox="0 -960 960 960" fill="currentColor"
 /** `menu` */
 export const ICON_MENU = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M144-264v-72h672v72H144Zm0-180v-72h672v72H144Zm0-180v-72h672v72H144Z"/></svg>`;
 
+/** `left_panel_open` */
+export const ICON_SIDE_PANEL_OPEN = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M504-636v312l168-156-168-156ZM211-144q-27.64 0-47.32-19.68T144-211v-538q0-27.64 19.68-47.32T211-816h538q27.64 0 47.32 19.68T816-749v538q0 27.64-19.68 47.32T749-144H211Zm125-72v-528H216v528h120Zm72 0h336v-528H408v528Zm-72 0H216h120Z"/></svg>`;
+
+/** `left_panel_close` */
+export const ICON_SIDE_PANEL_CLOSE = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M648-324v-312L480-480l168 156ZM211-144q-27.64 0-47.32-19.68T144-211v-538q0-27.64 19.68-47.32T211-816h538q27.64 0 47.32 19.68T816-749v538q0 27.64-19.68 47.32T749-144H211Zm125-72v-528H216v528h120Zm72 0h336v-528H408v528Zm-72 0H216h120Z"/></svg>`;
+
 /** `code` */
 export const ICON_CODE = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M336-240 96-480l240-240 51 51-189 189 189 189-51 51Zm288 0-51-51 189-189-189-189 51-51 240 240-240 240Z"/></svg>`;
 

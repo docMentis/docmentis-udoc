@@ -28,8 +28,9 @@ export const ru: Messages = {
 
     // Toolbar
     "toolbar.label": "Панель инструментов документа",
+    "toolbar.showSidePanel": "Показать боковую панель",
+    "toolbar.hideSidePanel": "Скрыть боковую панель",
     "toolbar.menu": "Меню",
-    "toolbar.more": "Ещё",
     "toolbar.search": "Поиск",
     "toolbar.comments": "Комментарии",
     "toolbar.print": "Печать",
