@@ -1478,8 +1478,10 @@ export function mountUIShell(
             e.preventDefault();
             requestHistory("redo");
         }
-        // The extension's own keys.
+        // The extension's own keys — one it takes, preventing its default, is
+        // its alone.
         extension?.keydown(e);
+        if (e.defaultPrevented) return;
         // Delete / Backspace removes the selected objects — but only in edit
         // mode, bar annotations, which edit in view mode too where their
         // capabilities allow (a session not entitled to annotate has none),
@@ -1944,12 +1946,12 @@ export function mountUIShell(
 
     // Each edit names what it acts on, as its command does: a drawing's shapes
     // (`translateShapes`) — in the doc types embedding the drawing families, a
-    // slide's shapes or a docx drawing's — or a PDF's page objects
-    // (`translateObjects`) or annotations (`translateAnnotations`). The emitters
-    // below pick by the open doc type, then by what a PDF selection holds.
+    // slide's shapes, a docx drawing's or those drawn over an image — or a PDF's
+    // page objects (`translateObjects`) or annotations (`translateAnnotations`).
+    // The emitters below pick by the open doc type, then by what a PDF
+    // selection holds.
     function shapeDocType(): boolean {
-        const docType = store.getState().docType;
-        return docType === "presentation" || docType === "wordprocessing";
+        return profileFor(store.getState().docType).drawingShapes;
     }
 
     function annotationsSelected(): boolean {

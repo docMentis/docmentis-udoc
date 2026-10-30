@@ -292,6 +292,11 @@ export const PAGE_MENU: readonly MenuItem[] = [
     { ...pageRow("thumbnails.deletePage", ICON_DELETE, { kind: "deletePages" }), separatorBefore: true },
 ];
 
+/** An image's thumbnail menu — {@link PAGE_MENU} less Insert Page, as a blank
+ *  image page means nothing. Duplicate is greyed but in a TIFF, the one
+ *  format that holds more than one page. */
+export const IMAGE_PAGE_MENU: readonly MenuItem[] = PAGE_MENU.slice(1);
+
 /** A deck's thumbnail menu — {@link PAGE_MENU}'s twin for its slides, with
  *  Add Section, and Hide Slide, checked while every selected slide is hidden. */
 export const SLIDE_MENU: readonly MenuItem[] = [

@@ -47,6 +47,7 @@ import type {
     GoogleFontFamily,
     GridCellSelectionMove,
     ComposedShapeMedia,
+    ImagePageInfo,
     UDocCommand,
     UDocFragment,
     UDocHit,
@@ -1075,6 +1076,30 @@ export class WorkerClient {
     async hitTest(x: number, y: number): Promise<UDocHit> {
         return (await this.#send({ type: "hitTest", x, y })) as UDocHit;
     }
+
+    /**
+     * The image-document surface — the reads that address and measure an
+     * image's pages, grouped off the agnostic client surface as
+     * {@link portable}'s are. Writes are agnostic, through {@link execute}.
+     */
+    readonly image = {
+        /**
+         * The manifest entry of the page at `index` — its id, its size in
+         * points, where its image is drawn on it, and the image's pixels and
+         * resolution — or `null` past the last page. A pure read: the id a
+         * page command takes, and the page's size and pixels.
+         */
+        pageInfoByIndex: (index: number): Promise<ImagePageInfo | null> =>
+            this.#send({ type: "imagePageInfo", index }) as Promise<ImagePageInfo | null>,
+
+        /**
+         * Whether the page `page` (its id) takes markup — an animated or a
+         * vector page takes none, and a shape drawn on it is dropped. Loads the
+         * page on first read.
+         */
+        takesMarkup: (page: string): Promise<boolean> =>
+            this.#send({ type: "imagePageTakesMarkup", page }) as Promise<boolean>,
+    };
 
     /**
      * The portable-document surface — the catalog read and id-addressed

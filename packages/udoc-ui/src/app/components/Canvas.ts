@@ -66,6 +66,7 @@ function hitText(hit: UDocHit, global: boolean): boolean {
         return portable.annotation.text != null;
     }
     if ("presentation" in hit) return shapeHitText(hit.presentation.shapeHit, global);
+    if ("image" in hit) return shapeHitText(hit.image.shapeHit, global);
     return false; // Spreadsheet — a grid cell, not text.
 }
 
@@ -178,6 +179,7 @@ function tableOf(hit: UDocHit): string | null {
     if (hit === "none") return null;
     if ("wordprocessing" in hit) return textHitTable(flowTextHit(hit.wordprocessing));
     if ("presentation" in hit) return shapeHitTable(hit.presentation.shapeHit);
+    if ("image" in hit) return shapeHitTable(hit.image.shapeHit);
     return null; // Portable and Spreadsheet — no table to work in.
 }
 
@@ -2375,9 +2377,10 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     }
 
     /**
-     * The gesture a **double press** on a slide object that shows no text
-     * opens: a text gesture there anyway, where a single press over a blank box
-     * stays an object pick. The engine lands the caret in a shape — at its sole
+     * The gesture a **double press** on a slide object, or a shape drawn over
+     * an image, that shows no text opens: a text gesture there anyway, where a
+     * single press over a blank box stays an object pick. The engine lands the
+     * caret in a shape — at its sole
      * boundary, or naming no story for a shape with no text body, which the
      * first keystroke then gives one — and leaves a picture or a connector as
      * it was. `null` for any other press.
@@ -2393,7 +2396,12 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     ): Extract<NonNullable<typeof gesture>, { kind: "textSelect" }> | null {
         const clicks = chainClick(x, y);
         const hit = hitAt(x, y);
-        if (clicks !== 2 || hit === "none" || !("presentation" in hit) || selectModeFor(ev) !== "replace") {
+        if (
+            clicks !== 2 ||
+            hit === "none" ||
+            !("presentation" in hit || "image" in hit) ||
+            selectModeFor(ev) !== "replace"
+        ) {
             return null;
         }
         return textGesture(x, y, ev, false, clicks);

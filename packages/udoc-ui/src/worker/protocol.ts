@@ -840,6 +840,27 @@ export interface PageIdByIndexRequest {
 }
 
 /**
+ * Read the manifest entry of the image page at `index` — its id, its size in
+ * points, where its image is drawn on it, and the image's pixels and
+ * resolution — a pure read. Replies with the entry, or `null` past the last
+ * page or with no open image.
+ */
+export interface ImagePageInfoRequest {
+    type: "imagePageInfo";
+    index: number;
+}
+
+/**
+ * Read whether the image page `page` (its id) takes markup — an animated or a
+ * vector page takes none. Loads the page on first read. Replies `false` for a
+ * page not in the document, or with no open image.
+ */
+export interface ImagePageTakesMarkupRequest {
+    type: "imagePageTakesMarkup";
+    page: string;
+}
+
+/**
  * Read the ids (hex keys) of every portable page, in page order — a pure read.
  * Replies with the list; empty with no open PDF.
  */
@@ -1831,6 +1852,8 @@ export type WorkerRequest =
     | HitTestRequest
     | MintIdRequest
     | PageIdByIndexRequest
+    | ImagePageInfoRequest
+    | ImagePageTakesMarkupRequest
     | PageIdsRequest
     | PageModeRequest
     | OutlineRequest

@@ -76,9 +76,9 @@ export interface DocProfile {
     rightPanels: readonly RightPanelTab[];
     /**
      * Whether this doc type's text is editable in place — a caret in a shape
-     * accepts typing (the hidden text input activates). Presentation and PDF
-     * (the portable engine's line-structured text) today; the rest is
-     * selection-only until their text model lands.
+     * accepts typing (the hidden text input activates). Presentation, PDF
+     * (the portable engine's line-structured text) and an image's drawn
+     * shapes today; the rest is selection-only until their text model lands.
      */
     textEditing: boolean;
     /**
@@ -98,10 +98,17 @@ export interface DocProfile {
      */
     pageArrangement: boolean;
     /**
+     * Whether the shapes this doc type selects are a drawing's — a slide's, a
+     * word document's drawings, or the shapes drawn over an image — whose
+     * edits (move, delete, fill, the text typed into them) are the drawing
+     * families', where a PDF's are its page objects' and annotations'.
+     */
+    drawingShapes: boolean;
+    /**
      * Whether the thumbnails pick whole pages outside view mode — the pages a
-     * PDF, and the slides a deck, are selected and edited as: deleted,
-     * duplicated, moved. A flow document's pages are where its text fell, and
-     * a sheet or an image has none to pick.
+     * PDF or an image, and the slides a deck, are selected and edited as:
+     * deleted, duplicated, moved. A flow document's pages are where its text
+     * fell, and a sheet has none to pick.
      */
     pageSelection: boolean;
     /**
@@ -148,6 +155,7 @@ export const FALLBACK_PROFILE: DocProfile = {
     textEditing: false,
     pagedViewControls: true,
     pageArrangement: false,
+    drawingShapes: false,
     pageSelection: false,
     // No band for an unprofiled type; a known paged type opts into the ruler
     // explicitly below.
@@ -159,8 +167,9 @@ export const FALLBACK_PROFILE: DocProfile = {
 };
 
 /**
- * The image document type — a stack of image pages, with no text to edit and
- * no page-control overlay.
+ * The image document type — a stack of image pages, which the thumbnails pick
+ * whole, with the shapes drawn over them as its only text, and no page-control
+ * overlay.
  */
 export const IMAGE_PROFILE: DocProfile = {
     viewTabs: [],
@@ -169,10 +178,12 @@ export const IMAGE_PROFILE: DocProfile = {
     leftPanels: ["thumbnail"],
     // An image has no text to search.
     rightPanels: [],
-    textEditing: false,
+    // A caret in a shape drawn over a page accepts typing, as on a slide.
+    textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
-    pageSelection: false,
+    drawingShapes: true,
+    pageSelection: true,
     // An image projects no guide.
     guide: null,
     // Gutters, like the page stacks.
@@ -193,6 +204,7 @@ export const PORTABLE_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,
+    drawingShapes: false,
     pageSelection: true,
     guide: null,
     scrollbarGutters: true,
@@ -214,6 +226,7 @@ export const PRESENTATION_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
+    drawingShapes: true,
     pageSelection: true,
     guide: null,
     scrollbarGutters: true,
@@ -241,6 +254,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
     textEditing: false,
     pagedViewControls: false,
     pageArrangement: false,
+    drawingShapes: false,
     pageSelection: false,
     guide: "header",
     // The sheet fills the pane edge to edge, so its bars float over the grid
@@ -267,6 +281,7 @@ export const WORDPROCESSING_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,
+    drawingShapes: true,
     pageSelection: false,
     guide: null,
     scrollbarGutters: true,

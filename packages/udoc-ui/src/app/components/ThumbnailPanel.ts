@@ -6,7 +6,7 @@ import type { SelectionEdit, SlideSectionRun } from "../../worker/protocol.js";
 import { THUMBNAIL_DROPPED } from "../../worker/WorkerClient.js";
 import type { WorkerClient } from "../../worker/WorkerClient.js";
 import type { Action } from "../actions.js";
-import { PAGE_MENU, SECTION_MENU, SLIDE_MENU } from "../commands.js";
+import { IMAGE_PAGE_MENU, PAGE_MENU, SECTION_MENU, SLIDE_MENU } from "../commands.js";
 import type { MenuItem } from "../commands.js";
 import { ICON_CHEVRON_DOWN, ICON_CHEVRON_RIGHT } from "../icons.js";
 import { reorderTo } from "../page-order.js";
@@ -1286,7 +1286,8 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
             y = rect.top + offsets[row]! - el.scrollTop + rowHeight(rows[row]!) / 2;
         }
         navigateTo(page);
-        callbacks.onContextMenu(x, y, slides() ? SLIDE_MENU : PAGE_MENU);
+        const docType = store?.getState().docType ?? null;
+        callbacks.onContextMenu(x, y, slides() ? SLIDE_MENU : docType === "image" ? IMAGE_PAGE_MENU : PAGE_MENU);
     }
 
     // --- state application -----------------------------------------------

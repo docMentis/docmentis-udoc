@@ -50,6 +50,7 @@ export {
     allowsEdit,
     allowsTableEdit,
     allowsTextEdit,
+    drawingProperties,
     EMPTY_SELECTION_PAINT,
     EMPTY_SELECTION_TEXT_FORMAT,
     selectionPaint,

@@ -53,7 +53,7 @@ export interface UIExtension {
     /** The commands its tabs name beyond the shell's catalog, by id. */
     readonly commands: Readonly<Record<string, CommandDef<string>>>;
     /** A key pressed in the shell: the extension acts on its own keys, and
-     *  prevents their default. */
+     *  prevents their default, which leaves them its alone. */
     keydown(e: KeyboardEvent): void;
     /** Run a menu row's intent of the extension's own — the `extension`
      *  `MenuAction` its menus carry. */

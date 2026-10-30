@@ -1957,6 +1957,24 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 );
                 break;
             }
+            case "imagePageInfo": {
+                // A pure read: one image page's manifest entry. Null past the
+                // last page, or with no open / non-image doc.
+                reply(
+                    id,
+                    safeRead(() => session?.image.model.root.pageInfoByIndex(msg.index), null),
+                );
+                break;
+            }
+            case "imagePageTakesMarkup": {
+                // Whether one image page takes markup — loading it on first
+                // read. False with no open / non-image doc.
+                reply(
+                    id,
+                    safeRead(() => session?.image.model.page(msg.page).takesMarkup(), false),
+                );
+                break;
+            }
             case "pageIds": {
                 // A pure read: every page's id, in page order. Empty with no
                 // open / non-portable doc.

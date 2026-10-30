@@ -34,6 +34,7 @@ import type {
     GridCellSelectOptions,
     TableSelectOptions,
     UDocSelectionProperties,
+    CommonSelectionProperties,
     Consensus,
     TextLineSpacing,
     TextParagraphAlign,
@@ -566,19 +567,28 @@ function consensusPoints(consensus: Consensus<number>): number | null {
 }
 
 /**
+ * The drawing sub-domains' properties of a selection — a deck's, a word
+ * document's, or the shapes' drawn over an image's pages, each the same
+ * `text` / `table` / `shape` blocks — or null for a PDF's, a workbook's, or
+ * none.
+ */
+export function drawingProperties(properties: UDocSelectionProperties | null): CommonSelectionProperties | null {
+    if (properties === null) return null;
+    if ("presentation" in properties) return properties.presentation;
+    if ("wordprocessing" in properties) return properties.wordprocessing;
+    if ("image" in properties) return properties.image;
+    return null;
+}
+
+/**
  * Project the engine's {@link UDocSelectionProperties} onto the Text tab's
- * {@link SelectionTextFormat}. Text is a shared sub-domain, so the presentation
- * and wordprocessing variants both carry the same `text` block — read whichever
- * is open. Any other doc type (or no selection) reflects
+ * {@link SelectionTextFormat}. Text is a shared sub-domain, so the doc types
+ * that draw ({@link drawingProperties}) all carry the same `text` block — read
+ * whichever is open. Any other doc type (or no selection) reflects
  * {@link EMPTY_SELECTION_TEXT_FORMAT}.
  */
 export function selectionTextFormat(properties: UDocSelectionProperties | null): SelectionTextFormat {
-    const text =
-        properties && "presentation" in properties
-            ? properties.presentation.text
-            : properties && "wordprocessing" in properties
-              ? properties.wordprocessing.text
-              : null;
+    const text = drawingProperties(properties)?.text;
     if (!text) return EMPTY_SELECTION_TEXT_FORMAT;
     return {
         font: consensusFont(text.font),
@@ -742,10 +752,11 @@ function resolvedColorDisplay(color: PaintColor, hex: string): PaintDisplay {
 /**
  * Project the engine's {@link UDocSelectionProperties} onto the four color
  * controls' {@link SelectionPaint}. Portable surfaces a path's fill / stroke (its
- * non-stroking / stroking brush); a presentation and a word document report the
- * same drawing properties — a shape's *resolved* fill / stroke (the effective
- * paint the layout composed, after the placeholder / style / theme cascade), be
- * it a slide's shape or a document's drawing, *and* the span color / highlight of
+ * non-stroking / stroking brush); a presentation, a word document and an image
+ * report the same drawing properties — a shape's *resolved* fill / stroke (the
+ * effective paint the layout composed, after the placeholder / style / theme
+ * cascade), be it a slide's shape, a document's drawing or one drawn over an
+ * image, *and* the span color / highlight of
  * a text caret, each with the color it displays as. Every drawing channel reports
  * its color the same way — the model paint (kind + theme identity) alongside the
  * color the engine resolved it to — so a theme-colored span swatches like a
@@ -762,12 +773,7 @@ export function selectionPaint(properties: UDocSelectionProperties | null): Sele
             highlight: { kind: "unknown" },
         };
     }
-    const p =
-        properties && "presentation" in properties
-            ? properties.presentation
-            : properties && "wordprocessing" in properties
-              ? properties.wordprocessing
-              : null;
+    const p = drawingProperties(properties);
     if (p) {
         return {
             fill: resolvedPaintDisplay(p.shape.fill, p.shape.fillColor, resolvedFillDisplay),
