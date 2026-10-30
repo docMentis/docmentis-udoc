@@ -1,6 +1,6 @@
 /**
  * The standard control factories — the shared button / dropdown / split-button
- * primitives. Every control builds from these so they share one set of
+ * / segment-button primitives. Every control builds from these so they share one set of
  * metrics (the `--udoc-btn-*` / `--udoc-menu-*` tokens) and one behavior (the
  * framework {@link createMenuController}) instead of each component hand-rolling
  * its own trigger, panel, and open/close logic.
@@ -243,4 +243,59 @@ export function createSplitButton(opts: {
         setActive: (active) => el.classList.toggle("udoc-split--selected", active),
         destroy: () => controller.destroy(),
     };
+}
+
+/** One choice of a {@link createSegmentButton}: its value, its name — the
+ *  tooltip and the accessible name — and its icon; one without shows its name. */
+export interface SegmentOption<T> {
+    value: T;
+    label: string;
+    icon?: string;
+}
+
+export interface SegmentButton<T> {
+    readonly el: HTMLElement;
+    /** Its buttons, in its options' order. */
+    readonly buttons: readonly HTMLButtonElement[];
+    /** Show `value`'s button as the pressed one, and every other as not. */
+    select(value: T): void;
+}
+
+/**
+ * A segment button: the choices of one setting, one of them pressed at a time
+ * — a radio group. Its buttons butt together like a button group's, square but
+ * for the control's two outer ends. A click calls `onSelect` with the choice's
+ * value; the caller, which owns the setting, shows it with
+ * {@link SegmentButton.select}.
+ */
+export function createSegmentButton<T>(
+    options: readonly SegmentOption<T>[],
+    opts: { label: string; onSelect: (value: T) => void },
+): SegmentButton<T> {
+    const el = document.createElement("div");
+    el.className = "udoc-segment";
+    el.setAttribute("role", "radiogroup");
+    el.setAttribute("aria-label", opts.label);
+
+    const buttons = options.map((opt) => {
+        const btn = createButton(
+            opt.icon ? { icon: opt.icon, label: opt.label } : { text: opt.label, label: opt.label },
+        );
+        btn.setAttribute("role", "radio");
+        btn.addEventListener("click", () => opts.onSelect(opt.value));
+        el.appendChild(btn);
+        return btn;
+    });
+
+    return {
+        el,
+        buttons,
+        select: (value) => buttons.forEach((btn, i) => checkSegment(btn, options[i]?.value === value)),
+    };
+}
+
+/** Show `button`, a choice of a segment button, as pressed or not. */
+export function checkSegment(button: HTMLButtonElement, checked: boolean): void {
+    button.classList.toggle("udoc-btn--selected", checked);
+    button.setAttribute("aria-checked", String(checked));
 }

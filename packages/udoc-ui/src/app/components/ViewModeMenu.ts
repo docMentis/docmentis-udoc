@@ -1,6 +1,6 @@
 import { on, subscribeSelector, createMenuController } from "../../framework/index.js";
 import type { Store, MenuController } from "../../framework/index.js";
-import { createButton } from "./controls.js";
+import { createButton, createSegmentButton } from "./controls.js";
 import type { Action } from "../actions.js";
 import type { UIState, LayoutMode, ScrollMode } from "../state.js";
 import { profileFor } from "../profiles.js";
@@ -131,46 +131,28 @@ export function createViewModeMenu(i18n: I18n) {
         titleEl.textContent = title;
         section.appendChild(titleEl);
 
-        const row = document.createElement("div");
-        row.className = "udoc-view-mode-menu__options";
-        row.setAttribute("role", "radiogroup");
-        row.setAttribute("aria-label", title);
+        const segment = createSegmentButton(
+            options.map((opt) => ({
+                value: opt.value,
+                label: i18n.t(opt.label),
+                ...(opt.icon && { icon: opt.icon }),
+            })),
+            { label: title, onSelect: (value) => storeRef?.dispatch(select(value)) },
+        );
+        segment.select(current);
+        options.forEach((opt, i) => {
+            const transforms = [
+                opt.iconFlipped ? "scaleX(-1)" : "",
+                opt.iconRotation ? `rotate(${opt.iconRotation}deg)` : "",
+            ].filter(Boolean);
+            const icon = segment.buttons[i]?.querySelector("svg");
+            if (icon && transforms.length > 0) icon.style.transform = transforms.join(" ");
+        });
+        // The pick rebuilds the panel, taking the clicked button out of it; kept
+        // from the document, the click can't read as one outside the menu.
+        dropdownListeners.push(on(segment.el, "click", (e: MouseEvent) => e.stopPropagation()));
 
-        for (const opt of options) {
-            const btn = document.createElement("button");
-            btn.className = "udoc-view-mode-menu__option";
-            const isActive = opt.value === current;
-            if (isActive) btn.classList.add("udoc-view-mode-menu__option--selected");
-            const label = i18n.t(opt.label);
-            btn.title = label;
-            btn.setAttribute("aria-label", label);
-            btn.setAttribute("aria-pressed", String(isActive));
-
-            if (opt.icon) {
-                const icon = document.createElement("span");
-                icon.className = "udoc-view-mode-menu__option-icon";
-                icon.innerHTML = opt.icon;
-                const transforms = [
-                    opt.iconFlipped ? "scaleX(-1)" : "",
-                    opt.iconRotation ? `rotate(${opt.iconRotation}deg)` : "",
-                ].filter(Boolean);
-                if (transforms.length > 0) icon.style.transform = transforms.join(" ");
-                btn.appendChild(icon);
-            } else {
-                btn.classList.add("udoc-view-mode-menu__option--label");
-                btn.textContent = label;
-            }
-
-            dropdownListeners.push(
-                on(btn, "click", (e: MouseEvent) => {
-                    e.stopPropagation();
-                    storeRef?.dispatch(select(opt.value));
-                }),
-            );
-            row.appendChild(btn);
-        }
-
-        section.appendChild(row);
+        section.appendChild(segment.el);
         return section;
     }
 

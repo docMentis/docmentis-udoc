@@ -33,6 +33,7 @@ import { setupRovingTabindex } from "../a11y.js";
 import { ICON_MORE_VERT } from "../icons.js";
 import {
     alignMenuToBounds,
+    checkSegment,
     createButton,
     createDropdownButton,
     createMenuItem,
@@ -221,10 +222,11 @@ function selectSlice(s: UIState): RibbonSlice {
     };
 }
 
-/** Whether a command bunches into a segmented `.udoc-btn-group`, and with which
- *  of its kind: the Annotate tab's markups cluster as `"toggle"`, its Color /
- *  Fill as `"paint"`, and controls, menus and toggles as their `cluster` says.
- *  Consecutive same-kind commands share one group; anything else stands alone. */
+/** Whether a command bunches into a segmented `.udoc-btn-group` (a `"segment"`
+ *  kind into a `.udoc-segment`), and with which of its kind: the Annotate tab's
+ *  markups cluster as `"toggle"`, its Color / Fill as `"paint"`, and controls,
+ *  menus and toggles as their `cluster` says. Consecutive same-kind commands
+ *  share one group; anything else stands alone. */
 function clusterKind(def: CommandDef<string>): ClusterKind | null {
     if (def.run.kind === "control" || def.run.kind === "menu" || def.run.kind === "toggle") {
         return def.run.cluster ?? null;
@@ -425,7 +427,8 @@ export function createRibbon(
      *  overrun it, the More button shows and the controls that don't fit beside
      *  it move to its panel, in order. A cluster the cut lands in splits there —
      *  its head stays on the row, the rest goes on as a cluster of its own —
-     *  rather than leaving its whole width empty. A divider the cut would leave
+     *  rather than leaving its whole width empty; a segment button, one
+     *  setting, moves whole. A divider the cut would leave
      *  trailing the row goes too, and the panel hides it as its first. */
     const flow = (): void => {
         if (el.style.display === "none") return;
@@ -730,12 +733,17 @@ export function createRibbon(
                     // kind (toggles → colors) starts a fresh cluster beside it.
                     if (!cluster || clusterOf !== kind) {
                         cluster = document.createElement("div");
-                        cluster.className = "udoc-btn-group";
-                        cluster.setAttribute("role", "group");
+                        // A segment's toggles are the choices of one setting: a
+                        // radio group, drawn as a segment button.
+                        const segment = kind === "segment";
+                        cluster.className = segment ? "udoc-segment" : "udoc-btn-group";
+                        cluster.setAttribute("role", segment ? "radiogroup" : "group");
                         clusterOf = kind;
                         toolsSection.appendChild(cluster);
                     }
-                    cluster.appendChild(cmdButton(def));
+                    const control = cmdButton(def);
+                    if (kind === "segment") control.setAttribute("role", "radio");
+                    cluster.appendChild(control);
                 } else {
                     cluster = null;
                     clusterOf = null;
@@ -804,8 +812,12 @@ export function createRibbon(
                     applyPaintBar(btn, annotationDisplay(ctx, def.run.channel));
                 } else if (def.run.kind === "toggle") {
                     const pressed = def.run.pressed(store.getState());
-                    btn.classList.toggle("udoc-btn--selected", pressed);
-                    btn.setAttribute("aria-pressed", String(pressed));
+                    if (btn.getAttribute("role") === "radio") {
+                        checkSegment(btn, pressed);
+                    } else {
+                        btn.classList.toggle("udoc-btn--selected", pressed);
+                        btn.setAttribute("aria-pressed", String(pressed));
+                    }
                 } else {
                     btn.classList.toggle("udoc-btn--selected", isCommandActive(def, slice.pointerMode));
                 }

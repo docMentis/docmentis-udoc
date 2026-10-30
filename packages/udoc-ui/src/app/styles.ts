@@ -403,60 +403,6 @@ export const uiStyles = css`
         padding: 0 4px;
     }
 
-    .udoc-ui-root .udoc-view-mode-menu__options {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 2px;
-    }
-
-    .udoc-ui-root .udoc-view-mode-menu__option {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        padding: 0;
-        border: none;
-        border-radius: 4px;
-        background: transparent;
-        color: var(--udoc-color-on-surface-variant);
-        cursor: pointer;
-    }
-
-    .udoc-ui-root .udoc-view-mode-menu__option:hover {
-        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
-    }
-
-    /* A choice the icon set has no symbol for shows its name instead. */
-    .udoc-ui-root .udoc-view-mode-menu__option--label {
-        width: auto;
-        min-width: 32px;
-        padding: 0 8px;
-        font: inherit;
-        font-size: 12px;
-        white-space: nowrap;
-    }
-
-    .udoc-ui-root .udoc-view-mode-menu__option--disabled {
-        opacity: var(--udoc-state-disabled-opacity);
-        cursor: default;
-    }
-
-    .udoc-ui-root .udoc-view-mode-menu__option--disabled:hover {
-        background: transparent;
-    }
-
-    .udoc-ui-root .udoc-view-mode-menu__option-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .udoc-ui-root .udoc-view-mode-menu__option-icon svg {
-        width: var(--udoc-btn-glyph);
-        height: var(--udoc-btn-glyph);
-    }
-
     /* Left Panel */
     .udoc-ui-root .udoc-left-panel {
         position: relative;
@@ -1105,6 +1051,29 @@ export const uiStyles = css`
         gap: 0;
     }
 
+    /* Segment button — the choices of one setting, one pressed at a time (the
+   View tab's views, the view settings menu's rows). Unframed and butted
+   together like a button group, but one control: its buttons are square, and
+   only its two outer ends round, so a tint on an end choice rounds on the
+   outside alone and a middle one's is a plain rectangle. Logical corners, so a
+   right-to-left row rounds the right ends. */
+    .udoc-ui-root .udoc-segment {
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+    }
+    .udoc-ui-root .udoc-segment > .udoc-btn {
+        border-radius: 0;
+    }
+    .udoc-ui-root .udoc-segment > .udoc-btn:first-child {
+        border-start-start-radius: var(--udoc-btn-radius);
+        border-end-start-radius: var(--udoc-btn-radius);
+    }
+    .udoc-ui-root .udoc-segment > .udoc-btn:last-child {
+        border-start-end-radius: var(--udoc-btn-radius);
+        border-end-end-radius: var(--udoc-btn-radius);
+    }
+
     /* Labeled content: a leading icon is spaced from the label by the gap (this is
    the only spacing that lives *inside* the button). */
     .udoc-ui-root .udoc-btn__icon {
@@ -1505,7 +1474,6 @@ export const uiStyles = css`
     .udoc-ui-root
         :is(
             .udoc-zoom-dropdown__item--selected,
-            .udoc-view-mode-menu__option--selected,
             .udoc-left-panel__tab--selected,
             .udoc-thumbnail-item--selected,
             .udoc-thumbnail-section--selected,
@@ -1859,13 +1827,9 @@ export const uiStyles = css`
             padding: 12px 16px;
         }
 
-        .udoc-ui-root .udoc-view-mode-menu__option {
-            width: 36px;
+        .udoc-ui-root .udoc-view-mode-menu__dropdown .udoc-segment > .udoc-btn {
+            min-width: 36px;
             height: 36px;
-        }
-
-        .udoc-ui-root .udoc-view-mode-menu__option--label {
-            width: auto;
         }
     }
 

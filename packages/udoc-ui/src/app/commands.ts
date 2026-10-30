@@ -533,7 +533,7 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  *   `press`es on a click — for a setting of an extension's (Show Formatting
  *   Marks), which mirrors its state, not the selection. `cluster` bunches it
  *   as a `control`'s does: a deck's Normal and Notes Page, one of which is
- *   always pressed.
+ *   always pressed, into a segment button.
  * - `markup` → an Annotate-tab text markup, through the ribbon's `onMarkup`:
  *   with text selected it marks it at once; else it arms its tool to mark the
  *   text the next drag selects, returning to `select` once it has. Pressing it
@@ -560,8 +560,10 @@ export type CommandRun<K extends string = MessageKey> =
 
 /** Which segmented group a ribbon command bunches into: consecutive commands of
  *  one kind butt together with no gap between them — the character toggles, the
- *  color dropdowns, the paragraph controls. */
-export type ClusterKind = "toggle" | "paint" | "paragraph";
+ *  color dropdowns, the paragraph controls. Consecutive `"segment"` toggles are
+ *  the choices of one setting, one pressed at a time: they form a segment
+ *  button (see `createSegmentButton`), which the ribbon never splits. */
+export type ClusterKind = "toggle" | "paint" | "paragraph" | "segment";
 
 /** A ribbon control an extension builds for one of its commands (a `control` {@link CommandRun}). */
 export interface RibbonControl {
@@ -746,7 +748,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
     },
 
-    // View tab — a deck's views, one segmented group: its slides, or the
+    // View tab — a deck's views, one segment button: its slides, or the
     // pages its notes print on, the one shown pressed.
     normalView: {
         id: "normalView",
@@ -755,7 +757,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         group: "views",
         run: {
             kind: "toggle",
-            cluster: "toggle",
+            cluster: "segment",
             pressed: (state) => state.presentationView === "normal",
             press: (store) => store.dispatch({ type: "SET_PRESENTATION_VIEW", view: "normal" }),
         },
@@ -768,7 +770,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         group: "views",
         run: {
             kind: "toggle",
-            cluster: "toggle",
+            cluster: "segment",
             pressed: (state) => state.presentationView === "notesPage",
             press: (store) => store.dispatch({ type: "SET_PRESENTATION_VIEW", view: "notesPage" }),
         },
@@ -791,7 +793,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: (c) => c.ready && c.scrollMode === "spread" && c.presentationView === "normal",
     },
 
-    // View tab — a word document's views, one segmented group like the
+    // View tab — a word document's views, one segment button like the
     // deck's: its pages, or its body pageless, flowed to the pane's width.
     pagesView: {
         id: "pagesView",
@@ -800,7 +802,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         group: "views",
         run: {
             kind: "toggle",
-            cluster: "toggle",
+            cluster: "segment",
             pressed: (state) => state.currentPlane !== PAGELESS_PLANE,
             press: (store) => store.dispatch({ type: "SET_CURRENT_PLANE", plane: 0 }),
         },
@@ -813,7 +815,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         group: "views",
         run: {
             kind: "toggle",
-            cluster: "toggle",
+            cluster: "segment",
             pressed: (state) => state.currentPlane === PAGELESS_PLANE,
             press: (store) => store.dispatch({ type: "SET_CURRENT_PLANE", plane: PAGELESS_PLANE }),
         },

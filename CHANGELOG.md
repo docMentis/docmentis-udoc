@@ -20,6 +20,11 @@ listed once, by package. Its major and minor version are those of the
 - A dropdown's or split button's chevron sits 4px from its icon and meets its
   right edge, where it kept 3px clear on each side, so the button is 5px
   narrower.
+- The View tab's views, Normal and Notes Page or Pages and Pageless, and each
+  row of the view settings menu are one segment button: its choices butt
+  together, square but for its two rounded ends, one of them pressed. The
+  menu's rows were separate rounded buttons 2px apart, its icons in the muted
+  color.
 
 ## [0.8.8] - 2026-10-29
 
