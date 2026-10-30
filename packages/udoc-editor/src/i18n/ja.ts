@@ -64,7 +64,7 @@ export const ja: EditMessages = {
     "ribbon.object": "オブジェクト",
 
     // Commands
-    "command.formattingMarks": "編集記号の表示",
+    "command.ruler": "ルーラー",
     "command.createSlide": "新しいスライド",
     "command.insertImage": "画像",
     "command.insertShape": "図形",

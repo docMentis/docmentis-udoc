@@ -27,18 +27,6 @@ export interface SetPlaceholderPromptsRequest {
 }
 
 /**
- * Toggle formatting marks — `¶` at each paragraph mark, a dot in each space, an
- * arrow in each tab and `↵` at each line break — drawn over composed text in the
- * space it already holds, so showing them never reflows. On while the user asks
- * for them in edit mode. Sticky like the backdrop: re-applied to every
- * subsequently opened document. Latest-wins, fire-and-forget.
- */
-export interface SetFormattingMarksRequest {
-    type: "setFormattingMarks";
-    on: boolean;
-}
-
-/**
  * Read the current slide's resolved theme color palette — the mapped scheme
  * slots the color picker shows as "Theme Colors" — a pure read. Replies with a
  * `ThemePalette`, or `null` for a doc type
@@ -208,7 +196,6 @@ export interface SelectionHandlePreviewRequest {
 export type EditRequest =
     | SetOverflowVisibleRequest
     | SetPlaceholderPromptsRequest
-    | SetFormattingMarksRequest
     | ThemePaletteRequest
     | FontFamilySummariesRequest
     | LoadedFontFamilyNamesRequest

@@ -9,8 +9,10 @@
 // edges, the indent markers and the tab stops — over them (ruler-controls.ts),
 // sending the edit a drop on one means (ruler-edits.ts).
 import type { Guide, RulerAxis, UDocType } from "@docmentis/udoc-wasm";
-import type { Action, BandCanvas, BandStrip, GuideBand, Store, UIState } from "@docmentis/udoc-ui/internal";
+import type { Action, BandCanvas, BandStrip, CommandDef, GuideBand, Store, UIState } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
+import type { MessageKey } from "./i18n/index.js";
+import { ICON_RULER } from "./icons.js";
 import { createRulerControls } from "./ruler-controls.js";
 import type { RulerControl, RulerControls, RulerDrop, RulerPlacement } from "./ruler-controls.js";
 import { rulerEdit, rulerMovable } from "./ruler-edits.js";
@@ -20,7 +22,7 @@ import { editState, updateEditState } from "./state.js";
 type RulerGuide = Extract<Guide, { type: "ruler" }>;
 
 /** The doc types the engine measures with a ruler: the paged ones. */
-const RULED: ReadonlySet<UDocType> = new Set<UDocType>(["portable", "presentation", "wordprocessing"]);
+export const RULED: ReadonlySet<UDocType> = new Set<UDocType>(["portable", "presentation", "wordprocessing"]);
 
 /** The rulers' depth, top and left alike, CSS px. */
 const THICKNESS = 22;
@@ -283,3 +285,18 @@ export function rulerShown(state: UIState): boolean {
 export function setShowRuler(store: Store<UIState, Action>, visible: boolean): void {
     updateEditState(store, { showRuler: visible });
 }
+
+/** The Ruler toggle — a guide over the pages, on the View tab of a doc type
+ *  edit mode rules (see {@link RULED}), live whatever is selected. */
+export const RULER_COMMAND: CommandDef<MessageKey> = {
+    id: "ruler",
+    label: "command.ruler",
+    icon: ICON_RULER,
+    group: "guides",
+    run: {
+        kind: "toggle",
+        pressed: (s) => editState(s).showRuler,
+        press: (store) => setShowRuler(store, !editState(store.getState()).showRuler),
+    },
+    enabledWhen: (c) => c.ready,
+};

@@ -12,12 +12,26 @@ listed once, by package. Its major and minor version are those of the
 
 - A `.md` or `.markdown` file opens, as a word document shown pageless:
   CommonMark, with GitHub's tables and strikethrough.
+- Every document has a View tab, its last tab in view mode and edit mode
+  alike. In order, where the document has them: a deck's or a word
+  document's own views; Single or Continuous; Page Layout, a dropdown of One
+  Page, Two Pages, Cover on the Right and Cover on the Left, its button
+  showing the current one's icon; Rotate View Left and Right; Gap; then what
+  shows beside the document — a PDF's Layers, only for a PDF that has some,
+  a deck's Notes, a word document's Formatting Marks and a workbook's
+  Formula Bar. The editor adds Ruler among them for a PDF, a deck and a word
+  document. The views, the scroll, Gap, Layers, Notes and Formula Bar show
+  their names beside their icons. Word's page controls grey out while it
+  shows pageless.
+- A word document's formatting marks show in view mode too, from the View
+  tab or Ctrl+Shift+8, and `setShowFormattingMarks` is the viewer's as well
+  as the editor's.
 
 #### Changed
 
 - The ribbon's commands show their icons alone, each named in its tooltip,
-  where the View tab's views and Notes, the Insert tab's tools, New Slide and
-  the crop controls showed their names beside their icons.
+  where the Insert tab's tools, New Slide and the crop controls showed their
+  names beside their icons. The View tab's controls keep their names.
 - The Annotate tab's Highlight, and a highlight's comments, show a highlighter
   pen alone, where it stood over a bar like the Color dropdown beside it.
 - The Annotate tab's Fill, Color and Opacity sit in one group, in that order,
@@ -25,11 +39,14 @@ listed once, by package. Its major and minor version are those of the
 - A dropdown's or split button's chevron sits 4px from its icon and meets its
   right edge, where it kept 3px clear on each side, so the button is 5px
   narrower.
-- The View tab's views, Normal and Notes Page or Pages and Pageless, and each
-  row of the view settings menu are one segment button: its choices butt
-  together, square but for its two rounded ends, one of them pressed. The
-  menu's rows were separate rounded buttons 2px apart, its icons in the muted
-  color.
+- The View tab's views, Normal and Notes Page or Pages and Pageless, and how
+  the pages scroll are each one segment button: its choices butt together,
+  square but for its two rounded ends, one of them pressed.
+- The view controls (page navigation and zoom) no longer carry the view
+  settings button: its Scroll, Layout, Rotation and Page Gap are on the View
+  tab, and with the toolbar hidden only the options and calls set them. Its
+  `translations` keys, `viewMode.*`, are gone; the View tab's are
+  `command.*` and `pageLayout.*`.
 - The toolbar's first button, which shows or hides the side panel, shows a
   window with its panel and an arrow the way a click moves it, and is named
   Show Side Panel or Hide Side Panel, where it was a ☰ named Menu. Its last
@@ -37,6 +54,12 @@ listed once, by package. Its major and minor version are those of the
   Menu, where it was a ⋯ named More. The `translations` keys
   `toolbar.showSidePanel` and `toolbar.hideSidePanel` name the first,
   `toolbar.menu` the last; `toolbar.more` is gone.
+
+#### Fixed
+
+- A text file, or a word document opened pageless, keeps the gaps between
+  its pages once shown in Pages, where they butted together until the gaps
+  were turned off and on again.
 
 ### udoc-node
 

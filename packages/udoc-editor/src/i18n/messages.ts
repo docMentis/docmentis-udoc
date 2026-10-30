@@ -117,8 +117,8 @@ export interface Messages extends UIMessages {
     "ribbon.object": string;
 
     // Commands
-    /** Show Formatting Marks */
-    "command.formattingMarks": string;
+    /** Ruler */
+    "command.ruler": string;
     /** New Slide */
     "command.createSlide": string;
     /** Image */

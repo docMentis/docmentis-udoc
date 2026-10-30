@@ -192,6 +192,7 @@ const STICKY_REQUESTS: ReadonlySet<string> = new Set<WorkerRequest["type"]>([
     "setScrollMode",
     "setLayoutMode",
     "setPageRotation",
+    "setFormattingMarks",
     "setUserInfo",
 ]);
 const sticky = new Map<string, EngineRequestEnvelope>();
@@ -1602,6 +1603,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "setPageRotation": {
                 // Sticky in Rust, like the spacing; the next frame re-stacks.
                 session?.setPageRotation(VIEWER, msg.quarterTurns);
+                scheduleFrame();
+                break;
+            }
+            case "setFormattingMarks": {
+                // Sticky in Rust, like the backdrop; a full repaint shows or
+                // clears the marks on the next frame.
+                session?.setFormattingMarks(VIEWER, msg.on);
                 scheduleFrame();
                 break;
             }

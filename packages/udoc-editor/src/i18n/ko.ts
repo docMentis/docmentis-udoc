@@ -64,7 +64,7 @@ export const ko: EditMessages = {
     "ribbon.object": "개체",
 
     // Commands
-    "command.formattingMarks": "편집 기호 표시",
+    "command.ruler": "눈금자",
     "command.createSlide": "새 슬라이드",
     "command.insertImage": "그림",
     "command.insertShape": "도형",

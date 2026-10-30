@@ -6,6 +6,7 @@ import { copyAllowed, PAGELESS_PLANE } from "./state.js";
 import type {
     AnnotationTool,
     CommandId,
+    LayoutMode,
     UIState,
     MarkupTool,
     PlaceTool,
@@ -65,6 +66,17 @@ import {
     ICON_SUBTOOL_STAMP,
     ICON_SHAPES,
     ICON_OPACITY,
+    ICON_VIEW_SPREAD,
+    ICON_VIEW_CONTINUOUS,
+    ICON_VIEW_SINGLE_PAGE,
+    ICON_VIEW_DOUBLE_PAGE,
+    ICON_VIEW_COVER,
+    ICON_VIEW_ROTATE_LEFT,
+    ICON_VIEW_ROTATE_RIGHT,
+    ICON_VIEW_PAGE_GAP,
+    ICON_LAYERS,
+    ICON_FORMATTING_MARKS,
+    ICON_FORMULA_BAR,
 } from "./icons.js";
 
 /**
@@ -107,6 +119,13 @@ export interface CommandContext {
     scrollMode: ScrollMode;
     /** How a deck shows — its notes panel shows only in its Normal view. */
     presentationView: PresentationView;
+    /** How the pages group into spreads — the View tab's Page Layout marks it. */
+    layoutMode: LayoutMode;
+    /** Whether a word document shows pageless, with no pages to scroll, pair
+     *  up, turn or space — the View tab's page controls grey. */
+    pageless: boolean;
+    /** Whether the open PDF has layers — the View tab's Layers shows for them. */
+    hasLayers: boolean;
     /** What the Annotate tab's Format controls act on and show — the armed
      *  annotation tool's style, else the selected annotations' — or null when
      *  there is neither. A control is live when its entry is present. */
@@ -139,6 +158,9 @@ export function commandContext(state: UIState): CommandContext {
         docType: state.docType,
         scrollMode: state.scrollMode,
         presentationView: state.presentationView,
+        layoutMode: state.layoutMode,
+        pageless: state.docType === "wordprocessing" && state.currentPlane === PAGELESS_PLANE,
+        hasLayers: state.hasLayers,
         annotation: annotationFormat(state),
     };
 }
@@ -154,6 +176,10 @@ export type EnabledWhen = (ctx: CommandContext) => boolean;
 /** Enabled whenever a document is open — the default for commands that act on
  *  the document at large rather than on the selection. */
 const whenReady: EnabledWhen = (c) => c.ready;
+
+/** Enabled while the document shows pages — not a word document's pageless
+ *  view — for the View tab's controls of how they scroll and are arranged. */
+const whenPaged: EnabledWhen = (c) => c.ready && !c.pageless;
 
 /**
  * What activating a menu item does — the intent the shell turns into an edit
@@ -171,6 +197,7 @@ const whenReady: EnabledWhen = (c) => c.ready;
  * `deleteSheet` deletes it, `renameSheet` edits its name in its tab,
  * `setSheetTabColor` colours its tab `#rrggbb` or takes its colour away,
  * `hideSheet` hides it, and `unhideSheet` shows the hidden sheet on `plane`.
+ * `setLayoutMode` groups the pages into spreads as `mode` does.
  * `extension` carries an extension's own intent, which the shell hands back
  * to it (`UIExtension.menuAction`).
  */
@@ -190,6 +217,7 @@ export type MenuAction =
     | { kind: "setSheetTabColor"; color: string | null }
     | { kind: "hideSheet" }
     | { kind: "unhideSheet"; plane: number }
+    | { kind: "setLayoutMode"; mode: LayoutMode }
     | { kind: "extension"; action: unknown };
 
 /** One entry in a command's dropdown menu (see the `menu` {@link CommandRun}).
@@ -467,6 +495,33 @@ const ANNOTATION_OPACITY_MENU: readonly MenuItem[] = ANNOTATION_OPACITIES.map((o
     activeWhen: (c) => c.annotation?.opacity === opacity,
 }));
 
+/** The cover's book glyph mirrored — the cover alone on the left, the book
+ *  read right to left. */
+const ICON_VIEW_COVER_LEFT = ICON_VIEW_COVER.replace("<svg ", '<svg style="transform: scaleX(-1)" ');
+
+/** How the View tab's Page Layout pairs the pages up, each with its glyph. */
+const PAGE_LAYOUTS: readonly (readonly [LayoutMode, MessageKey, string])[] = [
+    ["singlePage", "pageLayout.onePage", ICON_VIEW_SINGLE_PAGE],
+    ["doublePage", "pageLayout.twoPages", ICON_VIEW_DOUBLE_PAGE],
+    ["doublePageOddRight", "pageLayout.coverRight", ICON_VIEW_COVER],
+    ["doublePageOddLeft", "pageLayout.coverLeft", ICON_VIEW_COVER_LEFT],
+];
+
+/** The Page Layout dropdown: one exclusive set, the current layout marked. */
+const PAGE_LAYOUT_MENU: readonly MenuItem[] = PAGE_LAYOUTS.map(([mode, label, icon]) => ({
+    action: { kind: "setLayoutMode", mode },
+    label,
+    icon,
+    enabledWhen: whenPaged,
+    activeWhen: (c) => c.layoutMode === mode,
+}));
+
+/** The turn every page is shown at, a quarter turn `by` further clockwise. */
+function turnedView(store: Store<UIState, Action>, by: 90 | 270): void {
+    const rotation = ((store.getState().pageRotation + by) % 360) as 0 | 90 | 180 | 270;
+    store.dispatch({ type: "SET_PAGE_ROTATION", rotation });
+}
+
 /** A row of an `armPicker`'s picker: the tool it arms, and for a stamp row the
  *  stamp that tool then drops. */
 export interface PickerOption<K extends string = MessageKey> {
@@ -524,7 +579,9 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  *   tab's shapes or its standard stamps, an extension's own.
  * - `menu` → opens a dropdown of {@link MenuItem}s (Arrange / Align / Rotate);
  *   selecting an item dispatches its {@link MenuAction} through the ribbon's
- *   `onMenuAction` callback. `cluster` bunches it as a `control`'s does.
+ *   `onMenuAction` callback. `cluster` bunches it as a `control`'s does, and
+ *   `current`, when set, is the choice its button shows for the state — the
+ *   View tab's Page Layout shows the current layout's glyph, and its name.
  * - `control` → a control an extension builds for its command and keeps in
  *   step with the state itself ({@link RibbonControl}) — the Text tab's font
  *   picker, its toggles, its color and list buttons. `cluster` bunches it with
@@ -547,7 +604,12 @@ export type CommandRun<K extends string = MessageKey> =
     | { kind: "action"; press(store: Store<UIState, Action>): void }
     | { kind: "arm"; tool: PlaceTool; sticky?: boolean }
     | { kind: "armPicker"; options: readonly PickerOption<K>[] }
-    | { kind: "menu"; menu: readonly MenuItem<K>[]; cluster?: ClusterKind }
+    | {
+          kind: "menu";
+          menu: readonly MenuItem<K>[];
+          cluster?: ClusterKind;
+          current?(state: UIState): { icon: string; label: K };
+      }
     | { kind: "control"; cluster?: ClusterKind; create(env: RibbonControlEnv): RibbonControl }
     | {
           kind: "toggle";
@@ -600,6 +662,17 @@ export interface CommandDef<K extends string = MessageKey> {
     /** Visual grouping key — consecutive commands sharing a group sit together. */
     group: string;
     run: CommandRun<K>;
+    /**
+     * Show the {@link label} beside the glyph. Off by default: a tool band is
+     * read by shape, and a labeled control costs several times an icon's
+     * width. The View tab sets it on its controls, whose glyphs — a scroll, a
+     * layout, a pane shown — say what they do only once you know.
+     */
+    labeled?: boolean;
+    /** Whether it shows in its tab at all, for a command that has no use
+     *  without something the document may lack — the View tab's Layers, for a
+     *  PDF's layers. Absent, it always shows, greyed by {@link enabledWhen}. */
+    shownWhen?: EnabledWhen;
     /** The key that runs it — the shell's own handler, which the tooltip names. */
     shortcut?: Shortcut;
     /** When this command is enabled, given the current {@link CommandContext}
@@ -755,6 +828,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.normalView",
         icon: ICON_NORMAL_VIEW,
         group: "views",
+        labeled: true,
         run: {
             kind: "toggle",
             cluster: "segment",
@@ -768,6 +842,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.notesPageView",
         icon: ICON_NOTES_PAGE_VIEW,
         group: "views",
+        labeled: true,
         run: {
             kind: "toggle",
             cluster: "segment",
@@ -785,6 +860,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.notes",
         icon: ICON_NOTES,
         group: "show",
+        labeled: true,
         run: {
             kind: "toggle",
             pressed: (state) => state.notesOpen,
@@ -800,6 +876,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.pagesView",
         icon: ICON_PAGES_VIEW,
         group: "views",
+        labeled: true,
         run: {
             kind: "toggle",
             cluster: "segment",
@@ -813,6 +890,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.pagelessView",
         icon: ICON_PAGELESS_VIEW,
         group: "views",
+        labeled: true,
         run: {
             kind: "toggle",
             cluster: "segment",
@@ -820,5 +898,132 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             press: (store) => store.dispatch({ type: "SET_CURRENT_PLANE", plane: PAGELESS_PLANE }),
         },
         enabledWhen: whenReady,
+    },
+
+    // View tab — how the pages scroll, one segment button: a single page at a
+    // time, or a deck's slide, or one after another.
+    singleScroll: {
+        id: "singleScroll",
+        label: "command.singleScroll",
+        icon: ICON_VIEW_SPREAD,
+        group: "scroll",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            cluster: "segment",
+            pressed: (state) => state.scrollMode === "spread",
+            press: (store) => store.dispatch({ type: "SET_SCROLL_MODE", mode: "spread" }),
+        },
+        enabledWhen: whenPaged,
+    },
+    continuousScroll: {
+        id: "continuousScroll",
+        label: "command.continuousScroll",
+        icon: ICON_VIEW_CONTINUOUS,
+        group: "scroll",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            cluster: "segment",
+            pressed: (state) => state.scrollMode === "continuous",
+            press: (store) => store.dispatch({ type: "SET_SCROLL_MODE", mode: "continuous" }),
+        },
+        enabledWhen: whenPaged,
+    },
+    // Then how they pair up, a PDF's or a word document's: one dropdown, its
+    // button wearing the current layout's glyph.
+    pageLayout: {
+        id: "pageLayout",
+        label: "command.pageLayout",
+        icon: ICON_VIEW_SINGLE_PAGE,
+        group: "layout",
+        run: {
+            kind: "menu",
+            menu: PAGE_LAYOUT_MENU,
+            current: (state) => {
+                const [, label, icon] = PAGE_LAYOUTS.find(([mode]) => mode === state.layoutMode) ?? PAGE_LAYOUTS[0]!;
+                return { icon, label };
+            },
+        },
+        enabledWhen: whenPaged,
+    },
+    // The turn they're shown at, a quarter at a time — the view's, never the
+    // document's.
+    rotateViewLeft: {
+        id: "rotateViewLeft",
+        label: "command.rotateViewLeft",
+        icon: ICON_VIEW_ROTATE_LEFT,
+        group: "rotate",
+        run: { kind: "action", press: (store) => turnedView(store, 270) },
+        enabledWhen: whenPaged,
+    },
+    rotateViewRight: {
+        id: "rotateViewRight",
+        label: "command.rotateViewRight",
+        icon: ICON_VIEW_ROTATE_RIGHT,
+        group: "rotate",
+        run: { kind: "action", press: (store) => turnedView(store, 90) },
+        enabledWhen: whenPaged,
+    },
+    // The gaps between them, shown or butted together.
+    pageGap: {
+        id: "pageGap",
+        label: "command.pageGap",
+        icon: ICON_VIEW_PAGE_GAP,
+        group: "gap",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            pressed: (state) => state.showPageGap,
+            press: (store) => store.dispatch({ type: "SET_SHOW_PAGE_GAP", showPageGap: !store.getState().showPageGap }),
+        },
+        enabledWhen: whenPaged,
+    },
+    // What shows beside the document: a PDF's layers, in the side panel's
+    // Layers tab — only for a PDF that has some.
+    layers: {
+        id: "layers",
+        label: "leftPanel.layers",
+        icon: ICON_LAYERS,
+        group: "show",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            pressed: (state) => state.activePanel === "layers",
+            press: (store) => store.dispatch({ type: "TOGGLE_PANEL", panel: "layers" }),
+        },
+        shownWhen: (c) => c.hasLayers,
+        enabledWhen: whenReady,
+    },
+    // A word document's formatting marks, as Word's toggle and its key show
+    // them.
+    formattingMarks: {
+        id: "formattingMarks",
+        label: "command.formattingMarks",
+        icon: ICON_FORMATTING_MARKS,
+        group: "show",
+        run: {
+            kind: "toggle",
+            pressed: (state) => state.showFormattingMarks,
+            press: (store) =>
+                store.dispatch({ type: "SET_SHOW_FORMATTING_MARKS", visible: !store.getState().showFormattingMarks }),
+        },
+        shortcut: { key: "8", shift: true },
+        enabledWhen: (c) => c.ready && c.docType === "wordprocessing",
+    },
+    // A workbook's formula bar above its grid.
+    formulaBar: {
+        id: "formulaBar",
+        label: "command.formulaBar",
+        icon: ICON_FORMULA_BAR,
+        group: "show",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            pressed: (state) => state.formulaBarVisible,
+            press: (store) =>
+                store.dispatch({ type: "SET_FORMULA_BAR_VISIBLE", visible: !store.getState().formulaBarVisible }),
+        },
+        enabledWhen: (c) => c.ready && c.docType === "spreadsheet",
     },
 };

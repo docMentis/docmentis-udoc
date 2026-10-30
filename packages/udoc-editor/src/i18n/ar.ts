@@ -64,7 +64,7 @@ export const ar: EditMessages = {
     "ribbon.object": "كائن",
 
     // Commands
-    "command.formattingMarks": "إظهار علامات التنسيق",
+    "command.ruler": "المسطرة",
     "command.createSlide": "شريحة جديدة",
     "command.insertImage": "صورة",
     "command.insertShape": "أشكال",

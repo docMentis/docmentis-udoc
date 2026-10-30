@@ -192,6 +192,11 @@ export type Action =
     // and open at the height its splitter left
     | { type: "SET_NOTES_OPEN"; open: boolean }
     | { type: "SET_NOTES_HEIGHT"; height: number }
+    // What shows beside the document: a workbook's formula bar, a word
+    // document's formatting marks, and whether the open PDF has layers
+    | { type: "SET_FORMULA_BAR_VISIBLE"; visible: boolean }
+    | { type: "SET_SHOW_FORMATTING_MARKS"; visible: boolean }
+    | { type: "SET_HAS_LAYERS"; hasLayers: boolean }
     | { type: "ENABLE_PANEL_TRANSITIONS" }
     // Theme & fullscreen
     | { type: "SET_THEME"; theme: ThemeMode }

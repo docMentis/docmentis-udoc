@@ -125,17 +125,6 @@ export class UDocEditor extends UDocBase<UDocEditorEvents> {
         this.#editMode.setShowRuler(visible);
     }
 
-    /**
-     * Show or hide formatting marks — `¶` at each paragraph end, a dot in each
-     * space, an arrow in each tab, `↵` at each line break — on wordprocessing
-     * documents; the same toggle as the ribbon's button. A
-     * user preference, off by default; the marks are editing chrome, so they're
-     * additionally hidden outside `"edit"` mode.
-     */
-    setShowFormattingMarks(visible: boolean): void {
-        this.#editMode.setShowFormattingMarks(visible);
-    }
-
     /** The current editor mode; `"mode:changed"` fires when it changes. */
     get mode(): EditorMode {
         return this.#editMode.currentMode();

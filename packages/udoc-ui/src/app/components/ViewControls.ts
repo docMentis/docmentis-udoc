@@ -9,11 +9,10 @@ import type { Fit } from "../../geometry.js";
 import { setupRovingTabindex } from "../a11y.js";
 import { ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT, ICON_CHEVRON_DOWN, ICON_ZOOM_IN, ICON_ZOOM_OUT } from "../icons.js";
 import { createButton, nameButton, nameShortcut } from "./controls.js";
-import { createViewModeMenu } from "./ViewModeMenu.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
 
 /**
- * The view-state controls: `[page nav] [zoom] [view mode]`. A single, standalone
+ * The view-state controls: `[page nav] [zoom]`. A single, standalone
  * component — the canonical port of the viewer's floating-bar view controls —
  * that the shell mounts into whichever host the `viewControlsPlacement` selects
  * (the top toolbar, the bottom floating bar, or the status bar). It positions
@@ -209,10 +208,7 @@ export function createViewControls(i18n: I18n) {
 
     zoomSection.append(zoomOutBtn, zoomDropdownContainer, zoomInBtn);
 
-    // --- View mode ---
-    const viewModeMenu = createViewModeMenu(i18n);
-
-    el.append(navSection, zoomSection, viewModeMenu.el);
+    el.append(navSection, zoomSection);
 
     let unsub: (() => void) | null = null;
     const unsubEvents: Array<() => void> = [];
@@ -240,8 +236,6 @@ export function createViewControls(i18n: I18n) {
 
     function mount(store: Store<UIState, Action>): void {
         rovingTabindex = setupRovingTabindex(el, ".udoc-btn, input");
-
-        viewModeMenu.mount(store);
 
         // --- Page navigation ---
         unsubEvents.push(
@@ -392,11 +386,10 @@ export function createViewControls(i18n: I18n) {
     }
 
     /**
-     * Show or hide the paged sections — page navigation, the view-mode menu,
-     * and the page-fit zoom options (Fit
-     * width/height/page) — leaving the zoom steps standalone. A grid document
-     * (spreadsheet) has no page stack to scroll, group or turn, and no page to
-     * fit, so the shell strips all three and docks the bare zoom control
+     * Show or hide the paged sections — page navigation and the page-fit zoom
+     * options (Fit width/height/page) — leaving the zoom steps standalone. A
+     * grid document (spreadsheet) has no page stack to step through, and no
+     * page to fit, so the shell strips both and docks the bare zoom control
      * in the status bar; a word document shown pageless, one page flowed to
      * the pane, strips them where they are. Safe to call before
      * {@link mount}; re-runs the roving tabindex so the now-hidden buttons
@@ -406,7 +399,6 @@ export function createViewControls(i18n: I18n) {
         pagedSectionsVisible = visible;
         const display = visible ? "" : "none";
         navSection.style.display = display;
-        viewModeMenu.el.style.display = display;
         el.setAttribute("aria-label", i18n.t(visible ? PAGE_NAVIGATION[pageNoun].group : "zoom.label"));
         // Rebuild the zoom list so the page-fit options follow the flag (a no-op
         // before mount, where the first buildZoomDropdown already reads it).
@@ -419,7 +411,6 @@ export function createViewControls(i18n: I18n) {
         if (rovingTabindex) rovingTabindex.destroy();
         zoomMenu?.destroy();
         for (const off of unsubEvents) off();
-        viewModeMenu.destroy();
         el.remove();
     }
 

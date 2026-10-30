@@ -6,7 +6,9 @@ import type { Action } from "../actions.js";
 import type { SelectionCapabilities, PaintDisplay } from "../../geometry.js";
 import type {
     UIState,
+    LayoutMode,
     MarkupTool,
+    PanelTab,
     PlaceTool,
     PointerMode,
     PresentationView,
@@ -172,6 +174,13 @@ interface RibbonSlice {
     notesOpen: boolean;
     scrollMode: ScrollMode;
     presentationView: PresentationView;
+    currentPlane: number;
+    layoutMode: LayoutMode;
+    showPageGap: boolean;
+    activePanel: PanelTab | null;
+    showFormattingMarks: boolean;
+    formulaBarVisible: boolean;
+    hasLayers: boolean;
 }
 
 /** The color a display paints its bar with — a solid or theme color's own hex;
@@ -198,7 +207,14 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.annotationStyles === b.annotationStyles &&
         a.notesOpen === b.notesOpen &&
         a.scrollMode === b.scrollMode &&
-        a.presentationView === b.presentationView
+        a.presentationView === b.presentationView &&
+        a.currentPlane === b.currentPlane &&
+        a.layoutMode === b.layoutMode &&
+        a.showPageGap === b.showPageGap &&
+        a.activePanel === b.activePanel &&
+        a.showFormattingMarks === b.showFormattingMarks &&
+        a.formulaBarVisible === b.formulaBarVisible &&
+        a.hasLayers === b.hasLayers
     );
 }
 
@@ -219,6 +235,13 @@ function selectSlice(s: UIState): RibbonSlice {
         notesOpen: s.notesOpen,
         scrollMode: s.scrollMode,
         presentationView: s.presentationView,
+        currentPlane: s.currentPlane,
+        layoutMode: s.layoutMode,
+        showPageGap: s.showPageGap,
+        activePanel: s.activePanel,
+        showFormattingMarks: s.showFormattingMarks,
+        formulaBarVisible: s.formulaBarVisible,
+        hasLayers: s.hasLayers,
     };
 }
 
@@ -253,11 +276,32 @@ function isCommandActive(def: CommandDef<string>, pointer: PointerMode): boolean
     }
 }
 
+/** The glyph each dropdown whose choice follows the state shows now. */
+const shownIcons = new WeakMap<HTMLElement, string>();
+
+/** Show `icon` and, on a labeled one, `text` on `button`, a dropdown's trigger
+ *  that shows the current choice — where it shows another. */
+function showChoice(button: HTMLElement, icon: string, text: string): void {
+    const label = button.querySelector(".udoc-btn__label");
+    if (label && label.textContent !== text) label.textContent = text;
+    if (shownIcons.get(button) === icon) return;
+    shownIcons.set(button, icon);
+    // A labeled trigger holds its glyph in a span; an icon-only one leads with it.
+    const holder = button.querySelector(".udoc-btn__icon");
+    if (holder) {
+        holder.innerHTML = icon;
+    } else {
+        button.firstElementChild?.remove();
+        button.insertAdjacentHTML("afterbegin", icon);
+    }
+}
+
 /** Commands of the currently active tab, or [] when there's no tab.
- *  Host-disabled commands drop out for every tab; a *contextual* tab (Home) also
- *  drops the commands whose capability predicate is dead for the current
- *  selection — capability-driven show/hide — where an ordinary tab keeps them and
- *  lets the per-render pass grey them instead. */
+ *  Host-disabled commands drop out for every tab, as does one whose
+ *  `shownWhen` is false (the View tab's Layers, for a PDF without layers); a
+ *  *contextual* tab (Home) also drops the commands whose capability predicate
+ *  is dead for the current selection — capability-driven show/hide — where an
+ *  ordinary tab keeps them and lets the per-render pass grey them instead. */
 function activeTabCommands(
     slice: RibbonSlice,
     ctx: CommandContext,
@@ -268,7 +312,12 @@ function activeTabCommands(
     if (!tab) return [];
     return tab.commands.filter((id) => {
         const def = commandOf(id);
-        return def !== undefined && !slice.disabledCommands.has(id) && (!tab.contextual || def.enabledWhen(ctx));
+        return (
+            def !== undefined &&
+            !slice.disabledCommands.has(id) &&
+            (def.shownWhen?.(ctx) ?? true) &&
+            (!tab.contextual || def.enabledWhen(ctx))
+        );
     });
 }
 
@@ -641,7 +690,7 @@ export function createRibbon(
             if (def.run.kind === "menu") {
                 const items = def.run.menu;
                 const dd = createDropdownButton(
-                    { icon: def.icon, label },
+                    { icon: def.icon, label, ...(def.labeled && { text: label }) },
                     { menuLabel: label, menuRole: "menu", onOpen: () => fillMenu(dd, items) },
                 );
                 dd.trigger.dataset.command = def.id;
@@ -687,10 +736,11 @@ export function createRibbon(
                 dropdowns.push(dd);
                 return dd.el;
             }
-            // Icon-only, its label in the tooltip.
+            // Icon-only, its label in the tooltip, unless it asks to show it.
             const btn = createButton({
                 icon: def.icon,
                 label,
+                ...(def.labeled && { text: label }),
                 ...(def.shortcut && { shortcut: nameShortcut(def.shortcut, i18n) }),
             });
             btn.dataset.command = def.id;
@@ -810,6 +860,9 @@ export function createRibbon(
                 if (def.run.kind === "control") continue;
                 if (def.run.kind === "annotationPaint") {
                     applyPaintBar(btn, annotationDisplay(ctx, def.run.channel));
+                } else if (def.run.kind === "menu") {
+                    const current = def.run.current?.(store.getState());
+                    if (current) showChoice(btn, current.icon, labelOf(current.label));
                 } else if (def.run.kind === "toggle") {
                     const pressed = def.run.pressed(store.getState());
                     if (btn.getAttribute("role") === "radio") {

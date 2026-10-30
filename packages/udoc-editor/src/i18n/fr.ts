@@ -64,7 +64,7 @@ export const fr: EditMessages = {
     "ribbon.object": "Objet",
 
     // Commands
-    "command.formattingMarks": "Afficher les marques de mise en forme",
+    "command.ruler": "Règle",
     "command.createSlide": "Nouvelle diapositive",
     "command.insertImage": "Image",
     "command.insertShape": "Formes",

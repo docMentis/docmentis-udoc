@@ -99,7 +99,7 @@ export interface UDocOptions {
     presentationView?: PresentationView;
     /** Show a workbook's formula bar above its grid: the active cell's
      *  reference and its contents, which in edit mode it edits. Default
-     *  `true`. */
+     *  `true`; the View tab's Formula Bar changes it. */
     showFormulaBar?: boolean;
     /** Show the theme button in the toolbar's menu. Default `true`. */
     showThemeButton?: boolean;
@@ -135,7 +135,7 @@ export interface UDocOptions {
      *  its name. Default `true`; the people button's menu and
      *  {@link UDocBase.setShowPeerPointers} change it. */
     showPeerPointers?: boolean;
-    /** Where the view controls (page nav + zoom + view settings) dock. Default
+    /** Where the view controls (page nav + zoom) dock. Default
      *  `"floating"`; {@link UDocBase.setViewControlsPlacement} changes it. */
     viewControlsPlacement?: ViewControlsPlacement;
     /** How every document opens scrolling: `"spread"`, one spread at a time,
@@ -1334,8 +1334,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     /**
      * Scroll the open document one spread at a time (`"spread"`) or
      * continuously (`"continuous"`), and open every later one so; `null`
-     * restores each doc type's default. The view settings' Scroll section
-     * still picks a scroll mode for the open document alone.
+     * restores each doc type's default. The View tab's Single and Continuous
+     * still pick a scroll mode for the open document alone.
      */
     setScrollMode(mode: ScrollMode | null): void {
         this.shell.setScrollMode(mode);
@@ -1343,7 +1343,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
 
     /**
      * Group the pages into spreads, shown side by side, as `mode` says — the
-     * view settings' Layout section. PDF and Word documents only; any other
+     * View tab's Page Layout. PDF and Word documents only; any other
      * shows single pages.
      */
     setLayoutMode(mode: LayoutMode): void {
@@ -1351,8 +1351,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Turn every page `rotation` degrees clockwise on top of its own — the view
-     * settings' Rotation section. A view setting: the document is unchanged,
+     * Turn every page `rotation` degrees clockwise on top of its own, as the
+     * View tab's Rotate View buttons do. A view setting: the document is unchanged,
      * and nothing is saved or shared with collaborators. PDF and Word documents
      * only; any other shows its pages upright.
      */
@@ -1367,6 +1367,16 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      */
     setPageGap(gap: PageGap | null): void {
         this.shell.setPageGap(gap);
+    }
+
+    /**
+     * Show or hide formatting marks — `¶` at each paragraph end, a dot in each
+     * space, an arrow in each tab, `↵` at each line break — on word documents,
+     * as the View tab's Formatting Marks and Ctrl+Shift+8 do. Off by
+     * default, and kept for every document opened after.
+     */
+    setShowFormattingMarks(visible: boolean): void {
+        this.shell.setShowFormattingMarks(visible);
     }
 
     /**
@@ -1546,17 +1556,17 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.getState().isFullscreen;
     }
 
-    /** How the open document scrolls, as it opened or {@link setScrollMode} or the view settings last set it. */
+    /** How the open document scrolls, as it opened or {@link setScrollMode} or the View tab last set it. */
     get scrollMode(): ScrollMode {
         return this.shell.getState().scrollMode;
     }
 
-    /** How the pages group into spreads, as {@link setLayoutMode} or the view settings last set it. */
+    /** How the pages group into spreads, as {@link setLayoutMode} or the View tab last set it. */
     get layoutMode(): LayoutMode {
         return this.shell.getState().layoutMode;
     }
 
-    /** The turn every page is shown at, as {@link setPageRotation} or the view settings last set it. */
+    /** The turn every page is shown at, as {@link setPageRotation} or the View tab last set it. */
     get pageRotation(): 0 | 90 | 180 | 270 {
         return this.shell.getState().pageRotation;
     }
@@ -1611,7 +1621,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Dock the view-state controls (page nav + zoom + view settings) in the top
+     * Dock the view-state controls (page nav + zoom) in the top
      * toolbar (`"top-toolbar"`), the bottom floating bar (`"floating"`, the
      * default), or the bottom status bar (`"status-bar"`). The initial value is
      * set at construction via `viewControlsPlacement`.

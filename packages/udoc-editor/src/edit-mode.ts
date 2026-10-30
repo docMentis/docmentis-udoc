@@ -10,12 +10,6 @@ import { createModeSwitch } from "./components/ModeSwitch.js";
 import { createPaintOptionsModal } from "./components/PaintOptionsModal.js";
 import { EditClient } from "./edit-client.js";
 import type { EditHost } from "./edit-client.js";
-import {
-    FORMATTING_MARKS_COMMAND,
-    formattingMarksKey,
-    mountFormattingMarks,
-    setShowFormattingMarks,
-} from "./formatting-marks.js";
 import { createI18n, MESSAGE_PACKS } from "./i18n/index.js";
 import { imageCommands, mountImageSize } from "./image.js";
 import type { ImageSize } from "./image.js";
@@ -29,7 +23,7 @@ import { selectionLine } from "./paint.js";
 import { ALL_MODES, EDIT_MODE } from "./mode.js";
 import type { EditorMode } from "./mode.js";
 import { editState, INITIAL_EDIT_STATE, updateEditState } from "./state.js";
-import { createRuler, rulerShown, setShowRuler } from "./ruler.js";
+import { createRuler, RULER_COMMAND, rulerShown, setShowRuler } from "./ruler.js";
 import { selectionRuler } from "./ruler-edits.js";
 import { editorStyles } from "./styles.js";
 import { editTabs } from "./tabs.js";
@@ -38,8 +32,6 @@ import type { EditTools } from "./tools.js";
 
 /** Edit mode: the shell's extension, and the calls `UDocEditor` makes of it once mounted. */
 export interface EditMode extends UIExtension {
-    /** Show or hide formatting marks; see `UDocEditor.setShowFormattingMarks`. */
-    setShowFormattingMarks(visible: boolean): void;
     /** Show or hide the page ruler; see `UDocEditor.setShowRuler`. */
     setShowRuler(visible: boolean): void;
     /** The mode the editor is in; see `UDocEditor.mode`. */
@@ -224,7 +216,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
         tabs: editTabs,
         commands: {
             ...formatCommands(mountedTools),
-            formattingMarks: FORMATTING_MARKS_COMMAND,
+            ruler: RULER_COMMAND,
             createSlide: newSlideCommand(() => void newSlide?.open()),
             ...insertCommands(() => {
                 if (host) pickImage(host);
@@ -237,7 +229,6 @@ export function editMode(options: UDocEditorOptions): EditMode {
         },
         spacing: (state) => (showPageControls && pageControlsShown(state) ? PAGE_CONTROLS_SPACING : null),
         keydown(e) {
-            if (host) formattingMarksKey(e, host.store);
             tools?.crop.keydown(e);
         },
         menuAction(action) {
@@ -264,7 +255,6 @@ export function editMode(options: UDocEditorOptions): EditMode {
             const unmountDocumentState = mountDocumentState(mounted);
             const unmountEditingView = mountEditingView(mounted);
             const unmountPageControls = showPageControls ? mountPageControls(mounted, i18n) : null;
-            const unmountFormattingMarks = mountFormattingMarks(mounted);
             newSlide = mountNewSlide(mounted, i18n);
             imageSize = mountImageSize(mounted, i18n);
             return () => {
@@ -272,7 +262,6 @@ export function editMode(options: UDocEditorOptions): EditMode {
                 imageSize = null;
                 newSlide?.destroy();
                 newSlide = null;
-                unmountFormattingMarks();
                 unmountPageControls?.();
                 unmountEditingView();
                 unmountDocumentState();
@@ -283,9 +272,6 @@ export function editMode(options: UDocEditorOptions): EditMode {
                 tools = null;
                 host = null;
             };
-        },
-        setShowFormattingMarks(visible) {
-            if (host) setShowFormattingMarks(host.store, visible);
         },
         setShowRuler(visible) {
             if (host) setShowRuler(host.store, visible);

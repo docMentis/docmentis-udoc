@@ -28,8 +28,8 @@ const OPSZ = 20;
 
 /** Exported constant -> Material Symbol name. */
 const ICONS = {
-    // Text tab
-    ICON_FORMATTING_MARKS: "format_paragraph",
+    // View tab
+    ICON_RULER: "straighten",
 
     // Insert tab
     ICON_IMAGE: "image",

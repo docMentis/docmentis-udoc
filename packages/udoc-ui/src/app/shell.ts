@@ -158,7 +158,7 @@ const ACTIVITY_INPUTS = ["pointerdown", "pointermove", "keydown", "wheel"] as co
  */
 const READ_PAGE_GAP: PageGap = { horizontal: 12, vertical: 12 };
 
-/** The gaps with the view settings' Page Gap off: the pages butt together. */
+/** The gaps with the View tab's Gap off: the pages butt together. */
 const NO_PAGE_GAP: PageGap = { horizontal: 0, vertical: 0 };
 const READ_PADDING: ContentPadding = { top: { px: 18 }, right: { px: 18 }, bottom: { px: 18 }, left: { px: 18 } };
 
@@ -362,6 +362,8 @@ export interface UIShell {
     setLayoutMode: (mode: LayoutMode) => void;
     /** Turn every page by `rotation` degrees clockwise on top of its own. */
     setPageRotation: (rotation: 0 | 90 | 180 | 270) => void;
+    /** Show or hide a word document's formatting marks. */
+    setShowFormattingMarks: (visible: boolean) => void;
     /** Set the gaps between pages; `null` restores the built-in gaps. */
     setPageGap: (gap: PageGap | null) => void;
     /** Fit the open document by `fit`, and open every later one by it; `null` restores each doc type's default. */
@@ -898,7 +900,7 @@ export function mountUIShell(
 
     // The page spacing: the extension's, for page chrome of its own that needs
     // room around the pages, else the reading spacing — the host's `pageGap`,
-    // when it set one; none with the view settings' Page Gap off.
+    // when it set one; none with the View tab's Gap off.
     function spacingFor(s: UIState): PageSpacing {
         return (
             extension?.spacing(s) ?? {
@@ -1173,7 +1175,7 @@ export function mountUIShell(
     );
 
     // Push the arrangement — scroll mode, layout mode, page rotation — to the
-    // worker when the view-mode menu or the host changes it, and once now for
+    // worker when the View tab or the host changes it, and once now for
     // the host's options. Sticky in the worker, so each survives re-opens, but
     // for the scroll mode, which each open sets to the default below; a
     // live switch keeps the current page in view (the engine re-anchors and
@@ -1206,6 +1208,11 @@ export function mountUIShell(
         (rotation) => client.setPageRotation(rotation / 90),
     );
     client.setPageRotation(arrangementFor(store.getState()).pageRotation / 90);
+    // A word document's formatting marks, as the View tab or Ctrl+Shift+8 left
+    // them. Sticky in the worker across re-opens, so pushed at once too.
+    const marksShown = (s: UIState): boolean => s.showFormattingMarks && s.docType === "wordprocessing";
+    const unsubFormattingMarks = subscribeSelector(store, marksShown, (on) => client.setFormattingMarks(on));
+    client.setFormattingMarks(marksShown(store.getState()));
     // The fit every document opens with: the worker fits by it at open, before
     // the first frame, and the open below adopts the same into the state.
     const unsubDefaultFit = subscribeSelector(
@@ -1374,7 +1381,7 @@ export function mountUIShell(
     // the engine so it tracks the theme. Outline-variant — the soft outline —
     // reads as a page edge against the canvas background without competing with
     // page content, matching the guide grid marks. Where the pages touch (the
-    // view settings' Page Gap off) there is no edge to mark, only a line ruled
+    // View tab's Gap off) there is no edge to mark, only a line ruled
     // between pages, so none is drawn; nor around a word document shown
     // pageless, whose pane is its page.
     function syncPageBorder(): void {
@@ -1507,6 +1514,16 @@ export function mountUIShell(
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y" && !e.shiftKey && !isTypingTarget(e)) {
             e.preventDefault();
             requestHistory("redo");
+        }
+        // Word's Ctrl+Shift+8 shows or hides a word document's formatting
+        // marks, as the View tab's toggle does. Matched by the key's place, as
+        // Shift makes it `*` on a US layout and something else elsewhere.
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === "Digit8") {
+            const state = store.getState();
+            if (state.docType === "wordprocessing") {
+                e.preventDefault();
+                store.dispatch({ type: "SET_SHOW_FORMATTING_MARKS", visible: !state.showFormattingMarks });
+            }
         }
         // The extension's own keys — one it takes, preventing its default, is
         // its alone.
@@ -1688,6 +1705,8 @@ export function mountUIShell(
             // A PDF that asks to open with its outline showing opens the outline
             // tab — async, off the critical path.
             if (layout.docType === "portable") void openOutlineIfAsked();
+            // Whether it has layers, which the View tab's Layers shows for.
+            if (layout.docType === "portable") void readLayers();
             // Which widgets a press fills a form field in through — async, off
             // the critical path.
             if (layout.docType === "portable") void refreshFormWidgets();
@@ -1759,6 +1778,15 @@ export function mountUIShell(
         if (mode !== "useOutlines" || state.docGeneration !== generation) return;
         if (state.activePanel === "outline" || state.disabledPanels.has("outline")) return;
         store.dispatch({ type: "TOGGLE_PANEL", panel: "outline" });
+    }
+
+    /** Read whether the PDF just opened has layers — what the View tab's
+     *  Layers shows for — unless another document opened meanwhile. */
+    async function readLayers(): Promise<void> {
+        const generation = store.getState().docGeneration;
+        const properties = await client.portable.optionalContentProperties();
+        if (store.getState().docGeneration !== generation) return;
+        store.dispatch({ type: "SET_HAS_LAYERS", hasLayers: (properties?.defaultConfig.order ?? []).length > 0 });
     }
 
     const editListeners = new Set<() => void>();
@@ -1966,6 +1994,10 @@ export function mountUIShell(
         // on the slide shown, where a sheet opens at its top.
         if (viewOfPlane(state.planeKinds, plane) !== null) client.goToPage(state.pageIndex);
         const layout = await switched;
+        // The engine keeps the spacing with a plane's layout: a plane the
+        // document didn't open on (a text file opens pageless) never took it,
+        // so the plane switched to takes it now.
+        applySpacing();
         store.dispatch({
             type: "DOC_RELAYOUT",
             pageCount: layout.pageCount ?? null,
@@ -3144,6 +3176,9 @@ export function mountUIShell(
             case "extension":
                 extension?.menuAction(action.action);
                 break;
+            case "setLayoutMode":
+                store.dispatch({ type: "SET_LAYOUT_MODE", mode: action.mode });
+                break;
             case "annotationStyle":
                 void restyleAnnotations(action.change);
                 break;
@@ -3304,6 +3339,7 @@ export function mountUIShell(
         unsubDefaultScrollMode();
         unsubLayoutMode();
         unsubPageRotation();
+        unsubFormattingMarks();
         unsubDefaultFit();
         unsubDpi();
         unsubPlane();
@@ -3423,6 +3459,7 @@ export function mountUIShell(
         },
         setLayoutMode: (mode) => store.dispatch({ type: "SET_LAYOUT_MODE", mode }),
         setPageRotation: (rotation) => store.dispatch({ type: "SET_PAGE_ROTATION", rotation }),
+        setShowFormattingMarks: (visible) => store.dispatch({ type: "SET_SHOW_FORMATTING_MARKS", visible }),
         setPageGap: (gap) => store.dispatch({ type: "SET_PAGE_GAP", gap }),
         setFit: (fit) => {
             store.dispatch({ type: "SET_DEFAULT_FIT", fit });

@@ -13,14 +13,8 @@
  * or not-yet-profiled doc type falls back to {@link FALLBACK_PROFILE}. Adding a
  * doc type is one entry here — the rest of the UI doesn't change.
  */
-import {
-    ANNOTATE_COMMANDS,
-    LEFT_PANEL_TABS,
-    RIGHT_PANEL_TABS,
-    VIEW_COMMANDS,
-    WORDPROCESSING_VIEW_COMMANDS,
-} from "./state.js";
-import type { UIState, LayoutMode, LeftPanelTab, PanelTab, RightPanelTab, ToolbarTab } from "./state.js";
+import { ANNOTATE_COMMANDS, LEFT_PANEL_TABS, RIGHT_PANEL_TABS } from "./state.js";
+import type { CommandId, UIState, LayoutMode, LeftPanelTab, PanelTab, RightPanelTab, ToolbarTab } from "./state.js";
 import type { Feature, UDocType } from "@docmentis/udoc-wasm";
 
 /**
@@ -35,27 +29,37 @@ export const ANNOTATE_TAB: ToolbarTab = {
     feature: "annotation",
 };
 
-/**
- * A deck's View tab — the Notes toggle, which opens the pane of its speaker
- * notes under the slides, or closes it to its edge. A view setting, not an
- * edit, so it serves view mode and edit mode both: the last tab of each.
- */
-export const VIEW_TAB: ToolbarTab = {
-    id: "view",
-    label: "ribbon.view",
-    commands: VIEW_COMMANDS,
+/** How a paged document scrolls: a page at a time, or one after another. */
+const SCROLL: readonly CommandId[] = ["singleScroll", "continuousScroll"];
+
+/** How a PDF's or a word document's pages are arranged: how they pair up, the
+ *  turn they're shown at, and the gaps between them. */
+const ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLeft", "rotateViewRight", "pageGap"];
+
+/** Each doc type's View tab, around the guides an extension adds: before them
+ *  its own views and how its pages scroll and are arranged, after them what
+ *  shows beside the document. */
+const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; shows: readonly CommandId[] }>> = {
+    portable: { pages: [...SCROLL, ...ARRANGEMENT], shows: ["layers"] },
+    wordprocessing: { pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT], shows: ["formattingMarks"] },
+    presentation: { pages: ["normalView", "notesPageView", ...SCROLL], shows: ["notes"] },
+    image: { pages: [...SCROLL, "pageGap"], shows: [] },
+    spreadsheet: { pages: [], shows: ["formulaBar"] },
 };
 
 /**
- * A word document's View tab — its pages, or its body pageless, flowed to the
- * pane's width. A view setting like the deck's, in view mode and edit mode
- * both.
+ * `docType`'s View tab — how the document is shown, never an edit of it, so
+ * the same in view mode and edit mode, the last tab of each. Its groups, each
+ * where the doc type has one: its own views (a deck's Normal and Notes Page, a
+ * word document's Pages and Pageless), how the pages scroll, how they pair up,
+ * the turn they're shown at, the gaps between them, `guides` (an extension's,
+ * edit mode's ruler), then what shows beside the document — a PDF's layers, a
+ * deck's notes, a word document's formatting marks, a workbook's formula bar.
  */
-export const WORDPROCESSING_VIEW_TAB: ToolbarTab = {
-    id: "view",
-    label: "ribbon.view",
-    commands: WORDPROCESSING_VIEW_COMMANDS,
-};
+export function viewTab(docType: UDocType, guides: readonly string[] = []): ToolbarTab {
+    const { pages, shows } = VIEW_COMMANDS[docType];
+    return { id: "view", label: "ribbon.view", commands: [...pages, ...guides, ...shows] };
+}
 
 /**
  * The chrome one document type gets. Selected by `docType` (see
@@ -99,21 +103,27 @@ export interface DocProfile {
      */
     textEditing: boolean;
     /**
-     * Whether the view controls carry the paged sections — page navigation and
-     * the view-mode menu (scroll, layout, rotation). A page/slide stack (PDF,
-     * PPTX) shows the full page-nav + zoom + view-mode bar in the configured
-     * placement. A grid document (spreadsheet) has no page stack to scroll,
-     * group or turn, so it drops both and shows zoom only, pinned to the status
-     * bar beside its sheet tabs (see the shell's placement resolution).
+     * Whether the view controls carry page navigation. A page/slide stack
+     * (PDF, PPTX) shows page-nav + zoom in the configured placement. A grid
+     * document (spreadsheet) has no page stack to step through, so it shows
+     * zoom only, pinned to the status bar beside its sheet tabs (see the
+     * shell's placement resolution).
      */
     pagedViewControls: boolean;
     /**
-     * Whether the view settings offer the page arrangement — Layout, Rotation
-     * and Page Gap. A document read as a book of pages (PDF, Word) does; a deck
-     * and an image keep their pages single, upright and apart, whatever those
-     * settings hold (see {@link arrangementFor}).
+     * Whether the View tab offers the page arrangement — Page Layout and the
+     * turn. A document read as a book of pages (PDF, Word) does; a deck and an
+     * image keep their pages single and upright, whatever those settings hold
+     * (see {@link arrangementFor}).
      */
     pageArrangement: boolean;
+    /**
+     * Whether the View tab offers its Gap, the gaps between pages shown or the
+     * pages butted together: a stack of pages a reader runs down (PDF, Word, a
+     * multi-page image) does; a deck keeps its slides apart, whatever it holds
+     * (see {@link arrangementFor}).
+     */
+    pageGapToggle: boolean;
     /**
      * Whether the shapes this doc type selects are a drawing's — a slide's, a
      * word document's drawings, or the shapes drawn over an image — whose
@@ -172,6 +182,7 @@ export const FALLBACK_PROFILE: DocProfile = {
     textEditing: false,
     pagedViewControls: true,
     pageArrangement: false,
+    pageGapToggle: false,
     drawingShapes: false,
     pageSelection: false,
     // No band for an unprofiled type; a known paged type opts into the ruler
@@ -189,7 +200,7 @@ export const FALLBACK_PROFILE: DocProfile = {
  * overlay.
  */
 export const IMAGE_PROFILE: DocProfile = {
-    viewTabs: [],
+    viewTabs: [viewTab("image")],
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],
@@ -199,6 +210,7 @@ export const IMAGE_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
+    pageGapToggle: true,
     drawingShapes: true,
     pageSelection: true,
     // An image projects no guide.
@@ -211,7 +223,7 @@ export const IMAGE_PROFILE: DocProfile = {
 
 /** The portable (PDF) document type — the only one with real editing today. */
 export const PORTABLE_PROFILE: DocProfile = {
-    viewTabs: [ANNOTATE_TAB],
+    viewTabs: [ANNOTATE_TAB, viewTab("portable")],
     sheetTabs: false,
     leftPanels: LEFT_PANEL_TABS,
     rightPanels: RIGHT_PANEL_TABS,
@@ -221,6 +233,7 @@ export const PORTABLE_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,
+    pageGapToggle: true,
     drawingShapes: false,
     pageSelection: true,
     guide: null,
@@ -235,7 +248,7 @@ export const PORTABLE_PROFILE: DocProfile = {
  * the Thumbnails navigator, not a page-control strip.
  */
 export const PRESENTATION_PROFILE: DocProfile = {
-    viewTabs: [VIEW_TAB],
+    viewTabs: [viewTab("presentation")],
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],
@@ -243,6 +256,7 @@ export const PRESENTATION_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
+    pageGapToggle: false,
     drawingShapes: true,
     pageSelection: true,
     guide: null,
@@ -260,7 +274,7 @@ export const PRESENTATION_PROFILE: DocProfile = {
  * status bar beside the sheet tabs rather than in a floating page-nav bar.
  */
 export const SPREADSHEET_PROFILE: DocProfile = {
-    viewTabs: [],
+    viewTabs: [viewTab("spreadsheet")],
     sheetTabs: true,
     // No left-panel navigators — a workbook is a grid, not a page/slide stack, so
     // thumbnails / outline / layers / attachments don't apply; its navigation is
@@ -271,6 +285,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
     textEditing: false,
     pagedViewControls: false,
     pageArrangement: false,
+    pageGapToggle: false,
     drawingShapes: false,
     pageSelection: false,
     guide: "header",
@@ -290,7 +305,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
  * from the flow, they don't reorder).
  */
 export const WORDPROCESSING_PROFILE: DocProfile = {
-    viewTabs: [WORDPROCESSING_VIEW_TAB],
+    viewTabs: [viewTab("wordprocessing")],
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],
@@ -298,6 +313,7 @@ export const WORDPROCESSING_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,
+    pageGapToggle: true,
     drawingShapes: true,
     pageSelection: false,
     guide: null,
@@ -322,20 +338,22 @@ export function profileFor(docType: UDocType | null): DocProfile {
 }
 
 /**
- * The arrangement the open document is shown in: the view settings' layout,
- * rotation and page gap where its doc type offers them
- * ({@link DocProfile.pageArrangement} — PDF, Word), else single, upright pages
- * with their gaps.
+ * The arrangement the open document is shown in: the View tab's layout and
+ * rotation where its doc type offers them ({@link DocProfile.pageArrangement}
+ * — PDF, Word), else single, upright pages; and its Gap where it offers that
+ * ({@link DocProfile.pageGapToggle} — PDF, Word, an image), else the gaps.
  */
 export function arrangementFor(state: UIState): {
     layoutMode: LayoutMode;
     pageRotation: 0 | 90 | 180 | 270;
     showPageGap: boolean;
 } {
-    if (!profileFor(state.docType).pageArrangement) {
-        return { layoutMode: "singlePage", pageRotation: 0, showPageGap: true };
-    }
-    return { layoutMode: state.layoutMode, pageRotation: state.pageRotation, showPageGap: state.showPageGap };
+    const profile = profileFor(state.docType);
+    return {
+        layoutMode: profile.pageArrangement ? state.layoutMode : "singlePage",
+        pageRotation: profile.pageArrangement ? state.pageRotation : 0,
+        showPageGap: profile.pageGapToggle ? state.showPageGap : true,
+    };
 }
 
 /** The tab strip `docType` shows in `mode`: the profile's in view mode, an

@@ -19,17 +19,8 @@ import type { SelectionRuler } from "./ruler-edits.js";
 
 export interface EditState {
     /**
-     * Whether formatting marks (`¶`, a dot per space, a tab's arrow, `↵`) are
-     * drawn over the text — the ribbon's Show Formatting Marks toggle. A user
-     * preference, off by default; the marks are editing chrome, so what reaches
-     * the engine is `showFormattingMarks` in edit mode on a wordprocessing
-     * document.
-     */
-    showFormattingMarks: boolean;
-
-    /**
      * Whether the page ruler is shown (paged doc types — PDF / DOCX / PPTX). A
-     * user preference the host toggles; the ruler is additionally suppressed in
+     * user preference the host and the View tab's Ruler toggle; the ruler is additionally suppressed in
      * `view` mode (a reading pose needs no measurement chrome). A spreadsheet's
      * row/column headers are essential and never gated by this.
      */
@@ -130,7 +121,6 @@ export interface EditState {
 
 /** Edit mode's state at start. */
 export const INITIAL_EDIT_STATE: EditState = {
-    showFormattingMarks: false,
     showRuler: true,
     themePalette: null,
     fontFamilies: [],

@@ -678,6 +678,15 @@ export class WorkerClient {
     }
 
     /**
+     * Show or hide a word document's formatting marks. Sticky across opens in
+     * the worker like the spacing; the marks show in the next frame.
+     * Latest-wins, fire-and-forget.
+     */
+    setFormattingMarks(on: boolean): void {
+        this.#post({ type: "setFormattingMarks", on });
+    }
+
+    /**
      * Turn every page `quarterTurns` quarter turns clockwise (`0`–`3`) on top of
      * its own rotation — a view setting, never a document edit. Sticky across
      * opens in the worker like the spacing; the re-stacked arrangement rides

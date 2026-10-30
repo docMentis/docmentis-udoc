@@ -5,8 +5,8 @@
 // Material Symbols are © Google LLC, licensed under the Apache License 2.0:
 // https://www.apache.org/licenses/LICENSE-2.0
 
-/** `format_paragraph` */
-export const ICON_FORMATTING_MARKS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M384-192v-192q-79.68 0-135.84-56.23-56.16-56.22-56.16-136Q192-656 248.16-712q56.16-56 135.84-56h336v72h-96v504h-72v-504h-96v504h-72Z"/></svg>`;
+/** `straighten` */
+export const ICON_RULER = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M168-240q-29.7 0-50.85-21.15Q96-282.3 96-312v-336q0-29.7 21.15-50.85Q138.3-720 168-720h624q29.7 0 50.85 21.15Q864-677.7 864-648v336q0 29.7-21.15 50.85Q821.7-240 792-240H168Zm0-72h624v-336H672v168h-72v-168h-84v168h-72v-168h-84v168h-72v-168H168v336Zm120-168h72-72Zm156 0h72-72Zm156 0h72-72Zm-120 0Z"/></svg>`;
 
 /** `image` */
 export const ICON_IMAGE = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M216-144q-29.7 0-50.85-21.5Q144-187 144-216v-528q0-29 21.15-50.5T216-816h528q29.7 0 50.85 21.5Q816-773 816-744v528q0 29-21.15 50.5T744-144H216Zm0-72h528v-528H216v528Zm48-72h432L552-480 444-336l-72-96-108 144Zm-48 72v-528 528Z"/></svg>`;

@@ -64,7 +64,7 @@ export const ptBR: EditMessages = {
     "ribbon.object": "Objeto",
 
     // Commands
-    "command.formattingMarks": "Mostrar Marcas de Formatação",
+    "command.ruler": "Régua",
     "command.createSlide": "Novo Slide",
     "command.insertImage": "Imagem",
     "command.insertShape": "Formas",

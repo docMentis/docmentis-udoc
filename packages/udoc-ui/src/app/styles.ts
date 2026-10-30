@@ -365,44 +365,6 @@ export const uiStyles = css`
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
 
-    /* View Mode Menu */
-    .udoc-ui-root .udoc-view-mode-menu {
-        position: relative;
-        height: 32px;
-        display: flex;
-        align-items: center;
-    }
-
-    /* A settings popover rather than a list of rows — sections of 32px icon buttons —
-   so it keeps its own all-round padding where .udoc-menu insets rows vertically
-   only. Everything else (surface, border, radius, shadow) is the shared panel's,
-   which is also what finally gives this one the border it was missing. Matched on
-   both classes for the same ordering reason as the zoom menu above. */
-    .udoc-ui-root .udoc-menu.udoc-view-mode-menu__dropdown {
-        top: auto;
-        bottom: calc(100% + 8px);
-        left: 0;
-        padding: 8px;
-        min-width: 160px;
-    }
-
-    .udoc-ui-root .udoc-view-mode-menu__section {
-        margin-bottom: 8px;
-    }
-
-    .udoc-ui-root .udoc-view-mode-menu__section:last-child {
-        margin-bottom: 0;
-    }
-
-    .udoc-ui-root .udoc-view-mode-menu__title {
-        font-size: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--udoc-color-on-surface-variant);
-        margin-bottom: 4px;
-        padding: 0 4px;
-    }
-
     /* Left Panel */
     .udoc-ui-root .udoc-left-panel {
         position: relative;
@@ -1052,7 +1014,7 @@ export const uiStyles = css`
     }
 
     /* Segment button — the choices of one setting, one pressed at a time (the
-   View tab's views, the view settings menu's rows). Unframed and butted
+   View tab's views and how the pages scroll). Unframed and butted
    together like a button group, but one control: its buttons are square, and
    only its two outer ends round, so a tint on an end choice rounds on the
    outside alone and a middle one's is a plain rectangle. Logical corners, so a
@@ -1547,12 +1509,6 @@ export const uiStyles = css`
         top: calc(100% + 8px);
     }
 
-    /* View mode menu in toolbar: drops down instead of up */
-    .udoc-ui-root .udoc-toolbar__center .udoc-view-mode-menu__dropdown {
-        bottom: auto;
-        top: calc(100% + 8px);
-    }
-
     /* ===== Ribbon (tool options bar) ===== */
 
     .udoc-ui-root .udoc-ribbon-slot {
@@ -1817,19 +1773,8 @@ export const uiStyles = css`
             padding: 6px;
         }
 
-        /* View mode menu - right align */
-        .udoc-ui-root .udoc-view-mode-menu__dropdown {
-            left: auto;
-            right: 0;
-        }
-
         .udoc-ui-root .udoc-zoom-dropdown__item {
             padding: 12px 16px;
-        }
-
-        .udoc-ui-root .udoc-view-mode-menu__dropdown .udoc-segment > .udoc-btn {
-            min-width: 36px;
-            height: 36px;
         }
     }
 
@@ -3438,8 +3383,7 @@ export const uiStyles = css`
     }
 
     /* Docked in the top toolbar, the menus open downward instead of up. */
-    .udoc-ui-root .udoc-view-controls--top .udoc-zoom-dropdown__menu,
-    .udoc-ui-root .udoc-view-controls--top .udoc-view-mode-menu__dropdown {
+    .udoc-ui-root .udoc-view-controls--top .udoc-zoom-dropdown__menu {
         bottom: auto;
         top: calc(100% + 8px);
     }

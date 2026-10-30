@@ -2,9 +2,10 @@
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
 // order, and a strip opens on its Home.
 import type { UDocType } from "@docmentis/udoc-ui";
-import { ANNOTATE_TAB, VIEW_TAB, WORDPROCESSING_VIEW_TAB } from "@docmentis/udoc-ui/internal";
+import { ANNOTATE_TAB, viewTab } from "@docmentis/udoc-ui/internal";
 import type { CommandId, ToolbarTab } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
+import { RULED } from "./ruler.js";
 
 /** A command edit mode's tabs name: udoc-ui's, or the editor's own. */
 export type EditCommandId =
@@ -30,7 +31,7 @@ export type EditCommandId =
     | "objectFillColor"
     | "objectStrokeColor"
     | "objectArrange"
-    | "formattingMarks"
+    | "ruler"
     | "createSlide"
     | "insertImage"
     | "insertShape"
@@ -154,12 +155,12 @@ const PRESENTATION_TEXT_TAB: EditTab = {
     commands: TEXT_COMMANDS.filter((id) => id !== "widthScale"),
 };
 
-/** The wordprocessing View tab — udoc-ui's (Pages or Pageless), then Show
- *  Formatting Marks, which shows what the text holds rather than changing it. */
-const WORDPROCESSING_EDIT_VIEW_TAB: EditTab = {
-    ...WORDPROCESSING_VIEW_TAB,
-    commands: [...WORDPROCESSING_VIEW_TAB.commands, "formattingMarks"],
-};
+/** `docType`'s View tab, as view mode has it, with the ruler among its
+ *  guides where edit mode draws one: over a PDF's pages, a deck's slides and a
+ *  word document's pages. */
+function editViewTab(docType: UDocType): EditTab {
+    return viewTab(docType, RULED.has(docType) ? ["ruler"] : []);
+}
 
 /**
  * The portable Home tab. Like {@link HOME_TAB}, but with the
@@ -219,28 +220,43 @@ const IMAGE_HOME_TAB: EditTab = {
 const DEFAULT_TABS: readonly EditTab[] = [HOME_TAB];
 
 /** The portable (PDF) strip: its own Home and Insert, then Object (the page's
- *  content objects) and Annotate, but no Text tab. */
-const PORTABLE_TABS: readonly EditTab[] = [PORTABLE_HOME_TAB, PORTABLE_INSERT_TAB, OBJECT_TAB, ANNOTATE_TAB];
+ *  content objects) and Annotate, but no Text tab, and its View last. */
+const PORTABLE_TABS: readonly EditTab[] = [
+    PORTABLE_HOME_TAB,
+    PORTABLE_INSERT_TAB,
+    OBJECT_TAB,
+    ANNOTATE_TAB,
+    editViewTab("portable"),
+];
 
 /** The presentation strip: the slide-aware Home and its own Insert, then Text
- *  (character formatting) and Shape (free-floating graphics), and udoc-ui's
- *  View last (the notes pane), as view mode has it. */
+ *  (character formatting) and Shape (free-floating graphics), and its View
+ *  last. */
 const PRESENTATION_TABS: readonly EditTab[] = [
     PRESENTATION_HOME_TAB,
     PRESENTATION_INSERT_TAB,
     PRESENTATION_TEXT_TAB,
     SHAPE_TAB,
-    VIEW_TAB,
+    editViewTab("presentation"),
 ];
 
-/** The wordprocessing strip: Home plus Text, then View last (its pages or
- *  pageless, as view mode has it, and the formatting marks). No Shape tab yet —
- *  the flow document has no free-floating shapes. */
-const WORDPROCESSING_TABS: readonly EditTab[] = [HOME_TAB, TEXT_TAB, WORDPROCESSING_EDIT_VIEW_TAB];
+/** The wordprocessing strip: Home plus Text, then its View last. No Shape tab
+ *  yet — the flow document has no free-floating shapes. */
+const WORDPROCESSING_TABS: readonly EditTab[] = [HOME_TAB, TEXT_TAB, editViewTab("wordprocessing")];
 
 /** The image strip: its own Home and Insert, then the Text and Shape tabs of
- *  the shapes drawn over its pages — a deck's, as they are a slide's shapes. */
-const IMAGE_TABS: readonly EditTab[] = [IMAGE_HOME_TAB, IMAGE_INSERT_TAB, PRESENTATION_TEXT_TAB, SHAPE_TAB];
+ *  the shapes drawn over its pages — a deck's, as they are a slide's shapes —
+ *  and its View last. */
+const IMAGE_TABS: readonly EditTab[] = [
+    IMAGE_HOME_TAB,
+    IMAGE_INSERT_TAB,
+    PRESENTATION_TEXT_TAB,
+    SHAPE_TAB,
+    editViewTab("image"),
+];
+
+/** The spreadsheet strip: Home, and its View. */
+const SPREADSHEET_TABS: readonly EditTab[] = [HOME_TAB, editViewTab("spreadsheet")];
 
 /** Edit mode's tab strip for a document of `docType`. */
 export function editTabs(docType: UDocType | null): readonly EditTab[] {
@@ -253,6 +269,8 @@ export function editTabs(docType: UDocType | null): readonly EditTab[] {
             return WORDPROCESSING_TABS;
         case "image":
             return IMAGE_TABS;
+        case "spreadsheet":
+            return SPREADSHEET_TABS;
         default:
             return DEFAULT_TABS;
     }

@@ -30,15 +30,6 @@ export const EDIT_HANDLERS: EditHandlers = {
             worker.scheduleFrame();
         },
     },
-    setFormattingMarks: {
-        sticky: true,
-        handle(request, worker) {
-            // Sticky in Rust, like the backdrop; a full repaint shows or
-            // clears the marks on the next frame.
-            worker.session?.setFormattingMarks(worker.viewer, request.on);
-            worker.scheduleFrame();
-        },
-    },
     themePalette: {
         // The document's resolved theme palette — a slide's for a deck, the
         // single document theme for a word doc — a pure read. `null` when no

@@ -64,7 +64,7 @@ export const ru: EditMessages = {
     "ribbon.object": "Объект",
 
     // Commands
-    "command.formattingMarks": "Показать знаки форматирования",
+    "command.ruler": "Линейка",
     "command.createSlide": "Создать слайд",
     "command.insertImage": "Изображение",
     "command.insertShape": "Фигуры",

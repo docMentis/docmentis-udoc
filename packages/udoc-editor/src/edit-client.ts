@@ -47,15 +47,6 @@ export class EditClient {
     }
 
     /**
-     * Toggle formatting marks — `¶`, a dot per space, a tab's arrow, `↵` — drawn
-     * over composed text without reflowing it. Sticky across opens in the worker
-     * like the backdrop. Latest-wins, fire-and-forget.
-     */
-    setFormattingMarks(on: boolean): void {
-        this.#post({ type: "setFormattingMarks", on });
-    }
-
-    /**
      * Read the current slide's resolved theme color palette — the mapped scheme
      * slots the color picker shows as "Theme Colors". Resolves to `null` for a
      * doc type without a theme (only presentations carry one). Re-pull on open

@@ -64,7 +64,7 @@ export const zhCN: EditMessages = {
     "ribbon.object": "对象",
 
     // Commands
-    "command.formattingMarks": "显示格式标记",
+    "command.ruler": "标尺",
     "command.createSlide": "新建幻灯片",
     "command.insertImage": "图片",
     "command.insertShape": "形状",

@@ -64,7 +64,7 @@ export const zhTW: EditMessages = {
     "ribbon.object": "物件",
 
     // Commands
-    "command.formattingMarks": "顯示編輯標記",
+    "command.ruler": "尺規",
     "command.createSlide": "新投影片",
     "command.insertImage": "圖片",
     "command.insertShape": "圖案",

@@ -167,6 +167,30 @@ export interface Messages {
     "command.pagelessView": string;
     /** Notes */
     "command.notes": string;
+    /** Single */
+    "command.singleScroll": string;
+    /** Continuous */
+    "command.continuousScroll": string;
+    /** Page Layout */
+    "command.pageLayout": string;
+    /** One Page */
+    "pageLayout.onePage": string;
+    /** Two Pages */
+    "pageLayout.twoPages": string;
+    /** Cover on the Right */
+    "pageLayout.coverRight": string;
+    /** Cover on the Left */
+    "pageLayout.coverLeft": string;
+    /** Rotate View Left */
+    "command.rotateViewLeft": string;
+    /** Rotate View Right */
+    "command.rotateViewRight": string;
+    /** Gap */
+    "command.pageGap": string;
+    /** Formatting Marks */
+    "command.formattingMarks": string;
+    /** Formula Bar */
+    "command.formulaBar": string;
 
     // Formula bar
     /** Formula bar */
@@ -379,36 +403,6 @@ export interface Messages {
     "zoom.fitPage": string;
     /** Fit Slide */
     "zoom.fitSlide": string;
-
-    // View settings
-    /** View Settings */
-    "viewMode.label": string;
-    /** Scroll */
-    "viewMode.scroll": string;
-    /** Spread */
-    "viewMode.spread": string;
-    /** Continuous */
-    "viewMode.continuous": string;
-    /** Layout */
-    "viewMode.layout": string;
-    /** Single */
-    "viewMode.single": string;
-    /** Double */
-    "viewMode.double": string;
-    /** Cover Right */
-    "viewMode.coverRight": string;
-    /** Cover Left */
-    "viewMode.coverLeft": string;
-    /** Rotation */
-    "viewMode.rotation": string;
-    /** {degrees}° */
-    "viewMode.degrees": string;
-    /** Page Gap */
-    "viewMode.pageGap": string;
-    /** On */
-    "viewMode.on": string;
-    /** Off */
-    "viewMode.off": string;
 
     // Status bar
     /** Status bar */

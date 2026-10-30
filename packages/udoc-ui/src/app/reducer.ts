@@ -94,6 +94,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         case "OPEN_START":
             return {
                 ...state,
+                // The next document's layers are read once it opens.
+                hasLayers: false,
                 comments: new Map(),
                 allCommentsRead: false,
                 searchMatches: [],
@@ -534,6 +536,17 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         case "SET_NOTES_HEIGHT":
             // A height the splitter left above the pane's edge: open at it.
             return { ...state, notesOpen: true, notesHeight: action.height };
+
+        case "SET_FORMULA_BAR_VISIBLE":
+            return action.visible === state.formulaBarVisible ? state : { ...state, formulaBarVisible: action.visible };
+
+        case "SET_SHOW_FORMATTING_MARKS":
+            return action.visible === state.showFormattingMarks
+                ? state
+                : { ...state, showFormattingMarks: action.visible };
+
+        case "SET_HAS_LAYERS":
+            return action.hasLayers === state.hasLayers ? state : { ...state, hasLayers: action.hasLayers };
 
         case "ENABLE_PANEL_TRANSITIONS":
             if (!state.panelTransitionsDisabled) return state;

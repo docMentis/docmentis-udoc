@@ -333,6 +333,18 @@ export interface SetPageRotationRequest {
     quarterTurns: number;
 }
 
+/**
+ * Show formatting marks — `¶` at each paragraph mark, a dot in each space, an
+ * arrow in each tab and `↵` at each line break — drawn over composed text in
+ * the space it already holds, so showing them never reflows. Sticky like the
+ * spacing — re-applied to every subsequently opened document. Latest-wins,
+ * fire-and-forget.
+ */
+export interface SetFormattingMarksRequest {
+    type: "setFormattingMarks";
+    on: boolean;
+}
+
 /** Mark a document-space region dirty; omit `rect` to invalidate everything. */
 export interface InvalidateRequest {
     type: "invalidate";
@@ -1811,6 +1823,7 @@ export type WorkerRequest =
     | SetDefaultScrollModeRequest
     | SetLayoutModeRequest
     | SetPageRotationRequest
+    | SetFormattingMarksRequest
     | InvalidateRequest
     | SetPerfRequest
     | SetBackdropRequest

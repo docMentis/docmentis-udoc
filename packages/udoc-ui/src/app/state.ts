@@ -283,7 +283,16 @@ export type CommandId =
     | "notesPageView"
     | "notes"
     | "pagesView"
-    | "pagelessView";
+    | "pagelessView"
+    | "singleScroll"
+    | "continuousScroll"
+    | "pageLayout"
+    | "rotateViewLeft"
+    | "rotateViewRight"
+    | "pageGap"
+    | "layers"
+    | "formattingMarks"
+    | "formulaBar";
 
 /**
  * A tab in the ribbon's tab strip. Selecting a tab swaps the ribbon's tool
@@ -333,15 +342,6 @@ export const ANNOTATE_COMMANDS: readonly CommandId[] = [
     "annotationColor",
     "annotationOpacity",
 ];
-
-/** The View tab's commands — a deck's views, Normal and Notes Page; then its
- *  Notes toggle, which opens its speaker notes' pane under the slides, or
- *  closes it to its edge. */
-export const VIEW_COMMANDS: readonly CommandId[] = ["normalView", "notesPageView", "notes"];
-
-/** A word document's View tab's commands — its views, its pages or its body
- *  pageless. */
-export const WORDPROCESSING_VIEW_COMMANDS: readonly CommandId[] = ["pagesView", "pagelessView"];
 
 // -----------------------------------------------------------------------------
 // UI state
@@ -681,7 +681,7 @@ export interface UIState {
      */
     pageGap: PageGap | null;
     /**
-     * Whether the gaps between pages show — the view settings' Page Gap. Off
+     * Whether the gaps between pages show — the View tab's Gap. Off
      * butts the pages together; the page controls keep their own gap either
      * way.
      */
@@ -733,8 +733,15 @@ export interface UIState {
     notesHeight: number | null;
 
     /** Whether a workbook shows its formula bar above the grid — the host's
-     *  `showFormulaBar`. */
+     *  `showFormulaBar`, then the View tab's Formula Bar. */
     formulaBarVisible: boolean;
+    /** Whether a word document shows its formatting marks — `¶` at each
+     *  paragraph end, a dot in each space, an arrow in each tab, `↵` at each
+     *  line break — as Word's toggle does. Kept across documents. */
+    showFormattingMarks: boolean;
+    /** Whether the open PDF has layers to show or hide — what the View tab's
+     *  Layers button shows for. Read after the document opens. */
+    hasLayers: boolean;
 
     // --- Toolbar / chrome visibility -------------------------------------
     /**
@@ -884,7 +891,7 @@ export const initialState: UIState = {
     navRequest: { pageIndex: 0, seq: 0 },
 
     // Match the engine's default arrangement (a scrolling single column). The
-    // view-mode menu switches them and the shell pushes each to the worker.
+    // View tab switches them and the shell pushes each to the worker.
     scrollMode: "continuous",
     defaultScrollMode: null,
     layoutMode: "singlePage",
@@ -909,6 +916,8 @@ export const initialState: UIState = {
     notesOpen: false,
     notesHeight: null,
     formulaBarVisible: true,
+    showFormattingMarks: false,
+    hasLayers: false,
 
     toolbarVisible: true,
     fullscreenButtonVisible: true,
