@@ -27,11 +27,5 @@ export default defineConfig({
     build: { target: "es2022", rollupOptions: { external: ["@docmentis/udoc-wasm/meta-url"] } },
     server: {
         fs: { allow: [root, realpathSync(resolve(root, "node_modules/@docmentis/udoc-wasm"))] },
-        // `?document=<id>` opens a document udoc-server keeps, part by part,
-        // and joins its collaboration — the server `npm run dev` runs beside this
-        // one, on its default address. Proxied, WebSocket upgrades too, so the
-        // page and the server share an origin and the server needs no CORS.
-        // `UDOC_SERVER` points it at another.
-        proxy: { "/documents": { target: process.env.UDOC_SERVER ?? "http://127.0.0.1:8080", ws: true } },
     },
 });

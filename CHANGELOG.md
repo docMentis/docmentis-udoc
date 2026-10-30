@@ -33,6 +33,14 @@ listed once, by package. Its major and minor version are those of the
   `toolbar.showSidePanel` and `toolbar.hideSidePanel` name the first,
   `toolbar.menu` the last; `toolbar.more` is gone.
 
+### udoc-demo
+
+#### Removed
+
+- `?document=<id>`, which opened a document udoc-server keeps and joined its
+  collaboration through the dev server's `/documents` proxy. `npm run dev` no
+  longer runs udoc-server beside the demo.
+
 ## [0.8.8] - 2026-10-29
 
 Built on `@docmentis/udoc-wasm` 0.8.10.

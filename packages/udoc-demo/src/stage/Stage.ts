@@ -6,9 +6,6 @@ import type { Theme } from "../theme.js";
 import type { Mode, OpenDoc } from "../types.js";
 import { aiPanel } from "./AiPanel.js";
 
-/** This page's name in a collaboration it joins with one editor — one per page load, so two browsers tell apart. */
-const GUEST_NAME = `Guest ${Math.floor(100 + Math.random() * 900)}`;
-
 /**
  * Where the engine is. A build leaves it out (see `vite.config.ts`) for its
  * host to serve beside it, at `udoc-wasm/` laid out as `@docmentis/udoc-wasm`'s
@@ -89,7 +86,7 @@ export class Stage {
         } else {
             const editors = this.#editors;
             const service = await this.#openIn(editors, doc);
-            if (this.#editors === editors) this.#syncEditors(editors, doc, service);
+            if (this.#editors === editors) this.#syncEditors(editors, service);
         }
     }
 
@@ -146,20 +143,15 @@ export class Stage {
         const doc = this.#doc;
         const service = doc ? await this.#openIn(editors, doc) : undefined;
         if (gen !== this.#gen) return;
-        this.#syncEditors(editors, doc, service);
+        this.#syncEditors(editors, service);
     }
 
     /**
-     * Open `doc` in `editors`, from its bytes or from the server that keeps
-     * it. The two editors of Co-edit open a document of their own bytes
-     * through a local collaboration service instead — each opening the bytes
-     * itself would mint ids of its own — and this resolves with its id.
+     * Open `doc` in `editors`, from its bytes. The two editors of Co-edit open
+     * it through a local collaboration service instead — each opening the
+     * bytes itself would mint ids of its own — and this resolves with its id.
      */
     async #openIn(editors: UDocBase[], doc: OpenDoc): Promise<string | undefined> {
-        if ("remote" in doc) {
-            await Promise.all(editors.map((ed) => ed.openRemote(doc.remote))).catch(openFailed);
-            return undefined;
-        }
         if (this.#mode !== "coedit") {
             await Promise.all(editors.map((ed) => ed.open(doc.bytes, { filename: doc.name }))).catch(openFailed);
             return undefined;
@@ -189,22 +181,17 @@ export class Stage {
     }
 
     /**
-     * Join `editors`, just opened on `doc`, to its collaboration, each named
-     * (see `namesOf`) so the others flag its selection with a readable label:
-     * the one a server keeps for a document it keeps — as every editor open on
-     * it anywhere joins — or that of the local collaboration service they
-     * opened it from.
+     * Join `editors`, just opened from the local collaboration service
+     * `service`, to its collaboration, each named (see `COEDIT_NAMES`) so the
+     * other flags its selection with a readable label. Editors opened from
+     * their bytes, `service` undefined, join none.
      */
-    #syncEditors(editors: UDocBase[], doc: OpenDoc | null, service: string | undefined): void {
+    #syncEditors(editors: UDocBase[], service: string | undefined): void {
         this.#teardownSync?.();
         this.#teardownSync = null;
-        let join: ((ed: UDocBase, name: string) => void) | undefined;
-        if (doc && "collaboration" in doc) join = (ed, name) => ed.joinRemoteCollaboration(doc.collaboration, name);
-        else if (service !== undefined) join = (ed, name) => ed.joinLocalCollaboration(service, name);
-        if (!join) return;
-        const names = namesOf(this.#mode);
+        if (service === undefined) return;
         const offs = editors.flatMap((ed, i) => {
-            const name = names[i]!;
+            const name = COEDIT_NAMES[i]!;
             const listening = [
                 ed.on("collaboration:joined", () => console.info(`udoc: ${name} joined the collaboration`)),
                 ed.on("collaboration:interrupted", ({ code, reason }) =>
@@ -214,7 +201,7 @@ export class Stage {
                     this.onError(`The collaboration failed: ${reason || `the connection closed (${code})`}`),
                 ),
             ];
-            join(ed, name);
+            ed.joinLocalCollaboration(service, name);
             return listening;
         });
         this.#teardownSync = () => {
@@ -231,11 +218,8 @@ export class Stage {
     }
 }
 
-/** Each editor's name in `mode`, in the order the stage builds them: the user's first. */
-function namesOf(mode: Mode | null): string[] {
-    if (mode === "coedit") return ["Alex", "Robin"];
-    return [GUEST_NAME];
-}
+/** Co-edit's editors' names, in the order the stage builds them: the user's first. */
+const COEDIT_NAMES = ["Alex", "Robin"];
 
 /**
  * What covers the stage while Co-edit prepares its document: a running bar,

@@ -1,4 +1,4 @@
-# Build output, and udoc-server's documents under `npm run dev` (target/udoc-data)
+# Build output
 target
 packages/*/dist
 *.tsbuildinfo

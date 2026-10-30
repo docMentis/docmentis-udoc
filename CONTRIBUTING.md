@@ -22,7 +22,7 @@ npm install
 # Build all packages
 npm run build
 
-# Run the demo app (http://localhost:5173), with the UI packages and udoc-server rebuilding as you edit
+# Run the demo app (http://localhost:5173), with the UI packages rebuilding as you edit
 npm run dev
 ```
 

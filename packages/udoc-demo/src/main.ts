@@ -214,7 +214,7 @@ const sidebar = new Sidebar({
     onOpenFile: () => fileInput.click(),
     onOpenUrl: () => void openUrl(),
     onSelectDoc: (doc) => {
-        pushAddress({ sample: sampleFile(doc), document: null });
+        pushAddress({ sample: sampleFile(doc) });
         void openSample(doc);
     },
     onOpenOptions: () => optionsModal.open(),
@@ -227,18 +227,17 @@ header.setTheme(getTheme());
 
 // --- address --------------------------------------------------------------
 // The page's address names what the demo shows, so a link opens it there: the
-// mode, `?mode=`, and the document, a sample by its file's name, `?sample=`, or
-// one udoc-server keeps, `?document=`. Each change the user makes to them is a
-// new entry in the browser's history, and going back or forward shows its
-// entry's again.
+// mode, `?mode=`, and the document, a sample by its file's name, `?sample=`.
+// Each change the user makes to them is a new entry in the browser's history,
+// and going back or forward shows its entry's again.
 
 /** The mode the demo is in; `null` before the first. */
 let shownMode: Mode | null = null;
 
 /**
- * The document asked for last, by a name for it: `sample=<file>` or
- * `document=<id>`, as the address names it, or `file=<name>` or `url=<url>`
- * for one it can't name. `null` before the first.
+ * The document asked for last, by a name for it: `sample=<file>`, as the
+ * address names it, or `file=<name>` or `url=<url>` for one it can't name.
+ * `null` before the first.
  */
 let shownDoc: string | null = null;
 
@@ -274,14 +273,8 @@ async function showAddress(): Promise<void> {
     const mode = addressedMode();
     if (mode !== shownMode) await setMode(mode);
     // Read again: the address may have moved on while the mode was set.
-    const params = new URLSearchParams(location.search);
-    const remote = params.get("document");
-    const sample = findSample(params.get("sample"));
-    if (remote !== null) {
-        if (shownDoc !== `document=${remote}`) await openRemote(remote);
-    } else if (sample) {
-        if (shownDoc !== `sample=${sampleFile(sample)}`) await openSample(sample);
-    }
+    const sample = findSample(new URLSearchParams(location.search).get("sample"));
+    if (sample && shownDoc !== `sample=${sampleFile(sample)}`) await openSample(sample);
 }
 
 // --- actions --------------------------------------------------------------
@@ -328,7 +321,7 @@ async function openSample(doc: SampleDoc): Promise<void> {
 function askUnnamed(asked: string): string {
     shownDoc = asked;
     sidebar.setActiveDoc(null);
-    pushAddress({ sample: null, document: null });
+    pushAddress({ sample: null });
     return asked;
 }
 
@@ -343,23 +336,6 @@ async function openUrl(): Promise<void> {
     } catch (err) {
         console.error("udoc: failed to open URL", err);
         showError("Could not load that URL.");
-    }
-}
-
-/**
- * Open a document udoc-server keeps, part by part, and join its collaboration:
- * `?document=<id>`, reached through the dev server's `/documents` proxy (see
- * `vite.config.ts`). The same URL open anywhere else edits the same document.
- */
-async function openRemote(id: string): Promise<void> {
-    shownDoc = `document=${id}`;
-    sidebar.setActiveDoc(null);
-    const document = `/documents/${encodeURIComponent(id)}`;
-    try {
-        await stage.openDoc({ name: id, remote: `${document}/package`, collaboration: `${document}/collaboration` });
-    } catch (err) {
-        console.error("udoc: failed to open the server's document", err);
-        showError(`Could not open document "${id}" from the server.`);
     }
 }
 
@@ -389,8 +365,7 @@ async function main(): Promise<void> {
     document.body.appendChild(optionsModal.el);
     // The first entry names a mode and a document as every other does: View,
     // and the default sample, where the link named none.
-    const params = new URLSearchParams(location.search);
-    const named = params.has("document") || findSample(params.get("sample")) !== undefined;
+    const named = findSample(new URLSearchParams(location.search).get("sample")) !== undefined;
     history.replaceState(
         history.state,
         "",

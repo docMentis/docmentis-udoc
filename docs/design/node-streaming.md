@@ -110,9 +110,7 @@ an earlier checkpoint when neither has; `UDocSession::open_remote`; the wasm's
 with a synchronous `XMLHttpRequest`; udoc-node's `UDocNode.openRemote(url, fetch?)`,
 fetching on the embedder's thread for its blocked worker — with the global `fetch`, a
 part failing after 60 seconds, or with the embedder's own, which is how udoc-server
-opens a session over its store; and the
-demo's `?document=<id>`, which its dev server proxies to the udoc-server
-`npm run dev` runs beside it, so page and API share an origin.
+opens a session over its store.
 
 **Not built:** `?version=`; an index of a package's entries, so a request needn't scan
 them; cross-origin access and authentication.

@@ -12,9 +12,5 @@ export const MODES: { id: Mode; label: string; icon: "edit" | "view" | "sparkle"
     { id: "ai", label: "Co-edit with AI", icon: "sparkle" },
 ];
 
-/**
- * A document the demo can open, plus a display name: in-memory bytes, or a
- * document a udoc server keeps — its package resource, opened part by part,
- * and the collaboration its editors join.
- */
-export type OpenDoc = { name: string; bytes: Uint8Array } | { name: string; remote: string; collaboration: string };
+/** A document the demo can open: its bytes in memory, and a display name. */
+export type OpenDoc = { name: string; bytes: Uint8Array };
