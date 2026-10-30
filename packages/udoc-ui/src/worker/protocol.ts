@@ -1395,11 +1395,14 @@ export type SelectionEdit =
     // Whole pages and slides — the thumbnails' edits, on a page selection.
     // Each lands one undo step and leaves a selection: a delete the page that
     // took the first deleted one's place, an insert the new page, a duplicate
-    // the copies; a rotate and a reorder keep it.
+    // the copies; a rotate, a flip and a reorder keep it.
     /** PDF: delete the selected pages, inside a `page` edit. */
     | { kind: "deletePages" }
     /** PDF: rotate the selected pages a quarter turn, inside a `page` edit. */
     | { kind: "rotatePages"; clockwise: boolean }
+    /** Image: flip the selected pages — left to right when `horizontal`, else
+     *  top to bottom — inside a `page` edit. */
+    | { kind: "flipPages"; horizontal: boolean }
     /** PDF: insert a blank page after the last selected one, inside a `page` edit. */
     | { kind: "insertPage" }
     /** PDF: copy the selected pages in after the last of them, inside a `page` edit. */

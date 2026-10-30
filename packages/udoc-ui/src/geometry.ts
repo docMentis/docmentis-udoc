@@ -319,6 +319,7 @@ export type { Peer, Pointer, PeerPointer };
 export type SelectionEditKind =
     | "deletePages"
     | "rotatePages"
+    | "flipPages"
     | "insertPage"
     | "duplicatePages"
     | "reorderPages"
