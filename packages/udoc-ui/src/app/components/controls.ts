@@ -94,8 +94,8 @@ export function createButton(content: TriggerContent): HTMLButtonElement {
     const labeled = content.text !== undefined;
     const classes = ["udoc-btn", labeled ? "udoc-btn--labeled" : "udoc-btn--icon"];
     if (content.field) classes.push("udoc-btn--field");
-    // A caret owns the right edge with its own 2px, so the button drops its 6px
-    // there — the chevron sits 2px from the edge, matching a split button's caret.
+    // A caret owns the right edge, so the button drops its 6px there — the
+    // chevron's box meets the edge, matching a split button's caret.
     if (content.caret) classes.push("udoc-btn--has-caret");
     if (content.className) classes.push(content.className);
     btn.className = classes.join(" ");

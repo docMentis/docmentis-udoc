@@ -17,6 +17,9 @@ listed once, by package. Its major and minor version are those of the
   pen alone, where it stood over a bar like the Color dropdown beside it.
 - The Annotate tab's Fill, Color and Opacity sit in one group, in that order,
   where Color led and Opacity stood apart from the other two.
+- A dropdown's or split button's chevron sits 4px from its icon and meets its
+  right edge, where it kept 3px clear on each side, so the button is 5px
+  narrower.
 
 ## [0.8.8] - 2026-10-29
 

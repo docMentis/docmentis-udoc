@@ -145,7 +145,8 @@ export const uiStyles = css`
         --udoc-btn-radius: 4px;
         --udoc-btn-glyph: 20px; /* THE icon size — always 20x20 on a control */
         --udoc-btn-pad-x: 6px; /* button = 6px + content + 6px */
-        --udoc-caret-pad-x: 3px; /* caret = 3px + chevron + 3px (tighter than the button) */
+        --udoc-caret-pad-x: 0px; /* caret = the chevron alone (its glyph is its own margin) */
+        --udoc-caret-seam: 4px; /* content <-> caret, on the content's side */
         --udoc-btn-gap: 4px; /* icon <-> label internal spacing */
         --udoc-btn-font: 13px;
         --udoc-caret: 16px; /* the one chevron size (a chevron, not an icon) */
@@ -1116,19 +1117,18 @@ export const uiStyles = css`
         height: var(--udoc-btn-glyph);
     }
 
-    /* The one caret, everywhere — its own 3px unit (3 │ chevron │ 3). When a button
+    /* The one caret, everywhere — the chevron alone, unpadded. When a button
    carries a caret, the button drops its 6px right so the caret provides the
-   edge, so the chevron sits 3px from the edge like a split button's caret. */
+   edge, so the chevron's box meets the edge like a split button's caret. */
     .udoc-ui-root .udoc-btn--has-caret {
         padding-right: 0;
     }
     .udoc-ui-root .udoc-btn__caret {
         display: inline-flex;
         align-items: center;
-        /* content → chevron spans one button-pad (6px): the main body's implicit
-       3px seam (margin) + the caret's own 3px left pad — same gap as a split's
-       seam (main's 3px right + caret's 3px left). */
-        margin-left: var(--udoc-caret-pad-x);
+        /* content → chevron spans the 4px seam (margin) — same gap as a split's
+       (main's 4px right). */
+        margin-left: var(--udoc-caret-seam);
         padding: 0 var(--udoc-caret-pad-x);
         color: var(--udoc-color-on-surface-variant);
     }
@@ -1164,11 +1164,11 @@ export const uiStyles = css`
         border-radius: var(--udoc-btn-radius);
     }
     /* Split = main + caret. The main keeps the shared 6px on its outer (left) edge
-   but drops to one caret-pad (3px) on the seam; the caret is 3│chevron│3. Their
-   abutting 3px paddings make the 6px between content and chevron — pixel-identical
-   to a dropdown (button+caret); only the seam radius / hover split differs. */
+   and the 4px seam on the inner one; the caret is the chevron alone. That makes
+   the 4px between content and chevron — pixel-identical to a dropdown
+   (button+caret); only the seam radius / hover split differs. */
     .udoc-ui-root .udoc-split__main {
-        padding-right: var(--udoc-caret-pad-x);
+        padding-right: var(--udoc-caret-seam);
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
     }

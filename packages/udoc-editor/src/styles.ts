@@ -630,7 +630,8 @@ export const editorStyles = css`
     .udoc-ui-root .udoc-combobox__input:focus {
         outline: none;
     }
-    /* The caret shares the button caret's 3│chevron│3 metrics and muted tint. */
+    /* The caret shares the button caret's metrics (the chevron alone, unpadded)
+       and muted tint. */
     .udoc-ui-root .udoc-combobox__caret {
         display: inline-flex;
         align-items: center;
