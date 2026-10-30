@@ -8,6 +8,11 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- A `.md` or `.markdown` file opens, as a word document shown pageless:
+  CommonMark, with GitHub's tables and strikethrough.
+
 #### Changed
 
 - The ribbon's commands show their icons alone, each named in its tooltip,
@@ -33,7 +38,31 @@ listed once, by package. Its major and minor version are those of the
   `toolbar.showSidePanel` and `toolbar.hideSidePanel` name the first,
   `toolbar.menu` the last; `toolbar.more` is gone.
 
+### udoc-node
+
+#### Added
+
+- A Markdown file opens as a word document, its format named `"md"`, and
+  `saveToBytes("md")` saves it, or any word document, as Markdown.
+
+### udoc-cli
+
+#### Added
+
+- A `.md` or `.markdown` input opens as a word document, and `udoc save`
+  saves a word document to a `.md` or `.markdown` `--out`.
+
+### udoc-server
+
+#### Added
+
+- `GET /documents/:id/file.md` saves a copy of a word document as Markdown.
+
 ### udoc-demo
+
+#### Added
+
+- Open File takes a `.md` or `.markdown` file.
 
 #### Removed
 

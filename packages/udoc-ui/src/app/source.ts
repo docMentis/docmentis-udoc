@@ -64,8 +64,8 @@ export function sourceName(source: OpenSource): string | undefined {
 
 /**
  * The format `name`'s extension names when the bytes can't say it: a CSV's, a
- * TSV's, a PSV's or a text file's, which have no signature for the engine to
- * detect.
+ * TSV's, a PSV's, a text file's or a Markdown file's, which have no signature
+ * for the engine to detect.
  * `undefined` for any other name, and for none.
  */
 export function signaturelessFormat(name: string | undefined): FileFormat | undefined {
@@ -79,6 +79,9 @@ export function signaturelessFormat(name: string | undefined): FileFormat | unde
             return "psv";
         case "txt":
             return "txt";
+        case "md":
+        case "markdown":
+            return "md";
         default:
             return undefined;
     }
@@ -97,6 +100,7 @@ const MEDIA_TYPES: Record<FileFormat, string> = {
     pdf: "application/pdf",
     docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     txt: "text/plain",
+    md: "text/markdown",
     pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     csv: "text/csv",

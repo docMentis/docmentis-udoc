@@ -262,8 +262,8 @@ export class UDocSession {
      * original, the saved bytes keep: a `"delta"` or `"incremental"` save
      * writes over it, which a session opened with `UDocNode.openRemote` doesn't
      * hold; without it, the one keeping the most of it that `format` saves by
-     * (`"incremental"` for a PDF, `"rewrite"` for a CSV, a TSV, a PSV or an
-     * image, else `"delta"`). `delimiter` is the character a CSV's fields are
+     * (`"incremental"` for a PDF, `"rewrite"` for a CSV, a TSV, a PSV, a text
+     * file, a Markdown file or an image, else `"delta"`). `delimiter` is the character a CSV's fields are
      * split by; without it, the one the document was opened with, else a comma.
      * Rejects for a format its doc type doesn't save to, a format that never
      * saves by `strategy`, a delimiter for a format that takes none, no

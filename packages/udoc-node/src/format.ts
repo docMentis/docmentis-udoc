@@ -12,6 +12,7 @@ const FILE_FORMATS = {
     pdf: true,
     docx: true,
     txt: true,
+    md: true,
     pptx: true,
     xlsx: true,
     csv: true,

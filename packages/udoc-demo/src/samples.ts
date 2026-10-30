@@ -79,4 +79,4 @@ export function findSample(file: string | null): SampleDoc | undefined {
 }
 
 export const FILE_ACCEPT =
-    ".pdf,.pptx,.docx,.txt,.xlsx,.csv,.tsv,.tab,.psv,.svg,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.webp,.ico";
+    ".pdf,.pptx,.docx,.txt,.md,.markdown,.xlsx,.csv,.tsv,.tab,.psv,.svg,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.webp,.ico";
