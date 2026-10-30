@@ -34,7 +34,7 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-wasm": "0.8.9"
+        "@docmentis/udoc-wasm": "0.8.10"
     },
     "devDependencies": {
         "@docmentis/udoc-editor": "*",
