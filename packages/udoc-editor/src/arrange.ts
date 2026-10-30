@@ -37,11 +37,9 @@ import { editState, editStateOf } from "./state.js";
  *  y-down, so a positive angle reads as clockwise on screen. */
 const QUARTER_TURN = Math.PI / 2;
 
-/** `icon` given a quarter turn — Flip Vertical's glyph: Material Symbols draws
- *  the mirror about an upright axis only, so the horizontal one lies it down. */
-function quarterTurned(icon: string): string {
-    return icon.replace("<svg ", '<svg style="transform: rotate(90deg)" ');
-}
+/** Flip Vertical's glyph: Material Symbols draws the mirror about an upright
+ *  axis only, so the horizontal one is {@link ICON_FLIP} given a quarter turn. */
+export const ICON_FLIP_VERTICAL = ICON_FLIP.replace("<svg ", '<svg style="transform: rotate(90deg)" ');
 
 /** True when any item in `items` is enabled — the enablement of a submenu row
  *  (and of an Arrange trigger), which lights up exactly when it has a live
@@ -184,7 +182,7 @@ const SHAPE_ROTATE_MENU: readonly MenuItem<MessageKey>[] = [
     {
         action: editAction({ kind: "flip", axis: "vertical" }),
         label: "arrange.flipVertical",
-        icon: quarterTurned(ICON_FLIP),
+        icon: ICON_FLIP_VERTICAL,
         enabledWhen: (c) => allowsEdit(c.selection, "scaleEachShape"),
     },
 ];
@@ -357,7 +355,7 @@ const OBJECT_ROTATE_MENU: readonly MenuItem<MessageKey>[] = [
     {
         action: editAction({ kind: "flip", axis: "vertical" }),
         label: "arrange.flipVertical",
-        icon: quarterTurned(ICON_FLIP),
+        icon: ICON_FLIP_VERTICAL,
         enabledWhen: (c) => allowsEdit(c.selection, "scaleEachObject"),
     },
 ];

@@ -62,7 +62,8 @@ listed once, by package. Its major and minor version are those of the
   way to the next one. A rename rewrites the formulas naming the sheet, and a
   delete turns them to `#REF!`.
 - An image is edited in place. Its Home tab turns the current page, or the
-  pages picked in the thumbnails, left or right. Crop frames the part of the
+  pages picked in the thumbnails, left or right, and flips them horizontally
+  or vertically. Crop frames the part of the
   page to keep, dragged by its corners, edges and middle and kept to an aspect
   ratio if one is picked (Original, Square, 4:3 or 16:9); Apply or Enter crops
   it, Cancel or Escape leaves it, and Reset takes an earlier crop away to show
@@ -73,8 +74,8 @@ listed once, by package. Its major and minor version are those of the
   a line or an arrow, outlined in red and unfilled. The Shape tab colours and
   arranges them, a double-click in a rectangle or an ellipse types a label in
   it, which the Text tab formats and a double-click selects a word of, and a
-  save draws them into the image. Turning, cropping or resizing the image
-  carries them with it.
+  save draws them into the image. Turning, flipping, cropping or resizing the
+  image carries them with it, a label still reading forwards.
 - An image's thumbnails pick whole pages, as a PDF's do: a right-click rotates
   or deletes them, or in a TIFF duplicates them, a drag moves them, and Delete
   deletes them, an image keeping one page.

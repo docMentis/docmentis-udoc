@@ -1,15 +1,16 @@
-// An image document's edits: its pages turned, cropped and resized from the
-// Home tab, and the shapes the Insert tab draws over them. A page edit names
+// An image document's edits: its pages turned, flipped, cropped and resized
+// from the Home tab, and the shapes the Insert tab draws over them. A page edit names
 // its page by the id its manifest entry carries, which also measures it: the
 // page's size in points — the points a crop and the shapes are in, the page's
 // own from its top-left — and its pixels, which a resize names.
 import type { ImagePageCommand, ImagePageInfo, UDocCommand } from "@docmentis/udoc-wasm";
 import { allowsEdit, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, ShapeKind, ShapePoint } from "@docmentis/udoc-ui/internal";
+import { ICON_FLIP_VERTICAL } from "./arrange.js";
 import { createImageSizeModal } from "./components/ImageSizeModal.js";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
-import { ICON_CROP, ICON_IMAGE_SIZE } from "./icons.js";
+import { ICON_CROP, ICON_FLIP, ICON_IMAGE_SIZE } from "./icons.js";
 import { markupShape } from "./markup.js";
 import { editStateOf } from "./state.js";
 
@@ -121,6 +122,19 @@ async function rotatePages(host: EditHost, clockwise: boolean): Promise<void> {
     if (info) await host.commit(() => host.client.execute(editPage({ rotatePages: { ids: [info.id], clockwise } })));
 }
 
+/** Flip the pages picked in the thumbnails — left to right, or top to bottom
+ *  — or the current page with none picked. */
+async function flipPages(host: EditHost, horizontal: boolean): Promise<void> {
+    if (allowsEdit(host.store.getState().selectionCaps, "flipPages")) {
+        await host.commit(() =>
+            host.client.executeOnSelection({ kind: "page", edit: { kind: "flipPages", horizontal } }),
+        );
+        return;
+    }
+    const info = await currentPage(host);
+    if (info) await host.commit(() => host.client.execute(editPage({ flipPages: { ids: [info.id], horizontal } })));
+}
+
 /**
  * Whether an image's page edits show on its Home tab in `c`: with no shape
  * drawn over a page selected — nothing, or pages in the thumbnails — outside
@@ -152,6 +166,10 @@ export function imageCommands(
         const mounted = host();
         if (mounted) void rotatePages(mounted, clockwise);
     };
+    const flip = (horizontal: boolean) => {
+        const mounted = host();
+        if (mounted) void flipPages(mounted, horizontal);
+    };
     return {
         rotatePageLeft: {
             id: "rotatePageLeft",
@@ -169,12 +187,27 @@ export function imageCommands(
             run: { kind: "action", press: () => rotate(true) },
             enabledWhen: whenPageEdits,
         },
+        flipPageHorizontal: {
+            id: "flipPageHorizontal",
+            label: "arrange.flipHorizontal",
+            icon: ICON_FLIP,
+            group: "image",
+            run: { kind: "action", press: () => flip(true) },
+            enabledWhen: whenPageEdits,
+        },
+        flipPageVertical: {
+            id: "flipPageVertical",
+            label: "arrange.flipVertical",
+            icon: ICON_FLIP_VERTICAL,
+            group: "image",
+            run: { kind: "action", press: () => flip(false) },
+            enabledWhen: whenPageEdits,
+        },
         cropPage: {
             id: "cropPage",
             label: "command.cropPage",
             icon: ICON_CROP,
             group: "image",
-            labeled: true,
             run: { kind: "action", press: actions.crop },
             enabledWhen: whenPageEdits,
         },
@@ -183,7 +216,6 @@ export function imageCommands(
             label: "command.resizePage",
             icon: ICON_IMAGE_SIZE,
             group: "image",
-            labeled: true,
             run: { kind: "action", press: actions.resize },
             enabledWhen: whenPageEdits,
         },

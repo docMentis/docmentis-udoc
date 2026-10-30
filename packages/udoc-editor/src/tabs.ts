@@ -36,6 +36,8 @@ export type EditCommandId =
     | "insertShape"
     | "rotatePageLeft"
     | "rotatePageRight"
+    | "flipPageHorizontal"
+    | "flipPageVertical"
     | "cropPage"
     | "resizePage"
     | "cropAspect"
@@ -185,11 +187,12 @@ const PRESENTATION_HOME_TAB: EditTab = {
 
 /**
  * The image Home tab. Like {@link PRESENTATION_HOME_TAB}, its document-level
- * actions — the current page's Rotate Left / Right, Crop and Image Size — show
- * with no shape drawn over a page selected, or pages in the thumbnails, and
- * yield to the text and shape controls the moment one is. While a page is
- * cropped, crop mode's own controls show in their place: the aspect the box
- * keeps, Reset, Cancel and Apply.
+ * actions — the current page's Rotate Left / Right, Flip Horizontal /
+ * Vertical, Crop and Image Size — show with no shape drawn over a page
+ * selected, or pages in the thumbnails, and yield to the text and shape
+ * controls the moment one is. While a page is cropped, crop mode's own
+ * controls show in their place: the aspect the box keeps, Reset, Cancel and
+ * Apply.
  */
 const IMAGE_HOME_TAB: EditTab = {
     id: "home",
@@ -197,6 +200,8 @@ const IMAGE_HOME_TAB: EditTab = {
     commands: [
         "rotatePageLeft",
         "rotatePageRight",
+        "flipPageHorizontal",
+        "flipPageVertical",
         "cropPage",
         "resizePage",
         "cropAspect",
