@@ -6,6 +6,24 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Added
+
+- A word document's footnotes and endnotes show, numbered as Word numbers
+  them: a page's footnotes under a separator at its foot, and endnotes after
+  their section or at the end of the document.
+
+#### Fixed
+
+- A word document's superscript and subscript text, a note's number among
+  them, takes the size and the rise its font gives it, as in Word, where every
+  font's was set alike.
+- A slide's picture background takes the colour effects the deck gives it, a
+  duotone in the slide's colour among them, where it showed the plain picture.
+- A workbook's chart saved with no values cached for its data draws them from
+  the cells it names, where it drew nothing.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -49,6 +67,9 @@ listed once, by package. Its major and minor version are those of the
   columns and rows the font sizes.
 - A menu's on/off switch stands clear of its label, where it sat almost
   against it in a menu no wider than that row.
+- A workbook's sheet tabs end on one line, where a tab filled in its sheet's
+  colour stood a pixel lower than the open one, and the open tab's colour
+  tints its folds too.
 
 ### udoc-editor
 
