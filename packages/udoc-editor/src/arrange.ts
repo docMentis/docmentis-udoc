@@ -1,7 +1,7 @@
 // Arrange: the Shape and Object tabs' Arrange menus — z-order, align and
 // distribute, rotate and flip, group — and the edits they make of the
 // selection.
-import { allowsEdit, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT } from "@docmentis/udoc-ui/internal";
+import { allowsEdit, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT, profileFor } from "@docmentis/udoc-ui/internal";
 import type {
     AlignEdge,
     EditAxis,
@@ -407,11 +407,11 @@ export function createArrangeEdits(host: UIShellHost) {
     const annotationsSelected = () => host.annotationsSelected();
 
     // Each edit names what it acts on, as its command does: a drawing's shapes
-    // — in the doc types embedding the drawing families, a slide's shapes or a
-    // docx drawing's — or a PDF's page objects or annotations.
+    // — in the doc types embedding the drawing families, a slide's shapes, a
+    // docx drawing's or those drawn over an image — or a PDF's page objects or
+    // annotations.
     function shapeDocType(): boolean {
-        const docType = store.getState().docType;
-        return docType === "presentation" || docType === "wordprocessing";
+        return profileFor(store.getState().docType).drawingShapes;
     }
 
     function reorderSelection(order: ZOrder): Promise<void> {

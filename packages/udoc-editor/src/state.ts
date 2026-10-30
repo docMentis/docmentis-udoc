@@ -1,6 +1,6 @@
 // Edit mode's own state, kept in the shell's store as `UIState.extension`, so it
 // changes and is read as the rest of the state is.
-import type { FontFamilySummary } from "@docmentis/udoc-wasm";
+import type { FontFamilySummary, PaintLine } from "@docmentis/udoc-wasm";
 import { EMPTY_SELECTION_PAINT, EMPTY_SELECTION_TEXT_FORMAT } from "@docmentis/udoc-ui/internal";
 import type {
     Action,
@@ -11,6 +11,7 @@ import type {
     ThemePalette,
     UIState,
 } from "@docmentis/udoc-ui/internal";
+import type { CropAspect } from "./crop-box.js";
 import { ALL_MODES } from "./mode.js";
 import type { EditorMode } from "./mode.js";
 import { EMPTY_SELECTION_RULER } from "./ruler-edits.js";
@@ -91,6 +92,27 @@ export interface EditState {
      */
     selectionRuler: SelectionRuler;
 
+    /**
+     * The line of the selected shapes, where they agree on one — what a Line
+     * pick keeps the arrowheads, caps and joins of, as it sets the color,
+     * weight and dash. Null where they don't, or nothing is selected.
+     */
+    selectionLine: PaintLine | null;
+
+    /**
+     * Whether the current page of an image takes the shapes the Insert tab
+     * draws: false for an animated or a vector page, and for any other doc
+     * type. Re-read as the current page and the document change.
+     */
+    pageTakesMarkup: boolean;
+
+    /**
+     * Crop mode on an image's page — the page cropped, the aspect its box
+     * keeps, and whether the page shows a crop already, which Reset takes
+     * away — or null outside it. The box itself is the crop overlay's.
+     */
+    cropping: { page: number; aspect: CropAspect; cropped: boolean } | null;
+
     /** The modes the host lets the user switch between (drives the mode
      *  switcher, which offers those the session is entitled to —
      *  `modeEntitled`). */
@@ -116,6 +138,9 @@ export const INITIAL_EDIT_STATE: EditState = {
     selectionText: EMPTY_SELECTION_TEXT_FORMAT,
     selectionPaint: EMPTY_SELECTION_PAINT,
     selectionRuler: EMPTY_SELECTION_RULER,
+    selectionLine: null,
+    pageTakesMarkup: false,
+    cropping: null,
     allowedModes: ALL_MODES,
     showModeSwitch: true,
     alignToPage: false,

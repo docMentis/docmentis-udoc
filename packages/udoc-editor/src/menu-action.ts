@@ -3,6 +3,7 @@
 import type { TableSelectionEdit } from "@docmentis/udoc-wasm";
 import type { AlignEdge, EditAxis, MenuAction, TextParagraphAlign, ZOrder } from "@docmentis/udoc-ui/internal";
 import type { ClipboardOp, TableSelectScope } from "./context-menu.js";
+import type { CropAspect } from "./crop-box.js";
 import { editState, updateEditState } from "./state.js";
 import type { ParagraphSpaceEdge } from "./text-format.js";
 import type { EditTools } from "./tools.js";
@@ -14,7 +15,8 @@ import type { EditTools } from "./tools.js";
  * / `flip` / `rotate` the Align and Rotate dropdowns; `alignToPage` the Align
  * dropdown's reference toggle (a UI flag, not a document edit). `clipboard` /
  * `delete` are the context menu's acts on the selection, and `selectTable` /
- * `tableEdit` its rows over a table.
+ * `tableEdit` its rows over a table. `cropAspect` is crop mode's Aspect Ratio
+ * dropdown.
  *
  * The first five are the paragraph menus' rows. `indent` carries a *step*, not
  * a measure: an indent is relative per paragraph — a selection spanning two
@@ -39,7 +41,8 @@ export type EditMenuAction =
     | { kind: "clipboard"; op: ClipboardOp }
     | { kind: "delete" }
     | { kind: "selectTable"; scope: TableSelectScope }
-    | { kind: "tableEdit"; edit: TableSelectionEdit };
+    | { kind: "tableEdit"; edit: TableSelectionEdit }
+    | { kind: "cropAspect"; aspect: CropAspect };
 
 /** `action` as a shell {@link MenuAction}: carried as the extension's own. */
 export function editAction(action: EditMenuAction): MenuAction {
@@ -48,7 +51,7 @@ export function editAction(action: EditMenuAction): MenuAction {
 
 /** Run one of edit mode's menu rows' intents on the current selection. */
 export function runEditMenuAction(tools: EditTools, action: EditMenuAction): void {
-    const { arrange, text, clipboard, host } = tools;
+    const { arrange, text, clipboard, crop, host } = tools;
     switch (action.kind) {
         case "reorder":
             void arrange.reorderSelection(action.order);
@@ -127,5 +130,8 @@ export function runEditMenuAction(tools: EditTools, action: EditMenuAction): voi
             void host.commit(() => host.client.executeOnSelection(edit));
             break;
         }
+        case "cropAspect":
+            crop.setAspect(action.aspect);
+            break;
     }
 }

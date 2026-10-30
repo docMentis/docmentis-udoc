@@ -61,9 +61,29 @@ listed once, by package. Its major and minor version are those of the
   a delete's too, and the sheet shown stays shown or, deleted or hidden, gives
   way to the next one. A rename rewrites the formulas naming the sheet, and a
   delete turns them to `#REF!`.
+- An image is edited in place. Its Home tab turns the current page, or the
+  pages picked in the thumbnails, left or right. Crop frames the part of the
+  page to keep, dragged by its corners, edges and middle and kept to an aspect
+  ratio if one is picked (Original, Square, 4:3 or 16:9); Apply or Enter crops
+  it, Cancel or Escape leaves it, and Reset takes an earlier crop away to show
+  the whole image again. Image Size sets the size in pixels the page shows and
+  saves at, its aspect ratio kept unless unlocked. Each is one undo step, and
+  a save writes the image with them applied.
+- Shapes are drawn over an image from its Insert tab: a rectangle, an ellipse,
+  a line or an arrow, outlined in red and unfilled. The Shape tab colours and
+  arranges them, a double-click in a rectangle or an ellipse types a label in
+  it, which the Text tab formats and a double-click selects a word of, and a
+  save draws them into the image. Turning, cropping or resizing the image
+  carries them with it.
+- An image's thumbnails pick whole pages, as a PDF's do: a right-click rotates
+  or deletes them, or in a TIFF duplicates them, a drag moves them, and Delete
+  deletes them, an image keeping one page.
 
 #### Fixed
 
+- A Line colour, weight or dash picked for a shape keeps its arrowheads, where
+  it took them away.
+- Fill and Line colour a word document's drawing, where they did nothing.
 - New Slide shows the slide layouts again, where it showed the slides' notes
   pages in their place, stretched, and nothing past the deck's last slide.
   Each shows in the shape of the deck's slides, where a deck that isn't 16:9,

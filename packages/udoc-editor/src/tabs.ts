@@ -33,7 +33,15 @@ export type EditCommandId =
     | "formattingMarks"
     | "createSlide"
     | "insertImage"
-    | "insertShape";
+    | "insertShape"
+    | "rotatePageLeft"
+    | "rotatePageRight"
+    | "cropPage"
+    | "resizePage"
+    | "cropAspect"
+    | "cropReset"
+    | "cropCancel"
+    | "cropApply";
 
 /** A tab of edit mode's. */
 type EditTab = ToolbarTab<MessageKey>;
@@ -111,6 +119,9 @@ const HOME_TAB: EditTab = {
 /** The portable Insert tab: Shapes, dragged out as the page's own objects. */
 const PORTABLE_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertShape"] };
 
+/** The image Insert tab: Shapes, drawn over the page. */
+const IMAGE_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertShape"] };
+
 /** The presentation Insert tab: Image, a picture on the current slide. */
 const PRESENTATION_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertImage"] };
 
@@ -172,6 +183,32 @@ const PRESENTATION_HOME_TAB: EditTab = {
     contextual: true,
 };
 
+/**
+ * The image Home tab. Like {@link PRESENTATION_HOME_TAB}, its document-level
+ * actions — the current page's Rotate Left / Right, Crop and Image Size — show
+ * with no shape drawn over a page selected, or pages in the thumbnails, and
+ * yield to the text and shape controls the moment one is. While a page is
+ * cropped, crop mode's own controls show in their place: the aspect the box
+ * keeps, Reset, Cancel and Apply.
+ */
+const IMAGE_HOME_TAB: EditTab = {
+    id: "home",
+    label: "ribbon.home",
+    commands: [
+        "rotatePageLeft",
+        "rotatePageRight",
+        "cropPage",
+        "resizePage",
+        "cropAspect",
+        "cropReset",
+        "cropCancel",
+        "cropApply",
+        ...PRESENTATION_TEXT_TAB.commands,
+        ...SHAPE_COMMANDS,
+    ],
+    contextual: true,
+};
+
 /** The strip of a doc type with none of its own: Home. */
 const DEFAULT_TABS: readonly EditTab[] = [HOME_TAB];
 
@@ -194,6 +231,10 @@ const PRESENTATION_TABS: readonly EditTab[] = [
  *  document has no free-floating shapes. */
 const WORDPROCESSING_TABS: readonly EditTab[] = [HOME_TAB, TEXT_TAB];
 
+/** The image strip: its own Home and Insert, then the Text and Shape tabs of
+ *  the shapes drawn over its pages — a deck's, as they are a slide's shapes. */
+const IMAGE_TABS: readonly EditTab[] = [IMAGE_HOME_TAB, IMAGE_INSERT_TAB, PRESENTATION_TEXT_TAB, SHAPE_TAB];
+
 /** Edit mode's tab strip for a document of `docType`. */
 export function editTabs(docType: UDocType | null): readonly EditTab[] {
     switch (docType) {
@@ -203,6 +244,8 @@ export function editTabs(docType: UDocType | null): readonly EditTab[] {
             return PRESENTATION_TABS;
         case "wordprocessing":
             return WORDPROCESSING_TABS;
+        case "image":
+            return IMAGE_TABS;
         default:
             return DEFAULT_TABS;
     }

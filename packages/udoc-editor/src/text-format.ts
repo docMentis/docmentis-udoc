@@ -2,7 +2,7 @@
 // current text selection — a shape's text on a slide, the body caret in a doc —
 // the edits they make, and the paragraph menus.
 import type { TextCharacterProperty, TextNumberFormat, TextParagraphProperty, UDocType } from "@docmentis/udoc-wasm";
-import { allowsTextEdit } from "@docmentis/udoc-ui/internal";
+import { allowsTextEdit, profileFor } from "@docmentis/udoc-ui/internal";
 import type { EnabledWhen, Message, MenuItem, PaintSpec, UIShellHost } from "@docmentis/udoc-ui/internal";
 import { facesToLoad } from "./fonts/faces.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
@@ -262,13 +262,13 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
     // selection (a shape's text on a slide, the body caret in a doc). Each rides
     // the same `executeOnSelection` seam as Fill / typing: the shell emits a
     // format-blind character-property edit, the worker tags it (`Presentation` /
-    // `Wordprocessing`), and the editor overlays it on the selected range, keeping
-    // the selection so toggles chain. Only the two text doc types carry a
-    // character-property edit, so this no-ops for the rest (their `SelectionEdit`
-    // has no such kind); the Text tab is likewise gated to them (see `profiles.ts`).
+    // `Wordprocessing` / `Image`), and the editor overlays it on the selected
+    // range, keeping the selection so toggles chain. Only the doc types whose
+    // shapes are a drawing's carry a character-property edit, so this no-ops for
+    // the rest (their `SelectionEdit` has no such kind); the Text tab is likewise
+    // gated to them (see `profiles.ts`).
     function textDocType(): boolean {
-        const docType = store.getState().docType;
-        return docType === "presentation" || docType === "wordprocessing";
+        return profileFor(store.getState().docType).drawingShapes;
     }
 
     /** Overlay set-value character `properties` on the text selection. */

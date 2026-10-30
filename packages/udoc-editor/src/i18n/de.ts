@@ -68,6 +68,8 @@ export const de: EditMessages = {
     "command.createSlide": "Neue Folie",
     "command.insertImage": "Bild",
     "command.insertShape": "Formen",
+    "command.cropPage": "Zuschneiden",
+    "command.resizePage": "Bildgröße",
     "command.fontFamily": "Schriftart",
     "command.fontSize": "Schriftgrad",
     "command.bold": "Fett",
@@ -191,6 +193,19 @@ export const de: EditMessages = {
     "table.delete": "Löschen",
     "table.mergeCells": "Zellen verbinden",
     "table.unmergeCells": "Zellverbund aufheben",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "Seitenverhältnis",
+    "image.free": "Frei",
+    "image.original": "Original",
+    "image.square": "Quadrat",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height} px",
+    "image.reset": "Zurücksetzen",
+    "image.apply": "Anwenden",
+    "image.keepRatio": "Seitenverhältnis beibehalten",
+    "image.originalSize": "Original: {width} × {height} px",
+    "image.pixels": "px",
 
     // Toolbar
     "toolbar.label": "Editor-Symbolleiste",

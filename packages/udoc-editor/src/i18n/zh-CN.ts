@@ -68,6 +68,8 @@ export const zhCN: EditMessages = {
     "command.createSlide": "新建幻灯片",
     "command.insertImage": "图片",
     "command.insertShape": "形状",
+    "command.cropPage": "裁剪",
+    "command.resizePage": "图像大小",
     "command.fontFamily": "字体",
     "command.fontSize": "字号",
     "command.bold": "加粗",
@@ -187,6 +189,19 @@ export const zhCN: EditMessages = {
     "table.delete": "删除",
     "table.mergeCells": "合并单元格",
     "table.unmergeCells": "取消合并单元格",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "纵横比",
+    "image.free": "自由",
+    "image.original": "原始",
+    "image.square": "正方形",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height} 像素",
+    "image.reset": "重置",
+    "image.apply": "应用",
+    "image.keepRatio": "保持纵横比",
+    "image.originalSize": "原始大小：{width} × {height} 像素",
+    "image.pixels": "像素",
 
     // Toolbar
     "toolbar.label": "编辑器工具栏",

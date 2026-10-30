@@ -1,11 +1,13 @@
 // What edit mode builds on the shell's host once mounted: the edits the ribbon's
-// controls and the menus make, the clipboard, and the write-side memory they
-// share.
+// controls and the menus make, the clipboard, crop mode, and the write-side
+// memory they share.
 import { createArrangeEdits } from "./arrange.js";
 import type { ArrangeEdits } from "./arrange.js";
 import { createClipboard } from "./clipboard.js";
 import type { Clipboard } from "./clipboard.js";
 import { createLastListStyle, FONT_SPECIMEN_EM } from "./components/TextControls.js";
+import { createCrop } from "./crop.js";
+import type { Crop } from "./crop.js";
 import type { EditHost } from "./edit-client.js";
 import { createFontPreviewLoader } from "./fonts/preview.js";
 import type { FontPreviewLoader } from "./fonts/preview.js";
@@ -23,6 +25,8 @@ export interface EditTools {
     readonly text: TextEdits;
     readonly arrange: ArrangeEdits;
     readonly clipboard: Clipboard;
+    /** Crop mode on an image's page. */
+    readonly crop: Crop;
     readonly paintMemory: PaintMemory;
     /** The style each list button's main region applies. */
     readonly lastListStyle: Record<ListKind, ListStyle>;
@@ -52,6 +56,7 @@ export function createEditTools(host: EditHost, i18n: I18n): EditTools {
         text: createTextEdits(host, i18n),
         arrange: createArrangeEdits(host),
         clipboard: createClipboard(host),
+        crop: createCrop(host, i18n),
         paintMemory: createPaintMemory(),
         lastListStyle: createLastListStyle(),
         fontPreviews: createFontPreviewLoader({

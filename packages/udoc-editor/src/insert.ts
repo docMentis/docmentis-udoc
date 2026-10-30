@@ -1,5 +1,6 @@
-// The Insert tab's commands: Shapes on a PDF, placed by a pointer gesture the
-// canvas carries out, and Image on a slide deck, asked for and inserted at once.
+// The Insert tab's commands: Shapes on a PDF or over an image's page, placed by
+// a pointer gesture the canvas carries out, and Image on a slide deck, asked
+// for and inserted at once.
 import {
     ICON_SUBTOOL_ARROW,
     ICON_SUBTOOL_ELLIPSE,
@@ -14,6 +15,8 @@ import type { EditHost } from "./edit-client.js";
 import { EditCommand } from "./edit-command.js";
 import type { MessageKey } from "./i18n/index.js";
 import { ICON_IMAGE } from "./icons.js";
+import { placeMarkup } from "./image.js";
+import { editStateOf } from "./state.js";
 
 /** A placed shape's fill — translucent blue (filled shapes only). */
 const FILL = { components: [0.26, 0.55, 0.96], colorSpace: "srgb" };
@@ -87,12 +90,14 @@ export function placedShape(tool: string): ShapeKind | null {
 }
 
 /** Place the Insert tab's `tool` on page `page`, spanning the page-local points
- *  `p0 → p1`: a shape as a page object, on top of the page — the engine mints
- *  its id and selects it. A no-op for a page with no id (no document, or not a
- *  PDF). */
+ *  `p0 → p1`, on top of the page: on a PDF, a shape as a page object — the
+ *  engine mints its id and selects it — and on an image, a shape drawn over
+ *  it. A no-op for a page with no id (no document, or neither). */
 export async function place(host: EditHost, tool: string, page: number, p0: ShapePoint, p1: ShapePoint): Promise<void> {
     const shape = placedShape(tool);
-    if (!shape || host.store.getState().status !== "ready") return;
+    const state = host.store.getState();
+    if (!shape || state.status !== "ready") return;
+    if (state.docType === "image") return placeMarkup(host, shape, page, p0, p1);
     const pageId = await host.client.portable.pageIdByIndex(page);
     if (pageId === undefined) return;
     await host.commit(() => host.client.execute(EditCommand.insertObjects(pageId, [shapeObject(shape, p0, p1)])));
@@ -142,7 +147,12 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             icon: ICON_SUBTOOL_RECTANGLE,
             group: "insert",
             run: { kind: "armPicker", options: SHAPE_OPTIONS },
-            enabledWhen: (c) => c.ready && c.docType === "portable",
+            // An image's current page takes them unless it's animated or a
+            // vector, and not while it's cropped.
+            enabledWhen: (c) =>
+                c.ready &&
+                (c.docType === "portable" ||
+                    (c.docType === "image" && editStateOf(c).pageTakesMarkup && editStateOf(c).cropping === null)),
         },
     };
 }

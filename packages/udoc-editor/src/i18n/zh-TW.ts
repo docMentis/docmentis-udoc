@@ -68,6 +68,8 @@ export const zhTW: EditMessages = {
     "command.createSlide": "新投影片",
     "command.insertImage": "圖片",
     "command.insertShape": "圖案",
+    "command.cropPage": "裁剪",
+    "command.resizePage": "影像大小",
     "command.fontFamily": "字型",
     "command.fontSize": "大小",
     "command.bold": "粗體",
@@ -187,6 +189,19 @@ export const zhTW: EditMessages = {
     "table.delete": "刪除",
     "table.mergeCells": "合併儲存格",
     "table.unmergeCells": "取消合併儲存格",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "長寬比",
+    "image.free": "自由",
+    "image.original": "原始",
+    "image.square": "正方形",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height} 像素",
+    "image.reset": "重設",
+    "image.apply": "套用",
+    "image.keepRatio": "保持長寬比",
+    "image.originalSize": "原始大小：{width} × {height} 像素",
+    "image.pixels": "像素",
 
     // Toolbar
     "toolbar.label": "編輯器工具列",

@@ -69,6 +69,8 @@ export const en: EditMessages = {
     "command.createSlide": "New Slide",
     "command.insertImage": "Image",
     "command.insertShape": "Shapes",
+    "command.cropPage": "Crop",
+    "command.resizePage": "Image Size",
     "command.fontFamily": "Font",
     "command.fontSize": "Size",
     "command.bold": "Bold",
@@ -188,6 +190,19 @@ export const en: EditMessages = {
     "table.delete": "Delete",
     "table.mergeCells": "Merge Cells",
     "table.unmergeCells": "Unmerge Cells",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "Aspect Ratio",
+    "image.free": "Free",
+    "image.original": "Original",
+    "image.square": "Square",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height} px",
+    "image.reset": "Reset",
+    "image.apply": "Apply",
+    "image.keepRatio": "Keep Aspect Ratio",
+    "image.originalSize": "Original: {width} × {height} px",
+    "image.pixels": "px",
 
     // Toolbar
     "toolbar.label": "Editor toolbar",

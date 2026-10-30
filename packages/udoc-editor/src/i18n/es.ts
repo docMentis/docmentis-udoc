@@ -68,6 +68,8 @@ export const es: EditMessages = {
     "command.createSlide": "Nueva diapositiva",
     "command.insertImage": "Imagen",
     "command.insertShape": "Formas",
+    "command.cropPage": "Recortar",
+    "command.resizePage": "Tamaño de imagen",
     "command.fontFamily": "Fuente",
     "command.fontSize": "Tamaño",
     "command.bold": "Negrita",
@@ -189,6 +191,19 @@ export const es: EditMessages = {
     "table.delete": "Eliminar",
     "table.mergeCells": "Combinar celdas",
     "table.unmergeCells": "Separar celdas",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "Relación de aspecto",
+    "image.free": "Libre",
+    "image.original": "Original",
+    "image.square": "Cuadrado",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height} px",
+    "image.reset": "Restablecer",
+    "image.apply": "Aplicar",
+    "image.keepRatio": "Mantener relación de aspecto",
+    "image.originalSize": "Original: {width} × {height} px",
+    "image.pixels": "px",
 
     // Toolbar
     "toolbar.label": "Barra de herramientas del editor",

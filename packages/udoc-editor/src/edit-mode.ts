@@ -4,6 +4,7 @@ import type { UIExtension, UIState } from "@docmentis/udoc-ui/internal";
 import type { UDocEditorOptions } from "./editor.js";
 import { formatCommands } from "./commands.js";
 import { CONTEXT_MENU, TABLE_CONTEXT_MENU } from "./context-menu.js";
+import { cropCommands } from "./crop.js";
 import { createGrips } from "./grips.js";
 import { createModeSwitch } from "./components/ModeSwitch.js";
 import { createPaintOptionsModal } from "./components/PaintOptionsModal.js";
@@ -16,12 +17,15 @@ import {
     setShowFormattingMarks,
 } from "./formatting-marks.js";
 import { createI18n, MESSAGE_PACKS } from "./i18n/index.js";
+import { imageCommands, mountImageSize } from "./image.js";
+import type { ImageSize } from "./image.js";
 import { insertCommands, insertImage, pickImage, place, placedShape } from "./insert.js";
 import { runEditMenuAction } from "./menu-action.js";
 import type { EditMenuAction } from "./menu-action.js";
 import { mountNewSlide, newSlideCommand } from "./new-slide.js";
 import type { NewSlide } from "./new-slide.js";
 import { mountPageControls, PAGE_CONTROLS_SPACING, pageControlsShown } from "./page-controls.js";
+import { selectionLine } from "./paint.js";
 import { ALL_MODES, EDIT_MODE } from "./mode.js";
 import type { EditorMode } from "./mode.js";
 import { editState, INITIAL_EDIT_STATE, updateEditState } from "./state.js";
@@ -49,8 +53,10 @@ export interface EditMode extends UIExtension {
 /**
  * Keep the document-derived parts of edit mode's state in step with the open
  * document: the theme palette and font families pulled on open, the palette
- * again per slide, both cleared while nothing is open, and the selection's
- * resolved format mirrored from each selection report. Returns the teardown.
+ * again per slide, whether an image's current page takes markup as the
+ * current page changes, all cleared while nothing is open, and the
+ * selection's resolved format mirrored from each selection report. Returns the
+ * teardown.
  */
 function mountDocumentState(host: EditHost): () => void {
     const { store, client, edit } = host;
@@ -72,6 +78,21 @@ function mountDocumentState(host: EditHost): () => void {
         updateEditState(store, { loadedFontFamilyNames: await edit.loadedFontFamilyNames() });
     };
 
+    // Whether the current page of an image takes the shapes the Insert tab
+    // draws — read from the engine, which loads the page to say. Latest-wins:
+    // a read overtaken by the next drops its answer.
+    let markupReads = 0;
+    const refreshPageTakesMarkup = async (): Promise<void> => {
+        const read = ++markupReads;
+        const { docType, pageIndex } = store.getState();
+        let takes = false;
+        if (docType === "image") {
+            const info = await client.image.pageInfoByIndex(pageIndex);
+            takes = info !== null && (await client.image.takesMarkup(info.id));
+        }
+        if (read === markupReads) updateEditState(store, { pageTakesMarkup: takes });
+    };
+
     const unsubs = [
         // A document opening or closing drops the last one's palette and fonts.
         subscribeSelector(
@@ -79,7 +100,12 @@ function mountDocumentState(host: EditHost): () => void {
             (s) => s.status,
             (status) => {
                 if (status === "loading" || status === "empty") {
-                    updateEditState(store, { themePalette: null, fontFamilies: [], loadedFontFamilyNames: [] });
+                    updateEditState(store, {
+                        themePalette: null,
+                        fontFamilies: [],
+                        loadedFontFamilyNames: [],
+                        pageTakesMarkup: false,
+                    });
                 }
             },
         ),
@@ -91,7 +117,21 @@ function mountDocumentState(host: EditHost): () => void {
             () => {
                 void refreshThemePalette();
                 void refreshFontFamilies();
+                void refreshPageTakesMarkup();
             },
+        ),
+        // An image's page, another as the current one changes, or as pages
+        // come and go under it. What a page takes is its frames', which no
+        // edit changes, so an edit of the page itself asks nothing again.
+        subscribeSelector(
+            store,
+            (s) => s.pageIndex,
+            () => void refreshPageTakesMarkup(),
+        ),
+        subscribeSelector(
+            store,
+            (s) => s.pageCount,
+            () => void refreshPageTakesMarkup(),
         ),
         // Re-pull the theme palette when the viewed slide changes: a
         // multi-master deck (or a slide with a `clrMapOvr`) re-themes per slide,
@@ -113,6 +153,7 @@ function mountDocumentState(host: EditHost): () => void {
                 selectionText: selectionTextFormat(state.properties),
                 selectionPaint: selectionPaint(state.properties),
                 selectionRuler: selectionRuler(state.properties),
+                selectionLine: selectionLine(state.properties),
             }),
         ),
     ];
@@ -162,6 +203,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
     let host: EditHost | null = null;
     let tools: EditTools | null = null;
     let newSlide: NewSlide | null = null;
+    let imageSize: ImageSize | null = null;
     const grips = createGrips(() => tools);
     const ruler = createRuler(() => host);
     const mountedTools = (): EditTools => {
@@ -187,10 +229,16 @@ export function editMode(options: UDocEditorOptions): EditMode {
             ...insertCommands(() => {
                 if (host) pickImage(host);
             }),
+            ...imageCommands(() => host, {
+                crop: () => void tools?.crop.start(),
+                resize: () => void imageSize?.open(),
+            }),
+            ...cropCommands(() => tools?.crop ?? null),
         },
         spacing: (state) => (showPageControls && pageControlsShown(state) ? PAGE_CONTROLS_SPACING : null),
         keydown(e) {
             if (host) formattingMarksKey(e, host.store);
+            tools?.crop.keydown(e);
         },
         menuAction(action) {
             if (tools) runEditMenuAction(tools, action as EditMenuAction);
@@ -218,7 +266,10 @@ export function editMode(options: UDocEditorOptions): EditMode {
             const unmountPageControls = showPageControls ? mountPageControls(mounted, i18n) : null;
             const unmountFormattingMarks = mountFormattingMarks(mounted);
             newSlide = mountNewSlide(mounted, i18n);
+            imageSize = mountImageSize(mounted, i18n);
             return () => {
+                imageSize?.destroy();
+                imageSize = null;
                 newSlide?.destroy();
                 newSlide = null;
                 unmountFormattingMarks();
@@ -226,6 +277,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
                 unmountEditingView();
                 unmountDocumentState();
                 tools?.clipboard.destroy();
+                tools?.crop.destroy();
                 paintOptionsModal.destroy();
                 modeSwitch.destroy();
                 tools = null;

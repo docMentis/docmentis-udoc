@@ -68,6 +68,8 @@ export const ar: EditMessages = {
     "command.createSlide": "شريحة جديدة",
     "command.insertImage": "صورة",
     "command.insertShape": "أشكال",
+    "command.cropPage": "قص",
+    "command.resizePage": "حجم الصورة",
     "command.fontFamily": "الخط",
     "command.fontSize": "الحجم",
     "command.bold": "غامق",
@@ -187,6 +189,19 @@ export const ar: EditMessages = {
     "table.delete": "حذف",
     "table.mergeCells": "دمج الخلايا",
     "table.unmergeCells": "إلغاء دمج الخلايا",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "نسبة العرض إلى الارتفاع",
+    "image.free": "حر",
+    "image.original": "الأصلية",
+    "image.square": "مربع",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height} بكسل",
+    "image.reset": "إعادة تعيين",
+    "image.apply": "تطبيق",
+    "image.keepRatio": "الحفاظ على نسبة العرض إلى الارتفاع",
+    "image.originalSize": "الحجم الأصلي: {width} × {height} بكسل",
+    "image.pixels": "بكسل",
 
     // Toolbar
     "toolbar.label": "شريط أدوات المحرر",

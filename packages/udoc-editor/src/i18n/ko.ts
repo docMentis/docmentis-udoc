@@ -68,6 +68,8 @@ export const ko: EditMessages = {
     "command.createSlide": "새 슬라이드",
     "command.insertImage": "그림",
     "command.insertShape": "도형",
+    "command.cropPage": "자르기",
+    "command.resizePage": "이미지 크기",
     "command.fontFamily": "글꼴",
     "command.fontSize": "크기",
     "command.bold": "굵게",
@@ -187,6 +189,19 @@ export const ko: EditMessages = {
     "table.delete": "삭제",
     "table.mergeCells": "셀 병합",
     "table.unmergeCells": "셀 병합 취소",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "가로 세로 비율",
+    "image.free": "자유",
+    "image.original": "원본",
+    "image.square": "정사각형",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height}px",
+    "image.reset": "재설정",
+    "image.apply": "적용",
+    "image.keepRatio": "가로 세로 비율 고정",
+    "image.originalSize": "원본 크기: {width} × {height}px",
+    "image.pixels": "px",
 
     // Toolbar
     "toolbar.label": "편집기 도구 모음",

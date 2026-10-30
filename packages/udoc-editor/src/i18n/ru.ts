@@ -68,6 +68,8 @@ export const ru: EditMessages = {
     "command.createSlide": "Создать слайд",
     "command.insertImage": "Изображение",
     "command.insertShape": "Фигуры",
+    "command.cropPage": "Обрезать",
+    "command.resizePage": "Размер изображения",
     "command.fontFamily": "Шрифт",
     "command.fontSize": "Размер",
     "command.bold": "Полужирный",
@@ -188,6 +190,19 @@ export const ru: EditMessages = {
     "table.delete": "Удалить",
     "table.mergeCells": "Объединить ячейки",
     "table.unmergeCells": "Отменить объединение ячеек",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "Соотношение сторон",
+    "image.free": "Свободное",
+    "image.original": "Исходное",
+    "image.square": "Квадрат",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height} пикс.",
+    "image.reset": "Сбросить",
+    "image.apply": "Применить",
+    "image.keepRatio": "Сохранять пропорции",
+    "image.originalSize": "Исходный размер: {width} × {height} пикс.",
+    "image.pixels": "пикс.",
 
     // Toolbar
     "toolbar.label": "Панель инструментов редактора",

@@ -68,6 +68,8 @@ export const ptBR: EditMessages = {
     "command.createSlide": "Novo Slide",
     "command.insertImage": "Imagem",
     "command.insertShape": "Formas",
+    "command.cropPage": "Cortar",
+    "command.resizePage": "Tamanho da imagem",
     "command.fontFamily": "Fonte",
     "command.fontSize": "Tamanho",
     "command.bold": "Negrito",
@@ -187,6 +189,19 @@ export const ptBR: EditMessages = {
     "table.delete": "Excluir",
     "table.mergeCells": "Mesclar Células",
     "table.unmergeCells": "Desfazer Mesclagem de Células",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "Proporção",
+    "image.free": "Livre",
+    "image.original": "Original",
+    "image.square": "Quadrado",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height} px",
+    "image.reset": "Redefinir",
+    "image.apply": "Aplicar",
+    "image.keepRatio": "Manter proporção",
+    "image.originalSize": "Original: {width} × {height} px",
+    "image.pixels": "px",
 
     // Toolbar
     "toolbar.label": "Barra de ferramentas do editor",

@@ -125,6 +125,10 @@ export interface Messages extends UIMessages {
     "command.insertImage": string;
     /** Shapes */
     "command.insertShape": string;
+    /** Crop */
+    "command.cropPage": string;
+    /** Image Size */
+    "command.resizePage": string;
     /** Font */
     "command.fontFamily": string;
     /** Size */
@@ -343,6 +347,30 @@ export interface Messages extends UIMessages {
     "table.mergeCells": string;
     /** Unmerge Cells */
     "table.unmergeCells": string;
+
+    // Crop mode and the Image Size dialog
+    /** Aspect Ratio */
+    "image.aspectRatio": string;
+    /** Free */
+    "image.free": string;
+    /** Original */
+    "image.original": string;
+    /** Square */
+    "image.square": string;
+    /** {ratio} — a preset aspect, `4:3` */
+    "image.ratio": string;
+    /** {width} × {height} px */
+    "image.cropSize": string;
+    /** Reset */
+    "image.reset": string;
+    /** Apply */
+    "image.apply": string;
+    /** Keep Aspect Ratio */
+    "image.keepRatio": string;
+    /** Original: {width} × {height} px */
+    "image.originalSize": string;
+    /** px */
+    "image.pixels": string;
 }
 
 /** The strings edit mode adds, and udoc-ui's it words its own way — the

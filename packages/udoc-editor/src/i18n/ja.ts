@@ -68,6 +68,8 @@ export const ja: EditMessages = {
     "command.createSlide": "新しいスライド",
     "command.insertImage": "画像",
     "command.insertShape": "図形",
+    "command.cropPage": "トリミング",
+    "command.resizePage": "画像サイズ",
     "command.fontFamily": "フォント",
     "command.fontSize": "サイズ",
     "command.bold": "太字",
@@ -190,6 +192,19 @@ export const ja: EditMessages = {
     "table.delete": "削除",
     "table.mergeCells": "セルの結合",
     "table.unmergeCells": "セル結合の解除",
+
+    // Crop mode and the Image Size dialog
+    "image.aspectRatio": "縦横比",
+    "image.free": "自由",
+    "image.original": "元の比率",
+    "image.square": "正方形",
+    "image.ratio": "{ratio}",
+    "image.cropSize": "{width} × {height} px",
+    "image.reset": "リセット",
+    "image.apply": "適用",
+    "image.keepRatio": "縦横比を固定",
+    "image.originalSize": "元のサイズ: {width} × {height} px",
+    "image.pixels": "px",
 
     // Toolbar
     "toolbar.label": "エディターツールバー",

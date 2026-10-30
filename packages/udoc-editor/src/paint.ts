@@ -10,6 +10,7 @@ import type {
     PaintLine,
     PaintLineDash,
     PaintSchemeColor,
+    UDocSelectionProperties,
     UDocType,
 } from "@docmentis/udoc-wasm";
 import {
@@ -18,7 +19,9 @@ import {
     createDropdownButton,
     DEFAULT_OFFICE_THEME,
     displayToActivePaint,
+    drawingProperties,
     paintSwatch,
+    profileFor,
     themeSwatches,
 } from "@docmentis/udoc-ui/internal";
 import type {
@@ -92,19 +95,28 @@ function schemeSlot(slot: string): PaintSchemeColor {
 }
 
 /** A composed stroke as a `DrawingML` `Line`: its paint plus weight (points) and
- *  a preset dash. */
-function paintToDrawingLine(stroke: StrokeSpec): PaintLine {
+ *  a preset dash, over the rest of `current` — the line it replaces, whose
+ *  arrowheads, caps and joins it keeps. */
+function paintToDrawingLine(stroke: StrokeSpec, current: PaintLine | null): PaintLine {
     return {
         width: stroke.weight,
-        cap: null,
-        compound: null,
-        align: null,
+        cap: current?.cap ?? null,
+        compound: current?.compound ?? null,
+        align: current?.align ?? null,
         fill: paintToDrawingFill(stroke.paint),
         dash: dashToDrawing(stroke.dash),
-        join: null,
-        headEnd: null,
-        tailEnd: null,
+        join: current?.join ?? null,
+        headEnd: current?.headEnd ?? null,
+        tailEnd: current?.tailEnd ?? null,
     };
+}
+
+/** The line the selected shapes agree on — a deck's, a word document's, or
+ *  those drawn over an image — or null where they don't, or none is
+ *  selected. */
+export function selectionLine(properties: UDocSelectionProperties | null): PaintLine | null {
+    const line = drawingProperties(properties)?.shape.line;
+    return line !== undefined && typeof line === "object" ? line.value : null;
 }
 
 function dashToDrawing(dash: LineDash): PaintLineDash {
@@ -167,11 +179,11 @@ export function createPaintEdits(host: UIShellHost) {
     // Fill / Line — the picker's paint applied to the current selection. The
     // payload is the open doc type's own model style, built here (the host builds
     // model JSON, like `insertObject`), then sent through the same `executeOnSelection`
-    // seam; the doc-type binder replaces the shape's fill / line or the path's
-    // non-stroking / stroking style. "No Fill" on a PDF path (not expressible as a
-    // device style) is skipped.
+    // seam; the doc-type binder replaces a drawing shape's fill / line or a PDF
+    // path's non-stroking / stroking style. "No Fill" on a PDF path (not
+    // expressible as a device style) is skipped.
     function fillSelection(paint: PaintSpec): Promise<void> {
-        if (store.getState().docType === "presentation") {
+        if (profileFor(store.getState().docType).drawingShapes) {
             return commit(() => client.executeOnSelection({ kind: "setShapeFill", fill: paintToDrawingFill(paint) }));
         }
         const brush = paintToBrush(paint);
@@ -185,10 +197,13 @@ export function createPaintEdits(host: UIShellHost) {
     }
 
     // The whole composed stroke (color + weight + dash), since the engine sets the
-    // outline as one value.
+    // outline as one value — over the line the shapes have, so an arrow keeps
+    // its head.
     function strokeSelection(stroke: StrokeSpec): Promise<void> {
-        if (store.getState().docType === "presentation") {
-            return commit(() => client.executeOnSelection({ kind: "setShapeLine", line: paintToDrawingLine(stroke) }));
+        const state = store.getState();
+        if (profileFor(state.docType).drawingShapes) {
+            const line = paintToDrawingLine(stroke, editState(state).selectionLine);
+            return commit(() => client.executeOnSelection({ kind: "setShapeLine", line }));
         }
         const brush = paintToBrush(stroke.paint);
         if (!brush) return Promise.resolve();

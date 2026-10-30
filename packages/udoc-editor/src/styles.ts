@@ -340,6 +340,153 @@ export const editorStyles = css`
         outline-offset: 2px;
     }
 
+    /* The Image Size dialog's rows beyond the page-settings dialog's: the
+   pixel unit beside the size fields, the aspect lock, the original size, and
+   Reset at the footer's start. */
+    .udoc-ui-root .udoc-page-modal__unit-label {
+        flex: 0 0 auto;
+        height: 32px;
+        line-height: 32px;
+        font-size: 13px;
+        color: var(--udoc-color-on-surface-variant);
+    }
+
+    .udoc-ui-root .udoc-page-modal__check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        font-size: 13px;
+        color: var(--udoc-color-on-surface);
+        cursor: pointer;
+    }
+
+    .udoc-ui-root .udoc-page-modal__check input {
+        margin: 0;
+        accent-color: var(--udoc-color-primary);
+    }
+
+    .udoc-ui-root .udoc-page-modal__hint {
+        margin: 12px 0 10px;
+        font-size: 12px;
+        color: var(--udoc-color-on-surface-variant);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .udoc-ui-root .udoc-page-modal__secondary {
+        margin-right: auto;
+        height: 34px;
+        padding: 0 14px;
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--udoc-color-on-surface);
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .udoc-ui-root .udoc-page-modal__secondary:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+
+    /* --- Crop mode over an image's page (udoc:image-crop) ---
+   The page dimmed outside the box, the box with a rule-of-thirds grid and a
+   handle on each corner and edge, and the size badge. White over a dark edge,
+   not a theme role: it sits on the image, whatever the theme, so it reads on
+   light and dark pixels alike. */
+    .udoc-ui-root .udoc-crop {
+        position: relative;
+        pointer-events: auto;
+        touch-action: none;
+    }
+
+    .udoc-ui-root .udoc-crop__shade {
+        position: absolute;
+        background: rgb(0 0 0 / 0.5);
+    }
+
+    .udoc-ui-root .udoc-crop__box {
+        position: absolute;
+        box-sizing: border-box;
+        border: 1px solid #fff;
+        outline: 1px solid rgb(0 0 0 / 0.45);
+        cursor: move;
+    }
+
+    .udoc-ui-root .udoc-crop__grid {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+            linear-gradient(to right, rgb(255 255 255 / 0.5) 1px, transparent 1px),
+            linear-gradient(to bottom, rgb(255 255 255 / 0.5) 1px, transparent 1px);
+        background-size: calc(100% / 3) calc(100% / 3);
+    }
+
+    .udoc-ui-root .udoc-crop__handle {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        margin: -5px 0 0 -5px;
+        box-sizing: border-box;
+        background: #fff;
+        border: 1px solid rgb(0 0 0 / 0.6);
+        border-radius: 2px;
+    }
+
+    /* A wider target than the square it draws. */
+    .udoc-ui-root .udoc-crop__handle::before {
+        content: "";
+        position: absolute;
+        inset: -6px;
+    }
+
+    .udoc-ui-root .udoc-crop__handle--nw {
+        left: 0;
+        top: 0;
+    }
+    .udoc-ui-root .udoc-crop__handle--n {
+        left: 50%;
+        top: 0;
+    }
+    .udoc-ui-root .udoc-crop__handle--ne {
+        left: 100%;
+        top: 0;
+    }
+    .udoc-ui-root .udoc-crop__handle--e {
+        left: 100%;
+        top: 50%;
+    }
+    .udoc-ui-root .udoc-crop__handle--se {
+        left: 100%;
+        top: 100%;
+    }
+    .udoc-ui-root .udoc-crop__handle--s {
+        left: 50%;
+        top: 100%;
+    }
+    .udoc-ui-root .udoc-crop__handle--sw {
+        left: 0;
+        top: 100%;
+    }
+    .udoc-ui-root .udoc-crop__handle--w {
+        left: 0;
+        top: 50%;
+    }
+
+    .udoc-ui-root .udoc-crop__size {
+        position: absolute;
+        transform: translateX(-50%);
+        padding: 2px 8px;
+        border-radius: 4px;
+        background: rgb(0 0 0 / 0.7);
+        color: #fff;
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
     /* --- New-Slide layout picker (NewSlideModal) --- */
 
     .udoc-ui-root .udoc-slide-picker {

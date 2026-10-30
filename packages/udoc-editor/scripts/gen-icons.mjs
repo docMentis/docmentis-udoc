@@ -34,6 +34,12 @@ const ICONS = {
     // Insert tab
     ICON_IMAGE: "image",
 
+    // An image's Home tab
+    ICON_CROP: "crop",
+    ICON_IMAGE_SIZE: "photo_size_select_large",
+    ICON_ASPECT_RATIO: "aspect_ratio",
+    ICON_CROP_RESET: "crop_free",
+
     // Text tab
     ICON_FONTS: "font_download",
     ICON_FONT_SIZE: "format_size",
