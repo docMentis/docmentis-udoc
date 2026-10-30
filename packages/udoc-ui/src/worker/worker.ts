@@ -545,7 +545,7 @@ function readSelection(geometry?: SelectionGeometry): SelectionReportBody {
             },
         peers: session?.peerSelectionGeometry(VIEWER) ?? [],
         capabilities: session?.selectionCapabilities() ?? EMPTY_SELECTION_CAPABILITIES,
-        properties: session?.selectionProperties() ?? null,
+        properties: session?.selectionProperties(VIEWER) ?? null,
         slideSections: session ? Selection.slideSections(session.selection()) : [],
         viewers: session ? viewerSelections(session) : [],
         cellEntries,
@@ -1998,7 +1998,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // Stateless: the batch comes back with its continuation, and
                 // the layout after it — a search lays out the pages its
                 // matches are drawn on.
-                const batch = session.search(msg.query, msg.options, msg.scope ?? undefined, msg.from ?? undefined);
+                const batch = session.search(
+                    VIEWER,
+                    msg.query,
+                    msg.options,
+                    msg.scope ?? undefined,
+                    msg.from ?? undefined,
+                );
                 reply(id, { batch, layout: layoutOf(session) });
                 break;
             }
