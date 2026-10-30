@@ -39,6 +39,8 @@ listed once, by package. Its major and minor version are those of the
 #### Changed
 
 - The people button's Share My Pointer switch is named Show My Pointer.
+- A word document's Show Formatting Marks is on its View tab in the editor,
+  after Pages and Pageless, where it was on its Text and Home tabs.
 
 #### Fixed
 

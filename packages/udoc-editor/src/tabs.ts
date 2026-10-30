@@ -62,10 +62,6 @@ type EditTab = ToolbarTab<MessageKey>;
  * dropping its long tail into its own menu. The exact measures — indents and
  * spacing in points, first-line vs hanging, borders and shading, the pagination
  * keeps — belong in a Paragraph dialog, not in toolbar width.
- *
- * The Show Formatting Marks toggle closes the list. It is live whatever is
- * selected, so Home shows it in every state — on wordprocessing only, which is
- * what its predicate asks rather than the selection.
  */
 const TEXT_COMMANDS: readonly EditCommandId[] = [
     "fontFamily",
@@ -83,7 +79,6 @@ const TEXT_COMMANDS: readonly EditCommandId[] = [
     "lineSpacing",
     "bulletList",
     "numberList",
-    "formattingMarks",
 ];
 
 /**
@@ -151,13 +146,19 @@ const OBJECT_TAB: EditTab = { id: "object", label: "ribbon.object", commands: OB
  */
 const TEXT_TAB: EditTab = { id: "text", label: "ribbon.text", commands: TEXT_COMMANDS };
 
-/** The presentation Text tab — {@link TEXT_TAB} without the two controls a deck
- *  has no use for: Scale (`w:w` is docx's, and DrawingML has no horizontal glyph
- *  scale) and Show Formatting Marks (Word's toggle). The tab drops them rather
- *  than greying them for good. */
+/** The presentation Text tab — {@link TEXT_TAB} without the control a deck has
+ *  no use for: Scale (`w:w` is docx's, and DrawingML has no horizontal glyph
+ *  scale). The tab drops it rather than greying it for good. */
 const PRESENTATION_TEXT_TAB: EditTab = {
     ...TEXT_TAB,
-    commands: TEXT_COMMANDS.filter((id) => id !== "widthScale" && id !== "formattingMarks"),
+    commands: TEXT_COMMANDS.filter((id) => id !== "widthScale"),
+};
+
+/** The wordprocessing View tab — udoc-ui's (Pages or Pageless), then Show
+ *  Formatting Marks, which shows what the text holds rather than changing it. */
+const WORDPROCESSING_EDIT_VIEW_TAB: EditTab = {
+    ...WORDPROCESSING_VIEW_TAB,
+    commands: [...WORDPROCESSING_VIEW_TAB.commands, "formattingMarks"],
 };
 
 /**
@@ -232,10 +233,10 @@ const PRESENTATION_TABS: readonly EditTab[] = [
     VIEW_TAB,
 ];
 
-/** The wordprocessing strip: Home plus Text, then udoc-ui's View last (its
- *  pages or pageless), as view mode has it. No Shape tab yet — the flow
- *  document has no free-floating shapes. */
-const WORDPROCESSING_TABS: readonly EditTab[] = [HOME_TAB, TEXT_TAB, WORDPROCESSING_VIEW_TAB];
+/** The wordprocessing strip: Home plus Text, then View last (its pages or
+ *  pageless, as view mode has it, and the formatting marks). No Shape tab yet —
+ *  the flow document has no free-floating shapes. */
+const WORDPROCESSING_TABS: readonly EditTab[] = [HOME_TAB, TEXT_TAB, WORDPROCESSING_EDIT_VIEW_TAB];
 
 /** The image strip: its own Home and Insert, then the Text and Shape tabs of
  *  the shapes drawn over its pages — a deck's, as they are a slide's shapes. */

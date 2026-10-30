@@ -23,11 +23,10 @@ export function setShowFormattingMarks(store: Store<UIState, Action>, visible: b
 }
 
 /**
- * The Show Formatting Marks toggle — a view toggle, not an edit, so it is live
- * whatever is selected: the one Text-tab control no selection greys, fenced off
- * in a group of its own, and shown on the contextual Home in every state. Gated
- * on the doc type instead: every doc type's Home carries the text commands, and
- * the toggle is Word's — only wordprocessing text shows marks.
+ * The Show Formatting Marks toggle — a view toggle, not an edit, so it sits on a
+ * word document's View tab, in a group of its own after Pages and Pageless, live
+ * whatever is selected. Gated on the doc type: the toggle is Word's, and only
+ * wordprocessing text shows marks.
  */
 export const FORMATTING_MARKS_COMMAND: CommandDef<MessageKey> = {
     id: "formattingMarks",
