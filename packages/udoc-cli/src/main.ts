@@ -119,8 +119,8 @@ async function open(input: string, password: string | undefined, delimiter: stri
 
 /**
  * The format `input`'s extension names when the bytes can't say it: a CSV's, a
- * TSV's or a PSV's, which have no signature to detect. `undefined` for any
- * other file.
+ * TSV's, a PSV's or a text file's, which have no signature to detect.
+ * `undefined` for any other file.
  */
 function signaturelessFormat(input: string): FileFormat | undefined {
     switch (extname(input).slice(1).toLowerCase()) {
@@ -131,6 +131,8 @@ function signaturelessFormat(input: string): FileFormat | undefined {
             return "tsv";
         case "psv":
             return "psv";
+        case "txt":
+            return "txt";
         default:
             return undefined;
     }

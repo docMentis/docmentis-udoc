@@ -32,6 +32,7 @@ listed once, by package. Its major and minor version are those of the
   flowed to the pane's width on one page as tall as its text, with no headers,
   footers or page breaks, wrapping again as the pane or the zoom changes. A
   document saved in Word's Web Layout opens pageless.
+- A `.txt` file opens, as a word document shown pageless.
 
 #### Changed
 
@@ -98,6 +99,26 @@ listed once, by package. Its major and minor version are those of the
   pages in their place, stretched, and nothing past the deck's last slide.
   Each shows in the shape of the deck's slides, where a deck that isn't 16:9,
   a 4:3 or a portrait one, had them stretched to 16:9.
+
+### udoc-node
+
+#### Added
+
+- A plain text file opens as a word document, its format named `"txt"`, and
+  `saveToBytes("txt")` saves it as text again, a line for each paragraph.
+
+### udoc-cli
+
+#### Added
+
+- A `.txt` input opens as a word document, and `udoc save` saves it to a
+  `.txt` `--out`.
+
+### udoc-server
+
+#### Added
+
+- `GET /documents/:id/file.txt` saves a copy of a text document as text.
 
 ## [0.8.7] - 2026-10-28
 

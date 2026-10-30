@@ -650,7 +650,7 @@ test("a copy is saved as its own format by the strategy asked, or as a package, 
         400,
         "invalidRequest",
     ]);
-    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/file.txt`)), [404, "notFound"]);
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/file.rtf`)), [404, "notFound"]);
     assert.deepEqual(await errorOf(await request("PUT", `/documents/${id}/file.pdf`)), [405, "methodNotAllowed"]);
     // Each reached the session by the strategy asked, none past a refused
     // request; and a copy is a flat baseline, kept nowhere.

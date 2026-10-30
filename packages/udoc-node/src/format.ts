@@ -11,6 +11,7 @@ import type { FileFormat } from "@docmentis/udoc-wasm";
 const FILE_FORMATS = {
     pdf: true,
     docx: true,
+    txt: true,
     pptx: true,
     xlsx: true,
     csv: true,

@@ -99,7 +99,7 @@ test("what can't be run is a usage error", () => {
         ["page-count", "a.pdf", "-o", "x.png"],
         ["save", "a.pdf"],
         ["save", "a.pdf", "b.pdf", "-o", "c.pdf"],
-        ["save", "a.pdf", "-o", "a.txt"],
+        ["save", "a.pdf", "-o", "a.rtf"],
         ["save", "a.pdf", "-o", "a"],
         ["save", "a.pdf", "-o", "b.pdf", "--page", "2"],
     ]) {
