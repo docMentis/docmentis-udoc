@@ -5,8 +5,8 @@ document's pooled session held open while any client is connected
 ([Node Hosts — The server keeps documents](node-hosts.md#the-server-keeps-documents)):
 each client's edits are merged into it, sent on to every other client, and kept as
 the document's edit log. The engine does the merging — the sync surface of
-Core Editor (`versionVector`, `patchSince`, `merge`, `presence`,
-`mergePresence`) — and the server only carries its bytes.
+Core Editor (`versionVector`, `patchSince`, `merge`, `mergePresence`) — and the
+server only carries its bytes.
 
 ## The edit log
 
@@ -46,13 +46,13 @@ the upgrade it is `426 upgradeRequired`.
 
 Each message is a binary frame: one byte saying what it is, then the engine's bytes.
 
-| kind               | sent by                                            | payload                                                                             | what the receiver does                                                                                               |
-| ------------------ | -------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `join` (1)         | a client, first                                    | its version vector                                                                  | answers `join` with its own version vector, then `patch` — the edits the client lacks — and `presence`, every peer's |
-| `join` (1)         | the server                                         | its version vector                                                                  | sends `patch`: the edits the server lacks, preceded by `opaque parts` when they name any                             |
-| `patch` (2)        | either                                             | a patch                                                                             | merges it; the server also sends it on to every other client and keeps the log                                       |
-| `presence` (3)     | either                                             | a presence                                                                          | merges it; the server also sends it on. Never kept.                                                                  |
-| `opaque parts` (4) | a client, before the `patch` whose edits name them | the content of opaque parts — an inserted picture's image (Core Editor Opaque Part) | keeps each part and blob beside the package, before it merges the `patch` that follows. Never sent on.               |
+| kind               | sent by                                            | payload                                                                             | what the receiver does                                                                                 |
+| ------------------ | -------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `join` (1)         | a client, first                                    | its version vector                                                                  | answers `join` with its own version vector, then `patch` — the edits the client lacks                  |
+| `join` (1)         | the server                                         | its version vector                                                                  | sends `patch`: the edits the server lacks, preceded by `opaque parts` when they name any               |
+| `patch` (2)        | either                                             | a patch                                                                             | merges it; the server also sends it on to every other client and keeps the log                         |
+| `presence` (3)     | either                                             | a presence                                                                          | merges it; the server also sends it on. Never kept.                                                    |
+| `opaque parts` (4) | a client, before the `patch` whose edits name them | the content of opaque parts — an inserted picture's image (Core Editor Opaque Part) | keeps each part and blob beside the package, before it merges the `patch` that follows. Never sent on. |
 
 The join is also the recovery: a client that reconnects joins with its version
 vector, and each side sends what the other lacks, so a dropped connection loses
@@ -67,7 +67,9 @@ joined client refreshes it every 10 s, inside the engine's 30 s presence timeout
 and sends it whole; its pointer crosses alone, as it moves. One that leaves sends
 the withdrawal of its presence before it closes, so the others drop it at once;
 one that vanishes without leaving drops out within 40 s. The server merges a
-presence and sends it on as it does any other, a withdrawal included.
+presence and sends it on as it does any other, a withdrawal included, but sends
+none of its own, not even with a join's answer: it is no peer, and a joiner
+learns the others within one refresh.
 
 A close code is WebSocket's own where it defines the meaning, and the server's from 4000. Each says whether a joined client should rejoin; a code it doesn't know, it
 doesn't. A client whose join was never answered has nothing to rejoin: whatever

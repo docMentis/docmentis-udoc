@@ -124,6 +124,12 @@ listed once, by package. Its major and minor version are those of the
 
 - `GET /documents/:id/file.txt` saves a copy of a text document as text.
 
+#### Changed
+
+- A collaboration answers a join with its version and the edits the client
+  lacks, and no presence: the server is no peer, and a joiner learns the
+  others from their own, each sent whole within its 10 s refresh.
+
 ## [0.8.7] - 2026-10-28
 
 Built on `@docmentis/udoc-wasm` 0.8.9.

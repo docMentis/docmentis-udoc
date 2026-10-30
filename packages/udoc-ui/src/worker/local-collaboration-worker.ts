@@ -8,8 +8,9 @@
 // design's "Bootstrap and identity"). Then it serves the collaboration as
 // udoc-server does (docs/design/node-collaboration.md): each client connects
 // through a MessagePort speaking the server's messages, a join is answered with
-// what the client lacks and every peer's presence, and a patch or a presence is
-// merged and sent on to the others.
+// what the client lacks, and a patch or a presence is merged and sent on to the
+// others. It sends no presence of its own: a joiner learns the peers from their
+// own, which each refreshes and sends whole on its period.
 //
 // Unlike udoc-server it keeps no opaque parts a loader could read back — a
 // client here opened the package's bytes — so it acknowledges none. It holds
@@ -109,7 +110,6 @@ function receive(connection: number, port: MessagePort, message: Uint8Array): vo
                 const parts = s.opaquePartsSince(payload);
                 if (parts.byteLength > 0) send(port, OPAQUE_PARTS, parts);
                 send(port, PATCH, s.patchSince(payload));
-                send(port, PRESENCE, s.presence());
                 break;
             }
             case OPAQUE_PARTS:

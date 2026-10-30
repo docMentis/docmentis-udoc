@@ -268,12 +268,12 @@ class Collaboration {
                     // answer is made is sent on to it too: it may get one
                     // twice, which merging makes harmless, but never not at all.
                     this.#joined.add(client);
+                    // No presence: the server is no peer, and a joiner learns
+                    // the peers from their own, each sent whole on its refresh.
                     const missing = await session.patchSince(payload);
                     const held = await session.versionVector();
-                    const presence = await session.presence();
                     send(client, JOIN, held);
                     send(client, PATCH, missing);
-                    send(client, PRESENCE, presence);
                     return;
                 }
                 case OPAQUE_PARTS:

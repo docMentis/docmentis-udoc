@@ -816,32 +816,30 @@ test("a collaboration sends each edit on to the others, keeps it as the edit log
 
     const alex = await collaborator(t, base, id);
     alex.send(JOIN, "[]");
-    await until(() => alex.received.length === 3);
+    await until(() => alex.received.length === 2);
     assert.deepEqual(alex.received, [
         [JOIN, "[]"],
         [PATCH, "[]"],
-        [PRESENCE, "{}"],
     ]);
     alex.send(PATCH, '["alex 1"]');
     await until(async () => (await kept(directory, id))["crdt.loro"] === '["alex 1"]');
 
-    // A joiner that holds nothing gets what is held: the server's version, the
-    // edits it lacks, and every peer's presence.
+    // A joiner that holds nothing gets what is held: the server's version and
+    // the edits it lacks. No presence: the server is no peer.
     const robin = await collaborator(t, base, id);
     robin.send(JOIN, "[]");
-    await until(() => robin.received.length === 3);
+    await until(() => robin.received.length === 2);
     assert.deepEqual(robin.received, [
         [JOIN, '["alex 1"]'],
         [PATCH, '["alex 1"]'],
-        [PRESENCE, "{}"],
     ]);
 
     // Each edit and presence goes on to every client but its sender.
     robin.send(PATCH, '["robin 1"]');
     alex.send(PRESENCE, '{"alex":"page 1"}');
-    await until(() => alex.received.length === 4 && robin.received.length === 4);
-    assert.deepEqual(alex.received[3], [PATCH, '["robin 1"]']);
-    assert.deepEqual(robin.received[3], [PRESENCE, '{"alex":"page 1"}']);
+    await until(() => alex.received.length === 3 && robin.received.length === 3);
+    assert.deepEqual(alex.received[2], [PATCH, '["robin 1"]']);
+    assert.deepEqual(robin.received[2], [PRESENCE, '{"alex":"page 1"}']);
 
     // The log is every edit, served beside the package, whose description now
     // says it has one to replay.
@@ -870,7 +868,7 @@ test("a client's opaque parts are kept before its patch, served by route, and ne
     const robin = await collaborator(t, base, id);
     alex.send(JOIN, "[]");
     robin.send(JOIN, "[]");
-    await until(() => alex.received.length === 3 && robin.received.length === 3);
+    await until(() => alex.received.length === 2 && robin.received.length === 2);
 
     // An inserted picture's image, as the engine sends it: the part and its
     // blob, and the list the server doesn't keep — ahead of the patch naming it.
@@ -883,11 +881,11 @@ test("a client's opaque parts are kept before its patch, served by route, and ne
         }),
     );
     alex.send(PATCH, '["alex inserts a picture"]');
-    await until(() => robin.received.length === 4);
+    await until(() => robin.received.length === 3);
     // The others get the patch alone, and the sender nothing: a peer loads the
     // part from here.
-    assert.deepEqual(robin.received[3], [PATCH, '["alex inserts a picture"]']);
-    assert.equal(alex.received.length, 3);
+    assert.deepEqual(robin.received[2], [PATCH, '["alex inserts a picture"]']);
+    assert.equal(alex.received.length, 2);
 
     assert.equal(await body(await request("GET", `/documents/${id}/package/images/0-2a`)), "image part");
     assert.equal(await body(await request("GET", `/documents/${id}/package/blobs/e7e7e7`)), "image pixels");
@@ -924,7 +922,7 @@ test("what a client shouldn't send ends that client alone, and nothing of it is 
     const id = await upload();
     const alex = await collaborator(t, base, id);
     alex.send(JOIN, "[]");
-    await until(() => alex.received.length === 3);
+    await until(() => alex.received.length === 2);
 
     const unjoined = await collaborator(t, base, id);
     unjoined.send(PATCH, '["early"]');
@@ -945,7 +943,7 @@ test("what a client shouldn't send ends that client alone, and nothing of it is 
     assert.equal((await unzipped.closed).code, 1008);
 
     await sleep(20);
-    assert.equal(alex.received.length, 3, "nothing was sent on");
+    assert.equal(alex.received.length, 2, "nothing was sent on");
     assert.equal((await kept(directory, id))["crdt.loro"], undefined, "nothing was kept");
     assert.equal(alex.socket.readyState, WebSocket.OPEN);
 });
