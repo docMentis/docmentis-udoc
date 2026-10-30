@@ -39,7 +39,7 @@ import {
     ICON_SUBTOOL_STRIKETHROUGH,
     ICON_SUBTOOL_TEXTBOX,
     ICON_SUBTOOL_UNDERLINE,
-    ICON_TEXT_HIGHLIGHT,
+    ICON_SUBTOOL_HIGHLIGHT,
 } from "../icons.js";
 import { createButton } from "./controls.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
@@ -77,7 +77,7 @@ const KINDS: Partial<Record<AnnotationSubtype, { label: MessageKey; icon?: strin
     circle: { label: "annotationKind.ellipse", icon: ICON_SUBTOOL_ELLIPSE },
     polygon: { label: "annotationKind.polygon", icon: ICON_SUBTOOL_POLYGON },
     polyLine: { label: "annotationKind.polyline", icon: ICON_SUBTOOL_POLYLINE },
-    highlight: { label: "annotationKind.highlight", icon: ICON_TEXT_HIGHLIGHT },
+    highlight: { label: "annotationKind.highlight", icon: ICON_SUBTOOL_HIGHLIGHT },
     underline: { label: "annotationKind.underline", icon: ICON_SUBTOOL_UNDERLINE },
     squiggly: { label: "annotationKind.squiggly", icon: ICON_SUBTOOL_SQUIGGLY },
     strikeOut: { label: "annotationKind.strikethrough", icon: ICON_SUBTOOL_STRIKETHROUGH },

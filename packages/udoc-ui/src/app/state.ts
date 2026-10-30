@@ -315,8 +315,8 @@ export interface ToolbarTab<K extends string = MessageKey> {
  * text markups; the Note, the Text Box and the Stamp dropdown (the standard
  * stamps); the Pen, then the Shapes dropdown (rectangle, ellipse, line,
  * arrow, polygon, polyline, cloud); then the Format group, which styles the
- * armed tool or the selected annotations: Color (with the line's weight,
- * dashes and ends), Fill and Opacity. Only a PDF carries annotations, so only
+ * armed tool or the selected annotations: Fill, Color (with the line's weight,
+ * dashes and ends) and Opacity. Only a PDF carries annotations, so only
  * the portable profile shows it.
  */
 export const ANNOTATE_COMMANDS: readonly CommandId[] = [
@@ -329,8 +329,8 @@ export const ANNOTATE_COMMANDS: readonly CommandId[] = [
     "annotateStamp",
     "annotatePen",
     "annotateShape",
-    "annotationColor",
     "annotationFill",
+    "annotationColor",
     "annotationOpacity",
 ];
 

@@ -54,7 +54,7 @@ import {
     ICON_NORMAL_VIEW,
     ICON_PAGES_VIEW,
     ICON_PAGELESS_VIEW,
-    ICON_TEXT_HIGHLIGHT,
+    ICON_SUBTOOL_HIGHLIGHT,
     ICON_FILL,
     ICON_STROKE,
     ICON_SUBTOOL_FREEHAND,
@@ -639,7 +639,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
     annotateHighlight: {
         id: "annotateHighlight",
         label: "command.annotateHighlight",
-        icon: ICON_TEXT_HIGHLIGHT,
+        icon: ICON_SUBTOOL_HIGHLIGHT,
         group: "markup",
         run: { kind: "markup", tool: "highlight" },
         enabledWhen: whenReady,
@@ -741,7 +741,8 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         label: "command.annotationOpacity",
         icon: ICON_OPACITY,
         group: "format",
-        run: { kind: "menu", menu: ANNOTATION_OPACITY_MENU },
+        // With Color and Fill: it styles the same annotation.
+        run: { kind: "menu", menu: ANNOTATION_OPACITY_MENU, cluster: "paint" },
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
     },
 

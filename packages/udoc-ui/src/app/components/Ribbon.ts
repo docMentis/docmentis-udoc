@@ -223,16 +223,14 @@ function selectSlice(s: UIState): RibbonSlice {
 
 /** Whether a command bunches into a segmented `.udoc-btn-group`, and with which
  *  of its kind: the Annotate tab's markups cluster as `"toggle"`, its Color /
- *  Fill as `"paint"` — with its Opacity, since it styles the same annotation —
- *  and controls, menus and toggles as their `cluster` says. Consecutive
- *  same-kind commands share one group; anything else stands alone. */
+ *  Fill as `"paint"`, and controls, menus and toggles as their `cluster` says.
+ *  Consecutive same-kind commands share one group; anything else stands alone. */
 function clusterKind(def: CommandDef<string>): ClusterKind | null {
     if (def.run.kind === "control" || def.run.kind === "menu" || def.run.kind === "toggle") {
         return def.run.cluster ?? null;
     }
     if (def.run.kind === "markup") return "toggle";
     if (def.run.kind === "annotationPaint") return "paint";
-    if (def.id === "annotationOpacity") return "paint";
     return null;
 }
 

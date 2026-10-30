@@ -95,6 +95,7 @@ const ICONS = {
     ICON_SUBTOOL_NOTE: "sticky_note_2",
     ICON_SUBTOOL_STAMP: "approval",
     ICON_SUBTOOL_TEXTBOX: "insert_text",
+    ICON_SUBTOOL_HIGHLIGHT: "ink_highlighter",
     ICON_SUBTOOL_UNDERLINE: "format_underlined",
     ICON_SUBTOOL_STRIKETHROUGH: "format_strikethrough",
     ICON_SUBTOOL_SQUIGGLY: "format_underlined_squiggle",

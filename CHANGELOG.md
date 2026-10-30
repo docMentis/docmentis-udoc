@@ -13,6 +13,10 @@ listed once, by package. Its major and minor version are those of the
 - The ribbon's commands show their icons alone, each named in its tooltip,
   where the View tab's views and Notes, the Insert tab's tools, New Slide and
   the crop controls showed their names beside their icons.
+- The Annotate tab's Highlight, and a highlight's comments, show a highlighter
+  pen alone, where it stood over a bar like the Color dropdown beside it.
+- The Annotate tab's Fill, Color and Opacity sit in one group, in that order,
+  where Color led and Opacity stood apart from the other two.
 
 ## [0.8.8] - 2026-10-29
 
