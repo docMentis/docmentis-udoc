@@ -34,7 +34,7 @@ listed once, by package. Its major and minor version are those of the
   document saved in Word's Web Layout opens pageless. While it shows pageless
   the view controls are zoom alone: the page navigation, the view settings and
   the fit options come back with its pages.
-- A `.txt` file opens, as a word document shown pageless.
+- A `.txt` file opens, as a word document shown pageless, in Courier New.
 
 #### Changed
 
