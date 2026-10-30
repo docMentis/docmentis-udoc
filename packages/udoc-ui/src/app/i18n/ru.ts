@@ -7,6 +7,7 @@ export const ru: Messages = {
     "common.save": "Сохранить",
     "common.close": "Закрыть",
     "common.delete": "Удалить",
+    "common.ok": "ОК",
 
     // Numbers
     "format.percent": "{percent} %",
@@ -130,6 +131,13 @@ export const ru: Messages = {
     "paint.themeColors": "Цвета темы",
     "paint.standardColors": "Стандартные цвета",
     "paint.recentColors": "Последние цвета",
+    "paint.moreColors": "Другие цвета…",
+    "paint.customColor": "Пользовательский цвет",
+    "paint.saturationBrightness": "Насыщенность и яркость",
+    "paint.saturationBrightnessValue": "Насыщенность {saturation} %, яркость {brightness} %",
+    "paint.hue": "Оттенок",
+    "paint.hex": "Шестнадцатеричный",
+    "paint.eyedropper": "Пипетка",
     "paint.text1": "Текст 1",
     "paint.background1": "Фон 1",
     "paint.text2": "Текст 2",

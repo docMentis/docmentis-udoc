@@ -7,6 +7,7 @@ export const ar: Messages = {
     "common.save": "حفظ",
     "common.close": "إغلاق",
     "common.delete": "حذف",
+    "common.ok": "موافق",
 
     // Numbers
     "format.percent": "{percent}%",
@@ -130,6 +131,13 @@ export const ar: Messages = {
     "paint.themeColors": "ألوان النسق",
     "paint.standardColors": "ألوان قياسية",
     "paint.recentColors": "الألوان الأخيرة",
+    "paint.moreColors": "ألوان إضافية…",
+    "paint.customColor": "لون مخصص",
+    "paint.saturationBrightness": "التشبع والسطوع",
+    "paint.saturationBrightnessValue": "التشبع {saturation}%، السطوع {brightness}%",
+    "paint.hue": "تدرج اللون",
+    "paint.hex": "سداسي عشري",
+    "paint.eyedropper": "قطارة",
     "paint.text1": "نص 1",
     "paint.background1": "خلفية 1",
     "paint.text2": "نص 2",

@@ -125,6 +125,8 @@ const ICONS = {
     ICON_FILL: "format_color_fill",
     ICON_STROKE: "border_color",
     ICON_OPACITY: "opacity",
+    ICON_PALETTE: "palette",
+    ICON_EYEDROPPER: "colorize",
 
     // Text
     ICON_TEXT_HIGHLIGHT: "format_ink_highlighter",

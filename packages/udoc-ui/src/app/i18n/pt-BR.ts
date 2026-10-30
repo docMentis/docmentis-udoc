@@ -7,6 +7,7 @@ export const ptBR: Messages = {
     "common.save": "Salvar",
     "common.close": "Fechar",
     "common.delete": "Excluir",
+    "common.ok": "OK",
 
     // Numbers
     "format.percent": "{percent}%",
@@ -130,6 +131,13 @@ export const ptBR: Messages = {
     "paint.themeColors": "Cores do Tema",
     "paint.standardColors": "Cores Padrão",
     "paint.recentColors": "Cores Recentes",
+    "paint.moreColors": "Mais Cores…",
+    "paint.customColor": "Cor Personalizada",
+    "paint.saturationBrightness": "Saturação e brilho",
+    "paint.saturationBrightnessValue": "Saturação {saturation}%, brilho {brightness}%",
+    "paint.hue": "Matiz",
+    "paint.hex": "Hex",
+    "paint.eyedropper": "Conta-gotas",
     "paint.text1": "Texto 1",
     "paint.background1": "Plano de Fundo 1",
     "paint.text2": "Texto 2",

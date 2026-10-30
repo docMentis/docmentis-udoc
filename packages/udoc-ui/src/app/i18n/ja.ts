@@ -7,6 +7,7 @@ export const ja: Messages = {
     "common.save": "保存",
     "common.close": "閉じる",
     "common.delete": "削除",
+    "common.ok": "OK",
 
     // Numbers
     "format.percent": "{percent}%",
@@ -130,6 +131,13 @@ export const ja: Messages = {
     "paint.themeColors": "テーマの色",
     "paint.standardColors": "標準の色",
     "paint.recentColors": "最近使用した色",
+    "paint.moreColors": "その他の色…",
+    "paint.customColor": "ユーザー設定の色",
+    "paint.saturationBrightness": "彩度と明度",
+    "paint.saturationBrightnessValue": "彩度 {saturation}%、明度 {brightness}%",
+    "paint.hue": "色相",
+    "paint.hex": "16 進数",
+    "paint.eyedropper": "スポイト",
     "paint.text1": "テキスト 1",
     "paint.background1": "背景 1",
     "paint.text2": "テキスト 2",

@@ -15,6 +15,8 @@ export interface Messages {
     "common.close": string;
     /** Delete */
     "common.delete": string;
+    /** OK */
+    "common.ok": string;
 
     // Numbers
     /** {percent}% */
@@ -239,6 +241,20 @@ export interface Messages {
     "paint.standardColors": string;
     /** Recent Colors */
     "paint.recentColors": string;
+    /** More Colors… */
+    "paint.moreColors": string;
+    /** Custom Color */
+    "paint.customColor": string;
+    /** Saturation and brightness */
+    "paint.saturationBrightness": string;
+    /** Saturation {saturation}%, brightness {brightness}% */
+    "paint.saturationBrightnessValue": string;
+    /** Hue */
+    "paint.hue": string;
+    /** Hex */
+    "paint.hex": string;
+    /** Eyedropper */
+    "paint.eyedropper": string;
     /** Text 1 */
     "paint.text1": string;
     /** Background 1 */

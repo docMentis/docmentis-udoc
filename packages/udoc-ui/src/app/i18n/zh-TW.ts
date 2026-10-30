@@ -7,6 +7,7 @@ export const zhTW: Messages = {
     "common.save": "儲存",
     "common.close": "關閉",
     "common.delete": "刪除",
+    "common.ok": "確定",
 
     // Numbers
     "format.percent": "{percent}%",
@@ -130,6 +131,13 @@ export const zhTW: Messages = {
     "paint.themeColors": "佈景主題色彩",
     "paint.standardColors": "標準色彩",
     "paint.recentColors": "最近使用的色彩",
+    "paint.moreColors": "其他色彩…",
+    "paint.customColor": "自訂色彩",
+    "paint.saturationBrightness": "飽和度和亮度",
+    "paint.saturationBrightnessValue": "飽和度 {saturation}%，亮度 {brightness}%",
+    "paint.hue": "色調",
+    "paint.hex": "十六進位",
+    "paint.eyedropper": "滴管",
     "paint.text1": "文字 1",
     "paint.background1": "背景 1",
     "paint.text2": "文字 2",

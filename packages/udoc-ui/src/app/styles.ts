@@ -1277,6 +1277,136 @@ export const uiStyles = css`
         margin: 5px 0;
         border-top: 1px solid var(--udoc-color-outline-variant);
     }
+
+    /* Custom colour picker — "More Colors…", in the paint panel's place: a
+   saturation / brightness square over a hue strip, then the hex and the
+   buttons. Inset like the panel's grids; the panel holds the width it had. */
+    .udoc-ui-root .udoc-colorpicker {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 6px 14px;
+    }
+    .udoc-ui-root .udoc-colorpicker__square {
+        position: relative;
+        height: 120px;
+        border-radius: 4px;
+        background:
+            linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent),
+            var(--hue-color, #f00);
+        cursor: crosshair;
+        touch-action: none;
+    }
+    .udoc-ui-root .udoc-colorpicker__hue {
+        position: relative;
+        height: 12px;
+        border-radius: 6px;
+        background: linear-gradient(to right, #f00, #ff0 16.67%, #0f0 33.33%, #0ff 50%, #00f 66.67%, #f0f 83.33%, #f00);
+        cursor: pointer;
+        touch-action: none;
+    }
+    .udoc-ui-root :is(.udoc-colorpicker__square, .udoc-colorpicker__hue):focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: 2px;
+    }
+    /* A ring in the colour it sits on, legible on light and dark alike. */
+    .udoc-ui-root .udoc-colorpicker__thumb {
+        position: absolute;
+        top: 50%;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: var(--swatch-color, transparent);
+        box-shadow:
+            0 0 0 1px rgba(0, 0, 0, 0.35),
+            inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+        box-sizing: border-box;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+    .udoc-ui-root .udoc-colorpicker__fields {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .udoc-ui-root .udoc-colorpicker__preview {
+        flex: none;
+        width: 28px;
+        height: 28px;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        border-radius: 4px;
+        background: var(--swatch-color, transparent);
+        box-sizing: border-box;
+    }
+    .udoc-ui-root .udoc-colorpicker__hex {
+        flex: 1;
+        min-width: 0;
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid var(--udoc-color-outline);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--udoc-color-on-surface);
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+        box-sizing: border-box;
+    }
+    .udoc-ui-root .udoc-colorpicker__hex:focus {
+        outline: none;
+        border-color: var(--udoc-color-primary);
+    }
+    .udoc-ui-root .udoc-colorpicker__hex[aria-invalid="true"] {
+        border-color: var(--udoc-color-error);
+    }
+    .udoc-ui-root .udoc-colorpicker__eyedropper {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--udoc-color-on-surface-variant);
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-colorpicker__eyedropper svg {
+        width: var(--udoc-btn-glyph);
+        height: var(--udoc-btn-glyph);
+    }
+    .udoc-ui-root .udoc-colorpicker__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .udoc-ui-root :is(.udoc-colorpicker__cancel, .udoc-colorpicker__ok) {
+        height: 28px;
+        padding: 0 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-colorpicker__cancel {
+        border: 1px solid var(--udoc-color-outline-variant);
+        background: transparent;
+        color: var(--udoc-color-on-surface);
+    }
+    .udoc-ui-root .udoc-colorpicker__ok {
+        border: none;
+        background: var(--udoc-color-primary);
+        color: var(--udoc-color-on-primary);
+    }
+    .udoc-ui-root :is(.udoc-colorpicker__cancel, .udoc-colorpicker__ok, .udoc-colorpicker__eyedropper):hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root :is(.udoc-colorpicker__cancel, .udoc-colorpicker__ok, .udoc-colorpicker__eyedropper):focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: 2px;
+    }
     /* Dropdown wrapper — positions its .udoc-menu panel against the trigger. */
     .udoc-ui-root .udoc-dropdown {
         position: relative;

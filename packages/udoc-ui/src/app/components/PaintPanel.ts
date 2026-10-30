@@ -3,7 +3,9 @@
  * split button's caret. It is *doc-type aware*: presentation (Office) documents
  * get a Theme Colors block (base slots + a tint/shade ladder each) above the
  * standard row, because a theme pick must stay a scheme reference that re-themes;
- * portable (PDF) documents get standard device colours only (no theme).
+ * portable (PDF) documents get standard device colours only (no theme). Either
+ * way "More Colors…" swaps the swatches for the custom picker
+ * ({@link buildColorPicker}), for any other colour.
  *
  * A panel carries more than colour — that's the point of the split button. Fill
  * adds a "More Fill Options…" seam for the non-solid fills (gradient / pattern /
@@ -20,8 +22,11 @@ import type { AnnotationLineEnding } from "@docmentis/udoc-wasm";
 import type { PaintChannel } from "../commands.js";
 import type { ThemePalette } from "../../geometry.js";
 import type { I18n, Message, MessageKey } from "../i18n/index.js";
+import { hexToRgb, parseHex, rgbToHex } from "../color.js";
+import { buildColorPicker } from "./ColorPicker.js";
 import {
     ICON_FILL,
+    ICON_PALETTE,
     ICON_STROKE,
     ICON_NO_FILL,
     ICON_STROKE_WIDTH,
@@ -177,14 +182,6 @@ function facingStart(icon: string): string {
 }
 
 // ---- Colour math (tint/shade ladder under each theme slot) ----
-function hexToRgb(hex: string): [number, number, number] {
-    const n = parseInt(hex.slice(1), 16);
-    return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
-}
-function rgbToHex(r: number, g: number, b: number): string {
-    const h = (c: number) => Math.round(c).toString(16).padStart(2, "0");
-    return `#${h(r)}${h(g)}${h(b)}`;
-}
 /** Mix each channel toward white (`amount` of the way) — a lighter tint. */
 function lighten(hex: string, amount: number): string {
     const [r, g, b] = hexToRgb(hex);
@@ -400,6 +397,7 @@ function divider(): HTMLElement {
 export function buildPaintPanel(panel: HTMLElement, cfg: PaintPanelConfig): void {
     const { i18n, variant, theme, recent, active, onPick } = cfg;
     panel.innerHTML = "";
+    panel.style.minWidth = "";
     panel.classList.add("udoc-paintpanel");
 
     // "No Fill" / "No Line" — the explicit-nothing row.
@@ -467,6 +465,16 @@ export function buildPaintPanel(panel: HTMLElement, cfg: PaintPanelConfig): void
         }
         panel.appendChild(rg);
     }
+
+    // Any other colour — the custom picker, in the swatches' place. A row, not
+    // a swatch, so fenced off from the grids above it.
+    panel.appendChild(divider());
+    const moreColors = row(ICON_PALETTE, i18n.t("paint.moreColors"), (e) => {
+        e.stopPropagation();
+        showColorPicker(panel, cfg);
+    });
+    moreColors.classList.add("udoc-paintpanel__more-colors");
+    panel.appendChild(moreColors);
 
     // Stroke-only: Weight / Dashes fly-outs, then Start / End for a line that
     // takes endings.
@@ -541,6 +549,30 @@ export function buildPaintPanel(panel: HTMLElement, cfg: PaintPanelConfig): void
             onMoreOptions();
         }),
     );
+}
+
+/**
+ * Swap `panel`'s swatches for the custom picker, opened on the selection's
+ * colour (else the latest recent one), holding the panel at its width so it
+ * doesn't jump. OK picks the colour as a solid paint, like a swatch; Cancel
+ * rebuilds the swatches.
+ */
+function showColorPicker(panel: HTMLElement, cfg: PaintPanelConfig): void {
+    const { active, recent } = cfg;
+    const current = active && active.kind !== "none" ? active.hex : recent[0];
+    panel.style.minWidth = `${panel.clientWidth}px`;
+    panel.innerHTML = "";
+    const picker = buildColorPicker({
+        i18n: cfg.i18n,
+        initial: (current !== undefined && parseHex(current)) || "#000000",
+        onApply: (hex) => cfg.onPick({ kind: "solid", hex }),
+        onCancel: () => {
+            buildPaintPanel(panel, cfg);
+            panel.querySelector<HTMLElement>(".udoc-paintpanel__more-colors")?.focus();
+        },
+    });
+    panel.appendChild(picker);
+    picker.querySelector<HTMLElement>(".udoc-colorpicker__square")?.focus({ preventScroll: true });
 }
 
 /** Map a weight in points to a preview stroke-width in the 24×24 icon space,

@@ -7,6 +7,7 @@ export const zhCN: Messages = {
     "common.save": "保存",
     "common.close": "关闭",
     "common.delete": "删除",
+    "common.ok": "确定",
 
     // Numbers
     "format.percent": "{percent}%",
@@ -130,6 +131,13 @@ export const zhCN: Messages = {
     "paint.themeColors": "主题颜色",
     "paint.standardColors": "标准色",
     "paint.recentColors": "最近使用的颜色",
+    "paint.moreColors": "其他颜色…",
+    "paint.customColor": "自定义颜色",
+    "paint.saturationBrightness": "饱和度和亮度",
+    "paint.saturationBrightnessValue": "饱和度 {saturation}%，亮度 {brightness}%",
+    "paint.hue": "色调",
+    "paint.hex": "十六进制",
+    "paint.eyedropper": "取色器",
     "paint.text1": "文字 1",
     "paint.background1": "背景 1",
     "paint.text2": "文字 2",

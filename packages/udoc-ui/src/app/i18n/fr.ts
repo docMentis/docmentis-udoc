@@ -7,6 +7,7 @@ export const fr: Messages = {
     "common.save": "Enregistrer",
     "common.close": "Fermer",
     "common.delete": "Supprimer",
+    "common.ok": "OK",
 
     // Numbers
     "format.percent": "{percent} %",
@@ -130,6 +131,13 @@ export const fr: Messages = {
     "paint.themeColors": "Couleurs du thème",
     "paint.standardColors": "Couleurs standard",
     "paint.recentColors": "Couleurs récentes",
+    "paint.moreColors": "Autres couleurs…",
+    "paint.customColor": "Couleur personnalisée",
+    "paint.saturationBrightness": "Saturation et luminosité",
+    "paint.saturationBrightnessValue": "Saturation {saturation} %, luminosité {brightness} %",
+    "paint.hue": "Teinte",
+    "paint.hex": "Hex",
+    "paint.eyedropper": "Pipette",
     "paint.text1": "Texte 1",
     "paint.background1": "Arrière-plan 1",
     "paint.text2": "Texte 2",

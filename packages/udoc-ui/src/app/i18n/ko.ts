@@ -7,6 +7,7 @@ export const ko: Messages = {
     "common.save": "저장",
     "common.close": "닫기",
     "common.delete": "삭제",
+    "common.ok": "확인",
 
     // Numbers
     "format.percent": "{percent}%",
@@ -130,6 +131,13 @@ export const ko: Messages = {
     "paint.themeColors": "테마 색",
     "paint.standardColors": "표준 색",
     "paint.recentColors": "최근에 사용한 색",
+    "paint.moreColors": "다른 색…",
+    "paint.customColor": "사용자 지정 색",
+    "paint.saturationBrightness": "채도 및 명도",
+    "paint.saturationBrightnessValue": "채도 {saturation}%, 명도 {brightness}%",
+    "paint.hue": "색조",
+    "paint.hex": "16진수",
+    "paint.eyedropper": "스포이트",
     "paint.text1": "텍스트 1",
     "paint.background1": "배경 1",
     "paint.text2": "텍스트 2",

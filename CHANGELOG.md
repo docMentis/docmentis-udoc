@@ -23,6 +23,11 @@ listed once, by package. Its major and minor version are those of the
 - The people button's menu has a Show Collaborators' Pointers switch, on to
   start with, that hides the pointers the others share. The
   `showPeerPointers` option and `setShowPeerPointers` set it.
+- A colour menu's More Colors… shows a picker in place of its swatches, for
+  any colour: a saturation and brightness square over a hue strip, the hex
+  they make, which can be typed instead, and an eyedropper where the browser
+  has one. OK applies it and adds it to Recent Colors; Cancel goes back to the
+  swatches.
 
 #### Changed
 
