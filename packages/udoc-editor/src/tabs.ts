@@ -35,6 +35,7 @@ export type EditCommandId =
     | "createSlide"
     | "insertImage"
     | "insertShape"
+    | "insertGalleryShape"
     | "rotatePageLeft"
     | "rotatePageRight"
     | "flipPageHorizontal"
@@ -117,11 +118,16 @@ const HOME_TAB: EditTab = {
 /** The portable Insert tab: Shapes, dragged out as the page's own objects. */
 const PORTABLE_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertShape"] };
 
-/** The image Insert tab: Shapes, drawn over the page. */
-const IMAGE_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertShape"] };
+/** The image Insert tab: the gallery's Shapes, drawn over the page. */
+const IMAGE_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertGalleryShape"] };
 
-/** The presentation Insert tab: Image, a picture on the current slide. */
-const PRESENTATION_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertImage"] };
+/** The presentation Insert tab: Image, a picture on the current slide, and the
+ *  gallery's Shapes, dragged out on it. */
+const PRESENTATION_INSERT_TAB: EditTab = {
+    id: "insert",
+    label: "ribbon.insert",
+    commands: ["insertImage", "insertGalleryShape"],
+};
 
 /**
  * The Shape tab — appearance + arrangement for graphics objects. Fill / Line

@@ -29,6 +29,7 @@ import type {
     MenuItem,
     PaintChannel,
     PickerOption,
+    PickerSection,
     RibbonControl,
 } from "../commands.js";
 import { setupRovingTabindex } from "../a11y.js";
@@ -268,6 +269,10 @@ function isCommandActive(def: CommandDef<string>, pointer: PointerMode): boolean
         case "armPicker": {
             const armed = pointer.tool;
             return def.run.options.some((opt) => samePlaceTool(opt.tool, armed));
+        }
+        case "armGallery": {
+            const armed = pointer.tool;
+            return def.run.sections.some((section) => section.options.some((opt) => samePlaceTool(opt.tool, armed)));
         }
         case "markup":
             return pointer.tool.kind === "annotation" && pointer.tool.tool === def.run.tool;
@@ -602,6 +607,45 @@ export function createRibbon(
             }
         };
 
+        // Fill a dropdown tool's menu with its gallery: each section's heading
+        // over a grid of its options' icons, named by their tooltips, the armed
+        // one marked. A cell arms its tool.
+        const fillGallery = (dd: DropdownButton, sections: readonly PickerSection<string>[]): void => {
+            const pointer = store.getState().pointerMode;
+            const panel = document.createElement("div");
+            panel.className = "udoc-gallery";
+            for (const section of sections) {
+                const heading = document.createElement("div");
+                heading.className = "udoc-gallery__label";
+                heading.textContent = labelOf(section.label);
+                const grid = document.createElement("div");
+                grid.className = "udoc-gallery__grid";
+                grid.setAttribute("role", "group");
+                grid.setAttribute("aria-label", heading.textContent);
+                for (const opt of section.options) {
+                    const name = labelOf(opt.label);
+                    const item = document.createElement("button");
+                    item.className = "udoc-gallery__item";
+                    item.setAttribute("role", "menuitem");
+                    item.title = name;
+                    item.setAttribute("aria-label", name);
+                    item.innerHTML = opt.icon ?? "";
+                    item.classList.toggle(
+                        "udoc-gallery__item--selected",
+                        pointer.kind === "place" && samePlaceTool(opt.tool, pointer.tool),
+                    );
+                    item.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        store.dispatch({ type: "ARM_PLACE", tool: opt.tool, sticky: false });
+                        dd.controller.close();
+                    });
+                    grid.appendChild(item);
+                }
+                panel.append(heading, grid);
+            }
+            dd.menu.replaceChildren(panel);
+        };
+
         // Record a picked color as most-recent for its channel (dedup, cap 10).
         const pushRecent = (channel: PaintChannel, hex: string): void => {
             const list = recentPaint[channel];
@@ -708,6 +752,16 @@ export function createRibbon(
                 const dd = createDropdownButton(
                     { icon: def.icon, label },
                     { menuLabel: label, menuRole: "menu", onOpen: () => fillShapes(dd, options) },
+                );
+                dd.trigger.dataset.command = def.id;
+                dropdowns.push(dd);
+                return dd.el;
+            }
+            if (def.run.kind === "armGallery") {
+                const sections = def.run.sections;
+                const dd = createDropdownButton(
+                    { icon: def.icon, label },
+                    { menuLabel: label, menuRole: "menu", onOpen: () => fillGallery(dd, sections) },
                 );
                 dd.trigger.dataset.command = def.id;
                 dropdowns.push(dd);

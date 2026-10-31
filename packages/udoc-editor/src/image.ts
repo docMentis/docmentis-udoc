@@ -5,13 +5,14 @@
 // own from its top-left — and its pixels, which a resize names.
 import type { ImagePageCommand, ImagePageInfo, UDocCommand } from "@docmentis/udoc-wasm";
 import { allowsEdit, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT } from "@docmentis/udoc-ui/internal";
-import type { CommandContext, CommandDef, ShapeKind, ShapePoint } from "@docmentis/udoc-ui/internal";
+import type { CommandContext, CommandDef, ShapePoint } from "@docmentis/udoc-ui/internal";
 import { ICON_FLIP_VERTICAL } from "./arrange.js";
 import { createImageSizeModal } from "./components/ImageSizeModal.js";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { ICON_CROP, ICON_FLIP, ICON_IMAGE_SIZE } from "./icons.js";
 import { markupShape } from "./markup.js";
+import type { GalleryShape } from "./shape-gallery.js";
 import { editStateOf } from "./state.js";
 
 /** A large insert index that clamps to "on top" in the engine. */
@@ -229,7 +230,7 @@ export function imageCommands(
  */
 export async function placeMarkup(
     host: EditHost,
-    shape: ShapeKind,
+    shape: GalleryShape,
     page: number,
     p0: ShapePoint,
     p1: ShapePoint,

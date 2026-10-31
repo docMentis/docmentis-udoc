@@ -141,6 +141,16 @@ export interface SlideMastersSummaryRequest {
 }
 
 /**
+ * Read the id of the deck's slide at `index` (0-based, in slide order) — what
+ * a shape inserted onto it names its slide by. A pure read. Replies with the
+ * id, or `null` past the last slide or with no presentation open.
+ */
+export interface SlideIdRequest {
+    type: "slideId";
+    index: number;
+}
+
+/**
  * Paste a {@link import("@docmentis/udoc-wasm").UDocFragment} the host
  * read back off the system clipboard — the fragment's objects are re-inserted with
  * fresh ids onto the selection's page (else the current page) and become the
@@ -202,6 +212,7 @@ export type EditRequest =
     | FontFamiliesRequest
     | RenderFontPreviewRequest
     | SlideMastersSummaryRequest
+    | SlideIdRequest
     | PasteRequest
     | InsertImageRequest
     | SelectionHandlePreviewRequest;

@@ -6,6 +6,19 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-editor
+
+#### Added
+
+- Insert ▸ Shapes on a slide or over an image offers every preset shape
+  PowerPoint draws, in its groups — lines and connectors with their arrowed
+  forms, rectangles, basic shapes, block arrows, equation shapes, flowchart,
+  stars and banners, callouts and action buttons — in a gallery of icons
+  named by their tooltips. A slide takes Insert ▸ Shapes for the first time:
+  a shape is drawn in the deck's theme, as PowerPoint draws one it inserts,
+  holding centred text to type, and a line is a connector. Over an image a
+  shape is drawn in the markup red as before. A PDF keeps its four shapes.
+
 ## [0.8.9] - 2026-10-30
 
 Built on `@docmentis/udoc-wasm` 0.8.12.

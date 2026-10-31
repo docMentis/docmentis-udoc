@@ -1204,6 +1204,49 @@ export const uiStyles = css`
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: 1px;
     }
+    /* An armGallery's panel — the Insert tab's shapes: a heading per section over
+   a grid of icon cells, scrolling past a screenful. */
+    .udoc-ui-root .udoc-gallery {
+        width: min(340px, calc(100vw - 32px));
+        max-height: min(60vh, 440px);
+        overflow-y: auto;
+        padding: 0 8px 4px;
+    }
+    .udoc-ui-root .udoc-gallery__label {
+        padding: 7px 2px 3px;
+        color: var(--udoc-color-on-surface-variant);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+    .udoc-ui-root .udoc-gallery__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 26px);
+        gap: 2px;
+    }
+    .udoc-ui-root .udoc-gallery__item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: none;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--udoc-color-on-surface);
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-gallery__item > svg {
+        width: 20px;
+        height: 20px;
+    }
+    .udoc-ui-root .udoc-gallery__item:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root .udoc-gallery__item--selected {
+        background-color: var(--udoc-state-selected);
+    }
     .udoc-ui-root .udoc-paintpanel__divider {
         margin: 5px 0;
         border-top: 1px solid var(--udoc-color-outline-variant);

@@ -531,6 +531,12 @@ export interface PickerOption<K extends string = MessageKey> {
     stamp?: StampIcon;
 }
 
+/** A run of an `armGallery`'s picker under its heading `label`. */
+export interface PickerSection<K extends string = MessageKey> {
+    label: K;
+    options: readonly PickerOption<K>[];
+}
+
 /** Shapes offered by the Annotate tab's shape picker (`annotateShape`) — each
  *  an annotation tool. */
 const ANNOTATION_SHAPE_OPTIONS: readonly PickerOption[] = (
@@ -577,6 +583,9 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  *   extension's that its own code runs (New Slide, Insert ▸ Image).
  * - `armPicker` → opens a sub-picker of `options` before arming: the Annotate
  *   tab's shapes or its standard stamps, an extension's own.
+ * - `armGallery` → `armPicker` for a picker too long for a list: a panel of
+ *   `sections`, each a heading over a grid of its options' icons, named by
+ *   their tooltips — the Insert tab's shapes on a slide or an image.
  * - `menu` → opens a dropdown of {@link MenuItem}s (Arrange / Align / Rotate);
  *   selecting an item dispatches its {@link MenuAction} through the ribbon's
  *   `onMenuAction` callback. `cluster` bunches it as a `control`'s does, and
@@ -604,6 +613,7 @@ export type CommandRun<K extends string = MessageKey> =
     | { kind: "action"; press(store: Store<UIState, Action>): void }
     | { kind: "arm"; tool: PlaceTool; sticky?: boolean }
     | { kind: "armPicker"; options: readonly PickerOption<K>[] }
+    | { kind: "armGallery"; sections: readonly PickerSection<K>[] }
     | {
           kind: "menu";
           menu: readonly MenuItem<K>[];

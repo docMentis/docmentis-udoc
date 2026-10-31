@@ -1,6 +1,7 @@
-// The Insert tab's commands: Shapes on a PDF or over an image's page, placed by
-// a pointer gesture the canvas carries out, and Image on a slide deck, asked
-// for and inserted at once.
+// The Insert tab's commands: Shapes, placed by a pointer gesture the canvas
+// carries out — a PDF's four as page objects, the gallery's on a deck's slides
+// and over an image's pages — and Image on a slide deck, asked for and inserted
+// at once.
 import {
     ICON_SUBTOOL_ARROW,
     ICON_SUBTOOL_ELLIPSE,
@@ -16,17 +17,24 @@ import { EditCommand } from "./edit-command.js";
 import type { MessageKey } from "./i18n/index.js";
 import { ICON_IMAGE } from "./icons.js";
 import { placeMarkup } from "./image.js";
+import { galleryShape, SHAPE_GALLERY } from "./shape-gallery.js";
+import type { GalleryShape } from "./shape-gallery.js";
+import { slideShape } from "./slide-shape.js";
 import { editStateOf } from "./state.js";
+
+/** A large insert index that clamps to "on top" in the engine. */
+const APPEND_INDEX = 0x7fff_ffff;
 
 /** A placed shape's fill — translucent blue (filled shapes only). */
 const FILL = { components: [0.26, 0.55, 0.96], colorSpace: "srgb" };
 /** A placed shape's fill opacity. */
 const FILL_ALPHA = 0.18;
 
-/** The shapes the Insert tab places, as the shell carries their place tools. */
-const SHAPES: ReadonlySet<string> = new Set<ShapeKind>(["rectangle", "ellipse", "line", "arrow"]);
+/** The shapes the Insert tab places on a PDF, as the shell carries their place
+ *  tools. */
+const PORTABLE_SHAPES: ReadonlySet<string> = new Set<ShapeKind>(["rectangle", "ellipse", "line", "arrow"]);
 
-/** Shapes offered by the Insert tab's shape picker (`insertShape`). */
+/** Shapes offered by a PDF's Insert tab's shape picker (`insertShape`). */
 const SHAPE_OPTIONS: readonly PickerOption<MessageKey>[] = (
     [
         ["rectangle", ICON_SUBTOOL_RECTANGLE, "shape.rectangle"],
@@ -84,23 +92,61 @@ function shapeObject(shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): unknown 
     return object;
 }
 
-/** The shape the Insert tab's place `tool` drags out. */
+/** The outline the Insert tab's place `tool` is sketched with while it is
+ *  dragged out — a gallery shape's, or a PDF shape's own. */
 export function placedShape(tool: string): ShapeKind | null {
-    return SHAPES.has(tool) ? (tool as ShapeKind) : null;
+    return galleryShape(tool)?.sketch ?? (PORTABLE_SHAPES.has(tool) ? (tool as ShapeKind) : null);
 }
 
 /** Place the Insert tab's `tool` on page `page`, spanning the page-local points
  *  `p0 → p1`, on top of the page: on a PDF, a shape as a page object — the
- *  engine mints its id and selects it — and on an image, a shape drawn over
- *  it. A no-op for a page with no id (no document, or neither). */
+ *  engine mints its id and selects it — on a deck, a gallery shape on the
+ *  slide, and on an image, one drawn over it. A no-op for a page with no id
+ *  (no document, or none of these), or a tool not the document's. */
 export async function place(host: EditHost, tool: string, page: number, p0: ShapePoint, p1: ShapePoint): Promise<void> {
-    const shape = placedShape(tool);
     const state = host.store.getState();
-    if (!shape || state.status !== "ready") return;
+    if (state.status !== "ready") return;
+    if (state.docType === "portable") {
+        if (!PORTABLE_SHAPES.has(tool)) return;
+        const pageId = await host.client.portable.pageIdByIndex(page);
+        if (pageId === undefined) return;
+        const object = shapeObject(tool as ShapeKind, p0, p1);
+        await host.commit(() => host.client.execute(EditCommand.insertObjects(pageId, [object])));
+        return;
+    }
+    const shape = galleryShape(tool);
+    if (!shape) return;
     if (state.docType === "image") return placeMarkup(host, shape, page, p0, p1);
-    const pageId = await host.client.portable.pageIdByIndex(page);
-    if (pageId === undefined) return;
-    await host.commit(() => host.client.execute(EditCommand.insertObjects(pageId, [shapeObject(shape, p0, p1)])));
+    if (state.docType === "presentation") return placeSlideShape(host, shape, page, p0, p1);
+}
+
+/**
+ * Put `shape` on the deck's slide `page` from `p0` to `p1` — the slide's own
+ * points — on top of the slide, and select it. One committing edit. A no-op
+ * past the last slide.
+ */
+async function placeSlideShape(
+    host: EditHost,
+    shape: GalleryShape,
+    page: number,
+    p0: ShapePoint,
+    p1: ShapePoint,
+): Promise<void> {
+    const [slide, id, story] = await Promise.all([host.edit.slideId(page), host.client.mintId(), host.client.mintId()]);
+    if (!slide || !id || !story) return;
+    const container = { slide };
+    const node = slideShape(id, story, shape, p0, p1);
+    await host.commit(() =>
+        host.client.execute({
+            presentation: {
+                editShape: {
+                    container,
+                    command: { insertShapes: { parent: null, index: APPEND_INDEX, nodes: [node] } },
+                },
+            },
+        }),
+    );
+    host.client.setSelection({ presentation: { shapes: { container, selection: { shapes: [id] } } } });
 }
 
 /** Insert the image file `bytes` as a picture on the current slide, centred
@@ -146,11 +192,20 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             icon: ICON_SUBTOOL_RECTANGLE,
             group: "insert",
             run: { kind: "armPicker", options: SHAPE_OPTIONS },
-            // An image's current page takes them unless it's animated or a
-            // vector, and not while it's cropped.
+            enabledWhen: (c) => c.ready && c.docType === "portable",
+        },
+        insertGalleryShape: {
+            id: "insertGalleryShape",
+            label: "command.insertShape",
+            icon: ICON_SUBTOOL_RECTANGLE,
+            group: "insert",
+            run: { kind: "armGallery", sections: SHAPE_GALLERY },
+            // On a deck's slides, not its notes pages. An image's current page
+            // takes them unless it's animated or a vector, and not while it's
+            // cropped.
             enabledWhen: (c) =>
                 c.ready &&
-                (c.docType === "portable" ||
+                ((c.docType === "presentation" && c.presentationView === "normal") ||
                     (c.docType === "image" && editStateOf(c).pageTakesMarkup && editStateOf(c).cropping === null)),
         },
     };

@@ -83,6 +83,7 @@ export type {
     MenuItem,
     PaintChannel,
     PickerOption,
+    PickerSection,
     RibbonControl,
     RibbonControlEnv,
 } from "./app/commands.js";

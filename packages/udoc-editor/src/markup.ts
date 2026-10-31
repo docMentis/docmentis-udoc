@@ -2,8 +2,9 @@
 // in red and unfilled so the image shows through, at a weight that reads at the
 // page's size, and a box's room for a label. Pure — `image.ts` places what
 // this builds.
-import type { PaintColor, PaintLine, ShapeNode, ShapePresetGeometryType, TextBody } from "@docmentis/udoc-wasm";
-import type { ShapeKind, ShapePoint } from "@docmentis/udoc-ui/internal";
+import type { PaintColor, PaintLine, PaintLineEnd, ShapeNode, TextBody } from "@docmentis/udoc-wasm";
+import type { ShapePoint } from "@docmentis/udoc-ui/internal";
+import type { GalleryShape } from "./shape-gallery.js";
 
 /** The color shapes are drawn over an image in — a markup red. An image has
  *  no theme, so it is an sRGB color, never a scheme one. */
@@ -36,14 +37,8 @@ export function markupTextSize(width: number, height: number): number {
     return Math.max(MIN_TEXT_SIZE, Math.round(Math.min(width, height) / POINTS_PER_TEXT_POINT));
 }
 
-/** Each shape the Insert tab draws: its preset outline, its name, and whether
- *  it is a box, which takes a label. */
-const MARKUP_SHAPES: Record<ShapeKind, { preset: ShapePresetGeometryType; name: string; box: boolean }> = {
-    rectangle: { preset: "rect", name: "Rectangle", box: true },
-    ellipse: { preset: "ellipse", name: "Oval", box: true },
-    line: { preset: "line", name: "Line", box: false },
-    arrow: { preset: "line", name: "Arrow", box: false },
-};
+/** An arrowhead at a line's end. */
+const ARROWHEAD: PaintLineEnd = { kind: "triangle", width: "medium", length: "medium" };
 
 /** A box's text body, empty: one paragraph centred in it, which the text typed
  *  into it takes the markup color and `size` points from — what a press in the
@@ -70,19 +65,20 @@ function labelBody(story: string, size: number): TextBody {
  * The drawing shape `shape` spanning `p0 → p1` (the page's points) over a
  * page `page` points in size, its id `id` and a box's text story `story` —
  * outlined in {@link MARKUP_COLOR} and unfilled, so the image shows through;
- * an arrow's head at `p1`; a box with an empty label to type into. A line runs
- * from `p0` to `p1` by flipping the box its preset runs corner to corner
- * across; a box is never flipped, as a flip turns its label upside down.
+ * an arrowed line's head at `p1`, and at `p0` too for a double arrow; any
+ * shape but a line a box, with an empty label to type into. A line runs from
+ * `p0` to `p1` by flipping the box its preset runs corner to corner across; a
+ * box is never flipped, as a flip turns its label upside down.
  */
 export function markupShape(
     id: string,
     story: string,
-    shape: ShapeKind,
+    shape: GalleryShape,
     p0: ShapePoint,
     p1: ShapePoint,
     page: { width: number; height: number },
 ): ShapeNode {
-    const { preset, name, box } = MARKUP_SHAPES[shape];
+    const box = !shape.line;
     const line: PaintLine = {
         width: markupLineWeight(page.width, page.height),
         cap: "round",
@@ -91,13 +87,13 @@ export function markupShape(
         fill: { solid: MARKUP_COLOR },
         dash: null,
         join: "round",
-        headEnd: null,
-        tailEnd: shape === "arrow" ? { kind: "triangle", width: "medium", length: "medium" } : null,
+        headEnd: shape.arrows === "both" ? ARROWHEAD : null,
+        tailEnd: shape.arrows ? ARROWHEAD : null,
     };
     return {
         shape: {
             id,
-            nonVisual: { name, description: null, title: null, hidden: false, placeholder: null },
+            nonVisual: { name: shape.name, description: null, title: null, hidden: false, placeholder: null },
             properties: {
                 transform: {
                     offset: { x: Math.min(p0.x, p1.x), y: Math.min(p0.y, p1.y) },
@@ -106,7 +102,7 @@ export function markupShape(
                     flipH: !box && p1.x < p0.x,
                     flipV: !box && p1.y < p0.y,
                 },
-                geometry: { preset: { preset, adjustValues: [] } },
+                geometry: { preset: { preset: shape.preset, adjustValues: [] } },
                 fill: "none",
                 line,
                 effects: null,

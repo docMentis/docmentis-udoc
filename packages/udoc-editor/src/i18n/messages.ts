@@ -371,6 +371,409 @@ export interface Messages extends UIMessages {
     "image.originalSize": string;
     /** px */
     "image.pixels": string;
+
+    // The Insert tab's shape gallery (a deck's slides, an image's pages): each
+    // group's heading, and each shape's name, its tooltip
+    /** Lines */
+    "shapeGroup.lines": string;
+    /** Rectangles */
+    "shapeGroup.rectangles": string;
+    /** Basic Shapes */
+    "shapeGroup.basicShapes": string;
+    /** Block Arrows */
+    "shapeGroup.blockArrows": string;
+    /** Equation Shapes */
+    "shapeGroup.equationShapes": string;
+    /** Flowchart */
+    "shapeGroup.flowchart": string;
+    /** Stars and Banners */
+    "shapeGroup.starsAndBanners": string;
+    /** Callouts */
+    "shapeGroup.callouts": string;
+    /** Action Buttons */
+    "shapeGroup.actionButtons": string;
+    /** Line */
+    "shapeName.line": string;
+    /** Line Arrow */
+    "shapeName.lineArrow": string;
+    /** Line Arrow: Double */
+    "shapeName.lineDoubleArrow": string;
+    /** Connector: Elbow */
+    "shapeName.bentConnector3": string;
+    /** Connector: Elbow Arrow */
+    "shapeName.bentConnector3Arrow": string;
+    /** Connector: Elbow Double-Arrow */
+    "shapeName.bentConnector3DoubleArrow": string;
+    /** Connector: Curved */
+    "shapeName.curvedConnector3": string;
+    /** Connector: Curved Arrow */
+    "shapeName.curvedConnector3Arrow": string;
+    /** Connector: Curved Double-Arrow */
+    "shapeName.curvedConnector3DoubleArrow": string;
+    /** Connector: Elbow, One Bend */
+    "shapeName.bentConnector2": string;
+    /** Connector: Elbow, Three Bends */
+    "shapeName.bentConnector4": string;
+    /** Connector: Elbow, Four Bends */
+    "shapeName.bentConnector5": string;
+    /** Connector: Curved, One Bend */
+    "shapeName.curvedConnector2": string;
+    /** Connector: Curved, Three Bends */
+    "shapeName.curvedConnector4": string;
+    /** Connector: Curved, Four Bends */
+    "shapeName.curvedConnector5": string;
+    /** Rectangle */
+    "shapeName.rect": string;
+    /** Rectangle: Rounded Corners */
+    "shapeName.roundRect": string;
+    /** Rectangle: Single Corner Snipped */
+    "shapeName.snip1Rect": string;
+    /** Rectangle: Top Corners Snipped */
+    "shapeName.snip2SameRect": string;
+    /** Rectangle: Diagonal Corners Snipped */
+    "shapeName.snip2DiagRect": string;
+    /** Rectangle: Top Corners One Rounded and One Snipped */
+    "shapeName.snipRoundRect": string;
+    /** Rectangle: Single Corner Rounded */
+    "shapeName.round1Rect": string;
+    /** Rectangle: Top Corners Rounded */
+    "shapeName.round2SameRect": string;
+    /** Rectangle: Diagonal Corners Rounded */
+    "shapeName.round2DiagRect": string;
+    /** Oval */
+    "shapeName.ellipse": string;
+    /** Isosceles Triangle */
+    "shapeName.triangle": string;
+    /** Right Triangle */
+    "shapeName.rtTriangle": string;
+    /** Parallelogram */
+    "shapeName.parallelogram": string;
+    /** Trapezoid */
+    "shapeName.trapezoid": string;
+    /** Trapezoid: Non-isosceles */
+    "shapeName.nonIsoscelesTrapezoid": string;
+    /** Diamond */
+    "shapeName.diamond": string;
+    /** Regular Pentagon */
+    "shapeName.pentagon": string;
+    /** Hexagon */
+    "shapeName.hexagon": string;
+    /** Heptagon */
+    "shapeName.heptagon": string;
+    /** Octagon */
+    "shapeName.octagon": string;
+    /** Decagon */
+    "shapeName.decagon": string;
+    /** Dodecagon */
+    "shapeName.dodecagon": string;
+    /** Partial Circle */
+    "shapeName.pie": string;
+    /** Pie Wedge */
+    "shapeName.pieWedge": string;
+    /** Chord */
+    "shapeName.chord": string;
+    /** Teardrop */
+    "shapeName.teardrop": string;
+    /** Frame */
+    "shapeName.frame": string;
+    /** Half Frame */
+    "shapeName.halfFrame": string;
+    /** L-Shape */
+    "shapeName.corner": string;
+    /** Diagonal Stripe */
+    "shapeName.diagStripe": string;
+    /** Cross */
+    "shapeName.plus": string;
+    /** Plaque */
+    "shapeName.plaque": string;
+    /** Cylinder */
+    "shapeName.can": string;
+    /** Cube */
+    "shapeName.cube": string;
+    /** Rectangle: Beveled */
+    "shapeName.bevel": string;
+    /** Circle: Hollow */
+    "shapeName.donut": string;
+    /** “Not Allowed” Symbol */
+    "shapeName.noSmoking": string;
+    /** Block Arc */
+    "shapeName.blockArc": string;
+    /** Rectangle: Folded Corner */
+    "shapeName.foldedCorner": string;
+    /** Smiley Face */
+    "shapeName.smileyFace": string;
+    /** Heart */
+    "shapeName.heart": string;
+    /** Lightning Bolt */
+    "shapeName.lightningBolt": string;
+    /** Sun */
+    "shapeName.sun": string;
+    /** Moon */
+    "shapeName.moon": string;
+    /** Cloud */
+    "shapeName.cloud": string;
+    /** Arc */
+    "shapeName.arc": string;
+    /** Double Bracket */
+    "shapeName.bracketPair": string;
+    /** Double Brace */
+    "shapeName.bracePair": string;
+    /** Left Bracket */
+    "shapeName.leftBracket": string;
+    /** Right Bracket */
+    "shapeName.rightBracket": string;
+    /** Left Brace */
+    "shapeName.leftBrace": string;
+    /** Right Brace */
+    "shapeName.rightBrace": string;
+    /** Gear: 6 Teeth */
+    "shapeName.gear6": string;
+    /** Gear: 9 Teeth */
+    "shapeName.gear9": string;
+    /** Funnel */
+    "shapeName.funnel": string;
+    /** Corner Tabs */
+    "shapeName.cornerTabs": string;
+    /** Square Tabs */
+    "shapeName.squareTabs": string;
+    /** Plaque Tabs */
+    "shapeName.plaqueTabs": string;
+    /** Chart: X */
+    "shapeName.chartX": string;
+    /** Chart: Star */
+    "shapeName.chartStar": string;
+    /** Chart: Plus */
+    "shapeName.chartPlus": string;
+    /** Arrow: Right */
+    "shapeName.rightArrow": string;
+    /** Arrow: Left */
+    "shapeName.leftArrow": string;
+    /** Arrow: Up */
+    "shapeName.upArrow": string;
+    /** Arrow: Down */
+    "shapeName.downArrow": string;
+    /** Arrow: Left-Right */
+    "shapeName.leftRightArrow": string;
+    /** Arrow: Up-Down */
+    "shapeName.upDownArrow": string;
+    /** Arrow: Quad */
+    "shapeName.quadArrow": string;
+    /** Arrow: Left-Right-Up */
+    "shapeName.leftRightUpArrow": string;
+    /** Arrow: Bent */
+    "shapeName.bentArrow": string;
+    /** Arrow: U-Turn */
+    "shapeName.uTurnArrow": string;
+    /** Arrow: Left-Up */
+    "shapeName.leftUpArrow": string;
+    /** Arrow: Bent-Up */
+    "shapeName.bentUpArrow": string;
+    /** Arrow: Curved Right */
+    "shapeName.curvedRightArrow": string;
+    /** Arrow: Curved Left */
+    "shapeName.curvedLeftArrow": string;
+    /** Arrow: Curved Up */
+    "shapeName.curvedUpArrow": string;
+    /** Arrow: Curved Down */
+    "shapeName.curvedDownArrow": string;
+    /** Arrow: Striped Right */
+    "shapeName.stripedRightArrow": string;
+    /** Arrow: Notched Right */
+    "shapeName.notchedRightArrow": string;
+    /** Arrow: Pentagon */
+    "shapeName.homePlate": string;
+    /** Arrow: Chevron */
+    "shapeName.chevron": string;
+    /** Callout: Right Arrow */
+    "shapeName.rightArrowCallout": string;
+    /** Callout: Down Arrow */
+    "shapeName.downArrowCallout": string;
+    /** Callout: Left Arrow */
+    "shapeName.leftArrowCallout": string;
+    /** Callout: Up Arrow */
+    "shapeName.upArrowCallout": string;
+    /** Callout: Left-Right Arrow */
+    "shapeName.leftRightArrowCallout": string;
+    /** Callout: Up-Down Arrow */
+    "shapeName.upDownArrowCallout": string;
+    /** Callout: Quad Arrow */
+    "shapeName.quadArrowCallout": string;
+    /** Arrow: Circular */
+    "shapeName.circularArrow": string;
+    /** Arrow: Circular Left */
+    "shapeName.leftCircularArrow": string;
+    /** Arrow: Circular Left-Right */
+    "shapeName.leftRightCircularArrow": string;
+    /** Arrow: Swoosh */
+    "shapeName.swooshArrow": string;
+    /** Plus Sign */
+    "shapeName.mathPlus": string;
+    /** Minus Sign */
+    "shapeName.mathMinus": string;
+    /** Multiplication Sign */
+    "shapeName.mathMultiply": string;
+    /** Division Sign */
+    "shapeName.mathDivide": string;
+    /** Equals */
+    "shapeName.mathEqual": string;
+    /** Not Equal */
+    "shapeName.mathNotEqual": string;
+    /** Flowchart: Process */
+    "shapeName.flowChartProcess": string;
+    /** Flowchart: Alternate Process */
+    "shapeName.flowChartAlternateProcess": string;
+    /** Flowchart: Decision */
+    "shapeName.flowChartDecision": string;
+    /** Flowchart: Data */
+    "shapeName.flowChartInputOutput": string;
+    /** Flowchart: Predefined Process */
+    "shapeName.flowChartPredefinedProcess": string;
+    /** Flowchart: Internal Storage */
+    "shapeName.flowChartInternalStorage": string;
+    /** Flowchart: Document */
+    "shapeName.flowChartDocument": string;
+    /** Flowchart: Multidocument */
+    "shapeName.flowChartMultidocument": string;
+    /** Flowchart: Terminator */
+    "shapeName.flowChartTerminator": string;
+    /** Flowchart: Preparation */
+    "shapeName.flowChartPreparation": string;
+    /** Flowchart: Manual Input */
+    "shapeName.flowChartManualInput": string;
+    /** Flowchart: Manual Operation */
+    "shapeName.flowChartManualOperation": string;
+    /** Flowchart: Connector */
+    "shapeName.flowChartConnector": string;
+    /** Flowchart: Off-page Connector */
+    "shapeName.flowChartOffpageConnector": string;
+    /** Flowchart: Card */
+    "shapeName.flowChartPunchedCard": string;
+    /** Flowchart: Punched Tape */
+    "shapeName.flowChartPunchedTape": string;
+    /** Flowchart: Summing Junction */
+    "shapeName.flowChartSummingJunction": string;
+    /** Flowchart: Or */
+    "shapeName.flowChartOr": string;
+    /** Flowchart: Collate */
+    "shapeName.flowChartCollate": string;
+    /** Flowchart: Sort */
+    "shapeName.flowChartSort": string;
+    /** Flowchart: Extract */
+    "shapeName.flowChartExtract": string;
+    /** Flowchart: Merge */
+    "shapeName.flowChartMerge": string;
+    /** Flowchart: Stored Data */
+    "shapeName.flowChartOnlineStorage": string;
+    /** Flowchart: Offline Storage */
+    "shapeName.flowChartOfflineStorage": string;
+    /** Flowchart: Delay */
+    "shapeName.flowChartDelay": string;
+    /** Flowchart: Sequential Access Storage */
+    "shapeName.flowChartMagneticTape": string;
+    /** Flowchart: Magnetic Disk */
+    "shapeName.flowChartMagneticDisk": string;
+    /** Flowchart: Direct Access Storage */
+    "shapeName.flowChartMagneticDrum": string;
+    /** Flowchart: Display */
+    "shapeName.flowChartDisplay": string;
+    /** Explosion: 8 Points */
+    "shapeName.irregularSeal1": string;
+    /** Explosion: 14 Points */
+    "shapeName.irregularSeal2": string;
+    /** Star: 4 Points */
+    "shapeName.star4": string;
+    /** Star: 5 Points */
+    "shapeName.star5": string;
+    /** Star: 6 Points */
+    "shapeName.star6": string;
+    /** Star: 7 Points */
+    "shapeName.star7": string;
+    /** Star: 8 Points */
+    "shapeName.star8": string;
+    /** Star: 10 Points */
+    "shapeName.star10": string;
+    /** Star: 12 Points */
+    "shapeName.star12": string;
+    /** Star: 16 Points */
+    "shapeName.star16": string;
+    /** Star: 24 Points */
+    "shapeName.star24": string;
+    /** Star: 32 Points */
+    "shapeName.star32": string;
+    /** Ribbon: Tilted Up */
+    "shapeName.ribbon2": string;
+    /** Ribbon: Tilted Down */
+    "shapeName.ribbon": string;
+    /** Ribbon: Curved and Tilted Up */
+    "shapeName.ellipseRibbon2": string;
+    /** Ribbon: Curved and Tilted Down */
+    "shapeName.ellipseRibbon": string;
+    /** Ribbon: Left-Right */
+    "shapeName.leftRightRibbon": string;
+    /** Scroll: Vertical */
+    "shapeName.verticalScroll": string;
+    /** Scroll: Horizontal */
+    "shapeName.horizontalScroll": string;
+    /** Wave */
+    "shapeName.wave": string;
+    /** Double Wave */
+    "shapeName.doubleWave": string;
+    /** Speech Bubble: Rectangle */
+    "shapeName.wedgeRectCallout": string;
+    /** Speech Bubble: Rectangle with Corners Rounded */
+    "shapeName.wedgeRoundRectCallout": string;
+    /** Speech Bubble: Oval */
+    "shapeName.wedgeEllipseCallout": string;
+    /** Thought Bubble: Cloud */
+    "shapeName.cloudCallout": string;
+    /** Callout: Line */
+    "shapeName.borderCallout1": string;
+    /** Callout: Bent Line */
+    "shapeName.borderCallout2": string;
+    /** Callout: Double Bent Line */
+    "shapeName.borderCallout3": string;
+    /** Callout: Line with Accent Bar */
+    "shapeName.accentCallout1": string;
+    /** Callout: Bent Line with Accent Bar */
+    "shapeName.accentCallout2": string;
+    /** Callout: Double Bent Line with Accent Bar */
+    "shapeName.accentCallout3": string;
+    /** Callout: Line with No Border */
+    "shapeName.callout1": string;
+    /** Callout: Bent Line with No Border */
+    "shapeName.callout2": string;
+    /** Callout: Double Bent Line with No Border */
+    "shapeName.callout3": string;
+    /** Callout: Line with Border and Accent Bar */
+    "shapeName.accentBorderCallout1": string;
+    /** Callout: Bent Line with Border and Accent Bar */
+    "shapeName.accentBorderCallout2": string;
+    /** Callout: Double Bent Line with Border and Accent Bar */
+    "shapeName.accentBorderCallout3": string;
+    /** Action Button: Back or Previous */
+    "shapeName.actionButtonBackPrevious": string;
+    /** Action Button: Forward or Next */
+    "shapeName.actionButtonForwardNext": string;
+    /** Action Button: Beginning */
+    "shapeName.actionButtonBeginning": string;
+    /** Action Button: End */
+    "shapeName.actionButtonEnd": string;
+    /** Action Button: Home */
+    "shapeName.actionButtonHome": string;
+    /** Action Button: Information */
+    "shapeName.actionButtonInformation": string;
+    /** Action Button: Return */
+    "shapeName.actionButtonReturn": string;
+    /** Action Button: Video */
+    "shapeName.actionButtonMovie": string;
+    /** Action Button: Document */
+    "shapeName.actionButtonDocument": string;
+    /** Action Button: Sound */
+    "shapeName.actionButtonSound": string;
+    /** Action Button: Help */
+    "shapeName.actionButtonHelp": string;
+    /** Action Button: Blank */
+    "shapeName.actionButtonBlank": string;
 }
 
 /** The strings edit mode adds, and udoc-ui's it words its own way — the

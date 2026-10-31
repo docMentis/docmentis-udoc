@@ -173,6 +173,13 @@ export class EditClient {
     slideMastersSummary(): Promise<SlideMasterSummary[]> {
         return this.#request({ type: "slideMastersSummary" });
     }
+
+    /** The id of the deck's slide at `index` (0-based), or `null` past the last
+     *  slide or with no presentation open — what a shape placed on it names
+     *  its slide by. */
+    slideId(index: number): Promise<string | null> {
+        return this.#request({ type: "slideId", index });
+    }
 }
 
 /** What the shell lends edit mode, with edit mode's own client over its worker. */

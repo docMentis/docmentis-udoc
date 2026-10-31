@@ -107,6 +107,17 @@ export const EDIT_HANDLERS: EditHandlers = {
             }
         },
     },
+    slideId: {
+        // A pure read, lenient like the engine's own: a throw — no
+        // presentation open — reads as none.
+        handle(request, { session }): string | null {
+            try {
+                return session?.presentation.model.root.slideIds()[request.index] ?? null;
+            } catch {
+                return null;
+            }
+        },
+    },
     paste: {
         handle(request, worker) {
             const { session } = worker;
