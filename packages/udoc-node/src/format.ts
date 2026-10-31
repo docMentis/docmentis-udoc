@@ -17,6 +17,7 @@ const FILE_FORMATS = {
     txt: true,
     md: true,
     html: true,
+    eml: true,
     pptx: true,
     pptm: true,
     potx: true,

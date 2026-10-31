@@ -64,9 +64,9 @@ export function sourceName(source: OpenSource): string | undefined {
 
 /**
  * The format `name`'s extension names when the bytes can't say it: a CSV's, a
- * TSV's, a PSV's, a text file's or a Markdown file's, which have no signature
- * for the engine to detect, or an HTML file's, which needn't open with the
- * `<!DOCTYPE html>` or `<html>` the engine detects one by.
+ * TSV's, a PSV's, a text file's, a Markdown file's or an email's, which have no
+ * signature for the engine to detect, or an HTML file's, which needn't open
+ * with the `<!DOCTYPE html>` or `<html>` the engine detects one by.
  * `undefined` for any other name, and for none.
  */
 export function signaturelessFormat(name: string | undefined): FileFormat | undefined {
@@ -86,6 +86,8 @@ export function signaturelessFormat(name: string | undefined): FileFormat | unde
         case "html":
         case "htm":
             return "html";
+        case "eml":
+            return "eml";
         default:
             return undefined;
     }
@@ -109,6 +111,7 @@ const MEDIA_TYPES: Record<FileFormat, string> = {
     txt: "text/plain",
     md: "text/markdown",
     html: "text/html",
+    eml: "message/rfc822",
     pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     pptm: "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
     potx: "application/vnd.openxmlformats-officedocument.presentationml.template",

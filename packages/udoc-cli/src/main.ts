@@ -122,9 +122,10 @@ async function open(input: string, password: string | undefined, delimiter: stri
 
 /**
  * The format `input`'s extension names when the bytes can't say it: a CSV's, a
- * TSV's, a PSV's, a text file's or a Markdown file's, which have no signature
- * to detect, or an HTML file's, which needn't open with the `<!DOCTYPE html>`
- * or `<html>` one is detected by. `undefined` for any other file.
+ * TSV's, a PSV's, a text file's, a Markdown file's or an email's, which have no
+ * signature to detect, or an HTML file's, which needn't open with the
+ * `<!DOCTYPE html>` or `<html>` one is detected by. `undefined` for any other
+ * file.
  */
 function signaturelessFormat(input: string): FileFormat | undefined {
     switch (extname(input).slice(1).toLowerCase()) {
@@ -143,6 +144,8 @@ function signaturelessFormat(input: string): FileFormat | undefined {
         case "html":
         case "htm":
             return "html";
+        case "eml":
+            return "eml";
         default:
             return undefined;
     }

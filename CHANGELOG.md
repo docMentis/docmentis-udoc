@@ -15,6 +15,7 @@ listed once, by package. Its major and minor version are those of the
 - An `.html` or `.htm` file opens, as a word document shown pageless, styled
   by its `<style>` rules and `style` attributes, and the editor's download
   saves it back as HTML.
+- An `.eml` email message opens, as a word document.
 - A Word, PowerPoint or Excel template, slide show or macro-enabled file is
   told from the `.docx`, `.pptx` or `.xlsx` it varies: `sourceFormat` names
   it (`"docm"`, `"dotx"`, `"dotm"`, `"pptm"`, `"potx"`, `"potm"`, `"ppsx"`,
@@ -78,6 +79,7 @@ listed once, by package. Its major and minor version are those of the
   `saveToBytes("md")` saves it, or any word document, as Markdown.
 - An HTML file opens as a word document, its format named `"html"`, and
   `saveToBytes("html")` saves it, or any word document, as HTML.
+- An email message opens as a word document, its format named `"eml"`.
 - A Word, PowerPoint or Excel template, slide show or macro-enabled file
   opens as one: `sourceFormat` names it (`"docm"`, `"dotx"`, `"dotm"`,
   `"pptm"`, `"potx"`, `"potm"`, `"ppsx"`, `"ppsm"`, `"xlsm"`, `"xltx"` or
@@ -93,6 +95,7 @@ listed once, by package. Its major and minor version are those of the
   saves a word document to a `.md` or `.markdown` `--out`.
 - An `.html` or `.htm` input opens as a word document, and `udoc save`
   saves a word document to an `.html` or `.htm` `--out`.
+- An `.eml` input opens as a word document.
 - `udoc save` saves to a template's, a slide show's or a macro-enabled file's
   `--out`: `.docm`, `.dotx`, `.dotm`, `.pptm`, `.potx`, `.potm`, `.ppsx`,
   `.ppsm`, `.xlsm`, `.xltx` or `.xltm`.
@@ -119,7 +122,8 @@ listed once, by package. Its major and minor version are those of the
 #### Added
 
 - Open File takes a `.md` or `.markdown` file, an `.html` or `.htm` file,
-  and a Word, PowerPoint or Excel template, slide show or macro-enabled file.
+  an `.eml` file, and a Word, PowerPoint or Excel template, slide show or
+  macro-enabled file.
 
 #### Removed
 
