@@ -15,6 +15,44 @@ listed once, by package. Its major and minor version are those of the
   Natural Earth's, where it drew only its title and legend. They are a file
   `@docmentis/udoc-wasm` ships, `geography/countries.json`, fetched only for
   a document with such a map.
+- A waterfall, histogram, pareto, box & whisker, funnel, treemap, sunburst
+  or region map chart draws its axis titles and its tick marks.
+
+#### Fixed
+
+- Office's newer charts (waterfall, histogram, pareto, box & whisker,
+  funnel, treemap, sunburst and region map) lay out as Office lays them out:
+  their text, axis labels and legends stand where Office stands them, a
+  legend too wide for its chart wraps, and a legend that sizes no text draws
+  it at 9pt, where a workbook's drew its keys with no names.
+- A pareto chart whose line names no series draws, its axes with it, where
+  it drew nothing.
+- A box & whisker chart's legend that names no side stands above the chart,
+  as Office stands it, where it stood at the right.
+- A treemap labels every leaf, the label wrapped to the leaf and cut at the
+  chart's edge, where it dropped each label that didn't fit.
+- A region map's colour scale above or below the map lies on its side, a
+  waterfall's connectors draw where its style gives them no line, and a
+  treemap's or sunburst's name that comes back after another is a group of
+  its own, as in Office.
+- A slide's bullet takes its colour, size and font each from the master,
+  layout or slide that gives it, where a layout giving the master's bullet
+  a colour drew it in the text's colour; and the bullet stays out of its
+  text's underline.
+- A slide's linked text is painted in the theme's hyperlink colour,
+  underlined once, as PowerPoint paints it, and a link set to keep its
+  text's colour keeps it.
+- A shape with no fill casts no inner shadow, where it drew a dark edge along
+  its outline.
+- A table cell whose text runs vertically turns it, where it lay flat and
+  wrapped at the cell's width.
+- A WMF picture fills its frame, where one could shrink into its corner, and
+  draws with every fill it makes.
+- A SmartArt diagram spaces its lines of text by its font's own line
+  height, as Office does.
+- A bevelled 3D shape or text lit by the Chilly rig, or made of Translucent
+  Powder, is lit as in PowerPoint, where Chilly lit it upside down and
+  Translucent Powder drew harsh bands.
 
 ### udoc-viewer and udoc-editor
 
