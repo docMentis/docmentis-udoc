@@ -88,6 +88,9 @@ const scope = self as unknown as WorkerScope;
 // Where the office-compatible fonts are, beside the binary `init` loaded —
 // null until it has.
 let fonts: FontLocation | null = null;
+// The URL of the countries a region map draws where its file carries no
+// geography, beside that binary too, as `init` gave it.
+let geography: string | undefined;
 // The Google font families offered to every session, where the host's
 // `googleFontFamilies` replaced the catalog `startSession` offers (`[]` with Google
 // Fonts off); `undefined` keeps that catalog.
@@ -924,8 +927,23 @@ const fetchFontOrders = createFontPump({
         selectionAfterPaint = true;
     },
     fetch: (order) => fetchFontBinaries(order, fetch, fontMemory, googleFontEndpoint),
+    fetchGeography,
     schedule: (callback, ms) => void setTimeout(callback, ms),
 });
+
+/**
+ * The countries at `url`, for the pump — or nothing where they can't be
+ * fetched, which the engine takes as the host having none: the maps stay blank.
+ */
+async function fetchGeography(url: string): Promise<Uint8Array> {
+    try {
+        const response = await fetch(url);
+        if (response.ok) return new Uint8Array(await response.arrayBuffer());
+    } catch {
+        // Offline, CORS, a host serving no countries — all the same fact to the engine.
+    }
+    return new Uint8Array();
+}
 
 /** Run `job` on the session and resolve with what it returned. */
 function onSession<T>(job: (live: WasmSession) => T): Promise<T | undefined> {
@@ -1304,6 +1322,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "init": {
                 await initEngine({ module_or_path: msg.wasmUrl });
                 fonts = msg.fonts;
+                geography = msg.geography;
                 if (msg.googleFontFamilies) googleFontFamilies = msg.googleFontFamilies;
                 googleFontEndpoint = msg.googleFontEndpoint;
                 if (msg.enableCanvasFonts) canvasText = await createCanvasText();
@@ -1324,9 +1343,11 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 //
                 // The package's own fonts go in with the session itself — the
                 // office-compatible fonts by URL, and the Google font catalog,
-                // which is what makes a referenced web family orderable at all.
-                // A catalog of the wrong shape is a refusal like any other.
-                const started = await startSession(msg.config, fonts, googleFontFamilies);
+                // which is what makes a referenced web family orderable at all —
+                // and so do the countries a region map draws, by URL, for the
+                // font pump to fetch once a map asks for them. A catalog of the
+                // wrong shape is a refusal like any other.
+                const started = await startSession(msg.config, fonts, googleFontFamilies, geography);
                 // The host's own fonts go in before the swap, for the same
                 // reason: a URL font of the wrong shape rejects here, and the
                 // open document stays as it was.

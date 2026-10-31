@@ -152,7 +152,8 @@ _state_ stays in the shell's pure reducer; Rust receives the clamped values.
   service's worker), so a product runs from any origin — a CDN, a host's
   bundle — with no bundler and no module workers. Only `npm run dev` starts the
   unbundled module worker beside the product's modules.
-- **WASM loading.** Only the binary and the office-compatible fonts are
+- **WASM loading.** Only the binary, the office-compatible fonts and the
+  countries a region map draws where its file carries no geography are
   located, by trying an ordered candidate list — explicit `baseUrl` →
   `import.meta.url` (via the isolated, dynamically-imported `meta-url` module,
   which names each file by its own literal, so a bundler emits it) → the CDN,

@@ -36,16 +36,25 @@ function flush(): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+/** The countries' URL a stand-in session asks for. */
+const COUNTRIES = "https://example.com/udoc-wasm/geography/countries.json";
+
 /**
  * An engine stand-in: hands out one round of orders per `takeFontRequests`, and
  * settles an order only if it was actually on order — the real fail-closed
- * answer to a stale id.
+ * answer to a stale id. With `mapped`, it asks for the countries too, once, as
+ * a region map with no geography of its own does.
  */
-function fakeSession(rounds: FontRequest[][], changed = true) {
+function fakeSession(rounds: FontRequest[][], changed = true, mapped = false) {
     const inFlight = new Set<number>();
     const completed: Array<{ id: number; binaries: number }> = [];
     let round = 0;
     let refreshes = 0;
+    let geographyAsked = false;
+    let geographyOut = false;
+    /** Each geography completion, as its byte count. */
+    const geographyCompleted: number[] = [];
+    let geographyRefreshes = 0;
     const session: FontPumpSession = {
         takeFontRequests: () => {
             const orders = rounds[round++] ?? [];
@@ -60,21 +69,52 @@ function fakeSession(rounds: FontRequest[][], changed = true) {
             refreshes++;
             return changed;
         },
+        takeGeographyRequest: () => {
+            if (!mapped || geographyAsked) return undefined;
+            geographyAsked = geographyOut = true;
+            return COUNTRIES;
+        },
+        completeGeographyRequest: (bytes) => {
+            geographyCompleted.push(bytes.length);
+            const out = geographyOut;
+            geographyOut = false;
+            return out;
+        },
+        refreshGeography: () => {
+            geographyRefreshes++;
+            return changed;
+        },
     };
-    return { session, completed, refreshes: () => refreshes, rounds: () => round };
+    return {
+        session,
+        completed,
+        refreshes: () => refreshes,
+        rounds: () => round,
+        geographyCompleted,
+        geographyRefreshes: () => geographyRefreshes,
+    };
 }
 
 /** A fetch the test settles by hand, so "in the air" is an observable state. */
 function heldFetch() {
     const pending = new Map<number, (binaries: Uint8Array[]) => void>();
+    /** The countries' fetches in the air, oldest first. */
+    const geography: Array<{ url: string; resolve: (bytes: Uint8Array) => void }> = [];
     return {
         fetch: (o: FontRequest) => new Promise<Uint8Array[]>((resolve) => pending.set(o.id, resolve)),
+        fetchGeography: (url: string) => new Promise<Uint8Array>((resolve) => geography.push({ url, resolve })),
         pending,
+        geography,
         settle(id: number, binaries: Uint8Array[] = [new Uint8Array([1])]): void {
             const resolve = pending.get(id);
             assert.ok(resolve, `order ${id} was fetched`);
             pending.delete(id);
             resolve(binaries);
+        },
+        settleGeography(bytes: Uint8Array = new Uint8Array([1])): void {
+            const fetched = geography.shift();
+            assert.ok(fetched, "the countries were fetched");
+            fetched.resolve(bytes);
         },
     };
 }
@@ -128,6 +168,7 @@ test("a kick starts every fetch and queues nothing", () => {
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
 
@@ -148,6 +189,7 @@ test("bytes reach the session only as a job, once they are in hand", async () =>
         enqueue: queue.enqueue,
         repaint: () => void repaints++,
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -180,6 +222,7 @@ test("a burst installs in one pass", async () => {
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -212,6 +255,7 @@ test("installing re-arms the pump, and it stops when nothing is on order", async
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -242,6 +286,7 @@ test("an empty answer still settles the order", async () => {
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -267,6 +312,7 @@ test("a stale completion re-shapes nothing", async () => {
         enqueue: queue.enqueue,
         repaint: () => void repaints++,
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -294,6 +340,7 @@ test("a session that goes away mid-flight drops what landed", async () => {
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -319,12 +366,16 @@ test("an install that throws does not escape into the queue", async () => {
             throw new Error("engine went away");
         },
         refreshFonts: () => true,
+        takeGeographyRequest: () => undefined,
+        completeGeographyRequest: () => false,
+        refreshGeography: () => true,
     };
     const kick = createFontPump({
         session: () => session,
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -354,6 +405,7 @@ test("one order that throws does not strand the rest of the batch", async () => 
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -385,6 +437,7 @@ test("a font landing during the wait joins the install", async () => {
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -416,6 +469,7 @@ test("a batch of refusals re-shapes nothing, and takes the next orders at once",
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     kick();
@@ -440,6 +494,7 @@ test("settled answers at once when nothing is on order", async () => {
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
 
@@ -459,6 +514,7 @@ test("settled waits for every order, through the next vendor's, and holds no job
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     let settled: boolean | undefined;
@@ -492,6 +548,7 @@ test("settled ends when the session goes away mid-flight", async () => {
         enqueue: queue.enqueue,
         repaint: () => {},
         fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
         schedule: clock.schedule,
     });
     const waiting = pump.settled();
@@ -503,4 +560,132 @@ test("settled ends when the session goes away mid-flight", async () => {
     queue.run();
 
     assert.equal(await waiting, true);
+});
+
+test("a map's countries are fetched once, and reach the session only as a job", async () => {
+    // A region map with no geography of its own asks for them as it composes.
+    // They are megabytes: the queue must stay free while they download.
+    const queue = manualQueue();
+    const clock = manualClock();
+    const fetch = heldFetch();
+    const engine = fakeSession([], true, true);
+    let repaints = 0;
+    const kick = createFontPump({
+        session: () => engine.session,
+        enqueue: queue.enqueue,
+        repaint: () => void repaints++,
+        fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
+        schedule: clock.schedule,
+    });
+
+    kick();
+    kick();
+    assert.deepEqual(
+        fetch.geography.map((g) => g.url),
+        [COUNTRIES],
+        "asked for once, by its URL",
+    );
+    assert.equal(queue.jobs.length, 0, "and nothing is holding the queue");
+
+    fetch.settleGeography();
+    await flush();
+    clock.fireNext();
+    assert.deepEqual(engine.geographyCompleted, [], "queued, not applied");
+    queue.run();
+
+    assert.deepEqual(engine.geographyCompleted, [1]);
+    assert.equal(engine.geographyRefreshes(), 1, "the maps laid out against them");
+    assert.equal(engine.refreshes(), 0, "with no font re-shape for them");
+    assert.equal(repaints, 1);
+});
+
+test("countries landing with a font install in one re-shape", async () => {
+    // Laying the pages out against the fonts lays the maps out against the
+    // countries; a second re-shape would lay out every page again for nothing.
+    const queue = manualQueue();
+    const clock = manualClock();
+    const fetch = heldFetch();
+    const engine = fakeSession([[order(1)]], true, true);
+    const kick = createFontPump({
+        session: () => engine.session,
+        enqueue: queue.enqueue,
+        repaint: () => {},
+        fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
+        schedule: clock.schedule,
+    });
+    kick();
+
+    fetch.settle(1);
+    fetch.settleGeography();
+    await flush();
+    clock.fireNext();
+    assert.equal(queue.jobs.length, 1, "one install job for both");
+    queue.run();
+
+    assert.deepEqual(
+        engine.completed.map((c) => c.id),
+        [1],
+    );
+    assert.deepEqual(engine.geographyCompleted, [1]);
+    assert.equal(engine.refreshes(), 1);
+    assert.equal(engine.geographyRefreshes(), 0);
+});
+
+test("no countries settle the request and re-shape nothing", async () => {
+    // A host serving none, or a fetch that failed, answers empty: the maps stay
+    // blank, and the engine asks no more.
+    const queue = manualQueue();
+    const clock = manualClock();
+    const fetch = heldFetch();
+    const engine = fakeSession([], true, true);
+    let repaints = 0;
+    const kick = createFontPump({
+        session: () => engine.session,
+        enqueue: queue.enqueue,
+        repaint: () => void repaints++,
+        fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
+        schedule: clock.schedule,
+    });
+    kick();
+
+    fetch.settleGeography(new Uint8Array());
+    await flush();
+    clock.fireNext();
+    queue.run();
+
+    assert.deepEqual(engine.geographyCompleted, [0], "the request is settled");
+    assert.equal(engine.geographyRefreshes(), 0);
+    assert.equal(repaints, 0);
+    assert.equal(fetch.geography.length, 0, "and nothing asks again");
+});
+
+test("settled waits for the countries", async () => {
+    // An export draws a region map with its countries, so it waits for them as
+    // it waits for the fonts.
+    const queue = manualQueue();
+    const clock = manualClock();
+    const fetch = heldFetch();
+    const engine = fakeSession([], true, true);
+    const pump = createFontPump({
+        session: () => engine.session,
+        enqueue: queue.enqueue,
+        repaint: () => {},
+        fetch: fetch.fetch,
+        fetchGeography: fetch.fetchGeography,
+        schedule: clock.schedule,
+    });
+    let settled: boolean | undefined;
+    void pump.settled().then((waited) => (settled = waited));
+    await flush();
+    assert.equal(settled, undefined, "the countries are in the air");
+
+    fetch.settleGeography();
+    await flush();
+    clock.fireNext();
+    queue.run();
+    await flush();
+    assert.equal(settled, true);
 });

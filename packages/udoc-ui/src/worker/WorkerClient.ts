@@ -1925,6 +1925,7 @@ export class WorkerClient {
             type: "init",
             wasmUrl: candidate.wasmUrl,
             fonts: candidate.fonts,
+            geography: candidate.geography,
             ...(this.#googleFontFamilies ? { googleFontFamilies: this.#googleFontFamilies } : {}),
             googleFontEndpoint: this.#googleFontEndpoint,
             ...(this.#enableCanvasFonts ? { enableCanvasFonts: true } : {}),

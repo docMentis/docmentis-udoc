@@ -76,6 +76,9 @@ export interface InitRequest {
     wasmUrl: string;
     /** Where the office-compatible fonts are, beside that binary. */
     fonts: FontLocation;
+    /** URL of the countries a region map draws where its file carries no
+     *  geography, beside that binary too. */
+    geography: string;
     /** The Google font families every session offers (`[]` for none).
      *  Absent is the catalog `startSession` offers unless told otherwise. */
     googleFontFamilies?: GoogleFontFamily[];

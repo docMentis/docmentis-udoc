@@ -19,7 +19,7 @@ import {
     startSession,
 } from "@docmentis/udoc-wasm";
 import type { UrlFont, WasmSession } from "@docmentis/udoc-wasm";
-import { bundledFontUrls } from "@docmentis/udoc-wasm/meta-url";
+import { bundledFontUrls, bundledGeographyUrl } from "@docmentis/udoc-wasm/meta-url";
 
 import { blockingFetch } from "./blocking-fetch.js";
 import type {
@@ -82,7 +82,15 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 fontFiles.on("message", settleFontFile);
                 // Permitted first, then the permit is spent on this document
                 // whether or not it parses: one session, one permit, one document.
-                session = await startSession(init.config, bundledFontUrls, init.googleFontFamilies);
+                // The countries a region map draws go in by URL, unlike the
+                // fonts below: few documents have such a map, so only one that
+                // does reads them, as `updateLayoutSettled` fills its request.
+                session = await startSession(
+                    init.config,
+                    bundledFontUrls,
+                    init.googleFontFamilies,
+                    bundledGeographyUrl,
+                );
                 // The host's own fonts first: of two faces on one descriptor,
                 // the first registered answers, so a host's face outranks the
                 // package's — as in a browser, where the package's go in by URL
@@ -204,34 +212,48 @@ function registerHostFonts(s: WasmSession): void {
 
 /**
  * Compose through page `index`, then fill every font order the composing
- * placed and compose again, until none is left — so what a call answers with
- * is drawn in the document's fonts, never in the stand-in a font still on order
- * is drawn in. Whether the document composed to its end, as `updateLayout`
+ * placed, and the countries a region map asked for, and compose again, until
+ * none is left — so what a call answers with is drawn in the document's fonts,
+ * never in the stand-in a font still on order is drawn in, and its maps with
+ * their countries. Whether the document composed to its end, as `updateLayout`
  * says it.
  *
  * It ends: each settled order installs its font or retires its characters from
- * that vendor — putting the next one on order — and a family's chain of vendors
- * is finite.
+ * that vendor — putting the next one on order — a family's chain of vendors is
+ * finite, and the countries are asked for once.
  */
 async function updateLayoutSettled(s: WasmSession, index: number): Promise<boolean> {
     let complete = s.updateLayout(VIEWER, { pages: { start: 0, limit: index } });
-    for (let orders = s.takeFontRequests(); orders.length > 0; orders = s.takeFontRequests()) {
-        const settled = await Promise.all(
-            orders.map(
-                async (order) =>
-                    [order.id, await fetchFontBinaries(order, fetchFont, fontMemory, init.googleFontEndpoint)] as const,
+    for (;;) {
+        const orders = s.takeFontRequests();
+        const geography = s.takeGeographyRequest();
+        if (orders.length === 0 && geography === undefined) return complete;
+        const [settled, countries] = await Promise.all([
+            Promise.all(
+                orders.map(
+                    async (order) =>
+                        [
+                            order.id,
+                            await fetchFontBinaries(order, fetchFont, fontMemory, init.googleFontEndpoint),
+                        ] as const,
+                ),
             ),
-        );
+            // The package's own, a `file:` URL, read from disk.
+            geography === undefined ? undefined : readFile(new URL(geography)),
+        ]);
         for (const [id, binaries] of settled) s.completeFontRequest(BigInt(id), binaries);
-        // A round of nothing but refusals installed nothing, so there is nothing
-        // to re-shape; the next vendors are already on order.
-        if (settled.every(([, binaries]) => binaries.length === 0)) continue;
-        s.refreshFonts();
+        if (countries !== undefined) s.completeGeographyRequest(countries);
+        // One re-shape for both: laying the pages out against the fonts lays the
+        // maps out against the countries. A round of nothing but refusals
+        // installed nothing, so there is nothing to re-shape; the next vendors
+        // are already on order.
+        if (settled.some(([, binaries]) => binaries.length > 0)) s.refreshFonts();
+        else if (countries !== undefined) s.refreshGeography();
+        else continue;
         // Re-shaping can move page breaks, so the page asked for may sit
         // beyond what is composed now.
         complete = s.updateLayout(VIEWER, { pages: { start: 0, limit: index } });
     }
-    return complete;
 }
 
 /** How the fulfiller fetches under Node: a `file:` URL — the package's fonts,

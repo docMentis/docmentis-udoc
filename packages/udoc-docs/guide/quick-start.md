@@ -61,8 +61,10 @@ holds it unmounts. That removes its UI and stops the worker the engine runs in.
 ## Where the engine loads from
 
 The engine is a WebAssembly binary, with fonts that stand in for the common
-Office fonts. The viewer fetches the binary when it starts, and a font only when
-a document uses it. It looks for them in three places, in order:
+Office fonts and the world's countries for an Excel region map that carries none.
+The viewer fetches the binary when it starts, a font only when a document uses
+it, and the countries only when a map needs them. It looks for them in three
+places, in order:
 
 1. `wasm.baseUrl`, if you set it.
 2. The copy your bundler put beside your app. Vite and webpack 5 do this with

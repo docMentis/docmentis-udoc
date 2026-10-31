@@ -6,18 +6,18 @@ and [`@docmentis/udoc-editor`](https://www.npmjs.com/package/@docmentis/udoc-edi
 side by side in a framework or a bundler: the viewer opens a PDF, the editor a
 Word document.
 
-| Example                                | Framework and bundler        | What it takes beyond installing the packages                                                                                                                   |
-| -------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`vanilla`](vanilla)                   | None, with Vite              | Nothing.                                                                                                                                                       |
-| [`react-vite`](react-vite)             | React, with Vite             | An effect that destroys a viewer its cleanup ran before, as StrictMode's first run does.                                                                       |
-| [`vue-vite`](vue-vite)                 | Vue, with Vite               | Nothing.                                                                                                                                                       |
-| [`svelte-vite`](svelte-vite)           | Svelte 5, with Vite          | Nothing.                                                                                                                                                       |
-| [`angular`](angular)                   | Angular, with its builder    | The engine's binary and fonts copied into the app (`angular.json`) and `wasm.baseUrl` pointed at them: Angular's esbuild leaves `new URL(…, import.meta.url)`. |
-| [`nuxt`](nuxt)                         | Nuxt, rendered on the server | `.client.vue` components, which run in the browser alone, and an `await nextTick()` before their template is there.                                            |
-| [`nextjs-webpack`](nextjs-webpack)     | Next.js, with webpack        | `"use client"` components.                                                                                                                                     |
-| [`nextjs-turbopack`](nextjs-turbopack) | Next.js, with Turbopack      | `"use client"` components.                                                                                                                                     |
-| [`webpack`](webpack)                   | None, with webpack 5         | Nothing but the size hints off: the engine's binary is far over them.                                                                                          |
-| [`no-bundler`](no-bundler)             | None, and no build step      | An import map onto jsDelivr, its versions in step with each other.                                                                                             |
+| Example                                | Framework and bundler        | What it takes beyond installing the packages                                                                                                                              |
+| -------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`vanilla`](vanilla)                   | None, with Vite              | Nothing.                                                                                                                                                                  |
+| [`react-vite`](react-vite)             | React, with Vite             | An effect that destroys a viewer its cleanup ran before, as StrictMode's first run does.                                                                                  |
+| [`vue-vite`](vue-vite)                 | Vue, with Vite               | Nothing.                                                                                                                                                                  |
+| [`svelte-vite`](svelte-vite)           | Svelte 5, with Vite          | Nothing.                                                                                                                                                                  |
+| [`angular`](angular)                   | Angular, with its builder    | The engine's binary, fonts and countries copied into the app (`angular.json`) and `wasm.baseUrl` pointed at them: Angular's esbuild leaves `new URL(…, import.meta.url)`. |
+| [`nuxt`](nuxt)                         | Nuxt, rendered on the server | `.client.vue` components, which run in the browser alone, and an `await nextTick()` before their template is there.                                                       |
+| [`nextjs-webpack`](nextjs-webpack)     | Next.js, with webpack        | `"use client"` components.                                                                                                                                                |
+| [`nextjs-turbopack`](nextjs-turbopack) | Next.js, with Turbopack      | `"use client"` components.                                                                                                                                                |
+| [`webpack`](webpack)                   | None, with webpack 5         | Nothing but the size hints off: the engine's binary is far over them.                                                                                                     |
+| [`no-bundler`](no-bundler)             | None, and no build step      | An import map onto jsDelivr, its versions in step with each other.                                                                                                        |
 
 ## Running one
 

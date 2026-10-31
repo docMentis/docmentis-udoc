@@ -29,6 +29,11 @@
                                 "glob": "fonts/**/*",
                                 "input": "node_modules/@docmentis/udoc-wasm/dist",
                                 "output": "udoc-wasm"
+                            },
+                            {
+                                "glob": "geography/**/*",
+                                "input": "node_modules/@docmentis/udoc-wasm/dist",
+                                "output": "udoc-wasm"
                             }
                         ],
                         "styles": ["src/styles.css"]

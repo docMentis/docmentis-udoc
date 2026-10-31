@@ -6,6 +6,16 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Added
+
+- An Excel region map whose file carries no geography of its own, as one
+  written by an app other than Excel may not, draws its countries from
+  Natural Earth's, where it drew only its title and legend. They are a file
+  `@docmentis/udoc-wasm` ships, `geography/countries.json`, fetched only for
+  a document with such a map.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -44,6 +54,9 @@ listed once, by package. Its major and minor version are those of the
 
 #### Changed
 
+- A host serving the engine itself, at `wasm.baseUrl`, serves its
+  `geography/` too, beside `wasm/` and `fonts/`: without it, a region map with
+  no geography of its own draws no countries.
 - A `.csv` opened without a `delimiter` is split by the comma, semicolon, tab or vertical bar that
   splits its first records alike, else the one that splits its first record
   into the most fields, where only a comma or a semicolon was tried, on the

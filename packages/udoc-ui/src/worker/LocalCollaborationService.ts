@@ -201,7 +201,12 @@ export class LocalCollaborationService {
         let lastError: unknown;
         for (const candidate of candidates) {
             try {
-                await this.#send({ type: "init", wasmUrl: candidate.wasmUrl, fonts: candidate.fonts });
+                await this.#send({
+                    type: "init",
+                    wasmUrl: candidate.wasmUrl,
+                    fonts: candidate.fonts,
+                    geography: candidate.geography,
+                });
                 return;
             } catch (err) {
                 lastError = err;

@@ -1,9 +1,9 @@
-// Where the engine's artifacts are: the `.wasm` binary and the
-// office-compatible fonts `@docmentis/udoc-wasm` ships. The glue that runs the
-// binary is not among them — every worker is bundled with it (see
-// local-collaboration-worker-source.ts) — so only these two are located, on the
-// main thread, and handed to the worker as one candidate after another until a
-// binary loads.
+// Where the engine's artifacts are: the `.wasm` binary, the office-compatible
+// fonts and the countries a region map draws that `@docmentis/udoc-wasm`
+// ships. The glue that runs the binary is not among them — every worker is
+// bundled with it (see local-collaboration-worker-source.ts) — so only these
+// three are located, on the main thread, and handed to the worker as one
+// candidate after another until a binary loads.
 //
 // The candidate list is the battle-tested fix from the previous generation
 // (docmentis-udoc-viewer): across environments — Vite pre-bundling,
@@ -20,13 +20,17 @@ export interface WasmCandidate {
     wasmUrl: string;
     /** Where the office-compatible fonts are, beside that binary. */
     fonts: FontLocation;
+    /** The countries a region map draws where its file carries no geography,
+     *  beside that binary too. */
+    geography: string;
 }
 
 export interface WasmLocateOptions {
     /**
      * Directory the host serves the artifacts from, laid out as
-     * `@docmentis/udoc-wasm`'s `dist/`: `wasm/udoc_bg.wasm` and `fonts/`. A
-     * URL, or a path such as `"/udoc-wasm/"`, which is the page's. Tried first.
+     * `@docmentis/udoc-wasm`'s `dist/`: `wasm/udoc_bg.wasm`, `fonts/` and
+     * `geography/`. A URL, or a path such as `"/udoc-wasm/"`, which is the
+     * page's. Tried first.
      */
     baseUrl?: string | URL;
     /**
@@ -42,7 +46,7 @@ const DEFAULT_CDN_URL = `https://cdn.jsdelivr.net/npm/@docmentis/udoc-wasm@${WAS
 /**
  * Resolve candidate artifact URLs in priority order:
  *
- * 1. `baseUrl/wasm/udoc_bg.wasm`, with `baseUrl/fonts/`,
+ * 1. `baseUrl/wasm/udoc_bg.wasm`, with `baseUrl/fonts/` and `baseUrl/geography/`,
  * 2. `import.meta.url`-relative bundled copy (via the isolated, dynamically
  *    imported `meta-url` module — so envs without `import.meta` don't choke),
  * 3. the CDN's, `cdnUrl` or jsDelivr's.
@@ -56,7 +60,11 @@ export async function resolveWasmCandidates(options: WasmLocateOptions = {}): Pr
     // import.meta-hostile environments just skips this candidate.
     try {
         const meta = await import("@docmentis/udoc-wasm/meta-url");
-        candidates.push({ wasmUrl: meta.bundledWasmUrl, fonts: meta.bundledFontUrls });
+        candidates.push({
+            wasmUrl: meta.bundledWasmUrl,
+            fonts: meta.bundledFontUrls,
+            geography: meta.bundledGeographyUrl,
+        });
     } catch {
         // import.meta unavailable here — rely on baseUrl/cdn.
     }
@@ -70,5 +78,9 @@ function laidOutAt(base: string | URL): WasmCandidate {
     // A path is resolved here, against the page: the worker it goes to starts
     // from a blob, against which nothing relative resolves.
     const dir = new URL(base, globalThis.document?.baseURI ?? globalThis.location?.href).href;
-    return { wasmUrl: new URL("wasm/udoc_bg.wasm", dir).href, fonts: dir };
+    return {
+        wasmUrl: new URL("wasm/udoc_bg.wasm", dir).href,
+        fonts: dir,
+        geography: new URL("geography/countries.json", dir).href,
+    };
 }

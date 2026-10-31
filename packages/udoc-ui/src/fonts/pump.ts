@@ -26,6 +26,13 @@
  * refusals — "this vendor has none of those" — re-shapes not at all: it
  * installed nothing, so nothing on screen can change, and the engine has
  * already put the next vendor on order.
+ *
+ * One thing beside fonts goes through the pump: the countries a region map
+ * draws where its file carries no geography. The engine asks for them once, by
+ * URL, when the first such map composes; they land, wait and install as a font
+ * does, in the same batch, and a batch that installed fonts too re-shapes once
+ * for both — laying the pages out against the fonts lays the maps out against
+ * the countries.
  */
 
 import type { FontRequest } from "@docmentis/udoc-wasm";
@@ -38,6 +45,9 @@ export interface FontPumpSession {
     takeFontRequests(): FontRequest[];
     completeFontRequest(id: bigint, binaries: Uint8Array[]): boolean;
     refreshFonts(): boolean;
+    takeGeographyRequest(): string | undefined;
+    completeGeographyRequest(bytes: Uint8Array): boolean;
+    refreshGeography(): boolean;
 }
 
 /**
@@ -65,6 +75,12 @@ export interface FontPumpDeps {
      */
     fetch: (order: FontRequest) => Promise<Uint8Array[]>;
     /**
+     * How the countries' URL becomes their bytes — `fetch` in the worker — or
+     * nothing, where they can't be had: an empty answer is complete too, and
+     * leaves the maps blank.
+     */
+    fetchGeography: (url: string) => Promise<Uint8Array>;
+    /**
      * Run `callback` after `ms` — `setTimeout` in the worker. A parameter so
      * tests move the clock by hand.
      */
@@ -75,19 +91,20 @@ export interface FontPumpDeps {
 export interface FontPump {
     /**
      * Take what is on order and start fetching it. Call it whenever a layout
-     * change may have put new families on order. It starts the fetches and
-     * returns — there is no round to drive, no result to wait for, and calling
-     * it with nothing on order costs a `takeFontRequests`.
+     * change may have put new families, or a region map's countries, on order.
+     * It starts the fetches and returns — there is no round to drive, no result
+     * to wait for, and calling it with nothing on order costs a
+     * `takeFontRequests` and a `takeGeographyRequest`.
      */
     (): void;
     /**
      * Kick, then resolve once nothing is on order, in the air or waiting to
      * install: `true` if anything was, and the pages may have been laid out
      * again; `false`, at once, if nothing was. For an export, which draws the
-     * document's own fonts only once those on order have landed. It waits on
-     * the event loop, never in a job; it ends because every order does — a
-     * fetch that fails answers with nothing — and a family's chain of vendors
-     * is finite.
+     * document's own fonts, and its maps' countries, only once those on order
+     * have landed. It waits on the event loop, never in a job; it ends because
+     * every order does — a fetch that fails answers with nothing — a family's
+     * chain of vendors is finite, and the countries are asked for once.
      */
     settled(): Promise<boolean>;
 }
@@ -96,6 +113,8 @@ export interface FontPump {
 export function createFontPump(deps: FontPumpDeps): FontPump {
     /** Fetched orders waiting to be installed, so a burst installs in one pass. */
     const landed: Array<{ id: number; binaries: Uint8Array[] }> = [];
+    /** Fetched countries waiting to be installed with them. */
+    const landedGeography: Uint8Array[] = [];
     let installArmed = false;
     /** Orders taken and not yet installed: in the air, or landed and waiting. */
     let open = 0;
@@ -109,21 +128,35 @@ export function createFontPump(deps: FontPumpDeps): FontPump {
             open++;
             void deps.fetch(order).then((binaries) => {
                 landed.push({ id: order.id, binaries });
-                // One install per burst, not one per order: the first to land
-                // waits a moment, and everything landing before its install
-                // runs joins it — so a document ordering twenty families
-                // re-shapes a handful of times rather than twenty.
-                if (installArmed) return;
-                installArmed = true;
-                deps.schedule(() => deps.enqueue(install), INSTALL_WAIT_MS);
+                armInstall();
             });
         }
+        const geography = session.takeGeographyRequest();
+        if (geography !== undefined) {
+            open++;
+            void deps.fetchGeography(geography).then((bytes) => {
+                landedGeography.push(bytes);
+                armInstall();
+            });
+        }
+    }
+
+    /** Install what landed once whatever lands in the next moment has joined it. */
+    function armInstall(): void {
+        // One install per burst, not one per order: the first to land waits a
+        // moment, and everything landing before its install runs joins it — so
+        // a document ordering twenty families re-shapes a handful of times
+        // rather than twenty.
+        if (installArmed) return;
+        installArmed = true;
+        deps.schedule(() => deps.enqueue(install), INSTALL_WAIT_MS);
     }
 
     function install(): void {
         installArmed = false;
         const batch = landed.splice(0);
-        open -= batch.length;
+        const countries = landedGeography.splice(0);
+        open -= batch.length + countries.length;
         const session = deps.session();
         // Closed or replaced mid-flight. The ids are dead either way — they are
         // minted from a process-global counter, so a new session never reuses
@@ -148,10 +181,25 @@ export function createFontPump(deps: FontPumpDeps): FontPump {
                 // and no one else's.
             }
         }
+        let mapped = false;
+        for (const bytes of countries) {
+            try {
+                // Empty is a complete answer as well: the host has none, and
+                // the engine asks no more. A session that replaced the one that
+                // asked was given the same URL, so what landed for the one
+                // settles the other's request just as well.
+                if (session.completeGeographyRequest(bytes) && bytes.length > 0) mapped = true;
+            } catch {
+                // As a font that won't install: it costs the maps, and no font.
+            }
+        }
         try {
-            // Lay the composed pages out again against what is installed now. A
-            // batch of refusals installed nothing, so there is nothing to lay out.
-            if (installed && session.refreshFonts()) deps.repaint();
+            // Lay the composed pages out again against what is installed now —
+            // once, though fonts and countries both landed: laying the pages out
+            // against the fonts lays the maps out against the countries. A batch
+            // of refusals installed nothing, so there is nothing to lay out.
+            const relaid = installed ? session.refreshFonts() : mapped && session.refreshGeography();
+            if (relaid) deps.repaint();
             // A settled order frees its font's next one, refused or not.
             kick();
         } catch {
