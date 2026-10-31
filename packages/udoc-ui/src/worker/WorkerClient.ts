@@ -31,6 +31,7 @@ import type {
     ActionHideTarget,
     Annotation,
     CellEntryEdit,
+    DelimiterGuess,
     Destination,
     DestinationView,
     Entitlements,
@@ -428,6 +429,17 @@ export class WorkerClient {
             },
             [buffer],
         )) as DocumentLayout;
+    }
+
+    /**
+     * Guess what the CSV `bytes`' fields are split by — a comma, a semicolon,
+     * a tab or a pipe — and whether the file leaves no choice: when it
+     * doesn't, the reader is asked before {@link open}.
+     */
+    async guessCsvDelimiter(bytes: Uint8Array): Promise<DelimiterGuess> {
+        // Sliced, as `open` does, so the caller keeps its bytes to open.
+        const buffer = bytes.slice().buffer;
+        return (await this.#send({ type: "guessCsvDelimiter", bytes: buffer }, [buffer])) as DelimiterGuess;
     }
 
     /**

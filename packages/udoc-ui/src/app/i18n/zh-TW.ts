@@ -396,6 +396,17 @@ export const zhTW: Messages = {
     "password.hide": "隱藏密碼",
     "password.unlock": "解鎖",
     "password.incorrect": "密碼不正確",
+    "delimiter.title": "選擇分隔符號",
+    "delimiter.message": "請選擇此檔案中用來分隔欄位的字元。",
+    "delimiter.preview": "檔案的前幾行",
+    "delimiter.comma": "逗號",
+    "delimiter.semicolon": "分號",
+    "delimiter.tab": "定位字元",
+    "delimiter.pipe": "垂直線",
+    "delimiter.other": "其他",
+    "delimiter.otherLabel": "其他分隔符號",
+    "delimiter.otherInvalid": "請輸入一個 ASCII 字元（雙引號除外）。",
+    "delimiter.open": "開啟",
 
     // Busy hold
     "busy.preparingPrint": "正在準備列印…",

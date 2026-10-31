@@ -397,6 +397,17 @@ export const de: Messages = {
     "password.hide": "Kennwort ausblenden",
     "password.unlock": "Entsperren",
     "password.incorrect": "Falsches Kennwort",
+    "delimiter.title": "Trennzeichen wählen",
+    "delimiter.message": "Wählen Sie das Zeichen, das die Felder in dieser Datei trennt.",
+    "delimiter.preview": "Die ersten Zeilen der Datei",
+    "delimiter.comma": "Komma",
+    "delimiter.semicolon": "Semikolon",
+    "delimiter.tab": "Tabulator",
+    "delimiter.pipe": "Senkrechter Strich",
+    "delimiter.other": "Andere",
+    "delimiter.otherLabel": "Anderes Trennzeichen",
+    "delimiter.otherInvalid": "Geben Sie ein ASCII-Zeichen ein, das kein doppeltes Anführungszeichen ist.",
+    "delimiter.open": "Öffnen",
 
     // Busy hold
     "busy.preparingPrint": "Druckvorgang wird vorbereitet…",

@@ -396,6 +396,17 @@ export const ja: Messages = {
     "password.hide": "パスワードを非表示",
     "password.unlock": "ロック解除",
     "password.incorrect": "パスワードが正しくありません",
+    "delimiter.title": "区切り文字の選択",
+    "delimiter.message": "このファイルのフィールドを区切っている文字を選択してください。",
+    "delimiter.preview": "ファイルの先頭行",
+    "delimiter.comma": "コンマ",
+    "delimiter.semicolon": "セミコロン",
+    "delimiter.tab": "タブ",
+    "delimiter.pipe": "縦棒",
+    "delimiter.other": "その他",
+    "delimiter.otherLabel": "その他の区切り文字",
+    "delimiter.otherInvalid": "二重引用符以外の ASCII 文字を 1 つ入力してください。",
+    "delimiter.open": "開く",
 
     // Busy hold
     "busy.preparingPrint": "印刷の準備中…",

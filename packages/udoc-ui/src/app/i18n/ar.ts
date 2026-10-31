@@ -401,6 +401,17 @@ export const ar: Messages = {
     "password.hide": "إخفاء كلمة المرور",
     "password.unlock": "فتح القفل",
     "password.incorrect": "كلمة المرور غير صحيحة",
+    "delimiter.title": "اختيار الفاصل",
+    "delimiter.message": "اختر الحرف الذي يفصل بين الحقول في هذا الملف.",
+    "delimiter.preview": "الأسطر الأولى من الملف",
+    "delimiter.comma": "فاصلة",
+    "delimiter.semicolon": "فاصلة منقوطة",
+    "delimiter.tab": "علامة جدولة",
+    "delimiter.pipe": "شريط عمودي",
+    "delimiter.other": "أخرى",
+    "delimiter.otherLabel": "فاصل آخر",
+    "delimiter.otherInvalid": "أدخل حرف ASCII واحدًا غير علامة الاقتباس المزدوجة.",
+    "delimiter.open": "فتح",
 
     // Busy hold
     "busy.preparingPrint": "جارٍ التحضير للطباعة…",

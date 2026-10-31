@@ -740,6 +740,30 @@ export interface Messages {
     /** Incorrect password */
     "password.incorrect": string;
 
+    // Delimiter dialog
+    /** Choose a Delimiter */
+    "delimiter.title": string;
+    /** Choose the character that separates the fields in this file. */
+    "delimiter.message": string;
+    /** The file's first lines */
+    "delimiter.preview": string;
+    /** Comma */
+    "delimiter.comma": string;
+    /** Semicolon */
+    "delimiter.semicolon": string;
+    /** Tab */
+    "delimiter.tab": string;
+    /** Vertical bar */
+    "delimiter.pipe": string;
+    /** Other */
+    "delimiter.other": string;
+    /** Other delimiter */
+    "delimiter.otherLabel": string;
+    /** Enter one ASCII character other than a double quote. */
+    "delimiter.otherInvalid": string;
+    /** Open */
+    "delimiter.open": string;
+
     // Busy hold
     /** Preparing to print… */
     "busy.preparingPrint": string;

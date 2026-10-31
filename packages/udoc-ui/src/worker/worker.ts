@@ -45,7 +45,12 @@ import type {
     WorkerRequest,
     WorkerRequestEnvelope,
 } from "./protocol.js";
-import initEngine, { createFontFetchMemory, fetchFontBinaries, startSession } from "@docmentis/udoc-wasm";
+import initEngine, {
+    createFontFetchMemory,
+    fetchFontBinaries,
+    guessCsvDelimiter,
+    startSession,
+} from "@docmentis/udoc-wasm";
 import type {
     CanvasText,
     FontLocation,
@@ -1397,6 +1402,10 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // sessions `start` starts from here on.
                 hostLocalFonts.push(...msg.local);
                 hostUrlFonts.push(...msg.url);
+                break;
+            }
+            case "guessCsvDelimiter": {
+                reply(id, guessCsvDelimiter(new Uint8Array(msg.bytes)));
                 break;
             }
             case "open":

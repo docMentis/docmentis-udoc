@@ -398,6 +398,17 @@ export const en: Messages = {
     "password.hide": "Hide Password",
     "password.unlock": "Unlock",
     "password.incorrect": "Incorrect password",
+    "delimiter.title": "Choose a Delimiter",
+    "delimiter.message": "Choose the character that separates the fields in this file.",
+    "delimiter.preview": "The file's first lines",
+    "delimiter.comma": "Comma",
+    "delimiter.semicolon": "Semicolon",
+    "delimiter.tab": "Tab",
+    "delimiter.pipe": "Vertical bar",
+    "delimiter.other": "Other",
+    "delimiter.otherLabel": "Other delimiter",
+    "delimiter.otherInvalid": "Enter one ASCII character other than a double quote.",
+    "delimiter.open": "Open",
 
     // Busy hold
     "busy.preparingPrint": "Preparing to print…",

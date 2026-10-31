@@ -36,9 +36,18 @@ listed once, by package. Its major and minor version are those of the
 - A word document's formatting marks show in view mode too, from the View
   tab or Ctrl+Shift+8, and `setShowFormattingMarks` is the viewer's as well
   as the editor's.
+- A `.csv` opened without a `delimiter` whose first records no delimiter
+  splits alike, or more than one does, asks the reader what splits its
+  fields before it opens: a dialog shows its first lines, the delimiter
+  picked marked in them, and offers Comma, Semicolon, Tab, Vertical bar and
+  Other, the likeliest picked. Its `translations` keys are `delimiter.*`.
 
 #### Changed
 
+- A `.csv` opened without a `delimiter` is split by the comma, semicolon, tab or vertical bar that
+  splits its first records alike, else the one that splits its first record
+  into the most fields, where only a comma or a semicolon was tried, on the
+  first record alone.
 - The ribbon's commands show their icons alone, each named in its tooltip,
   where the Insert tab's tools, New Slide and the crop controls showed their
   names beside their icons. The View tab's controls keep their names.
@@ -87,6 +96,13 @@ listed once, by package. Its major and minor version are those of the
   `saveToBytes` saves a document as any of its doc type's: a `"delta"` keeps
   a macro-enabled file's macros, a `"rewrite"` drops them.
 
+#### Changed
+
+- A CSV opened without a `delimiter` is split by the comma, semicolon, tab or vertical bar that
+  splits its first records alike, else the one that splits its first record
+  into the most fields, where only a comma or a semicolon was tried, on the
+  first record alone.
+
 ### udoc-cli
 
 #### Added
@@ -99,6 +115,13 @@ listed once, by package. Its major and minor version are those of the
 - `udoc save` saves to a template's, a slide show's or a macro-enabled file's
   `--out`: `.docm`, `.dotx`, `.dotm`, `.pptm`, `.potx`, `.potm`, `.ppsx`,
   `.ppsm`, `.xlsm`, `.xltx` or `.xltm`.
+
+#### Changed
+
+- A `.csv` input without `--delimiter` is split by the comma, semicolon, tab or vertical bar that
+  splits its first records alike, else the one that splits its first record
+  into the most fields, where only a comma or a semicolon was tried, on the
+  first record alone.
 
 #### Fixed
 
@@ -116,6 +139,13 @@ listed once, by package. Its major and minor version are those of the
 - `GET /documents/:id/file.<ext>` saves a copy as a template, a slide show
   or a macro-enabled file, `<ext>` one of `docm`, `dotx`, `dotm`, `pptm`,
   `potx`, `potm`, `ppsx`, `ppsm`, `xlsm`, `xltx` and `xltm`.
+
+#### Changed
+
+- A CSV imported without `?delimiter=` is split by the comma, semicolon, tab or vertical bar that
+  splits its first records alike, else the one that splits its first record
+  into the most fields, where only a comma or a semicolon was tried, on the
+  first record alone.
 
 ### udoc-demo
 

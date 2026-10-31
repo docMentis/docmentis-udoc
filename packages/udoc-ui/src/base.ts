@@ -262,10 +262,11 @@ export interface OpenOptions {
      *  document. Default a `File`'s own name, or a URL's last path segment,
      *  else `document.<format>`. */
     filename?: string;
-    /** The character a CSV's fields are split by, `";"`, `"|"`, …, for a
-     *  file whose delimiter detection gets wrong. Default a comma, or a
-     *  semicolon where the first record is split by more of them; saving back
-     *  to CSV keeps it. No other format takes one. */
+    /** The character a CSV's fields are split by, `";"`, `"|"`, …, which
+     *  skips detection. Default the comma, semicolon, tab or vertical bar that
+     *  splits the file's first records alike; where no one or more than one
+     *  does, a dialog asks the reader, the likeliest picked. Saving back to
+     *  CSV keeps it. No other format takes one. */
     delimiter?: string;
     /** The password a protected document opens with, for a host that holds
      *  it: tried first, and the user is asked only when it doesn't open the

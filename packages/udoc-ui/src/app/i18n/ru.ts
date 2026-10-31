@@ -399,6 +399,17 @@ export const ru: Messages = {
     "password.hide": "Скрыть пароль",
     "password.unlock": "Разблокировать",
     "password.incorrect": "Неверный пароль",
+    "delimiter.title": "Выбор разделителя",
+    "delimiter.message": "Выберите символ, которым разделены поля в этом файле.",
+    "delimiter.preview": "Первые строки файла",
+    "delimiter.comma": "Запятая",
+    "delimiter.semicolon": "Точка с запятой",
+    "delimiter.tab": "Табуляция",
+    "delimiter.pipe": "Вертикальная черта",
+    "delimiter.other": "Другой",
+    "delimiter.otherLabel": "Другой разделитель",
+    "delimiter.otherInvalid": "Введите один символ ASCII, кроме двойной кавычки.",
+    "delimiter.open": "Открыть",
 
     // Busy hold
     "busy.preparingPrint": "Подготовка к печати…",

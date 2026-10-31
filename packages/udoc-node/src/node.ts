@@ -109,8 +109,9 @@ export class UDocNode {
      * Open a document from its bytes in a session of its own — as `format` when
      * given, which skips detection; otherwise the format is detected, and a
      * `.udoc` zip opens as a package. `delimiter` is the character a CSV's
-     * fields are split by; without it, a comma, or a semicolon where the first
-     * record is split by more of them. No other format takes one.
+     * fields are split by; without it, the comma, semicolon, tab or vertical
+     * bar that splits the first records alike, else the one that splits the
+     * first into the most fields. No other format takes one.
      *
      * Starts the session first, so this is where a license is checked and,
      * without one, where a permit is spent — on this document, whether or not

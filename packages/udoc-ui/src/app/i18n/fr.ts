@@ -398,6 +398,17 @@ export const fr: Messages = {
     "password.hide": "Masquer le mot de passe",
     "password.unlock": "Déverrouiller",
     "password.incorrect": "Mot de passe incorrect",
+    "delimiter.title": "Choisir un séparateur",
+    "delimiter.message": "Choisissez le caractère qui sépare les champs de ce fichier.",
+    "delimiter.preview": "Premières lignes du fichier",
+    "delimiter.comma": "Virgule",
+    "delimiter.semicolon": "Point-virgule",
+    "delimiter.tab": "Tabulation",
+    "delimiter.pipe": "Barre verticale",
+    "delimiter.other": "Autre",
+    "delimiter.otherLabel": "Autre séparateur",
+    "delimiter.otherInvalid": "Saisissez un caractère ASCII autre qu'un guillemet double.",
+    "delimiter.open": "Ouvrir",
 
     // Busy hold
     "busy.preparingPrint": "Préparation de l'impression…",

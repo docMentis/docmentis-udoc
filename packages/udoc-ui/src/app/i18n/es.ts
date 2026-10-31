@@ -398,6 +398,17 @@ export const es: Messages = {
     "password.hide": "Ocultar contraseña",
     "password.unlock": "Desbloquear",
     "password.incorrect": "Contraseña incorrecta",
+    "delimiter.title": "Elegir delimitador",
+    "delimiter.message": "Elija el carácter que separa los campos de este archivo.",
+    "delimiter.preview": "Primeras líneas del archivo",
+    "delimiter.comma": "Coma",
+    "delimiter.semicolon": "Punto y coma",
+    "delimiter.tab": "Tabulación",
+    "delimiter.pipe": "Barra vertical",
+    "delimiter.other": "Otro",
+    "delimiter.otherLabel": "Otro delimitador",
+    "delimiter.otherInvalid": "Escriba un carácter ASCII que no sea una comilla doble.",
+    "delimiter.open": "Abrir",
 
     // Busy hold
     "busy.preparingPrint": "Preparando la impresión…",

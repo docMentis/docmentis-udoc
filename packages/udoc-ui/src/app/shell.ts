@@ -72,6 +72,7 @@ import { mediaPlayers } from "./components/MediaPlayer.js";
 import { createBusyModal } from "./components/BusyModal.js";
 import { createLoadingOverlay } from "./components/LoadingOverlay.js";
 import { createLicenseNotice, isRefusal } from "./components/LicenseNotice.js";
+import { createDelimiterModal } from "./components/DelimiterModal.js";
 import { createPasswordModal } from "./components/PasswordModal.js";
 import { createPrintModal } from "./components/PrintModal.js";
 import { createScrollbar } from "./components/Scrollbar.js";
@@ -500,6 +501,10 @@ export function mountUIShell(
     // works, so it blocks the whole component.
     const passwordModal = createPasswordModal(i18n);
     passwordModal.mount(layout);
+    // The delimiter a CSV the engine can't split for sure is split by, asked
+    // before it opens — on the root for the same reason.
+    const delimiterModal = createDelimiterModal(i18n);
+    delimiterModal.mount(layout);
 
     // --- slot scaffold (mirrors the viewer shell) ------------------------
     const toolbarSlot = document.createElement("div");
@@ -1616,13 +1621,30 @@ export function mountUIShell(
                 });
                 // The engine has it from here: the overlay's bar runs on.
                 if (generation === sourceGeneration) store.dispatch({ type: "SET_LOAD_PROGRESS", progress: null });
-                const layout = await client.open(bytes, format ?? signaturelessFormat(name), delimiter);
+                const opening = format ?? signaturelessFormat(name);
+                const split = delimiter ?? (opening === "csv" ? await csvDelimiter(bytes, generation) : undefined);
+                // Another document was opened, or this one closed, while it asked.
+                if (split === null) return null;
+                const layout = await client.open(bytes, opening, split);
                 // The host's password first, unasked: the dialog asks only
                 // when it doesn't open the document.
                 return layout.needsPassword && password !== undefined ? client.authenticate(password) : layout;
             },
             { filename: name },
         );
+    }
+
+    /**
+     * The delimiter the CSV `bytes`, opened by the `generation`th
+     * {@link openSource}, are split by when the host names none: the
+     * engine's guess when it is certain, else the one the reader picks in the
+     * dialog. Null when another document was opened, or this one closed,
+     * before it was picked.
+     */
+    async function csvDelimiter(bytes: Uint8Array, generation: number): Promise<string | null> {
+        const guess = await client.guessCsvDelimiter(bytes);
+        if (generation !== sourceGeneration) return null;
+        return guess.certain ? guess.delimiter : delimiterModal.ask(bytes, guess.delimiter);
     }
 
     /** The package resource the open document was opened from with `openRemote`, absolute; `undefined` for any other. */
@@ -1652,13 +1674,16 @@ export function mountUIShell(
      * Open a document with `open`, and bring the UI up on it — from
      * `from.packageUrl`, a server's package resource, when it is opened
      * remotely, and named `from.filename` when its file's name is known.
+     * `open` gives null when it was given up, the reader asked something and
+     * another document opened, or this one closed, before they answered.
      */
     async function openDocument(
-        open: () => Promise<DocumentLayout>,
+        open: () => Promise<DocumentLayout | null>,
         from: { packageUrl?: string | undefined; filename?: string | undefined } = {},
     ): Promise<void> {
         void leaveCollaboration(); // it was the previous document's
         passwordModal.dismiss(); // so was a password it asked for
+        delimiterModal.dismiss(); // and a delimiter
         remotePackage = undefined; // and so was the server it came from
         sourceFilename = undefined; // and its file's name
         formWidgets = new Map(); // and so was its form
@@ -1672,7 +1697,8 @@ export function mountUIShell(
             // before a download, and the loading overlay knows whether the
             // license lets it hide.
             await client.start();
-            const layout = await unlock(await open());
+            const opened = await open();
+            const layout = opened && (await unlock(opened));
             // Another document was opened, or this one closed, while it asked.
             if (!layout) return;
             store.dispatch({
@@ -1737,6 +1763,7 @@ export function mountUIShell(
             await planesRead;
         } catch (err) {
             passwordModal.dismiss();
+            delimiterModal.dismiss();
             const error = UDocError.from(err);
             // A refusal to start a session draws the notice, by its code; every
             // other failure is an ordinary one and gets the message alone.
@@ -3158,6 +3185,7 @@ export function mountUIShell(
     function close(): void {
         void leaveCollaboration();
         passwordModal.dismiss();
+        delimiterModal.dismiss();
         remotePackage = undefined;
         sourceFilename = undefined;
         formWidgets = new Map();
@@ -3366,6 +3394,7 @@ export function mountUIShell(
         busyModal.destroy();
         loadingOverlay.destroy();
         passwordModal.destroy();
+        delimiterModal.destroy();
         licenseNotice.destroy();
         ribbon.destroy();
         annotationBar.destroy();

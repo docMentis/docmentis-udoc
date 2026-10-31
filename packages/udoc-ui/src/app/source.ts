@@ -93,6 +93,26 @@ export function signaturelessFormat(name: string | undefined): FileFormat | unde
     }
 }
 
+/** The lines of a CSV its preview shows. */
+const PREVIEW_LINES = 8;
+
+/** The most of a CSV its preview decodes, so one without line breaks isn't decoded whole. */
+const PREVIEW_BYTES = 4096;
+
+/**
+ * The first lines of the CSV `bytes` as written, for the reader to see what
+ * splits its fields: decoded as UTF-8, as the engine reads it, without a byte
+ * order mark, and short of the line the first {@link PREVIEW_BYTES} cut,
+ * unless that is the only one.
+ */
+export function csvPreviewLines(bytes: Uint8Array): string[] {
+    const cut = bytes.byteLength > PREVIEW_BYTES;
+    const lines = new TextDecoder().decode(bytes.subarray(0, PREVIEW_BYTES)).split(/\r\n|\r|\n/);
+    // The line the cut runs through, or the empty one after the last break.
+    if ((cut && lines.length > 1) || lines.at(-1) === "") lines.pop();
+    return lines.slice(0, PREVIEW_LINES);
+}
+
 /**
  * The media type of a file in `format`, for a download of it: what lets the
  * browser give a name without an extension the right one, where an untyped

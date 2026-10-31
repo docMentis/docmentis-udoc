@@ -4500,4 +4500,151 @@ export const uiStyles = css`
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: 2px;
     }
+
+    /* === Delimiter dialog (DelimiterModal) — what a CSV the engine can't split
+   for sure is split by. Covers the whole component, as the password dialog
+   does: until the document opens nothing works. === */
+    .udoc-ui-root .udoc-delimiter-modal {
+        position: absolute;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background: var(--udoc-color-scrim);
+    }
+    .udoc-ui-root .udoc-delimiter-modal__dialog {
+        position: relative;
+        z-index: 1;
+        width: min(440px, 100%);
+        max-height: 100%;
+        overflow-y: auto;
+        background: var(--udoc-color-surface-container-highest);
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 8px;
+        box-shadow: var(--udoc-elevation-4);
+    }
+    .udoc-ui-root .udoc-delimiter-modal__heading {
+        margin: 0;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--udoc-color-outline-variant);
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--udoc-color-on-surface);
+    }
+    .udoc-ui-root .udoc-delimiter-modal__body {
+        margin: 0;
+        padding: 14px 16px;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__message {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: var(--udoc-color-on-surface-variant);
+    }
+    /* The file as written: its lines whole, scrolled sideways, never wrapped. */
+    .udoc-ui-root .udoc-delimiter-modal__preview {
+        margin: 0 0 12px;
+        padding: 8px;
+        max-height: 152px;
+        overflow: auto;
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 6px;
+        background: var(--udoc-color-surface);
+        color: var(--udoc-color-on-surface);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 17px;
+        white-space: pre;
+        tab-size: 4;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__preview:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: 1px;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__mark {
+        border-radius: 2px;
+        background: var(--udoc-color-primary);
+        color: var(--udoc-color-on-primary);
+    }
+    .udoc-ui-root .udoc-delimiter-modal__radios {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__radio {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 30px;
+        font-size: 13px;
+        color: var(--udoc-color-on-surface);
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__radio input[type="radio"] {
+        margin: 0;
+        accent-color: var(--udoc-color-primary);
+    }
+    .udoc-ui-root .udoc-delimiter-modal__glyph {
+        min-width: 18px;
+        padding: 0 4px;
+        border-radius: 4px;
+        background: var(--udoc-color-surface-container);
+        color: var(--udoc-color-on-surface-variant);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        text-align: center;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__other {
+        width: 40px;
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid var(--udoc-color-outline);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--udoc-color-on-surface);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+        text-align: center;
+        box-sizing: border-box;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__other:focus {
+        outline: none;
+        border-color: var(--udoc-color-primary);
+    }
+    /* Always holds a line, so an error appearing doesn't move the button. */
+    .udoc-ui-root .udoc-delimiter-modal__error {
+        min-height: 16px;
+        margin: 6px 0 0;
+        font-size: 12px;
+        line-height: 16px;
+        color: var(--udoc-color-error);
+    }
+    .udoc-ui-root .udoc-delimiter-modal__footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 8px;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__open {
+        height: 34px;
+        padding: 0 18px;
+        border: none;
+        border-radius: 6px;
+        background: var(--udoc-color-primary);
+        color: var(--udoc-color-on-primary);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-delimiter-modal__open:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root .udoc-delimiter-modal__open:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: 2px;
+    }
 `;

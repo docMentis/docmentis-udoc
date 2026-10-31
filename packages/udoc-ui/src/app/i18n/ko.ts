@@ -396,6 +396,17 @@ export const ko: Messages = {
     "password.hide": "암호 숨기기",
     "password.unlock": "잠금 해제",
     "password.incorrect": "암호가 올바르지 않습니다",
+    "delimiter.title": "구분 기호 선택",
+    "delimiter.message": "이 파일의 필드를 구분하는 문자를 선택하세요.",
+    "delimiter.preview": "파일의 처음 몇 줄",
+    "delimiter.comma": "쉼표",
+    "delimiter.semicolon": "세미콜론",
+    "delimiter.tab": "탭",
+    "delimiter.pipe": "세로 막대",
+    "delimiter.other": "기타",
+    "delimiter.otherLabel": "기타 구분 기호",
+    "delimiter.otherInvalid": "큰따옴표가 아닌 ASCII 문자 하나를 입력하세요.",
+    "delimiter.open": "열기",
 
     // Busy hold
     "busy.preparingPrint": "인쇄 준비 중…",

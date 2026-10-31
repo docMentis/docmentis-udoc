@@ -396,6 +396,17 @@ export const zhCN: Messages = {
     "password.hide": "隐藏密码",
     "password.unlock": "解锁",
     "password.incorrect": "密码不正确",
+    "delimiter.title": "选择分隔符",
+    "delimiter.message": "请选择此文件中用于分隔字段的字符。",
+    "delimiter.preview": "文件的前几行",
+    "delimiter.comma": "逗号",
+    "delimiter.semicolon": "分号",
+    "delimiter.tab": "制表符",
+    "delimiter.pipe": "竖线",
+    "delimiter.other": "其他",
+    "delimiter.otherLabel": "其他分隔符",
+    "delimiter.otherInvalid": "请输入一个 ASCII 字符（双引号除外）。",
+    "delimiter.open": "打开",
 
     // Busy hold
     "busy.preparingPrint": "正在准备打印…",

@@ -78,8 +78,9 @@ export function documentRoutes({
      * The body is a document's bytes: import it and keep it; `201 { id }`.
      * `?format=` (`pdf`, `pptx`, …) is for bytes detection gets wrong; absent,
      * the format is detected. `?delimiter=` is the character a CSV's fields
-     * are split by; absent, a comma, or a semicolon where the first record is
-     * split by more of them. A udoc package is refused: it is a document
+     * are split by; absent, the comma, semicolon, tab or vertical bar that
+     * splits the first records alike, else the one that splits the first into
+     * the most fields. A udoc package is refused: it is a document
      * already imported, not one to import. A PDF encrypted with a user password
      * opens with the one sent in `X-UDoc-Password`, percent-encoded
      * (`encodeURIComponent`), its user or its owner password. It is asked for

@@ -157,6 +157,16 @@ export interface OpenRequest {
 }
 
 /**
+ * Guess what a CSV's fields are split by, from its raw bytes (the buffer is
+ * transferred, not copied) — before it opens, so the host can ask its reader
+ * when the guess isn't certain. Replies with a `DelimiterGuess`.
+ */
+export interface GuessCsvDelimiterRequest {
+    type: "guessCsvDelimiter";
+    bytes: ArrayBuffer;
+}
+
+/**
  * Open the package a server keeps at `url` — its package resource — fetching
  * each part the first time the document needs it. `url` is absolute: the
  * worker resolves nothing against the page.
@@ -1810,6 +1820,7 @@ export type WorkerRequest =
     | AddViewerRequest
     | RegisterFontsRequest
     | OpenRequest
+    | GuessCsvDelimiterRequest
     | OpenRemoteRequest
     | AuthenticateRequest
     | SetViewportRequest

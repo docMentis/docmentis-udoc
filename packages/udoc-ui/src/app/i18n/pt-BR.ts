@@ -398,6 +398,17 @@ export const ptBR: Messages = {
     "password.hide": "Ocultar Senha",
     "password.unlock": "Desbloquear",
     "password.incorrect": "Senha incorreta",
+    "delimiter.title": "Escolher delimitador",
+    "delimiter.message": "Escolha o caractere que separa os campos deste arquivo.",
+    "delimiter.preview": "Primeiras linhas do arquivo",
+    "delimiter.comma": "Vírgula",
+    "delimiter.semicolon": "Ponto e vírgula",
+    "delimiter.tab": "Tabulação",
+    "delimiter.pipe": "Barra vertical",
+    "delimiter.other": "Outro",
+    "delimiter.otherLabel": "Outro delimitador",
+    "delimiter.otherInvalid": "Digite um caractere ASCII que não seja aspas duplas.",
+    "delimiter.open": "Abrir",
 
     // Busy hold
     "busy.preparingPrint": "Preparando para imprimir…",
