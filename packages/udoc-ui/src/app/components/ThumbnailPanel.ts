@@ -1,3 +1,4 @@
+import type { SlideMasterSummary } from "@docmentis/udoc-wasm";
 import { subscribeSelector } from "../../framework/index.js";
 import type { Store } from "../../framework/index.js";
 import { allowsEdit } from "../../geometry.js";
@@ -12,7 +13,7 @@ import { ICON_CHEVRON_DOWN, ICON_CHEVRON_RIGHT } from "../icons.js";
 import { reorderTo } from "../page-order.js";
 import { pageRows, thumbnailRows } from "../thumbnail-rows.js";
 import type { ThumbnailRow } from "../thumbnail-rows.js";
-import { VIEW_MODE } from "../state.js";
+import { VIEW_MODE, thumbnailPlane } from "../state.js";
 import type { UIState } from "../state.js";
 import { profileFor } from "../profiles.js";
 import type { I18n } from "../i18n/index.js";
@@ -56,7 +57,12 @@ import { MAC } from "./controls.js";
  *
  * A deck's sections head their slides in every mode, each header folding its
  * slides away or back — so the strip is a list of rows, a page's or a header's,
- * not of pages. Picking, a press on a header selects the section, with the
+ * not of pages.
+ *
+ * In a deck's Slide Master view the strip shows the slide masters' plane
+ * instead, as PowerPoint's does: each slide master numbered, its slide layouts
+ * smaller under it, indented and joined to it, each named by its layout. It
+ * only navigates there: no page is picked, and no section heads them. Picking, a press on a header selects the section, with the
  * toggle key and Shift as on a page; a right-click opens the section menu, a
  * double-click edits its name in place, and a drag lifts the selected sections
  * out, stacked, to drop them with their slides between two others.
@@ -91,6 +97,9 @@ const CARD_PAD = 12;
 const GAP = 12;
 /** Height of a section's header (matches the `height` in styles.ts). */
 const SECTION_H = 24;
+/** How far a slide layout's card is indented under its slide master's, in the
+ *  Slide Master view (matches the layout card's `left` in styles.ts). */
+const LAYOUT_INDENT = 24;
 /** Fallback aspect (width / height) before any page is measured — US Letter
  *  portrait, a reasonable guess that self-corrects on the first real measure. */
 const DEFAULT_ASPECT = 612 / 792;
@@ -112,6 +121,8 @@ const GHOST_FAN = 4;
 interface ThumbItem {
     container: HTMLDivElement;
     canvas: HTMLCanvasElement;
+    /** The number under the page: its own, or its slide master's. */
+    label: HTMLDivElement;
     /** Cache key (`page:scale`) last drawn, so an unchanged re-show is a no-op. */
     drawnKey: string | null;
 }
@@ -129,6 +140,8 @@ interface SectionHeader {
 }
 
 interface ThumbnailSlice {
+    /** The plane the strip shows ({@link thumbnailPlane}). */
+    plane: number;
     pageCount: number;
     /** The current page's index (`state.pageIndex`). */
     currentPage: number;
@@ -147,9 +160,18 @@ interface ThumbnailSlice {
     selectedSections: readonly string[];
     /** The section whose name is being edited (`state.renamingSlideSection`). */
     renaming: string | null;
+    /** The deck's slide masters, in its Slide Master view (`state.slideMasters`);
+     *  none in any other. */
+    slideMasters: readonly SlideMasterSummary[];
 }
 
+/** No sections, and no slide masters: what the strip shows of each outside
+ *  the view that has them. */
+const NO_SECTIONS: readonly SlideSectionRun[] = [];
+const NO_SLIDE_MASTERS: readonly SlideMasterSummary[] = [];
+
 const EMPTY_SLICE: ThumbnailSlice = {
+    plane: 0,
     pageCount: 0,
     currentPage: 0,
     generation: -1,
@@ -159,20 +181,47 @@ const EMPTY_SLICE: ThumbnailSlice = {
     collapsed: new Set(),
     selectedSections: [],
     renaming: null,
+    slideMasters: NO_SLIDE_MASTERS,
 };
 
 function selectSlice(state: UIState): ThumbnailSlice {
+    const plane = thumbnailPlane(state);
+    // Off the first plane, the strip shows a deck's slide masters.
+    const masters = plane !== 0;
     return {
+        plane,
         pageCount: state.pageCount,
         currentPage: state.pageIndex,
         generation: state.docGeneration,
-        picking: state.mode !== VIEW_MODE && profileFor(state.docType).pageSelection,
+        picking: !masters && state.mode !== VIEW_MODE && profileFor(state.docType).pageSelection,
         selectedPages: state.selectedPages,
-        sections: state.slideSections,
+        sections: masters ? NO_SECTIONS : state.slideSections,
         collapsed: state.collapsedSlideSections,
         selectedSections: state.selectedSlideSections,
         renaming: state.renamingSlideSection,
+        slideMasters: masters ? state.slideMasters : NO_SLIDE_MASTERS,
     };
+}
+
+/** What a page of the slide masters' plane is: a slide master, by its number
+ *  in the deck (1-based), or one of its slide layouts, by its name. */
+type MasterPage = { kind: "slideMaster"; number: number } | { kind: "slideLayout"; name: string | null; last: boolean };
+
+/** What each page of the slide masters' plane is, by page, as `slideMasters`
+ *  lays them out — none for a page past them. */
+function masterPages(slideMasters: readonly SlideMasterSummary[]): Map<number, MasterPage> {
+    const pages = new Map<number, MasterPage>();
+    slideMasters.forEach((slideMaster, index) => {
+        pages.set(slideMaster.page, { kind: "slideMaster", number: index + 1 });
+        slideMaster.slideLayouts.forEach((slideLayout, layout) => {
+            pages.set(slideMaster.page + 1 + layout, {
+                kind: "slideLayout",
+                name: slideLayout.name,
+                last: layout === slideMaster.slideLayouts.length - 1,
+            });
+        });
+    });
+    return pages;
 }
 
 /** No modifier keys: a press that selects one page or section alone. */
@@ -271,6 +320,8 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     let rowOf: number[] = [];
     /** The row of each section's header, by section index. */
     let sectionRows: number[] = [];
+    /** What each page is, in the Slide Master view; empty in any other. */
+    let roles = new Map<number, MasterPage>();
     /** Page sizes (document points) by page index — drives aspect + scale. */
     const sizes = new Map<number, { w: number; h: number }>();
     /** The pages whose size in {@link sizes} has been read since the document
@@ -312,13 +363,25 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         return s ? s.w / s.h : typicalAspect;
     }
 
+    /** Whether page `page` is a slide layout, indented under its slide master
+     *  with no label. */
+    function isLayout(page: number): boolean {
+        return roles.get(page)?.kind === "slideLayout";
+    }
+
+    /** The width page `page` is drawn at: the strip's, or a slide layout's, its
+     *  indent narrower. */
+    function pageWidth(page: number): number {
+        return isLayout(page) ? Math.max(0, thumbWidth - LAYOUT_INDENT) : thumbWidth;
+    }
+
     /** Card height of one item: the padded box the tint/outline hugs — the
-     *  scaled thumbnail plus its vertical padding and label, but *not* the
-     *  inter-card gap. */
+     *  scaled thumbnail plus its vertical padding and label (a slide layout has
+     *  none), but *not* the inter-card gap. */
     function cardHeight(page: number): number {
-        const inner = LABEL_H + 2 * CARD_PAD;
+        const inner = (isLayout(page) ? 0 : LABEL_H) + 2 * CARD_PAD;
         if (thumbWidth <= 0) return inner;
-        return Math.round(thumbWidth / aspect(page)) + inner;
+        return Math.round(pageWidth(page) / aspect(page)) + inner;
     }
 
     /** Slot height of one item: the card plus the gap below it. */
@@ -332,8 +395,10 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         return row.kind === "page" ? slotHeight(row.page) : SECTION_H + GAP;
     }
 
-    /** Rebuild the rows from the page count, the sections and their folds. */
+    /** Rebuild the rows from the page count, the sections and their folds, and
+     *  what each page is from the slide masters. */
     function rebuildRows(): void {
+        roles = masterPages(slice.slideMasters);
         rows = thumbnailRows(slice.pageCount, slice.sections, slice.collapsed);
         rowOf = pageRows(slice.pageCount, rows, slice.sections);
         sectionRows = slice.sections.map(() => -1);
@@ -443,11 +508,27 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     function positionItem(item: ThumbItem, page: number): void {
         // The card fills its content box; the trailing GAP is left empty so the
         // fill/outline reads as a separated card, not a continuous column.
+        const width = pageWidth(page);
         item.container.style.top = `${offsets[rowOf[page]!]!}px`;
         item.container.style.height = `${cardHeight(page)}px`;
-        item.canvas.style.width = `${thumbWidth}px`;
-        item.canvas.style.height = `${Math.round(thumbWidth / aspect(page))}px`;
+        item.canvas.style.width = `${width}px`;
+        item.canvas.style.height = `${Math.round(width / aspect(page))}px`;
         markItem(item, page);
+    }
+
+    /** What `page` is called — its number in a deck's slides or a document's
+     *  pages, the slide master or slide layout it is in a Slide Master view. */
+    function itemName(page: number, isHidden: boolean): string {
+        const role = roles.get(page);
+        if (role?.kind === "slideMaster") return i18n.t("thumbnails.slideMaster", { number: role.number });
+        if (role?.kind === "slideLayout") {
+            return role.name
+                ? i18n.t("thumbnails.slideLayout", { name: role.name })
+                : i18n.t("thumbnails.untitledSlideLayout");
+        }
+        return i18n.t(isHidden ? "thumbnails.hiddenSlide" : slides() ? "thumbnails.slide" : "thumbnails.page", {
+            page: page + 1,
+        });
     }
 
     /** Mark `item` selected — one look for the current page and, picking, each
@@ -462,12 +543,18 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         item.container.classList.toggle("udoc-thumbnail-item--selected", current || isSelected);
         item.container.classList.toggle("udoc-dragging", isSelected && press?.dragging === true);
         item.container.classList.toggle("udoc-thumbnail-item--hidden", isHidden);
-        item.container.setAttribute(
-            "aria-label",
-            i18n.t(isHidden ? "thumbnails.hiddenSlide" : slides() ? "thumbnails.slide" : "thumbnails.page", {
-                page: page + 1,
-            }),
-        );
+        // A slide layout hangs off its slide master, the last closing the run.
+        const role = roles.get(page);
+        item.container.classList.toggle("udoc-thumbnail-item--layout", role?.kind === "slideLayout");
+        item.container.classList.toggle("udoc-thumbnail-item--last-layout", role?.kind === "slideLayout" && role.last);
+        item.label.textContent = role?.kind === "slideMaster" ? String(role.number) : String(page + 1);
+        item.label.hidden = role?.kind === "slideLayout";
+        const name = itemName(page, isHidden);
+        item.container.setAttribute("aria-label", name);
+        // In the Slide Master view, what each is shows on hover, as PowerPoint's
+        // does: the pages there carry no slide number to go by.
+        if (role) item.container.title = name;
+        else item.container.removeAttribute("title");
         item.container.setAttribute("aria-selected", String(isSelected));
         if (current) item.container.setAttribute("aria-current", "page");
         else item.container.removeAttribute("aria-current");
@@ -494,7 +581,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         container.addEventListener("click", () => {
             if (!slice.picking) navigateTo(page);
         });
-        return { container, canvas, drawnKey: null };
+        return { container, canvas, label, drawnKey: null };
     }
 
     // --- section headers -------------------------------------------------
@@ -632,7 +719,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         const generation = changeGeneration;
         let stale = false;
         try {
-            const { width: w, height: h } = await client.pageDisplaySize(page);
+            const { width: w, height: h } = await client.pageDisplaySize(slice.plane, page);
             if (!mounted || w <= 0 || h <= 0) return;
             // Read before the document last changed: re-read it.
             if (generation !== changeGeneration) {
@@ -656,7 +743,8 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     /** Read whether a slide show shows each mounted slide not read since the
      *  deck last changed, in one round trip, and mark the hidden ones. */
     async function readShow(): Promise<void> {
-        if (!client || !slides() || store?.getState().status !== "ready") return;
+        // The slide masters' pages are no slides a slide show could skip.
+        if (!client || !slides() || slice.plane !== 0 || store?.getState().status !== "ready") return;
         const pages = [...items.keys()].filter((page) => !showRead.has(page) && !showReading.has(page));
         if (pages.length === 0) return;
         for (const page of pages) showReading.add(page);
@@ -694,12 +782,13 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         const size = sizes.get(page);
         if (!size || !mounted || !items.has(page)) return;
 
-        const scale = (thumbWidth * dpr) / size.w;
-        const key = `${page}:${scale.toFixed(3)}`;
+        const plane = slice.plane;
+        const scale = (pageWidth(page) * dpr) / size.w;
+        const key = `${plane}:${page}:${scale.toFixed(3)}`;
         if (item.drawnKey === key) return;
 
         try {
-            const bitmap = await client.requestThumbnail(page, scale);
+            const bitmap = await client.requestThumbnail(plane, page, scale);
             // The item may have recycled or rescaled while awaiting.
             if (!mounted || items.get(page) !== item) return;
             const canvas = item.canvas;
@@ -1293,9 +1382,15 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     // --- state application -----------------------------------------------
 
     function applySlice(next: ThumbnailSlice): void {
-        const docChanged = next.generation !== slice.generation;
+        // Another plane shows other pages: the strip starts over, as for
+        // another document.
+        const planeChanged = next.plane !== slice.plane;
+        const docChanged = next.generation !== slice.generation || planeChanged;
         const grew = next.pageCount !== slice.pageCount;
-        const regrouped = next.sections !== slice.sections || next.collapsed !== slice.collapsed;
+        const regrouped =
+            next.sections !== slice.sections ||
+            next.collapsed !== slice.collapsed ||
+            next.slideMasters !== slice.slideMasters;
         const renamed = next.renaming !== slice.renaming;
         const pageMoved = next.currentPage !== slice.currentPage;
         const marksChanged =
@@ -1310,8 +1405,16 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         el.setAttribute("aria-multiselectable", String(next.picking));
 
         if (docChanged) {
-            el.setAttribute("aria-label", i18n.t(slides() ? "thumbnails.slides" : "thumbnails.pages"));
-            // New document: drop everything and rebuild from a clean slate.
+            el.setAttribute(
+                "aria-label",
+                i18n.t(
+                    next.plane !== 0 ? "thumbnails.slideMasters" : slides() ? "thumbnails.slides" : "thumbnails.pages",
+                ),
+            );
+            // New document: drop everything and rebuild from a clean slate —
+            // the renders queued for the plane left behind too.
+            if (planeChanged) for (const page of items.keys()) client?.cancelThumbnail(page);
+            changeGeneration++;
             for (const item of items.values()) item.container.remove();
             items.clear();
             for (const header of headers.values()) header.container.remove();
@@ -1426,6 +1529,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         applySlice(selectSlice(s.getState()));
         unsub = subscribeSelector(s, selectSlice, applySlice, {
             equality: (a, b) =>
+                a.plane === b.plane &&
                 a.pageCount === b.pageCount &&
                 a.currentPage === b.currentPage &&
                 a.generation === b.generation &&
@@ -1434,7 +1538,8 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
                 a.sections === b.sections &&
                 a.collapsed === b.collapsed &&
                 a.selectedSections === b.selectedSections &&
-                a.renaming === b.renaming,
+                a.renaming === b.renaming &&
+                a.slideMasters === b.slideMasters,
         });
     }
 

@@ -26,6 +26,7 @@ import type {
     GridCellSelectionMove,
     ScrollAlignment,
     SheetLayoutMode,
+    SlideMasterSummary,
     TextHyperlink,
 } from "@docmentis/udoc-wasm";
 import { allowsEdit, cssPxPerPt } from "../geometry.js";
@@ -95,6 +96,7 @@ import {
     renderZoom,
     showsPageless,
     showsPaper,
+    showsSlides,
     viewDpi,
     viewOfPlane,
 } from "./state.js";
@@ -1750,8 +1752,10 @@ export function mountUIShell(
             // Which widgets a press fills a form field in through — async, off
             // the critical path.
             if (layout.docType === "portable") void refreshFormWidgets();
-            // A document opens with no slide left by a link jump.
+            // A document opens with no slide left by a link jump, and none its
+            // Slide Master view was entered from.
             slideLeftByLink = null;
+            slideBeforeMasters = 0;
             // Adopt the fit the document opened with — the host's, else the doc
             // type's default. The worker already applied it at open (for the
             // first paint), so don't re-send it here (`reframe: false`) —
@@ -2013,6 +2017,36 @@ export function mountUIShell(
         void history(op);
     }
 
+    // The slide a deck's Slide Master view was entered from, which leaving it
+    // goes back to — the first, for a deck opened in it.
+    let slideBeforeMasters = 0;
+
+    // The deck's slide masters, read the first time its Slide Master view
+    // shows: the view's thumbnails are laid out by them.
+    async function readSlideMasters(): Promise<readonly SlideMasterSummary[]> {
+        const { slideMasters, docGeneration } = store.getState();
+        if (slideMasters.length > 0) return slideMasters;
+        const read = await client.presentation.slideMasters();
+        if (store.getState().docGeneration === docGeneration) {
+            store.dispatch({ type: "SET_SLIDE_MASTERS", slideMasters: read });
+        }
+        return read;
+    }
+
+    // The page of the slide masters' plane that shows the slide layout slide
+    // `slide` is built on — the first slide master's, with no slide.
+    async function slideLayoutPage(slide: number | null): Promise<number> {
+        const [slideMasters, slideLayout] = await Promise.all([
+            readSlideMasters(),
+            slide === null ? null : client.presentation.slideLayoutId(slide),
+        ]);
+        for (const slideMaster of slideMasters) {
+            const index = slideMaster.slideLayouts.findIndex((layout) => layout.id === slideLayout);
+            if (index >= 0) return slideMaster.page + 1 + index;
+        }
+        return 0;
+    }
+
     // Switch the active plane (a sheet-tab click, a deck's other view): tell
     // the worker, and adopt the layout it replies with — the new sheet's
     // extent the frame that paints it reports, and the worker composes ahead
@@ -2032,10 +2066,23 @@ export function mountUIShell(
                 return;
             }
         }
+        // A deck's views of its slides are each a page per slide: the one
+        // switched to opens on the slide shown, or the one the Slide Master view
+        // was entered from. That view opens on the slide layout of the slide
+        // shown, as PowerPoint's does. A sheet opens at its top.
+        const from = viewOfPlane(state.planeKinds, paintedPlane);
+        const to = viewOfPlane(state.planeKinds, plane);
+        let page: number | null = null;
+        if (showsSlides(to)) {
+            page = showsSlides(from) ? state.pageIndex : slideBeforeMasters;
+        } else if (to === "slideMaster") {
+            if (showsSlides(from)) slideBeforeMasters = state.pageIndex;
+            page = await slideLayoutPage(showsSlides(from) ? state.pageIndex : null);
+            // Another view was chosen while the slide layout was read.
+            if (requestedPlane !== plane) return;
+        }
         const switched = client.goToPlane(plane);
-        // A deck's views are each a page per slide: the one switched to opens
-        // on the slide shown, where a sheet opens at its top.
-        if (viewOfPlane(state.planeKinds, plane) !== null) client.goToPage(state.pageIndex);
+        if (page !== null) client.goToPage(page);
         const layout = await switched;
         // The engine keeps the spacing with a plane's layout: a plane the
         // document didn't open on (a text file opens pageless) never took it,
@@ -2897,22 +2944,31 @@ export function mountUIShell(
         const state = store.getState();
         if (state.status !== "ready") throw new Error("print: there is no open document to print");
         // A workbook prints its current sheet on the paper it prints on,
-        // whichever view it shows, as Excel prints the active sheet; any other
-        // document its pages, which are known only once composed, so every
-        // page must be to count them, or to print them all.
+        // whichever view it shows, as Excel prints the active sheet; a deck its
+        // slides, which its Slide Master view shows none of, as PowerPoint
+        // prints them from it; any other document its pages, which are known
+        // only once composed, so every page must be to count them, or to print
+        // them all.
         const sheet = state.docType === "spreadsheet" ? state.currentPlane : null;
+        const masters = viewOfPlane(state.planeKinds, state.currentPlane) === "slideMaster";
         const counting =
-            sheet !== null ? client.printPageCount(sheet) : composeAll().then(() => store.getState().pageCount);
+            sheet !== null
+                ? client.printPageCount(sheet)
+                : masters
+                  ? client.presentation.slideCount()
+                  : composeAll().then(() => store.getState().pageCount);
         if (!(await busyModal.hold(i18n.t("busy.preparingPrint"), counting))) return;
         const pageCount = await counting;
         if (pageCount === 0) throw new Error("print: the open document has no pages to print");
         if (options === undefined) {
             // The page shown is current where the pages printed are the ones
-            // shown — not a sheet shown as its grid.
+            // shown — not a sheet shown as its grid; from a deck's Slide Master
+            // view, the slide it was entered from.
             const shown = sheet === null || showsPaper(store.getState());
+            const current = masters ? slideBeforeMasters : shown ? store.getState().pageIndex : 0;
             printModal.open({
                 pageCount,
-                currentPage: shown ? Math.min(store.getState().pageIndex, pageCount - 1) : 0,
+                currentPage: Math.min(current, pageCount - 1),
                 pageNoun: profileFor(store.getState().docType).pageNoun,
                 onPrint: (chosen) =>
                     void printPages(chosen, pageCount, sheet).catch((error: unknown) =>

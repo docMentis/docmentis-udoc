@@ -12,6 +12,7 @@ import type {
     SearchMatch,
     SheetLayoutMode,
     SheetState,
+    SlideMasterSummary,
     StampIcon,
     StartError,
     UDocSearchScope,
@@ -138,23 +139,46 @@ export interface ActiveCell {
 /**
  * How a deck shows: `"normal"`, its slides, as PowerPoint's Normal view does;
  * `"notesPage"`, the page each slide's notes print on, the slide drawn above
- * them, as its Notes Page view does.
+ * them, as its Notes Page view does; `"slideMaster"`, its slide masters, each
+ * followed by its slide layouts, as its Slide Master view does.
  */
-export type PresentationView = "normal" | "notesPage";
+export type PresentationView = "normal" | "notesPage" | "slideMaster";
 
-/** The plane of a deck that shows `view` — its slides', or its notes pages' —
- *  or `-1` when no plane in `kinds` does: not a deck, or no roster yet. */
+/** The plane kind of a deck that shows each view. */
+const VIEW_PLANES: Readonly<Record<PresentationView, PresentationPlaneKind>> = {
+    normal: "slides",
+    notesPage: "notesPages",
+    slideMaster: "slideMasters",
+};
+
+/** The plane of a deck that shows `view` — its slides', its notes pages' or
+ *  its slide masters' — or `-1` when no plane in `kinds` does: not a deck, or
+ *  no roster yet. */
 export function planeOfView(kinds: UIState["planeKinds"], view: PresentationView): number {
-    return kinds.indexOf(view === "notesPage" ? "notesPages" : "slides");
+    return kinds.indexOf(VIEW_PLANES[view]);
 }
 
 /** The view of a deck its plane `plane` shows, or null for a plane that
- *  shows neither its slides nor its notes pages. */
+ *  shows none: the notes text, which the notes pane shows beside a view. */
 export function viewOfPlane(kinds: UIState["planeKinds"], plane: number): PresentationView | null {
     const kind = kinds[plane];
     if (kind === "slides") return "normal";
     if (kind === "notesPages") return "notesPage";
+    if (kind === "slideMasters") return "slideMaster";
     return null;
+}
+
+/** Whether `view` shows a page per slide, in the slide order — the slides, or
+ *  their notes pages — where the Slide Master view shows the masters. */
+export function showsSlides(view: PresentationView | null): boolean {
+    return view === "normal" || view === "notesPage";
+}
+
+/** The plane the thumbnails show in `state`: the slide masters' in a deck's
+ *  Slide Master view, else the first — a deck's slides, any other document's
+ *  pages. */
+export function thumbnailPlane(state: Pick<UIState, "planeKinds" | "currentPlane">): number {
+    return viewOfPlane(state.planeKinds, state.currentPlane) === "slideMaster" ? state.currentPlane : 0;
 }
 
 /** The plane a word document shows pageless: its body flowed to the pane's
@@ -299,6 +323,7 @@ export type CommandId =
     | "annotationOpacity"
     | "normalView"
     | "notesPageView"
+    | "slideMasterView"
     | "notes"
     | "pagesView"
     | "pagelessView"
@@ -459,7 +484,7 @@ export interface UIState {
      *  hidden sheet has no tab. Empty with no document open. */
     planeVisibility: readonly SheetState[];
     /** Which view of a deck each plane is, indexed by plane — its slides, their
-     *  notes pages or notes text, a slide master's — `null` for any other doc
+     *  notes pages or notes text, its slide masters — `null` for any other doc
      *  type's. Empty with no document open. */
     planeKinds: readonly (PresentationPlaneKind | null)[];
     /** The sheet layout mode each plane shows, indexed by plane — a
@@ -558,6 +583,14 @@ export interface UIState {
      * document.
      */
     slideSections: readonly SlideSectionRun[];
+
+    /**
+     * The open deck's slide masters, in order, each with its page on the slide
+     * masters' plane and its slide layouts — what the Slide Master view's
+     * thumbnails lay the pages out by. Read when that view first shows; empty
+     * until then, and for any other document.
+     */
+    slideMasters: readonly SlideMasterSummary[];
 
     /**
      * The sections the selection holds, by id — picked by their headers in the
@@ -756,8 +789,8 @@ export interface UIState {
     panelTransitionsDisabled: boolean;
 
     // --- Notes ---------------------------------------------------------------
-    /** How a deck shows — the View tab's Normal and Notes Page, the host's
-     *  `presentationView`. Kept for every doc type, and across documents; a
+    /** How a deck shows — the View tab's Normal, Notes Page and Slide Master,
+     *  the host's `presentationView`. Kept for every doc type, and across documents; a
      *  deck shows it on the plane {@link planeOfView} names, which
      *  `currentPlane` follows, and a move to another plane follows back. */
     presentationView: PresentationView;
@@ -891,6 +924,7 @@ export const initialState: UIState = {
     selectedSlidesHidden: false,
     activeCell: null,
     slideSections: [],
+    slideMasters: [],
     selectedSlideSections: [],
     collapsedSlideSections: new Set(),
     renamingSlideSection: null,

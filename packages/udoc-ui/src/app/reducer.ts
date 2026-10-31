@@ -108,9 +108,11 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 refusal: null,
                 docType: null,
                 sourceFormat: null,
-                // The sections are read back once the open is sent; the folds
-                // and a rename were the last document's.
+                // The sections are read back once the open is sent, the slide
+                // masters when they show; the folds and a rename were the last
+                // document's.
                 slideSections: [],
+                slideMasters: [],
                 collapsedSlideSections: new Set(),
                 renamingSlideSection: null,
                 renamingSheet: null,
@@ -217,6 +219,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 docType: null,
                 sourceFormat: null,
                 slideSections: [],
+                slideMasters: [],
                 collapsedSlideSections: new Set(),
                 renamingSlideSection: null,
                 renamingSheet: null,
@@ -372,6 +375,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...state, selectedSlidesHidden: action.hidden };
         case "SET_SLIDE_SECTIONS":
             return { ...state, slideSections: action.sections };
+        case "SET_SLIDE_MASTERS":
+            return { ...state, slideMasters: action.slideMasters };
         case "SET_SELECTED_SLIDE_SECTIONS":
             return { ...state, selectedSlideSections: action.ids };
         case "SET_SLIDE_SECTIONS_COLLAPSED": {

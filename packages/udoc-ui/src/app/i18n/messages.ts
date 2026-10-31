@@ -161,6 +161,8 @@ export interface Messages {
     "command.normalView": string;
     /** Notes Page */
     "command.notesPageView": string;
+    /** Slide Master — a deck's view of its slide masters and their slide layouts */
+    "command.slideMasterView": string;
     /** Pages */
     "command.pagesView": string;
     /** Pageless */
@@ -473,6 +475,14 @@ export interface Messages {
     "thumbnails.slide": string;
     /** Slide {page}, hidden */
     "thumbnails.hiddenSlide": string;
+    /** Slide master thumbnails — the strip in a deck's Slide Master view */
+    "thumbnails.slideMasters": string;
+    /** Slide Master {number} — a slide master's thumbnail, numbered in the deck's order */
+    "thumbnails.slideMaster": string;
+    /** {name} Layout — a slide layout's thumbnail, by its name ("Title Slide") */
+    "thumbnails.slideLayout": string;
+    /** Layout — a slide layout's thumbnail, where it has no name */
+    "thumbnails.untitledSlideLayout": string;
     /** Insert Page */
     "thumbnails.insertPage": string;
     /** Duplicate Page */

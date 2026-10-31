@@ -2,7 +2,6 @@
 import type { WorkerHandler } from "@docmentis/udoc-ui/worker";
 import { Transferring } from "@docmentis/udoc-ui/worker";
 import type { ThemePalette } from "@docmentis/udoc-ui/internal";
-import type { SlideMasterSummary } from "@docmentis/udoc-wasm";
 import type { EditRequest } from "./protocol.js";
 
 /** A handler for each of edit mode's requests, by type. */
@@ -93,19 +92,6 @@ export const EDIT_HANDLERS: EditHandlers = {
                 ? (session.selectionHandlePreview(viewer, request.textWarp, request.index, request.x, request.y) ??
                   null)
                 : null,
-    },
-    slideMastersSummary: {
-        // A pure read: every slide master, summarized for the New-Slide picker.
-        // Empty when there's no open / non-presentation doc. Loads every slide
-        // master (to learn its slide layouts), so `&mut`-backed. Lenient like
-        // the engine's own reads: a throw reads as none.
-        handle(_request, { session }): SlideMasterSummary[] {
-            try {
-                return session?.presentation.model.slideMasters.summary() ?? [];
-            } catch {
-                return [];
-            }
-        },
     },
     slideId: {
         // A pure read, lenient like the engine's own: a throw — no

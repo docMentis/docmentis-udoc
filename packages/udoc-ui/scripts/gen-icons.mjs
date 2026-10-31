@@ -78,6 +78,7 @@ const ICONS = {
     ICON_NOTES: "speaker_notes",
     ICON_NORMAL_VIEW: "crop_landscape",
     ICON_NOTES_PAGE_VIEW: "article",
+    ICON_SLIDE_MASTER_VIEW: "space_dashboard",
     ICON_PAGES_VIEW: "description",
     ICON_PAGELESS_VIEW: "subject",
     ICON_SHEET_NORMAL_VIEW: "grid_on",

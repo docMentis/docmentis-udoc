@@ -1,6 +1,6 @@
 // Edit mode's calls on the render worker: the requests its own handlers answer
 // (worker/handlers.ts), sent through the shell's client.
-import type { FontFamily, FontFamilySummary, SlideMasterSummary, UDocFragment } from "@docmentis/udoc-wasm";
+import type { FontFamily, FontFamilySummary, UDocFragment } from "@docmentis/udoc-wasm";
 import type { DocumentLayout } from "@docmentis/udoc-ui";
 import type { SelectionHandle, ThemePalette, UIShellHost, WorkerClient } from "@docmentis/udoc-ui/internal";
 import type { EditRequest, FontPreviewImage } from "./worker/protocol.js";
@@ -161,17 +161,6 @@ export class EditClient {
      */
     selectionHandlePreview(textWarp: boolean, index: number, x: number, y: number): Promise<SelectionHandle | null> {
         return this.#request({ type: "selectionHandlePreview", textWarp, index, x, y });
-    }
-
-    /**
-     * Every slide master, summarized for the New-Slide picker: its id, its
-     * slide layouts' ids (each at page `1 + index` within the slide master's
-     * plane), and the layout plane it renders on. The picker thumbnails each
-     * slide layout with the client's `renderPagePreview` and creates a slide on it
-     * via `Command.createSlide(index, layoutId)`.
-     */
-    slideMastersSummary(): Promise<SlideMasterSummary[]> {
-        return this.#request({ type: "slideMastersSummary" });
     }
 
     /** The id of the deck's slide at `index` (0-based), or `null` past the last

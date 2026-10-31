@@ -92,8 +92,9 @@ export interface UDocOptions {
      *  deck's slides show one at a time in its Normal view; other document
      *  types have no notes, and no panel. */
     showNotesPanel?: boolean;
-    /** How a deck shows: `"normal"`, its slides, or `"notesPage"`, the page
-     *  each slide's notes print on, as PowerPoint's views of those names do.
+    /** How a deck shows: `"normal"`, its slides; `"notesPage"`, the page each
+     *  slide's notes print on; or `"slideMaster"`, its slide masters, each
+     *  followed by its slide layouts — as PowerPoint's views of those names do.
      *  Default `"normal"`; {@link UDocBase.setPresentationView} and the View
      *  tab change it. Other document types keep it for the next deck. */
     presentationView?: PresentationView;
@@ -1462,10 +1463,13 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Show a deck as `view` — its slides, or the pages their notes print on —
-     * as the View tab's Normal and Notes Page do, on the slide it shows.
-     * Resolves once the view has painted. Kept while a document of another
-     * type is open, which resolves at once: the next deck opens in it.
+     * Show a deck as `view` — its slides, the pages their notes print on, or
+     * its slide masters and their slide layouts — as the View tab's Normal,
+     * Notes Page and Slide Master do. The slides and the notes pages open on
+     * the slide shown; the slide masters on the slide layout of the slide
+     * shown, and leaving them goes back to that slide. Resolves once the view
+     * has painted. Kept while a document of another type is open, which
+     * resolves at once: the next deck opens in it.
      */
     setPresentationView(view: PresentationView): Promise<void> {
         return this.shell.setPresentationView(view);

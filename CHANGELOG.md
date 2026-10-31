@@ -21,6 +21,14 @@ listed once, by package. Its major and minor version are those of the
   shows, whichever view it is shown in, as Excel prints the active sheet;
   the print dialog and `print({ pages })` count those pages. It printed the
   first sheet's grid before, as one page, whatever sheet was shown.
+- A deck's View tab adds Slide Master to Normal and Notes Page, as
+  PowerPoint names it: its slide masters, each followed by its slide layouts,
+  to look through but not yet edit. The thumbnails show each slide master
+  numbered and its slide layouts indented under it, named by their layout.
+  The view opens on the slide layout of the slide shown, and Normal or Notes
+  Page goes back to that slide. `setPresentationView("slideMaster")` and the
+  `presentationView` option show it too. New Slide greys in it, and Print
+  still prints the deck's slides.
 
 #### Changed
 

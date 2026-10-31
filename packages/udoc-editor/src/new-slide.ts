@@ -47,8 +47,8 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
     const execute = (command: UDocCommand) => host.commit(() => host.client.execute(command));
     return {
         // Pull every slide master's summary, flatten it to pickable options
-        // (each slide layout previews on its slide master's plane at page
-        // `1 + its index`), and open — with the current slide's size, which
+        // (each slide layout previews on the slide masters' plane, after its
+        // slide master's page), and open — with the current slide's size, which
         // every slide layout shares. Falls back to the copy-neighbor default
         // when no slide layouts are available. The new slide lands at the end
         // of the last section selected in the thumbnails — an empty one too —
@@ -63,14 +63,14 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
                     ? APPEND_INDEX
                     : (selectedPages.length > 0 ? Math.max(...selectedPages) : pageIndex) + 1;
             const [slideMasters, slideSize] = await Promise.all([
-                host.edit.slideMastersSummary(),
-                host.client.pageDisplaySize(pageIndex),
+                host.client.presentation.slideMasters(),
+                host.client.pageDisplaySize(0, pageIndex),
             ]);
             const options: LayoutOption[] = slideMasters.flatMap((slideMaster) =>
                 slideMaster.slideLayouts.map((slideLayout, index) => ({
                     layout: slideLayout.id,
                     plane: slideMaster.plane,
-                    page: index + 1,
+                    page: slideMaster.page + 1 + index,
                     name: slideLayout.name,
                 })),
             );
@@ -94,7 +94,8 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
 /**
  * The New Slide command, opening the picker with `open` — a document-level
  * action, live whatever is selected: the slide lands after the current one,
- * or the slides or sections picked in the thumbnails.
+ * or the slides or sections picked in the thumbnails. Not in the Slide Master
+ * view, which shows no slide to put it after.
  */
 export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
     return {
@@ -104,6 +105,6 @@ export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
         group: "slide",
         labeled: true,
         run: { kind: "action", press: open },
-        enabledWhen: (c) => c.ready,
+        enabledWhen: (c) => c.ready && c.presentationView !== "slideMaster",
     };
 }

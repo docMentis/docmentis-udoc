@@ -52,6 +52,7 @@ import {
     ICON_SUBTOOL_CLOUD,
     ICON_NOTES,
     ICON_NOTES_PAGE_VIEW,
+    ICON_SLIDE_MASTER_VIEW,
     ICON_NORMAL_VIEW,
     ICON_PAGES_VIEW,
     ICON_PAGELESS_VIEW,
@@ -846,8 +847,9 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
     },
 
-    // View tab — a deck's views, one segment button: its slides, or the
-    // pages its notes print on, the one shown pressed.
+    // View tab — a deck's views, one segment button: its slides, the pages
+    // its notes print on, or its slide masters and their slide layouts, the
+    // one shown pressed.
     normalView: {
         id: "normalView",
         label: "command.normalView",
@@ -873,6 +875,20 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             cluster: "segment",
             pressed: (state) => state.presentationView === "notesPage",
             press: (store) => store.dispatch({ type: "SET_PRESENTATION_VIEW", view: "notesPage" }),
+        },
+        enabledWhen: whenReady,
+    },
+    slideMasterView: {
+        id: "slideMasterView",
+        label: "command.slideMasterView",
+        icon: ICON_SLIDE_MASTER_VIEW,
+        group: "views",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            cluster: "segment",
+            pressed: (state) => state.presentationView === "slideMaster",
+            press: (store) => store.dispatch({ type: "SET_PRESENTATION_VIEW", view: "slideMaster" }),
         },
         enabledWhen: whenReady,
     },

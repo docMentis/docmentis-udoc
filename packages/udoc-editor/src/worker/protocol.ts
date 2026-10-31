@@ -131,16 +131,6 @@ export interface FontPreviewImage {
 }
 
 /**
- * Read every slide master, summarized for the New-Slide picker: its id, its
- * slide layouts' ids, and the layout **plane** it renders on. A pure read
- * (though it loads every slide master to learn its slide layouts). Replies with
- * the parsed {@link import("@docmentis/udoc-wasm").SlideMasterSummary} list.
- */
-export interface SlideMastersSummaryRequest {
-    type: "slideMastersSummary";
-}
-
-/**
  * Read the id of the deck's slide at `index` (0-based, in slide order) — what
  * a shape inserted onto it names its slide by. A pure read. Replies with the
  * id, or `null` past the last slide or with no presentation open.
@@ -211,7 +201,6 @@ export type EditRequest =
     | LoadedFontFamilyNamesRequest
     | FontFamiliesRequest
     | RenderFontPreviewRequest
-    | SlideMastersSummaryRequest
     | SlideIdRequest
     | PasteRequest
     | InsertImageRequest

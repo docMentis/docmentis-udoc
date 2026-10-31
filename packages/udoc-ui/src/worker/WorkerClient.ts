@@ -58,6 +58,7 @@ import type {
     SearchMatchLocation,
     SearchOptions,
     SheetLayoutMode,
+    SlideMasterSummary,
     UrlFont,
 } from "@docmentis/udoc-wasm";
 import { UDocError } from "@docmentis/udoc-wasm/error";
@@ -1359,6 +1360,33 @@ export class WorkerClient {
             this.#send({ type: "slidesShow", indices: [...indices] }) as Promise<boolean[]>,
 
         /**
+         * Every slide master of the open deck, in order, summarized: its id, its
+         * slide layouts' ids and names, and the plane and page it renders on —
+         * the slide masters', each followed by its slide layouts. Loads every
+         * slide master and slide layout; none for any other document. A read:
+         * what the New-Slide picker offers, and the Slide Master view's
+         * thumbnails are laid out by.
+         */
+        slideMasters: (): Promise<SlideMasterSummary[]> =>
+            this.#send({ type: "slideMasters" }) as Promise<SlideMasterSummary[]>,
+
+        /**
+         * How many slides the open deck has, whichever view shows; `0` for any
+         * other document. A read: what a print from the Slide Master view
+         * counts.
+         */
+        slideCount: (): Promise<number> => this.#send({ type: "slideCount" }) as Promise<number>,
+
+        /**
+         * The id of the slide layout the slide at `index` (0-based, in slide
+         * order) is built on, loading the slide on first read — `null` past the
+         * last slide, or for any other document. A read: the slide layout the
+         * Slide Master view opens on.
+         */
+        slideLayoutId: (index: number): Promise<string | null> =>
+            this.#send({ type: "slideLayoutId", index }) as Promise<string | null>,
+
+        /**
          * The open deck's sections, in order, each with the run of the slide
          * order it holds; none for a deck without sections, or any other
          * document. A read: what the thumbnails group the slides under.
@@ -1715,20 +1743,22 @@ export class WorkerClient {
     }
 
     /**
-     * The size page `index` (0-based) takes as displayed, in document points —
-     * turned by its rotation, the page's own and the view's, the shape its
-     * {@link requestThumbnail} comes out in. Doc-type-agnostic (slides, PDF
-     * pages, image frames all answer), so the thumbnail strip can shape and
-     * scale a preview of any open document. A pure read; resolves to a zero
-     * size when the page is out of range or not yet composed.
+     * The size page `index` (0-based) of `plane` takes as displayed, in
+     * document points — turned by its rotation, the page's own and the view's,
+     * the shape its {@link requestThumbnail} comes out in. Doc-type-agnostic
+     * (slides, PDF pages, image frames all answer), so the thumbnail strip can
+     * shape and scale a preview of any open document. A pure read; resolves to
+     * a zero size when the page is out of range or not yet composed.
      */
-    async pageDisplaySize(index: number): Promise<Size> {
-        return (await this.#send({ type: "pageDisplaySize", index })) as Size;
+    async pageDisplaySize(plane: number, index: number): Promise<Size> {
+        return (await this.#send({ type: "pageDisplaySize", plane, index })) as Size;
     }
 
     /**
-     * Render a thumbnail of page `index` (0-based) at `scale` (output pixels
-     * per document point), resolving with a decoded {@link ImageBitmap}. Served
+     * Render a thumbnail of page `index` (0-based) of `plane` at `scale` (output
+     * pixels per document point), resolving with a decoded {@link ImageBitmap}.
+     * The strip shows one plane at a time: a request for a page of another
+     * plane replaces one still queued for the page. Served
      * from an in-process LRU cache when warm; otherwise queued in the worker,
      * which rasterizes it off the viewport as background work — **only once the
      * reader has been quiet a moment**, so the strip never stutters live
@@ -1738,8 +1768,8 @@ export class WorkerClient {
      * ({@link cancelThumbnail}), or invalidated ({@link invalidateThumbnails});
      * callers skip those silently.
      */
-    requestThumbnail(index: number, scale: number): Promise<ImageBitmap> {
-        const key = `${index}:${scale.toFixed(3)}`;
+    requestThumbnail(plane: number, index: number, scale: number): Promise<ImageBitmap> {
+        const key = `${plane}:${index}:${scale.toFixed(3)}`;
         const cached = this.#thumbnailCache.get(key);
         if (cached) {
             cached.lastAccess = performance.now();
@@ -1751,7 +1781,7 @@ export class WorkerClient {
         const queued = this.#thumbnailRequests.get(index);
         if (queued?.key === key) return queued.promise;
         const epoch = this.#thumbnailEpoch;
-        const promise = (this.#send({ type: "queueThumbnail", index, scale }) as Promise<ThumbnailResult | null>)
+        const promise = (this.#send({ type: "queueThumbnail", plane, index, scale }) as Promise<ThumbnailResult | null>)
             .then(async (result) => {
                 if (result === null) throw new Error(THUMBNAIL_DROPPED);
                 // The page is opaque (a white media box), so the premultiplied
@@ -1778,12 +1808,11 @@ export class WorkerClient {
     /**
      * Render a one-shot preview of page `page` on `plane` at `scale`, resolving
      * with a decoded {@link ImageBitmap} — for the New-Slide layout picker, which
-     * previews slide layouts on their slide masters' planes, and for
-     * printing, which renders each page to print at its quality's DPI. Unlike
-     * {@link requestThumbnail} this bypasses the slide-plane strip's queue and
-     * cache, and runs as a request rather than as background work: the picker
-     * renders a small fixed set on open, off the slide-plane navigator's
-     * scheduling. The caller owns the returned bitmap.
+     * previews slide layouts on the slide masters' plane, and for printing,
+     * which renders each page to print at its quality's DPI. Unlike
+     * {@link requestThumbnail} this bypasses the strip's queue and cache, and
+     * runs as a request rather than as background work: the picker renders a
+     * small fixed set on open, off the strip's scheduling. The caller owns the returned bitmap.
      * `ephemeral` draws the ephemeral annotations, which a print leaves out.
      */
     async renderPagePreview(plane: number, page: number, scale: number, ephemeral = true): Promise<ImageBitmap> {

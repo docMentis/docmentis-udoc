@@ -25,14 +25,14 @@ const PREVIEW_SCALE = 0.25;
 const DEFAULT_SLIDE_SIZE: Size = { width: 960, height: 540 };
 
 /** One pickable slide layout: the id a slide is created on, plus where its
- *  preview renders — the plane (its slide master's) and the page within it
- *  (`1 + its index`; page 0 of that plane is the master). */
+ *  preview renders — the slide masters' plane, and its page there (after its
+ *  slide master's, `1 + its index` on). */
 export interface LayoutOption {
     /** The slide-layout id (hex key) — passed to `createSlide(index, layout)`. */
     layout: string;
-    /** The slide master's plane the preview renders on. */
+    /** The slide masters' plane the preview renders on. */
     plane: number;
-    /** The page index within that plane (`1..`; page 0 is the master). */
+    /** The page index within that plane: after its slide master's. */
     page: number;
     /** The name the file gives the slide layout ("Title Slide"), or null for
      *  none. */

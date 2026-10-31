@@ -60,6 +60,7 @@ import type {
     PageImage,
     SheetLayoutMode,
     SheetState,
+    SlideMasterSummary,
     UrlFont,
     WasmSession,
 } from "@docmentis/udoc-wasm";
@@ -749,8 +750,9 @@ const fontTask: Task = {
     take: () => fontInstalls.shift()!,
 };
 
-/** The thumbnail strip's renders, queued and not yet run, by page: the scale, and the request to answer. */
-const thumbnails = new Map<number, { id: number | undefined; scale: number }>();
+/** The thumbnail strip's renders, queued and not yet run, by page: the plane
+ *  the strip shows, the scale, and the request to answer. */
+const thumbnails = new Map<number, { id: number | undefined; plane: number; scale: number }>();
 
 /** The page the strip is centred on: the queued render nearest it runs first. */
 let thumbnailFocus = 0;
@@ -769,9 +771,9 @@ const thumbnailTask: Task = {
                 index = page;
             }
         }
-        const { id, scale } = thumbnails.get(index)!;
+        const { id, plane, scale } = thumbnails.get(index)!;
         thumbnails.delete(index);
-        return () => renderQueuedThumbnail(id, index, scale);
+        return () => renderQueuedThumbnail(id, plane, index, scale);
     },
 };
 
@@ -1219,13 +1221,13 @@ function loadSheet(s: WasmSession, plane: number): void {
 }
 
 /** Render the strip's queued thumbnail of page `index` at `scale`, and answer request `id` with it. */
-function renderQueuedThumbnail(id: number | undefined, index: number, scale: number): void {
+function renderQueuedThumbnail(id: number | undefined, plane: number, index: number, scale: number): void {
     if (!session) {
         reply(id, null);
         return;
     }
     try {
-        const raster = rasterPage(session, 0, index, scale, true);
+        const raster = rasterPage(session, plane, index, scale, true);
         reply(id, raster, undefined, [raster.rgba]);
     } catch (error) {
         reply(id, undefined, error);
@@ -1837,7 +1839,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // an earlier request for the page answers that one with nothing.
                 const earlier = thumbnails.get(msg.index);
                 if (earlier) reply(earlier.id, null);
-                thumbnails.set(msg.index, { id, scale: msg.scale });
+                thumbnails.set(msg.index, { id, plane: msg.plane, scale: msg.scale });
                 lanes.wake();
                 break;
             }
@@ -2231,8 +2233,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // degrades to "unknown" rather than rejecting.
                 let size = { width: 0, height: 0 };
                 try {
-                    // The strip only ever sizes slide-plane pages — plane 0.
-                    if (session) size = session.pageDisplaySize(0, msg.index);
+                    if (session) size = session.pageDisplaySize(msg.plane, msg.index);
                 } catch {
                     // out of range / not composed — fall through to zero.
                 }
@@ -2321,6 +2322,24 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // is none to read: no open / non-presentation doc, or past the
                 // last slide.
                 reply(id, session ? slidesShow(session, msg.indices) : msg.indices.map(() => true));
+                break;
+            }
+            case "slideMasters": {
+                // A read that loads every slide master and slide layout. None
+                // with no open / non-presentation doc.
+                reply(id, session ? slideMasters(session) : []);
+                break;
+            }
+            case "slideCount": {
+                // A pure read of the deck's root. None with no open /
+                // non-presentation doc.
+                reply(id, session ? slideCount(session) : 0);
+                break;
+            }
+            case "slideLayoutId": {
+                // A read that loads the slide on first use. None with no open /
+                // non-presentation doc, or past the last slide.
+                reply(id, session ? slideLayoutId(session, msg.index) : null);
                 break;
             }
             case "slideSections": {
@@ -2752,6 +2771,25 @@ function slidesShow(s: WasmSession, indices: readonly number[]): boolean[] {
         const id = ids[index];
         return id === undefined || safeRead(() => s.presentation.model.slide(id).show(), true);
     });
+}
+
+/** The open deck's slide masters, summarized — none for any other document. */
+function slideMasters(s: WasmSession): SlideMasterSummary[] {
+    return safeRead(() => s.presentation.model.slideMasters.summary(), []);
+}
+
+/** How many slides the open deck has — none for any other document. */
+function slideCount(s: WasmSession): number {
+    return safeRead(() => s.presentation.model.root.slideIds(), []).length;
+}
+
+/** The id of the slide layout the slide at `index` is built on — `null` past
+ *  the last slide, for one that won't load, or any other document. */
+function slideLayoutId(s: WasmSession, index: number): string | null {
+    const id = safeRead(() => s.presentation.model.root.slideIds(), [])[index];
+    return id === undefined
+        ? null
+        : safeRead<string | null>(() => s.presentation.model.slide(id).slideLayoutId(), null);
 }
 
 /** The open deck's sections, each as the run of the slide order it holds —

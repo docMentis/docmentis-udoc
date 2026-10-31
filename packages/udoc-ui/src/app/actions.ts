@@ -5,6 +5,7 @@ import type {
     SearchMatch,
     SheetLayoutMode,
     SheetState,
+    SlideMasterSummary,
     StampIcon,
     StartError,
     UDocSearchScope,
@@ -120,6 +121,9 @@ export type Action =
     // The open deck's sections (read back after each change of the document).
     // Drives the thumbnails' section headers.
     | { type: "SET_SLIDE_SECTIONS"; sections: readonly SlideSectionRun[] }
+    // The open deck's slide masters (read when its Slide Master view first
+    // shows). Lays out the thumbnails of that view.
+    | { type: "SET_SLIDE_MASTERS"; slideMasters: readonly SlideMasterSummary[] }
     // The sections the selection holds (pushed from the worker's selection
     // reports). Drives the headers' tint and the section menu.
     | { type: "SET_SELECTED_SLIDE_SECTIONS"; ids: readonly string[] }

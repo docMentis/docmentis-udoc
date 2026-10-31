@@ -742,6 +742,38 @@ export const uiStyles = css`
         text-decoration: line-through;
     }
 
+    /* A slide layout, in a deck's Slide Master view: indented under its slide
+   master (ThumbnailPanel's LAYOUT_INDENT), and joined to it by a line down
+   the indent that turns into each layout, the last ending the run. */
+    .udoc-ui-root .udoc-thumbnail-item--layout {
+        left: 36px;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-item--layout::before,
+    .udoc-ui-root .udoc-thumbnail-item--layout::after {
+        content: "";
+        position: absolute;
+        left: -12px;
+        border: 0 solid var(--udoc-color-outline-variant);
+        pointer-events: none;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-item--layout::before {
+        top: -12px;
+        bottom: 0;
+        border-left-width: 1px;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-item--last-layout::before {
+        bottom: 50%;
+    }
+
+    .udoc-ui-root .udoc-thumbnail-item--layout::after {
+        top: 50%;
+        width: 12px;
+        border-top-width: 1px;
+    }
+
     /* A deck section's header, above its slides: a toggle folding them away,
    its name, and how many it holds while folded. Placed like the cards
    (ThumbnailPanel's SECTION_H is its height). */

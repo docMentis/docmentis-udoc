@@ -1041,9 +1041,9 @@ export interface HideAnnotationsRequest {
 }
 
 /**
- * Read the size (document points) page `index` takes as displayed — turned by
- * its rotation, the page's own and the view's — a doc-type-agnostic pure read
- * (slides, PDF pages, image frames all answer). Replies with a
+ * Read the size (document points) page `index` of `plane` takes as displayed —
+ * turned by its rotation, the page's own and the view's — a doc-type-agnostic
+ * pure read (slides, PDF pages, image frames all answer). Replies with a
  * {@link import("../geometry.js").Size}, the shape a thumbnail render comes
  * out in; the thumbnail strip shapes and scales a preview from it. Composes the
  * page if needed. Returns a zero size when the page is out of range / not
@@ -1051,6 +1051,7 @@ export interface HideAnnotationsRequest {
  */
 export interface PageDisplaySizeRequest {
     type: "pageDisplaySize";
+    plane: number;
     index: number;
 }
 
@@ -1199,6 +1200,37 @@ export interface MediaDataRequest {
 export interface SlidesShowRequest {
     type: "slidesShow";
     indices: number[];
+}
+
+/**
+ * Read every slide master of the open deck, summarized: its id, its slide
+ * layouts' ids and names, and the plane and page it renders on — the slide
+ * masters', each followed by its slide layouts. Loads every slide master and
+ * slide layout. Replies with the
+ * {@link import("@docmentis/udoc-wasm").SlideMasterSummary} list, empty for any
+ * other document.
+ */
+export interface SlideMastersRequest {
+    type: "slideMasters";
+}
+
+/**
+ * Read how many slides the open deck has — a pure read of its root, whichever
+ * view shows. Replies with the count, `0` for any other document.
+ */
+export interface SlideCountRequest {
+    type: "slideCount";
+}
+
+/**
+ * Read the id (hex key) of the slide layout the deck's slide at `index`
+ * (0-based, in slide order) is built on, loading the slide on first read.
+ * Replies with the id, or `null` past the last slide, for one that won't load,
+ * and for any other document.
+ */
+export interface SlideLayoutIdRequest {
+    type: "slideLayoutId";
+    index: number;
 }
 
 /**
@@ -1785,10 +1817,9 @@ export interface RenderPrintPageRequest {
  */
 export interface RenderThumbnailRequest {
     type: "renderThumbnail";
-    /** The layout plane to render — `0` is the slide plane (the thumbnail
-     *  strip); the New-Slide picker's layout previews are on a slide master's,
-     *  after the notes planes. Required, mirroring the plane-leading wasm
-     *  `renderPageToRgba`; the slide-plane strip passes `0` explicitly. */
+    /** The layout plane to render — `0` is the slide plane; the New-Slide
+     *  picker's layout previews are on the slide masters', after the notes
+     *  planes. Required, mirroring the plane-leading wasm `renderPageToRgba`. */
     plane: number;
     index: number;
     scale: number;
@@ -1798,7 +1829,7 @@ export interface RenderThumbnailRequest {
 }
 
 /**
- * Queue a thumbnail-strip render of page `index` (0-based) on the slide plane at
+ * Queue a thumbnail-strip render of page `index` (0-based) on `plane` at
  * `scale`, as a {@link RenderThumbnailRequest} renders it. The worker runs it
  * as background work — once the reader has been quiet a moment, nearest the
  * strip's focus ({@link ThumbnailFocusRequest}) first — and replies with the
@@ -1807,6 +1838,9 @@ export interface RenderThumbnailRequest {
  */
 export interface QueueThumbnailRequest {
     type: "queueThumbnail";
+    /** The plane the strip shows: a deck's slides, or its slide masters in its
+     *  Slide Master view — `0` for any other document. */
+    plane: number;
     index: number;
     scale: number;
 }
@@ -1948,6 +1982,9 @@ export type WorkerRequest =
     | PageMediaRequest
     | MediaDataRequest
     | SlidesShowRequest
+    | SlideMastersRequest
+    | SlideCountRequest
+    | SlideLayoutIdRequest
     | SlideSectionsRequest
     | SheetIdByIndexRequest
     | SetSelectionRequest
