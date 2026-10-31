@@ -2115,6 +2115,12 @@ export const uiStyles = css`
         position: absolute;
         inset: 0;
     }
+    /* A canvas's stand-in while the browser catches up with its resize
+   (ResizeCover): placed and shown as the canvas is, its class's, but never the
+   pointer's target, which the canvas's handlers look for. */
+    .udoc-ui-root .udoc-ui__resize-cover {
+        pointer-events: none;
+    }
 
     /* A deck's notes pane, under the slides: the notes viewer's canvas, its
    caret and scrollbar over it, and the splitter that resizes it lying along

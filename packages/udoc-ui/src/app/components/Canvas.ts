@@ -41,6 +41,7 @@ import { SelectionLayer } from "./SelectionLayer.js";
 import type { KeepOutRect, Preview, ResizeHandle, SelectionChrome, SelectionPlacement } from "./SelectionLayer.js";
 import { GuideBands } from "./GuideBands.js";
 import type { BandKind, BandPalette, GuideBand } from "./GuideBands.js";
+import { ResizeCover } from "./ResizeCover.js";
 import { SCROLLBAR_THICKNESS_PX, visibleSpan } from "./Scrollbar.js";
 import { MAC } from "./controls.js";
 import { applyPoint, applyVector, invert, translate } from "./affine.js";
@@ -730,6 +731,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     const canvas = document.createElement("canvas");
     canvas.className = "udoc-ui__canvas";
     el.appendChild(canvas);
+    // Over the canvas while the browser catches up with its resize.
+    const resizeCover = new ResizeCover(canvas);
 
     // The selection overlay: boxes marking the selected objects, above the
     // canvas and the page chrome (selection marks stack over the page pill/rail
@@ -1332,6 +1335,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             const tx = dx + shiftX;
             const ty = dy + shiftY;
             canvas.style.transform = tx || ty ? `translate(${tx}px, ${ty}px)` : "";
+            resizeCover.sync();
             // What the canvas's pixels carry rides with them: the selection,
             // the overlays — and the guide bands' marks, so the ruler / column
             // headers don't sit frozen until the worker's frame at the new size
@@ -1910,8 +1914,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
 
         // Commit the canvas's CSS size only once the worker has repainted the
         // backing store at the new size, so the browser never scales stale
-        // pixels (the resize "stretch"). See the `applyMeasure` comment.
-        const offResized = client.onResized(({ width, height }) => {
+        // pixels (the resize "stretch") — and cover it with that frame until
+        // the browser shows it (see ResizeCover). See the `applyMeasure` comment.
+        const offResized = client.onResized(({ width, height, frame }) => {
             // A band change waiting on this frame shows with it — first, so the
             // canvas is placed in the pane its strips leave.
             if (bandAwaitsFrame) {
@@ -1919,6 +1924,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
                 applyBandLayout();
             }
             commitCanvasSize(width, height);
+            if (frame) resizeCover.show(frame);
         });
         cleanups.push(offResized);
 
@@ -3781,6 +3787,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         resizeObserver = null;
         if (settleFrame !== null) cancelAnimationFrame(settleFrame);
         settleFrame = null;
+        resizeCover.destroy();
         for (const off of cleanups) off();
         cleanups.length = 0;
         overlay.clear();

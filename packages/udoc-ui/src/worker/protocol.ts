@@ -2037,7 +2037,28 @@ export interface PageViewsReport {
      * frame's views, in the one task: the canvas takes its new size as what is
      * laid over it takes the frame's geometry, and no paint falls between.
      */
-    resized: { width: number; height: number } | null;
+    resized: ResizeAck | null;
+}
+
+/**
+ * A viewer's resize, acked once the worker has painted a frame at it: the
+ * size in CSS px, and a copy of that frame.
+ */
+export interface ResizeAck {
+    width: number;
+    height: number;
+    /**
+     * The frame painted at the new size, copied out of the canvas — `null`
+     * where it keeps the size of the frame the page shows (as a document
+     * opened does), and before the first. The browser shows a transferred
+     * canvas's frame at a new size only once its GPU process has told the
+     * page of it, which can be a frame after the page has taken its new CSS
+     * size and laid what is over the canvas at the frame's geometry; until
+     * then it stretches the old frame to the new box. The host shows this
+     * copy over the canvas, in step with the rest, until the canvas's own
+     * frame is surely shown.
+     */
+    frame: ImageBitmap | null;
 }
 
 /**
@@ -2134,12 +2155,10 @@ export interface HistoryReport {
  * A frame that posts its views carries its ack in them instead
  * ({@link PageViewsReport.resized}); this comes for one that posts none.
  */
-export interface ResizedReport {
+export interface ResizedReport extends ResizeAck {
     type: "resized";
     /** The viewer resized, as {@link PageViewsReport.viewer} names it. */
     viewer: number;
-    width: number;
-    height: number;
 }
 
 /**

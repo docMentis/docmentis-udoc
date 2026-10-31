@@ -18,6 +18,7 @@ import type { UIState } from "../state.js";
 import { VIEW_MODE, viewDpi } from "../state.js";
 import type { I18n } from "../i18n/index.js";
 import { CLICK_CHAIN_MS, CLICK_CHAIN_RADIUS, DRAG_THRESHOLD, granularityFor } from "./Canvas.js";
+import { ResizeCover } from "./ResizeCover.js";
 import { SCROLLBAR_THICKNESS_PX, thumbPlacement } from "./Scrollbar.js";
 import { SelectionLayer } from "./SelectionLayer.js";
 
@@ -110,6 +111,8 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
     track.appendChild(thumb);
     host.append(canvas, selectionHost, track);
     el.append(splitter, host);
+    // Over the canvas while the browser catches up with its resize.
+    const resizeCover = new ResizeCover(canvas);
 
     const viewer: ViewerClient = client.addViewer(canvas);
     viewer.setPageBorder(null);
@@ -219,6 +222,7 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
         const dpr = globalThis.devicePixelRatio || 1;
         canvas.style.width = `${Math.max(1, Math.round(cssW * dpr)) / dpr}px`;
         canvas.style.height = `${Math.max(1, Math.round(cssH * dpr)) / dpr}px`;
+        resizeCover.sync();
     }
 
     /** Draw the scrollbar from the latest frame: shown where the engine kept
@@ -562,7 +566,12 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
                 followCaret();
             }),
         );
-        cleanups.push(viewer.onResized(({ width: w, height: h }) => commitCanvasSize(w, h)));
+        cleanups.push(
+            viewer.onResized(({ width: w, height: h, frame }) => {
+                commitCanvasSize(w, h);
+                if (frame) resizeCover.show(frame);
+            }),
+        );
         cleanups.push(client.onSelection(adoptSelection));
     }
 
@@ -579,6 +588,7 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
     function destroy(): void {
         for (const off of cleanups) off();
         cleanups.length = 0;
+        resizeCover.destroy();
         el.remove();
     }
 

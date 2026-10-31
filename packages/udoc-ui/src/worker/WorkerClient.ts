@@ -66,6 +66,7 @@ import type {
     PageAnnotations,
     PageComments,
     PageViewsReport,
+    ResizeAck,
     SearchReply,
     SelectedAnnotations,
     SelectionEdit,
@@ -267,7 +268,7 @@ export class WorkerClient {
     readonly #peersListeners = new Set<(peers: Peer[]) => void>();
     readonly #peerPointersListeners = new Set<(pointers: PeerPointer[]) => void>();
     readonly #historyListeners = new Set<(state: HistoryState) => void>();
-    readonly #resizedListeners = new Set<(size: { width: number; height: number }) => void>();
+    readonly #resizedListeners = new Set<(ack: ResizeAck) => void>();
     readonly #brandingRectListeners = new Set<(rect: Rect | null) => void>();
     /** Last branding rect seen, replayed to late subscribers (it's posted only
      *  on resize, so a subscriber mounting after the resize would otherwise miss
@@ -1675,11 +1676,13 @@ export class WorkerClient {
     /**
      * Subscribe to the worker's resize acks: fired after the worker has resized
      * the backing store and run a frame at the new size, carrying that size in
-     * CSS px. The canvas host waits for this to set the canvas's CSS size, so
-     * the displayed box never runs ahead of the painted pixels (the resize
-     * "stretch"). Returns an unsubscribe function.
+     * CSS px and a copy of the frame. The canvas host waits for this to set the
+     * canvas's CSS size, so the displayed box never runs ahead of the painted
+     * pixels (the resize "stretch"), and shows the copy over the canvas while
+     * the browser catches up (see {@link ResizeAck.frame}) — the one listener
+     * that takes it, as showing it detaches it. Returns an unsubscribe function.
      */
-    onResized(listener: (size: { width: number; height: number }) => void): () => void {
+    onResized(listener: (ack: ResizeAck) => void): () => void {
         this.#resizedListeners.add(listener);
         return () => this.#resizedListeners.delete(listener);
     }
@@ -2006,7 +2009,7 @@ export class WorkerClient {
                         return;
                     }
                     for (const listener of this.#resizedListeners) {
-                        listener({ width: msg.width, height: msg.height });
+                        listener({ width: msg.width, height: msg.height, frame: msg.frame });
                     }
                     return;
                 case "brandingRect":

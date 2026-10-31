@@ -34,6 +34,7 @@ import type {
     MediaFile,
     PageAnnotations,
     PageComments,
+    ResizeAck,
     SelectedAnnotations,
     SelectionEdit,
     SelectionReport,
@@ -141,6 +142,9 @@ interface ViewerHost {
     // main thread only grows the canvas's CSS box after the pixels behind it
     // are fresh.
     resizeAck: { width: number; height: number } | null;
+    // The canvas's size (device px) at the resize ack last posted — the size
+    // of the frame the page shows; `null` before the first.
+    shownBacking: { width: number; height: number } | null;
     // Sequence number of the latest viewport message consumed (0 before any),
     // echoed in each pageViews report so the client can tell which frames
     // reflect its newest viewport.
@@ -161,6 +165,7 @@ function viewerHost(canvas: OffscreenCanvas | null): ViewerHost {
         zoom: Number.NaN,
         anchorShift: 0,
         resizeAck: null,
+        shownBacking: null,
         viewportSeq: 0,
         emittedSeq: -1,
     };
@@ -379,12 +384,37 @@ function reportPerf(): void {
     perfReportAt = now;
 }
 
+/**
+ * A copy of viewer `v`'s frame for the resize ack it posts, where the frame
+ * changes the canvas's size from the one the page shows — see
+ * {@link ResizeAck.frame}. `null` where it keeps it (a document opened), and
+ * for the first, before which the page shows nothing.
+ */
+function resizedFrame(v: number): ImageBitmap | null {
+    const host = viewers[v]!;
+    const canvas = host.canvas;
+    if (!canvas) return null;
+    const shown = host.shownBacking;
+    host.shownBacking = { width: canvas.width, height: canvas.height };
+    if (!shown || (shown.width === canvas.width && shown.height === canvas.height)) return null;
+    if (canvas.width === 0 || canvas.height === 0) return null;
+    const copy = new OffscreenCanvas(canvas.width, canvas.height);
+    const ctx = copy.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(canvas, 0, 0);
+    return copy.transferToImageBitmap();
+}
+
 /** Post viewer `v`'s pending resize ack (if any) so the main thread commits the CSS size. */
 function flushResizeAck(s: WasmSession, v: number): void {
     const host = viewers[v]!;
     const ack = host.resizeAck;
     if (!ack) return;
-    scope.postMessage({ type: "resized", viewer: v, width: ack.width, height: ack.height });
+    const frame = resizedFrame(v);
+    scope.postMessage(
+        { type: "resized", viewer: v, width: ack.width, height: ack.height, frame },
+        frame ? [frame] : [],
+    );
     host.resizeAck = null;
     // The brand decal is screen-fixed, so its CSS rect changes only with the
     // viewport — re-post it on the same beat as the resize ack so the host can
@@ -434,8 +464,9 @@ let lastGuideKey: string | null = null;
  */
 function emitPageViews(s: WasmSession, v: number, frame = false): void {
     const host = viewers[v]!;
-    const resized = frame ? host.resizeAck : null;
-    if (resized) host.resizeAck = null;
+    const ack = frame ? host.resizeAck : null;
+    if (ack) host.resizeAck = null;
+    const resized: ResizeAck | null = ack && { ...ack, frame: resizedFrame(v) };
     const rects = s.pageViewRects(v);
     // [zoom, scrollX, scrollY, scrollWidth, scrollHeight, currentPage,
     // scrollUsedWidth, scrollUsedHeight, scrollbarX, scrollbarY]; empty before open.
@@ -480,7 +511,7 @@ function emitPageViews(s: WasmSession, v: number, frame = false): void {
             guide,
             resized,
         },
-        [rects.buffer],
+        resized?.frame ? [rects.buffer, resized.frame] : [rects.buffer],
     );
     // The decal's rect moves with the viewport — see `flushResizeAck`.
     if (resized && v === VIEWER) emitBrandingRect(s);

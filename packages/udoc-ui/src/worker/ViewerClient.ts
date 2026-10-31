@@ -9,11 +9,10 @@ import type {
     PageViewsFrame,
     RgbColor,
     ScrollMode,
-    Size,
     TextSelectOptions,
     Viewport,
 } from "../geometry.js";
-import type { PageViewsReport, ResizedReport, WorkerRequest } from "./protocol.js";
+import type { PageViewsReport, ResizeAck, ResizedReport, WorkerRequest } from "./protocol.js";
 
 /** Floats per page in a {@link PageViewsReport} buffer:
  *  `[index, x, y, w, h, rotation]`. */
@@ -67,7 +66,7 @@ export class ViewerClient {
     readonly index: number;
     readonly #transport: ViewerTransport;
     readonly #pageViewListeners = new Set<(frame: PageViewsFrame) => void>();
-    readonly #resizedListeners = new Set<(size: Size) => void>();
+    readonly #resizedListeners = new Set<(ack: ResizeAck) => void>();
     /** Seq of the latest viewport sent; reports echoing it are `fresh`. */
     #viewportSeq = 0;
     /** The `anchorShift` of the latest fresh report — what the host's scroll,
@@ -156,8 +155,10 @@ export class ViewerClient {
     }
 
     /** Subscribe to its resize acks — the CSS size its canvas was repainted at,
-     *  which the host commits its CSS box to. Returns an unsubscribe function. */
-    onResized(listener: (size: Size) => void): () => void {
+     *  which the host commits its CSS box to, and a copy of that frame, which
+     *  it shows over it a moment (see {@link ResizeAck.frame}). Returns an
+     *  unsubscribe function. */
+    onResized(listener: (ack: ResizeAck) => void): () => void {
         this.#resizedListeners.add(listener);
         return () => this.#resizedListeners.delete(listener);
     }
@@ -166,7 +167,9 @@ export class ViewerClient {
      *  routes them here. */
     receive(report: PageViewsReport | ResizedReport): void {
         if (report.type === "resized") {
-            for (const listener of this.#resizedListeners) listener({ width: report.width, height: report.height });
+            for (const listener of this.#resizedListeners) {
+                listener({ width: report.width, height: report.height, frame: report.frame });
+            }
             return;
         }
         // The resize the frame acks goes first — see `PageViewsReport.resized`.

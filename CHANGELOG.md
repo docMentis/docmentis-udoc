@@ -23,7 +23,8 @@ listed once, by package. Its major and minor version are those of the
   holds still until it re-fits, and a page wider or taller than the pane
   keeps its place. The page re-fits a frame or two after the pane settles
   rather than after a fixed wait, and the scrollbars resize with the pane at
-  once rather than after the page.
+  once rather than after the page. Nor does the page, or a deck's notes,
+  squeeze or stretch for a frame as it re-fits and spring back.
 
 ### udoc-editor
 
