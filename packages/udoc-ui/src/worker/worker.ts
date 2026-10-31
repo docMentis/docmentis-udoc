@@ -330,6 +330,9 @@ function renderViewerFrame(s: WasmSession, v: number): void {
     if (v === VIEWER && painted && backgroundAfterPaint) {
         backgroundAfterPaint = false;
         startBackground(s);
+    } else if (v === VIEWER && painted) {
+        // A grid composes ahead around its view, which this frame may have moved.
+        composeAroundView(s);
     }
     // A plane switched to, or a document opened, composes in its first frame,
     // which places the selection it was shown with: a sheet's active cell. A
@@ -695,13 +698,6 @@ const COMPOSE_ROWS = 64;
  * to reach some that aren't. Rows already composed cost the engine a bit-check.
  */
 const ROW_ASKS_PER_STEP = 256;
-
-/**
- * Excel's row count. Compose-ahead on a grid ends here even when the grid
- * hasn't reported itself complete: the engine doesn't say how many rows a grid
- * has, so this is the walk's safety net.
- */
-const SHEET_ROWS = 1_048_576;
 
 /** The font pump's installs, waiting their turn. */
 const fontInstalls: Job[] = [];
@@ -1078,25 +1074,40 @@ function composePagesAhead(s: WasmSession, from: number): void {
 }
 
 /**
- * A worksheet grid's compose-ahead step, from row `from` down: past the rows
- * already composed — the view's among them, which each frame composes with a
- * view below — to the next that aren't, which it composes. A grid's extent is
- * known before its rows are, so there is no layout to post. It ends once the
- * grid reports every row composed.
+ * A worksheet grid's compose-ahead step, over the rows the engine names around
+ * the view (`aheadRows`), from row `from` down: past the rows already composed
+ * — the view's among them, which each frame composes with a view below — to
+ * the next that aren't, which it composes. A grid's extent is known before its
+ * rows are, so there is no layout to post. It ends at the last of those rows;
+ * a frame that moves the view starts it over ({@link composeAroundView}), and
+ * the engine releases the rows the view has left far behind.
  */
 function composeRowsAhead(s: WasmSession, from: number): void {
+    // [start, limit], both inclusive; undefined with no grid in view.
+    const ahead = s.aheadRows(VIEWER);
+    if (ahead?.length !== 2) return;
+    const start = ahead[0]!;
+    const limit = ahead[1]!;
     const before = s.composedRowCount(VIEWER);
-    let row = from;
-    let done = false;
-    for (let asked = 0; asked < ROW_ASKS_PER_STEP && !done; asked++) {
-        done = s.updateLayout(VIEWER, { rows: { start: row, limit: row + COMPOSE_ROWS - 1 } });
+    let row = Math.max(from, start);
+    for (let asked = 0; asked < ROW_ASKS_PER_STEP && row <= limit; asked++) {
+        s.updateLayout(VIEWER, { rows: { start: row, limit: Math.min(row + COMPOSE_ROWS - 1, limit) } });
         row += COMPOSE_ROWS;
-        done ||= row >= SHEET_ROWS;
         if (s.composedRowCount(VIEWER) !== before) break;
     }
-    if (!done) composeAt = { rows: row };
+    if (row <= limit) composeAt = { rows: row };
     // The rows just composed may name families nothing has asked for yet.
     fetchFontOrders();
+}
+
+/**
+ * Start compose-ahead on a worksheet's grid over from the top of the rows
+ * around its view, after a frame that may have moved the view — once
+ * background work has started, and while the shown sheet is a grid.
+ */
+function composeAroundView(s: WasmSession): void {
+    if (backgroundAfterPaint || s.needsPassword() || !composesByRows(s)) return;
+    composeAgain(s);
 }
 
 /**
