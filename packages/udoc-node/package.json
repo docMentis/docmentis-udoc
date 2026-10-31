@@ -1,6 +1,6 @@
 {
     "name": "@docmentis/udoc-node",
-    "version": "0.8.8",
+    "version": "0.8.9",
     "description": "Read, render, and process documents programmatically in Node.js.",
     "keywords": [
         "document",
