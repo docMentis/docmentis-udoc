@@ -105,8 +105,8 @@ export interface Messages extends UIMessages {
     "pageSize.custom": string;
 
     // Ribbon tabs
-    /** Home */
-    "ribbon.home": string;
+    /** Image */
+    "ribbon.image": string;
     /** Insert */
     "ribbon.insert": string;
     /** Text */

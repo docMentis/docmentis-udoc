@@ -1,7 +1,7 @@
 // Crop mode on an image's page: a box over the page that keeps its part of
 // the image, dragged by its corners, its edges and its middle, kept to an
 // aspect when one is picked, and applied as the page's crop. While it lasts
-// the Home tab carries its controls — the aspect, Reset, Cancel and Apply —
+// the Image tab carries its controls — the aspect, Reset, Cancel and Apply —
 // and Enter and Escape apply and cancel it.
 //
 // The page shows only the part of its image it keeps, so the box crops within
@@ -27,7 +27,7 @@ const OVERLAY_ID = "udoc:image-crop";
 /** The narrowest the box gets, in CSS px on screen. */
 const MIN_BOX_PX = 16;
 
-/** Crop mode: what the Home tab's crop controls and the keys call. */
+/** Crop mode: what the Image tab's crop controls and the keys call. */
 export interface Crop {
     /** Start cropping the current page — a no-op on a doc that isn't an
      *  image, or while cropping. */
@@ -88,7 +88,7 @@ export function createCrop(host: EditHost, i18n: I18n): Crop {
     const { store, client } = host;
     let session: CropSession | null = null;
 
-    /** Mirror the session onto edit mode's state, which the Home tab reads. */
+    /** Mirror the session onto edit mode's state, which the Image tab reads. */
     function publish(): void {
         updateEditState(store, {
             cropping: session
@@ -272,8 +272,8 @@ const ASPECT_MENU: readonly MenuItem<MessageKey>[] = ASPECTS.map(([aspect, label
     activeWhen: (c) => editStateOf(c).cropping?.aspect === aspect,
 }));
 
-/** Crop mode's controls on the image Home tab — which, Home being contextual,
- *  show while it lasts — over `crop` once edit mode is mounted. */
+/** Crop mode's controls on the image Image tab — which, the tab being
+ *  contextual, show while it lasts — over `crop` once edit mode is mounted. */
 export function cropCommands(crop: () => Crop | null): Readonly<Record<string, CommandDef<MessageKey>>> {
     return {
         cropAspect: {

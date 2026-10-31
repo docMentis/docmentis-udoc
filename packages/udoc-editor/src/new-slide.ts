@@ -1,7 +1,7 @@
-// New Slide: the presentation Home tab's document-level action, and the layout
+// New Slide: the presentation Insert tab's document-level action, and the layout
 // picker it opens.
 import type { UDocCommand } from "@docmentis/udoc-ui";
-import { allowsEdit, ICON_PAGE_ADD } from "@docmentis/udoc-ui/internal";
+import { ICON_PAGE_ADD } from "@docmentis/udoc-ui/internal";
 import type { CommandDef } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
 import { createNewSlideModal } from "./components/NewSlideModal.js";
@@ -93,10 +93,8 @@ export function mountNewSlide(host: EditHost, i18n: I18n): NewSlide {
 
 /**
  * The New Slide command, opening the picker with `open` — a document-level
- * action shown with nothing selected, or slides or sections: it sits where the
- * selection's property controls go, so it shows on the empty canvas and with
- * slides or sections picked in the thumbnails, and yields to those controls the
- * moment a shape or text is selected.
+ * action, live whatever is selected: the slide lands after the current one,
+ * or the slides or sections picked in the thumbnails.
  */
 export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
     return {
@@ -104,9 +102,8 @@ export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
         label: "command.createSlide",
         icon: ICON_PAGE_ADD,
         group: "slide",
+        labeled: true,
         run: { kind: "action", press: open },
-        enabledWhen: (c) =>
-            c.ready &&
-            (c.selection.count === 0 || allowsEdit(c.selection, "insertSlide") || c.slideSections.selected.length > 0),
+        enabledWhen: (c) => c.ready,
     };
 }

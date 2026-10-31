@@ -57,7 +57,7 @@ export const ja: EditMessages = {
     "pageSize.custom": "ユーザー設定",
 
     // Ribbon tabs
-    "ribbon.home": "ホーム",
+    "ribbon.image": "画像",
     "ribbon.insert": "挿入",
     "ribbon.text": "テキスト",
     "ribbon.shape": "図形",

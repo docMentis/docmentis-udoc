@@ -46,8 +46,8 @@ export interface UIExtension {
     readonly initialState: unknown;
     /**
      * The tab strip a document of `docType` shows in the extension's mode —
-     * in order, the default its Home — naming the shell's commands or the
-     * extension's {@link commands}.
+     * in order, folded until a selection opens its tab or one is picked —
+     * naming the shell's commands or the extension's {@link commands}.
      */
     tabs(docType: UDocType | null): readonly ToolbarTab<string>[];
     /** The commands its tabs name beyond the shell's catalog, by id. */

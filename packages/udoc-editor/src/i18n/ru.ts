@@ -57,7 +57,7 @@ export const ru: EditMessages = {
     "pageSize.custom": "Произвольный",
 
     // Ribbon tabs
-    "ribbon.home": "Главная",
+    "ribbon.image": "Изображение",
     "ribbon.insert": "Вставка",
     "ribbon.text": "Текст",
     "ribbon.shape": "Фигура",

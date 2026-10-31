@@ -57,7 +57,7 @@ export const de: EditMessages = {
     "pageSize.custom": "Benutzerdefiniert",
 
     // Ribbon tabs
-    "ribbon.home": "Start",
+    "ribbon.image": "Bild",
     "ribbon.insert": "Einfügen",
     "ribbon.text": "Text",
     "ribbon.shape": "Form",

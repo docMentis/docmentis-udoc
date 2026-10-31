@@ -31,6 +31,14 @@ listed once, by package. Its major and minor version are those of the
 
 - The Insert tab names its commands beside their icons, and Shapes has a
   glyph of its own.
+- The ribbon opens folded, its tabs alone showing, and the Home tab is gone:
+  what is selected opens its tab — text the Text tab, a shape the Shape tab,
+  a PDF's page objects the Object tab and its annotations the Annotate tab,
+  an image's pages its Image tab — while a tab picked stays open as the
+  selection moves within the same kind. New Slide moves to the Insert tab,
+  an image's Rotate, Flip, Crop and Image Size to its new Image tab, and a
+  word document's drawings take their Fill, Line and Arrange from a Shape
+  tab.
 
 ## [0.8.9] - 2026-10-30
 

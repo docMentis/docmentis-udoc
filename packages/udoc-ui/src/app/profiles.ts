@@ -16,6 +16,7 @@
 import { ANNOTATE_COMMANDS, LEFT_PANEL_TABS, RIGHT_PANEL_TABS } from "./state.js";
 import type { CommandId, UIState, LayoutMode, LeftPanelTab, PanelTab, RightPanelTab, ToolbarTab } from "./state.js";
 import type { Feature, UDocType } from "@docmentis/udoc-wasm";
+import type { SelectionCapabilities } from "../geometry.js";
 
 /**
  * The Annotate tab — the tools that draw a PDF annotation over the page (see
@@ -390,10 +391,10 @@ export function tabsFor(
     return tabs.every(offered) ? tabs : tabs.filter(offered);
 }
 
-/** The tab a strip of `tabs` opens on — Home, or null (the ribbon folded, its
- *  tabs alone showing) in a strip without one. Home needs no feature. */
-export function defaultTab(tabs: readonly ToolbarTab<string>[]): string | null {
-    return tabs.find((t) => t.id === "home")?.id ?? null;
+/** The tab of `tabs` a selection of `caps` opens — the first whose
+ *  {@link ToolbarTab.opensFor} holds for it — or null for none. */
+export function selectionTab(tabs: readonly ToolbarTab<string>[], caps: SelectionCapabilities): string | null {
+    return tabs.find((t) => t.opensFor?.(caps) ?? false)?.id ?? null;
 }
 
 /**

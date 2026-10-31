@@ -57,7 +57,7 @@ export const ptBR: EditMessages = {
     "pageSize.custom": "Personalizado",
 
     // Ribbon tabs
-    "ribbon.home": "Página Inicial",
+    "ribbon.image": "Imagem",
     "ribbon.insert": "Inserir",
     "ribbon.text": "Texto",
     "ribbon.shape": "Forma",

@@ -57,7 +57,7 @@ export const zhCN: EditMessages = {
     "pageSize.custom": "自定义",
 
     // Ribbon tabs
-    "ribbon.home": "开始",
+    "ribbon.image": "图像",
     "ribbon.insert": "插入",
     "ribbon.text": "文本",
     "ribbon.shape": "形状",

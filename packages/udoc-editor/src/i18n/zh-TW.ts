@@ -57,7 +57,7 @@ export const zhTW: EditMessages = {
     "pageSize.custom": "自訂",
 
     // Ribbon tabs
-    "ribbon.home": "常用",
+    "ribbon.image": "影像",
     "ribbon.insert": "插入",
     "ribbon.text": "文字",
     "ribbon.shape": "圖案",

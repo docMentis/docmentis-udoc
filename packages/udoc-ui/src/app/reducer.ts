@@ -11,7 +11,7 @@ import {
     viewDpi,
     viewOfPlane,
 } from "./state.js";
-import { defaultTab, profileDisabledPanels } from "./profiles.js";
+import { profileDisabledPanels, selectionTab, tabsFor } from "./profiles.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
 import { visibleSpan } from "./components/Scrollbar.js";
 import { defaultScrollModeForDocType } from "../worker/protocol.js";
@@ -156,9 +156,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 viewSettled: false,
                 scrollbars: { x: false, y: false },
                 docGeneration: state.docGeneration + 1,
-                // Re-pick the active tab from the new doc type's profile (its
-                // tab set may differ from the previous document's).
-                activeTab: defaultTab(tabsOf(action.docType ?? null, mode)),
+                // The new doc type's strip opens folded (its tab set may differ
+                // from the previous document's); a selection opens its tab.
+                activeTab: null,
                 // A fresh document has no history yet; the worker's open reply
                 // pushes the same via a history report, but reset here too so the
                 // buttons can't flash enabled between open and that report.
@@ -320,8 +320,16 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             if (action.visible === state.peerPointersVisible) return state;
             return { ...state, peerPointersVisible: action.visible };
 
-        case "SET_SELECTION_CAPABILITIES":
-            return { ...state, selectionCaps: action.capabilities };
+        case "SET_SELECTION_CAPABILITIES": {
+            // A selection of another kind opens its tab: a caret in text the
+            // Text tab, a picked shape the Shape tab. One of the same kind — a
+            // caret moved, an edit echoed — leaves the tab where it is, a tab
+            // picked since or the ribbon folded.
+            const tabs = tabsFor(tabsOf(state.docType, state.mode), state.features);
+            const tab = selectionTab(tabs, action.capabilities);
+            const opens = tab !== null && tab !== selectionTab(tabs, state.selectionCaps);
+            return { ...state, selectionCaps: action.capabilities, activeTab: opens ? tab : state.activeTab };
+        }
         case "SET_ACTIVE_CELL": {
             const [now, was] = [action.cell, state.activeCell];
             const same =
@@ -561,11 +569,11 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_MODE": {
             if (action.mode === state.mode || !entitled(action.mode, state.features)) return state;
-            // Each mode lands in select + its default tab.
+            // Each mode lands in select, its strip folded.
             return {
                 ...state,
                 mode: action.mode,
-                activeTab: defaultTab(tabsOf(state.docType, action.mode)),
+                activeTab: null,
                 pointerMode: { kind: "select" },
             };
         }

@@ -57,7 +57,7 @@ export const ar: EditMessages = {
     "pageSize.custom": "مخصص",
 
     // Ribbon tabs
-    "ribbon.home": "الصفحة الرئيسية",
+    "ribbon.image": "صورة",
     "ribbon.insert": "إدراج",
     "ribbon.text": "نص",
     "ribbon.shape": "شكل",

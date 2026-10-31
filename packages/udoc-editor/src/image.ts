@@ -1,5 +1,5 @@
 // An image document's edits: its pages turned, flipped, cropped and resized
-// from the Home tab, and the shapes the Insert tab draws over them. A page edit names
+// from the Image tab, and the shapes the Insert tab draws over them. A page edit names
 // its page by the id its manifest entry carries, which also measures it: the
 // page's size in points — the points a crop and the shapes are in, the page's
 // own from its top-left — and its pixels, which a resize names.
@@ -136,19 +136,10 @@ async function flipPages(host: EditHost, horizontal: boolean): Promise<void> {
     if (info) await host.commit(() => host.client.execute(editPage({ flipPages: { ids: [info.id], horizontal } })));
 }
 
-/**
- * Whether an image's page edits show on its Home tab in `c`: with no shape
- * drawn over a page selected — nothing, or pages in the thumbnails — outside
- * crop mode. Home is contextual, so they yield to the text and shape controls
- * the moment a shape is.
- */
+/** Whether an image's page edits show on its Image tab in `c`: outside crop
+ *  mode, whose controls the tab, contextual, shows in their place. */
 function whenPageEdits(c: CommandContext): boolean {
-    return (
-        c.ready &&
-        c.docType === "image" &&
-        editStateOf(c).cropping === null &&
-        (c.selection.count === 0 || allowsEdit(c.selection, "rotatePages"))
-    );
+    return c.ready && c.docType === "image" && editStateOf(c).cropping === null;
 }
 
 /** What the image commands open: crop mode, and the Image Size dialog, on the
@@ -158,7 +149,7 @@ export interface ImagePageActions {
     resize(): void;
 }
 
-/** The image Home tab's page commands, over `host` once edit mode is mounted. */
+/** The image Image tab's page commands, over `host` once edit mode is mounted. */
 export function imageCommands(
     host: () => EditHost | null,
     actions: ImagePageActions,

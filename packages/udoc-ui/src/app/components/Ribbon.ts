@@ -304,7 +304,7 @@ function showChoice(button: HTMLElement, icon: string, text: string): void {
 /** Commands of the currently active tab, or [] when there's no tab.
  *  Host-disabled commands drop out for every tab, as does one whose
  *  `shownWhen` is false (the View tab's Layers, for a PDF without layers); a
- *  *contextual* tab (Home) also drops the commands whose capability predicate
+ *  *contextual* tab (an image's Image) also drops the commands whose capability predicate
  *  is dead for the current selection — capability-driven show/hide — where an
  *  ordinary tab keeps them and lets the per-render pass grey them instead. */
 function activeTabCommands(
@@ -810,8 +810,8 @@ export function createRibbon(
             toolsSection.innerHTML = "";
             overflowTools.innerHTML = "";
             // Render the tab's commands, separating consecutive groups (the
-            // command's `group` key) with a thin divider — e.g. Home's Clipboard
-            // group from its Editing group. Consecutive same-kind controls bunch
+            // command's `group` key) with a thin divider — e.g. the Text tab's
+            // character group from its paragraph group. Consecutive same-kind controls bunch
             // into one segmented `.udoc-btn-group` (see `clusterKind`): the
             // Bold / Italic / Underline / Strikethrough toggles as one cluster, the
             // Text Color / Highlight (or Fill / Line) color dropdowns as another,
@@ -858,7 +858,7 @@ export function createRibbon(
 
         const applyState = (slice: RibbonSlice) => {
             // The selection-capability read every enablement / contextual-visibility
-            // decision below shares — the contextual Home tab uses it to pick which
+            // decision below shares — a contextual tab uses it to pick which
             // commands to show, the per-render pass to grey the rest.
             const ctx = commandContext(store.getState());
             // Tab strip: rebuilt on doc-type / mode / active-tab change,
@@ -871,11 +871,12 @@ export function createRibbon(
             }
 
             // Show the tool surface whenever a real tab is active — including a tab
-            // with no commands (Home). An empty tab keeps its band so the active tab
-            // reads as a present, connected folder tab (its bottom merges into this
-            // surface) instead of a detached tab hanging off the toolbar, and the row
-            // doesn't collapse when you switch to Home. Hidden only when the toolbar
-            // is off or no tab is open (the ribbon folded, or a mode with no tabs).
+            // showing no commands (a contextual one with none live). An empty tab
+            // keeps its band so the active tab reads as a present, connected folder
+            // tab (its bottom merges into this surface) instead of a detached tab
+            // hanging off the toolbar, and the row doesn't collapse under it. Hidden
+            // only when the toolbar is off or no tab is open (the ribbon folded, or
+            // a mode with no tabs).
             const tabs = tabsIn(slice);
             const activeTab = tabs.find((t) => t.id === slice.activeTab);
             const visible = slice.toolbarVisible && activeTab !== undefined;
@@ -889,9 +890,9 @@ export function createRibbon(
             }
 
             // The commands the active tab shows now — its declared set minus the
-            // host-disabled ones, and for the contextual Home tab minus the ones
+            // host-disabled ones, and for a contextual tab minus the ones
             // the current selection can't take. Keying the tool surface off this
-            // list (not just the disabled set) rebuilds Home as its live command
+            // list (not just the disabled set) rebuilds a contextual tab as its live command
             // set changes with the selection, while an ordinary tab still rebuilds
             // only when a host toggle hides one of its commands.
             const shownCommands = activeTabCommands(slice, ctx, tabs, commandOf);
@@ -904,7 +905,7 @@ export function createRibbon(
 
             // Per-render: enablement (the command's own predicate over the
             // current context) + armed highlight. Host UI policy already applied
-            // upstream — disabledCommands (and Home's contextual filter) drop
+            // upstream — disabledCommands (and a contextual tab's filter) drop
             // entries in activeTabCommands.
             for (const btn of el.querySelectorAll<HTMLButtonElement>("[data-command]")) {
                 const def = commandOf(btn.dataset.command ?? "");

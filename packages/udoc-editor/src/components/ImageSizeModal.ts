@@ -1,4 +1,4 @@
-// The Image Size dialog, opened from an image's Home tab: the size in pixels
+// The Image Size dialog, opened from an image's Image tab: the size in pixels
 // the current page shows and saves at, as a width × height kept to its aspect
 // unless the lock is off, with its original size beside it to go back to. A
 // modal — backdrop + centered dialog — on the page-settings dialog's styles.

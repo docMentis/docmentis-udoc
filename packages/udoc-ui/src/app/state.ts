@@ -309,11 +309,18 @@ export interface ToolbarTab<K extends string = MessageKey> {
      * When set, the tab is *contextual*: it shows only the commands whose
      * capability predicate is live for the current selection (capability-driven
      * show/hide), instead of showing every command and greying the inapplicable
-     * ones. Home uses this to surface exactly the text / shape controls the
-     * selection can take; the doc-type Text / Shape / Object tabs leave it unset — they
-     * keep every command and enable/disable per selection.
+     * ones. An image's Image tab uses this to trade its page commands for crop
+     * mode's controls while a crop lasts; the Text / Shape / Object tabs leave
+     * it unset — they keep every command and enable/disable per selection.
      */
     contextual?: boolean;
+    /**
+     * The selection the tab is for: a selection it holds for opens the tab —
+     * folded ribbon or not — as the selection becomes one, a caret in text the
+     * Text tab, a picked shape the Shape tab. The first tab of the strip it
+     * holds for wins, so a caret in a shape's text opens Text, ahead of Shape.
+     */
+    opensFor?: (selection: SelectionCapabilities) => boolean;
     /** The feature the tab's commands need. A session not entitled to it does
      *  not see the tab. */
     feature?: Feature;

@@ -96,7 +96,7 @@ import {
     viewDpi,
     viewOfPlane,
 } from "./state.js";
-import { arrangementFor, defaultTab, profileFor } from "./profiles.js";
+import { arrangementFor, profileFor } from "./profiles.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
 import type {
     AnnotationTool,
@@ -581,7 +581,6 @@ export function mountUIShell(
     const startState: UIState = {
         ...initialState,
         mode: startMode,
-        activeTab: defaultTab(tabsOf(null, startMode)),
         extension: extension?.initialState ?? null,
         theme: shellOptions.theme ?? initialState.theme,
         toolbarVisible: shellOptions.showToolbar ?? initialState.toolbarVisible,

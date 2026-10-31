@@ -57,7 +57,7 @@ export const ko: EditMessages = {
     "pageSize.custom": "사용자 지정",
 
     // Ribbon tabs
-    "ribbon.home": "홈",
+    "ribbon.image": "이미지",
     "ribbon.insert": "삽입",
     "ribbon.text": "텍스트",
     "ribbon.shape": "도형",
