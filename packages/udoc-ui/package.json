@@ -55,7 +55,7 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-wasm": "0.8.10"
+        "@docmentis/udoc-wasm": "0.8.12"
     },
     "devDependencies": {
         "esbuild": "^0.25.12"
