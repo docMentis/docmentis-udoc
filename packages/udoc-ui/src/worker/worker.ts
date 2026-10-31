@@ -326,7 +326,7 @@ function renderViewerFrame(s: WasmSession, v: number): void {
         return;
     }
     followView(s, v, scrollBefore);
-    if (painted || host.viewportSeq !== host.emittedSeq) emitPageViews(s, v);
+    if (painted || host.viewportSeq !== host.emittedSeq) emitPageViews(s, v, true);
     if (v === VIEWER && painted && backgroundAfterPaint) {
         backgroundAfterPaint = false;
         startBackground(s);
@@ -348,11 +348,11 @@ function renderViewerFrame(s: WasmSession, v: number): void {
     // the notes a press just wrote — so the selection it projects is posted
     // again once it has moved.
     if (v !== VIEWER && painted) emitMovedViewerSelection(s, v);
-    // Ack any pending resize now that the backing store has been repainted at
-    // the new size — this is the main thread's cue to commit the CSS size
-    // without scaling stale pixels. Fired even on a no-op frame (e.g. no
-    // document open): there are no painted pixels to stretch, and the canvas
-    // still needs to track the container.
+    // Ack any pending resize the frame's views didn't carry, now that the
+    // backing store has been repainted at the new size — this is the main
+    // thread's cue to commit the CSS size without scaling stale pixels. Fired
+    // even on a no-op frame (e.g. no document open): there are no painted
+    // pixels to stretch, and the canvas still needs to track the container.
     flushResizeAck(s, v);
 }
 
@@ -429,10 +429,13 @@ let lastGuideKey: string | null = null;
  * painted under the previous seq). `pageViewRects` returns a Float64Array in
  * JS memory (copied out of wasm), so its buffer is transferred, not cloned.
  * Empty (zero-length) frames still post — that's how the host clears overlays
- * when the last page scrolls off.
+ * when the last page scrolls off. Posted by the `frame` itself, it carries the
+ * resize ack the frame owes (see {@link PageViewsReport.resized}).
  */
-function emitPageViews(s: WasmSession, v: number): void {
+function emitPageViews(s: WasmSession, v: number, frame = false): void {
     const host = viewers[v]!;
+    const resized = frame ? host.resizeAck : null;
+    if (resized) host.resizeAck = null;
     const rects = s.pageViewRects(v);
     // [zoom, scrollX, scrollY, scrollWidth, scrollHeight, currentPage,
     // scrollUsedWidth, scrollUsedHeight, scrollbarX, scrollbarY]; empty before open.
@@ -475,9 +478,12 @@ function emitPageViews(s: WasmSession, v: number): void {
             scrollbarX: state[8] === 1,
             scrollbarY: state[9] === 1,
             guide,
+            resized,
         },
         [rects.buffer],
     );
+    // The decal's rect moves with the viewport — see `flushResizeAck`.
+    if (resized && v === VIEWER) emitBrandingRect(s);
 }
 
 /**

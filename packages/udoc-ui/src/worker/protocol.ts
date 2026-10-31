@@ -2031,6 +2031,13 @@ export interface PageViewsReport {
      * the last non-null one. Read only by the developer repaint-area overlay.
      */
     repaintArea: { x: number; y: number; width: number; height: number } | null;
+    /**
+     * The resize this frame is the first painted at, acked with it (CSS px) —
+     * else `null`. The client takes it as a {@link ResizedReport} ahead of the
+     * frame's views, in the one task: the canvas takes its new size as what is
+     * laid over it takes the frame's geometry, and no paint falls between.
+     */
+    resized: { width: number; height: number } | null;
 }
 
 /**
@@ -2124,6 +2131,8 @@ export interface HistoryReport {
  * main thread waits for this before setting the canvas's CSS size, so the
  * displayed box never runs ahead of the painted pixels — running ahead is what
  * makes the browser scale (stretch) the stale backing store during a resize.
+ * A frame that posts its views carries its ack in them instead
+ * ({@link PageViewsReport.resized}); this comes for one that posts none.
  */
 export interface ResizedReport {
     type: "resized";

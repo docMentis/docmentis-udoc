@@ -14,6 +14,17 @@ listed once, by package. Its major and minor version are those of the
   show upright: the `pageRotation` option and `setPageRotation` turn a PDF's
   pages alone.
 
+#### Fixed
+
+- As the document's pane resizes — a side panel opening, the ribbon
+  unfolding — the page moves once, and the selection and rulers with it,
+  where before it could move twice or slide over and back: a page centred at
+  its zoom moves straight to where it settles, a page fitted to the pane
+  holds still until it re-fits, and a page wider or taller than the pane
+  keeps its place. The page re-fits a frame or two after the pane settles
+  rather than after a fixed wait, and the scrollbars resize with the pane at
+  once rather than after the page.
+
 ### udoc-editor
 
 #### Added

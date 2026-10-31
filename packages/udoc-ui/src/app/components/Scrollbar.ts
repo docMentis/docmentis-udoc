@@ -66,12 +66,24 @@ export function createScrollbar(axis: Axis) {
 
     const cleanups: Array<() => void> = [];
     let dragPointer: number | null = null;
+    // The host's size as laid out, CSS px — what the bar spans, measured as
+    // it changes rather than read from the store, whose viewport takes the
+    // host's size only once it settles (see Canvas' `measure`): a ribbon
+    // unfolding shortens the vertical bar with the pane. `null` until measured.
+    let pane: PaneSize | null = null;
 
     function mount(host: HTMLElement, store: Store<UIState, Action>): void {
         host.appendChild(track);
 
         const apply = () => layout(store.getState());
-        cleanups.push(subscribeSelector(store, (s) => geom(s, axis), apply, { equality: shallowGeomEqual }));
+        cleanups.push(subscribeSelector(store, (s) => geom(s, axis, pane), apply, { equality: shallowGeomEqual }));
+        const observer = new ResizeObserver(() => {
+            const { width, height } = host.getBoundingClientRect();
+            pane = { width, height };
+            apply();
+        });
+        observer.observe(host);
+        cleanups.push(() => observer.disconnect());
         // Initial paint (subscribeSelector only fires on change).
         apply();
 
@@ -86,7 +98,7 @@ export function createScrollbar(axis: Axis) {
             // grows as you drag toward empty grid, so recomputing it mid-drag
             // would accelerate under the finger; the frozen travel/range keep the
             // drag linear and hold it within the data (to reach empty grid, wheel).
-            const startG = geom(store.getState(), axis);
+            const startG = geom(store.getState(), axis, pane);
             const startTravel = startG.travelPx;
 
             const onMove = (e: PointerEvent) => {
@@ -114,7 +126,7 @@ export function createScrollbar(axis: Axis) {
             if (ev.target === thumb) return;
             const rect = track.getBoundingClientRect();
             const pos = axis === "y" ? ev.clientY - rect.top : ev.clientX - rect.left;
-            const g = geom(store.getState(), axis);
+            const g = geom(store.getState(), axis, pane);
             const page = g.visibleDoc * 0.9 * (pos > g.thumbStartPx + g.thumbPx / 2 ? 1 : -1);
             store.dispatch(
                 axis === "y" ? { type: "SCROLL_BY", dx: 0, dy: page } : { type: "SCROLL_BY", dx: page, dy: 0 },
@@ -125,7 +137,7 @@ export function createScrollbar(axis: Axis) {
     }
 
     function layout(s: UIState): void {
-        const g = geom(s, axis);
+        const g = geom(s, axis, pane);
         const visible = g.shown && g.trackPx > 0;
         track.style.display = visible ? "" : "none";
         if (!visible) return;
@@ -163,15 +175,23 @@ interface Geom {
     maxScroll: number;
 }
 
-function geom(s: UIState, axis: Axis): Geom {
-    const viewportPx = axis === "y" ? s.viewportHeight : s.viewportWidth;
+/** A pane's size, CSS px. */
+interface PaneSize {
+    width: number;
+    height: number;
+}
+
+/** The bar along `axis` over a pane `pane` — the store's viewport if unmeasured. */
+function geom(s: UIState, axis: Axis, pane: PaneSize | null): Geom {
+    const { width, height } = pane ?? { width: s.viewportWidth, height: s.viewportHeight };
+    const viewportPx = axis === "y" ? height : width;
     const scroll = axis === "y" ? s.scrollY : s.scrollX;
     // Visible extent in document space: the span the document shows through
     // (the viewport less any strip kept for the other bar), divided by
     // (zoom × 96/72), against the zoom actually rendered (the fit's derived zoom
     // while fitting, not the stale explicit `zoom`).
     const z = renderZoom(s);
-    const visibleDoc = z > 0 ? visibleSpan(s, axis) / (z * cssPxPerPt(viewDpi(s))) : 0;
+    const visibleDoc = z > 0 ? visibleSpan(s, axis, viewportPx) / (z * cssPxPerPt(viewDpi(s))) : 0;
     const content = scrollArea(s, axis, visibleDoc);
     // Before the first fitted frame after open, `content` is the full document
     // extent but `z` is the open default (the fit's zoom isn't known yet), so
@@ -200,9 +220,13 @@ export function scrollbarShown(s: UIState, axis: Axis): boolean {
  * The CSS px of the viewport the document shows through along `axis`: less the
  * strip the engine keeps clear for the other axis's bar while that one shows,
  * where it keeps one. A floating bar lies over the document and takes nothing.
+ * `viewportPx` measures a viewport of another size than the store's.
  */
-export function visibleSpan(s: UIState, axis: Axis): number {
-    const viewportPx = axis === "y" ? s.viewportHeight : s.viewportWidth;
+export function visibleSpan(
+    s: UIState,
+    axis: Axis,
+    viewportPx = axis === "y" ? s.viewportHeight : s.viewportWidth,
+): number {
     const strip = profileFor(s.docType).scrollbarGutters && s.scrollbars[axis === "y" ? "x" : "y"];
     return viewportPx - (strip ? SCROLLBAR_THICKNESS_PX : 0);
 }

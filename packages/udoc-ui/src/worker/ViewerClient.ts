@@ -169,6 +169,8 @@ export class ViewerClient {
             for (const listener of this.#resizedListeners) listener({ width: report.width, height: report.height });
             return;
         }
+        // The resize the frame acks goes first — see `PageViewsReport.resized`.
+        if (report.resized) for (const listener of this.#resizedListeners) listener(report.resized);
         const fresh = report.seq === this.#viewportSeq;
         // Before the listeners: adopting this frame's scroll sends the viewport
         // back at once, and it was read against this report.

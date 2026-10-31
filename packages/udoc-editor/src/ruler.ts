@@ -108,12 +108,12 @@ function drawAxis(
     orient: "h" | "v",
 ): void {
     const { colors, extent, scale } = canvas;
-    // Shift the horizontal ruler's marks (along x) to ride the content canvas
-    // mid-resize; the vertical ruler tracks height, which isn't shifted. See
-    // `GuideBands.setContentShift`. `0` when settled.
-    const shift = orient === "h" ? canvas.shiftX : 0;
+    // Shift the ruler's marks along it to ride the content canvas mid-resize.
+    // See `GuideBands.setContentShift`. `0` when settled.
+    const shift = orient === "h" ? canvas.shiftX : canvas.shiftY;
     ctx.save();
-    ctx.translate(shift, 0);
+    if (orient === "h") ctx.translate(shift, 0);
+    else ctx.translate(0, shift);
     /** Where `points` from the origin falls in the strip, CSS px. */
     const at = (points: number): number => axis.origin + points * scale;
     // Each span ends on device pixel edges, so a margin's edge meets its fill
@@ -180,10 +180,10 @@ function drawAxis(
 
 /**
  * Where the controls stand along the ruler `axis` drew in `strip`: on its
- * ticks, riding the top ruler's shift with them (see {@link drawAxis}).
+ * ticks, riding the ruler's shift with them (see {@link drawAxis}).
  */
 function placement(canvas: BandCanvas, strip: BandStrip, axis: RulerAxis, orient: "h" | "v"): RulerPlacement {
-    const shift = orient === "h" ? canvas.shiftX : 0;
+    const shift = orient === "h" ? canvas.shiftX : canvas.shiftY;
     return {
         layer: canvas.layer(orient === "h" ? "top" : "left"),
         pane: canvas.layer("pane"),

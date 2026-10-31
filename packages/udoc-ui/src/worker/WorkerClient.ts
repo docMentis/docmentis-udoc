@@ -1965,8 +1965,13 @@ export class WorkerClient {
                     for (const listener of this.#perfListeners) listener(msg.summary);
                     return;
                 case "pageViews":
-                    if (msg.viewer === MAIN_VIEWER) this.#emitPageViews(msg);
-                    else this.#viewers[msg.viewer - 1]?.receive(msg);
+                    if (msg.viewer !== MAIN_VIEWER) {
+                        this.#viewers[msg.viewer - 1]?.receive(msg);
+                        return;
+                    }
+                    // The resize the frame acks goes first — see `PageViewsReport.resized`.
+                    if (msg.resized) for (const listener of this.#resizedListeners) listener(msg.resized);
+                    this.#emitPageViews(msg);
                     return;
                 case "selection": {
                     const state: SelectionState = {

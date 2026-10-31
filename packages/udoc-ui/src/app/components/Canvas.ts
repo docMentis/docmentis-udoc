@@ -25,7 +25,7 @@ import { shallowEqual, subscribeSelector } from "../../framework/index.js";
 import type { Store } from "../../framework/index.js";
 import type { Action } from "../actions.js";
 import type { AnnotationTool, UIState, MarkupTool, PlaceTool, ShapeKind } from "../state.js";
-import { NO_FIT, VIEW_MODE, copyAllowed, pageStep, renderZoom, viewDpi } from "../state.js";
+import { NO_FIT, VIEW_MODE, copyAllowed, pageStep, renderZoom, showsPageless, viewDpi } from "../state.js";
 import { profileFor } from "../profiles.js";
 import type { Segment, ShapePoint } from "../shapes.js";
 import { segmentsFor, STROKE as SHAPE_STROKE, STROKE_WIDTH as SHAPE_STROKE_WIDTH } from "../shapes.js";
@@ -259,6 +259,9 @@ const SYNC_EPSILON = 0.01;
 
 /** Treat a scroll within this many doc points of a page edge as "at the edge". */
 const PAGE_EDGE_EPSILON = 0.5;
+
+/** Treat a fit's zoom within this of its cap as held there. */
+const ZOOM_CAP_EPSILON = 1e-3;
 
 /** Quiet gap (ms) after which a single-page wheel flip re-arms (see `pageFlipArmed`). */
 const WHEEL_REST_MS = 120;
@@ -649,6 +652,54 @@ function resizeScale(
     return { sx, sy };
 }
 
+/** A pane's size along each axis, CSS px. */
+interface PaneSize {
+    x: number;
+    y: number;
+}
+
+/**
+ * How many times its extent along `axis` the frame of `s`, painted in a pane
+ * `size` along it, shows of its content at its zoom.
+ */
+function room(s: UIState, axis: "x" | "y", size: number): number {
+    const extent = axis === "y" ? s.scrollSize.height : s.scrollSize.width;
+    return visibleSpan(s, axis, size) / (renderZoom(s) * cssPxPerPt(viewDpi(s))) / extent;
+}
+
+/**
+ * Whether the engine centres the content of `s` along `axis`, painted in a
+ * pane `size` along it: it fits the pane's span there, on a plane that
+ * centres — not a pageless word document's, held at the pane's top-left as a
+ * sheet's grid is. Centred content re-centres as the pane's span changes;
+ * content that overflows it keeps its scroll, its near edge riding the pane's.
+ */
+function centredOn(s: UIState, axis: "x" | "y", size: number): boolean {
+    const z = renderZoom(s);
+    if (z <= 0 || showsPageless(s)) return false;
+    const extent = axis === "y" ? s.scrollSize.height : s.scrollSize.width;
+    return extent <= visibleSpan(s, axis, size) / (z * cssPxPerPt(viewDpi(s))) + PAGE_EDGE_EPSILON;
+}
+
+/**
+ * Whether the zoom of `s`, painted in a pane `painted`, changes as the pane
+ * goes to `next` along `axis`: a fit the engine re-derives as the pane resizes,
+ * bound by that span before or after — a fit to the width or the height, or to
+ * the page along the span its spread fills (the tighter to contain it, the
+ * looser to cover) — and not held at its cap.
+ */
+function zoomFollows(s: UIState, axis: "x" | "y", painted: PaneSize, next: number): boolean {
+    const { mode, zoomCap } = s.fit;
+    const z = renderZoom(s);
+    if (mode === "none" || z <= 0 || (zoomCap !== null && z >= zoomCap - ZOOM_CAP_EPSILON)) return false;
+    if (mode === "width" || mode === "height") return (mode === "width") === (axis === "x");
+    const acrossAxis = axis === "x" ? "y" : "x";
+    const across = room(s, acrossAxis, painted[acrossAxis]);
+    const before = room(s, axis, painted[axis]);
+    const after = room(s, axis, next);
+    return mode === "both" ? Math.min(before, after) <= across : Math.max(before, after) >= across;
+}
+
 export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHooks = {}) {
     /** The shape placing `tool` drops — an annotation's own, or what the
      *  extension says its tool drags out — or null for a tool not placed by a
@@ -827,6 +878,20 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     let showRepaintArea = false;
     let lastRepaintArea: Rect | null = null;
 
+    // The layers laid out in the engine's viewport coordinates, as the canvas's
+    // pixels are: each rides the canvas's shift while a resize is in flight
+    // (see `applyCanvasTransform`), so the selection stays on what it marks.
+    const viewportLayers: HTMLElement[] = [
+        searchHost,
+        annotationHoverHost,
+        selectionHost,
+        overlayHost,
+        overlayAboveHost,
+        marqueeClip,
+        brandingLink,
+        repaintBox,
+    ];
+
     /** Lay the repaint-area box over the region the engine last repainted. */
     function renderRepaintArea(): void {
         if (!showRepaintArea || !lastRepaintArea) {
@@ -890,7 +955,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
 
     let store: Store<UIState, Action> | null = null;
     let resizeObserver: ResizeObserver | null = null;
-    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    // The frame that checks whether the host has settled at a new size — see
+    // `measure`. `null` while none is pending.
+    let settleFrame: number | null = null;
     const cleanups: Array<() => void> = [];
 
     // The latest frame's CSS px per document point, from `onPageViews` — used to
@@ -1199,10 +1266,17 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // `cssSize × dpr` exactly the backing) and translate the surface by the
         // sub-pixel remainder of its physical origin. Same device-grid snap
         // OverlayManager already applies to page-anchored chrome.
-        // The canvas CSS width its backing store is currently painted at. Held
+        // The canvas CSS size its backing store is currently painted at. Held
         // so the surface can be kept centred in its host while a resize is in
         // flight (committed size != host size); `0` until the first measure.
         let committedCssW = 0;
+        let committedCssH = 0;
+        // Where the host stood (viewport CSS px) when it last had the size its
+        // backing was painted at — where a stale frame holds still while a
+        // resize is in flight. A frame landing mid-burst, painted at a size the
+        // host has since left, keeps it: it holds where the frame before it did.
+        let committedLeft = 0;
+        let committedTop = 0;
         const commitCanvasSize = (cssW: number, cssH: number) => {
             const dpr = globalThis.devicePixelRatio || 1;
             const backingW = Math.max(1, Math.round(cssW * dpr));
@@ -1210,32 +1284,61 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             canvas.style.width = `${backingW / dpr}px`;
             canvas.style.height = `${backingH / dpr}px`;
             committedCssW = backingW / dpr;
+            committedCssH = backingH / dpr;
+            const host = el.getBoundingClientRect();
+            if (Math.abs(host.width - committedCssW) < 0.5 && Math.abs(host.height - committedCssH) < 0.5) {
+                ({ left: committedLeft, top: committedTop } = host);
+            }
             applyCanvasTransform();
         };
         // Position the surface: the device-grid sub-pixel snap, plus — while a
-        // resize is in flight — a horizontal shift that keeps the (still
-        // old-sized) backing centred in its host. A side panel opening shrinks
-        // the host now but the backing is repainted, re-fitted and re-centred a
-        // worker round-trip later; without this the stale page sits off-centre
-        // and visibly slides over when the re-fit lands. Shifting by half the
-        // host's width change centres it immediately, so the re-fit is
-        // seamless. The shift tracks the panel's width transition (the observer
-        // fires each frame) and is exactly zero once the backing matches the
-        // host again.
+        // resize is in flight — a shift that puts the (still old-sized) backing
+        // where the re-fit will leave its content. A side panel opening, or the
+        // ribbon unfolding, resizes the host now but the backing is repainted
+        // a worker round-trip later; riding the host until then, the stale page
+        // jumps with it and again when the re-fit lands. Along each axis:
+        // content overflowing the host keeps its scroll there, its near edge
+        // riding the host's — no shift; centred content at a zoom the resize
+        // leaves re-centres — half the host's change; and centred content whose
+        // fit follows the span re-zooms, which no shift of the stale frame
+        // matches, so it holds still on screen and moves once, as the re-fit
+        // lands. The shift tracks the panel's transition (the observer fires
+        // each frame) and is exactly zero once the backing matches the host.
         function applyCanvasTransform(): void {
             const dpr = globalThis.devicePixelRatio || 1;
-            const { left, top, width } = el.getBoundingClientRect();
+            const { left, top, width, height } = el.getBoundingClientRect();
             const dx = (Math.round(left * dpr) - left * dpr) / dpr;
             const dy = (Math.round(top * dpr) - top * dpr) / dpr;
-            let shiftX = committedCssW > 0 ? -(committedCssW - width) / 2 : 0;
-            if (Math.abs(shiftX) < 0.5) shiftX = 0; // settled (or sub-pixel) — no drift
+            const st = s.getState();
+            // The pane the frame on screen was painted for — the store's may
+            // already be the host's new size.
+            const painted: PaneSize = { x: committedCssW, y: committedCssH };
+            const shift = (axis: "x" | "y"): number => {
+                const [start, size, from] = axis === "x" ? [left, width, committedLeft] : [top, height, committedTop];
+                if (painted[axis] <= 0 || Math.abs(size - painted[axis]) < 0.5 || !centredOn(st, axis, painted[axis])) {
+                    return 0;
+                }
+                // Held, on the device grid where it stood — snapped whole, as
+                // the host moves under it, so it doesn't wobble a pixel.
+                if (zoomFollows(st, axis, painted, size))
+                    return (Math.round(from * dpr) - Math.round(start * dpr)) / dpr;
+                const d = (size - painted[axis]) / 2;
+                // Sub-pixel — no drift; else on the device grid, which the layers
+                // riding it snap their chrome to.
+                return Math.abs(d) < 0.5 ? 0 : Math.round(d * dpr) / dpr;
+            };
+            const shiftX = shift("x");
+            const shiftY = shift("y");
             const tx = dx + shiftX;
-            canvas.style.transform = tx || dy ? `translate(${tx}px, ${dy}px)` : "";
-            // Slide the guide bands' marks by the same shift so the ruler /
-            // column headers ride the content canvas instead of sitting frozen
-            // (the worker repaint that refreshes them is debounced). Zero once
-            // settled. See GuideBands.setContentShift.
-            guideBands.setContentShift(shiftX);
+            const ty = dy + shiftY;
+            canvas.style.transform = tx || ty ? `translate(${tx}px, ${ty}px)` : "";
+            // What the canvas's pixels carry rides with them: the selection,
+            // the overlays — and the guide bands' marks, so the ruler / column
+            // headers don't sit frozen until the worker's frame at the new size
+            // refreshes them. Zero once settled. See GuideBands.setContentShift.
+            const ride = shiftX || shiftY ? `${shiftX}px ${shiftY}px` : "";
+            for (const layer of viewportLayers) layer.style.translate = ride;
+            guideBands.setContentShift(shiftX, shiftY);
         }
         const applyMeasure = () => {
             const rect = el.getBoundingClientRect();
@@ -1243,18 +1346,31 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
                 commitCanvasSize(rect.width, rect.height);
                 sized = true;
             }
+            const { viewportWidth, viewportHeight } = s.getState();
+            if (rect.width === viewportWidth && rect.height === viewportHeight) return;
             s.dispatch({ type: "RESIZE_VIEWPORT", width: rect.width, height: rect.height });
         };
+        // Whether the host has resized since the last settle check.
+        let resizedSince = false;
+        const settle = () => {
+            if (resizedSince) {
+                resizedSince = false;
+                settleFrame = requestAnimationFrame(settle);
+                return;
+            }
+            settleFrame = null;
+            applyMeasure();
+        };
         const measure = () => {
-            // Re-centre the canvas immediately as the host animates (cheap, runs
-            // every frame of the panel slide); debounce the worker resize itself
-            // (heavy, rare) so it fires once the size settles.
+            // Place the canvas immediately as the host changes (cheap, runs every
+            // frame of a panel slide). The resize the worker repaints is heavy,
+            // so it waits for the host to keep its size through a whole frame: a
+            // tab unfolding the ribbon resizes it in one frame and goes two on;
+            // a panel sliding or the window dragged resizes it every frame and
+            // goes as it settles, never painting a size the host passes through.
             applyCanvasTransform();
-            if (resizeTimer !== null) clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                resizeTimer = null;
-                applyMeasure();
-            }, 150);
+            resizedSince = true;
+            settleFrame ??= requestAnimationFrame(settle);
         };
         resizeObserver = new ResizeObserver(measure);
         resizeObserver.observe(el);
@@ -3663,8 +3779,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     function destroy(): void {
         resizeObserver?.disconnect();
         resizeObserver = null;
-        if (resizeTimer !== null) clearTimeout(resizeTimer);
-        resizeTimer = null;
+        if (settleFrame !== null) cancelAnimationFrame(settleFrame);
+        settleFrame = null;
         for (const off of cleanups) off();
         cleanups.length = 0;
         overlay.clear();

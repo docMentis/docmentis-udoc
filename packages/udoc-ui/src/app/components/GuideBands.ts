@@ -47,6 +47,8 @@ export interface BandCanvas {
     /** How far the top band's marks ride the content canvas mid-resize, in CSS
      *  px — see {@link GuideBands.setContentShift}. */
     readonly shiftX: number;
+    /** How far the left band's marks ride it, likewise. */
+    readonly shiftY: number;
     /** CSS px per document point — the zoom the frame was painted at, which
      *  lays out what a ruler measures in points. */
     readonly scale: number;
@@ -133,6 +135,8 @@ export class GuideBands {
     /** Horizontal shift (CSS px) applied to the top band's marks while a resize
      *  is in flight — see {@link setContentShift}. `0` when settled. */
     #shiftX = 0;
+    /** The vertical shift applied to the left band's marks, likewise. */
+    #shiftY = 0;
 
     constructor(
         root: HTMLElement,
@@ -225,7 +229,8 @@ export class GuideBands {
     }
 
     /**
-     * Slide the column ruler / headers horizontally by `shiftX` CSS px to ride the
+     * Slide the top band's marks (the column ruler / headers) by `shiftX` CSS px,
+     * and the left band's (the row ruler / headers) by `shiftY`, to ride the
      * content canvas while a resize is in flight — the band's twin of the content
      * canvas's maintain-size-and-shift (Canvas' `applyCanvasTransform`). The
      * content canvas keeps its pre-resize backing and shifts to stay centred as
@@ -233,14 +238,16 @@ export class GuideBands {
      * — is debounced; without matching the shift here the ticks would sit frozen
      * while the page slides beneath them, detaching ("stretching") the ruler from
      * the page until the resize settles. Only the marks shift, not the band's own
-     * background / frame; the left (row) band isn't shifted, matching the content
-     * canvas's horizontal-only centring. Driven each resize frame from the same
+     * background / frame. Driven each resize frame from the same
      * `applyCanvasTransform`, and reset to `0` once the size settles.
      */
-    setContentShift(shiftX: number): void {
-        const s = Math.abs(shiftX) < 0.5 ? 0 : shiftX; // settled (or sub-pixel) — no drift
-        if (s === this.#shiftX) return;
-        this.#shiftX = s;
+    setContentShift(shiftX: number, shiftY: number): void {
+        // Settled (or sub-pixel) — no drift.
+        const x = Math.abs(shiftX) < 0.5 ? 0 : shiftX;
+        const y = Math.abs(shiftY) < 0.5 ? 0 : shiftY;
+        if (x === this.#shiftX && y === this.#shiftY) return;
+        this.#shiftX = x;
+        this.#shiftY = y;
         this.#draw();
     }
 
@@ -300,6 +307,7 @@ export class GuideBands {
                 layer: (which) => this.#layers[which],
                 colors: this.#colors,
                 shiftX: this.#shiftX,
+                shiftY: this.#shiftY,
                 scale: this.#scale,
                 extent: this.#extent,
             });
@@ -397,6 +405,9 @@ export class GuideBands {
         const left = this.#prepare(this.#left);
         if (left) {
             const { ctx, w, h } = left;
+            // The row tracks ride the canvas as the columns do.
+            ctx.save();
+            ctx.translate(0, this.#shiftY);
             if (sel) {
                 ctx.fillStyle = this.#colors.highlight;
                 for (const r of guide.rows) {
@@ -414,6 +425,7 @@ export class GuideBands {
                     ctx.fillText(r.label, w / 2, (r.start + r.end) / 2);
                 }
             }
+            ctx.restore();
             stroke(ctx, this.#colors.grid, w - 0.5, 0, w - 0.5, h);
         }
     }
