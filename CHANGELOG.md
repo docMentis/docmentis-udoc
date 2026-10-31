@@ -6,6 +6,14 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Changed
+
+- A word document's View tab no longer offers Rotate View, and its pages
+  show upright: the `pageRotation` option and `setPageRotation` turn a PDF's
+  pages alone.
+
 ### udoc-editor
 
 #### Added

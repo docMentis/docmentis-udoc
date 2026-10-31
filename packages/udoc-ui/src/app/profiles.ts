@@ -32,15 +32,19 @@ export const ANNOTATE_TAB: ToolbarTab = {
 /** How a paged document scrolls: a page at a time, or one after another. */
 const SCROLL: readonly CommandId[] = ["singleScroll", "continuousScroll"];
 
-/** How a PDF's or a word document's pages are arranged: how they pair up, the
- *  turn they're shown at, and the gaps between them. */
-const ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLeft", "rotateViewRight", "pageGap"];
+/** How a word document's pages are arranged: how they pair up, and the gaps
+ *  between them. */
+const ARRANGEMENT: readonly CommandId[] = ["pageLayout", "pageGap"];
+
+/** How a PDF's pages are arranged: as a word document's, and the turn they're
+ *  shown at. */
+const PORTABLE_ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLeft", "rotateViewRight", "pageGap"];
 
 /** Each doc type's View tab, around the guides an extension adds: before them
  *  its own views and how its pages scroll and are arranged, after them what
  *  shows beside the document. */
 const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; shows: readonly CommandId[] }>> = {
-    portable: { pages: [...SCROLL, ...ARRANGEMENT], shows: ["layers"] },
+    portable: { pages: [...SCROLL, ...PORTABLE_ARRANGEMENT], shows: ["layers"] },
     wordprocessing: { pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT], shows: ["formattingMarks"] },
     presentation: { pages: ["normalView", "notesPageView", ...SCROLL], shows: ["notes"] },
     image: { pages: [...SCROLL, "pageGap"], shows: [] },
@@ -111,12 +115,17 @@ export interface DocProfile {
      */
     pagedViewControls: boolean;
     /**
-     * Whether the View tab offers the page arrangement — Page Layout and the
-     * turn. A document read as a book of pages (PDF, Word) does; a deck and an
-     * image keep their pages single and upright, whatever those settings hold
-     * (see {@link arrangementFor}).
+     * Whether the View tab offers Page Layout, the pages paired into spreads. A
+     * document read as a book of pages (PDF, Word) does; a deck and an image
+     * keep their pages single, whatever it holds (see {@link arrangementFor}).
      */
     pageArrangement: boolean;
+    /**
+     * Whether the View tab offers Rotate View, every page shown turned. A PDF
+     * does, as a scan's pages may lie sideways; any other document shows its
+     * pages upright, whatever it holds (see {@link arrangementFor}).
+     */
+    viewRotation: boolean;
     /**
      * Whether the View tab offers its Gap, the gaps between pages shown or the
      * pages butted together: a stack of pages a reader runs down (PDF, Word, a
@@ -182,6 +191,7 @@ export const FALLBACK_PROFILE: DocProfile = {
     textEditing: false,
     pagedViewControls: true,
     pageArrangement: false,
+    viewRotation: false,
     pageGapToggle: false,
     drawingShapes: false,
     pageSelection: false,
@@ -210,6 +220,7 @@ export const IMAGE_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
+    viewRotation: false,
     pageGapToggle: true,
     drawingShapes: true,
     pageSelection: true,
@@ -233,6 +244,7 @@ export const PORTABLE_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,
+    viewRotation: true,
     pageGapToggle: true,
     drawingShapes: false,
     pageSelection: true,
@@ -256,6 +268,7 @@ export const PRESENTATION_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
+    viewRotation: false,
     pageGapToggle: false,
     drawingShapes: true,
     pageSelection: true,
@@ -285,6 +298,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
     textEditing: false,
     pagedViewControls: false,
     pageArrangement: false,
+    viewRotation: false,
     pageGapToggle: false,
     drawingShapes: false,
     pageSelection: false,
@@ -313,6 +327,7 @@ export const WORDPROCESSING_PROFILE: DocProfile = {
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,
+    viewRotation: false,
     pageGapToggle: true,
     drawingShapes: true,
     pageSelection: false,
@@ -338,10 +353,12 @@ export function profileFor(docType: UDocType | null): DocProfile {
 }
 
 /**
- * The arrangement the open document is shown in: the View tab's layout and
- * rotation where its doc type offers them ({@link DocProfile.pageArrangement}
- * — PDF, Word), else single, upright pages; and its Gap where it offers that
- * ({@link DocProfile.pageGapToggle} — PDF, Word, an image), else the gaps.
+ * The arrangement the open document is shown in: the View tab's layout where
+ * its doc type offers it ({@link DocProfile.pageArrangement} — PDF, Word), else
+ * single pages; its rotation where it offers that
+ * ({@link DocProfile.viewRotation} — PDF), else upright pages; and its Gap
+ * where it offers that ({@link DocProfile.pageGapToggle} — PDF, Word, an
+ * image), else the gaps.
  */
 export function arrangementFor(state: UIState): {
     layoutMode: LayoutMode;
@@ -351,7 +368,7 @@ export function arrangementFor(state: UIState): {
     const profile = profileFor(state.docType);
     return {
         layoutMode: profile.pageArrangement ? state.layoutMode : "singlePage",
-        pageRotation: profile.pageArrangement ? state.pageRotation : 0,
+        pageRotation: profile.viewRotation ? state.pageRotation : 0,
         showPageGap: profile.pageGapToggle ? state.showPageGap : true,
     };
 }

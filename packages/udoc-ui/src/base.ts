@@ -151,8 +151,8 @@ export interface UDocOptions {
      *  {@link UDocBase.setLayoutMode} changes it. */
     layoutMode?: LayoutMode;
     /** The turn, in degrees clockwise, every page is shown at on top of its
-     *  own — a view setting: the document is unchanged. PDF and Word documents
-     *  only. Default `0`; {@link UDocBase.setPageRotation} changes it. */
+     *  own — a view setting: the document is unchanged. PDF documents only.
+     *  Default `0`; {@link UDocBase.setPageRotation} changes it. */
     pageRotation?: 0 | 90 | 180 | 270;
     /** The gaps between pages, in document points — `horizontal` between the
      *  pages of a spread, `vertical` from one spread to the next. Default
@@ -1355,8 +1355,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     /**
      * Turn every page `rotation` degrees clockwise on top of its own, as the
      * View tab's Rotate View buttons do. A view setting: the document is unchanged,
-     * and nothing is saved or shared with collaborators. PDF and Word documents
-     * only; any other shows its pages upright.
+     * and nothing is saved or shared with collaborators. PDF documents only;
+     * any other shows its pages upright.
      */
     setPageRotation(rotation: 0 | 90 | 180 | 270): void {
         this.shell.setPageRotation(rotation);
