@@ -80,6 +80,7 @@ const ICONS = {
     ICON_NOTES_PAGE_VIEW: "article",
     ICON_PAGES_VIEW: "description",
     ICON_PAGELESS_VIEW: "subject",
+    ICON_SHEET_NORMAL_VIEW: "grid_on",
 
     // Pointer modes
     ICON_TOOL_POINTER: "arrow_selector_tool",

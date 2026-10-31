@@ -57,6 +57,7 @@ import type {
     SearchContinuation,
     SearchMatchLocation,
     SearchOptions,
+    SheetLayoutMode,
     UrlFont,
 } from "@docmentis/udoc-wasm";
 import { UDocError } from "@docmentis/udoc-wasm/error";
@@ -304,7 +305,9 @@ export class WorkerClient {
     /** Notified when landed fonts re-shaped the composed pages. */
     readonly #fontsRefreshedListeners = new Set<() => void>();
     /** Notified when a sheet loaded in the background, with its tab's colour. */
-    readonly #planeLoadedListeners = new Set<(plane: number, color: string | null, chartsheet: boolean) => void>();
+    readonly #planeLoadedListeners = new Set<
+        (plane: number, color: string | null, chartsheet: boolean, sheetLayoutMode: SheetLayoutMode | null) => void
+    >();
     readonly #planesListeners = new Set<(planes: PlaneInfo) => void>();
     /** Notified when the worker composed more of the document ahead of the reader. */
     readonly #composedListeners = new Set<(layout: DocumentLayout) => void>();
@@ -835,6 +838,17 @@ export class WorkerClient {
      */
     async goToPlane(plane: number): Promise<DocumentLayout> {
         return (await this.#send({ type: "goToPlane", plane })) as DocumentLayout;
+    }
+
+    /**
+     * Show the worksheet on `plane` in `mode` — `"normal"`, its grid, or
+     * `"print"`, Page Layout view's paper: a view setting, never an edit. The
+     * sheet's view starts over from its top-left; resolves with the layout
+     * known before the frame composes it, as {@link goToPlane} does. A
+     * chartsheet, or the mode the sheet shows already, changes nothing.
+     */
+    async setSheetLayoutMode(plane: number, mode: SheetLayoutMode): Promise<DocumentLayout> {
+        return (await this.#send({ type: "setSheetLayoutMode", plane, mode })) as DocumentLayout;
     }
 
     /**
@@ -1785,6 +1799,26 @@ export class WorkerClient {
     }
 
     /**
+     * How many pages the workbook's sheet on `plane` prints on: a worksheet's
+     * Page Layout view's paper, whichever view it shows, or a chartsheet's one
+     * page. The sheet shows as it did.
+     */
+    async printPageCount(plane: number): Promise<number> {
+        return (await this.#send({ type: "printPageCount", plane })) as number;
+    }
+
+    /**
+     * Rasterize page `page` (0-based) of what the workbook's sheet on `plane`
+     * prints on — see {@link printPageCount} — at `scale` (device pixels per
+     * document point), ephemeral content left out, as a print renders it.
+     */
+    async renderPrintPage(plane: number, page: number, scale: number): Promise<ImageBitmap> {
+        const result = (await this.#send({ type: "renderPrintPage", plane, index: page, scale })) as ThumbnailResult;
+        const image = new ImageData(new Uint8ClampedArray(result.rgba), result.width, result.height);
+        return createImageBitmap(image);
+    }
+
+    /**
      * Bias the thumbnail render order toward `page` — the page the strip is
      * centred on. Queued requests nearest it render first, so what the user is
      * looking at fills before off-window pages. Cheap to call on every scroll.
@@ -1859,11 +1893,19 @@ export class WorkerClient {
     /**
      * Subscribe to sheet loads — fired as the worker loads a workbook's sheets
      * in the background after an open, one sheet at a time in tab order, with
-     * the plane, its tab's `#rrggbb` colour (`null` for none) and whether it is
-     * a chartsheet. The sheet shown at the open isn't among them:
+     * the plane, its tab's `#rrggbb` colour (`null` for none), whether it is
+     * a chartsheet, and the sheet layout mode it opens in (`null` for a
+     * chartsheet). The sheet shown at the open isn't among them:
      * {@link planeInfo} reads it. Returns an unsubscribe function.
      */
-    onPlaneLoaded(listener: (plane: number, color: string | null, chartsheet: boolean) => void): () => void {
+    onPlaneLoaded(
+        listener: (
+            plane: number,
+            color: string | null,
+            chartsheet: boolean,
+            sheetLayoutMode: SheetLayoutMode | null,
+        ) => void,
+    ): () => void {
         this.#planeLoadedListeners.add(listener);
         return () => this.#planeLoadedListeners.delete(listener);
     }
@@ -2021,7 +2063,7 @@ export class WorkerClient {
                     return;
                 case "planeLoaded":
                     for (const listener of this.#planeLoadedListeners) {
-                        listener(msg.plane, msg.color, msg.chartsheet);
+                        listener(msg.plane, msg.color, msg.chartsheet, msg.sheetLayoutMode);
                     }
                     return;
                 case "planes": {

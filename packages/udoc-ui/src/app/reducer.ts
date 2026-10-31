@@ -8,6 +8,7 @@ import {
     isLeftPanelTab,
     planeOfView,
     renderZoom,
+    sheetLayoutModeOf,
     viewDpi,
     viewOfPlane,
 } from "./state.js";
@@ -180,6 +181,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeChartsheets: [],
                 planeVisibility: [],
                 planeKinds: [],
+                planeSheetLayoutModes: [],
                 activeCell: null,
             };
         }
@@ -227,6 +229,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeChartsheets: [],
                 planeVisibility: [],
                 planeKinds: [],
+                planeSheetLayoutModes: [],
                 activeCell: null,
                 scrollSize: { width: 0, height: 0 },
                 canUndo: false,
@@ -261,6 +264,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 planeChartsheets: action.chartsheets,
                 planeVisibility: action.visibility,
                 planeKinds: action.kinds,
+                planeSheetLayoutModes: action.sheetLayoutModes,
             };
         }
 
@@ -269,7 +273,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             if (
                 action.plane >= state.planeCount ||
                 (state.planeColors[action.plane] === action.color &&
-                    state.planeChartsheets[action.plane] === action.chartsheet)
+                    state.planeChartsheets[action.plane] === action.chartsheet &&
+                    state.planeSheetLayoutModes[action.plane] === action.sheetLayoutMode)
             ) {
                 return state;
             }
@@ -277,7 +282,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             planeColors[action.plane] = action.color;
             const planeChartsheets = [...state.planeChartsheets];
             planeChartsheets[action.plane] = action.chartsheet;
-            return { ...state, planeColors, planeChartsheets };
+            const planeSheetLayoutModes = [...state.planeSheetLayoutModes];
+            planeSheetLayoutModes[action.plane] = action.sheetLayoutMode;
+            return { ...state, planeColors, planeChartsheets, planeSheetLayoutModes };
         }
 
         case "SET_CURRENT_PLANE": {
@@ -286,6 +293,24 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             // move to that view.
             const view = viewOfPlane(state.planeKinds, action.plane) ?? state.presentationView;
             return { ...state, currentPlane: action.plane, presentationView: view };
+        }
+
+        case "SET_SHEET_LAYOUT_MODE": {
+            // The current worksheet's, at once; the shell asks the worker for
+            // it. A chartsheet, or a sheet not loaded yet, has none to set.
+            const shown = sheetLayoutModeOf(state);
+            if (shown === null || shown === action.mode) return state;
+            const planeSheetLayoutModes = [...state.planeSheetLayoutModes];
+            planeSheetLayoutModes[state.currentPlane] = action.mode;
+            return {
+                ...state,
+                planeSheetLayoutModes,
+                sheetLayoutModeRequest: {
+                    plane: state.currentPlane,
+                    mode: action.mode,
+                    seq: state.sheetLayoutModeRequest.seq + 1,
+                },
+            };
         }
 
         case "SET_PRESENTATION_VIEW": {

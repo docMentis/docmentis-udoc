@@ -91,6 +91,7 @@ export const zhCN: Messages = {
     "command.notesPageView": "备注页",
     "command.pagesView": "分页",
     "command.pagelessView": "无分页",
+    "command.pageLayoutView": "页面布局",
     "command.notes": "备注",
     "command.singleScroll": "单页",
     "command.continuousScroll": "连续",

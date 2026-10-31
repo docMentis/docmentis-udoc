@@ -3,6 +3,7 @@ import type {
     FileFormat,
     PresentationPlaneKind,
     SearchMatch,
+    SheetLayoutMode,
     SheetState,
     StampIcon,
     StartError,
@@ -74,10 +75,18 @@ export type Action =
           chartsheets: readonly boolean[];
           visibility: readonly SheetState[];
           kinds: readonly (PresentationPlaneKind | null)[];
+          sheetLayoutModes: readonly (SheetLayoutMode | null)[];
       }
-    // One plane's tab colour and whether it is a chartsheet — a sheet the
-    // worker loaded in the background, after the open.
-    | { type: "PLANE_LOADED"; plane: number; color: string | null; chartsheet: boolean }
+    // One plane's tab colour, whether it is a chartsheet, and the sheet layout
+    // mode it opens in — a sheet the worker loaded in the background, after
+    // the open.
+    | {
+          type: "PLANE_LOADED";
+          plane: number;
+          color: string | null;
+          chartsheet: boolean;
+          sheetLayoutMode: SheetLayoutMode | null;
+      }
     // Switch the active plane — a sheet-tab click. Optimistically sets
     // `currentPlane`; the shell watches it and tells the worker to switch,
     // reconciling the new plane's pages via a follow-up DOC_RELAYOUT.
@@ -188,6 +197,9 @@ export type Action =
     | { type: "SET_RIGHT_PANEL_WIDTH"; width: number }
     // How a deck shows: its slides, or its notes pages
     | { type: "SET_PRESENTATION_VIEW"; view: PresentationView }
+    // Show the current worksheet as its grid or as Page Layout view's paper —
+    // the View tab's Normal and Page Layout
+    | { type: "SET_SHEET_LAYOUT_MODE"; mode: SheetLayoutMode }
     // A deck's notes pane: open (at its default height) or closed to its edge,
     // and open at the height its splitter left
     | { type: "SET_NOTES_OPEN"; open: boolean }

@@ -57,6 +57,8 @@ import type {
     FontLocation,
     PresentationPlaneKind,
     GoogleFontFamily,
+    PageImage,
+    SheetLayoutMode,
     SheetState,
     UrlFont,
     WasmSession,
@@ -1073,9 +1075,11 @@ function composeAgain(s: WasmSession): void {
     lanes.wake();
 }
 
-/** Whether `s` shows a worksheet's grid, which composes by rows, rather than pages. */
+/** Whether `s` shows a worksheet's grid, which composes by rows, rather than pages: a chartsheet, and a worksheet shown as Page Layout view's paper, compose by pages. */
 function composesByRows(s: WasmSession): boolean {
-    return s.docType() === "spreadsheet" && !s.planeIsChartsheet(s.currentPlane(VIEWER));
+    if (s.docType() !== "spreadsheet") return false;
+    const plane = s.currentPlane(VIEWER);
+    return !s.planeIsChartsheet(plane) && s.spreadsheet.sheetLayoutMode(plane) !== "print";
 }
 
 /**
@@ -1201,7 +1205,7 @@ function walkSheet(): void {
     if (plane + 1 < count) walkFrom = plane + 1;
 }
 
-/** Load sheet `plane` of the open workbook, and post its tab colour and kind. */
+/** Load sheet `plane` of the open workbook, and post its tab colour, its kind and the sheet layout mode it opens in. */
 function loadSheet(s: WasmSession, plane: number): void {
     s.spreadsheet.loadSheet(plane);
     loadedSheets.add(planeKey(s, plane));
@@ -1210,6 +1214,7 @@ function loadSheet(s: WasmSession, plane: number): void {
         plane,
         color: tabColorHex(s, plane),
         chartsheet: s.planeIsChartsheet(plane),
+        sheetLayoutMode: s.spreadsheet.sheetLayoutMode(plane) ?? null,
     });
 }
 
@@ -1235,13 +1240,19 @@ function dropThumbnails(): void {
 
 /**
  * Rasterize page `index` of `plane` off the viewport: wholly separate from the
- * painted frame, so no repaint and no selection/history churn. The pixels move
- * out of the PageImage (so they aren't cloned) into a standalone, transferable
- * buffer — the binding copies them out of wasm memory, and `slice()` detaches
- * them, as the snapshot reads do — and the wasm-side handle is freed.
+ * painted frame, so no repaint and no selection/history churn.
  */
 function rasterPage(s: WasmSession, plane: number, index: number, scale: number, ephemeral: boolean): ThumbnailResult {
-    const img = s.renderPageToRgba(plane, index, scale, ephemeral);
+    return rasterOf(s.renderPageToRgba(plane, index, scale, ephemeral));
+}
+
+/**
+ * `img`'s pixels, moved out of the PageImage (so they aren't cloned) into a
+ * standalone, transferable buffer — the binding copies them out of wasm
+ * memory, and `slice()` detaches them, as the snapshot reads do — with the
+ * wasm-side handle freed.
+ */
+function rasterOf(img: PageImage): ThumbnailResult {
     const width = img.width;
     const height = img.height;
     const rgba = img.takeData().slice().buffer;
@@ -1251,9 +1262,9 @@ function rasterPage(s: WasmSession, plane: number, index: number, scale: number,
 
 /**
  * The plane roster of `s` (the sheet tabs): count + active + each plane's name,
- * tab colour, kind and visibility — the colour and kind of the sheets loaded so
- * far, the rest following from the sheet walk. A pure read — no compose, no
- * repaint.
+ * tab colour, kind, visibility and sheet layout mode — the colour, kind and
+ * mode of the sheets loaded so far, the rest following from the sheet walk. A
+ * pure read — no compose, no repaint.
  */
 function planesOf(s: WasmSession): PlaneInfo {
     const count = s.planeCount();
@@ -1262,19 +1273,28 @@ function planesOf(s: WasmSession): PlaneInfo {
     const chartsheets: boolean[] = [];
     const visibility: SheetState[] = [];
     const kinds: (PresentationPlaneKind | null)[] = [];
+    const sheetLayoutModes: (SheetLayoutMode | null)[] = [];
+    const workbook = s.docType() === "spreadsheet";
     for (let i = 0; i < count; i++) {
         names.push(s.planeName(i) ?? "");
         colors.push(loadedSheets.has(planeKey(s, i)) ? tabColorHex(s, i) : undefined);
         chartsheets.push(s.planeIsChartsheet(i));
         visibility.push(s.planeSheetState(i) ?? "visible");
         kinds.push(s.planeKind(i) ?? null);
+        sheetLayoutModes.push((workbook && s.spreadsheet.sheetLayoutMode(i)) || null);
     }
-    return { count, current: s.currentPlane(VIEWER), names, colors, chartsheets, visibility, kinds };
+    return { count, current: s.currentPlane(VIEWER), names, colors, chartsheets, visibility, kinds, sheetLayoutModes };
 }
 
 /** What tells one roster from another: its tabs, not which one is current. */
 function planesKey(planes: PlaneInfo): string {
-    return JSON.stringify([planes.names, planes.colors, planes.chartsheets, planes.visibility]);
+    return JSON.stringify([
+        planes.names,
+        planes.colors,
+        planes.chartsheets,
+        planes.visibility,
+        planes.sheetLayoutModes,
+    ]);
 }
 
 /**
@@ -1774,10 +1794,40 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, layout);
                 break;
             }
+            case "setSheetLayoutMode": {
+                if (!session) throw new Error("engine worker: setSheetLayoutMode before open");
+                // The sheet's view starts over from its top-left, its grid or
+                // its paper composed by the frame, as after a sheet switch:
+                // the layout replied is the one known before it, and the
+                // selection is projected onto what the frame shows.
+                session.spreadsheet.setSheetLayoutMode(msg.plane, msg.mode);
+                const layout = layoutOf(session);
+                emitSelection(false);
+                selectionAfterPaint = true;
+                scheduleFrame();
+                // Then the rest: a grid's rows, or the paper's pages.
+                startComposeAhead(session);
+                reply(id, layout);
+                break;
+            }
             case "renderThumbnail": {
                 if (!session) throw new Error("engine worker: renderThumbnail before open");
                 // A one-off preview, now — a slide layout's, a page to print.
                 const raster = rasterPage(session, msg.plane, msg.index, msg.scale, msg.ephemeral ?? true);
+                reply(id, raster, undefined, [raster.rgba]);
+                break;
+            }
+            case "printPageCount": {
+                if (!session) throw new Error("engine worker: printPageCount before open");
+                // Paper shown may have been cut again: the engine repaints it
+                // whole, so a frame paints it.
+                reply(id, session.spreadsheet.printPageCount(msg.plane));
+                scheduleFrame();
+                break;
+            }
+            case "renderPrintPage": {
+                if (!session) throw new Error("engine worker: renderPrintPage before open");
+                const raster = rasterOf(session.spreadsheet.renderPrintPageToRgba(msg.plane, msg.index, msg.scale));
                 reply(id, raster, undefined, [raster.rgba]);
                 break;
             }

@@ -91,6 +91,7 @@ export const ptBR: Messages = {
     "command.notesPageView": "Página de anotações",
     "command.pagesView": "Páginas",
     "command.pagelessView": "Sem páginas",
+    "command.pageLayoutView": "Layout da Página",
     "command.notes": "Anotações",
     "command.singleScroll": "Individual",
     "command.continuousScroll": "Contínuo",

@@ -1,8 +1,8 @@
 import type { HistoryOp, SelectionEdit } from "../worker/protocol.js";
-import type { StampIcon, UDocType } from "@docmentis/udoc-wasm";
+import type { SheetLayoutMode, StampIcon, UDocType } from "@docmentis/udoc-wasm";
 import { allowsEdit } from "../geometry.js";
 import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
-import { copyAllowed, PAGELESS_PLANE } from "./state.js";
+import { copyAllowed, PAGELESS_PLANE, sheetLayoutModeOf } from "./state.js";
 import type {
     AnnotationTool,
     CommandId,
@@ -55,6 +55,7 @@ import {
     ICON_NORMAL_VIEW,
     ICON_PAGES_VIEW,
     ICON_PAGELESS_VIEW,
+    ICON_SHEET_NORMAL_VIEW,
     ICON_SUBTOOL_HIGHLIGHT,
     ICON_FILL,
     ICON_STROKE,
@@ -124,6 +125,13 @@ export interface CommandContext {
     /** Whether a word document shows pageless, with no pages to scroll, pair
      *  up, turn or space — the View tab's page controls grey. */
     pageless: boolean;
+    /** The sheet layout mode the current sheet of a workbook shows — what its
+     *  View tab's Normal and Page Layout read pressed by — or null for a
+     *  chartsheet, which shows neither, and any other doc type. */
+    sheetLayoutMode: SheetLayoutMode | null;
+    /** Whether a cell is being typed into — Excel's Edit mode, which greys a
+     *  workbook's views until what's typed is entered or dropped. */
+    cellEntry: boolean;
     /** Whether the open PDF has layers — the View tab's Layers shows for them. */
     hasLayers: boolean;
     /** What the Annotate tab's Format controls act on and show — the armed
@@ -160,6 +168,8 @@ export function commandContext(state: UIState): CommandContext {
         presentationView: state.presentationView,
         layoutMode: state.layoutMode,
         pageless: state.docType === "wordprocessing" && state.currentPlane === PAGELESS_PLANE,
+        sheetLayoutMode: sheetLayoutModeOf(state),
+        cellEntry: state.activeCell?.entry != null,
         hasLayers: state.hasLayers,
         annotation: annotationFormat(state),
     };
@@ -180,6 +190,10 @@ const whenReady: EnabledWhen = (c) => c.ready;
 /** Enabled while the document shows pages — not a word document's pageless
  *  view — for the View tab's controls of how they scroll and are arranged. */
 const whenPaged: EnabledWhen = (c) => c.ready && !c.pageless;
+
+/** Enabled while a workbook shows a worksheet and no cell is typed into, for
+ *  its View tab's Normal and Page Layout. */
+const whenSheetViews: EnabledWhen = (c) => c.ready && c.sheetLayoutMode !== null && !c.cellEntry;
 
 /**
  * What activating a menu item does — the intent the shell turns into an edit
@@ -909,6 +923,38 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             press: (store) => store.dispatch({ type: "SET_CURRENT_PLANE", plane: PAGELESS_PLANE }),
         },
         enabledWhen: whenReady,
+    },
+
+    // View tab — a workbook's views of its current sheet, one segment button
+    // as Excel names them: its grid, or its Page Layout view's paper. A
+    // chartsheet has neither.
+    sheetNormalView: {
+        id: "sheetNormalView",
+        label: "command.normalView",
+        icon: ICON_SHEET_NORMAL_VIEW,
+        group: "views",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            cluster: "segment",
+            pressed: (state) => sheetLayoutModeOf(state) === "normal",
+            press: (store) => store.dispatch({ type: "SET_SHEET_LAYOUT_MODE", mode: "normal" }),
+        },
+        enabledWhen: whenSheetViews,
+    },
+    sheetPageLayoutView: {
+        id: "sheetPageLayoutView",
+        label: "command.pageLayoutView",
+        icon: ICON_PAGES_VIEW,
+        group: "views",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            cluster: "segment",
+            pressed: (state) => sheetLayoutModeOf(state) === "print",
+            press: (store) => store.dispatch({ type: "SET_SHEET_LAYOUT_MODE", mode: "print" }),
+        },
+        enabledWhen: whenSheetViews,
     },
 
     // View tab — how the pages scroll, one segment button: a single page at a

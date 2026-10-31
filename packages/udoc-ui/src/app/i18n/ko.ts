@@ -91,6 +91,7 @@ export const ko: Messages = {
     "command.notesPageView": "노트 페이지",
     "command.pagesView": "페이지",
     "command.pagelessView": "페이지 없음",
+    "command.pageLayoutView": "페이지 레이아웃",
     "command.notes": "슬라이드 노트",
     "command.singleScroll": "단일",
     "command.continuousScroll": "연속",

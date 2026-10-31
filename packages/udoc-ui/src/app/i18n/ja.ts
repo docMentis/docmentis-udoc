@@ -91,6 +91,7 @@ export const ja: Messages = {
     "command.notesPageView": "ノート ページ",
     "command.pagesView": "ページ分けあり",
     "command.pagelessView": "ページ分けなし",
+    "command.pageLayoutView": "ページ レイアウト",
     "command.notes": "ノート",
     "command.singleScroll": "単一",
     "command.continuousScroll": "連続",

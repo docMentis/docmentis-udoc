@@ -91,6 +91,7 @@ export const ru: Messages = {
     "command.notesPageView": "Страница заметок",
     "command.pagesView": "Страницы",
     "command.pagelessView": "Без страниц",
+    "command.pageLayoutView": "Разметка страницы",
     "command.notes": "Заметки",
     "command.singleScroll": "Одиночный",
     "command.continuousScroll": "Непрерывно",

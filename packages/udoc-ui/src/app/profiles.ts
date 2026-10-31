@@ -49,14 +49,15 @@ const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; sh
     wordprocessing: { pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT], shows: ["formattingMarks"] },
     presentation: { pages: ["normalView", "notesPageView", ...SCROLL], shows: ["notes"] },
     image: { pages: [...SCROLL, "pageGap"], shows: [] },
-    spreadsheet: { pages: [], shows: ["formulaBar"] },
+    spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar"] },
 };
 
 /**
  * `docType`'s View tab — how the document is shown, never an edit of it, so
  * the same in view mode and edit mode, the last tab of each. Its groups, each
  * where the doc type has one: its own views (a deck's Normal and Notes Page, a
- * word document's Pages and Pageless), how the pages scroll, how they pair up,
+ * word document's Pages and Pageless, a workbook's Normal and Page Layout of
+ * its current sheet), how the pages scroll, how they pair up,
  * the turn they're shown at, the gaps between them, `guides` (an extension's,
  * edit mode's ruler), then what shows beside the document — a PDF's layers, a
  * deck's notes, a word document's formatting marks, a workbook's formula bar.

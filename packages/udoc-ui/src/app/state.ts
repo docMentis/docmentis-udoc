@@ -10,6 +10,7 @@ import type {
     FileFormat,
     PresentationPlaneKind,
     SearchMatch,
+    SheetLayoutMode,
     SheetState,
     StampIcon,
     StartError,
@@ -166,6 +167,23 @@ export function showsPageless(state: { docType: UDocType | null; currentPlane: n
     return state.docType === "wordprocessing" && state.currentPlane === PAGELESS_PLANE;
 }
 
+/** The sheet layout mode the current sheet of a workbook shows — `"normal"`,
+ *  its grid, or `"print"`, Page Layout view's paper — or null for a
+ *  chartsheet, a sheet not loaded yet, or any other doc type. */
+export function sheetLayoutModeOf(state: {
+    docType: UDocType | null;
+    currentPlane: number;
+    planeSheetLayoutModes: readonly (SheetLayoutMode | null)[];
+}): SheetLayoutMode | null {
+    if (state.docType !== "spreadsheet") return null;
+    return state.planeSheetLayoutModes[state.currentPlane] ?? null;
+}
+
+/** Whether `state` shows a worksheet as Page Layout view's paper. */
+export function showsPaper(state: Parameters<typeof sheetLayoutModeOf>[0]): boolean {
+    return sheetLayoutModeOf(state) === "print";
+}
+
 /** Canonical render order for the left-panel tab strip. */
 export const LEFT_PANEL_TABS: readonly LeftPanelTab[] = ["thumbnail", "outline", "layers", "attachments"];
 
@@ -284,6 +302,8 @@ export type CommandId =
     | "notes"
     | "pagesView"
     | "pagelessView"
+    | "sheetNormalView"
+    | "sheetPageLayoutView"
     | "singleScroll"
     | "continuousScroll"
     | "pageLayout"
@@ -442,6 +462,17 @@ export interface UIState {
      *  notes pages or notes text, a slide master's — `null` for any other doc
      *  type's. Empty with no document open. */
     planeKinds: readonly (PresentationPlaneKind | null)[];
+    /** The sheet layout mode each plane shows, indexed by plane — a
+     *  worksheet's grid, `"normal"`, or Page Layout view's paper, `"print"` —
+     *  `null` for a chartsheet, a sheet the worker hasn't loaded yet, and any
+     *  other doc type's plane. Empty with no document open. */
+    planeSheetLayoutModes: readonly (SheetLayoutMode | null)[];
+    /**
+     * A switch of a worksheet's sheet layout mode, as an event carried in
+     * state: the plane and the mode the View tab asked for, `seq` bumping on
+     * every switch. The shell watches `seq` and asks the worker for it.
+     */
+    sheetLayoutModeRequest: { plane: number; mode: SheetLayoutMode; seq: number };
     /** Full scrollable document size; drives scroll clamping. Also dynamic. */
     scrollSize: Size;
     /** Used content size the scrollbar is drawn from. Equals `scrollSize` for
@@ -843,6 +874,8 @@ export const initialState: UIState = {
     planeChartsheets: [],
     planeVisibility: [],
     planeKinds: [],
+    planeSheetLayoutModes: [],
+    sheetLayoutModeRequest: { plane: 0, mode: "normal", seq: 0 },
     scrollSize: { width: 0, height: 0 },
     scrollUsedSize: { width: 0, height: 0 },
     scrollbars: { x: false, y: false },

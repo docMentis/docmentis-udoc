@@ -7,7 +7,14 @@
 // Wire contract types declared from the Rust source (tsify → `udoc.d.ts`) are
 // re-exported here so host code keeps one geometry import surface. They are the
 // single definition — no hand-authored mirror.
-import type { Feature, FileFormat, PresentationPlaneKind, SheetState, UDocType } from "@docmentis/udoc-wasm";
+import type {
+    Feature,
+    FileFormat,
+    PresentationPlaneKind,
+    SheetLayoutMode,
+    SheetState,
+    UDocType,
+} from "@docmentis/udoc-wasm";
 import type {
     UDocSelectionCapabilities as SelectionCapabilities,
     SelectionBox,
@@ -222,6 +229,13 @@ export interface PlaneInfo {
      * plane of any other doc type.
      */
     kinds: (PresentationPlaneKind | null)[];
+    /**
+     * The sheet layout mode each plane shows, indexed by plane: `"normal"`, a
+     * worksheet's grid, or `"print"`, its Page Layout view's paper. `null` for
+     * a chartsheet, a sheet not loaded yet, and every single-plane doc type's
+     * plane — posted as a sheet lands, as its colour is.
+     */
+    sheetLayoutModes: (SheetLayoutMode | null)[];
 }
 
 /**

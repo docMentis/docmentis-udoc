@@ -165,6 +165,8 @@ export interface Messages {
     "command.pagesView": string;
     /** Pageless */
     "command.pagelessView": string;
+    /** Page Layout — a workbook's view of a sheet as the paper it prints on */
+    "command.pageLayoutView": string;
     /** Notes */
     "command.notes": string;
     /** Single */

@@ -41,6 +41,7 @@ import type {
     SearchContinuation,
     SearchMatchLocation,
     SearchOptions,
+    SheetLayoutMode,
     UrlFont,
 } from "@docmentis/udoc-wasm";
 import type {
@@ -630,6 +631,19 @@ export interface PlaneInfoRequest {
 export interface GoToPlaneRequest extends ViewerScoped {
     type: "goToPlane";
     plane: number;
+}
+
+/**
+ * Show the worksheet on `plane` in `mode` — `"normal"`, its grid, or
+ * `"print"`, Page Layout view's paper: a view setting, never an edit. The
+ * engine starts the sheet's view over from its top-left; replies with the
+ * layout known before the frame composes it, as `goToPlane` does. A
+ * chartsheet, or the mode the sheet shows already, changes nothing.
+ */
+export interface SetSheetLayoutModeRequest {
+    type: "setSheetLayoutMode";
+    plane: number;
+    mode: SheetLayoutMode;
 }
 
 /** Release the open document (but keep the worker alive for the next open). */
@@ -1736,6 +1750,30 @@ export interface MergeOpaquePartsRequest {
 }
 
 /**
+ * Count the pages the sheet on `plane` prints on: a worksheet's Page Layout
+ * view's paper, laid out now whichever sheet layout mode it shows, or a
+ * chartsheet's one page. The sheet shows as it did after. Replies with the
+ * count — what a print offers to choose from.
+ */
+export interface PrintPageCountRequest {
+    type: "printPageCount";
+    plane: number;
+}
+
+/**
+ * Rasterize page `index` (0-based) of what the sheet on `plane` prints on —
+ * see {@link PrintPageCountRequest} — at `scale` (1.0 == 72 DPI), ephemeral
+ * content left out: a workbook's page to print. Replies with a
+ * {@link ThumbnailResult} whose pixel buffer is transferred.
+ */
+export interface RenderPrintPageRequest {
+    type: "renderPrintPage";
+    plane: number;
+    index: number;
+    scale: number;
+}
+
+/**
  * Rasterize page `index` (0-based) to a premultiplied-RGBA8 bitmap at `scale`
  * (output pixels per document point — 1.0 == 72 DPI), now: a one-off preview —
  * a slide layout's, a page to print. An off-viewport CPU raster, wholly
@@ -1856,7 +1894,10 @@ export type WorkerRequest =
     | EnsureFontRequest
     | PlaneInfoRequest
     | GoToPlaneRequest
+    | SetSheetLayoutModeRequest
     | RenderThumbnailRequest
+    | PrintPageCountRequest
+    | RenderPrintPageRequest
     | QueueThumbnailRequest
     | CancelThumbnailRequest
     | DropThumbnailsRequest
@@ -2197,15 +2238,17 @@ export interface FontsRefreshedReport {
 /**
  * Unsolicited sheet load: the worker loaded a workbook's sheet in the
  * background, before it was shown, and this is the colour its tab takes —
- * `#rrggbb`, or `null` for a tab in no colour — and whether it is a
- * chartsheet. Posted once per sheet, in tab order, after an open; the sheet
- * shown at the open is read by `planeInfo` instead.
+ * `#rrggbb`, or `null` for a tab in no colour — whether it is a chartsheet,
+ * and the sheet layout mode it opens in (`null` for a chartsheet). Posted once
+ * per sheet, in tab order, after an open; the sheet shown at the open is read
+ * by `planeInfo` instead.
  */
 export interface PlaneLoadedReport {
     type: "planeLoaded";
     plane: number;
     color: string | null;
     chartsheet: boolean;
+    sheetLayoutMode: SheetLayoutMode | null;
 }
 
 /**

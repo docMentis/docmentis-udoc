@@ -91,6 +91,7 @@ export const de: Messages = {
     "command.notesPageView": "Notizenseite",
     "command.pagesView": "Seiten",
     "command.pagelessView": "Seitenlos",
+    "command.pageLayoutView": "Seitenlayout",
     "command.notes": "Notizen",
     "command.singleScroll": "Einzeln",
     "command.continuousScroll": "Fortlaufend",

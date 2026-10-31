@@ -25,7 +25,7 @@ import { shallowEqual, subscribeSelector } from "../../framework/index.js";
 import type { Store } from "../../framework/index.js";
 import type { Action } from "../actions.js";
 import type { AnnotationTool, UIState, MarkupTool, PlaceTool, ShapeKind } from "../state.js";
-import { NO_FIT, VIEW_MODE, copyAllowed, pageStep, renderZoom, showsPageless, viewDpi } from "../state.js";
+import { NO_FIT, VIEW_MODE, copyAllowed, pageStep, renderZoom, showsPageless, showsPaper, viewDpi } from "../state.js";
 import { profileFor } from "../profiles.js";
 import type { Segment, ShapePoint } from "../shapes.js";
 import { segmentsFor, STROKE as SHAPE_STROKE, STROKE_WIDTH as SHAPE_STROKE_WIDTH } from "../shapes.js";
@@ -711,14 +711,19 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
 
     /**
      * The guide band the host reserves for `state` — a spreadsheet's headers,
-     * but for a chartsheet, which has no grid; the band the shell's extension
-     * draws (edit mode's ruler); or none. Host-static: derived from the doc
-     * profile and view state with no dependence on a painted frame, so the band
-     * strips can be reserved before the first paint and the content pane
-     * measured once (see {@link GuideBands.layout}).
+     * but for a chartsheet, which has no grid, and a worksheet shown as Page
+     * Layout view's paper; the band the shell's extension draws (edit mode's
+     * ruler); or none. Host-static: derived from the doc profile and view
+     * state with no dependence on a painted frame, so the band strips can be
+     * reserved before the first paint and the content pane measured once (see
+     * {@link GuideBands.layout}).
      */
     function bandKind(state: UIState): BandKind {
-        if (profileFor(state.docType).guide === "header" && !state.planeChartsheets[state.currentPlane]) {
+        if (
+            profileFor(state.docType).guide === "header" &&
+            !state.planeChartsheets[state.currentPlane] &&
+            !showsPaper(state)
+        ) {
             return "header";
         }
         return hooks.guideBand?.(state) ?? null;

@@ -1003,13 +1003,17 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * and quality — what the toolbar's Print does; with them it prints as
      * they say.
      *
+     * A workbook prints its current sheet, as Excel prints the active sheet:
+     * on the pages its Page Layout view shows, whichever view it is shown in,
+     * so `options.pages` counts those pages.
+     *
      * Every page of a PDF at `"standard"` quality prints as the PDF itself,
      * saved as {@link download} saves it, through the browser's own viewer.
      * Anything else prints rendered: each page rendered at the quality's DPI,
      * one sheet each, with input held while they render — Cancel there
      * stops the print. The print job is named after the file {@link open} was
-     * given. Rejects with no document open, one without pages (a
-     * spreadsheet), or a page index past its last page.
+     * given. Rejects with no document open, one without pages, or a page index
+     * past its last page.
      */
     print(options?: PrintOptions): Promise<void> {
         return this.shell.print(options);

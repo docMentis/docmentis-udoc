@@ -8,6 +8,20 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- A workbook's View tab shows the current sheet as Normal, its grid, or as
+  Page Layout, the pages it prints on, as Excel names them: each sheet
+  keeps its own view, and a sheet saved in Page Layout view opens in it. A
+  sheet on paper shows no row and column headers, and the view controls
+  offer its pages to go to and the fits; a cell is selected and typed into
+  on its page. A switch starts the sheet from its top-left, and the views
+  grey while a cell is typed into.
+- Print prints a workbook's current sheet on the pages its Page Layout view
+  shows, whichever view it is shown in, as Excel prints the active sheet;
+  the print dialog and `print({ pages })` count those pages. It printed the
+  first sheet's grid before, as one page, whatever sheet was shown.
+
 #### Changed
 
 - A word document's View tab no longer offers Rotate View, and its pages

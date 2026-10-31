@@ -25,6 +25,7 @@ import type {
     CellEntryMode,
     GridCellSelectionMove,
     ScrollAlignment,
+    SheetLayoutMode,
     TextHyperlink,
 } from "@docmentis/udoc-wasm";
 import { allowsEdit, cssPxPerPt } from "../geometry.js";
@@ -93,6 +94,7 @@ import {
     planeOfView,
     renderZoom,
     showsPageless,
+    showsPaper,
     viewDpi,
     viewOfPlane,
 } from "./state.js";
@@ -1141,8 +1143,10 @@ export function mountUIShell(
     // the bare zoom control. Keyed on the profile flag so it tracks the loaded
     // doc type (unknown until the first document loads). A word document shown
     // pageless strips them too: its one page flows to the pane, with no other
-    // to go to, no arrangement, and no fit but 100%.
-    const pagedViewControls = (s: UIState) => profileFor(s.docType).pagedViewControls && !showsPageless(s);
+    // to go to, no arrangement, and no fit but 100%. A worksheet shown as Page
+    // Layout view's paper takes them back: its pages to go to and to fit.
+    const pagedViewControls = (s: UIState) =>
+        (profileFor(s.docType).pagedViewControls && !showsPageless(s)) || showsPaper(s);
     viewControls.setPagedSections(pagedViewControls(store.getState()));
     const unsubViewControlsComposition = subscribeSelector(
         store,
@@ -1176,6 +1180,16 @@ export function mountUIShell(
         (req) => {
             if (store.getState().status === "ready") client.goToPage(req.pageIndex);
         },
+    );
+
+    // Show a worksheet as its grid or as Page Layout view's paper: the View
+    // tab's Normal and Page Layout set the store's mode at once and raise a
+    // request, watched here by its seq — a sheet switch changes the mode shown
+    // too, with nothing to tell the worker.
+    const unsubSheetLayoutMode = subscribeSelector(
+        store,
+        (s) => s.sheetLayoutModeRequest,
+        ({ plane, mode }) => void switchSheetLayoutMode(plane, mode),
     );
 
     // Push the arrangement — scroll mode, layout mode, page rotation — to the
@@ -1725,6 +1739,7 @@ export function mountUIShell(
                     chartsheets: planes.chartsheets,
                     visibility: planes.visibility,
                     kinds: planes.kinds,
+                    sheetLayoutModes: planes.sheetLayoutModes,
                 });
             });
             // A PDF that asks to open with its outline showing opens the outline
@@ -1947,11 +1962,13 @@ export function mountUIShell(
     // people button lists them.
     const unsubPeers = client.onPeers((peers) => store.dispatch({ type: "SET_PEERS", peers }));
 
-    // A sheet's tab colour and whether it is a chartsheet, pushed by the worker
-    // as it loads a workbook's sheets in the background after an open. Drives
-    // the sheet tabs' fills, and the header bands a chartsheet goes without.
-    const unsubPlaneLoaded = client.onPlaneLoaded((plane, color, chartsheet) => {
-        store.dispatch({ type: "PLANE_LOADED", plane, color, chartsheet });
+    // A sheet's tab colour, whether it is a chartsheet and the sheet layout
+    // mode it opens in, pushed by the worker as it loads a workbook's sheets in
+    // the background after an open. Drives the sheet tabs' fills, the header
+    // bands a chartsheet and paper go without, and the View tab's Normal and
+    // Page Layout.
+    const unsubPlaneLoaded = client.onPlaneLoaded((plane, color, chartsheet, sheetLayoutMode) => {
+        store.dispatch({ type: "PLANE_LOADED", plane, color, chartsheet, sheetLayoutMode });
     });
 
     // A workbook's sheet tabs as an edit, an undo or a peer's left them, and
@@ -2024,6 +2041,21 @@ export function mountUIShell(
         // document didn't open on (a text file opens pageless) never took it,
         // so the plane switched to takes it now.
         applySpacing();
+        store.dispatch({
+            type: "DOC_RELAYOUT",
+            pageCount: layout.pageCount ?? null,
+            firstUncomposedPage: layout.firstUncomposedPage,
+            scrollSize: layout.scrollSize,
+        });
+    }
+
+    // Show the worksheet on `plane` in `mode`, and adopt the layout the worker
+    // replies with, as a sheet switch does: the engine starts the sheet's view
+    // over from its top-left, and the frame that paints it reports its extent.
+    // A view change, not a document edit.
+    async function switchSheetLayoutMode(plane: number, mode: SheetLayoutMode): Promise<void> {
+        if (store.getState().status !== "ready") return;
+        const layout = await client.setSheetLayoutMode(plane, mode);
         store.dispatch({
             type: "DOC_RELAYOUT",
             pageCount: layout.pageCount ?? null,
@@ -2862,28 +2894,41 @@ export function mountUIShell(
     }
 
     async function print(options?: PrintOptions): Promise<void> {
-        if (store.getState().status !== "ready") throw new Error("print: there is no open document to print");
-        // A page is known only once composed, so every page must be to count
-        // them, or to print them all.
-        if (!(await busyModal.hold(i18n.t("busy.preparingPrint"), composeAll()))) return;
-        const { pageCount, pageIndex } = store.getState();
+        const state = store.getState();
+        if (state.status !== "ready") throw new Error("print: there is no open document to print");
+        // A workbook prints its current sheet on the paper it prints on,
+        // whichever view it shows, as Excel prints the active sheet; any other
+        // document its pages, which are known only once composed, so every
+        // page must be to count them, or to print them all.
+        const sheet = state.docType === "spreadsheet" ? state.currentPlane : null;
+        const counting =
+            sheet !== null ? client.printPageCount(sheet) : composeAll().then(() => store.getState().pageCount);
+        if (!(await busyModal.hold(i18n.t("busy.preparingPrint"), counting))) return;
+        const pageCount = await counting;
         if (pageCount === 0) throw new Error("print: the open document has no pages to print");
         if (options === undefined) {
+            // The page shown is current where the pages printed are the ones
+            // shown — not a sheet shown as its grid.
+            const shown = sheet === null || showsPaper(store.getState());
             printModal.open({
                 pageCount,
-                currentPage: pageIndex,
+                currentPage: shown ? Math.min(store.getState().pageIndex, pageCount - 1) : 0,
                 pageNoun: profileFor(store.getState().docType).pageNoun,
                 onPrint: (chosen) =>
-                    void printPages(chosen).catch((error: unknown) => console.error("udoc: printing failed", error)),
+                    void printPages(chosen, pageCount, sheet).catch((error: unknown) =>
+                        console.error("udoc: printing failed", error),
+                    ),
             });
             return;
         }
-        await printPages(options);
+        await printPages(options, pageCount, sheet);
     }
 
-    /** Print the pages `options` names, every page composed. */
-    async function printPages(options: PrintOptions): Promise<void> {
-        const { pageCount, sourceFormat } = store.getState();
+    /** Print the pages `options` names, of the `pageCount` printed: the
+     *  document's, every page composed, or with `sheet` a workbook's sheet's
+     *  paper. */
+    async function printPages(options: PrintOptions, pageCount: number, sheet: number | null): Promise<void> {
+        const { sourceFormat } = store.getState();
         const pages = options.pages ?? Array.from({ length: pageCount }, (_, i) => i);
         if (pages.length === 0) throw new Error("print: no pages to print");
         const missing = pages.find((page) => !Number.isInteger(page) || page < 0 || page >= pageCount);
@@ -2905,11 +2950,18 @@ export function mountUIShell(
                 return;
             }
         }
-        await printRendered(pages, PRINT_DPI[quality], title);
+        await printRendered(pages, PRINT_DPI[quality], title, sheet);
     }
 
-    /** Render `pages` (0-based indices) at `dpi`, one at a time under the busy hold, and print them. */
-    async function printRendered(pages: readonly number[], dpi: number, title: string | undefined): Promise<void> {
+    /** Render `pages` (0-based indices) at `dpi`, one at a time under the busy
+     *  hold, and print them — the document's pages, or with `sheet` a
+     *  workbook's sheet's paper. */
+    async function printRendered(
+        pages: readonly number[],
+        dpi: number,
+        title: string | undefined,
+        sheet: number | null,
+    ): Promise<void> {
         const printed: PrintPage[] = [];
         let cancelled = false;
         const preparing =
@@ -2919,7 +2971,11 @@ export function mountUIShell(
                 if (cancelled) return;
                 busyModal.relabel(i18n.t(preparing, { page: i + 1, count: pages.length }));
                 // Ephemeral annotations show, but don't print.
-                printed.push(await printPageOf(await client.renderPagePreview(0, page, dpi / 72, false), dpi));
+                const bitmap =
+                    sheet !== null
+                        ? await client.renderPrintPage(sheet, page, dpi / 72)
+                        : await client.renderPagePreview(0, page, dpi / 72, false);
+                printed.push(await printPageOf(bitmap, dpi));
             }
         })();
         cancelled = !(await busyModal.hold(i18n.t(preparing, { page: 1, count: pages.length }), rendering));
@@ -3352,6 +3408,7 @@ export function mountUIShell(
         unsubPeers();
         unsubPointerSharing();
         unsubPlaneLoaded();
+        unsubSheetLayoutMode();
         unsubPlanes();
         unsubPlacement();
         unsubViewControlsComposition();
