@@ -81,10 +81,13 @@ async function exportDocument({ input, password, delimiter, out, format }: Expor
 async function save({ input, password, delimiter, out, format, outDelimiter }: SaveInvocation): Promise<void> {
     const session = await open(input, password, delimiter);
     try {
+        // Only the format it came from saves over the original; any other is
+        // rewritten — a .docx saved as a .dotx, a .csv as an .xlsx.
+        const strategy = format === session.sourceFormat ? undefined : "rewrite";
         const bytes =
             format === "udoc"
                 ? await session.saveToPackage()
-                : await session.saveToBytes(format, undefined, outDelimiter);
+                : await session.saveToBytes(format, strategy, outDelimiter);
         await fileIo(writeFile(out, bytes));
         console.log(`Saved → ${out} (${bytes.length} bytes)`);
     } finally {
@@ -120,7 +123,8 @@ async function open(input: string, password: string | undefined, delimiter: stri
 /**
  * The format `input`'s extension names when the bytes can't say it: a CSV's, a
  * TSV's, a PSV's, a text file's or a Markdown file's, which have no signature
- * to detect. `undefined` for any other file.
+ * to detect, or an HTML file's, which needn't open with the `<!DOCTYPE html>`
+ * or `<html>` one is detected by. `undefined` for any other file.
  */
 function signaturelessFormat(input: string): FileFormat | undefined {
     switch (extname(input).slice(1).toLowerCase()) {
@@ -136,6 +140,9 @@ function signaturelessFormat(input: string): FileFormat | undefined {
         case "md":
         case "markdown":
             return "md";
+        case "html":
+        case "htm":
+            return "html";
         default:
             return undefined;
     }

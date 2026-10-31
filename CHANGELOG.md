@@ -12,6 +12,15 @@ listed once, by package. Its major and minor version are those of the
 
 - A `.md` or `.markdown` file opens, as a word document shown pageless:
   CommonMark, with GitHub's tables and strikethrough.
+- An `.html` or `.htm` file opens, as a word document shown pageless, styled
+  by its `<style>` rules and `style` attributes, and the editor's download
+  saves it back as HTML.
+- A Word, PowerPoint or Excel template, slide show or macro-enabled file is
+  told from the `.docx`, `.pptx` or `.xlsx` it varies: `sourceFormat` names
+  it (`"docm"`, `"dotx"`, `"dotm"`, `"pptm"`, `"potx"`, `"potm"`, `"ppsx"`,
+  `"ppsm"`, `"xlsm"`, `"xltx"` or `"xltm"`), where it named the format it
+  varies, and the editor's download saves it as one, a macro-enabled file
+  with its macros.
 - Every document has a View tab, its last tab in view mode and edit mode
   alike. In order, where the document has them: a deck's or a word
   document's own views; Single or Continuous; Page Layout, a dropdown of One
@@ -67,6 +76,14 @@ listed once, by package. Its major and minor version are those of the
 
 - A Markdown file opens as a word document, its format named `"md"`, and
   `saveToBytes("md")` saves it, or any word document, as Markdown.
+- An HTML file opens as a word document, its format named `"html"`, and
+  `saveToBytes("html")` saves it, or any word document, as HTML.
+- A Word, PowerPoint or Excel template, slide show or macro-enabled file
+  opens as one: `sourceFormat` names it (`"docm"`, `"dotx"`, `"dotm"`,
+  `"pptm"`, `"potx"`, `"potm"`, `"ppsx"`, `"ppsm"`, `"xlsm"`, `"xltx"` or
+  `"xltm"`), where it named the `.docx`, `.pptx` or `.xlsx` it varies, and
+  `saveToBytes` saves a document as any of its doc type's: a `"delta"` keeps
+  a macro-enabled file's macros, a `"rewrite"` drops them.
 
 ### udoc-cli
 
@@ -74,18 +91,35 @@ listed once, by package. Its major and minor version are those of the
 
 - A `.md` or `.markdown` input opens as a word document, and `udoc save`
   saves a word document to a `.md` or `.markdown` `--out`.
+- An `.html` or `.htm` input opens as a word document, and `udoc save`
+  saves a word document to an `.html` or `.htm` `--out`.
+- `udoc save` saves to a template's, a slide show's or a macro-enabled file's
+  `--out`: `.docm`, `.dotx`, `.dotm`, `.pptm`, `.potx`, `.potm`, `.ppsx`,
+  `.ppsm`, `.xlsm`, `.xltx` or `.xltm`.
+
+#### Fixed
+
+- `udoc save` rewrites a document whose `--out` names another of its doc
+  type's formats — a `.docx` saved as a `.dotx`, a `.csv` as an `.xlsx`, a
+  `.md` as a `.docx` — where it failed, trying to save over the original.
 
 ### udoc-server
 
 #### Added
 
 - `GET /documents/:id/file.md` saves a copy of a word document as Markdown.
+- `GET /documents/:id/file.html` saves a copy of a word document as HTML,
+  and `POST /documents?format=html` imports one.
+- `GET /documents/:id/file.<ext>` saves a copy as a template, a slide show
+  or a macro-enabled file, `<ext>` one of `docm`, `dotx`, `dotm`, `pptm`,
+  `potx`, `potm`, `ppsx`, `ppsm`, `xlsm`, `xltx` and `xltm`.
 
 ### udoc-demo
 
 #### Added
 
-- Open File takes a `.md` or `.markdown` file.
+- Open File takes a `.md` or `.markdown` file, an `.html` or `.htm` file,
+  and a Word, PowerPoint or Excel template, slide show or macro-enabled file.
 
 #### Removed
 

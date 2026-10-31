@@ -65,7 +65,8 @@ export function sourceName(source: OpenSource): string | undefined {
 /**
  * The format `name`'s extension names when the bytes can't say it: a CSV's, a
  * TSV's, a PSV's, a text file's or a Markdown file's, which have no signature
- * for the engine to detect.
+ * for the engine to detect, or an HTML file's, which needn't open with the
+ * `<!DOCTYPE html>` or `<html>` the engine detects one by.
  * `undefined` for any other name, and for none.
  */
 export function signaturelessFormat(name: string | undefined): FileFormat | undefined {
@@ -82,6 +83,9 @@ export function signaturelessFormat(name: string | undefined): FileFormat | unde
         case "md":
         case "markdown":
             return "md";
+        case "html":
+        case "htm":
+            return "html";
         default:
             return undefined;
     }
@@ -99,10 +103,22 @@ export function mediaType(format: FileFormat): string {
 const MEDIA_TYPES: Record<FileFormat, string> = {
     pdf: "application/pdf",
     docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    docm: "application/vnd.ms-word.document.macroEnabled.12",
+    dotx: "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+    dotm: "application/vnd.ms-word.template.macroEnabled.12",
     txt: "text/plain",
     md: "text/markdown",
+    html: "text/html",
     pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    pptm: "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
+    potx: "application/vnd.openxmlformats-officedocument.presentationml.template",
+    potm: "application/vnd.ms-powerpoint.template.macroEnabled.12",
+    ppsx: "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+    ppsm: "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
     xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    xlsm: "application/vnd.ms-excel.sheet.macroEnabled.12",
+    xltx: "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+    xltm: "application/vnd.ms-excel.template.macroEnabled.12",
     csv: "text/csv",
     tsv: "text/tab-separated-values",
     // A PSV has no media type of its own.

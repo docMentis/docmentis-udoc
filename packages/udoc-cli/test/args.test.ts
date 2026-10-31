@@ -69,6 +69,8 @@ test("save writes the format its output's extension names", () => {
     assert.equal((parseInvocation(["save", "a.pptx", "-o", "a.udoc"]) as { format: string }).format, "udoc");
     assert.equal((parseInvocation(["save", "a.jpeg", "-o", "b.jpeg"]) as { format: string }).format, "jpg");
     assert.equal((parseInvocation(["save", "a.docx", "-o", "b.markdown"]) as { format: string }).format, "md");
+    assert.equal((parseInvocation(["save", "a.docx", "-o", "b.htm"]) as { format: string }).format, "html");
+    assert.equal((parseInvocation(["save", "a.pptx", "-o", "b.POTX"]) as { format: string }).format, "potx");
 });
 
 test("page-count takes the one document it counts", () => {

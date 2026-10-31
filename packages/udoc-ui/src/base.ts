@@ -255,8 +255,8 @@ export interface RenderPageOptions {
 export interface OpenOptions {
     /** The bytes' format, for bytes detection gets wrong: given, it skips
      *  detection outright. Default detected — a CSV, a TSV, a PSV, a text file
-     *  or a Markdown file, which has no signature, by the file's name — and a
-     *  `.udoc` zip opens as a package. */
+     *  or a Markdown file, which has no signature, and an HTML file, by the
+     *  file's name — and a `.udoc` zip opens as a package. */
     format?: FileFormat;
     /** The file's name — what {@link UDocBase.download} names the saved
      *  document. Default a `File`'s own name, or a URL's last path segment,
@@ -947,9 +947,10 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * save writes over it, which a document opened with {@link openRemote}
      * doesn't hold; without it, the one keeping the most of it that `format`
      * saves by (`"incremental"` for a PDF, `"rewrite"` for a CSV, a TSV, a
-     * PSV, a text file, a Markdown file or an image, else `"delta"`). Rejects for a format its doc type doesn't
-     * save to, a format that never saves by `strategy`, no original to write
-     * over, or a save that isn't built yet.
+     * PSV, a text file, a Markdown file, an HTML file or an image, else
+     * `"delta"`). Rejects for a format its doc type doesn't save to, a format
+     * that never saves by `strategy`, no original to write over, or a save that
+     * isn't built yet.
      */
     saveToBytes(format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
         return this.shell.saveToBytes(format, strategy);

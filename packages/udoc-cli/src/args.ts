@@ -19,8 +19,8 @@ Commands:
                     extension names: one of its own (.pdf, .pptx, …), or .udoc
   page-count        print how many pages the document has
 
-The format is detected from the bytes; a .csv, .tsv, .tab, .psv, .txt, .md or
-.markdown's from its extension.
+The format is detected from the bytes; a .csv, .tsv, .tab, .psv, .txt, .md,
+.markdown, .html or .htm's from its extension.
 Counting pages and exporting lay out the whole document; rendering lays it out
 only as far as the page asked for.
 
@@ -244,11 +244,24 @@ function scaleOf(value: string | undefined): number {
 const SAVE_FORMATS: Readonly<Record<string, FileFormat | "udoc">> = {
     pdf: "pdf",
     docx: "docx",
+    docm: "docm",
+    dotx: "dotx",
+    dotm: "dotm",
     txt: "txt",
     md: "md",
     markdown: "md",
+    html: "html",
+    htm: "html",
     pptx: "pptx",
+    pptm: "pptm",
+    potx: "potx",
+    potm: "potm",
+    ppsx: "ppsx",
+    ppsm: "ppsm",
     xlsx: "xlsx",
+    xlsm: "xlsm",
+    xltx: "xltx",
+    xltm: "xltm",
     csv: "csv",
     tsv: "tsv",
     tab: "tsv",
