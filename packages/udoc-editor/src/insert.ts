@@ -15,7 +15,7 @@ import type { CommandDef, PickerOption, ShapeKind, ShapePoint } from "@docmentis
 import type { EditHost } from "./edit-client.js";
 import { EditCommand } from "./edit-command.js";
 import type { MessageKey } from "./i18n/index.js";
-import { ICON_IMAGE } from "./icons.js";
+import { ICON_IMAGE, ICON_SHAPES } from "./icons.js";
 import { placeMarkup } from "./image.js";
 import { galleryShape, SHAPE_GALLERY } from "./shape-gallery.js";
 import type { GalleryShape } from "./shape-gallery.js";
@@ -183,22 +183,25 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             label: "command.insertImage",
             icon: ICON_IMAGE,
             group: "insert",
+            labeled: true,
             run: { kind: "action", press: pickImage },
             enabledWhen: (c) => c.ready && c.docType === "presentation" && c.presentationView === "normal",
         },
         insertShape: {
             id: "insertShape",
             label: "command.insertShape",
-            icon: ICON_SUBTOOL_RECTANGLE,
+            icon: ICON_SHAPES,
             group: "insert",
+            labeled: true,
             run: { kind: "armPicker", options: SHAPE_OPTIONS },
             enabledWhen: (c) => c.ready && c.docType === "portable",
         },
         insertGalleryShape: {
             id: "insertGalleryShape",
             label: "command.insertShape",
-            icon: ICON_SUBTOOL_RECTANGLE,
+            icon: ICON_SHAPES,
             group: "insert",
+            labeled: true,
             run: { kind: "armGallery", sections: SHAPE_GALLERY },
             // On a deck's slides, not its notes pages. An image's current page
             // takes them unless it's animated or a vector, and not while it's

@@ -33,6 +33,7 @@ const ICONS = {
 
     // Insert tab
     ICON_IMAGE: "image",
+    ICON_SHAPES: "shapes",
 
     // An image's Home tab
     ICON_CROP: "crop",

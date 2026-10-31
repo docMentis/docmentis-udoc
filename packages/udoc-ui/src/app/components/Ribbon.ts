@@ -750,7 +750,7 @@ export function createRibbon(
             if (def.run.kind === "armPicker") {
                 const options = def.run.options;
                 const dd = createDropdownButton(
-                    { icon: def.icon, label },
+                    { icon: def.icon, label, ...(def.labeled && { text: label }) },
                     { menuLabel: label, menuRole: "menu", onOpen: () => fillShapes(dd, options) },
                 );
                 dd.trigger.dataset.command = def.id;
@@ -760,7 +760,7 @@ export function createRibbon(
             if (def.run.kind === "armGallery") {
                 const sections = def.run.sections;
                 const dd = createDropdownButton(
-                    { icon: def.icon, label },
+                    { icon: def.icon, label, ...(def.labeled && { text: label }) },
                     { menuLabel: label, menuRole: "menu", onOpen: () => fillGallery(dd, sections) },
                 );
                 dd.trigger.dataset.command = def.id;

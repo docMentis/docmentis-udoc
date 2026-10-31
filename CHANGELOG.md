@@ -27,6 +27,11 @@ listed once, by package. Its major and minor version are those of the
   holding centred text to type, and a line is a connector. Over an image a
   shape is drawn in the markup red as before. A PDF keeps its four shapes.
 
+#### Changed
+
+- The Insert tab names its commands beside their icons, and Shapes has a
+  glyph of its own.
+
 ## [0.8.9] - 2026-10-30
 
 Built on `@docmentis/udoc-wasm` 0.8.12.
