@@ -382,17 +382,19 @@ export class WorkerClient {
     }
 
     /**
-     * Preview slide `slide` (0-based) of the open deck on `canvas`, transferred
-     * to the worker — a canvas of the preview's own, `width × height` device
-     * pixels, laid over the view — as PowerPoint's Preview plays it: the
-     * slide's transition from the slide before it, then its animations one
-     * after another. Resolves once it plays; {@link onSlideShowEnded} fires
-     * when it has played, its last frame left up until the host takes the
-     * canvas down. Rejects when it can't play — no deck open, no WebGL2.
+     * Preview slide `slide` (0-based) of the open deck in place, on `canvas`,
+     * transferred to the worker — a canvas of the preview's own, laid exactly
+     * over the view's — as PowerPoint's Preview plays it: the slide's
+     * transition from the slide before it, then its animations one after
+     * another, where the view shows the slide, at its zoom, on its backdrop,
+     * the canvas transparent around it. Resolves once it plays;
+     * {@link onSlideShowEnded} fires when it has played, its last frame left up
+     * until the host takes the canvas down. Rejects when it can't play — no
+     * deck open, no WebGL2.
      */
-    async previewSlide(canvas: HTMLCanvasElement, slide: number, width: number, height: number): Promise<void> {
+    async previewSlide(canvas: HTMLCanvasElement, slide: number): Promise<void> {
         const offscreen = canvas.transferControlToOffscreen();
-        await this.#send({ type: "previewSlide", slide, canvas: offscreen, width, height }, [offscreen]);
+        await this.#send({ type: "previewSlide", slide, canvas: offscreen }, [offscreen]);
     }
 
     /** Stop the slide preview playing, if one is, before it ends. */

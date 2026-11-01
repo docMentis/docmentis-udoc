@@ -43,13 +43,13 @@ const PORTABLE_ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLef
 
 /** Each doc type's View tab, around the guides an extension adds: before them
  *  its own views and how its pages scroll and are arranged, after them what
- *  shows beside the document. */
+ *  shows beside the document, and last a deck's Preview of the slide shown. */
 const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; shows: readonly CommandId[] }>> = {
     portable: { pages: [...SCROLL, ...PORTABLE_ARRANGEMENT], shows: ["layers"] },
     wordprocessing: { pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT], shows: ["formattingMarks"] },
     presentation: {
-        pages: ["previewSlide", "normalView", "notesPageView", "slideMasterView", ...SCROLL],
-        shows: ["notes"],
+        pages: ["normalView", "notesPageView", "slideMasterView", ...SCROLL],
+        shows: ["notes", "previewSlide"],
     },
     image: { pages: [...SCROLL, "pageGap"], shows: [] },
     spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar"] },
@@ -58,13 +58,13 @@ const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; sh
 /**
  * `docType`'s View tab — how the document is shown, never an edit of it, so
  * the same in view mode and edit mode, the last tab of each. Its groups, each
- * where the doc type has one: a deck's Preview of the slide shown, its own
- * views (a deck's Normal, Notes Page and
+ * where the doc type has one: its own views (a deck's Normal, Notes Page and
  * Slide Master, a word document's Pages and Pageless, a workbook's Normal and
  * Page Layout of its current sheet), how the pages scroll, how they pair up,
  * the turn they're shown at, the gaps between them, `guides` (an extension's,
  * edit mode's ruler), then what shows beside the document — a PDF's layers, a
- * deck's notes, a word document's formatting marks, a workbook's formula bar.
+ * deck's notes, a word document's formatting marks, a workbook's formula bar —
+ * and last a deck's Preview of the slide shown.
  */
 export function viewTab(docType: UDocType, guides: readonly string[] = []): ToolbarTab {
     const { pages, shows } = VIEW_COMMANDS[docType];

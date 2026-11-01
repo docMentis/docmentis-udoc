@@ -986,26 +986,31 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         ev.stopPropagation();
         stopPreview();
     }
-    /** Preview slide `slide` over the whole view, in place of any playing. */
+    /**
+     * Preview slide `slide` in place, in place of any playing: on a canvas laid
+     * exactly over the view's — its class and the inline box the host places
+     * it by — which the engine draws the slide on where the view shows it, the
+     * view showing through around it.
+     */
     function previewSlide(slide: number): void {
         stopPreview();
-        const canvas = document.createElement("canvas");
-        canvas.className = "udoc-ui__slide-preview";
-        canvas.setAttribute("aria-hidden", "true");
-        canvas.addEventListener("pointerdown", (ev) => {
+        const surface = document.createElement("canvas");
+        surface.className = `${canvas.className} udoc-ui__slide-preview`;
+        for (const property of ["width", "height", "transform"] as const) {
+            surface.style[property] = canvas.style[property];
+        }
+        surface.setAttribute("aria-hidden", "true");
+        surface.addEventListener("pointerdown", (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
             stopPreview();
         });
         // Under the brand decal, which stays in view; over everything else.
-        el.insertBefore(canvas, el.querySelector(".udoc-ui__branding"));
-        preview = canvas;
+        el.insertBefore(surface, el.querySelector(".udoc-ui__branding"));
+        preview = surface;
         globalThis.addEventListener("keydown", onPreviewKey, true);
-        const dpr = globalThis.devicePixelRatio || 1;
-        const width = Math.max(1, Math.round(el.clientWidth * dpr));
-        const height = Math.max(1, Math.round(el.clientHeight * dpr));
-        client.previewSlide(canvas, slide, width, height).catch(() => {
-            if (preview === canvas) endPreview();
+        client.previewSlide(surface, slide).catch(() => {
+            if (preview === surface) endPreview();
         });
     }
     let resizeObserver: ResizeObserver | null = null;

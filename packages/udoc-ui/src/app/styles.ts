@@ -2158,15 +2158,11 @@ export const uiStyles = css`
         position: absolute;
         inset: 0;
     }
-    /* A slide preview playing over the view: a canvas of its own, the whole
-   canvas host, black around the slide, over the page chrome and the selection
-   and under the brand decal, which comes after it. A press on it stops it. */
+    /* A slide preview playing in place: a canvas of its own, placed as the
+   view's canvas is, its class's, over the page chrome and the selection and
+   under the brand decal, which comes after it. The engine draws the slide where
+   the view shows it, transparent around it. A press on it stops it. */
     .udoc-ui-root .udoc-ui__slide-preview {
-        display: block;
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
         z-index: 3;
         cursor: pointer;
     }

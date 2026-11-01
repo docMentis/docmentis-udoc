@@ -117,19 +117,18 @@ export interface AttachRequest {
 }
 
 /**
- * Preview slide `slide` (0-based) on `canvas` — transferred, a canvas of the
- * preview's own, `width × height` device pixels, which the host lays over its
- * view — as PowerPoint's Preview plays it: the slide's transition from the
- * slide before it, then its animations one after another. The worker draws it
- * frame by frame, in place of any preview playing, and posts a
- * {@link SlideShowEndedReport} once it has played.
+ * Preview slide `slide` (0-based) in place, on `canvas` — transferred, a canvas
+ * of the preview's own, which the host lays exactly over the view's — as
+ * PowerPoint's Preview plays it: the slide's transition from the slide before
+ * it, then its animations one after another, where the view shows the slide,
+ * at its zoom, on its backdrop, the canvas transparent around it. The worker
+ * sizes the canvas to the view's, draws it frame by frame, in place of any
+ * preview playing, and posts a {@link SlideShowEndedReport} once it has played.
  */
 export interface PreviewSlideRequest {
     type: "previewSlide";
     slide: number;
     canvas: OffscreenCanvas;
-    width: number;
-    height: number;
 }
 
 /** Stop the slide preview playing, if one is, before it ends. */
