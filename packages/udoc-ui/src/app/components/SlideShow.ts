@@ -6,13 +6,18 @@
 // It fills the screen when the browser lets it, else the whole UI. With Use
 // Presenter View, where there is a screen for the audience, it plays in a
 // window of its own instead — dragged to that screen, a click fills it — and
-// the presenter view shows over the UI here. It takes PowerPoint's keys: a
-// click, Space, →, ↓, Enter, Page Down or N steps on; ←, ↑, Backspace, Page Up
-// or P steps back; Home and End go to the first and last slide it shows, a
-// slide's number then Enter to that slide; Escape ends it, as leaving the full
-// screen does here. A swipe steps on or back. Past its last slide it shows
-// black, and a step on from there ends it. The view then shows the slide the
-// show was on, as PowerPoint's does.
+// the presenter view shows over the UI here. With the screens set up, it fills
+// the screen Set Up Screens chose from here at the press, and the presenter
+// view opens in a window of its own on another. Swap Screens trades the two:
+// each window keeps its screen, and the one pressed in fills it with the show.
+//
+// It takes PowerPoint's keys: a click, Space, →, ↓, Enter, Page Down or N
+// steps on; ←, ↑, Backspace, Page Up or P steps back; Home and End go to the
+// first and last slide it shows, a slide's number then Enter to that slide;
+// Escape ends it, as leaving the full screen does when it plays alone. A swipe
+// steps on or back. Past its last slide it shows black, and a step on from
+// there ends it. The view then shows the slide the show was on, as
+// PowerPoint's does.
 
 import { subscribeSelector } from "../../framework/index.js";
 import type { Store } from "../../framework/index.js";
@@ -22,6 +27,9 @@ import type { Action } from "../actions.js";
 import { planeOfView, viewDpi } from "../state.js";
 import type { UIState } from "../state.js";
 import type { I18n } from "../i18n/index.js";
+import { audienceScreen, presenterScreen, readScreens } from "../screens.js";
+import type { ScreenDetailed } from "../screens.js";
+import { uiStyles } from "../styles.js";
 import { createPresenterView } from "./PresenterView.js";
 import type { PresenterActions, PresenterDeck } from "./PresenterView.js";
 
@@ -39,31 +47,45 @@ const SETTLE_MS = 1500;
 const NEXT_KEYS: ReadonlySet<string> = new Set([" ", "ArrowRight", "ArrowDown", "Enter", "PageDown", "n", "N"]);
 const PREVIOUS_KEYS: ReadonlySet<string> = new Set(["ArrowLeft", "ArrowUp", "Backspace", "PageUp", "p", "P"]);
 
-/** The name of the window a show plays in for the audience's screen. */
+/** The names of the windows a show plays in for the audience's screen, and
+ *  the presenter view opens in on the presenter's. */
 const SHOW_WINDOW = "udoc-slide-show";
+const PRESENTER_WINDOW = "udoc-presenter-view";
 /** The slides' size, points, where the deck's won't read: 16:9. */
 const FALLBACK_SLIDE: Size = { width: 960, height: 540 };
 
-/** The show window's own styles: its document has none of the UI's. */
-const SHOW_WINDOW_STYLE = `
-html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
-.show { position: fixed; inset: 0; outline: none; touch-action: none; user-select: none; }
-.show.resting { cursor: none; }
-canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
-.end, .hint { position: absolute; left: 0; right: 0; text-align: center; color: #fff;
-    font: 14px system-ui, sans-serif; pointer-events: none; }
-.end { top: 12px; }
-.hint { bottom: 16px; padding: 0 16px; }
-.hint span { display: inline-block; padding: 8px 12px; border-radius: 6px; background: rgba(0, 0, 0, 0.7); }
-[hidden] { display: none; }
-`;
+/**
+ * A window a show plays in — the UI's, over its root, or one of its own — and
+ * the stage in it the show or the presenter view stands on: what fills the
+ * screen there.
+ */
+interface Place {
+    view: Window;
+    stage: HTMLElement;
+    /** Whether the window is the show's own, which it closes as it ends. */
+    own: boolean;
+    /** Take the stage down, or close the window. */
+    close(): void;
+}
 
 /** The show playing. */
 interface Show {
-    /** "End of slide show, click to exit.", over the black past its last slide. */
+    /** What the show is drawn on — its canvas, the line over the black past
+     *  its last slide, and how to put a window of its own on the audience's
+     *  screen — standing on its place's stage. */
+    surface: HTMLElement;
+    canvas: HTMLCanvasElement;
     end: HTMLElement;
+    hint: HTMLElement;
+    /** Where the show stands, and where the presenter view does, if one
+     *  shows; every window it opened. */
+    place: Place;
+    presenterPlace: Place | null;
+    places: Place[];
     /** Whether the worker plays it: its start resolved. */
     started: boolean;
+    /** The size last handed the show, device pixels. */
+    sent: { width: number; height: number };
     /** The slide it shows, by its index in the deck, as the worker last said. */
     slide: number;
     /** Whether it has gone past its last slide, as the worker last said. */
@@ -75,16 +97,8 @@ interface Show {
     /** What had the keyboard before it, to have it back after. */
     focused: Element | null;
     cleanups: Array<() => void>;
-}
-
-/** The window a show plays in for the audience's screen, and what it shows. */
-interface ShowWindow {
-    view: Window;
-    root: HTMLElement;
-    canvas: HTMLCanvasElement;
-    end: HTMLElement;
-    /** How to put the window on the audience's screen, while it isn't full. */
-    hint: HTMLElement;
+    /** Stop watching its canvas's size, in the window it was in. */
+    unwatchSize: (() => void) | null;
 }
 
 export function createSlideShow(i18n: I18n, client: WorkerClient) {
@@ -107,35 +121,164 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
     async function play(slide: number | null): Promise<void> {
         if (!store || !host) return;
         takeDown(false);
-        // In a window of its own for the audience's screen, with the presenter
-        // view here — opened first, in the press. One the browser blocks
-        // plays here.
-        const presenting = store.getState().usePresenterView && hasOtherScreen();
-        const shown = presenting ? openShowWindow(i18n) : null;
-        if (shown) await present(slide, shown);
-        else await playHere(slide);
+        const state = store.getState();
+        const presenting = state.usePresenterView && hasOtherScreen();
+        // The screens set up: filling the screen chosen from here, with the
+        // presenter view in a window of its own on another.
+        if (presenting && state.screensSetUp) {
+            const screens = await readScreens();
+            const audience = screens ? audienceScreen(screens, state.audienceScreen) : undefined;
+            const there = screens && audience ? presenterScreen(screens, audience) : undefined;
+            if (audience && there) {
+                await presentAcross(slide, audience, there);
+                return;
+            }
+        }
+        // Else in a window of its own for the audience's screen, with the
+        // presenter view here — opened first, in the press. One the browser
+        // blocks plays here, alone.
+        const own = presenting ? ownPlace(SHOW_WINDOW, showWindowFeatures(), i18n.t("slideShow.window")) : null;
+        if (own) await present(slide, own);
+        else await playAlone(slide);
     }
 
-    /** A show from `slide`, its end line `end`. */
-    function newShow(slide: number | null, end: HTMLElement): Show {
+    /** Play the show alone over the UI, filling the screen when the browser
+     *  lets it; leaving the full screen ends it. */
+    async function playAlone(slide: number | null): Promise<void> {
+        const place = mainPlace();
+        if (!place) return;
+        const current = begin(slide, place);
+        const full = await fill(current);
+        if (show !== current) return;
+        if (full) {
+            const { stage } = place;
+            const onFullscreenChange = (): void => {
+                if (document.fullscreenElement !== stage) endShow();
+            };
+            document.addEventListener("fullscreenchange", onFullscreenChange);
+            current.cleanups.push(() => document.removeEventListener("fullscreenchange", onFullscreenChange));
+        }
+        await startShow(current, slide);
+    }
+
+    /** Play the show in `own`, a window of its own for the audience's screen,
+     *  with the presenter view over the UI here. */
+    async function present(slide: number | null, own: Place): Promise<void> {
+        const here = mainPlace();
+        if (!here) {
+            own.close();
+            return;
+        }
+        const current = begin(slide, own, here);
+        const deck = await readDeck();
+        if (show !== current) return;
+        const mirror = openPresenter(current, here, deck, slide);
+        await startShow(current, slide, mirror);
+    }
+
+    /**
+     * Play the show filling `audience` from the UI's window, and open the
+     * presenter view in a window of its own filling `there` — in the one
+     * press, as the browser lets a page with its screens set up open a window
+     * in the press that filled another screen.
+     */
+    async function presentAcross(slide: number | null, audience: ScreenDetailed, there: ScreenDetailed): Promise<void> {
+        const place = mainPlace();
+        if (!place) return;
+        const current = begin(slide, place);
+        let own: Place | null = null;
+        const full = await fill(current, audience, () => {
+            own = ownPlace(PRESENTER_WINDOW, screenFeatures(there), i18n.t("presenter.label"));
+        });
+        const opened = own as Place | null;
+        if (show !== current) {
+            opened?.close();
+            return;
+        }
+        if (!full || !opened) {
+            // The show plays alone.
+            await startShow(current, slide);
+            return;
+        }
+        addPlace(current, opened);
+        current.presenterPlace = opened;
+        const deck = await readDeck();
+        if (show !== current) return;
+        const mirror = openPresenter(current, opened, deck, slide);
+        await startShow(current, slide, mirror);
+    }
+
+    /** The UI's window as a place: a stage over its root. */
+    function mainPlace(): Place | null {
+        if (!host) return null;
+        const stage = document.createElement("div");
+        stage.className = "udoc-ui__slide-show-stage";
+        stage.tabIndex = -1;
+        host.appendChild(stage);
         return {
-            end,
-            started: false,
-            slide: slide ?? 0,
-            ended: false,
-            typed: "",
-            generation: store?.getState().docGeneration ?? 0,
-            focused: document.activeElement,
-            cleanups: [],
+            view: window,
+            stage,
+            own: false,
+            close: () => {
+                if (document.fullscreenElement === stage) void document.exitFullscreen().catch(() => {});
+                stage.remove();
+            },
         };
     }
 
-    /** Play the show over the UI, filling the screen when the browser lets it. */
-    async function playHere(slide: number | null): Promise<void> {
-        if (!host) return;
-        const el = document.createElement("div");
-        el.className = "udoc-ui__slide-show";
-        el.tabIndex = -1;
+    /**
+     * A window of its own, named `name`, opened by `features` and titled
+     * `title`, as a place — `null` where the browser won't open one — styled
+     * as the UI is: its stylesheet, and the root's classes and settings, the
+     * theme's among them.
+     */
+    function ownPlace(name: string, features: string, title: string): Place | null {
+        if (!host) return null;
+        let view: Window | null;
+        try {
+            view = window.open("", name, features);
+        } catch {
+            return null;
+        }
+        if (!view) return null;
+        const doc = view.document;
+        const style = doc.createElement("style");
+        style.textContent = uiStyles;
+        doc.head.replaceChildren(style);
+        doc.title = title;
+        const root = doc.createElement("div");
+        root.className = host.className;
+        root.style.cssText = host.style.cssText;
+        Object.assign(root.style, { position: "fixed", inset: "0" });
+        const stage = doc.createElement("div");
+        stage.className = "udoc-ui__slide-show-stage";
+        stage.tabIndex = -1;
+        root.append(stage);
+        doc.body.style.margin = "0";
+        doc.body.replaceChildren(root);
+        // Leaving the page closes the window.
+        const opened = view;
+        const onLeave = (): void => opened.close();
+        window.addEventListener("pagehide", onLeave);
+        return {
+            view,
+            stage,
+            own: true,
+            close: () => {
+                window.removeEventListener("pagehide", onLeave);
+                opened.close();
+            },
+        };
+    }
+
+    /**
+     * A show from `slide`, its surface standing on `place`'s stage, and the
+     * presenter view to stand on `presenterPlace`'s, if given: listening to
+     * both places, and their windows.
+     */
+    function begin(slide: number | null, place: Place, presenterPlace: Place | null = null): Show {
+        const surface = document.createElement("div");
+        surface.className = "udoc-ui__slide-show";
         const canvas = document.createElement("canvas");
         canvas.className = "udoc-ui__slide-show-canvas";
         canvas.setAttribute("aria-hidden", "true");
@@ -143,150 +286,196 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         end.className = "udoc-ui__slide-show-end";
         end.textContent = i18n.t("slideShow.end");
         end.hidden = true;
-        el.append(canvas, end);
-        host.appendChild(el);
-        const current = newShow(slide, end);
+        const hint = document.createElement("div");
+        hint.className = "udoc-ui__slide-show-hint";
+        const hintText = document.createElement("span");
+        hintText.textContent = i18n.t("slideShow.windowHint");
+        hint.append(hintText);
+        surface.append(canvas, end, hint);
+        place.stage.append(surface);
+        const current: Show = {
+            surface,
+            canvas,
+            end,
+            hint,
+            place,
+            presenterPlace,
+            places: [],
+            started: false,
+            sent: { width: 0, height: 0 },
+            slide: slide ?? 0,
+            ended: false,
+            typed: "",
+            generation: store?.getState().docGeneration ?? 0,
+            focused: document.activeElement,
+            cleanups: [],
+            unwatchSize: null,
+        };
         show = current;
+        addPlace(current, place);
+        if (presenterPlace) addPlace(current, presenterPlace);
+        listenPointer(current);
+        place.stage.focus({ preventScroll: true });
+        return current;
+    }
+
+    /** Take in `place`'s keys and its window's for `current`: the show's keys,
+     *  its full screen, and its closing, which ends the show. */
+    function addPlace(current: Show, place: Place): void {
+        current.places.push(place);
+        const { stage, view } = place;
+        const onKey = keys(current);
+        const onPointerDown = (): void => stage.focus({ preventScroll: true });
+        const onFullscreenChange = (): void => showHint(current);
+        const onClose = (): void => endShow();
+        stage.addEventListener("keydown", onKey);
+        stage.addEventListener("pointerdown", onPointerDown);
+        view.document.addEventListener("fullscreenchange", onFullscreenChange);
+        if (place.own) view.addEventListener("pagehide", onClose);
         current.cleanups.push(() => {
-            if (document.fullscreenElement === el) void document.exitFullscreen().catch(() => {});
-            el.remove();
+            stage.removeEventListener("keydown", onKey);
+            stage.removeEventListener("pointerdown", onPointerDown);
+            view.document.removeEventListener("fullscreenchange", onFullscreenChange);
+            view.removeEventListener("pagehide", onClose);
         });
-        el.focus({ preventScroll: true });
-        listen(current, el, el);
-        listenPointer(current, el, canvas, "udoc-ui__slide-show--resting");
+        showHint(current);
+    }
 
-        // The show's black on screen before the screen fills: the browser grows
-        // into the full screen from a picture of the page as last painted —
-        // macOS stretches it to the screen as it moves into a Space of its
-        // own — which would otherwise be the view and its slide.
-        await painted(window);
-        if (show !== current) return;
+    /** How to put the show's window on the audience's screen, shown while a
+     *  window of its own doesn't fill it. */
+    function showHint(current: Show): void {
+        const { own, view, stage } = current.place;
+        current.hint.hidden = !own || view.document.fullscreenElement === stage;
+    }
 
-        // The whole screen, when the browser lets it — not in an iframe
-        // without `allow="fullscreen"`, nor on an iPhone; else the UI.
-        const before = devicePixels(canvas);
-        let full = false;
+    /**
+     * Fill the screen with `current`'s place's stage — `screen`, when given —
+     * black until the show could draw at the screen's size, and resolve with
+     * whether it does. `granted` runs the moment the browser says it does.
+     */
+    async function fill(current: Show, screen?: ScreenDetailed, granted?: () => void): Promise<boolean> {
+        const { view, stage } = current.place;
+        if (view.document.fullscreenElement === stage) return true;
+        const { canvas } = current;
+        canvas.style.visibility = "hidden";
         try {
-            await el.requestFullscreen({ navigationUI: "hide" });
-            full = true;
-        } catch {
-            // Fills the UI.
-        }
-        if (show !== current) return;
-        if (full) {
-            const onFullscreenChange = (): void => {
-                if (document.fullscreenElement !== el) endShow();
-            };
-            document.addEventListener("fullscreenchange", onFullscreenChange);
-            current.cleanups.push(() => document.removeEventListener("fullscreenchange", onFullscreenChange));
+            // The show's black on screen before the screen fills: the browser
+            // grows into the full screen from a picture of the page as last
+            // painted — macOS stretches it to the screen as it moves into a
+            // Space of its own — which would otherwise be what showed before.
+            await painted(view);
+            const before = devicePixels(canvas);
+            await stage.requestFullscreen({ navigationUI: "hide", screen } as FullscreenOptions);
+            granted?.();
             // Drawn once the screen has filled: the browser says it is full
             // before it is — macOS grows the window over its animation and
             // gives the page its new size only at the end — and a frame drawn
             // before would show at the window's size.
             await settled(canvas, before);
-            if (show !== current) return;
+            resize(current);
+            await painted(view);
+            return true;
+        } catch {
+            // It stays as it is.
+            return false;
+        } finally {
+            canvas.style.visibility = "";
         }
+    }
 
-        const size = devicePixels(canvas);
+    /** Start `current` from `slide` at its canvas's size, the worker copying
+     *  its slide onto `mirror`, if given; then follow its canvas's size. */
+    async function startShow(
+        current: Show,
+        slide: number | null,
+        mirror?: { canvas: HTMLCanvasElement; width: number; height: number; slide: Size },
+    ): Promise<void> {
+        const size = devicePixels(current.canvas);
+        current.sent = size;
         try {
-            await client.startSlideShow(canvas, slide, size.width, size.height);
+            await client.startSlideShow(current.canvas, slide, size.width, size.height, mirror);
         } catch {
             if (show === current) endShow();
             return;
         }
         if (show !== current) return;
         current.started = true;
-        // Its canvas's new size, as the screen turns or the UI resizes.
-        let sent = size;
-        const resizeObserver = new ResizeObserver(() => {
-            const next = devicePixels(canvas);
-            if (next.width === sent.width && next.height === sent.height) return;
-            sent = next;
-            client.slideShowInput({ resize: next });
-        });
-        resizeObserver.observe(canvas);
-        current.cleanups.push(() => resizeObserver.disconnect());
+        current.cleanups.push(() => current.unwatchSize?.());
+        watchSize(current);
+        resize(current);
+    }
+
+    /** Hand the show its canvas's new size, if it has one — its window
+     *  resized, filling its screen, or on a screen of another scale. */
+    function resize(current: Show): void {
+        if (!current.started) return;
+        const next = devicePixels(current.canvas);
+        if (next.width === current.sent.width && next.height === current.sent.height) return;
+        current.sent = next;
+        client.slideShowInput({ resize: next });
+    }
+
+    /** Follow `current`'s canvas's size in the window it is in. */
+    function watchSize(current: Show): void {
+        current.unwatchSize?.();
+        const view = current.place.view as Window & typeof globalThis;
+        const onResize = (): void => resize(current);
+        const observer = new view.ResizeObserver(onResize);
+        observer.observe(current.canvas);
+        view.addEventListener("resize", onResize);
+        current.unwatchSize = () => {
+            observer.disconnect();
+            view.removeEventListener("resize", onResize);
+        };
     }
 
     /**
-     * Play the show in `shown`, the window for the audience's screen, with the
-     * presenter view over the UI here. Closing the window ends the show.
+     * Open the presenter view on `place` for `current`, a show of `deck` from
+     * `slide`, and return the canvas it copies the show's slide onto, for the
+     * show to transfer. In a window of its own — the screens set up — its
+     * first click or key fills its screen with it; in the UI's, it stays as
+     * it is, the show's window still to be dragged to the audience's screen.
      */
-    async function present(slide: number | null, shown: ShowWindow): Promise<void> {
-        if (!host) return;
-        const { view, root, canvas, end, hint } = shown;
-        const current = newShow(slide, end);
-        show = current;
-        // Closing the window ends the show; leaving the page closes the window.
-        const onClose = (): void => endShow();
-        const onLeave = (): void => view.close();
-        view.addEventListener("pagehide", onClose);
-        window.addEventListener("pagehide", onLeave);
-        current.cleanups.push(() => {
-            view.removeEventListener("pagehide", onClose);
-            window.removeEventListener("pagehide", onLeave);
-            view.close();
-        });
-        let sent = devicePixels(canvas);
-        /** Hand the show its window's new size — resized, filling its
-         *  screen, or moved to a screen of another scale. */
-        const resize = (): void => {
-            const next = devicePixels(canvas);
-            if (!current.started || (next.width === sent.width && next.height === sent.height)) return;
-            sent = next;
-            client.slideShowInput({ resize: next });
-        };
-        listen(current, view.document, null);
-        listenPointer(current, root, canvas, "resting", async () => {
-            // A window that doesn't fill its screen fills it at a click, black
-            // until the show has drawn at the screen's size, as here.
-            if (view.document.fullscreenElement) return false;
-            canvas.style.visibility = "hidden";
-            try {
-                await painted(view);
-                const before = devicePixels(canvas);
-                await root.requestFullscreen({ navigationUI: "hide" });
-                await settled(canvas, before);
-                resize();
-                await painted(view);
-            } catch {
-                // The window stays as it is.
-            } finally {
-                canvas.style.visibility = "";
-            }
-            return true;
-        });
-        const onFullscreenChange = (): void => {
-            hint.hidden = view.document.fullscreenElement !== null;
-        };
-        view.document.addEventListener("fullscreenchange", onFullscreenChange);
-        current.cleanups.push(() => view.document.removeEventListener("fullscreenchange", onFullscreenChange));
-
-        const deck = await readDeck();
-        if (show !== current || !host) return;
+    function openPresenter(
+        current: Show,
+        place: Place,
+        deck: PresenterDeck,
+        slide: number | null,
+    ): { canvas: HTMLCanvasElement; width: number; height: number; slide: Size } {
         const actions: PresenterActions = {
             next: () => step(current),
             previous: () => client.slideShowInput("previous"),
             end: endShow,
-            key: keys(current),
+            swap: () => void swap(current),
         };
-        const copy = presenter.open(host, deck, actions);
+        const copy = presenter.open(place.stage, deck, actions, place.own);
         current.cleanups.push(() => presenter.close());
         current.slide = slide ?? deck.shown[0] ?? 0;
         presenter.update({ slide: current.slide, ended: false });
+        return { ...copy, slide: deck.slideSize };
+    }
 
-        sent = devicePixels(canvas);
-        try {
-            await client.startSlideShow(canvas, slide, sent.width, sent.height, { ...copy, slide: deck.slideSize });
-        } catch {
-            if (show === current) endShow();
-            return;
-        }
-        if (show !== current) return;
-        current.started = true;
-        resize();
-        view.addEventListener("resize", resize);
-        current.cleanups.push(() => view.removeEventListener("resize", resize));
+    /**
+     * Swap the screens `current` and the presenter view show on: each window
+     * keeps its screen, the show standing where the presenter view stood and
+     * the presenter view where the show stood. Pressed in the presenter view,
+     * whose window then fills its screen with the show.
+     */
+    async function swap(current: Show): Promise<void> {
+        const there = current.presenterPlace;
+        if (!there || !current.started) return;
+        const here = current.place;
+        current.place = there;
+        current.presenterPlace = here;
+        current.canvas.style.visibility = "hidden";
+        there.stage.append(current.surface);
+        presenter.move(here.stage);
+        there.stage.focus({ preventScroll: true });
+        showHint(current);
+        watchSize(current);
+        resize(current);
+        await fill(current);
+        current.canvas.style.visibility = "";
     }
 
     /** What the presenter view shows of the open deck. */
@@ -343,31 +532,13 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         };
     }
 
-    /** Take in `current`'s keys on `target`, and, on `focus`, have them back
-     *  at a press. */
-    function listen(current: Show, target: HTMLElement | Document, focus: HTMLElement | null): void {
-        const onKey = keys(current);
-        target.addEventListener("keydown", onKey as EventListener);
-        current.cleanups.push(() => target.removeEventListener("keydown", onKey as EventListener));
-        if (!focus) return;
-        const onPointerDown = (): void => focus.focus({ preventScroll: true });
-        focus.addEventListener("pointerdown", onPointerDown);
-        current.cleanups.push(() => focus.removeEventListener("pointerdown", onPointerDown));
-    }
-
     /**
-     * Take in `current`'s clicks and swipes on `el`, over its `canvas`, and
-     * hide the pointer while it rests, by `resting`. A press `first` answers
-     * true for is its alone, not the show's.
+     * Take in `current`'s clicks and swipes on its surface, and hide the
+     * pointer while it rests. With the presenter view, a click on a show whose
+     * window doesn't fill its screen fills it instead.
      */
-    function listenPointer(
-        current: Show,
-        el: HTMLElement,
-        canvas: HTMLCanvasElement,
-        resting: string,
-        first?: () => Promise<boolean>,
-    ): void {
-        const view = el.ownerDocument.defaultView ?? window;
+    function listenPointer(current: Show): void {
+        const { surface, canvas } = current;
         // A tap or a click is a click on the slide; a swipe across steps on
         // or back.
         let down: { id: number; x: number; y: number } | null = null;
@@ -385,18 +556,18 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
                 else client.slideShowInput("previous");
                 return;
             }
-            void (first?.() ?? Promise.resolve(false)).then((taken) => {
-                if (taken || show !== current) return;
-                if (current.ended) {
-                    endShow();
-                    return;
-                }
-                const rect = canvas.getBoundingClientRect();
-                const dpr = view.devicePixelRatio || 1;
-                client.slideShowInput({
-                    click: { x: (ev.clientX - rect.left) * dpr, y: (ev.clientY - rect.top) * dpr },
-                });
-            });
+            const { view, stage } = current.place;
+            if (current.presenterPlace && view.document.fullscreenElement !== stage) {
+                void fill(current);
+                return;
+            }
+            if (current.ended) {
+                endShow();
+                return;
+            }
+            const rect = canvas.getBoundingClientRect();
+            const dpr = view.devicePixelRatio || 1;
+            client.slideShowInput({ click: { x: (ev.clientX - rect.left) * dpr, y: (ev.clientY - rect.top) * dpr } });
         };
         const onPointerCancel = (): void => {
             down = null;
@@ -405,9 +576,9 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
 
         let rest: ReturnType<typeof setTimeout> | null = null;
         const onPointerMove = (): void => {
-            el.classList.remove(resting);
+            surface.classList.remove("udoc-ui__slide-show--resting");
             if (rest !== null) clearTimeout(rest);
-            rest = setTimeout(() => el.classList.add(resting), POINTER_REST_MS);
+            rest = setTimeout(() => surface.classList.add("udoc-ui__slide-show--resting"), POINTER_REST_MS);
         };
         onPointerMove();
 
@@ -418,9 +589,9 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             ["pointermove", onPointerMove],
             ["contextmenu", onContextMenu],
         ];
-        for (const [type, listener] of listeners) el.addEventListener(type, listener);
+        for (const [type, listener] of listeners) surface.addEventListener(type, listener);
         current.cleanups.push(() => {
-            for (const [type, listener] of listeners) el.removeEventListener(type, listener);
+            for (const [type, listener] of listeners) surface.removeEventListener(type, listener);
             if (rest !== null) clearTimeout(rest);
         });
     }
@@ -433,7 +604,10 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         const current = show;
         if (!current) return;
         show = null;
-        for (const off of current.cleanups) off();
+        // Newest first; then its places, the presenter view gone from them.
+        for (const off of current.cleanups.reverse()) off();
+        current.surface.remove();
+        for (const place of current.places) place.close();
         client.endSlideShow();
         if (current.focused instanceof HTMLElement) current.focused.focus({ preventScroll: true });
         const state = store?.getState();
@@ -500,41 +674,20 @@ function hasOtherScreen(): boolean {
     return (screen as Screen & { isExtended?: boolean }).isExtended === true;
 }
 
-/** Open the window a show plays in for the audience's screen — `null` where
- *  the browser won't — black, with how to put it on that screen. */
-function openShowWindow(i18n: I18n): ShowWindow | null {
+/** A window of its own for the audience's screen: half the screen's width
+ *  at most, 16:9, where the browser places it. */
+function showWindowFeatures(): string {
     const width = Math.round(Math.min(960, screen.availWidth / 2));
     const height = Math.round((width * 9) / 16);
-    let view: Window | null;
-    try {
-        view = window.open("", SHOW_WINDOW, `popup,width=${width},height=${height}`);
-    } catch {
-        return null;
-    }
-    if (!view) return null;
-    const doc = view.document;
-    const style = doc.createElement("style");
-    style.textContent = SHOW_WINDOW_STYLE;
-    doc.head.replaceChildren(style);
-    doc.title = i18n.t("slideShow.window");
-    const root = doc.createElement("div");
-    root.className = "show";
-    root.tabIndex = -1;
-    const canvas = doc.createElement("canvas");
-    canvas.setAttribute("aria-hidden", "true");
-    const end = doc.createElement("div");
-    end.className = "end";
-    end.textContent = i18n.t("slideShow.end");
-    end.hidden = true;
-    const hint = doc.createElement("div");
-    hint.className = "hint";
-    const hintText = doc.createElement("span");
-    hintText.textContent = i18n.t("slideShow.windowHint");
-    hint.append(hintText);
-    root.append(canvas, end, hint);
-    doc.body.replaceChildren(root);
-    root.focus({ preventScroll: true });
-    return { view, root, canvas, end, hint };
+    return `popup,width=${width},height=${height}`;
+}
+
+/** A window of its own filling `screen` — full screen where the browser opens
+ *  a window so for a page that may place windows (`fullscreen`, a Chrome
+ *  trial), else its available area. */
+function screenFeatures(screen: ScreenDetailed): string {
+    const { availLeft: left, availTop: top, availWidth: width, availHeight: height } = screen;
+    return `popup,fullscreen,left=${left},top=${top},width=${width},height=${height}`;
 }
 
 /** Resolves once what `view` shows now has reached the screen: at the

@@ -178,6 +178,9 @@ export interface Messages {
     /** Use Presenter View — a deck's slide show in a window of its own for
      *  the audience's screen, and the presenter view here */
     "command.usePresenterView": string;
+    /** Set Up Screens — let the UI place windows on each of the computer's
+     *  screens, so a slide show fills the audience's at a press */
+    "command.setUpScreens": string;
     /** Preview */
     "command.previewSlide": string;
     /** Stop — Preview, while a slide preview plays */
@@ -504,10 +507,21 @@ export interface Messages {
     "presenter.resumeTimer": string;
     /** Restart Timer */
     "presenter.restartTimer": string;
+    /** Swap Screens — the show onto the presenter view's screen, and the
+     *  presenter view onto the show's */
+    "presenter.swap": string;
     /** Make the Text Larger — the notes' */
     "presenter.largerText": string;
     /** Make the Text Smaller — the notes' */
     "presenter.smallerText": string;
+
+    // Set Up Screens
+    /** Screens — the dialog's screens, which one is picked from */
+    "screens.label": string;
+    /** Choose the screen the slide show plays on. Presenter View shows on another. */
+    "screens.message": string;
+    /** Only one screen is connected. */
+    "screens.oneScreen": string;
 
     // Thumbnails
     /** Page thumbnails */

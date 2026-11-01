@@ -97,6 +97,7 @@ export const ru: Messages = {
     "command.slideShowFromBeginning": "С начала",
     "command.slideShowFromCurrent": "С текущего слайда",
     "command.usePresenterView": "Использовать режим докладчика",
+    "command.setUpScreens": "Настроить экраны",
     "command.previewSlide": "Просмотр",
     "command.stopSlidePreview": "Остановить",
     "command.singleScroll": "Одиночный",
@@ -273,8 +274,14 @@ export const ru: Messages = {
     "presenter.pauseTimer": "Приостановить таймер",
     "presenter.resumeTimer": "Возобновить таймер",
     "presenter.restartTimer": "Перезапустить таймер",
+    "presenter.swap": "Поменять экраны местами",
     "presenter.largerText": "Увеличить текст",
     "presenter.smallerText": "Уменьшить текст",
+
+    // Set Up Screens
+    "screens.label": "Экраны",
+    "screens.message": "Выберите экран для показа слайдов. Режим докладчика откроется на другом.",
+    "screens.oneScreen": "Подключен только один экран.",
 
     // Thumbnails
     "thumbnails.pages": "Миниатюры страниц",

@@ -97,6 +97,7 @@ export const zhTW: Messages = {
     "command.slideShowFromBeginning": "從首張投影片",
     "command.slideShowFromCurrent": "從目前投影片",
     "command.usePresenterView": "使用簡報者檢視畫面",
+    "command.setUpScreens": "設定螢幕",
     "command.previewSlide": "預覽",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "單頁",
@@ -272,8 +273,14 @@ export const zhTW: Messages = {
     "presenter.pauseTimer": "暫停計時器",
     "presenter.resumeTimer": "繼續計時器",
     "presenter.restartTimer": "重新開始計時器",
+    "presenter.swap": "交換螢幕",
     "presenter.largerText": "放大文字",
     "presenter.smallerText": "縮小文字",
+
+    // Set Up Screens
+    "screens.label": "螢幕",
+    "screens.message": "選擇播放投影片的螢幕。簡報者檢視畫面會顯示在另一個螢幕上。",
+    "screens.oneScreen": "僅連接了一個螢幕。",
 
     // Thumbnails
     "thumbnails.pages": "頁面縮圖",

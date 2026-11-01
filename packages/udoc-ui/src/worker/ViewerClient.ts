@@ -78,6 +78,14 @@ export class ViewerClient {
         this.#transport = transport;
     }
 
+    /** Paint into `canvas` (transferred as an OffscreenCanvas) from now on, in
+     *  place of the one it painted into: a view shown afresh, as a presenter
+     *  view's notes are in each window it opens in. The next viewport sizes it. */
+    attach(canvas: HTMLCanvasElement): void {
+        const offscreen = canvas.transferControlToOffscreen();
+        this.#transport.post({ type: "attach", viewer: this.index, canvas: offscreen }, [offscreen]);
+    }
+
     /** Update the painted window (scroll / zoom / resize); a viewport with no
      *  area stops the viewer painting until it has one again. Latest-wins. */
     setViewport(viewport: Viewport): void {

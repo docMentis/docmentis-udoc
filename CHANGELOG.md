@@ -31,6 +31,20 @@ listed once, by package. Its major and minor version are those of the
   show and end it. Closing the show's window ends the show. A browser that
   can't tell of a second screen (any but Chrome and Edge) plays the show
   alone, as it did.
+- The View tab's Set Up Screens, in Chrome and Edge, lets the UI place
+  windows on each of the computer's screens, as the browser asks once and
+  remembers, and opens a dialog of the screens as they stand, each named, to
+  choose the one the slide show plays on. A slide show with the presenter
+  view then fills that screen at the press that starts it, and opens the
+  presenter view in a window of its own filling another, with no window to
+  drag. Closing the presenter view's window ends the show.
+- The presenter view's Swap Screens trades the screens the show and the
+  presenter view show on, the show playing on: each window keeps its
+  screen, and the one pressed in fills it with the show.
+- With the screens set up, the presenter view fills its screen at the first
+  press in its window, a click or a key, as the browser lets only a press in
+  that window do; one taken out of the full screen stays out. Over the UI,
+  with the show in a window still to drag, it stays as it is.
 
 ## [0.8.10] - 2026-10-31
 

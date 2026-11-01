@@ -1664,8 +1664,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "attach": {
                 // Held, not handed straight on: a canvas transfers once, and
                 // the session that paints into it is replaced per document.
-                viewers[VIEWER]!.canvas = msg.canvas;
-                session?.attach(VIEWER, msg.canvas);
+                // An added viewer's new canvas has no size yet: the next view
+                // pushed sizes it, at an unchanged size too.
+                const v = msg.viewer ?? VIEWER;
+                const host = viewers[v]!;
+                host.canvas = msg.canvas;
+                if (v !== VIEWER) host.width = host.height = host.dpr = Number.NaN;
+                session?.attach(v, msg.canvas);
                 reply(id, undefined);
                 break;
             }

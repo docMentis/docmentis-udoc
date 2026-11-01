@@ -97,6 +97,7 @@ export const ja: Messages = {
     "command.slideShowFromBeginning": "最初から",
     "command.slideShowFromCurrent": "現在のスライドから",
     "command.usePresenterView": "発表者ツールを使用する",
+    "command.setUpScreens": "画面の設定",
     "command.previewSlide": "プレビュー",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "単一",
@@ -273,8 +274,14 @@ export const ja: Messages = {
     "presenter.pauseTimer": "タイマーを一時停止",
     "presenter.resumeTimer": "タイマーを再開",
     "presenter.restartTimer": "タイマーをリスタート",
+    "presenter.swap": "画面の入れ替え",
     "presenter.largerText": "文字を拡大",
     "presenter.smallerText": "文字を縮小",
+
+    // Set Up Screens
+    "screens.label": "画面",
+    "screens.message": "スライド ショーを表示する画面を選択してください。発表者ツールは別の画面に表示されます。",
+    "screens.oneScreen": "接続されている画面は 1 つだけです。",
 
     // Thumbnails
     "thumbnails.pages": "ページサムネイル",

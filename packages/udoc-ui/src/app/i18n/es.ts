@@ -97,6 +97,7 @@ export const es: Messages = {
     "command.slideShowFromBeginning": "Desde el principio",
     "command.slideShowFromCurrent": "Desde la diapositiva actual",
     "command.usePresenterView": "Usar vista Moderador",
+    "command.setUpScreens": "Configurar pantallas",
     "command.previewSlide": "Vista previa",
     "command.stopSlidePreview": "Detener",
     "command.singleScroll": "Individual",
@@ -273,8 +274,15 @@ export const es: Messages = {
     "presenter.pauseTimer": "Pausar el temporizador",
     "presenter.resumeTimer": "Reanudar el temporizador",
     "presenter.restartTimer": "Reiniciar el temporizador",
+    "presenter.swap": "Intercambiar pantallas",
     "presenter.largerText": "Aumentar el tamaño del texto",
     "presenter.smallerText": "Reducir el tamaño del texto",
+
+    // Set Up Screens
+    "screens.label": "Pantallas",
+    "screens.message":
+        "Elija la pantalla en la que se reproduce la presentación. La vista Moderador se muestra en otra.",
+    "screens.oneScreen": "Solo hay una pantalla conectada.",
 
     // Thumbnails
     "thumbnails.pages": "Miniaturas de páginas",

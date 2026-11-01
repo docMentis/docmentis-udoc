@@ -325,6 +325,7 @@ export type CommandId =
     | "slideShowFromBeginning"
     | "slideShowFromCurrent"
     | "usePresenterView"
+    | "setUpScreens"
     | "normalView"
     | "notesPageView"
     | "slideMasterView"
@@ -752,6 +753,22 @@ export interface UIState {
      * Presenter View.
      */
     usePresenterView: boolean;
+    /**
+     * Whether the screens are set up: the browser lets the UI place windows
+     * on each of the computer's screens — the View tab's Set Up Screens — so a
+     * slide show with the presenter view fills the audience's screen and opens
+     * the presenter view on this one at a press.
+     */
+    screensSetUp: boolean;
+    /**
+     * The screen a slide show with the presenter view plays on, as Set Up
+     * Screens chose it, by its name and where it stands (`screenKey`) — `null`
+     * for the first but the one the UI's window is on.
+     */
+    audienceScreen: string | null;
+    /** Bumps on every Set Up Screens the browser let the UI place windows
+     *  for, so the shell opens its dialog. */
+    screensDialogSeq: number;
 
     /** Visible canvas size in CSS px (updated by the Canvas on resize). */
     viewportWidth: number;
@@ -1008,6 +1025,9 @@ export const initialState: UIState = {
     slideShowRequest: { slide: null, seq: 0 },
     slideShowPlaying: false,
     usePresenterView: true,
+    screensSetUp: false,
+    audienceScreen: null,
+    screensDialogSeq: 0,
     viewportWidth: 0,
     viewportHeight: 0,
     pageIndex: 0,

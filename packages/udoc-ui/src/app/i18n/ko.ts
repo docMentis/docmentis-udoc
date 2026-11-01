@@ -97,6 +97,7 @@ export const ko: Messages = {
     "command.slideShowFromBeginning": "처음부터",
     "command.slideShowFromCurrent": "현재 슬라이드부터",
     "command.usePresenterView": "발표자 보기 사용",
+    "command.setUpScreens": "화면 설정",
     "command.previewSlide": "미리 보기",
     "command.stopSlidePreview": "중지",
     "command.singleScroll": "단일",
@@ -272,8 +273,14 @@ export const ko: Messages = {
     "presenter.pauseTimer": "타이머 일시 중지",
     "presenter.resumeTimer": "타이머 계속",
     "presenter.restartTimer": "타이머 다시 시작",
+    "presenter.swap": "화면 바꾸기",
     "presenter.largerText": "텍스트 크게",
     "presenter.smallerText": "텍스트 작게",
+
+    // Set Up Screens
+    "screens.label": "화면",
+    "screens.message": "슬라이드 쇼를 표시할 화면을 선택하세요. 발표자 보기는 다른 화면에 표시됩니다.",
+    "screens.oneScreen": "연결된 화면이 하나뿐입니다.",
 
     // Thumbnails
     "thumbnails.pages": "페이지 축소판 그림",

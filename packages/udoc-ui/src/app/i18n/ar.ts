@@ -97,6 +97,7 @@ export const ar: Messages = {
     "command.slideShowFromBeginning": "من البداية",
     "command.slideShowFromCurrent": "من الشريحة الحالية",
     "command.usePresenterView": "استخدام طريقة عرض مقدم العرض",
+    "command.setUpScreens": "إعداد الشاشات",
     "command.previewSlide": "معاينة",
     "command.stopSlidePreview": "إيقاف",
     "command.singleScroll": "مفرد",
@@ -272,8 +273,14 @@ export const ar: Messages = {
     "presenter.pauseTimer": "إيقاف المؤقت مؤقتًا",
     "presenter.resumeTimer": "استئناف المؤقت",
     "presenter.restartTimer": "إعادة تشغيل المؤقت",
+    "presenter.swap": "تبديل الشاشات",
     "presenter.largerText": "تكبير النص",
     "presenter.smallerText": "تصغير النص",
+
+    // Set Up Screens
+    "screens.label": "الشاشات",
+    "screens.message": "اختر الشاشة التي يُعرض عليها عرض الشرائح. تظهر طريقة عرض مقدم العرض على شاشة أخرى.",
+    "screens.oneScreen": "شاشة واحدة فقط متصلة.",
 
     // Thumbnails
     "thumbnails.pages": "صور مصغرة للصفحات",

@@ -2212,17 +2212,23 @@ export const uiStyles = css`
         z-index: 3;
         cursor: pointer;
     }
-    /* A deck's slide show (SlideShow): over the whole UI, and over the whole
-   screen once the browser lets it fill it. Black whatever the theme, as the
-   engine draws around the slide and past the last; the pointer hides while it
-   rests, and a touch swipes rather than scrolls or zooms. */
-    .udoc-ui-root .udoc-ui__slide-show {
+    /* A deck's slide show (SlideShow): a stage over the whole UI, or in a
+   window of its own, which fills the screen once the browser lets it — the
+   show standing on it, or the presenter view. Black whatever the theme, as
+   the engine draws around the slide and past the last. */
+    .udoc-ui-root .udoc-ui__slide-show-stage {
         position: absolute;
         inset: 0;
         /* Over the chrome, the dialogs and the menus. */
         z-index: 300;
         background: #000;
         outline: none;
+    }
+    /* The show on it: the pointer hides while it rests, and a touch swipes
+   rather than scrolls or zooms. */
+    .udoc-ui-root .udoc-ui__slide-show {
+        position: absolute;
+        inset: 0;
         touch-action: none;
         user-select: none;
     }
@@ -2248,7 +2254,27 @@ export const uiStyles = css`
         font-size: 14px;
         pointer-events: none;
     }
-    .udoc-ui-root .udoc-ui__slide-show-end[hidden] {
+    /* How to put a show's window of its own on the audience's screen, while
+   it doesn't fill it. */
+    .udoc-ui-root .udoc-ui__slide-show-hint {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 16px;
+        padding: 0 16px;
+        text-align: center;
+        pointer-events: none;
+    }
+    .udoc-ui-root .udoc-ui__slide-show-hint > span {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        font-size: 14px;
+    }
+    .udoc-ui-root .udoc-ui__slide-show-end[hidden],
+    .udoc-ui-root .udoc-ui__slide-show-hint[hidden] {
         display: none;
     }
     /* A deck's presenter view (PresenterView): over the whole UI, as the show
@@ -4954,6 +4980,139 @@ export const uiStyles = css`
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
     .udoc-ui-root .udoc-delimiter-modal__open:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: 2px;
+    }
+
+    /* === Set Up Screens (ScreensModal) — the screen a slide show plays on === */
+    .udoc-ui-root .udoc-screens-modal {
+        position: absolute;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+    }
+    .udoc-ui-root .udoc-screens-modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background: var(--udoc-color-scrim);
+    }
+    .udoc-ui-root .udoc-screens-modal__dialog {
+        position: relative;
+        z-index: 1;
+        width: min(440px, 100%);
+        max-height: 100%;
+        overflow-y: auto;
+        background: var(--udoc-color-surface-container-highest);
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 8px;
+        box-shadow: var(--udoc-elevation-4);
+    }
+    .udoc-ui-root .udoc-screens-modal__heading {
+        margin: 0;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--udoc-color-outline-variant);
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--udoc-color-on-surface);
+    }
+    .udoc-ui-root .udoc-screens-modal__body {
+        padding: 14px 16px;
+    }
+    .udoc-ui-root .udoc-screens-modal__message {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: var(--udoc-color-on-surface-variant);
+    }
+    /* The screens as they stand, each placed by ScreensModal at its share of
+   the box. */
+    .udoc-ui-root .udoc-screens-modal__screens {
+        position: relative;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+    .udoc-ui-root .udoc-screens-modal__screen {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        box-sizing: border-box;
+        padding: 4px;
+        overflow: hidden;
+        border: 2px solid var(--udoc-color-outline-variant);
+        border-radius: 6px;
+        background: var(--udoc-color-surface);
+        color: var(--udoc-color-on-surface);
+        font-size: 12px;
+        text-align: center;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-screens-modal__screen:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root .udoc-screens-modal__screen[aria-checked="true"] {
+        border-color: var(--udoc-color-primary);
+    }
+    .udoc-ui-root .udoc-screens-modal__screen:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: 2px;
+    }
+    .udoc-ui-root .udoc-screens-modal__screen-name {
+        max-width: 100%;
+        overflow: hidden;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .udoc-ui-root .udoc-screens-modal__screen-size {
+        color: var(--udoc-color-on-surface-variant);
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+    }
+    .udoc-ui-root .udoc-screens-modal__screen-role {
+        color: var(--udoc-color-primary);
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .udoc-ui-root .udoc-screens-modal__footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 14px 16px;
+        border-top: 1px solid var(--udoc-color-outline-variant);
+    }
+    .udoc-ui-root .udoc-screens-modal__cancel {
+        height: 34px;
+        padding: 0 16px;
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--udoc-color-on-surface);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-screens-modal__ok {
+        height: 34px;
+        padding: 0 18px;
+        border: none;
+        border-radius: 6px;
+        background: var(--udoc-color-primary);
+        color: var(--udoc-color-on-primary);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-screens-modal__cancel:hover,
+    .udoc-ui-root .udoc-screens-modal__ok:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root .udoc-screens-modal__cancel:focus-visible,
+    .udoc-ui-root .udoc-screens-modal__ok:focus-visible {
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: 2px;
     }

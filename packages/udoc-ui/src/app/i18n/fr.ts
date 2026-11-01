@@ -97,6 +97,7 @@ export const fr: Messages = {
     "command.slideShowFromBeginning": "À partir du début",
     "command.slideShowFromCurrent": "À partir de la diapositive actuelle",
     "command.usePresenterView": "Utiliser le mode Présentateur",
+    "command.setUpScreens": "Configurer les écrans",
     "command.previewSlide": "Aperçu",
     "command.stopSlidePreview": "Arrêter",
     "command.singleScroll": "Unique",
@@ -273,8 +274,15 @@ export const fr: Messages = {
     "presenter.pauseTimer": "Suspendre le minuteur",
     "presenter.resumeTimer": "Reprendre le minuteur",
     "presenter.restartTimer": "Redémarrer le minuteur",
+    "presenter.swap": "Permuter les écrans",
     "presenter.largerText": "Agrandir le texte",
     "presenter.smallerText": "Réduire le texte",
+
+    // Set Up Screens
+    "screens.label": "Écrans",
+    "screens.message":
+        "Choisissez l’écran sur lequel le diaporama s’affiche. Le mode Présentateur s’affiche sur un autre.",
+    "screens.oneScreen": "Un seul écran est connecté.",
 
     // Thumbnails
     "thumbnails.pages": "Miniatures des pages",

@@ -98,6 +98,7 @@ export const en: Messages = {
     "command.slideShowFromBeginning": "From Beginning",
     "command.slideShowFromCurrent": "From Current Slide",
     "command.usePresenterView": "Use Presenter View",
+    "command.setUpScreens": "Set Up Screens",
     "command.previewSlide": "Preview",
     "command.stopSlidePreview": "Stop",
     "command.singleScroll": "Single",
@@ -273,8 +274,14 @@ export const en: Messages = {
     "presenter.pauseTimer": "Pause Timer",
     "presenter.resumeTimer": "Resume Timer",
     "presenter.restartTimer": "Restart Timer",
+    "presenter.swap": "Swap Screens",
     "presenter.largerText": "Make the Text Larger",
     "presenter.smallerText": "Make the Text Smaller",
+
+    // Set Up Screens
+    "screens.label": "Screens",
+    "screens.message": "Choose the screen the slide show plays on. Presenter View shows on another.",
+    "screens.oneScreen": "Only one screen is connected.",
 
     // Thumbnails
     "thumbnails.pages": "Page thumbnails",

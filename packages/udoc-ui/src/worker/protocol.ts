@@ -112,9 +112,12 @@ export interface StartRequest {
     config: SessionConfig;
 }
 
-/** Hand the worker the transferred canvas it will paint into. */
+/** Hand the worker the transferred canvas viewer `viewer` paints into — the
+ *  session's own, absent, else one an {@link AddViewerRequest} added, in
+ *  place of the canvas it painted into before. */
 export interface AttachRequest {
     type: "attach";
+    viewer?: number;
     canvas: OffscreenCanvas;
 }
 

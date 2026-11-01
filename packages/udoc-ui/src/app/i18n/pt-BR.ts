@@ -97,6 +97,7 @@ export const ptBR: Messages = {
     "command.slideShowFromBeginning": "Do Começo",
     "command.slideShowFromCurrent": "Do Slide Atual",
     "command.usePresenterView": "Usar Modo de Exibição do Apresentador",
+    "command.setUpScreens": "Configurar Telas",
     "command.previewSlide": "Visualizar",
     "command.stopSlidePreview": "Parar",
     "command.singleScroll": "Individual",
@@ -273,8 +274,15 @@ export const ptBR: Messages = {
     "presenter.pauseTimer": "Pausar o Temporizador",
     "presenter.resumeTimer": "Retomar o Temporizador",
     "presenter.restartTimer": "Reiniciar o Temporizador",
+    "presenter.swap": "Trocar Telas",
     "presenter.largerText": "Aumentar o Texto",
     "presenter.smallerText": "Diminuir o Texto",
+
+    // Set Up Screens
+    "screens.label": "Telas",
+    "screens.message":
+        "Escolha a tela em que a apresentação de slides é exibida. O Modo de Exibição do Apresentador aparece em outra.",
+    "screens.oneScreen": "Apenas uma tela está conectada.",
 
     // Thumbnails
     "thumbnails.pages": "Miniaturas das páginas",

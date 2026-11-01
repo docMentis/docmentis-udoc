@@ -219,6 +219,13 @@ export type Action =
     // Play a slide show with the presenter view where there is a screen for
     // the audience, or not
     | { type: "SET_USE_PRESENTER_VIEW"; use: boolean }
+    // The browser lets the UI place windows on each screen, or no longer does
+    | { type: "SET_SCREENS_SET_UP"; setUp: boolean }
+    // Open the Set Up Screens dialog (bumps `screensDialogSeq`)
+    | { type: "OPEN_SCREENS_DIALOG" }
+    // Play a slide show with the presenter view on this screen, by its key,
+    // or on the first but the UI's
+    | { type: "SET_AUDIENCE_SCREEN"; screen: string | null }
     // Show the current worksheet as its grid or as Page Layout view's paper —
     // the View tab's Normal and Page Layout
     | { type: "SET_SHEET_LAYOUT_MODE"; mode: SheetLayoutMode }

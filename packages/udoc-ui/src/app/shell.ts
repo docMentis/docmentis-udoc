@@ -75,6 +75,8 @@ import { createBusyModal } from "./components/BusyModal.js";
 import { createLoadingOverlay } from "./components/LoadingOverlay.js";
 import { createLicenseNotice, isRefusal } from "./components/LicenseNotice.js";
 import { createSlideShow } from "./components/SlideShow.js";
+import { readScreens, watchScreensPermission } from "./screens.js";
+import { createScreensModal } from "./components/ScreensModal.js";
 import { createDelimiterModal } from "./components/DelimiterModal.js";
 import { createPasswordModal } from "./components/PasswordModal.js";
 import { createPrintModal } from "./components/PrintModal.js";
@@ -515,6 +517,8 @@ export function mountUIShell(
     // before it opens — on the root for the same reason.
     const delimiterModal = createDelimiterModal(i18n);
     delimiterModal.mount(layout);
+    const screensModal = createScreensModal(i18n);
+    screensModal.mount(layout);
 
     // --- slot scaffold (mirrors the viewer shell) ------------------------
     const toolbarSlot = document.createElement("div");
@@ -916,6 +920,24 @@ export function mountUIShell(
     // covers the whole UI wherever the browser won't fill the screen with it.
     const slideShow = createSlideShow(i18n, client);
     slideShow.mount(layout, store);
+    // Whether the screens are set up, as the browser remembers it from a
+    // Set Up Screens before, and as its site settings change it; and, at each
+    // Set Up Screens the browser lets through, the screen a show plays on.
+    const unwatchScreens = watchScreensPermission((setUp) => store.dispatch({ type: "SET_SCREENS_SET_UP", setUp }));
+    async function chooseScreen(): Promise<void> {
+        const screens = await readScreens();
+        if (!screens) return;
+        const key = await screensModal.ask(screens, store.getState().audienceScreen);
+        if (key !== undefined) store.dispatch({ type: "SET_AUDIENCE_SCREEN", screen: key });
+    }
+    const unsubScreensDialog = subscribeSelector(
+        store,
+        (s) => s.screensDialogSeq,
+        () => void chooseScreen(),
+        {
+            phase: "effect",
+        },
+    );
 
     // The page spacing: the extension's, for page chrome of its own that needs
     // room around the pages, else the reading spacing — the host's `pageGap`,
@@ -3561,6 +3583,9 @@ export function mountUIShell(
         passwordModal.destroy();
         delimiterModal.destroy();
         licenseNotice.destroy();
+        unwatchScreens();
+        unsubScreensDialog();
+        screensModal.destroy();
         slideShow.destroy();
         ribbon.destroy();
         annotationBar.destroy();

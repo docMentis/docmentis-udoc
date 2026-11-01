@@ -97,6 +97,7 @@ export const zhCN: Messages = {
     "command.slideShowFromBeginning": "从头开始",
     "command.slideShowFromCurrent": "从当前幻灯片开始",
     "command.usePresenterView": "使用演示者视图",
+    "command.setUpScreens": "设置屏幕",
     "command.previewSlide": "预览",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "单页",
@@ -272,8 +273,14 @@ export const zhCN: Messages = {
     "presenter.pauseTimer": "暂停计时器",
     "presenter.resumeTimer": "继续计时器",
     "presenter.restartTimer": "重新开始计时器",
+    "presenter.swap": "交换屏幕",
     "presenter.largerText": "放大文本",
     "presenter.smallerText": "缩小文本",
+
+    // Set Up Screens
+    "screens.label": "屏幕",
+    "screens.message": "选择放映幻灯片的屏幕。演示者视图显示在另一个屏幕上。",
+    "screens.oneScreen": "仅连接了一个屏幕。",
 
     // Thumbnails
     "thumbnails.pages": "页面缩略图",

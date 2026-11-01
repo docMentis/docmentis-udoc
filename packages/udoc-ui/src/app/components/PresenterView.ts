@@ -7,7 +7,12 @@
 // draws onto a canvas of the view's. The next slide is a picture of it, as a
 // thumbnail is. The notes are a viewer of the deck's notes text, as the notes
 // pane shows them, their text made larger or smaller here; the view keeps its
-// viewer from one show to the next, as a viewer added stays.
+// viewer from one show to the next, as a viewer added stays, and hands it a
+// canvas of its own each time.
+//
+// It opens in the UI's window, or in a window of its own on the presenter's
+// screen, its elements moved there: what it measures, observes and fills the
+// screen with is that window's.
 
 import { cssPxPerPt } from "../../geometry.js";
 import type { ContentPadding, PageGap, PageViewsFrame, RgbColor, Size } from "../../geometry.js";
@@ -19,6 +24,7 @@ import {
     ICON_CHEVRON_RIGHT,
     ICON_FULLSCREEN,
     ICON_FULLSCREEN_EXIT,
+    ICON_SWAP_SCREENS,
     ICON_TEXT_LARGER,
     ICON_TEXT_SMALLER,
     ICON_TIMER_PAUSE,
@@ -58,13 +64,14 @@ export interface PresenterDeck {
     dpi: number;
 }
 
-/** What the presenter view's buttons and keys do to the show. */
+/** What the presenter view's buttons do to the show. Its keys are the
+ *  show's, which the stage it stands on takes. */
 export interface PresenterActions {
     next(): void;
     previous(): void;
     end(): void;
-    /** A key pressed in the view, which the show takes as its own. */
-    key(ev: KeyboardEvent): void;
+    /** Swap the screens the show and the presenter view show on. */
+    swap(): void;
 }
 
 /** Where the show is, as the presenter view shows it. */
@@ -92,8 +99,9 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     const restart = createButton({ icon: ICON_TIMER_RESTART, label: i18n.t("presenter.restartTimer") });
     const clock = document.createElement("span");
     clock.className = "udoc-ui__presenter-clock";
+    const swap = createButton({ icon: ICON_SWAP_SCREENS, label: i18n.t("presenter.swap") });
     const fullscreen = createButton({ icon: ICON_FULLSCREEN, label: i18n.t("toolbar.fullscreen") });
-    bar.append(timer, pause, restart, spacer(), clock, fullscreen);
+    bar.append(timer, pause, restart, spacer(), clock, swap, fullscreen);
 
     // The slide as the audience sees it, and the buttons that step it.
     const stage = document.createElement("div");
@@ -139,9 +147,6 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     notesBar.append(notesHeading, spacer(), smaller, larger);
     const notesHost = document.createElement("div");
     notesHost.className = "udoc-ui__presenter-notes";
-    const notesCanvas = document.createElement("canvas");
-    notesCanvas.className = "udoc-ui__presenter-notes-canvas";
-    notesHost.append(notesCanvas);
     side.append(nextHeading, nextBox, notesBar, notesHost);
 
     const main = document.createElement("div");
@@ -150,8 +155,10 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     el.append(bar, main);
 
     // The notes' viewer, added the first time a deck with notes shows here,
-    // and the ground it draws them on.
+    // the canvas it paints into while the view shows, and the ground it draws
+    // them on.
     let viewer: ViewerClient | null = null;
+    let notesCanvas: HTMLCanvasElement | null = null;
     let backdrop: RgbColor | null = null;
 
     // The show shown, while one plays.
@@ -160,6 +167,8 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     let position: PresenterPosition | null = null;
     let mirror: HTMLCanvasElement | null = null;
     const cleanups: Array<() => void> = [];
+    // What is bound to the window the view shows in, let go as it moves.
+    const windowCleanups: Array<() => void> = [];
 
     // The notes' view: the box they show in (CSS px), their zoom, their scroll
     // down the page (document points) and the latest frame.
@@ -180,19 +189,30 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     let nextShown: { slide: number; scale: number } | null = null;
     let nextGeneration = 0;
 
+    // Whether the first click or key in the view's window fills its screen.
+    let fillAtPress = false;
+
+    /** The window the view shows in. */
+    const view = (): Window => el.ownerDocument.defaultView ?? window;
+
     /**
-     * Show the presenter view over `host` for a show of `deck`, whose buttons
-     * and keys do `todo`. Returns the canvas the worker copies the show's
-     * slide onto, and its size in device pixels, for the show to transfer.
+     * Show the presenter view on `host` — a stage in the UI's window, or in
+     * one of its own, which fills its screen — for a show of `deck`, whose
+     * buttons do `todo`. With `fill`, the first click or key in its window
+     * fills its screen with it. Returns the canvas the worker copies the
+     * show's slide onto, and its size in device pixels, for the show to
+     * transfer.
      */
     function open(
         host: HTMLElement,
         shown: PresenterDeck,
         todo: PresenterActions,
+        fill: boolean,
     ): { canvas: HTMLCanvasElement; width: number; height: number } {
         close();
         deck = shown;
         actions = todo;
+        fillAtPress = fill;
         host.appendChild(el);
         el.focus({ preventScroll: true });
 
@@ -202,10 +222,18 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         slideBox.prepend(canvas);
         mirror = canvas;
         const size = fitMirror();
+        if (shown.notesPlane >= 0) {
+            notesCanvas = document.createElement("canvas");
+            notesCanvas.className = "udoc-ui__presenter-notes-canvas";
+            notesHost.append(notesCanvas);
+            attachNotes(notesCanvas);
+        }
 
         notesZoom = NOTES_ZOOM_OPEN;
         smaller.disabled = larger.disabled = false;
         listen();
+        listenWindow();
+        showNotes();
         timerPaused = null;
         restartTimer();
         renderTimer();
@@ -229,14 +257,24 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         }
     }
 
+    /** Stand the view on `host` instead — the show's stage, its screens
+     *  swapped — in its window. */
+    function move(host: HTMLElement): void {
+        if (!deck) return;
+        for (const off of windowCleanups) off();
+        windowCleanups.length = 0;
+        host.appendChild(el);
+        el.focus({ preventScroll: true });
+        listenWindow();
+    }
+
     /** Take the view down, if it shows. */
     function close(): void {
         if (!deck) return;
-        for (const off of cleanups) off();
-        cleanups.length = 0;
+        for (const off of [...cleanups, ...windowCleanups]) off();
+        cleanups.length = windowCleanups.length = 0;
         if (tick !== null) clearInterval(tick);
         tick = null;
-        if (document.fullscreenElement === el) void document.exitFullscreen().catch(() => {});
         mirror?.remove();
         mirror = null;
         deck = actions = position = nextShown = null;
@@ -245,10 +283,12 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         // Its viewer stops painting.
         notesWidth = notesHeight = 0;
         sendNotesViewport();
+        notesCanvas?.remove();
+        notesCanvas = null;
         el.remove();
     }
 
-    /** Take in the view's buttons, keys and sizes for the show shown. */
+    /** Take in the view's buttons for the show shown. */
     function listen(): void {
         const on = <K extends keyof HTMLElementEventMap>(
             target: HTMLElement,
@@ -259,7 +299,6 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
             target.addEventListener(type, handler, options);
             cleanups.push(() => target.removeEventListener(type, handler, options));
         };
-        on(el, "keydown", (ev) => actions?.key(ev));
         on(previous, "click", () => actions?.previous());
         on(next, "click", () => actions?.next());
         on(slideBox, "click", () => actions?.next());
@@ -276,9 +315,12 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
             restartTimer();
             renderTimer();
         });
+        on(swap, "click", () => actions?.swap());
+        // The stage the view stands on fills the screen, or leaves it.
         on(fullscreen, "click", () => {
-            if (document.fullscreenElement === el) void document.exitFullscreen().catch(() => {});
-            else void el.requestFullscreen().catch(() => {});
+            const doc = el.ownerDocument;
+            if (doc.fullscreenElement) void doc.exitFullscreen().catch(() => {});
+            else void el.parentElement?.requestFullscreen().catch(() => {});
         });
         on(smaller, "click", () => zoomNotes(-1));
         on(larger, "click", () => zoomNotes(1));
@@ -298,28 +340,66 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
             },
             { passive: false },
         );
+    }
 
+    /** Take in the sizes and the full screen of the window the view shows in,
+     *  and lay it out there. */
+    function listenWindow(): void {
+        const doc = el.ownerDocument;
         const onFullscreenChange = (): void => {
-            const full = document.fullscreenElement === el;
+            const full = doc.fullscreenElement !== null;
             fullscreen.innerHTML = full ? ICON_FULLSCREEN_EXIT : ICON_FULLSCREEN;
             nameButton(fullscreen, i18n.t(full ? "toolbar.exitFullscreen" : "toolbar.fullscreen"));
         };
-        document.addEventListener("fullscreenchange", onFullscreenChange);
-        cleanups.push(() => document.removeEventListener("fullscreenchange", onFullscreenChange));
+        doc.addEventListener("fullscreenchange", onFullscreenChange);
+        windowCleanups.push(() => doc.removeEventListener("fullscreenchange", onFullscreenChange));
         onFullscreenChange();
 
-        const resizeObserver = new ResizeObserver(() => {
+        // The first click or key in the window fills its screen with the view,
+        // when the show asks it to: the browser fills a screen only in answer
+        // to a press in the window, and the one that started the show went to
+        // the show. At the click,
+        // not the press under it: a screen filled while the button is still
+        // down moves the view from under the release, and the button never
+        // hears its click. Once a window — a view taken out of the full
+        // screen stays out — and never at the buttons that fill or leave the
+        // screen themselves: its own full-screen button, Swap Screens and End
+        // Show.
+        let pressed = !fillAtPress;
+        const onPress = (ev: Event): void => {
+            if (pressed || (ev instanceof KeyboardEvent && (ev.key === "Escape" || ev.repeat))) return;
+            const target = ev.target instanceof Node ? ev.target : null;
+            if (target && [fullscreen, swap, end].some((button) => button.contains(target))) return;
+            pressed = true;
+            if (!doc.fullscreenElement)
+                void el.parentElement?.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+        };
+        el.addEventListener("click", onPress, true);
+        el.addEventListener("keydown", onPress, true);
+        windowCleanups.push(() => {
+            el.removeEventListener("click", onPress, true);
+            el.removeEventListener("keydown", onPress, true);
+        });
+
+        // Observed in the view's own window, where it lays out — which also
+        // tells of a screen of another scale, a resize there.
+        const relayout = (): void => {
             const size = fitMirror();
             client.resizeSlideShowMirror(size.width, size.height);
             renderNext();
             measureNotes();
-        });
+        };
+        const win = view() as Window & typeof globalThis;
+        const resizeObserver = new win.ResizeObserver(relayout);
         resizeObserver.observe(slideBox);
         resizeObserver.observe(nextBox);
         resizeObserver.observe(notesHost);
-        cleanups.push(() => resizeObserver.disconnect());
+        win.addEventListener("resize", relayout);
+        windowCleanups.push(() => {
+            resizeObserver.disconnect();
+            win.removeEventListener("resize", relayout);
+        });
         measureNotes();
-        showNotes();
     }
 
     /** Stand the slide's copy in its box, centred, as large as fits, and
@@ -361,10 +441,14 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
             });
     }
 
-    /** The notes' viewer — added the first time it is asked for. */
-    function notesViewer(): ViewerClient {
-        if (viewer) return viewer;
-        const added = client.addViewer(notesCanvas);
+    /** Paint the notes into `canvas` — the viewer added the first time,
+     *  handed the canvas after. */
+    function attachNotes(canvas: HTMLCanvasElement): void {
+        if (viewer) {
+            viewer.attach(canvas);
+            return;
+        }
+        const added = client.addViewer(canvas);
         added.setPageBorder(null);
         added.setSpacing(NOTES_PADDING, NOTES_GAP);
         // One slide's notes at a time, scrolled within.
@@ -378,18 +462,18 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         // The canvas's CSS box, once the worker has painted it at its new
         // size, on the device-pixel grid, as the notes pane's.
         added.onResized(({ width, height }) => {
-            const dpr = globalThis.devicePixelRatio || 1;
+            if (!notesCanvas) return;
+            const dpr = view().devicePixelRatio || 1;
             notesCanvas.style.width = `${Math.max(1, Math.round(width * dpr)) / dpr}px`;
             notesCanvas.style.height = `${Math.max(1, Math.round(height * dpr)) / dpr}px`;
         });
         viewer = added;
-        return added;
     }
 
     /** Show the current slide's notes, from their top. */
     function showNotes(): void {
-        if (!deck || deck.notesPlane < 0) return;
-        const notes = notesViewer();
+        const notes = viewer;
+        if (!deck || deck.notesPlane < 0 || !notes) return;
         notesScroll = 0;
         notesFrame = null;
         void notes.goToPlane(deck.notesPlane);
@@ -425,7 +509,7 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
             scrollX: 0,
             scrollY: notesScroll,
             zoom: NOTES_ZOOMS[notesZoom]!,
-            dpr: globalThis.devicePixelRatio || 1,
+            dpr: view().devicePixelRatio || 1,
             width: deck ? notesWidth : 0,
             height: deck ? notesHeight : 0,
         });
@@ -483,7 +567,7 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         close();
     }
 
-    return { el, open, update, close, setBackdrop, destroy };
+    return { el, open, update, move, close, setBackdrop, destroy };
 }
 
 export type PresenterView = ReturnType<typeof createPresenterView>;
@@ -502,7 +586,7 @@ function spacer(): HTMLElement {
  */
 function fitCanvas(canvas: HTMLCanvasElement, box: HTMLElement, slide: Size): { width: number; height: number } {
     const rect = box.getBoundingClientRect();
-    const dpr = globalThis.devicePixelRatio || 1;
+    const dpr = canvas.ownerDocument.defaultView?.devicePixelRatio || 1;
     const scale = Math.min(rect.width / slide.width, rect.height / slide.height);
     const width = Math.max(1, Math.round(slide.width * scale * dpr));
     const height = Math.max(1, Math.round(slide.height * scale * dpr));

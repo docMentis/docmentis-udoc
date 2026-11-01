@@ -723,6 +723,9 @@ export function createRibbon(
                     callbacks.onHistory?.(def.run.op);
                     break;
                 case "action":
+                    // Done once pressed: the More panel it may have been
+                    // pressed in closes, before a dialog it opens shows under it.
+                    overflowMenu.close();
                     def.run.press(store);
                     break;
                 case "markup":

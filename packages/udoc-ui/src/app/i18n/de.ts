@@ -97,6 +97,7 @@ export const de: Messages = {
     "command.slideShowFromBeginning": "Von Beginn an",
     "command.slideShowFromCurrent": "Ab aktueller Folie",
     "command.usePresenterView": "Referentenansicht verwenden",
+    "command.setUpScreens": "Bildschirme einrichten",
     "command.previewSlide": "Vorschau",
     "command.stopSlidePreview": "Beenden",
     "command.singleScroll": "Einzeln",
@@ -273,8 +274,15 @@ export const de: Messages = {
     "presenter.pauseTimer": "Zeitgeber anhalten",
     "presenter.resumeTimer": "Zeitgeber fortsetzen",
     "presenter.restartTimer": "Zeitgeber neu starten",
+    "presenter.swap": "Bildschirme tauschen",
     "presenter.largerText": "Text vergrößern",
     "presenter.smallerText": "Text verkleinern",
+
+    // Set Up Screens
+    "screens.label": "Bildschirme",
+    "screens.message":
+        "Wählen Sie den Bildschirm für die Bildschirmpräsentation. Die Referentenansicht erscheint auf einem anderen.",
+    "screens.oneScreen": "Es ist nur ein Bildschirm angeschlossen.",
 
     // Thumbnails
     "thumbnails.pages": "Seitenminiaturen",

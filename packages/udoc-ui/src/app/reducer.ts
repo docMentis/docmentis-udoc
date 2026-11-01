@@ -354,6 +354,15 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         case "SET_USE_PRESENTER_VIEW":
             return action.use === state.usePresenterView ? state : { ...state, usePresenterView: action.use };
 
+        case "SET_SCREENS_SET_UP":
+            return action.setUp === state.screensSetUp ? state : { ...state, screensSetUp: action.setUp };
+
+        case "OPEN_SCREENS_DIALOG":
+            return { ...state, screensSetUp: true, screensDialogSeq: state.screensDialogSeq + 1 };
+
+        case "SET_AUDIENCE_SCREEN":
+            return action.screen === state.audienceScreen ? state : { ...state, audienceScreen: action.screen };
+
         case "SET_PRESENTATION_VIEW": {
             // A deck shows it on its plane; one still opening, once its roster
             // is in (SET_PLANES). Another view stops a slide preview playing.

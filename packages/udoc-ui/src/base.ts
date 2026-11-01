@@ -1494,6 +1494,10 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * second screen the browser knows of (Chrome's and Edge's), the show plays
      * in a window of its own, for the audience's screen, and the presenter
      * view — the slide, the next one, the notes and a timer — over the UI.
+     * With the screens set up too — the View tab's Set Up Screens, which
+     * chooses the screen the show plays on — the show fills that screen from
+     * the UI's window instead, and the presenter view opens in a window of its
+     * own on another. The presenter view's Swap Screens trades the two.
      *
      * The browser fills the screen, or opens that window, only in answer to a
      * user gesture, so call it from the host's own click handler; without

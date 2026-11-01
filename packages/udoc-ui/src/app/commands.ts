@@ -56,6 +56,7 @@ import {
     ICON_SLIDE_SHOW_FROM_BEGINNING,
     ICON_SLIDE_SHOW_FROM_CURRENT,
     ICON_PRESENTER_VIEW,
+    ICON_SET_UP_SCREENS,
     ICON_NOTES_PAGE_VIEW,
     ICON_SLIDE_MASTER_VIEW,
     ICON_NORMAL_VIEW,
@@ -85,6 +86,7 @@ import {
     ICON_FORMATTING_MARKS,
     ICON_FORMULA_BAR,
 } from "./icons.js";
+import { hasScreensApi, readScreens } from "./screens.js";
 
 /**
  * The flat read-model every {@link CommandDef.enabledWhen} / {@link MenuItem.enabledWhen}
@@ -906,6 +908,29 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             pressed: (state) => state.usePresenterView,
             press: (store) =>
                 store.dispatch({ type: "SET_USE_PRESENTER_VIEW", use: !store.getState().usePresenterView }),
+        },
+        enabledWhen: whenReady,
+    },
+    // Let the UI place windows on each screen — a press the browser asks
+    // about once, and remembers — and choose the screen a slide show with the
+    // presenter view plays on, in a dialog: the show then fills that screen
+    // and opens the presenter view on another. Only where the browser can
+    // place windows.
+    setUpScreens: {
+        id: "setUpScreens",
+        label: "command.setUpScreens",
+        icon: ICON_SET_UP_SCREENS,
+        group: "slideShow",
+        labeled: true,
+        shownWhen: hasScreensApi,
+        run: {
+            kind: "action",
+            // Asked in the press, which the browser's question needs.
+            press: (store) => {
+                void readScreens().then((screens) => {
+                    if (screens) store.dispatch({ type: "OPEN_SCREENS_DIALOG" });
+                });
+            },
         },
         enabledWhen: whenReady,
     },
