@@ -94,6 +94,7 @@ export const es: Messages = {
     "command.pagelessView": "Sin páginas",
     "command.pageLayoutView": "Diseño de página",
     "command.notes": "Notas",
+    "command.previewSlide": "Vista previa",
     "command.singleScroll": "Individual",
     "command.continuousScroll": "Continuo",
     "command.pageLayout": "Diseño de página",

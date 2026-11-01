@@ -171,6 +171,8 @@ export interface Messages {
     "command.pageLayoutView": string;
     /** Notes */
     "command.notes": string;
+    /** Preview */
+    "command.previewSlide": string;
     /** Single */
     "command.singleScroll": string;
     /** Continuous */

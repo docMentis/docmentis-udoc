@@ -962,6 +962,52 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     client.attach(canvas);
 
     let store: Store<UIState, Action> | null = null;
+
+    // The slide preview playing over the view, if one is: a canvas of its own,
+    // transferred to the worker, which plays the preview on it and reports its
+    // end. A press on it, or Escape, stops it early.
+    let preview: HTMLCanvasElement | null = null;
+    /** Take the preview's canvas down. */
+    const endPreview = (): void => {
+        if (!preview) return;
+        preview.remove();
+        preview = null;
+        globalThis.removeEventListener("keydown", onPreviewKey, true);
+    };
+    /** Stop the preview playing, if one is, and take it down. */
+    const stopPreview = (): void => {
+        if (!preview) return;
+        client.endSlideShow();
+        endPreview();
+    };
+    function onPreviewKey(ev: KeyboardEvent): void {
+        if (ev.key !== "Escape") return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        stopPreview();
+    }
+    /** Preview slide `slide` over the whole view, in place of any playing. */
+    function previewSlide(slide: number): void {
+        stopPreview();
+        const canvas = document.createElement("canvas");
+        canvas.className = "udoc-ui__slide-preview";
+        canvas.setAttribute("aria-hidden", "true");
+        canvas.addEventListener("pointerdown", (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            stopPreview();
+        });
+        // Under the brand decal, which stays in view; over everything else.
+        el.insertBefore(canvas, el.querySelector(".udoc-ui__branding"));
+        preview = canvas;
+        globalThis.addEventListener("keydown", onPreviewKey, true);
+        const dpr = globalThis.devicePixelRatio || 1;
+        const width = Math.max(1, Math.round(el.clientWidth * dpr));
+        const height = Math.max(1, Math.round(el.clientHeight * dpr));
+        client.previewSlide(canvas, slide, width, height).catch(() => {
+            if (preview === canvas) endPreview();
+        });
+    }
     let resizeObserver: ResizeObserver | null = null;
     // The frame that checks whether the host has settled at a new size — see
     // `measure`. `null` while none is pending.
@@ -1759,6 +1805,18 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // including re-picking the active fit. Keyed on the seq (not the fit)
         // so it re-fires at an unchanged fit, so the engine re-frames
         // (re-centers) the current page on the active fit.
+        // Each Preview bumps `slidePreviewSeq`: play the slide shown over the
+        // view, and take it down when the worker says it has played.
+        cleanups.push(
+            subscribeSelector(
+                s,
+                (st) => st.slidePreviewSeq,
+                () => previewSlide(s.getState().pageIndex),
+            ),
+            client.onSlideShowEnded(endPreview),
+            stopPreview,
+        );
+
         const offFit = subscribeSelector(
             s,
             (st) => st.refitSeq,

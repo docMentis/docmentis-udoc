@@ -94,6 +94,7 @@ export const ru: Messages = {
     "command.pagelessView": "Без страниц",
     "command.pageLayoutView": "Разметка страницы",
     "command.notes": "Заметки",
+    "command.previewSlide": "Просмотр",
     "command.singleScroll": "Одиночный",
     "command.continuousScroll": "Непрерывно",
     "command.pageLayout": "Макет страниц",

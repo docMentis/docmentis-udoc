@@ -47,7 +47,10 @@ const PORTABLE_ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLef
 const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; shows: readonly CommandId[] }>> = {
     portable: { pages: [...SCROLL, ...PORTABLE_ARRANGEMENT], shows: ["layers"] },
     wordprocessing: { pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT], shows: ["formattingMarks"] },
-    presentation: { pages: ["normalView", "notesPageView", "slideMasterView", ...SCROLL], shows: ["notes"] },
+    presentation: {
+        pages: ["previewSlide", "normalView", "notesPageView", "slideMasterView", ...SCROLL],
+        shows: ["notes"],
+    },
     image: { pages: [...SCROLL, "pageGap"], shows: [] },
     spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar"] },
 };
@@ -55,7 +58,8 @@ const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; sh
 /**
  * `docType`'s View tab — how the document is shown, never an edit of it, so
  * the same in view mode and edit mode, the last tab of each. Its groups, each
- * where the doc type has one: its own views (a deck's Normal, Notes Page and
+ * where the doc type has one: a deck's Preview of the slide shown, its own
+ * views (a deck's Normal, Notes Page and
  * Slide Master, a word document's Pages and Pageless, a workbook's Normal and
  * Page Layout of its current sheet), how the pages scroll, how they pair up,
  * the turn they're shown at, the gaps between them, `guides` (an extension's,

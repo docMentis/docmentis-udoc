@@ -51,6 +51,7 @@ import {
     ICON_SUBTOOL_POLYLINE,
     ICON_SUBTOOL_CLOUD,
     ICON_NOTES,
+    ICON_PREVIEW_SLIDE,
     ICON_NOTES_PAGE_VIEW,
     ICON_SLIDE_MASTER_VIEW,
     ICON_NORMAL_VIEW,
@@ -847,6 +848,20 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         // With Color and Fill: it styles the same annotation.
         run: { kind: "menu", menu: ANNOTATION_OPACITY_MENU, cluster: "paint" },
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
+    },
+
+    // View tab — a deck's slide shown, previewed where it shows as
+    // PowerPoint's Preview plays it: its transition from the slide before,
+    // then its animations one after another. Not in the Slide Master view,
+    // which shows no slide.
+    previewSlide: {
+        id: "previewSlide",
+        label: "command.previewSlide",
+        icon: ICON_PREVIEW_SLIDE,
+        group: "preview",
+        labeled: true,
+        run: { kind: "action", press: (store) => store.dispatch({ type: "PREVIEW_SLIDE" }) },
+        enabledWhen: (c) => c.ready && c.presentationView !== "slideMaster",
     },
 
     // View tab — a deck's views, one segment button: its slides, the pages

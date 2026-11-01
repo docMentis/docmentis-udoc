@@ -94,6 +94,7 @@ export const zhTW: Messages = {
     "command.pagelessView": "不分頁",
     "command.pageLayoutView": "整頁模式",
     "command.notes": "備忘稿",
+    "command.previewSlide": "預覽",
     "command.singleScroll": "單頁",
     "command.continuousScroll": "連續",
     "command.pageLayout": "頁面配置",

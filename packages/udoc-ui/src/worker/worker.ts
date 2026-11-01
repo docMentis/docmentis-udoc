@@ -259,6 +259,40 @@ let defaultScrollMode: ScrollMode | null = null;
 // `attach`/`open` (a fresh session).
 let renderPoisoned = false;
 
+// The slide preview's next frame, while one plays: it draws on a canvas of its
+// own, frame by frame as its status asks, apart from the viewers' frames.
+let slideShowRafId: number | null = null;
+
+/** Draw the slide preview's next frame, and the one after while it asks. */
+function scheduleSlideShowFrame(): void {
+    if (slideShowRafId !== null) return;
+    slideShowRafId = requestAnimationFrame((now) => {
+        slideShowRafId = null;
+        if (!session) return;
+        let ended: boolean;
+        try {
+            const status = session.renderSlideShowFrame(now);
+            // A preview that waits for nothing has nothing more to play.
+            ended = status.ended || status.nextFrame === null;
+        } catch {
+            ended = true;
+        }
+        if (!ended) {
+            scheduleSlideShowFrame();
+            return;
+        }
+        session.endSlideShow();
+        scope.postMessage({ type: "slideShowEnded" });
+    });
+}
+
+/** Stop the slide preview, if one plays, without a word to the host. */
+function stopSlideShow(): void {
+    if (slideShowRafId !== null) cancelAnimationFrame(slideShowRafId);
+    slideShowRafId = null;
+    session?.endSlideShow();
+}
+
 /**
  * Schedule a paint on the next animation frame, coalescing multiple viewport
  * messages into one render. `render_frame` clears the whole dirty rect, so a
@@ -1463,6 +1497,19 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                     await handle(replay);
                 }
                 reply(id, session.entitlements());
+                break;
+            }
+            case "previewSlide": {
+                if (!session) throw new Error("engine worker: previewSlide before start");
+                stopSlideShow();
+                session.previewSlide(msg.slide, msg.canvas, msg.width, msg.height);
+                scheduleSlideShowFrame();
+                reply(id, undefined);
+                break;
+            }
+            case "endSlideShow": {
+                stopSlideShow();
+                reply(id, undefined);
                 break;
             }
             case "attach": {

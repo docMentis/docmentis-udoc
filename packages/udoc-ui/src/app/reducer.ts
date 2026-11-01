@@ -316,6 +316,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             };
         }
 
+        case "PREVIEW_SLIDE":
+            return { ...state, slidePreviewSeq: state.slidePreviewSeq + 1 };
+
         case "SET_PRESENTATION_VIEW": {
             // A deck shows it on its plane; one still opening, once its roster
             // is in (SET_PLANES).

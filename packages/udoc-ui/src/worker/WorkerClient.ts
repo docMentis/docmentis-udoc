@@ -312,6 +312,7 @@ export class WorkerClient {
     readonly #planesListeners = new Set<(planes: PlaneInfo) => void>();
     /** Notified when the worker composed more of the document ahead of the reader. */
     readonly #composedListeners = new Set<(layout: DocumentLayout) => void>();
+    readonly #slideShowEndedListeners = new Set<() => void>();
 
     private constructor(worker: Worker, options: LicenseOptions & FontOptions & FeatureOptions, wrapper: Wrapper) {
         this.#worker = worker;
@@ -378,6 +379,34 @@ export class WorkerClient {
     attach(canvas: HTMLCanvasElement): void {
         const offscreen = canvas.transferControlToOffscreen();
         this.#post({ type: "attach", canvas: offscreen }, [offscreen]);
+    }
+
+    /**
+     * Preview slide `slide` (0-based) of the open deck on `canvas`, transferred
+     * to the worker — a canvas of the preview's own, `width × height` device
+     * pixels, laid over the view — as PowerPoint's Preview plays it: the
+     * slide's transition from the slide before it, then its animations one
+     * after another. Resolves once it plays; {@link onSlideShowEnded} fires
+     * when it has played, its last frame left up until the host takes the
+     * canvas down. Rejects when it can't play — no deck open, no WebGL2.
+     */
+    async previewSlide(canvas: HTMLCanvasElement, slide: number, width: number, height: number): Promise<void> {
+        const offscreen = canvas.transferControlToOffscreen();
+        await this.#send({ type: "previewSlide", slide, canvas: offscreen, width, height }, [offscreen]);
+    }
+
+    /** Stop the slide preview playing, if one is, before it ends. */
+    endSlideShow(): void {
+        this.#post({ type: "endSlideShow" });
+    }
+
+    /**
+     * Subscribe to the slide preview's end: it has played, or could draw no
+     * further, and its canvas can come down. Returns an unsubscribe function.
+     */
+    onSlideShowEnded(listener: () => void): () => void {
+        this.#slideShowEndedListeners.add(listener);
+        return () => this.#slideShowEndedListeners.delete(listener);
     }
 
     /**
@@ -2102,6 +2131,9 @@ export class WorkerClient {
                 }
                 case "composed":
                     for (const listener of this.#composedListeners) listener(msg.layout);
+                    return;
+                case "slideShowEnded":
+                    for (const listener of this.#slideShowEndedListeners) listener();
                     return;
             }
             return;

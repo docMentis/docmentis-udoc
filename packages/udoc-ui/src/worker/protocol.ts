@@ -117,6 +117,27 @@ export interface AttachRequest {
 }
 
 /**
+ * Preview slide `slide` (0-based) on `canvas` — transferred, a canvas of the
+ * preview's own, `width × height` device pixels, which the host lays over its
+ * view — as PowerPoint's Preview plays it: the slide's transition from the
+ * slide before it, then its animations one after another. The worker draws it
+ * frame by frame, in place of any preview playing, and posts a
+ * {@link SlideShowEndedReport} once it has played.
+ */
+export interface PreviewSlideRequest {
+    type: "previewSlide";
+    slide: number;
+    canvas: OffscreenCanvas;
+    width: number;
+    height: number;
+}
+
+/** Stop the slide preview playing, if one is, before it ends. */
+export interface EndSlideShowRequest {
+    type: "endSlideShow";
+}
+
+/**
  * A request that acts on one of the session's viewers: `viewer` names it — `0`,
  * the session's own, when absent, else one an {@link AddViewerRequest} added.
  */
@@ -1896,6 +1917,8 @@ export type WorkerRequest =
     | InitRequest
     | StartRequest
     | AttachRequest
+    | PreviewSlideRequest
+    | EndSlideShowRequest
     | AddViewerRequest
     | RegisterFontsRequest
     | OpenRequest
@@ -2268,6 +2291,14 @@ export interface RenderErrorReport {
 }
 
 /**
+ * Unsolicited: the slide preview playing has played to its end, or could draw
+ * no further. Its last frame stays up for the host to take its canvas down.
+ */
+export interface SlideShowEndedReport {
+    type: "slideShowEnded";
+}
+
+/**
  * Fonts the engine ordered have landed and the composed pages were re-shaped
  * against them: text may sit elsewhere than it did, so what was placed by it —
  * a search's highlights — is placed again.
@@ -2329,7 +2360,8 @@ export type WorkerOutbound =
     | PlaneLoadedReport
     | PlanesReport
     | ComposedReport
-    | RenderErrorReport;
+    | RenderErrorReport
+    | SlideShowEndedReport;
 
 // --- the local collaboration service ---------------------------------------
 

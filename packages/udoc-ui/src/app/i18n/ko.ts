@@ -94,6 +94,7 @@ export const ko: Messages = {
     "command.pagelessView": "페이지 없음",
     "command.pageLayoutView": "페이지 레이아웃",
     "command.notes": "슬라이드 노트",
+    "command.previewSlide": "미리 보기",
     "command.singleScroll": "단일",
     "command.continuousScroll": "연속",
     "command.pageLayout": "페이지 레이아웃",

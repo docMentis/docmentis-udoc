@@ -94,6 +94,7 @@ export const ja: Messages = {
     "command.pagelessView": "ページ分けなし",
     "command.pageLayoutView": "ページ レイアウト",
     "command.notes": "ノート",
+    "command.previewSlide": "プレビュー",
     "command.singleScroll": "単一",
     "command.continuousScroll": "連続",
     "command.pageLayout": "ページレイアウト",

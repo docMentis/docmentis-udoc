@@ -201,6 +201,9 @@ export type Action =
     | { type: "SET_RIGHT_PANEL_WIDTH"; width: number }
     // How a deck shows: its slides, or its notes pages
     | { type: "SET_PRESENTATION_VIEW"; view: PresentationView }
+    // Preview the slide shown — its transition, then its animations — over
+    // the view (bumps `slidePreviewSeq`, which the Canvas plays it on).
+    | { type: "PREVIEW_SLIDE" }
     // Show the current worksheet as its grid or as Page Layout view's paper —
     // the View tab's Normal and Page Layout
     | { type: "SET_SHEET_LAYOUT_MODE"; mode: SheetLayoutMode }

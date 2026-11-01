@@ -2158,6 +2158,18 @@ export const uiStyles = css`
         position: absolute;
         inset: 0;
     }
+    /* A slide preview playing over the view: a canvas of its own, the whole
+   canvas host, black around the slide, over the page chrome and the selection
+   and under the brand decal, which comes after it. A press on it stops it. */
+    .udoc-ui-root .udoc-ui__slide-preview {
+        display: block;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 3;
+        cursor: pointer;
+    }
     /* A canvas's stand-in while the browser catches up with its resize
    (ResizeCover): placed and shown as the canvas is, its class's, but never the
    pointer's target, which the canvas's handlers look for. */

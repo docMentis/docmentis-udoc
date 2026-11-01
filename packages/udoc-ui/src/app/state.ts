@@ -321,6 +321,7 @@ export type CommandId =
     | "annotationColor"
     | "annotationFill"
     | "annotationOpacity"
+    | "previewSlide"
     | "normalView"
     | "notesPageView"
     | "slideMasterView"
@@ -709,6 +710,13 @@ export interface UIState {
      */
     refitSeq: number;
 
+    /**
+     * Bumps on every Preview, so the Canvas lays a preview of the slide shown
+     * over the view and plays it — keyed on the seq, so pressing it again
+     * plays it again.
+     */
+    slidePreviewSeq: number;
+
     /** Visible canvas size in CSS px (updated by the Canvas on resize). */
     viewportWidth: number;
     viewportHeight: number;
@@ -958,6 +966,7 @@ export const initialState: UIState = {
     maxZoom: MAX_ZOOM,
     zoomRequest: { zoom: 1, x: 0, y: 0, seq: 0 },
     refitSeq: 0,
+    slidePreviewSeq: 0,
     viewportWidth: 0,
     viewportHeight: 0,
     pageIndex: 0,
