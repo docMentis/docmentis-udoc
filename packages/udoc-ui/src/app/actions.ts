@@ -210,6 +210,12 @@ export type Action =
     | { type: "PREVIEW_SLIDE" }
     // Stop the slide preview playing, or mark one played to its end
     | { type: "STOP_SLIDE_PREVIEW" }
+    // Play the deck full screen from slide `slide` (0-based), or from the
+    // first slide the show shows when `null` (bumps `slideShowRequest`, which
+    // the slide show plays it on)
+    | { type: "START_SLIDE_SHOW"; slide: number | null }
+    // End the slide show playing, or mark one ended
+    | { type: "END_SLIDE_SHOW" }
     // Show the current worksheet as its grid or as Page Layout view's paper —
     // the View tab's Normal and Page Layout
     | { type: "SET_SHEET_LAYOUT_MODE"; mode: SheetLayoutMode }

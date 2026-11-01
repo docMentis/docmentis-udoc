@@ -53,6 +53,8 @@ import {
     ICON_NOTES,
     ICON_PREVIEW_SLIDE,
     ICON_STOP_SLIDE_PREVIEW,
+    ICON_SLIDE_SHOW_FROM_BEGINNING,
+    ICON_SLIDE_SHOW_FROM_CURRENT,
     ICON_NOTES_PAGE_VIEW,
     ICON_SLIDE_MASTER_VIEW,
     ICON_NORMAL_VIEW,
@@ -864,6 +866,31 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         // With Color and Fill: it styles the same annotation.
         run: { kind: "menu", menu: ANNOTATION_OPACITY_MENU, cluster: "paint" },
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
+    },
+
+    // View tab — a deck's slide show, the deck played full screen a slide at a
+    // time as PowerPoint's Slide Show plays it: from the first slide it shows,
+    // or from the slide shown, which the Slide Master view has none of.
+    slideShowFromBeginning: {
+        id: "slideShowFromBeginning",
+        label: "command.slideShowFromBeginning",
+        icon: ICON_SLIDE_SHOW_FROM_BEGINNING,
+        group: "slideShow",
+        labeled: true,
+        run: { kind: "action", press: (store) => store.dispatch({ type: "START_SLIDE_SHOW", slide: null }) },
+        enabledWhen: whenReady,
+    },
+    slideShowFromCurrent: {
+        id: "slideShowFromCurrent",
+        label: "command.slideShowFromCurrent",
+        icon: ICON_SLIDE_SHOW_FROM_CURRENT,
+        group: "slideShow",
+        labeled: true,
+        run: {
+            kind: "action",
+            press: (store) => store.dispatch({ type: "START_SLIDE_SHOW", slide: store.getState().pageIndex }),
+        },
+        enabledWhen: (c) => c.ready && c.presentationView !== "slideMaster",
     },
 
     // View tab — a deck's slide shown, previewed where it shows as

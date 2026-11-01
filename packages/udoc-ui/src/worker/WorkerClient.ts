@@ -59,6 +59,7 @@ import type {
     SearchOptions,
     SheetLayoutMode,
     SlideMasterSummary,
+    SlideShowInput,
     UrlFont,
 } from "@docmentis/udoc-wasm";
 import { UDocError } from "@docmentis/udoc-wasm/error";
@@ -73,6 +74,7 @@ import type {
     SelectedAnnotations,
     SelectionEdit,
     SlideSectionRun,
+    SlideShowPosition,
     ThumbnailResult,
     WorkerOutbound,
     ExtensionRequest,
@@ -313,6 +315,7 @@ export class WorkerClient {
     /** Notified when the worker composed more of the document ahead of the reader. */
     readonly #composedListeners = new Set<(layout: DocumentLayout) => void>();
     readonly #slideShowEndedListeners = new Set<() => void>();
+    readonly #slideShowStatusListeners = new Set<(status: SlideShowPosition) => void>();
 
     private constructor(worker: Worker, options: LicenseOptions & FontOptions & FeatureOptions, wrapper: Wrapper) {
         this.#worker = worker;
@@ -397,18 +400,62 @@ export class WorkerClient {
         await this.#send({ type: "previewSlide", slide, canvas: offscreen }, [offscreen]);
     }
 
-    /** Stop the slide preview playing, if one is, before it ends. */
+    /**
+     * Start a slide show of the open deck at slide `slide` (0-based) — at the
+     * first slide it shows when `null` — on `canvas`, transferred to the
+     * worker: a canvas of the show's own, which the host shows full screen,
+     * `width × height` device pixels. It plays the deck a slide at a time, as
+     * PowerPoint's Slide Show does, in place of any show or preview playing,
+     * moving on at each {@link slideShowInput}; {@link onSlideShowStatus} tells
+     * where it is as it moves. Resolves once it plays; rejects when it can't —
+     * no deck open, no WebGL2.
+     */
+    async startSlideShow(
+        canvas: HTMLCanvasElement,
+        slide: number | null,
+        width: number,
+        height: number,
+    ): Promise<void> {
+        const offscreen = canvas.transferControlToOffscreen();
+        await this.#send(
+            { type: "startSlideShow", ...(slide !== null && { slide }), canvas: offscreen, width, height },
+            [offscreen],
+        );
+    }
+
+    /**
+     * Hand the slide show playing a key, a click or its canvas's new size —
+     * one of the engine's {@link SlideShowInput}s, or the first or last slide
+     * it shows.
+     */
+    slideShowInput(input: SlideShowInput | "firstSlide" | "lastSlide"): void {
+        this.#post({ type: "slideShowInput", input });
+    }
+
+    /** Stop the slide show or slide preview playing, if one is, before it ends. */
     endSlideShow(): void {
         this.#post({ type: "endSlideShow" });
     }
 
     /**
-     * Subscribe to the slide preview's end: it has played, or could draw no
-     * further, and its canvas can come down. Returns an unsubscribe function.
+     * Subscribe to the end of the slide show or preview playing: a preview has
+     * played, or either could draw no further, and its canvas can come down.
+     * Returns an unsubscribe function.
      */
     onSlideShowEnded(listener: () => void): () => void {
         this.#slideShowEndedListeners.add(listener);
         return () => this.#slideShowEndedListeners.delete(listener);
+    }
+
+    /**
+     * Subscribe to where the slide show playing is, as it moves: the slide it
+     * shows, by its index in the deck, how many of its click groups have
+     * started, and whether it has gone past its last slide onto the black that
+     * ends it. Returns an unsubscribe function.
+     */
+    onSlideShowStatus(listener: (status: SlideShowPosition) => void): () => void {
+        this.#slideShowStatusListeners.add(listener);
+        return () => this.#slideShowStatusListeners.delete(listener);
     }
 
     /**
@@ -2147,6 +2194,11 @@ export class WorkerClient {
                 case "slideShowEnded":
                     for (const listener of this.#slideShowEndedListeners) listener();
                     return;
+                case "slideShowStatus": {
+                    const { type: _, ...status } = msg;
+                    for (const listener of this.#slideShowStatusListeners) listener(status);
+                    return;
+                }
             }
             return;
         }

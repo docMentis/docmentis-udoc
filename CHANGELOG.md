@@ -6,6 +6,22 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Added
+
+- A deck plays as a slide show, as PowerPoint's Slide Show does: the View
+  tab's From Beginning and From Current Slide fill the screen with it, a
+  slide at a time, each slide's transition and animations playing — Morph
+  among them — and a slide timed to move on doing so. A click, Space, → or
+  Enter steps on, ← or Backspace steps back, Home and End go to the first and
+  last slide shown, a slide's number then Enter to that slide, and a swipe
+  steps on or back; Escape ends it, as does a click on the black past the
+  last slide, and the view then shows the slide it was on. Where the browser
+  won't fill the screen, the show fills the UI. `startSlideShow(slide?)` and
+  `endSlideShow()` play and end it, `isSlideShowPlaying` says whether one
+  plays, and `"slideShow:changed"` fires as one starts and ends.
+
 ## [0.8.10] - 2026-10-31
 
 Built on `@docmentis/udoc-wasm` 0.8.13.

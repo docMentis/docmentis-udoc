@@ -94,6 +94,8 @@ export const ptBR: Messages = {
     "command.pagelessView": "Sem páginas",
     "command.pageLayoutView": "Layout da Página",
     "command.notes": "Anotações",
+    "command.slideShowFromBeginning": "Do Começo",
+    "command.slideShowFromCurrent": "Do Slide Atual",
     "command.previewSlide": "Visualizar",
     "command.stopSlidePreview": "Parar",
     "command.singleScroll": "Individual",
@@ -252,6 +254,9 @@ export const ptBR: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "Redimensionar anotações",
+
+    // Slide show
+    "slideShow.end": "Fim da apresentação de slides. Clique para sair.",
 
     // Thumbnails
     "thumbnails.pages": "Miniaturas das páginas",

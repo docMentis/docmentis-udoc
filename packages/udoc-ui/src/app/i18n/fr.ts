@@ -94,6 +94,8 @@ export const fr: Messages = {
     "command.pagelessView": "Sans pages",
     "command.pageLayoutView": "Mise en page",
     "command.notes": "Notes",
+    "command.slideShowFromBeginning": "À partir du début",
+    "command.slideShowFromCurrent": "À partir de la diapositive actuelle",
     "command.previewSlide": "Aperçu",
     "command.stopSlidePreview": "Arrêter",
     "command.singleScroll": "Unique",
@@ -252,6 +254,9 @@ export const fr: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "Redimensionner les notes",
+
+    // Slide show
+    "slideShow.end": "Fin du diaporama. Cliquez pour quitter.",
 
     // Thumbnails
     "thumbnails.pages": "Miniatures des pages",

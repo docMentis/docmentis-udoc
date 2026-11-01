@@ -94,6 +94,8 @@ export const ja: Messages = {
     "command.pagelessView": "ページ分けなし",
     "command.pageLayoutView": "ページ レイアウト",
     "command.notes": "ノート",
+    "command.slideShowFromBeginning": "最初から",
+    "command.slideShowFromCurrent": "現在のスライドから",
     "command.previewSlide": "プレビュー",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "単一",
@@ -252,6 +254,9 @@ export const ja: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "ノートのサイズ変更",
+
+    // Slide show
+    "slideShow.end": "スライド ショーの最後です。クリックすると終了します。",
 
     // Thumbnails
     "thumbnails.pages": "ページサムネイル",

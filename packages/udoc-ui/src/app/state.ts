@@ -322,6 +322,8 @@ export type CommandId =
     | "annotationFill"
     | "annotationOpacity"
     | "previewSlide"
+    | "slideShowFromBeginning"
+    | "slideShowFromCurrent"
     | "normalView"
     | "notesPageView"
     | "slideMasterView"
@@ -730,6 +732,19 @@ export interface UIState {
      */
     slidePreviewing: boolean;
 
+    /**
+     * Bumps on every start of a slide show, so the shell's slide show plays the
+     * deck full screen from `slide` — its index in the deck, or `null` for the
+     * first slide the show shows.
+     */
+    slideShowRequest: { slide: number | null; seq: number };
+    /**
+     * Whether a slide show plays — from its start until it ends: by Escape, by
+     * a click past its last slide, by the host's `endSlideShow`, or by
+     * another document opened.
+     */
+    slideShowPlaying: boolean;
+
     /** Visible canvas size in CSS px (updated by the Canvas on resize). */
     viewportWidth: number;
     viewportHeight: number;
@@ -982,6 +997,8 @@ export const initialState: UIState = {
     refitSeq: 0,
     slidePreviewSeq: 0,
     slidePreviewing: false,
+    slideShowRequest: { slide: null, seq: 0 },
+    slideShowPlaying: false,
     viewportWidth: 0,
     viewportHeight: 0,
     pageIndex: 0,

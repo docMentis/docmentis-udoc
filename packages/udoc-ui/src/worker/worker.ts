@@ -39,6 +39,7 @@ import type {
     SelectionEdit,
     SelectionReport,
     SlideSectionRun,
+    SlideShowPosition,
     ThumbnailFocusRequest,
     ViewerSelection,
     ThumbnailResult,
@@ -61,6 +62,8 @@ import type {
     SheetLayoutMode,
     SheetState,
     SlideMasterSummary,
+    SlideShowInput,
+    SlideShowStatus,
     UrlFont,
     WasmSession,
 } from "@docmentis/udoc-wasm";
@@ -259,37 +262,90 @@ let defaultScrollMode: ScrollMode | null = null;
 // `attach`/`open` (a fresh session).
 let renderPoisoned = false;
 
-// The slide preview's next frame, while one plays: it draws on a canvas of its
-// own, frame by frame as its status asks, apart from the viewers' frames.
+// The slide show playing, if one is — a deck's show, or a preview of one slide
+// over the view — and its next frame: it draws on a canvas of its own, frame by
+// frame as its status asks, apart from the viewers' frames.
+let slideShow: "show" | "preview" | null = null;
 let slideShowRafId: number | null = null;
+let slideShowTimer: ReturnType<typeof setTimeout> | null = null;
+// Where the show was when the host was last told, so it is told only of a move.
+let slideShowReported: SlideShowPosition | null = null;
+// The show's new size, taken in by the frame drawn at it: a canvas resized
+// apart from its frame would show cleared until the frame after.
+let slideShowResize: Extract<SlideShowInput, { resize: unknown }> | null = null;
 
-/** Draw the slide preview's next frame, and the one after while it asks. */
-function scheduleSlideShowFrame(): void {
-    if (slideShowRafId !== null) return;
-    slideShowRafId = requestAnimationFrame((now) => {
-        slideShowRafId = null;
-        if (!session) return;
-        let ended: boolean;
-        try {
-            const status = session.renderSlideShowFrame(now);
-            // A preview that waits for nothing has nothing more to play.
-            ended = status.ended || status.nextFrame === null;
-        } catch {
-            ended = true;
-        }
-        if (!ended) {
-            scheduleSlideShowFrame();
-            return;
-        }
-        session.endSlideShow();
-        scope.postMessage({ type: "slideShowEnded" });
-    });
+/** How long ahead of a frame due later its animation frame is asked for, ms. */
+const SLIDE_SHOW_FRAME_AHEAD = 20;
+
+/**
+ * Draw the slide show's next frame at `nextFrame` (ms, the worker's clock): on
+ * the next animation frame for a moment due, after a wait for a later one — a
+ * slide that moves on of itself — and none while the show waits for input.
+ */
+function scheduleSlideShowFrame(nextFrame: number | null): void {
+    cancelSlideShowFrame();
+    if (nextFrame === null) return;
+    const wait = nextFrame - performance.now() - SLIDE_SHOW_FRAME_AHEAD;
+    if (wait > 0) {
+        slideShowTimer = setTimeout(() => {
+            slideShowTimer = null;
+            slideShowRafId = requestAnimationFrame(drawSlideShowFrame);
+        }, wait);
+        return;
+    }
+    slideShowRafId = requestAnimationFrame(drawSlideShowFrame);
 }
 
-/** Stop the slide preview, if one plays, without a word to the host. */
-function stopSlideShow(): void {
+function cancelSlideShowFrame(): void {
     if (slideShowRafId !== null) cancelAnimationFrame(slideShowRafId);
+    if (slideShowTimer !== null) clearTimeout(slideShowTimer);
+    slideShowRafId = slideShowTimer = null;
+}
+
+/** Draw the slide show's frame at `now`, and ask for the next as it says. */
+function drawSlideShowFrame(now: number): void {
     slideShowRafId = null;
+    if (!session || slideShow === null) return;
+    let status: SlideShowStatus;
+    try {
+        if (slideShowResize) session.slideShowInput(slideShowResize);
+        slideShowResize = null;
+        status = session.renderSlideShowFrame(now);
+    } catch {
+        endSlideShowPlaying();
+        return;
+    }
+    // A preview that waits for nothing has nothing more to play.
+    if (slideShow === "preview" && (status.ended || status.nextFrame === null)) {
+        endSlideShowPlaying();
+        return;
+    }
+    reportSlideShow(status);
+    scheduleSlideShowFrame(status.nextFrame);
+}
+
+/** Tell the host where the show playing is, if it has moved. */
+function reportSlideShow({ slide, step, ended }: SlideShowStatus): void {
+    if (slideShow !== "show") return;
+    const last = slideShowReported;
+    if (last && last.slide === slide && last.step === step && last.ended === ended) return;
+    slideShowReported = { slide, step, ended };
+    scope.postMessage({ type: "slideShowStatus", slide, step, ended });
+}
+
+/** End the slide show or preview playing, and tell the host its canvas can
+ *  come down. */
+function endSlideShowPlaying(): void {
+    stopSlideShow();
+    scope.postMessage({ type: "slideShowEnded" });
+}
+
+/** Stop the slide show or preview, if one plays, without a word to the host. */
+function stopSlideShow(): void {
+    cancelSlideShowFrame();
+    slideShow = null;
+    slideShowReported = null;
+    slideShowResize = null;
     session?.endSlideShow();
 }
 
@@ -1463,6 +1519,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                     started.free();
                     throw error;
                 }
+                // Nor does a slide show it played: the host takes its canvas
+                // down as the open starts.
+                stopSlideShow();
                 session?.free();
                 session = started;
                 // Nothing of the last session's background work carries over.
@@ -1503,8 +1562,46 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (!session) throw new Error("engine worker: previewSlide before start");
                 stopSlideShow();
                 session.previewSlide(VIEWER, msg.slide, msg.canvas);
-                scheduleSlideShowFrame();
+                slideShow = "preview";
+                scheduleSlideShowFrame(0);
                 reply(id, undefined);
+                break;
+            }
+            case "startSlideShow": {
+                if (!session) throw new Error("engine worker: startSlideShow before start");
+                stopSlideShow();
+                const slide = msg.slide ?? shownSlides(session)[0] ?? 0;
+                session.startSlideShow(slide, msg.canvas, msg.width, msg.height);
+                slideShow = "show";
+                scheduleSlideShowFrame(0);
+                reply(id, undefined);
+                break;
+            }
+            case "slideShowInput": {
+                if (!session || slideShow !== "show") break;
+                let input: SlideShowInput;
+                if (msg.input === "firstSlide" || msg.input === "lastSlide") {
+                    const shown = shownSlides(session);
+                    const slide = msg.input === "firstSlide" ? shown[0] : shown.at(-1);
+                    if (slide === undefined) break;
+                    input = { goToSlide: slide };
+                } else {
+                    input = msg.input;
+                }
+                // A slide number typed past the last slide goes nowhere.
+                if (typeof input === "object" && "goToSlide" in input && input.goToSlide >= slideCount(session)) break;
+                if (typeof input === "object" && "resize" in input) {
+                    slideShowResize = input;
+                    scheduleSlideShowFrame(0);
+                    break;
+                }
+                try {
+                    const status = session.slideShowInput(input);
+                    reportSlideShow(status);
+                    scheduleSlideShowFrame(status.nextFrame);
+                } catch {
+                    endSlideShowPlaying();
+                }
                 break;
             }
             case "endSlideShow": {
@@ -2824,6 +2921,13 @@ function slidesShow(s: WasmSession, indices: readonly number[]): boolean[] {
         const id = ids[index];
         return id === undefined || safeRead(() => s.presentation.model.slide(id).show(), true);
     });
+}
+
+/** The slides a slide show steps through, by their indices: those whose
+ *  `show` is set, in order. */
+function shownSlides(s: WasmSession): number[] {
+    const ids = safeRead(() => s.presentation.model.root.slideIds(), []);
+    return ids.flatMap((id, index) => (safeRead(() => s.presentation.model.slide(id).show(), true) ? [index] : []));
 }
 
 /** Whether a slide show plays anything on each slide at `indices` — a

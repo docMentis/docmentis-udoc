@@ -94,6 +94,8 @@ export const ru: Messages = {
     "command.pagelessView": "Без страниц",
     "command.pageLayoutView": "Разметка страницы",
     "command.notes": "Заметки",
+    "command.slideShowFromBeginning": "С начала",
+    "command.slideShowFromCurrent": "С текущего слайда",
     "command.previewSlide": "Просмотр",
     "command.stopSlidePreview": "Остановить",
     "command.singleScroll": "Одиночный",
@@ -252,6 +254,9 @@ export const ru: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "Изменить размер заметок",
+
+    // Slide show
+    "slideShow.end": "Конец показа слайдов. Щелкните для выхода.",
 
     // Thumbnails
     "thumbnails.pages": "Миниатюры страниц",

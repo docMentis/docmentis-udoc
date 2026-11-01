@@ -94,6 +94,8 @@ export const de: Messages = {
     "command.pagelessView": "Seitenlos",
     "command.pageLayoutView": "Seitenlayout",
     "command.notes": "Notizen",
+    "command.slideShowFromBeginning": "Von Beginn an",
+    "command.slideShowFromCurrent": "Ab aktueller Folie",
     "command.previewSlide": "Vorschau",
     "command.stopSlidePreview": "Beenden",
     "command.singleScroll": "Einzeln",
@@ -252,6 +254,9 @@ export const de: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "Größe der Notizen ändern",
+
+    // Slide show
+    "slideShow.end": "Ende der Bildschirmpräsentation. Zum Beenden klicken.",
 
     // Thumbnails
     "thumbnails.pages": "Seitenminiaturen",

@@ -94,6 +94,8 @@ export const ko: Messages = {
     "command.pagelessView": "페이지 없음",
     "command.pageLayoutView": "페이지 레이아웃",
     "command.notes": "슬라이드 노트",
+    "command.slideShowFromBeginning": "처음부터",
+    "command.slideShowFromCurrent": "현재 슬라이드부터",
     "command.previewSlide": "미리 보기",
     "command.stopSlidePreview": "중지",
     "command.singleScroll": "단일",
@@ -252,6 +254,9 @@ export const ko: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "슬라이드 노트 크기 조정",
+
+    // Slide show
+    "slideShow.end": "슬라이드 쇼의 끝입니다. 클릭하면 끝납니다.",
 
     // Thumbnails
     "thumbnails.pages": "페이지 축소판 그림",

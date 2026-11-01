@@ -2212,6 +2212,45 @@ export const uiStyles = css`
         z-index: 3;
         cursor: pointer;
     }
+    /* A deck's slide show (SlideShow): over the whole UI, and over the whole
+   screen once the browser lets it fill it. Black whatever the theme, as the
+   engine draws around the slide and past the last; the pointer hides while it
+   rests, and a touch swipes rather than scrolls or zooms. */
+    .udoc-ui-root .udoc-ui__slide-show {
+        position: absolute;
+        inset: 0;
+        /* Over the chrome, the dialogs and the menus. */
+        z-index: 300;
+        background: #000;
+        outline: none;
+        touch-action: none;
+        user-select: none;
+    }
+    .udoc-ui-root .udoc-ui__slide-show--resting {
+        cursor: none;
+    }
+    /* A frame drawn at the size before shows whole, never stretched, until
+   the one drawn at the new size. */
+    .udoc-ui-root .udoc-ui__slide-show-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    /* "End of slide show, click to exit." — at the top, as PowerPoint's. */
+    .udoc-ui-root .udoc-ui__slide-show-end {
+        position: absolute;
+        top: 12px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        color: #fff;
+        font-size: 14px;
+        pointer-events: none;
+    }
+    .udoc-ui-root .udoc-ui__slide-show-end[hidden] {
+        display: none;
+    }
     /* A canvas's stand-in while the browser catches up with its resize
    (ResizeCover): placed and shown as the canvas is, its class's, but never the
    pointer's target, which the canvas's handlers look for. */

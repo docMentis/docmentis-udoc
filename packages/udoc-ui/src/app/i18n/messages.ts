@@ -171,6 +171,10 @@ export interface Messages {
     "command.pageLayoutView": string;
     /** Notes */
     "command.notes": string;
+    /** From Beginning — a deck's slide show, from the first slide it shows */
+    "command.slideShowFromBeginning": string;
+    /** From Current Slide — a deck's slide show, from the slide shown */
+    "command.slideShowFromCurrent": string;
     /** Preview */
     "command.previewSlide": string;
     /** Stop — Preview, while a slide preview plays */
@@ -467,6 +471,10 @@ export interface Messages {
     // Notes pane
     /** Resize notes */
     "notes.resizeHandle": string;
+
+    // Slide show
+    /** End of slide show, click to exit. — over the black past a slide show's last slide */
+    "slideShow.end": string;
 
     // Thumbnails
     /** Page thumbnails */

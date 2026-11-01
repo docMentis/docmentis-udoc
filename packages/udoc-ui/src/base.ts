@@ -352,6 +352,8 @@ export interface UDocEvents {
     "notesPanel:changed": { open: boolean };
     /** Fires when a deck's view changes — by the host, the View tab, or a search match on the slides from its notes pages. */
     "presentationView:changed": { view: PresentationView; previousView: PresentationView };
+    /** Fires when a deck's slide show starts or ends — by the host, the View tab, Escape, or a step past its last slide. */
+    "slideShow:changed": { playing: boolean };
     /**
      * Fires after a *local* edit is applied (page edits, undo/redo) — not on
      * merges, so a sync listener that pushes a snapshot to a peer can't loop.
@@ -545,6 +547,11 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
                 shell.store,
                 (s) => s.presentationView,
                 (view, previousView) => this.#emit("presentationView:changed", { view, previousView }),
+            ),
+            subscribeSelector(
+                shell.store,
+                (s) => s.slideShowPlaying,
+                (playing) => this.#emit("slideShow:changed", { playing }),
             ),
             shell.onEdit(() => this.#emit("document:edited", { pageCount: shell.getState().pageCount })),
             shell.onSelectionEdit(() => this.#emit("selection:changed", {})),
@@ -1475,6 +1482,29 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.setPresentationView(view);
     }
 
+    /**
+     * Play the open deck as a slide show, as the View tab's From Beginning and
+     * From Current Slide do: full screen, a slide at a time, each slide's
+     * transition and animations playing, stepped on by a click or a key and
+     * ended by Escape. From slide `slide`, 0-based, even one hidden from the
+     * show; from the first slide the show shows when omitted. In place of a
+     * show playing; nothing for a document that is not a deck.
+     *
+     * The browser fills the screen only in answer to a user gesture, so call
+     * it from the host's own click handler; without one, or where the browser
+     * refuses, the show fills the UI instead. `"slideShow:changed"` fires as
+     * it starts and ends, and once it ends the view shows the slide it was
+     * on.
+     */
+    startSlideShow(slide?: number): void {
+        this.shell.startSlideShow(slide ?? null);
+    }
+
+    /** End the slide show playing, if one is, as Escape does. */
+    endSlideShow(): void {
+        this.shell.endSlideShow();
+    }
+
     /** The open document's doc type, or `null` with no document open. */
     get docType(): UDocType | null {
         return this.shell.getState().docType;
@@ -1618,6 +1648,11 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     /** How a deck shows, as {@link setPresentationView} last set it; `"presentationView:changed"` fires when it changes. */
     get presentationView(): PresentationView {
         return this.shell.getState().presentationView;
+    }
+
+    /** Whether a slide show plays, by {@link startSlideShow} or the View tab; `"slideShow:changed"` fires when it starts or ends. */
+    get isSlideShowPlaying(): boolean {
+        return this.shell.getState().slideShowPlaying;
     }
 
     /** Where a followed link or outline item, or a chosen comment, lands, as {@link setNavigationScrollAlignment} last set it. */

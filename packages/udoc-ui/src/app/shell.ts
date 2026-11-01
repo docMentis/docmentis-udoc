@@ -74,6 +74,7 @@ import { mediaPlayers } from "./components/MediaPlayer.js";
 import { createBusyModal } from "./components/BusyModal.js";
 import { createLoadingOverlay } from "./components/LoadingOverlay.js";
 import { createLicenseNotice, isRefusal } from "./components/LicenseNotice.js";
+import { createSlideShow } from "./components/SlideShow.js";
 import { createDelimiterModal } from "./components/DelimiterModal.js";
 import { createPasswordModal } from "./components/PasswordModal.js";
 import { createPrintModal } from "./components/PrintModal.js";
@@ -360,6 +361,11 @@ export interface UIShell {
     setTheme: (theme: ThemeMode) => void;
     /** Enter or leave fullscreen on the root; rejects when the browser refuses. */
     setFullscreen: (fullscreen: boolean) => Promise<void>;
+    /** Play the open deck full screen from slide `slide`, or from the first
+     *  slide the show shows when `null`. */
+    startSlideShow: (slide: number | null) => void;
+    /** End the slide show playing, if one is. */
+    endSlideShow: () => void;
     /** Scroll one spread at a time, or continuously — the open document and
      *  every later one; `null` restores each doc type's default. */
     setScrollMode: (mode: ScrollMode | null) => void;
@@ -905,6 +911,11 @@ export function mountUIShell(
     // one that needs the store, which does not exist that early.
     const licenseNotice = createLicenseNotice(i18n);
     licenseNotice.mount(layout, store);
+
+    // A deck's slide show, the deck played full screen. On the root, as it
+    // covers the whole UI wherever the browser won't fill the screen with it.
+    const slideShow = createSlideShow(i18n, client);
+    slideShow.mount(layout, store);
 
     // The page spacing: the extension's, for page chrome of its own that needs
     // room around the pages, else the reading spacing — the host's `pageGap`,
@@ -3548,6 +3559,7 @@ export function mountUIShell(
         passwordModal.destroy();
         delimiterModal.destroy();
         licenseNotice.destroy();
+        slideShow.destroy();
         ribbon.destroy();
         annotationBar.destroy();
         toolbar.destroy();
@@ -3631,6 +3643,8 @@ export function mountUIShell(
             if (fullscreen === (document.fullscreenElement === layout)) return Promise.resolve();
             return fullscreen ? layout.requestFullscreen() : document.exitFullscreen();
         },
+        startSlideShow: (slide) => store.dispatch({ type: "START_SLIDE_SHOW", slide }),
+        endSlideShow: () => store.dispatch({ type: "END_SLIDE_SHOW" }),
         setScrollMode: (mode) => {
             store.dispatch({ type: "SET_DEFAULT_SCROLL_MODE", mode });
             store.dispatch({

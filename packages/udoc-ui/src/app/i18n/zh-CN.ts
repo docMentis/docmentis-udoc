@@ -94,6 +94,8 @@ export const zhCN: Messages = {
     "command.pagelessView": "无分页",
     "command.pageLayoutView": "页面布局",
     "command.notes": "备注",
+    "command.slideShowFromBeginning": "从头开始",
+    "command.slideShowFromCurrent": "从当前幻灯片开始",
     "command.previewSlide": "预览",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "单页",
@@ -252,6 +254,9 @@ export const zhCN: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "调整备注大小",
+
+    // Slide show
+    "slideShow.end": "放映结束，单击鼠标退出。",
 
     // Thumbnails
     "thumbnails.pages": "页面缩略图",

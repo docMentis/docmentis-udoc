@@ -42,6 +42,7 @@ import type {
     SearchMatchLocation,
     SearchOptions,
     SheetLayoutMode,
+    SlideShowInput,
     UrlFont,
 } from "@docmentis/udoc-wasm";
 import type {
@@ -131,7 +132,34 @@ export interface PreviewSlideRequest {
     canvas: OffscreenCanvas;
 }
 
-/** Stop the slide preview playing, if one is, before it ends. */
+/**
+ * Start a slide show of the open deck at slide `slide` (0-based) — or, absent,
+ * at the first slide it shows — on `canvas`, transferred, a canvas of the
+ * show's own that the host shows full screen, `width × height` device pixels:
+ * the deck a slide at a time, as PowerPoint's Slide Show plays it, in place of
+ * any show or preview playing. The worker draws it frame by frame as the show
+ * asks, posts a {@link SlideShowStatusReport} as it moves, and a
+ * {@link SlideShowEndedReport} if it can draw no further.
+ */
+export interface StartSlideShowRequest {
+    type: "startSlideShow";
+    slide?: number;
+    canvas: OffscreenCanvas;
+    width: number;
+    height: number;
+}
+
+/**
+ * A key, click or resize for the slide show playing — one of the engine's
+ * {@link SlideShowInput}s, or the first or last slide it shows. Fire-and-forget:
+ * where it moves the show to comes back as a {@link SlideShowStatusReport}.
+ */
+export interface SlideShowInputRequest {
+    type: "slideShowInput";
+    input: SlideShowInput | "firstSlide" | "lastSlide";
+}
+
+/** Stop the slide show or slide preview playing, if one is, before it ends. */
 export interface EndSlideShowRequest {
     type: "endSlideShow";
 }
@@ -1928,6 +1956,8 @@ export type WorkerRequest =
     | StartRequest
     | AttachRequest
     | PreviewSlideRequest
+    | StartSlideShowRequest
+    | SlideShowInputRequest
     | EndSlideShowRequest
     | AddViewerRequest
     | RegisterFontsRequest
@@ -2302,11 +2332,27 @@ export interface RenderErrorReport {
 }
 
 /**
- * Unsolicited: the slide preview playing has played to its end, or could draw
- * no further. Its last frame stays up for the host to take its canvas down.
+ * Unsolicited: the slide preview playing has played to its end, or the slide
+ * show or preview playing could draw no further. Its last frame stays up for
+ * the host to take its canvas down.
  */
 export interface SlideShowEndedReport {
     type: "slideShowEnded";
+}
+
+/** Where a slide show is. */
+export interface SlideShowPosition {
+    /** The slide it shows, by its index in the deck. */
+    slide: number;
+    /** How many of the slide's click groups have started. */
+    step: number;
+    /** Whether it has gone past its last slide, onto the black that ends it. */
+    ended: boolean;
+}
+
+/** Unsolicited: where the slide show playing is, posted as it moves. */
+export interface SlideShowStatusReport extends SlideShowPosition {
+    type: "slideShowStatus";
 }
 
 /**
@@ -2372,7 +2418,8 @@ export type WorkerOutbound =
     | PlanesReport
     | ComposedReport
     | RenderErrorReport
-    | SlideShowEndedReport;
+    | SlideShowEndedReport
+    | SlideShowStatusReport;
 
 // --- the local collaboration service ---------------------------------------
 

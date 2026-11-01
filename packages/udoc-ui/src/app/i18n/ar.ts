@@ -94,6 +94,8 @@ export const ar: Messages = {
     "command.pagelessView": "بلا صفحات",
     "command.pageLayoutView": "تخطيط الصفحة",
     "command.notes": "ملاحظات",
+    "command.slideShowFromBeginning": "من البداية",
+    "command.slideShowFromCurrent": "من الشريحة الحالية",
     "command.previewSlide": "معاينة",
     "command.stopSlidePreview": "إيقاف",
     "command.singleScroll": "مفرد",
@@ -252,6 +254,9 @@ export const ar: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "تغيير حجم الملاحظات",
+
+    // Slide show
+    "slideShow.end": "نهاية عرض الشرائح. انقر للخروج.",
 
     // Thumbnails
     "thumbnails.pages": "صور مصغرة للصفحات",

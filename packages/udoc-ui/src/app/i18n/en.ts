@@ -95,6 +95,8 @@ export const en: Messages = {
     "command.pagelessView": "Pageless",
     "command.pageLayoutView": "Page Layout",
     "command.notes": "Notes",
+    "command.slideShowFromBeginning": "From Beginning",
+    "command.slideShowFromCurrent": "From Current Slide",
     "command.previewSlide": "Preview",
     "command.stopSlidePreview": "Stop",
     "command.singleScroll": "Single",
@@ -253,6 +255,9 @@ export const en: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "Resize notes",
+
+    // Slide show
+    "slideShow.end": "End of slide show, click to exit.",
 
     // Thumbnails
     "thumbnails.pages": "Page thumbnails",

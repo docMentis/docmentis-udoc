@@ -94,6 +94,8 @@ export const zhTW: Messages = {
     "command.pagelessView": "不分頁",
     "command.pageLayoutView": "整頁模式",
     "command.notes": "備忘稿",
+    "command.slideShowFromBeginning": "從首張投影片",
+    "command.slideShowFromCurrent": "從目前投影片",
     "command.previewSlide": "預覽",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "單頁",
@@ -252,6 +254,9 @@ export const zhTW: Messages = {
 
     // Notes pane
     "notes.resizeHandle": "調整備忘稿大小",
+
+    // Slide show
+    "slideShow.end": "投影片放映結束，按一下即可結束。",
 
     // Thumbnails
     "thumbnails.pages": "頁面縮圖",

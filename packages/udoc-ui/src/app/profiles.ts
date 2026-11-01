@@ -43,13 +43,14 @@ const PORTABLE_ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLef
 
 /** Each doc type's View tab, around the guides an extension adds: before them
  *  its own views and how its pages scroll and are arranged, after them what
- *  shows beside the document, and last a deck's Preview of the slide shown. */
+ *  shows beside the document, then a deck's slide show, and last its Preview
+ *  of the slide shown. */
 const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; shows: readonly CommandId[] }>> = {
     portable: { pages: [...SCROLL, ...PORTABLE_ARRANGEMENT], shows: ["layers"] },
     wordprocessing: { pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT], shows: ["formattingMarks"] },
     presentation: {
         pages: ["normalView", "notesPageView", "slideMasterView", ...SCROLL],
-        shows: ["notes", "previewSlide"],
+        shows: ["notes", "slideShowFromBeginning", "slideShowFromCurrent", "previewSlide"],
     },
     image: { pages: [...SCROLL, "pageGap"], shows: [] },
     spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar"] },
@@ -68,7 +69,8 @@ const EDIT_VIEWS: ReadonlySet<string> = new Set<CommandId>(["slideMasterView"]);
  * pair up, the turn they're shown at, the gaps between them, `edit`'s `guides`
  * (an extension's, edit mode's ruler), then what shows beside the document —
  * a PDF's layers, a deck's notes, a word document's formatting marks, a
- * workbook's formula bar — and last a deck's Preview of the slide shown.
+ * workbook's formula bar — then a deck's slide show, From Beginning and From
+ * Current Slide, and last its Preview of the slide shown.
  */
 export function viewTab(docType: UDocType, edit?: { guides: readonly string[] }): ToolbarTab {
     const { pages, shows } = VIEW_COMMANDS[docType];

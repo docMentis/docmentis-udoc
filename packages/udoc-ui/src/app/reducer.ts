@@ -117,6 +117,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 renamingSlideSection: null,
                 renamingSheet: null,
                 slidePreviewing: false,
+                slideShowPlaying: false,
             };
 
         case "OPEN_SUCCESS": {
@@ -242,6 +243,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 scrollY: 0,
                 pageIndex: 0,
                 slidePreviewing: false,
+                slideShowPlaying: false,
             };
 
         case "DOC_RELAYOUT": {
@@ -334,6 +336,20 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "STOP_SLIDE_PREVIEW":
             return state.slidePreviewing ? { ...state, slidePreviewing: false } : state;
+
+        case "START_SLIDE_SHOW":
+            // A deck's alone, once it is open; it takes the place of a preview
+            // playing.
+            if (state.status !== "ready" || state.docType !== "presentation") return state;
+            return {
+                ...state,
+                slideShowRequest: { slide: action.slide, seq: state.slideShowRequest.seq + 1 },
+                slideShowPlaying: true,
+                slidePreviewing: false,
+            };
+
+        case "END_SLIDE_SHOW":
+            return state.slideShowPlaying ? { ...state, slideShowPlaying: false } : state;
 
         case "SET_PRESENTATION_VIEW": {
             // A deck shows it on its plane; one still opening, once its roster
