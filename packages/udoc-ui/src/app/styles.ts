@@ -2280,7 +2280,9 @@ export const uiStyles = css`
     /* A deck's presenter view (PresenterView): over the whole UI, as the show
    is here — the timer and the time along the top, the slide as the audience
    sees it and the buttons that step it on the left, the next slide and the
-   notes on the right. */
+   notes on the right. Its text is the buttons' size, and its buttons the
+   text's font rather than the browser's for a control, as the two stand side
+   by side here. */
     .udoc-ui-root .udoc-ui__presenter {
         position: absolute;
         inset: 0;
@@ -2289,7 +2291,11 @@ export const uiStyles = css`
         flex-direction: column;
         background: var(--udoc-color-surface-container-low);
         color: var(--udoc-color-on-surface);
+        font-size: var(--udoc-btn-font);
         outline: none;
+    }
+    .udoc-ui-root .udoc-ui__presenter button {
+        font-family: inherit;
     }
     .udoc-ui-root .udoc-ui__presenter-bar,
     .udoc-ui-root .udoc-ui__presenter-nav,

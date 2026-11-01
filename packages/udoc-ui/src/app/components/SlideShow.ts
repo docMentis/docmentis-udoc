@@ -249,6 +249,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         const root = doc.createElement("div");
         root.className = host.className;
         root.style.cssText = host.style.cssText;
+        carryFont(host, root);
         Object.assign(root.style, { position: "fixed", inset: "0" });
         const stage = doc.createElement("div");
         stage.className = "udoc-ui__slide-show-stage";
@@ -672,6 +673,30 @@ export type SlideShow = ReturnType<typeof createSlideShow>;
  *  none where it can't. */
 function hasOtherScreen(): boolean {
     return (screen as Screen & { isExtended?: boolean }).isExtended === true;
+}
+
+/** The text properties the UI's root inherits from the page it stands on. */
+const FONT_PROPERTIES = [
+    "font-family",
+    "font-size",
+    "font-style",
+    "font-weight",
+    "line-height",
+    "letter-spacing",
+    "-webkit-font-smoothing",
+    "-moz-osx-font-smoothing",
+];
+
+/** Give `root`, a window of its own's, the text `host` inherits from the page
+ *  the UI stands on, which the window's blank page has none of: the browser's
+ *  serif in its place. A web font the page loads stays the page's: the window
+ *  falls back past it. */
+function carryFont(host: HTMLElement, root: HTMLElement): void {
+    const style = getComputedStyle(host);
+    for (const name of FONT_PROPERTIES) {
+        const value = style.getPropertyValue(name);
+        if (value) root.style.setProperty(name, value);
+    }
 }
 
 /** A window of its own for the audience's screen: half the screen's width
