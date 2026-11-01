@@ -1391,6 +1391,16 @@ export class WorkerClient {
             this.#send({ type: "slidesShow", indices: [...indices] }) as Promise<boolean[]>,
 
         /**
+         * Whether a slide show plays anything on each slide at `indices`
+         * (0-based, in slide order) — a transition, or an animation — one
+         * answer per index, loading each slide on first read; `false` where
+         * there is none to read. A read: what the thumbnails mark a slide's
+         * Preview by.
+         */
+        slidesPlay: (indices: readonly number[]): Promise<boolean[]> =>
+            this.#send({ type: "slidesPlay", indices: [...indices] }) as Promise<boolean[]>,
+
+        /**
          * Every slide master of the open deck, in order, summarized: its id, its
          * slide layouts' ids and names, and the plane and page it renders on —
          * the slide masters', each followed by its slide layouts. Loads every

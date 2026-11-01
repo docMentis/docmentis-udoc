@@ -1223,6 +1223,17 @@ export interface SlidesShowRequest {
 }
 
 /**
+ * Read whether a slide show plays anything on each slide at `indices` (0-based,
+ * in slide order) — a transition, or an animation — loading each slide on first
+ * read. Replies with a `boolean[]`, one per index: `false` where there is none
+ * to read (no presentation open, past the last slide).
+ */
+export interface SlidesPlayRequest {
+    type: "slidesPlay";
+    indices: number[];
+}
+
+/**
  * Read every slide master of the open deck, summarized: its id, its slide
  * layouts' ids and names, and the plane and page it renders on — the slide
  * masters', each followed by its slide layouts. Loads every slide master and
@@ -2008,6 +2019,7 @@ export type WorkerRequest =
     | PageMediaRequest
     | MediaDataRequest
     | SlidesShowRequest
+    | SlidesPlayRequest
     | SlideMastersRequest
     | SlideCountRequest
     | SlideLayoutIdRequest

@@ -2371,6 +2371,12 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, session ? slidesShow(session, msg.indices) : msg.indices.map(() => true));
                 break;
             }
+            case "slidesPlay": {
+                // A read that loads each slide on first use. Playing nothing
+                // where there is none to read.
+                reply(id, session ? slidesPlay(session, msg.indices) : msg.indices.map(() => false));
+                break;
+            }
             case "slideMasters": {
                 // A read that loads every slide master and slide layout. None
                 // with no open / non-presentation doc.
@@ -2817,6 +2823,17 @@ function slidesShow(s: WasmSession, indices: readonly number[]): boolean[] {
     return indices.map((index) => {
         const id = ids[index];
         return id === undefined || safeRead(() => s.presentation.model.slide(id).show(), true);
+    });
+}
+
+/** Whether a slide show plays anything on each slide at `indices` — a
+ *  transition, or an animation — `false` for an index past the last slide, or
+ *  one that won't read. */
+function slidesPlay(s: WasmSession, indices: readonly number[]): boolean[] {
+    const ids = safeRead(() => s.presentation.model.root.slideIds(), []);
+    return indices.map((index) => {
+        const id = ids[index];
+        return id !== undefined && safeRead(() => s.presentation.model.slide(id).plays(), false);
     });
 }
 

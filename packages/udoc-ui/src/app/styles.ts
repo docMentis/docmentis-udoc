@@ -732,6 +732,45 @@ export const uiStyles = css`
         font-weight: 500;
     }
 
+    /* A deck's card, numbered as PowerPoint numbers its slides: a column left
+   of the slide (ThumbnailPanel's NUMBER_GUTTER) holds its number at the top
+   and, under it, the Preview mark of a slide that plays a transition or an
+   animation, pressed to play it in place. */
+    .udoc-ui-root .udoc-thumbnail-item--number-left {
+        padding-left: 28px;
+    }
+    .udoc-ui-root .udoc-thumbnail-item--number-left .udoc-thumbnail-item__label {
+        position: absolute;
+        top: 12px;
+        left: 4px;
+        width: 20px;
+    }
+    .udoc-ui-root .udoc-thumbnail-item__play {
+        position: absolute;
+        top: 28px;
+        left: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--udoc-color-on-surface-variant);
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-thumbnail-item__play[hidden] {
+        display: none;
+    }
+    .udoc-ui-root .udoc-thumbnail-item__play:hover {
+        color: var(--udoc-color-on-surface);
+    }
+    .udoc-ui-root .udoc-thumbnail-item__play svg {
+        width: 16px;
+        height: 16px;
+    }
+
     /* A hidden slide, which the slide show skips: its page fades and its
    number is struck through. */
     .udoc-ui-root .udoc-thumbnail-item--hidden .udoc-thumbnail-item__canvas {
@@ -772,6 +811,13 @@ export const uiStyles = css`
         top: 50%;
         width: 12px;
         border-top-width: 1px;
+    }
+
+    /* A numbered-left layout's slide stands past the empty number column: the
+   turn reaches on across it, ending as short of the slide as it ends of an
+   unnumbered one. */
+    .udoc-ui-root .udoc-thumbnail-item--number-left.udoc-thumbnail-item--layout::after {
+        width: 28px;
     }
 
     /* A deck section's header, above its slides: a toggle folding them away,

@@ -9,7 +9,7 @@ import type { WorkerClient } from "../../worker/WorkerClient.js";
 import type { Action } from "../actions.js";
 import { IMAGE_PAGE_MENU, PAGE_MENU, SECTION_MENU, SLIDE_MENU } from "../commands.js";
 import type { MenuItem } from "../commands.js";
-import { ICON_CHEVRON_DOWN, ICON_CHEVRON_RIGHT } from "../icons.js";
+import { ICON_CHEVRON_DOWN, ICON_CHEVRON_RIGHT, ICON_SLIDE_PLAYS } from "../icons.js";
 import { reorderTo } from "../page-order.js";
 import { pageRows, thumbnailRows } from "../thumbnail-rows.js";
 import type { ThumbnailRow } from "../thumbnail-rows.js";
@@ -53,7 +53,11 @@ import { MAC } from "./controls.js";
  * selected pages out of the strip, stacked, to drop them in a gap.
  *
  * A deck's hidden slides, which its slide show skips, are faded in every mode,
- * their number struck through — read, like the sizes, as their items mount.
+ * their number struck through; and a slide a slide show plays anything on — a
+ * transition, an animation — carries a Preview mark, which plays it in place.
+ * Both are read, like the sizes, as their items mount. A deck numbers its
+ * slides as PowerPoint does, in a column left of each, the mark under the
+ * number; every other document numbers its pages under them.
  *
  * A deck's sections head their slides in every mode, each header folding its
  * slides away or back — so the strip is a list of rows, a page's or a header's,
@@ -86,8 +90,13 @@ const OVERSCAN = 3;
 const SIDE_PAD = 12;
 /** Top padding above the first item. */
 const TOP_PAD = 12;
-/** Label area under each thumbnail (the page-number text plus its top gap). */
+/** Label area under each thumbnail (the page-number text plus its top gap) —
+ *  but a deck's, whose number stands beside its slide. */
 const LABEL_H = 18;
+/** The column left of a deck's slide its number and Preview mark stand in, at
+ *  its top, as PowerPoint numbers its slides (matches the numbered-left card's
+ *  extra `padding-left` in styles.ts). */
+const NUMBER_GUTTER = 16;
 /** Padding inside the card, around the page and below the label — the gap
  *  between the card edge and the page (matches the `padding` in styles.ts). */
 const CARD_PAD = 12;
@@ -123,6 +132,9 @@ interface ThumbItem {
     canvas: HTMLCanvasElement;
     /** The number under the page: its own, or its slide master's. */
     label: HTMLDivElement;
+    /** The Preview mark under the number, shown on a slide that plays
+     *  anything. */
+    play: HTMLButtonElement;
     /** Cache key (`page:scale`) last drawn, so an unchanged re-show is a no-op. */
     drawnKey: string | null;
 }
@@ -335,8 +347,12 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     const sizing = new Set<number>();
     /** A deck's slides read hidden from its slide show, by page index. */
     const hidden = new Set<number>();
-    /** The slides whose show has been read since the deck last changed — a hide
-     *  changes it, and a move or an insert puts another slide at the index. */
+    /** A deck's slides read to play a transition or an animation, by page
+     *  index. */
+    const playing = new Set<number>();
+    /** The slides whose show — and whether they play — has been read since the
+     *  deck last changed: a hide changes it, and a move or an insert puts
+     *  another slide at the index. */
     const showRead = new Set<number>();
     /** Slides whose show is being read, so a read isn't sent twice. */
     const showReading = new Set<number>();
@@ -369,17 +385,19 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         return roles.get(page)?.kind === "slideLayout";
     }
 
-    /** The width page `page` is drawn at: the strip's, or a slide layout's, its
-     *  indent narrower. */
+    /** The width page `page` is drawn at: the strip's, a deck's slide its
+     *  number's column narrower, and a slide layout its indent narrower again. */
     function pageWidth(page: number): number {
-        return isLayout(page) ? Math.max(0, thumbWidth - LAYOUT_INDENT) : thumbWidth;
+        const inset = (isLayout(page) ? LAYOUT_INDENT : 0) + (slides() ? NUMBER_GUTTER : 0);
+        return Math.max(0, thumbWidth - inset);
     }
 
     /** Card height of one item: the padded box the tint/outline hugs — the
-     *  scaled thumbnail plus its vertical padding and label (a slide layout has
-     *  none), but *not* the inter-card gap. */
+     *  scaled thumbnail plus its vertical padding and the label under it (a
+     *  deck's stands beside it, and a slide layout has none), but *not* the
+     *  inter-card gap. */
     function cardHeight(page: number): number {
-        const inner = (isLayout(page) ? 0 : LABEL_H) + 2 * CARD_PAD;
+        const inner = (isLayout(page) || slides() ? 0 : LABEL_H) + 2 * CARD_PAD;
         if (thumbWidth <= 0) return inner;
         return Math.round(pageWidth(page) / aspect(page)) + inner;
     }
@@ -540,6 +558,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         const current = page === slice.currentPage;
         const isSelected = slice.picking ? selected.has(page) : current;
         const isHidden = hidden.has(page);
+        item.container.classList.toggle("udoc-thumbnail-item--number-left", slides());
         item.container.classList.toggle("udoc-thumbnail-item--selected", current || isSelected);
         item.container.classList.toggle("udoc-dragging", isSelected && press?.dragging === true);
         item.container.classList.toggle("udoc-thumbnail-item--hidden", isHidden);
@@ -549,6 +568,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         item.container.classList.toggle("udoc-thumbnail-item--last-layout", role?.kind === "slideLayout" && role.last);
         item.label.textContent = role?.kind === "slideMaster" ? String(role.number) : String(page + 1);
         item.label.hidden = role?.kind === "slideLayout";
+        item.play.hidden = role !== undefined || !playing.has(page);
         const name = itemName(page, isHidden);
         item.container.setAttribute("aria-label", name);
         // In the Slide Master view, what each is shows on hover, as PowerPoint's
@@ -581,7 +601,26 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         container.addEventListener("click", () => {
             if (!slice.picking) navigateTo(page);
         });
-        return { container, canvas, label, drawnKey: null };
+
+        // The slide shown, then previewed in place, as the View tab's Preview
+        // plays it.
+        const play = document.createElement("button");
+        play.type = "button";
+        play.className = "udoc-thumbnail-item__play";
+        play.tabIndex = -1;
+        play.hidden = true;
+        play.innerHTML = ICON_SLIDE_PLAYS;
+        const preview = i18n.t("command.previewSlide");
+        play.title = preview;
+        play.setAttribute("aria-label", preview);
+        play.addEventListener("pointerdown", (ev) => ev.stopPropagation());
+        play.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            navigateTo(page);
+            store?.dispatch({ type: "PREVIEW_SLIDE" });
+        });
+        container.appendChild(play);
+        return { container, canvas, label, play, drawnKey: null };
     }
 
     // --- section headers -------------------------------------------------
@@ -741,7 +780,8 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     }
 
     /** Read whether a slide show shows each mounted slide not read since the
-     *  deck last changed, in one round trip, and mark the hidden ones. */
+     *  deck last changed, and whether it plays anything on it, and mark the
+     *  hidden ones and the ones that play. */
     async function readShow(): Promise<void> {
         // The slide masters' pages are no slides a slide show could skip.
         if (!client || !slides() || slice.plane !== 0 || store?.getState().status !== "ready") return;
@@ -751,7 +791,10 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         const generation = changeGeneration;
         let stale = false;
         try {
-            const show = await client.presentation.slidesShow(pages);
+            const [show, plays] = await Promise.all([
+                client.presentation.slidesShow(pages),
+                client.presentation.slidesPlay(pages),
+            ]);
             if (!mounted) return;
             // Read before the deck last changed: re-read them.
             if (generation !== changeGeneration) {
@@ -762,6 +805,8 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
                 showRead.add(page);
                 if (show[i]) hidden.delete(page);
                 else hidden.add(page);
+                if (plays[i]) playing.add(page);
+                else playing.delete(page);
                 const item = items.get(page);
                 if (item) markItem(item, page);
             });
@@ -1423,6 +1468,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
             measured.clear();
             sizing.clear();
             hidden.clear();
+            playing.clear();
             showRead.clear();
             showReading.clear();
             typicalAspect = DEFAULT_ASPECT;
