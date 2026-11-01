@@ -263,7 +263,7 @@ export interface SegmentButton<T> {
 
 /**
  * A segment button: the choices of one setting, one of them pressed at a time
- * — a radio group. Its buttons butt together like a button group's, square but
+ * — a radio group. Its buttons butt together inside one border, square but
  * for the control's two outer ends. A click calls `onSelect` with the choice's
  * value; the caller, which owns the setting, shows it with
  * {@link SegmentButton.select}.

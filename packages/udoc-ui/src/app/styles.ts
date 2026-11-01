@@ -1046,26 +1046,35 @@ export const uiStyles = css`
     }
 
     /* Segment button — the choices of one setting, one pressed at a time (the
-   View tab's views and how the pages scroll). Unframed and butted
-   together like a button group, but one control: its buttons are square, and
-   only its two outer ends round, so a tint on an end choice rounds on the
-   outside alone and a middle one's is a plain rectangle. Logical corners, so a
-   right-to-left row rounds the right ends. */
+   View tab's views and how the pages scroll). Butted together like a button
+   group, but one control holding one value, so it is framed: in the lighter
+   outline-variant, a frame round its choices rather than a field's darker
+   border (see .udoc-btn--field), and inside a button's height, as a field's
+   border is, so it lines up with the buttons beside it. Its buttons are
+   square, and only its two outer ends round, just inside the frame's
+   corners, so a tint on an end choice rounds on the outside alone and a
+   middle one's is a plain rectangle. Logical corners, so a right-to-left row
+   rounds the right ends. */
     .udoc-ui-root .udoc-segment {
         display: inline-flex;
         align-items: center;
         gap: 0;
+        height: var(--udoc-btn-h);
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: var(--udoc-btn-radius);
+        box-sizing: border-box;
     }
     .udoc-ui-root .udoc-segment > .udoc-btn {
+        height: 100%;
         border-radius: 0;
     }
     .udoc-ui-root .udoc-segment > .udoc-btn:first-child {
-        border-start-start-radius: var(--udoc-btn-radius);
-        border-end-start-radius: var(--udoc-btn-radius);
+        border-start-start-radius: calc(var(--udoc-btn-radius) - 1px);
+        border-end-start-radius: calc(var(--udoc-btn-radius) - 1px);
     }
     .udoc-ui-root .udoc-segment > .udoc-btn:last-child {
-        border-start-end-radius: var(--udoc-btn-radius);
-        border-end-end-radius: var(--udoc-btn-radius);
+        border-start-end-radius: calc(var(--udoc-btn-radius) - 1px);
+        border-end-end-radius: calc(var(--udoc-btn-radius) - 1px);
     }
 
     /* Labeled content: a leading icon is spaced from the label by the gap (this is
@@ -1101,9 +1110,10 @@ export const uiStyles = css`
     }
 
     /* Field variant: a bordered trigger (a mode switch). The border is the one
-   signal that a control *holds a value* — it never groups buttons;
-   the same border marks .udoc-toolbar__page-input, so every field reads as the
-   same kind of thing.
+   signal that a control *holds a value* — it never groups buttons that are
+   not one value (a .udoc-segment is one, framed lighter); the same border
+   marks .udoc-toolbar__page-input, so every field reads as the same kind of
+   thing.
 
    A field is an outline and no fill of its own, so it looks the same on every
    plane it sits on and inherits the base button's hover / pressed overlay

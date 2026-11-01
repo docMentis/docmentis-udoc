@@ -35,6 +35,8 @@ listed once, by package. Its major and minor version are those of the
 - A word document's View tab no longer offers Rotate View, and its pages
   show upright: the `pageRotation` option and `setPageRotation` turn a PDF's
   pages alone.
+- The View tab's choices of one setting — the views, how the pages scroll —
+  sit inside one light border, so each set reads as one control.
 
 #### Fixed
 
