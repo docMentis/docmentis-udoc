@@ -4,7 +4,13 @@
 import { allowsEdit, ICON_FILL, ICON_STROKE, ICON_TEXT_HIGHLIGHT } from "@docmentis/udoc-ui/internal";
 import type { CommandDef } from "@docmentis/udoc-ui/internal";
 import { OBJECT_ARRANGE_MENU, SHAPE_ARRANGE_MENU } from "./arrange.js";
-import { fontFamilyControl, fontSizeControl, listControl, textFormatControl } from "./components/TextControls.js";
+import {
+    fontFamilyControl,
+    fontSizeControl,
+    listControl,
+    paragraphStyleControl,
+    textFormatControl,
+} from "./components/TextControls.js";
 import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_ARRANGE,
@@ -16,6 +22,7 @@ import {
     ICON_LIST_BULLET,
     ICON_LIST_NUMBER,
     ICON_PARAGRAPH_LEFT,
+    ICON_PARAGRAPH_STYLE,
     ICON_STRIKETHROUGH,
     ICON_SUBSCRIPT,
     ICON_SUPERSCRIPT,
@@ -28,6 +35,7 @@ import {
     LINE_SPACING_MENU,
     PARAGRAPH_ALIGN_MENU,
     whenParagraphFormat,
+    whenParagraphStyle,
     whenTextFormat,
     whenWidthScale,
     WIDTH_SCALE_MENU,
@@ -57,7 +65,20 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
         enabledWhen: whenTextFormat,
     });
     return {
-        // Text tab — the font picker, the point-size field, then the Bold /
+        // Text tab — first the style picker, the paragraph style the touched
+        // paragraphs are in, a value field of its own group: the broadest
+        // control, which the rest refine. A word document's alone, gated on the
+        // engine's `applyParagraphStyle`, which only a document with styles
+        // grants.
+        paragraphStyle: {
+            id: "paragraphStyle",
+            label: "command.paragraphStyle",
+            icon: ICON_PARAGRAPH_STYLE,
+            group: "paragraphStyle",
+            run: { kind: "control", create: (env) => paragraphStyleControl(env, "paragraphStyle", tools()) },
+            enabledWhen: whenParagraphStyle,
+        },
+        // Then the font picker, the point-size field, then the Bold /
         // Italic toggles. Each mirrors the selection's resolved format and
         // lowers to a character-property text edit, so all gate on the engine's
         // text `setCharacterProperties` capability (`whenTextFormat`): live over

@@ -1567,6 +1567,10 @@ export type SelectionEdit =
      *  Decrease Indent. Relative rather than a measure, so each paragraph steps
      *  from its own value and the engine decides what one step means for it. */
     | { kind: "indentParagraphs"; delta: number }
+    /** Word: put those paragraphs in paragraph style `style` (an id from the
+     *  document's style list), clearing their direct formatting as Word does;
+     *  `null` names none. */
+    | { kind: "applyParagraphStyle"; style: string | null }
     /** Table: a structural edit on the table the selection sits in — insert or
      *  delete a row or column, merge or split the selected block. The tsify type
      *  itself, already in its wire form (`{ insertRows: { before, count } }`,

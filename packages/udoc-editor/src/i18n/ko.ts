@@ -70,6 +70,7 @@ export const ko: EditMessages = {
     "command.insertShape": "도형",
     "command.cropPage": "자르기",
     "command.resizePage": "이미지 크기",
+    "command.paragraphStyle": "단락 스타일",
     "command.fontFamily": "글꼴",
     "command.fontSize": "크기",
     "command.bold": "굵게",
@@ -104,6 +105,18 @@ export const ko: EditMessages = {
     "ribbon.noMatchingFonts": "일치하는 글꼴 없음",
     "ribbon.listOptions": "{label} 옵션",
     "ribbon.listStyles": "{label} 스타일",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "표준",
+    "paragraphStyle.noSpacing": "간격 없음",
+    "paragraphStyle.heading": "제목 {level}",
+    "paragraphStyle.title": "제목",
+    "paragraphStyle.subtitle": "부제",
+    "paragraphStyle.quote": "인용",
+    "paragraphStyle.intenseQuote": "강한 인용",
+    "paragraphStyle.listParagraph": "목록 단락",
+    "paragraphStyle.normalWeb": "표준(웹)",
+    "paragraphStyle.htmlPreformatted": "미리 서식이 지정된 HTML",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "왼쪽 맞춤",

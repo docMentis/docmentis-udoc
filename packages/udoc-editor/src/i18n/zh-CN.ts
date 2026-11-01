@@ -70,6 +70,7 @@ export const zhCN: EditMessages = {
     "command.insertShape": "形状",
     "command.cropPage": "裁剪",
     "command.resizePage": "图像大小",
+    "command.paragraphStyle": "段落样式",
     "command.fontFamily": "字体",
     "command.fontSize": "字号",
     "command.bold": "加粗",
@@ -104,6 +105,18 @@ export const zhCN: EditMessages = {
     "ribbon.noMatchingFonts": "没有匹配的字体",
     "ribbon.listOptions": "{label}选项",
     "ribbon.listStyles": "{label}样式",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "正文",
+    "paragraphStyle.noSpacing": "无间隔",
+    "paragraphStyle.heading": "标题 {level}",
+    "paragraphStyle.title": "标题",
+    "paragraphStyle.subtitle": "副标题",
+    "paragraphStyle.quote": "引用",
+    "paragraphStyle.intenseQuote": "明显引用",
+    "paragraphStyle.listParagraph": "列表段落",
+    "paragraphStyle.normalWeb": "普通(网站)",
+    "paragraphStyle.htmlPreformatted": "HTML 预设格式",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "左对齐",

@@ -70,6 +70,7 @@ export const fr: EditMessages = {
     "command.insertShape": "Formes",
     "command.cropPage": "Rogner",
     "command.resizePage": "Taille de l'image",
+    "command.paragraphStyle": "Style de paragraphe",
     "command.fontFamily": "Police",
     "command.fontSize": "Taille",
     "command.bold": "Gras",
@@ -104,6 +105,18 @@ export const fr: EditMessages = {
     "ribbon.noMatchingFonts": "Aucune police correspondante",
     "ribbon.listOptions": "Options : {label}",
     "ribbon.listStyles": "Styles : {label}",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "Normal",
+    "paragraphStyle.noSpacing": "Sans interligne",
+    "paragraphStyle.heading": "Titre {level}",
+    "paragraphStyle.title": "Titre",
+    "paragraphStyle.subtitle": "Sous-titre",
+    "paragraphStyle.quote": "Citation",
+    "paragraphStyle.intenseQuote": "Citation intense",
+    "paragraphStyle.listParagraph": "Paragraphe de liste",
+    "paragraphStyle.normalWeb": "Normal (Web)",
+    "paragraphStyle.htmlPreformatted": "Préformaté HTML",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "Aligner à gauche",

@@ -668,6 +668,21 @@ export const editorStyles = css`
         width: 116px;
     }
 
+    /* Text tab's style picker — a fixed-width field like the font picker, so a
+   long style name doesn't shift the controls beside it; the name is cut short
+   with an ellipsis, the caret kept at the right edge. */
+    .udoc-ui-root .udoc-style-select {
+        width: 124px;
+    }
+    .udoc-ui-root .udoc-style-select .udoc-btn__label {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        text-align: start;
+    }
+
     /* Font picker rows: the name fills the row, cut short with an ellipsis. */
     .udoc-ui-root .udoc-font-item .udoc-menu__item-label {
         flex: 1 1 auto;

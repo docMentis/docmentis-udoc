@@ -1,6 +1,6 @@
 // Edit mode's calls on the render worker: the requests its own handlers answer
 // (worker/handlers.ts), sent through the shell's client.
-import type { FontFamily, FontFamilySummary, UDocFragment } from "@docmentis/udoc-wasm";
+import type { FontFamily, FontFamilySummary, ParagraphStyleSummary, UDocFragment } from "@docmentis/udoc-wasm";
 import type { DocumentLayout } from "@docmentis/udoc-ui";
 import type { SelectionHandle, ThemePalette, UIShellHost, WorkerClient } from "@docmentis/udoc-ui/internal";
 import type { EditRequest, FontPreviewImage } from "./worker/protocol.js";
@@ -70,6 +70,19 @@ export class EditClient {
      */
     fontFamilySummaries(): Promise<FontFamilySummary[]> {
         return this.#request({ type: "fontFamilySummaries" });
+    }
+
+    /**
+     * Read the open word document's paragraph styles, in its style gallery's
+     * order — the default first, then by Word's priority — each flagged
+     * `inGallery` where the gallery offers it. Every style is listed, so the
+     * picker can name the one a paragraph is in even where its menu leaves
+     * that one out. Fixed for the document, so pull this once on open. `[]`
+     * when no document is open, for any other doc type, and for a document
+     * with no styles.
+     */
+    paragraphStyleSummaries(): Promise<ParagraphStyleSummary[]> {
+        return this.#request({ type: "paragraphStyleSummaries" });
     }
 
     /**

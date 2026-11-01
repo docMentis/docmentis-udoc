@@ -70,6 +70,7 @@ export const ja: EditMessages = {
     "command.insertShape": "図形",
     "command.cropPage": "トリミング",
     "command.resizePage": "画像サイズ",
+    "command.paragraphStyle": "段落スタイル",
     "command.fontFamily": "フォント",
     "command.fontSize": "サイズ",
     "command.bold": "太字",
@@ -104,6 +105,18 @@ export const ja: EditMessages = {
     "ribbon.noMatchingFonts": "一致するフォントがありません",
     "ribbon.listOptions": "{label}のオプション",
     "ribbon.listStyles": "{label}のスタイル",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "標準",
+    "paragraphStyle.noSpacing": "行間詰め",
+    "paragraphStyle.heading": "見出し {level}",
+    "paragraphStyle.title": "表題",
+    "paragraphStyle.subtitle": "副題",
+    "paragraphStyle.quote": "引用文",
+    "paragraphStyle.intenseQuote": "引用文 2",
+    "paragraphStyle.listParagraph": "リスト段落",
+    "paragraphStyle.normalWeb": "標準 (Web)",
+    "paragraphStyle.htmlPreformatted": "HTML 書式付き",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "左揃え",

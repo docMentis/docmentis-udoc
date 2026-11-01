@@ -60,6 +60,13 @@ listed once, by package. Its major and minor version are those of the
   a shape is drawn in the deck's theme, as PowerPoint draws one it inserts,
   holding centred text to type, and a line is a connector. Over an image a
   shape is drawn in the markup red as before. A PDF keeps its four shapes.
+- A word document's Text tab opens with a paragraph style picker: it shows
+  the style the selected paragraphs are in and offers the document's style
+  gallery, as Word lists it. A pick puts the paragraphs in that style and
+  clears their direct formatting, as Word does, and Enter at the end of a
+  heading starts body text. A Markdown or HTML document offers body text,
+  the headings, a quote and a code block; a text file has no styles to
+  offer, and a deck's Text tab has no picker.
 
 #### Changed
 

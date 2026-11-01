@@ -71,6 +71,7 @@ export const en: EditMessages = {
     "command.insertShape": "Shapes",
     "command.cropPage": "Crop",
     "command.resizePage": "Image Size",
+    "command.paragraphStyle": "Paragraph Style",
     "command.fontFamily": "Font",
     "command.fontSize": "Size",
     "command.bold": "Bold",
@@ -105,6 +106,18 @@ export const en: EditMessages = {
     "ribbon.noMatchingFonts": "No matching fonts",
     "ribbon.listOptions": "{label} Options",
     "ribbon.listStyles": "{label} styles",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "Normal",
+    "paragraphStyle.noSpacing": "No Spacing",
+    "paragraphStyle.heading": "Heading {level}",
+    "paragraphStyle.title": "Title",
+    "paragraphStyle.subtitle": "Subtitle",
+    "paragraphStyle.quote": "Quote",
+    "paragraphStyle.intenseQuote": "Intense Quote",
+    "paragraphStyle.listParagraph": "List Paragraph",
+    "paragraphStyle.normalWeb": "Normal (Web)",
+    "paragraphStyle.htmlPreformatted": "HTML Preformatted",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "Align Left",

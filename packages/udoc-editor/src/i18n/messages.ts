@@ -129,6 +129,8 @@ export interface Messages extends UIMessages {
     "command.cropPage": string;
     /** Image Size */
     "command.resizePage": string;
+    /** Paragraph Style */
+    "command.paragraphStyle": string;
     /** Font */
     "command.fontFamily": string;
     /** Size */
@@ -191,6 +193,28 @@ export interface Messages extends UIMessages {
     "ribbon.listOptions": string;
     /** {label} styles */
     "ribbon.listStyles": string;
+
+    // Paragraph Style — Word's built-in styles, by the names Word gives them
+    /** Normal */
+    "paragraphStyle.normal": string;
+    /** No Spacing */
+    "paragraphStyle.noSpacing": string;
+    /** Heading {level} */
+    "paragraphStyle.heading": string;
+    /** Title */
+    "paragraphStyle.title": string;
+    /** Subtitle */
+    "paragraphStyle.subtitle": string;
+    /** Quote */
+    "paragraphStyle.quote": string;
+    /** Intense Quote */
+    "paragraphStyle.intenseQuote": string;
+    /** List Paragraph */
+    "paragraphStyle.listParagraph": string;
+    /** Normal (Web) */
+    "paragraphStyle.normalWeb": string;
+    /** HTML Preformatted */
+    "paragraphStyle.htmlPreformatted": string;
 
     // Align & Indent, Line & Paragraph Spacing
     /** Align Left */

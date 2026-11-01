@@ -58,6 +58,19 @@ export interface FontFamilySummariesRequest {
 }
 
 /**
+ * Read the open word document's paragraph styles, in its style gallery's
+ * order — the default first, then by Word's priority — each flagged
+ * `inGallery` where the gallery offers it. Replies with a
+ * `ParagraphStyleSummary[]`; empty when no document is open, for any other doc
+ * type, and for a document with no styles (a text file). Every style is
+ * listed, so the picker can name the one a paragraph is in even where its menu
+ * leaves that one out. Fixed for the document, so pull it once on open.
+ */
+export interface ParagraphStyleSummariesRequest {
+    type: "paragraphStyleSummaries";
+}
+
+/**
  * Read the families that are **loaded** — parsed and in hand this moment — a
  * subset of {@link FontFamilySummariesRequest}'s answer, in the same order. Replies
  * with a `string[]`.
@@ -198,6 +211,7 @@ export type EditRequest =
     | SetPlaceholderPromptsRequest
     | ThemePaletteRequest
     | FontFamilySummariesRequest
+    | ParagraphStyleSummariesRequest
     | LoadedFontFamilyNamesRequest
     | FontFamiliesRequest
     | RenderFontPreviewRequest

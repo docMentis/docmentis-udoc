@@ -70,6 +70,7 @@ export const ptBR: EditMessages = {
     "command.insertShape": "Formas",
     "command.cropPage": "Cortar",
     "command.resizePage": "Tamanho da imagem",
+    "command.paragraphStyle": "Estilo de Parágrafo",
     "command.fontFamily": "Fonte",
     "command.fontSize": "Tamanho",
     "command.bold": "Negrito",
@@ -104,6 +105,18 @@ export const ptBR: EditMessages = {
     "ribbon.noMatchingFonts": "Nenhuma fonte correspondente",
     "ribbon.listOptions": "Opções de {label}",
     "ribbon.listStyles": "Estilos de {label}",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "Normal",
+    "paragraphStyle.noSpacing": "Sem Espaçamento",
+    "paragraphStyle.heading": "Título {level}",
+    "paragraphStyle.title": "Título",
+    "paragraphStyle.subtitle": "Subtítulo",
+    "paragraphStyle.quote": "Citação",
+    "paragraphStyle.intenseQuote": "Citação Intensa",
+    "paragraphStyle.listParagraph": "Parágrafo da Lista",
+    "paragraphStyle.normalWeb": "Normal (Web)",
+    "paragraphStyle.htmlPreformatted": "Pré-formatação HTML",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "Alinhar à Esquerda",

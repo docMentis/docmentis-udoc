@@ -70,6 +70,7 @@ export const zhTW: EditMessages = {
     "command.insertShape": "圖案",
     "command.cropPage": "裁剪",
     "command.resizePage": "影像大小",
+    "command.paragraphStyle": "段落樣式",
     "command.fontFamily": "字型",
     "command.fontSize": "大小",
     "command.bold": "粗體",
@@ -104,6 +105,18 @@ export const zhTW: EditMessages = {
     "ribbon.noMatchingFonts": "沒有相符的字型",
     "ribbon.listOptions": "{label}選項",
     "ribbon.listStyles": "{label}樣式",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "內文",
+    "paragraphStyle.noSpacing": "無間距",
+    "paragraphStyle.heading": "標題 {level}",
+    "paragraphStyle.title": "標題",
+    "paragraphStyle.subtitle": "副標題",
+    "paragraphStyle.quote": "引文",
+    "paragraphStyle.intenseQuote": "鮮明引文",
+    "paragraphStyle.listParagraph": "清單段落",
+    "paragraphStyle.normalWeb": "內文 (Web)",
+    "paragraphStyle.htmlPreformatted": "HTML 預設格式",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "靠左對齊",

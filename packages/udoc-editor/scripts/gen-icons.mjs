@@ -42,6 +42,7 @@ const ICONS = {
     ICON_CROP_RESET: "crop_free",
 
     // Text tab
+    ICON_PARAGRAPH_STYLE: "style",
     ICON_FONTS: "font_download",
     ICON_FONT_SIZE: "format_size",
     ICON_BOLD: "format_bold",

@@ -1,7 +1,13 @@
 // Text formatting: the Text tab's character and paragraph controls over the
 // current text selection — a shape's text on a slide, the body caret in a doc —
 // the edits they make, and the paragraph menus.
-import type { TextCharacterProperty, TextNumberFormat, TextParagraphProperty, UDocType } from "@docmentis/udoc-wasm";
+import type {
+    ParagraphStyleSummary,
+    TextCharacterProperty,
+    TextNumberFormat,
+    TextParagraphProperty,
+    UDocType,
+} from "@docmentis/udoc-wasm";
 import { allowsTextEdit, profileFor } from "@docmentis/udoc-ui/internal";
 import type { EnabledWhen, Message, MenuItem, PaintSpec, UIShellHost } from "@docmentis/udoc-ui/internal";
 import { facesToLoad } from "./fonts/faces.js";
@@ -88,6 +94,35 @@ export const whenTextFormat: EnabledWhen = (c) => allowsTextEdit(c.selection, "s
  *  always *inside* a paragraph — clicking in a line and pressing Center is the
  *  ordinary gesture, so these gate on the paragraph edit instead. */
 export const whenParagraphFormat: EnabledWhen = (c) => allowsTextEdit(c.selection, "setParagraphProperties");
+
+/** The style picker: a paragraph edit like {@link whenParagraphFormat}, which
+ *  the engine grants only in a word document that has styles to name. */
+export const whenParagraphStyle: EnabledWhen = (c) => allowsTextEdit(c.selection, "applyParagraphStyle");
+
+/** Word's built-in paragraph styles the picker names in the user's language,
+ *  by the name Word writes them under — lowercased, as Word matches a built-in
+ *  name in any case. A style not here shows the name it was written with. */
+const BUILT_IN_STYLES: ReadonlyMap<string, MessageKey> = new Map<string, MessageKey>([
+    ["normal", "paragraphStyle.normal"],
+    ["no spacing", "paragraphStyle.noSpacing"],
+    ["title", "paragraphStyle.title"],
+    ["subtitle", "paragraphStyle.subtitle"],
+    ["quote", "paragraphStyle.quote"],
+    ["intense quote", "paragraphStyle.intenseQuote"],
+    ["list paragraph", "paragraphStyle.listParagraph"],
+    ["normal (web)", "paragraphStyle.normalWeb"],
+    ["html preformatted", "paragraphStyle.htmlPreformatted"],
+]);
+
+/** The name the picker shows for `style`: a built-in in the user's language —
+ *  Word's `heading 1` as "Heading 1" — and any other as it was written. */
+export function paragraphStyleName(style: ParagraphStyleSummary, i18n: I18n): string {
+    const name = style.name.toLowerCase();
+    const heading = /^heading ([1-9])$/.exec(name);
+    if (heading) return i18n.t("paragraphStyle.heading", { level: heading[1]! });
+    const key = BUILT_IN_STYLES.get(name);
+    return key ? i18n.t(key) : style.name;
+}
 
 /** The Scale dropdown: a character format like {@link whenTextFormat}, on the
  *  one doc type that can hold it — `w:w` is docx's, and DrawingML has no
@@ -364,6 +399,14 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
         ]);
     }
 
+    /** Put the touched paragraphs in paragraph style `style`, an id from the
+     *  document's style list. The engine clears their direct formatting as it
+     *  names the style, as Word does. */
+    function applyParagraphStyle(style: string): Promise<void> {
+        if (!textDocType()) return Promise.resolve();
+        return commit(() => client.executeOnSelection({ kind: "applyParagraphStyle", style }));
+    }
+
     /** Apply a highlight to the text selection. The highlight is a bare color, so
      *  "no fill" clears the highlight key (back to un-highlighted). */
     function textHighlightSelection(paint: PaintSpec): Promise<void> {
@@ -385,6 +428,7 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
         indentSelection,
         toggleParagraphSpace,
         listSelection,
+        applyParagraphStyle,
         textHighlightSelection,
     };
 }

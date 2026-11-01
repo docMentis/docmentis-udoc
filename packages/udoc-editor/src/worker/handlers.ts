@@ -45,6 +45,11 @@ export const EDIT_HANDLERS: EditHandlers = {
         // (PDF/image).
         handle: (_request, { session }) => (session ? session.fontFamilySummaries() : []),
     },
+    paragraphStyleSummaries: {
+        // The style picker's list — a word document's, `[]` with no document
+        // or for any other doc type.
+        handle: (_request, { session }) => (session ? session.paragraphStyleSummaries() : []),
+    },
     loadedFontFamilyNames: {
         // The subset needing no download — read fresh each time, since
         // binaries land throughout the session.

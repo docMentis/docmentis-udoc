@@ -45,6 +45,7 @@ import type {
     Consensus,
     TextLineSpacing,
     TextParagraphAlign,
+    TextParagraphStyleId,
     PaintFill,
     PaintLine,
     PaintColor,
@@ -413,7 +414,8 @@ export type TextEditKind =
     | "clearCharacterProperties"
     | "setParagraphProperties"
     | "clearParagraphProperties"
-    | "indentParagraphs";
+    | "indentParagraphs"
+    | "applyParagraphStyle";
 
 /**
  * Whether `caps` allows the text edit `kind` — the text cousin of
@@ -507,6 +509,11 @@ export interface SelectionTextFormat {
     bulleted: TextFormatState;
     /** Whether an auto-number renders — the numbered-list toggle. */
     numbered: TextFormatState;
+    /** The id of the paragraph style the touched paragraphs share — a word
+     *  document's, the default where a paragraph names none — or `null` when
+     *  they disagree, are in none, or the doc type has no styles. The style
+     *  picker's current value. */
+    paragraphStyle: string | null;
 }
 
 /** The empty text format — nothing selected (or a non-text selection). The
@@ -527,6 +534,7 @@ export const EMPTY_SELECTION_TEXT_FORMAT: SelectionTextFormat = {
     spaceAfter: null,
     bulleted: "off",
     numbered: "off",
+    paragraphStyle: null,
 };
 
 /** A `Consensus` boolean → a toggle state: `Value(true)` on, `Value(false)` /
@@ -572,6 +580,12 @@ function consensusLineSpacing(consensus: Consensus<TextLineSpacing>): number | n
     if (typeof consensus !== "object" || !("value" in consensus)) return null;
     const spacing = consensus.value;
     return "percent" in spacing ? spacing.percent : null;
+}
+
+/** A `Consensus` paragraph style → the shared style's id, or `null` when absent
+ *  / mixed or the paragraphs are in no style. */
+function consensusParagraphStyle(consensus: Consensus<TextParagraphStyleId | null>): string | null {
+    return typeof consensus === "object" && "value" in consensus ? consensus.value : null;
 }
 
 /** A `Consensus` point measure → the shared value, or `null` when absent / mixed.
@@ -621,6 +635,7 @@ export function selectionTextFormat(properties: UDocSelectionProperties | null):
         spaceAfter: consensusPoints(text.spacingAfter),
         bulleted: textFormatState(text.bulleted),
         numbered: textFormatState(text.numbered),
+        paragraphStyle: consensusParagraphStyle(text.paragraphStyle),
     };
 }
 

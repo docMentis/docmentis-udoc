@@ -70,6 +70,7 @@ export const ar: EditMessages = {
     "command.insertShape": "أشكال",
     "command.cropPage": "قص",
     "command.resizePage": "حجم الصورة",
+    "command.paragraphStyle": "نمط الفقرة",
     "command.fontFamily": "الخط",
     "command.fontSize": "الحجم",
     "command.bold": "غامق",
@@ -104,6 +105,18 @@ export const ar: EditMessages = {
     "ribbon.noMatchingFonts": "لا توجد خطوط مطابقة",
     "ribbon.listOptions": "خيارات {label}",
     "ribbon.listStyles": "أنماط {label}",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "عادي",
+    "paragraphStyle.noSpacing": "بلا تباعد",
+    "paragraphStyle.heading": "عنوان {level}",
+    "paragraphStyle.title": "العنوان",
+    "paragraphStyle.subtitle": "عنوان فرعي",
+    "paragraphStyle.quote": "اقتباس",
+    "paragraphStyle.intenseQuote": "اقتباس مكثف",
+    "paragraphStyle.listParagraph": "فقرة القائمة",
+    "paragraphStyle.normalWeb": "عادي (ويب)",
+    "paragraphStyle.htmlPreformatted": "HTML منسق مسبقاً",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "محاذاة إلى اليسار",

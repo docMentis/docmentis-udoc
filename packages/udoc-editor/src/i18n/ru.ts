@@ -70,6 +70,7 @@ export const ru: EditMessages = {
     "command.insertShape": "Фигуры",
     "command.cropPage": "Обрезать",
     "command.resizePage": "Размер изображения",
+    "command.paragraphStyle": "Стиль абзаца",
     "command.fontFamily": "Шрифт",
     "command.fontSize": "Размер",
     "command.bold": "Полужирный",
@@ -104,6 +105,18 @@ export const ru: EditMessages = {
     "ribbon.noMatchingFonts": "Нет подходящих шрифтов",
     "ribbon.listOptions": "Параметры: {label}",
     "ribbon.listStyles": "Стили: {label}",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "Обычный",
+    "paragraphStyle.noSpacing": "Без интервала",
+    "paragraphStyle.heading": "Заголовок {level}",
+    "paragraphStyle.title": "Название",
+    "paragraphStyle.subtitle": "Подзаголовок",
+    "paragraphStyle.quote": "Цитата",
+    "paragraphStyle.intenseQuote": "Выделенная цитата",
+    "paragraphStyle.listParagraph": "Абзац списка",
+    "paragraphStyle.normalWeb": "Обычный (веб)",
+    "paragraphStyle.htmlPreformatted": "Стандартный HTML",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "Выровнять по левому краю",

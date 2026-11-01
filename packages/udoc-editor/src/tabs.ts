@@ -10,6 +10,7 @@ import { RULED } from "./ruler.js";
 /** A command edit mode's tabs name: udoc-ui's, or the editor's own. */
 export type EditCommandId =
     | CommandId
+    | "paragraphStyle"
     | "fontFamily"
     | "fontSize"
     | "bold"
@@ -80,14 +81,15 @@ function imagePages(caps: SelectionCapabilities): boolean {
 }
 
 /**
- * The Text tab — the character half first (the font family / size fields, the
- * Bold / Italic / Underline / Strikethrough / Superscript / Subscript toggles,
- * the Scale dropdown, the Text Color / Highlight pickers), then the paragraph
- * half (the Align + Indent dropdown, the Line & Paragraph Spacing dropdown, and
- * the two list split buttons). For the doc types whose text edits through the
- * shared text engine — a deck's, a word document's, the shapes' over an image;
- * a PDF's text and a spreadsheet's cells don't carry it. A selection in text
- * opens it.
+ * The Text tab — the paragraph style picker first, the broadest control and the
+ * one the rest refine; then the character half (the font family / size fields,
+ * the Bold / Italic / Underline / Strikethrough / Superscript / Subscript
+ * toggles, the Scale dropdown, the Text Color / Highlight pickers), then the
+ * paragraph half (the Align + Indent dropdown, the Line & Paragraph Spacing
+ * dropdown, and the two list split buttons). For the doc types whose text edits
+ * through the shared text engine — a deck's, a word document's, the shapes'
+ * over an image; a PDF's text and a spreadsheet's cells don't carry it. A
+ * selection in text opens it.
  *
  * The paragraph controls stay a **short** band on purpose: four entries, each
  * dropping its long tail into its own menu. The exact measures — indents and
@@ -98,6 +100,7 @@ const TEXT_TAB: EditTab = {
     id: "text",
     label: "ribbon.text",
     commands: [
+        "paragraphStyle",
         "fontFamily",
         "fontSize",
         "bold",
@@ -117,12 +120,13 @@ const TEXT_TAB: EditTab = {
     opensFor: inText,
 };
 
-/** The presentation Text tab — {@link TEXT_TAB} without the control a deck has
- *  no use for: Scale (`w:w` is docx's, and DrawingML has no horizontal glyph
- *  scale). The tab drops it rather than greying it for good. */
+/** The presentation Text tab — {@link TEXT_TAB} without the controls a deck has
+ *  no use for: the style picker (a slide's paragraphs inherit by outline level,
+ *  naming no style) and Scale (`w:w` is docx's, and DrawingML has no horizontal
+ *  glyph scale). The tab drops them rather than greying them for good. */
 const PRESENTATION_TEXT_TAB: EditTab = {
     ...TEXT_TAB,
-    commands: TEXT_TAB.commands.filter((id) => id !== "widthScale"),
+    commands: TEXT_TAB.commands.filter((id) => id !== "paragraphStyle" && id !== "widthScale"),
 };
 
 /**

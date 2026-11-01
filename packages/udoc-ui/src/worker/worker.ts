@@ -2919,6 +2919,7 @@ const TEXT_KINDS: Record<TextSelectionEditType, "text"> = {
     setParagraphProperties: "text",
     clearParagraphProperties: "text",
     indentParagraphs: "text",
+    applyParagraphStyle: "text",
 };
 const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     translateShapes: "shape",

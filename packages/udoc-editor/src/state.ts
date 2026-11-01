@@ -1,6 +1,6 @@
 // Edit mode's own state, kept in the shell's store as `UIState.extension`, so it
 // changes and is read as the rest of the state is.
-import type { FontFamilySummary, PaintLine } from "@docmentis/udoc-wasm";
+import type { FontFamilySummary, PaintLine, ParagraphStyleSummary } from "@docmentis/udoc-wasm";
 import { EMPTY_SELECTION_PAINT, EMPTY_SELECTION_TEXT_FORMAT } from "@docmentis/udoc-ui/internal";
 import type {
     Action,
@@ -57,6 +57,14 @@ export interface EditState {
      * document composes and as fonts are picked, while the full list stays put.
      */
     loadedFontFamilyNames: readonly string[];
+
+    /**
+     * The open word document's paragraph styles, in its style gallery's order
+     * — the style picker's list, its menu the `inGallery` ones. Fixed for the
+     * document, so pulled once on open. Empty with no document open, for any
+     * other doc type, and for a document with no styles.
+     */
+    paragraphStyles: readonly ParagraphStyleSummary[];
 
     /**
      * The current selection's resolved character format (font / bold / italic)
@@ -125,6 +133,7 @@ export const INITIAL_EDIT_STATE: EditState = {
     themePalette: null,
     fontFamilies: [],
     loadedFontFamilyNames: [],
+    paragraphStyles: [],
     selectionText: EMPTY_SELECTION_TEXT_FORMAT,
     selectionPaint: EMPTY_SELECTION_PAINT,
     selectionRuler: EMPTY_SELECTION_RULER,

@@ -70,6 +70,7 @@ export const de: EditMessages = {
     "command.insertShape": "Formen",
     "command.cropPage": "Zuschneiden",
     "command.resizePage": "Bildgröße",
+    "command.paragraphStyle": "Absatzformatvorlage",
     "command.fontFamily": "Schriftart",
     "command.fontSize": "Schriftgrad",
     "command.bold": "Fett",
@@ -104,6 +105,18 @@ export const de: EditMessages = {
     "ribbon.noMatchingFonts": "Keine passenden Schriftarten",
     "ribbon.listOptions": "Optionen für {label}",
     "ribbon.listStyles": "Stile für {label}",
+
+    // Paragraph Style
+    "paragraphStyle.normal": "Standard",
+    "paragraphStyle.noSpacing": "Kein Leerraum",
+    "paragraphStyle.heading": "Überschrift {level}",
+    "paragraphStyle.title": "Titel",
+    "paragraphStyle.subtitle": "Untertitel",
+    "paragraphStyle.quote": "Zitat",
+    "paragraphStyle.intenseQuote": "Intensives Zitat",
+    "paragraphStyle.listParagraph": "Listenabsatz",
+    "paragraphStyle.normalWeb": "Standard (Web)",
+    "paragraphStyle.htmlPreformatted": "HTML Vorformatiert",
 
     // Align & Indent, Line & Paragraph Spacing
     "paragraph.alignLeft": "Linksbündig",

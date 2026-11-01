@@ -44,7 +44,8 @@ export interface EditMode extends UIExtension {
 
 /**
  * Keep the document-derived parts of edit mode's state in step with the open
- * document: the theme palette and font families pulled on open, the palette
+ * document: the theme palette, font families and paragraph styles pulled on
+ * open, the palette
  * again per slide, whether an image's current page takes markup as the
  * current page changes, all cleared while nothing is open, and the
  * selection's resolved format mirrored from each selection report. Returns the
@@ -70,6 +71,13 @@ function mountDocumentState(host: EditHost): () => void {
         updateEditState(store, { loadedFontFamilyNames: await edit.loadedFontFamilyNames() });
     };
 
+    // Pull the open word document's paragraph styles — the style picker's list.
+    // Empty for any other doc type. Fixed for the document (nothing edits its
+    // styles), so pulled once on open.
+    const refreshParagraphStyles = async (): Promise<void> => {
+        updateEditState(store, { paragraphStyles: await edit.paragraphStyleSummaries() });
+    };
+
     // Whether the current page of an image takes the shapes the Insert tab
     // draws — read from the engine, which loads the page to say. Latest-wins:
     // a read overtaken by the next drops its answer.
@@ -86,7 +94,8 @@ function mountDocumentState(host: EditHost): () => void {
     };
 
     const unsubs = [
-        // A document opening or closing drops the last one's palette and fonts.
+        // A document opening or closing drops the last one's palette, fonts
+        // and styles.
         subscribeSelector(
             store,
             (s) => s.status,
@@ -96,19 +105,21 @@ function mountDocumentState(host: EditHost): () => void {
                         themePalette: null,
                         fontFamilies: [],
                         loadedFontFamilyNames: [],
+                        paragraphStyles: [],
                         pageTakesMarkup: false,
                     });
                 }
             },
         ),
-        // Each opened document: its palette and its font list — async, off the
-        // open's critical path.
+        // Each opened document: its palette, its font list and its styles —
+        // async, off the open's critical path.
         subscribeSelector(
             store,
             (s) => s.docGeneration,
             () => {
                 void refreshThemePalette();
                 void refreshFontFamilies();
+                void refreshParagraphStyles();
                 void refreshPageTakesMarkup();
             },
         ),

@@ -1,16 +1,22 @@
-// The Text tab's controls: the font picker, the point-size field, the character
-// toggles and the two list split buttons. Each *mirrors* the selection's
+// The Text tab's controls: the style picker, the font picker, the point-size
+// field, the character toggles and the two list split buttons. Each *mirrors* the selection's
 // resolved format — what the selected text actually carries, pushed from the
 // engine's selection properties into edit mode's state — rather than its own
 // click-state; a click fires the edit, and the control's look follows when the
 // resulting selection report lands.
 import type { FontFamilySummary } from "@docmentis/udoc-wasm";
-import { createButton, createSplitButton } from "@docmentis/udoc-ui/internal";
-import type { RibbonControl, RibbonControlEnv, TextFormatState } from "@docmentis/udoc-ui/internal";
+import { createButton, createDropdownButton, createMenuItem, createSplitButton } from "@docmentis/udoc-ui/internal";
+import type {
+    DropdownButton,
+    RibbonControl,
+    RibbonControlEnv,
+    TextFormatState,
+    UIState,
+} from "@docmentis/udoc-ui/internal";
 import { cssFontFamily, isEngineDrawn } from "../fonts/preview.js";
 import type { FontPreviewLoader } from "../fonts/preview.js";
 import { editState } from "../state.js";
-import { listStyles } from "../text-format.js";
+import { listStyles, paragraphStyleName } from "../text-format.js";
 import type { ListKind, ListStyle, TextFormatProperty } from "../text-format.js";
 import type { EditTools } from "../tools.js";
 import { createComboBox } from "./ComboBox.js";
@@ -333,6 +339,67 @@ export function fontFamilyControl(env: RibbonControlEnv, id: string, tools: Edit
             unlisten();
             combo.destroy();
         },
+    };
+}
+
+/**
+ * The Text tab's style picker: a field showing the paragraph style the
+ * selection's paragraphs are in — blank where they disagree — whose list is
+ * the document's style gallery, the current style checked. A pick puts the
+ * touched paragraphs in that style. Not typeable: a style is one the document
+ * defines, so there is nothing to enter that the list doesn't hold.
+ *
+ * The field names the current style even where the gallery leaves it out —
+ * a paragraph in `Body Text` reads as that — from the document's whole list.
+ */
+export function paragraphStyleControl(env: RibbonControlEnv, id: string, tools: EditTools): RibbonControl {
+    const { store, label } = env;
+    const { i18n } = tools;
+
+    /** The name the field shows for the selection's style, `""` for none. */
+    const currentName = (state: UIState): string => {
+        const { paragraphStyles, selectionText } = editState(state);
+        const current = paragraphStyles.find((style) => style.id === selectionText.paragraphStyle);
+        return current ? paragraphStyleName(current, i18n) : "";
+    };
+
+    const fillStyles = (dd: DropdownButton): void => {
+        const { paragraphStyles, selectionText } = editState(store.getState());
+        dd.menu.innerHTML = "";
+        for (const style of paragraphStyles) {
+            if (!style.inGallery) continue;
+            const item = createMenuItem({ text: "", role: "option" });
+            // Set as text, not markup: a name is the document's to choose.
+            item.querySelector(".udoc-menu__item-label")!.textContent = paragraphStyleName(style, i18n);
+            const selected = style.id === selectionText.paragraphStyle;
+            item.classList.toggle("udoc-menu__item--selected", selected);
+            item.setAttribute("aria-selected", String(selected));
+            item.addEventListener("click", (e) => {
+                e.stopPropagation();
+                // The field mirrors the selection, so it updates when the
+                // resulting report lands.
+                void tools.text.applyParagraphStyle(style.id);
+                dd.controller.close();
+            });
+            dd.menu.appendChild(item);
+        }
+    };
+
+    const dd = createDropdownButton(
+        { text: "", label, field: true, className: "udoc-style-select" },
+        { menuLabel: label, menuRole: "listbox", onOpen: () => fillStyles(dd) },
+    );
+    dd.trigger.dataset.command = id;
+    const shown = dd.trigger.querySelector<HTMLElement>(".udoc-btn__label")!;
+    const mirror = (state: UIState): void => {
+        shown.textContent = currentName(state);
+    };
+    mirror(store.getState());
+    return {
+        el: dd.el,
+        sync: mirror,
+        close: () => dd.controller.close(),
+        destroy: () => dd.destroy(),
     };
 }
 
