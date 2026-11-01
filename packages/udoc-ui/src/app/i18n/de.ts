@@ -63,6 +63,7 @@ export const de: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Kommentieren",
+    "ribbon.slideShow": "Bildschirmpräsentation",
     "ribbon.view": "Ansicht",
 
     // Ribbon

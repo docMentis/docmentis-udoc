@@ -352,7 +352,7 @@ export interface UDocEvents {
     "notesPanel:changed": { open: boolean };
     /** Fires when a deck's view changes — by the host, the View tab, or a search match on the slides from its notes pages. */
     "presentationView:changed": { view: PresentationView; previousView: PresentationView };
-    /** Fires when a deck's slide show starts or ends — by the host, the View tab, Escape, or a step past its last slide. */
+    /** Fires when a deck's slide show starts or ends — by the host, the Slide Show tab, Escape, or a step past its last slide. */
     "slideShow:changed": { playing: boolean };
     /**
      * Fires after a *local* edit is applied (page edits, undo/redo) — not on
@@ -1483,18 +1483,19 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Play the open deck as a slide show, as the View tab's From Beginning and
-     * From Current Slide do: full screen, a slide at a time, each slide's
-     * transition and animations playing, stepped on by a click or a key and
-     * ended by Escape. From slide `slide`, 0-based, even one hidden from the
+     * Play the open deck as a slide show, as the Slide Show tab's From
+     * Beginning and From Current Slide do: full screen, a slide at a time,
+     * each slide's transition and animations playing, stepped on by a click
+     * or a key and ended by Escape. From slide `slide`, 0-based, even one hidden from the
      * show; from the first slide the show shows when omitted. In place of a
      * show playing; nothing for a document that is not a deck.
      *
-     * With the View tab's Use Presenter View on, as it is at first, and a
-     * second screen the browser knows of (Chrome's and Edge's), the show plays
-     * in a window of its own, for the audience's screen, and the presenter
-     * view — the slide, the next one, the notes and a timer — over the UI.
-     * With the screens set up too — the View tab's Set Up Screens, which
+     * With the Slide Show tab's Use Presenter View on, as it is at first,
+     * and a second screen the browser knows of (Chrome's and Edge's), the
+     * show plays in a window of its own, for the audience's screen, and the
+     * presenter view — the slide, the next one, the notes and a timer — over
+     * the UI.
+     * With the screens set up too — the Slide Show tab's Set Up Screens, which
      * chooses the screen the show plays on — the show fills that screen from
      * the UI's window instead, and the presenter view opens in a window of its
      * own on another. The presenter view's Swap Screens trades the two.
@@ -1659,7 +1660,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.getState().presentationView;
     }
 
-    /** Whether a slide show plays, by {@link startSlideShow} or the View tab; `"slideShow:changed"` fires when it starts or ends. */
+    /** Whether a slide show plays, by {@link startSlideShow} or the Slide Show tab; `"slideShow:changed"` fires when it starts or ends. */
     get isSlideShowPlaying(): boolean {
         return this.shell.getState().slideShowPlaying;
     }

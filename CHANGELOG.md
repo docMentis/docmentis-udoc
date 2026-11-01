@@ -10,10 +10,11 @@ listed once, by package. Its major and minor version are those of the
 
 #### Added
 
-- A deck plays as a slide show, as PowerPoint's Slide Show does: the View
-  tab's From Beginning and From Current Slide fill the screen with it, a
-  slide at a time, each slide's transition and animations playing — Morph
-  among them — and a slide timed to move on doing so. A click, Space, → or
+- A deck plays as a slide show, as PowerPoint's Slide Show does: a Slide
+  Show tab before its View tab, in the viewer and the editor, has From
+  Beginning and From Current Slide, which fill the screen with it, a slide
+  at a time, each slide's transition and animations playing — Morph among
+  them — and a slide timed to move on doing so. A click, Space, → or
   Enter steps on, ← or Backspace steps back, Home and End go to the first and
   last slide shown, a slide's number then Enter to that slide, and a swipe
   steps on or back; Escape ends it, as does a click on the black past the
@@ -22,20 +23,20 @@ listed once, by package. Its major and minor version are those of the
   `endSlideShow()` play and end it, `isSlideShowPlaying` says whether one
   plays, and `"slideShow:changed"` fires as one starts and ends.
 - A slide show plays with PowerPoint's presenter view where there is a
-  second screen, as the View tab's Use Presenter View has it, on at first:
-  the show opens in a window of its own, which a click fills the audience's
-  screen with once it is dragged there, and the presenter view covers the
-  UI here — the slide as the audience sees it, transitions and animations
-  playing, the next slide, the slide's notes with their text made larger or
-  smaller, a timer to pause and restart, the time, and buttons to step the
-  show and end it, a line between each two of its panes that a drag moves
-  to resize them. Closing the show's window ends the show. A browser that
-  can't tell of a second screen (any but Chrome and Edge) plays the show
-  alone, as it did.
-- The View tab's Set Up Screens, in Chrome and Edge, lets the UI place
-  windows on each of the computer's screens, as the browser asks once and
-  remembers, and opens a dialog of the screens as they stand, each named, to
-  choose the one the slide show plays on. A slide show with the presenter
+  second screen, as the Slide Show tab's Use Presenter View has it, on at
+  first: the show opens in a window of its own, which a click fills the
+  audience's screen with once it is dragged there, and the presenter view
+  covers the UI here — the slide as the audience sees it, transitions and
+  animations playing, the next slide, the slide's notes with their text
+  made larger or smaller, a timer to pause and restart, the time, and
+  buttons to step the show and end it, a line between each two of its panes
+  that a drag moves to resize them. Closing the show's window ends the
+  show. A browser that can't tell of a second screen (any but Chrome and
+  Edge) plays the show alone, as it did.
+- The Slide Show tab's Set Up Screens, in Chrome and Edge, lets the UI
+  place windows on each of the computer's screens, as the browser asks once
+  and remembers, and opens a dialog of the screens as they stand, each
+  named, to choose the one the slide show plays on. A slide show with the presenter
   view then fills that screen at the press that starts it, and opens the
   presenter view in a window of its own filling another, with no window to
   drag. Closing the presenter view's window ends the show.

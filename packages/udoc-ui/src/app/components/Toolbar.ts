@@ -7,7 +7,7 @@ import type { Action } from "../actions.js";
 import type { UIState, PanelTab, ThemeMode } from "../state.js";
 import type { I18n } from "../i18n/index.js";
 import { LEFT_PANEL_TABS, isLeftPanelTab } from "../state.js";
-import { tabsFor, VIEW_TAB_ID } from "../profiles.js";
+import { tabsFor, VIEWING_TAB_IDS } from "../profiles.js";
 import type { TabSource } from "../profiles.js";
 import { setupRovingTabindex } from "../a11y.js";
 import {
@@ -348,12 +348,12 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
             nameButton(sidePanelBtn, i18n.t(slice.sidePanelOpen ? "toolbar.hideSidePanel" : "toolbar.showSidePanel"));
 
             // Undo/redo: visible where the mode has a tab of edits — any but
-            // the View tab, whose settings aren't on the history: in view mode
-            // a PDF's Annotate tab alone, so another doc type's viewer has
-            // none. Greyed when the respective history stack is empty (or no
-            // doc is ready yet).
+            // the View tab and a deck's Slide Show, whose settings aren't on
+            // the history: in view mode a PDF's Annotate tab alone, so another
+            // doc type's viewer has none. Greyed when the respective history
+            // stack is empty (or no doc is ready yet).
             const showHistory = tabsFor(tabsOf(slice.docType, slice.mode), slice.features).some(
-                (tab) => tab.id !== VIEW_TAB_ID,
+                (tab) => !VIEWING_TAB_IDS.has(tab.id),
             );
             historySection.style.display = showHistory ? "" : "none";
             if (showHistory) {

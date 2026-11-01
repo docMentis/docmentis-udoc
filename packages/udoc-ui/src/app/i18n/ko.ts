@@ -63,6 +63,7 @@ export const ko: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "주석",
+    "ribbon.slideShow": "슬라이드 쇼",
     "ribbon.view": "보기",
 
     // Ribbon

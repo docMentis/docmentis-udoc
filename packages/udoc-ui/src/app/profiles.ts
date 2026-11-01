@@ -41,24 +41,26 @@ const ARRANGEMENT: readonly CommandId[] = ["pageLayout", "pageGap"];
  *  shown at. */
 const PORTABLE_ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLeft", "rotateViewRight", "pageGap"];
 
+/**
+ * A deck's Slide Show tab, as PowerPoint's: the show started From Beginning
+ * or From Current Slide, the slide shown played by Preview, and the screens
+ * it plays on — Use Presenter View and Set Up Screens. Its commands are never
+ * edits, as the View tab's aren't; it stands before it, in view mode and in
+ * edit mode.
+ */
+export const SLIDE_SHOW_TAB: ToolbarTab = {
+    id: "slideShow",
+    label: "ribbon.slideShow",
+    commands: ["slideShowFromBeginning", "slideShowFromCurrent", "previewSlide", "usePresenterView", "setUpScreens"],
+};
+
 /** Each doc type's View tab, around the guides an extension adds: before them
  *  its own views and how its pages scroll and are arranged, after them what
- *  shows beside the document, then a deck's slide show, and last its Preview
- *  of the slide shown. */
+ *  shows beside the document. */
 const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; shows: readonly CommandId[] }>> = {
     portable: { pages: [...SCROLL, ...PORTABLE_ARRANGEMENT], shows: ["layers"] },
     wordprocessing: { pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT], shows: ["formattingMarks"] },
-    presentation: {
-        pages: ["normalView", "notesPageView", "slideMasterView", ...SCROLL],
-        shows: [
-            "notes",
-            "slideShowFromBeginning",
-            "slideShowFromCurrent",
-            "usePresenterView",
-            "setUpScreens",
-            "previewSlide",
-        ],
-    },
+    presentation: { pages: ["normalView", "notesPageView", "slideMasterView", ...SCROLL], shows: ["notes"] },
     image: { pages: [...SCROLL, "pageGap"], shows: [] },
     spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar"] },
 };
@@ -76,9 +78,7 @@ const EDIT_VIEWS: ReadonlySet<string> = new Set<CommandId>(["slideMasterView"]);
  * pair up, the turn they're shown at, the gaps between them, `edit`'s `guides`
  * (an extension's, edit mode's ruler), then what shows beside the document —
  * a PDF's layers, a deck's notes, a word document's formatting marks, a
- * workbook's formula bar — then a deck's slide show, From Beginning, From
- * Current Slide, Use Presenter View and Set Up Screens, and last its Preview
- * of the slide shown.
+ * workbook's formula bar.
  */
 export function viewTab(docType: UDocType, edit?: { guides: readonly string[] }): ToolbarTab {
     const { pages, shows } = VIEW_COMMANDS[docType];
@@ -86,9 +86,13 @@ export function viewTab(docType: UDocType, edit?: { guides: readonly string[] })
     return { id: VIEW_TAB_ID, label: "ribbon.view", commands: [...shown, ...(edit?.guides ?? []), ...shows] };
 }
 
-/** The id of every doc type's {@link viewTab}: the one tab whose commands are
- *  never edits, so a strip with none other has nothing to undo. */
+/** The id of every doc type's {@link viewTab}. */
 export const VIEW_TAB_ID = "view";
+
+/** The ids of the tabs whose commands are never edits — every doc type's
+ *  {@link viewTab} and a deck's {@link SLIDE_SHOW_TAB} — so a strip with none
+ *  other has nothing to undo. */
+export const VIEWING_TAB_IDS: ReadonlySet<string> = new Set([VIEW_TAB_ID, SLIDE_SHOW_TAB.id]);
 
 /**
  * The chrome one document type gets. Selected by `docType` (see
@@ -285,7 +289,7 @@ export const PORTABLE_PROFILE: DocProfile = {
  * the Thumbnails navigator, not a page-control strip.
  */
 export const PRESENTATION_PROFILE: DocProfile = {
-    viewTabs: [viewTab("presentation")],
+    viewTabs: [SLIDE_SHOW_TAB, viewTab("presentation")],
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],

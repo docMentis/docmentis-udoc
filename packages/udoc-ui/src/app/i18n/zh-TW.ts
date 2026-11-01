@@ -63,6 +63,7 @@ export const zhTW: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "註解",
+    "ribbon.slideShow": "投影片放映",
     "ribbon.view": "檢視",
 
     // Ribbon

@@ -749,15 +749,15 @@ export interface UIState {
     /**
      * Whether a slide show plays with PowerPoint's presenter view where there
      * is a screen for the audience: the show in a window of its own, for that
-     * screen, and the presenter view over the UI — the View tab's Use
-     * Presenter View.
+     * screen, and the presenter view over the UI — the Slide Show tab's
+     * Use Presenter View.
      */
     usePresenterView: boolean;
     /**
      * Whether the screens are set up: the browser lets the UI place windows
-     * on each of the computer's screens — the View tab's Set Up Screens — so a
-     * slide show with the presenter view fills the audience's screen and opens
-     * the presenter view on this one at a press.
+     * on each of the computer's screens — the Slide Show tab's Set Up
+     * Screens — so a slide show with the presenter view fills the audience's
+     * screen and opens the presenter view on this one at a press.
      */
     screensSetUp: boolean;
     /**

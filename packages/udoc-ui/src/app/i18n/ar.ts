@@ -63,6 +63,7 @@ export const ar: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "تعليق توضيحي",
+    "ribbon.slideShow": "عرض الشرائح",
     "ribbon.view": "عرض",
 
     // Ribbon

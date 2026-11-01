@@ -602,8 +602,8 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
             if (!slice.picking) navigateTo(page);
         });
 
-        // The slide shown, then previewed in place, as the View tab's Preview
-        // plays it.
+        // The slide shown, then previewed in place, as the Slide Show tab's
+        // Preview plays it.
         const play = document.createElement("button");
         play.type = "button";
         play.className = "udoc-thumbnail-item__play";

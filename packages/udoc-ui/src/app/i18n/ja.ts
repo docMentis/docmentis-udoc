@@ -63,6 +63,7 @@ export const ja: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "注釈",
+    "ribbon.slideShow": "スライド ショー",
     "ribbon.view": "表示",
 
     // Ribbon

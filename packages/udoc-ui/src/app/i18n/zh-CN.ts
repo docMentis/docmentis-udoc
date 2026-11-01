@@ -63,6 +63,7 @@ export const zhCN: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "注释",
+    "ribbon.slideShow": "幻灯片放映",
     "ribbon.view": "视图",
 
     // Ribbon

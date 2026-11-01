@@ -613,7 +613,7 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  *   extension's that its own code runs (New Slide, Insert ▸ Image). `cluster`
  *   bunches it as a `control`'s does: the Shape tab's Group and Ungroup. And
  *   `current`, when set, is the face its button shows for the state, as a
- *   `menu`'s: the View tab's Preview shows Stop while a preview plays.
+ *   `menu`'s: the Slide Show tab's Preview shows Stop while a preview plays.
  * - `armPicker` → opens a sub-picker of `options` before arming: the Annotate
  *   tab's shapes or its standard stamps, an extension's own.
  * - `armGallery` → `armPicker` for a picker too long for a list: a panel of
@@ -871,14 +871,15 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
     },
 
-    // View tab — a deck's slide show, the deck played full screen a slide at a
-    // time as PowerPoint's Slide Show plays it: from the first slide it shows,
-    // or from the slide shown, which the Slide Master view has none of.
+    // Slide Show tab — a deck's slide show, the deck played full screen a
+    // slide at a time as PowerPoint's Slide Show plays it: from the first
+    // slide it shows, or from the slide shown, which the Slide Master view has
+    // none of.
     slideShowFromBeginning: {
         id: "slideShowFromBeginning",
         label: "command.slideShowFromBeginning",
         icon: ICON_SLIDE_SHOW_FROM_BEGINNING,
-        group: "slideShow",
+        group: "slideShowStart",
         labeled: true,
         run: { kind: "action", press: (store) => store.dispatch({ type: "START_SLIDE_SHOW", slide: null }) },
         enabledWhen: whenReady,
@@ -887,7 +888,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         id: "slideShowFromCurrent",
         label: "command.slideShowFromCurrent",
         icon: ICON_SLIDE_SHOW_FROM_CURRENT,
-        group: "slideShow",
+        group: "slideShowStart",
         labeled: true,
         run: {
             kind: "action",
@@ -901,7 +902,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         id: "usePresenterView",
         label: "command.usePresenterView",
         icon: ICON_PRESENTER_VIEW,
-        group: "slideShow",
+        group: "screens",
         labeled: true,
         run: {
             kind: "toggle",
@@ -920,7 +921,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         id: "setUpScreens",
         label: "command.setUpScreens",
         icon: ICON_SET_UP_SCREENS,
-        group: "slideShow",
+        group: "screens",
         labeled: true,
         shownWhen: hasScreensApi,
         run: {
@@ -935,7 +936,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: whenReady,
     },
 
-    // View tab — a deck's slide shown, previewed where it shows as
+    // Slide Show tab — a deck's slide shown, previewed where it shows as
     // PowerPoint's Preview plays it: its transition from the slide before,
     // then its animations one after another — in Normal view, a slide at a
     // time, which it switches to first. Stop while one plays. Greyed on a

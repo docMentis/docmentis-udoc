@@ -63,6 +63,7 @@ export const ptBR: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Anotar",
+    "ribbon.slideShow": "Apresentação de Slides",
     "ribbon.view": "Exibir",
 
     // Ribbon

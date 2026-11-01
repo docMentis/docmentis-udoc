@@ -63,6 +63,7 @@ export const fr: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Annoter",
+    "ribbon.slideShow": "Diaporama",
     "ribbon.view": "Affichage",
 
     // Ribbon

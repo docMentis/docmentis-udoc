@@ -2,7 +2,14 @@
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
 // order. A strip opens folded, and a selection opens the tab it is for.
 import type { UDocType } from "@docmentis/udoc-ui";
-import { allowsEdit, allowsTableEdit, allowsTextEdit, ANNOTATE_TAB, viewTab } from "@docmentis/udoc-ui/internal";
+import {
+    allowsEdit,
+    allowsTableEdit,
+    allowsTextEdit,
+    ANNOTATE_TAB,
+    SLIDE_SHOW_TAB,
+    viewTab,
+} from "@docmentis/udoc-ui/internal";
 import type { CommandId, SelectionCapabilities, ToolbarTab } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
 import { RULED } from "./ruler.js";
@@ -245,11 +252,12 @@ const PORTABLE_TABS: readonly EditTab[] = [
 ];
 
 /** The presentation strip: its own Insert, then Text (character formatting)
- *  and Shape (free-floating graphics), and its View last. */
+ *  and Shape (free-floating graphics), then Slide Show, and its View last. */
 const PRESENTATION_TABS: readonly EditTab[] = [
     PRESENTATION_INSERT_TAB,
     PRESENTATION_TEXT_TAB,
     SHAPE_TAB,
+    SLIDE_SHOW_TAB,
     editViewTab("presentation"),
 ];
 

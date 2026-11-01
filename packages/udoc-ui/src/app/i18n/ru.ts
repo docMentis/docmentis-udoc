@@ -63,6 +63,7 @@ export const ru: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Аннотации",
+    "ribbon.slideShow": "Слайд-шоу",
     "ribbon.view": "Вид",
 
     // Ribbon

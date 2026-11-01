@@ -113,6 +113,8 @@ export interface Messages {
     // Ribbon tabs
     /** Annotate */
     "ribbon.annotate": string;
+    /** Slide Show */
+    "ribbon.slideShow": string;
     /** View */
     "ribbon.view": string;
 
