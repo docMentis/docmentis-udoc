@@ -55,20 +55,25 @@ const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; sh
     spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar"] },
 };
 
+/** The views only edit mode's View tab offers: a deck's Slide Master, where
+ *  its slide masters and slide layouts are edited. */
+const EDIT_VIEWS: ReadonlySet<string> = new Set<CommandId>(["slideMasterView"]);
+
 /**
  * `docType`'s View tab — how the document is shown, never an edit of it, so
- * the same in view mode and edit mode, the last tab of each. Its groups, each
- * where the doc type has one: its own views (a deck's Normal, Notes Page and
- * Slide Master, a word document's Pages and Pageless, a workbook's Normal and
- * Page Layout of its current sheet), how the pages scroll, how they pair up,
- * the turn they're shown at, the gaps between them, `guides` (an extension's,
- * edit mode's ruler), then what shows beside the document — a PDF's layers, a
- * deck's notes, a word document's formatting marks, a workbook's formula bar —
- * and last a deck's Preview of the slide shown.
+ * the last tab of view mode and of edit mode, `edit`'s. Its groups, each where
+ * the doc type has one: its own views (a deck's Normal, Notes Page and, in
+ * edit mode, Slide Master, a word document's Pages and Pageless, a workbook's
+ * Normal and Page Layout of its current sheet), how the pages scroll, how they
+ * pair up, the turn they're shown at, the gaps between them, `edit`'s `guides`
+ * (an extension's, edit mode's ruler), then what shows beside the document —
+ * a PDF's layers, a deck's notes, a word document's formatting marks, a
+ * workbook's formula bar — and last a deck's Preview of the slide shown.
  */
-export function viewTab(docType: UDocType, guides: readonly string[] = []): ToolbarTab {
+export function viewTab(docType: UDocType, edit?: { guides: readonly string[] }): ToolbarTab {
     const { pages, shows } = VIEW_COMMANDS[docType];
-    return { id: VIEW_TAB_ID, label: "ribbon.view", commands: [...pages, ...guides, ...shows] };
+    const shown = edit ? pages : pages.filter((id) => !EDIT_VIEWS.has(id));
+    return { id: VIEW_TAB_ID, label: "ribbon.view", commands: [...shown, ...(edit?.guides ?? []), ...shows] };
 }
 
 /** The id of every doc type's {@link viewTab}: the one tab whose commands are

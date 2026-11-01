@@ -225,11 +225,11 @@ const PRESENTATION_INSERT_TAB: EditTab = {
     commands: ["createSlide", "insertImage", "insertGalleryShape"],
 };
 
-/** `docType`'s View tab, as view mode has it, with the ruler among its
- *  guides where edit mode draws one: over a PDF's pages, a deck's slides and a
- *  word document's pages. */
+/** `docType`'s View tab, as edit mode has it: with the views edit mode alone
+ *  offers, and the ruler among its guides where edit mode draws one — over a
+ *  PDF's pages, a deck's slides and a word document's pages. */
 function editViewTab(docType: UDocType): EditTab {
-    return viewTab(docType, RULED.has(docType) ? ["ruler"] : []);
+    return viewTab(docType, { guides: RULED.has(docType) ? ["ruler"] : [] });
 }
 
 /** The strip of a doc type with none of its own: no tabs. */
