@@ -78,6 +78,13 @@ const ICONS = {
     ICON_NOTES: "speaker_notes",
     ICON_SLIDE_SHOW_FROM_BEGINNING: "slideshow",
     ICON_SLIDE_SHOW_FROM_CURRENT: "play_circle",
+    ICON_PRESENTER_VIEW: "co_present",
+    // The presenter view
+    ICON_TIMER_PAUSE: "pause",
+    ICON_TIMER_RESUME: "play_arrow",
+    ICON_TIMER_RESTART: "replay",
+    ICON_TEXT_LARGER: "text_increase",
+    ICON_TEXT_SMALLER: "text_decrease",
     ICON_PREVIEW_SLIDE: "play_arrow",
     ICON_STOP_SLIDE_PREVIEW: "stop",
     ICON_SLIDE_PLAYS: "animation",

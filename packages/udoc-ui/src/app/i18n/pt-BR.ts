@@ -96,6 +96,7 @@ export const ptBR: Messages = {
     "command.notes": "Anotações",
     "command.slideShowFromBeginning": "Do Começo",
     "command.slideShowFromCurrent": "Do Slide Atual",
+    "command.usePresenterView": "Usar Modo de Exibição do Apresentador",
     "command.previewSlide": "Visualizar",
     "command.stopSlidePreview": "Parar",
     "command.singleScroll": "Individual",
@@ -257,6 +258,23 @@ export const ptBR: Messages = {
 
     // Slide show
     "slideShow.end": "Fim da apresentação de slides. Clique para sair.",
+    "slideShow.window": "Apresentação de Slides",
+    "slideShow.windowHint":
+        "Arraste esta janela para a tela que o público vê e clique nela para que ela preencha essa tela.",
+
+    // Presenter view
+    "presenter.label": "Modo de Exibição do Apresentador",
+    "presenter.slideOf": "Slide {slide} de {count}",
+    "presenter.previous": "Anterior",
+    "presenter.next": "Próximo",
+    "presenter.endShow": "Encerrar Apresentação",
+    "presenter.nextSlide": "Próximo Slide",
+    "presenter.endOfShow": "Fim da apresentação de slides",
+    "presenter.pauseTimer": "Pausar o Temporizador",
+    "presenter.resumeTimer": "Retomar o Temporizador",
+    "presenter.restartTimer": "Reiniciar o Temporizador",
+    "presenter.largerText": "Aumentar o Texto",
+    "presenter.smallerText": "Diminuir o Texto",
 
     // Thumbnails
     "thumbnails.pages": "Miniaturas das páginas",

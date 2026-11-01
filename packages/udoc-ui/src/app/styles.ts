@@ -2251,6 +2251,131 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-ui__slide-show-end[hidden] {
         display: none;
     }
+    /* A deck's presenter view (PresenterView): over the whole UI, as the show
+   is here — the timer and the time along the top, the slide as the audience
+   sees it and the buttons that step it on the left, the next slide and the
+   notes on the right. */
+    .udoc-ui-root .udoc-ui__presenter {
+        position: absolute;
+        inset: 0;
+        z-index: 300;
+        display: flex;
+        flex-direction: column;
+        background: var(--udoc-color-surface-container-low);
+        color: var(--udoc-color-on-surface);
+        outline: none;
+    }
+    .udoc-ui-root .udoc-ui__presenter-bar,
+    .udoc-ui-root .udoc-ui__presenter-nav,
+    .udoc-ui-root .udoc-ui__presenter-heading {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .udoc-ui-root .udoc-ui__presenter-bar {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--udoc-color-outline-variant);
+    }
+    .udoc-ui-root .udoc-ui__presenter-spacer {
+        flex: 1 1 auto;
+    }
+    .udoc-ui-root .udoc-ui__presenter-timer,
+    .udoc-ui-root .udoc-ui__presenter-clock {
+        font-size: 20px;
+        font-variant-numeric: tabular-nums;
+    }
+    .udoc-ui-root .udoc-ui__presenter-timer {
+        margin-inline-end: 8px;
+    }
+    .udoc-ui-root .udoc-ui__presenter-main {
+        flex: 1 1 auto;
+        display: flex;
+        gap: 16px;
+        min-height: 0;
+        padding: 16px;
+    }
+    .udoc-ui-root .udoc-ui__presenter-stage,
+    .udoc-ui-root .udoc-ui__presenter-side {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+    }
+    .udoc-ui-root .udoc-ui__presenter-stage {
+        flex: 2 1 0;
+    }
+    .udoc-ui-root .udoc-ui__presenter-side {
+        flex: 1 1 0;
+    }
+    /* The slide and the next one, each centred in its box, as large as fits
+   (PresenterView's fitCanvas). A press on the slide steps the show on. */
+    .udoc-ui-root .udoc-ui__presenter-slide,
+    .udoc-ui-root .udoc-ui__presenter-next {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+    }
+    .udoc-ui-root .udoc-ui__presenter-slide {
+        flex: 1 1 auto;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-ui__presenter-next {
+        flex: 0 0 40%;
+    }
+    .udoc-ui-root .udoc-ui__presenter-slide-canvas,
+    .udoc-ui-root .udoc-ui__presenter-next-canvas {
+        display: block;
+        background: #000;
+        box-shadow: var(--udoc-elevation-2);
+    }
+    .udoc-ui-root .udoc-ui__presenter-end {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 16px;
+        text-align: center;
+        color: var(--udoc-color-on-surface-variant);
+        pointer-events: none;
+    }
+    /* Over the black past the last slide, as the show's own line is. */
+    .udoc-ui-root .udoc-ui__presenter-slide .udoc-ui__presenter-end {
+        color: #fff;
+    }
+    .udoc-ui-root .udoc-ui__presenter-end[hidden],
+    .udoc-ui-root .udoc-ui__presenter-next-canvas[hidden] {
+        display: none;
+    }
+    .udoc-ui-root .udoc-ui__presenter-heading {
+        min-height: var(--udoc-btn-h);
+        color: var(--udoc-color-on-surface-variant);
+    }
+    .udoc-ui-root .udoc-ui__presenter-counter {
+        min-width: 120px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+    }
+    /* The notes, on the canvas's ground as the notes pane's are, and inverted
+   in the dark theme as theirs are. */
+    .udoc-ui-root .udoc-ui__presenter-notes {
+        position: relative;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+        background: var(--udoc-canvas-background);
+    }
+    .udoc-ui-root .udoc-ui__presenter-notes-canvas {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    .udoc-ui-root.udoc-ui-dark .udoc-ui__presenter-notes-canvas {
+        filter: invert(1) hue-rotate(180deg);
+    }
     /* A canvas's stand-in while the browser catches up with its resize
    (ResizeCover): placed and shown as the canvas is, its class's, but never the
    pointer's target, which the canvas's handlers look for. */

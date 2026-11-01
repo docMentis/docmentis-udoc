@@ -22,6 +22,7 @@ import type {
     PlaneInfo,
     ScrollMode,
     SelectionGeometry,
+    Size,
     Viewport,
 } from "../geometry.js";
 import { createCanvasText } from "../fonts/canvas-text.js";
@@ -273,6 +274,10 @@ let slideShowReported: SlideShowPosition | null = null;
 // The show's new size, taken in by the frame drawn at it: a canvas resized
 // apart from its frame would show cleared until the frame after.
 let slideShowResize: Extract<SlideShowInput, { resize: unknown }> | null = null;
+// The show's canvas and its size, device pixels, and a presenter view's copy
+// of its slide, if one watches it: each frame's slide is copied onto it.
+let slideShowSurface: { canvas: OffscreenCanvas; width: number; height: number } | null = null;
+let slideShowMirror: { canvas: OffscreenCanvas; context: OffscreenCanvasRenderingContext2D; slide: Size } | null = null;
 
 /** How long ahead of a frame due later its animation frame is asked for, ms. */
 const SLIDE_SHOW_FRAME_AHEAD = 20;
@@ -308,9 +313,14 @@ function drawSlideShowFrame(now: number): void {
     if (!session || slideShow === null) return;
     let status: SlideShowStatus;
     try {
-        if (slideShowResize) session.slideShowInput(slideShowResize);
+        if (slideShowResize) {
+            session.slideShowInput(slideShowResize);
+            const { width, height } = slideShowResize.resize;
+            if (slideShowSurface) Object.assign(slideShowSurface, { width, height });
+        }
         slideShowResize = null;
         status = session.renderSlideShowFrame(now);
+        mirrorSlideShow();
     } catch {
         endSlideShowPlaying();
         return;
@@ -322,6 +332,33 @@ function drawSlideShowFrame(now: number): void {
     }
     reportSlideShow(status);
     scheduleSlideShowFrame(status.nextFrame);
+}
+
+/**
+ * Copy the slide the show has just drawn onto the presenter view's canvas, if
+ * one watches it: the slide's own rectangle of the show's surface — where the
+ * show stands it, centred, as large as fits — onto the whole of the copy,
+ * which has the slide's proportions.
+ */
+function mirrorSlideShow(): void {
+    const surface = slideShowSurface;
+    const mirror = slideShowMirror;
+    if (!surface || !mirror) return;
+    const { width, height } = mirror.slide;
+    const scale = Math.min(surface.width / width, surface.height / height);
+    const [w, h] = [width * scale, height * scale];
+    const { canvas, context } = mirror;
+    context.drawImage(
+        surface.canvas,
+        (surface.width - w) / 2,
+        (surface.height - h) / 2,
+        w,
+        h,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+    );
 }
 
 /** Tell the host where the show playing is, if it has moved. */
@@ -346,6 +383,7 @@ function stopSlideShow(): void {
     slideShow = null;
     slideShowReported = null;
     slideShowResize = null;
+    slideShowSurface = slideShowMirror = null;
     session?.endSlideShow();
 }
 
@@ -1573,6 +1611,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 const slide = msg.slide ?? shownSlides(session)[0] ?? 0;
                 session.startSlideShow(slide, msg.canvas, msg.width, msg.height);
                 slideShow = "show";
+                slideShowSurface = { canvas: msg.canvas, width: msg.width, height: msg.height };
+                const mirror = msg.mirror;
+                const context = mirror?.canvas.getContext("2d");
+                if (mirror && context) {
+                    Object.assign(mirror.canvas, { width: mirror.width, height: mirror.height });
+                    slideShowMirror = { canvas: mirror.canvas, context, slide: mirror.slide };
+                }
                 scheduleSlideShowFrame(0);
                 reply(id, undefined);
                 break;
@@ -1602,6 +1647,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 } catch {
                     endSlideShowPlaying();
                 }
+                break;
+            }
+            case "resizeSlideShowMirror": {
+                if (!slideShowMirror) break;
+                Object.assign(slideShowMirror.canvas, { width: msg.width, height: msg.height });
+                // Cleared as it resized: a frame copies the slide onto it again.
+                scheduleSlideShowFrame(0);
                 break;
             }
             case "endSlideShow": {

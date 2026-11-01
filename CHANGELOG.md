@@ -21,6 +21,16 @@ listed once, by package. Its major and minor version are those of the
   won't fill the screen, the show fills the UI. `startSlideShow(slide?)` and
   `endSlideShow()` play and end it, `isSlideShowPlaying` says whether one
   plays, and `"slideShow:changed"` fires as one starts and ends.
+- A slide show plays with PowerPoint's presenter view where there is a
+  second screen, as the View tab's Use Presenter View has it, on at first:
+  the show opens in a window of its own, which a click fills the audience's
+  screen with once it is dragged there, and the presenter view covers the
+  UI here — the slide as the audience sees it, transitions and animations
+  playing, the next slide, the slide's notes with their text made larger or
+  smaller, a timer to pause and restart, the time, and buttons to step the
+  show and end it. Closing the show's window ends the show. A browser that
+  can't tell of a second screen (any but Chrome and Edge) plays the show
+  alone, as it did.
 
 ## [0.8.10] - 2026-10-31
 

@@ -175,6 +175,9 @@ export interface Messages {
     "command.slideShowFromBeginning": string;
     /** From Current Slide — a deck's slide show, from the slide shown */
     "command.slideShowFromCurrent": string;
+    /** Use Presenter View — a deck's slide show in a window of its own for
+     *  the audience's screen, and the presenter view here */
+    "command.usePresenterView": string;
     /** Preview */
     "command.previewSlide": string;
     /** Stop — Preview, while a slide preview plays */
@@ -475,6 +478,36 @@ export interface Messages {
     // Slide show
     /** End of slide show, click to exit. — over the black past a slide show's last slide */
     "slideShow.end": string;
+    /** Slide Show — the title of the window a slide show plays in */
+    "slideShow.window": string;
+    /** Drag this window to the screen your audience sees, then click it to fill that screen. */
+    "slideShow.windowHint": string;
+
+    // Presenter view
+    /** Presenter View */
+    "presenter.label": string;
+    /** Slide {slide} of {count} */
+    "presenter.slideOf": string;
+    /** Previous — the step or slide before */
+    "presenter.previous": string;
+    /** Next — the next step or slide */
+    "presenter.next": string;
+    /** End Show */
+    "presenter.endShow": string;
+    /** Next Slide — over the picture of the slide the show goes to next */
+    "presenter.nextSlide": string;
+    /** End of slide show — where the next slide would be, after the last */
+    "presenter.endOfShow": string;
+    /** Pause Timer */
+    "presenter.pauseTimer": string;
+    /** Resume Timer */
+    "presenter.resumeTimer": string;
+    /** Restart Timer */
+    "presenter.restartTimer": string;
+    /** Make the Text Larger — the notes' */
+    "presenter.largerText": string;
+    /** Make the Text Smaller — the notes' */
+    "presenter.smallerText": string;
 
     // Thumbnails
     /** Page thumbnails */

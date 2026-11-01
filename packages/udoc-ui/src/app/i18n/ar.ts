@@ -96,6 +96,7 @@ export const ar: Messages = {
     "command.notes": "ملاحظات",
     "command.slideShowFromBeginning": "من البداية",
     "command.slideShowFromCurrent": "من الشريحة الحالية",
+    "command.usePresenterView": "استخدام طريقة عرض مقدم العرض",
     "command.previewSlide": "معاينة",
     "command.stopSlidePreview": "إيقاف",
     "command.singleScroll": "مفرد",
@@ -257,6 +258,22 @@ export const ar: Messages = {
 
     // Slide show
     "slideShow.end": "نهاية عرض الشرائح. انقر للخروج.",
+    "slideShow.window": "عرض الشرائح",
+    "slideShow.windowHint": "اسحب هذه النافذة إلى الشاشة التي يراها جمهورك، ثم انقر فوقها لتملأ تلك الشاشة.",
+
+    // Presenter view
+    "presenter.label": "طريقة عرض مقدم العرض",
+    "presenter.slideOf": "الشريحة {slide} من {count}",
+    "presenter.previous": "السابق",
+    "presenter.next": "التالي",
+    "presenter.endShow": "إنهاء العرض",
+    "presenter.nextSlide": "الشريحة التالية",
+    "presenter.endOfShow": "نهاية عرض الشرائح",
+    "presenter.pauseTimer": "إيقاف المؤقت مؤقتًا",
+    "presenter.resumeTimer": "استئناف المؤقت",
+    "presenter.restartTimer": "إعادة تشغيل المؤقت",
+    "presenter.largerText": "تكبير النص",
+    "presenter.smallerText": "تصغير النص",
 
     // Thumbnails
     "thumbnails.pages": "صور مصغرة للصفحات",

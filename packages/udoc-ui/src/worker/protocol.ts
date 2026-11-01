@@ -67,6 +67,7 @@ import type {
     TextSelectOptions,
     ScrollAlignment,
     ScrollMode,
+    Size,
     UDocSelectionProperties,
     Viewport,
 } from "../geometry.js";
@@ -139,12 +140,36 @@ export interface PreviewSlideRequest {
  * the deck a slide at a time, as PowerPoint's Slide Show plays it, in place of
  * any show or preview playing. The worker draws it frame by frame as the show
  * asks, posts a {@link SlideShowStatusReport} as it moves, and a
- * {@link SlideShowEndedReport} if it can draw no further.
+ * {@link SlideShowEndedReport} if it can draw no further. With a `mirror`, it
+ * copies the slide of each frame onto it too.
  */
 export interface StartSlideShowRequest {
     type: "startSlideShow";
     slide?: number;
     canvas: OffscreenCanvas;
+    width: number;
+    height: number;
+    mirror?: SlideShowMirror;
+}
+
+/**
+ * A presenter view's copy of the slide a show draws: `canvas`, transferred,
+ * `width × height` device pixels, of the deck's `slide` size's proportions,
+ * which the worker copies the slide's own rectangle of each frame onto —
+ * where the show stands it, centred on its surface, as large as fits.
+ */
+export interface SlideShowMirror {
+    canvas: OffscreenCanvas;
+    width: number;
+    height: number;
+    /** The deck's slides' size, points. */
+    slide: Size;
+}
+
+/** The slide show's {@link SlideShowMirror} is now `width × height` device
+ *  pixels: the worker draws a frame at once to copy onto it. */
+export interface ResizeSlideShowMirrorRequest {
+    type: "resizeSlideShowMirror";
     width: number;
     height: number;
 }
@@ -1958,6 +1983,7 @@ export type WorkerRequest =
     | PreviewSlideRequest
     | StartSlideShowRequest
     | SlideShowInputRequest
+    | ResizeSlideShowMirrorRequest
     | EndSlideShowRequest
     | AddViewerRequest
     | RegisterFontsRequest

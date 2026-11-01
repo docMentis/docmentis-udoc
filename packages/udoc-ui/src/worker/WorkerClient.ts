@@ -407,20 +407,37 @@ export class WorkerClient {
      * `width × height` device pixels. It plays the deck a slide at a time, as
      * PowerPoint's Slide Show does, in place of any show or preview playing,
      * moving on at each {@link slideShowInput}; {@link onSlideShowStatus} tells
-     * where it is as it moves. Resolves once it plays; rejects when it can't —
-     * no deck open, no WebGL2.
+     * where it is as it moves. With a `mirror` — a presenter view's canvas,
+     * also transferred, `width × height` device pixels of the deck's `slide`
+     * size's proportions — the worker copies each frame's slide onto it.
+     * Resolves once it plays; rejects when it can't — no deck open, no WebGL2.
      */
     async startSlideShow(
         canvas: HTMLCanvasElement,
         slide: number | null,
         width: number,
         height: number,
+        mirror?: { canvas: HTMLCanvasElement; width: number; height: number; slide: Size },
     ): Promise<void> {
         const offscreen = canvas.transferControlToOffscreen();
+        const copy = mirror && { ...mirror, canvas: mirror.canvas.transferControlToOffscreen() };
         await this.#send(
-            { type: "startSlideShow", ...(slide !== null && { slide }), canvas: offscreen, width, height },
-            [offscreen],
+            {
+                type: "startSlideShow",
+                ...(slide !== null && { slide }),
+                canvas: offscreen,
+                width,
+                height,
+                ...(copy && { mirror: copy }),
+            },
+            copy ? [offscreen, copy.canvas] : [offscreen],
         );
+    }
+
+    /** The slide show's mirror — see {@link startSlideShow} — is now `width ×
+     *  height` device pixels. */
+    resizeSlideShowMirror(width: number, height: number): void {
+        this.#post({ type: "resizeSlideShowMirror", width, height });
     }
 
     /**

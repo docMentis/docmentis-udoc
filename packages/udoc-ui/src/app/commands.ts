@@ -55,6 +55,7 @@ import {
     ICON_STOP_SLIDE_PREVIEW,
     ICON_SLIDE_SHOW_FROM_BEGINNING,
     ICON_SLIDE_SHOW_FROM_CURRENT,
+    ICON_PRESENTER_VIEW,
     ICON_NOTES_PAGE_VIEW,
     ICON_SLIDE_MASTER_VIEW,
     ICON_NORMAL_VIEW,
@@ -891,6 +892,22 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             press: (store) => store.dispatch({ type: "START_SLIDE_SHOW", slide: store.getState().pageIndex }),
         },
         enabledWhen: (c) => c.ready && c.presentationView !== "slideMaster",
+    },
+    // With a screen for the audience, a slide show plays there, in a window of
+    // its own, and the presenter view here: PowerPoint's Use Presenter View.
+    usePresenterView: {
+        id: "usePresenterView",
+        label: "command.usePresenterView",
+        icon: ICON_PRESENTER_VIEW,
+        group: "slideShow",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            pressed: (state) => state.usePresenterView,
+            press: (store) =>
+                store.dispatch({ type: "SET_USE_PRESENTER_VIEW", use: !store.getState().usePresenterView }),
+        },
+        enabledWhen: whenReady,
     },
 
     // View tab — a deck's slide shown, previewed where it shows as

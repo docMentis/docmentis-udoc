@@ -96,6 +96,7 @@ export const es: Messages = {
     "command.notes": "Notas",
     "command.slideShowFromBeginning": "Desde el principio",
     "command.slideShowFromCurrent": "Desde la diapositiva actual",
+    "command.usePresenterView": "Usar vista Moderador",
     "command.previewSlide": "Vista previa",
     "command.stopSlidePreview": "Detener",
     "command.singleScroll": "Individual",
@@ -257,6 +258,23 @@ export const es: Messages = {
 
     // Slide show
     "slideShow.end": "Fin de la presentación con diapositivas. Haga clic para salir.",
+    "slideShow.window": "Presentación con diapositivas",
+    "slideShow.windowHint":
+        "Arrastre esta ventana a la pantalla que ve su público y haga clic en ella para que ocupe esa pantalla.",
+
+    // Presenter view
+    "presenter.label": "Vista Moderador",
+    "presenter.slideOf": "Diapositiva {slide} de {count}",
+    "presenter.previous": "Anterior",
+    "presenter.next": "Siguiente",
+    "presenter.endShow": "Finalizar presentación",
+    "presenter.nextSlide": "Diapositiva siguiente",
+    "presenter.endOfShow": "Fin de la presentación con diapositivas",
+    "presenter.pauseTimer": "Pausar el temporizador",
+    "presenter.resumeTimer": "Reanudar el temporizador",
+    "presenter.restartTimer": "Reiniciar el temporizador",
+    "presenter.largerText": "Aumentar el tamaño del texto",
+    "presenter.smallerText": "Reducir el tamaño del texto",
 
     // Thumbnails
     "thumbnails.pages": "Miniaturas de páginas",

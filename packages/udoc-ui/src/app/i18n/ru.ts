@@ -96,6 +96,7 @@ export const ru: Messages = {
     "command.notes": "Заметки",
     "command.slideShowFromBeginning": "С начала",
     "command.slideShowFromCurrent": "С текущего слайда",
+    "command.usePresenterView": "Использовать режим докладчика",
     "command.previewSlide": "Просмотр",
     "command.stopSlidePreview": "Остановить",
     "command.singleScroll": "Одиночный",
@@ -257,6 +258,23 @@ export const ru: Messages = {
 
     // Slide show
     "slideShow.end": "Конец показа слайдов. Щелкните для выхода.",
+    "slideShow.window": "Показ слайдов",
+    "slideShow.windowHint":
+        "Перетащите это окно на экран, который видят зрители, а затем щелкните его, чтобы оно заполнило этот экран.",
+
+    // Presenter view
+    "presenter.label": "Режим докладчика",
+    "presenter.slideOf": "Слайд {slide} из {count}",
+    "presenter.previous": "Назад",
+    "presenter.next": "Далее",
+    "presenter.endShow": "Завершить показ",
+    "presenter.nextSlide": "Следующий слайд",
+    "presenter.endOfShow": "Конец показа слайдов",
+    "presenter.pauseTimer": "Приостановить таймер",
+    "presenter.resumeTimer": "Возобновить таймер",
+    "presenter.restartTimer": "Перезапустить таймер",
+    "presenter.largerText": "Увеличить текст",
+    "presenter.smallerText": "Уменьшить текст",
 
     // Thumbnails
     "thumbnails.pages": "Миниатюры страниц",

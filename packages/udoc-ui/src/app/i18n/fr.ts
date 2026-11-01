@@ -96,6 +96,7 @@ export const fr: Messages = {
     "command.notes": "Notes",
     "command.slideShowFromBeginning": "À partir du début",
     "command.slideShowFromCurrent": "À partir de la diapositive actuelle",
+    "command.usePresenterView": "Utiliser le mode Présentateur",
     "command.previewSlide": "Aperçu",
     "command.stopSlidePreview": "Arrêter",
     "command.singleScroll": "Unique",
@@ -257,6 +258,23 @@ export const fr: Messages = {
 
     // Slide show
     "slideShow.end": "Fin du diaporama. Cliquez pour quitter.",
+    "slideShow.window": "Diaporama",
+    "slideShow.windowHint":
+        "Faites glisser cette fenêtre sur l’écran que voit votre public, puis cliquez dessus pour qu’elle remplisse cet écran.",
+
+    // Presenter view
+    "presenter.label": "Mode Présentateur",
+    "presenter.slideOf": "Diapositive {slide} sur {count}",
+    "presenter.previous": "Précédent",
+    "presenter.next": "Suivant",
+    "presenter.endShow": "Arrêter le diaporama",
+    "presenter.nextSlide": "Diapositive suivante",
+    "presenter.endOfShow": "Fin du diaporama",
+    "presenter.pauseTimer": "Suspendre le minuteur",
+    "presenter.resumeTimer": "Reprendre le minuteur",
+    "presenter.restartTimer": "Redémarrer le minuteur",
+    "presenter.largerText": "Agrandir le texte",
+    "presenter.smallerText": "Réduire le texte",
 
     // Thumbnails
     "thumbnails.pages": "Miniatures des pages",

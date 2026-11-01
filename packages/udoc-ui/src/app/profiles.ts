@@ -50,7 +50,7 @@ const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; sh
     wordprocessing: { pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT], shows: ["formattingMarks"] },
     presentation: {
         pages: ["normalView", "notesPageView", "slideMasterView", ...SCROLL],
-        shows: ["notes", "slideShowFromBeginning", "slideShowFromCurrent", "previewSlide"],
+        shows: ["notes", "slideShowFromBeginning", "slideShowFromCurrent", "usePresenterView", "previewSlide"],
     },
     image: { pages: [...SCROLL, "pageGap"], shows: [] },
     spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar"] },
@@ -69,8 +69,9 @@ const EDIT_VIEWS: ReadonlySet<string> = new Set<CommandId>(["slideMasterView"]);
  * pair up, the turn they're shown at, the gaps between them, `edit`'s `guides`
  * (an extension's, edit mode's ruler), then what shows beside the document —
  * a PDF's layers, a deck's notes, a word document's formatting marks, a
- * workbook's formula bar — then a deck's slide show, From Beginning and From
- * Current Slide, and last its Preview of the slide shown.
+ * workbook's formula bar — then a deck's slide show, From Beginning, From
+ * Current Slide and Use Presenter View, and last its Preview of the slide
+ * shown.
  */
 export function viewTab(docType: UDocType, edit?: { guides: readonly string[] }): ToolbarTab {
     const { pages, shows } = VIEW_COMMANDS[docType];

@@ -185,9 +185,11 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
     }
 
     /** Lay the notes out as wide as the pane, less the scrollbar's strip, so a
-     *  bar showing never turns a line. */
+     *  bar showing never turns a line — but for while a slide show plays: the
+     *  presenter view lays them out as wide as its own, and the pane has them
+     *  back once the show ends. */
     function sendPageWidth(): void {
-        if (!shown || width <= SCROLLBAR_THICKNESS_PX) return;
+        if (!shown || width <= SCROLLBAR_THICKNESS_PX || store?.getState().slideShowPlaying) return;
         const next = (width - SCROLLBAR_THICKNESS_PX) / scale();
         if (next === pageWidth) return;
         pageWidth = next;
@@ -554,6 +556,18 @@ export function createNotesPane(i18n: I18n, client: WorkerClient, hooks: NotesPa
                 s,
                 (state) => viewDpi(state),
                 () => sendPageWidth(),
+            ),
+        );
+        // A slide show ended: the notes as wide as the pane again.
+        cleanups.push(
+            subscribeSelector(
+                s,
+                (state) => state.slideShowPlaying,
+                (playing) => {
+                    if (playing) return;
+                    pageWidth = Number.NaN;
+                    sendPageWidth();
+                },
             ),
         );
 

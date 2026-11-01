@@ -96,6 +96,7 @@ export const ja: Messages = {
     "command.notes": "ノート",
     "command.slideShowFromBeginning": "最初から",
     "command.slideShowFromCurrent": "現在のスライドから",
+    "command.usePresenterView": "発表者ツールを使用する",
     "command.previewSlide": "プレビュー",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "単一",
@@ -257,6 +258,23 @@ export const ja: Messages = {
 
     // Slide show
     "slideShow.end": "スライド ショーの最後です。クリックすると終了します。",
+    "slideShow.window": "スライド ショー",
+    "slideShow.windowHint":
+        "このウィンドウを聴衆が見る画面にドラッグしてから、クリックしてその画面いっぱいに表示します。",
+
+    // Presenter view
+    "presenter.label": "発表者ツール",
+    "presenter.slideOf": "スライド {slide} / {count}",
+    "presenter.previous": "前へ",
+    "presenter.next": "次へ",
+    "presenter.endShow": "スライド ショーの終了",
+    "presenter.nextSlide": "次のスライド",
+    "presenter.endOfShow": "スライド ショーの最後",
+    "presenter.pauseTimer": "タイマーを一時停止",
+    "presenter.resumeTimer": "タイマーを再開",
+    "presenter.restartTimer": "タイマーをリスタート",
+    "presenter.largerText": "文字を拡大",
+    "presenter.smallerText": "文字を縮小",
 
     // Thumbnails
     "thumbnails.pages": "ページサムネイル",

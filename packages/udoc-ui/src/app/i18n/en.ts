@@ -97,6 +97,7 @@ export const en: Messages = {
     "command.notes": "Notes",
     "command.slideShowFromBeginning": "From Beginning",
     "command.slideShowFromCurrent": "From Current Slide",
+    "command.usePresenterView": "Use Presenter View",
     "command.previewSlide": "Preview",
     "command.stopSlidePreview": "Stop",
     "command.singleScroll": "Single",
@@ -258,6 +259,22 @@ export const en: Messages = {
 
     // Slide show
     "slideShow.end": "End of slide show, click to exit.",
+    "slideShow.window": "Slide Show",
+    "slideShow.windowHint": "Drag this window to the screen your audience sees, then click it to fill that screen.",
+
+    // Presenter view
+    "presenter.label": "Presenter View",
+    "presenter.slideOf": "Slide {slide} of {count}",
+    "presenter.previous": "Previous",
+    "presenter.next": "Next",
+    "presenter.endShow": "End Show",
+    "presenter.nextSlide": "Next Slide",
+    "presenter.endOfShow": "End of slide show",
+    "presenter.pauseTimer": "Pause Timer",
+    "presenter.resumeTimer": "Resume Timer",
+    "presenter.restartTimer": "Restart Timer",
+    "presenter.largerText": "Make the Text Larger",
+    "presenter.smallerText": "Make the Text Smaller",
 
     // Thumbnails
     "thumbnails.pages": "Page thumbnails",

@@ -351,6 +351,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         case "END_SLIDE_SHOW":
             return state.slideShowPlaying ? { ...state, slideShowPlaying: false } : state;
 
+        case "SET_USE_PRESENTER_VIEW":
+            return action.use === state.usePresenterView ? state : { ...state, usePresenterView: action.use };
+
         case "SET_PRESENTATION_VIEW": {
             // A deck shows it on its plane; one still opening, once its roster
             // is in (SET_PLANES). Another view stops a slide preview playing.

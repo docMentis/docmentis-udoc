@@ -1385,8 +1385,10 @@ export function mountUIShell(
         // A word document shown pageless lays no page under its text: the pane
         // is its page, white like the pages it shows otherwise.
         client.setBackdrop(showsPageless(store.getState()) ? { r: 255, g: 255, b: 255 } : color);
-        // A deck's notes stand on the same ground, under the slides.
+        // A deck's notes stand on the same ground, under the slides and in
+        // the presenter view.
         notesPane.setBackdrop(color, isDark);
+        slideShow.setBackdrop(color, isDark);
     }
     const unsubPagelessBackdrop = subscribeSelector(store, showsPageless, () =>
         syncBackdrop(resolveIsDark(store.getState().theme)),

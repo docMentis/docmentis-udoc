@@ -216,6 +216,9 @@ export type Action =
     | { type: "START_SLIDE_SHOW"; slide: number | null }
     // End the slide show playing, or mark one ended
     | { type: "END_SLIDE_SHOW" }
+    // Play a slide show with the presenter view where there is a screen for
+    // the audience, or not
+    | { type: "SET_USE_PRESENTER_VIEW"; use: boolean }
     // Show the current worksheet as its grid or as Page Layout view's paper —
     // the View tab's Normal and Page Layout
     | { type: "SET_SHEET_LAYOUT_MODE"; mode: SheetLayoutMode }

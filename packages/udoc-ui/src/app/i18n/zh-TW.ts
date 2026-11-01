@@ -96,6 +96,7 @@ export const zhTW: Messages = {
     "command.notes": "備忘稿",
     "command.slideShowFromBeginning": "從首張投影片",
     "command.slideShowFromCurrent": "從目前投影片",
+    "command.usePresenterView": "使用簡報者檢視畫面",
     "command.previewSlide": "預覽",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "單頁",
@@ -257,6 +258,22 @@ export const zhTW: Messages = {
 
     // Slide show
     "slideShow.end": "投影片放映結束，按一下即可結束。",
+    "slideShow.window": "投影片放映",
+    "slideShow.windowHint": "將此視窗拖曳到觀眾看到的螢幕，然後按一下它以填滿該螢幕。",
+
+    // Presenter view
+    "presenter.label": "簡報者檢視畫面",
+    "presenter.slideOf": "投影片 {slide}/{count}",
+    "presenter.previous": "上一個",
+    "presenter.next": "下一個",
+    "presenter.endShow": "結束放映",
+    "presenter.nextSlide": "下一張投影片",
+    "presenter.endOfShow": "投影片放映結束",
+    "presenter.pauseTimer": "暫停計時器",
+    "presenter.resumeTimer": "繼續計時器",
+    "presenter.restartTimer": "重新開始計時器",
+    "presenter.largerText": "放大文字",
+    "presenter.smallerText": "縮小文字",
 
     // Thumbnails
     "thumbnails.pages": "頁面縮圖",

@@ -324,6 +324,7 @@ export type CommandId =
     | "previewSlide"
     | "slideShowFromBeginning"
     | "slideShowFromCurrent"
+    | "usePresenterView"
     | "normalView"
     | "notesPageView"
     | "slideMasterView"
@@ -744,6 +745,13 @@ export interface UIState {
      * another document opened.
      */
     slideShowPlaying: boolean;
+    /**
+     * Whether a slide show plays with PowerPoint's presenter view where there
+     * is a screen for the audience: the show in a window of its own, for that
+     * screen, and the presenter view over the UI — the View tab's Use
+     * Presenter View.
+     */
+    usePresenterView: boolean;
 
     /** Visible canvas size in CSS px (updated by the Canvas on resize). */
     viewportWidth: number;
@@ -999,6 +1007,7 @@ export const initialState: UIState = {
     slidePreviewing: false,
     slideShowRequest: { slide: null, seq: 0 },
     slideShowPlaying: false,
+    usePresenterView: true,
     viewportWidth: 0,
     viewportHeight: 0,
     pageIndex: 0,

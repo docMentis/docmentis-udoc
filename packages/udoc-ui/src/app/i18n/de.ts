@@ -96,6 +96,7 @@ export const de: Messages = {
     "command.notes": "Notizen",
     "command.slideShowFromBeginning": "Von Beginn an",
     "command.slideShowFromCurrent": "Ab aktueller Folie",
+    "command.usePresenterView": "Referentenansicht verwenden",
     "command.previewSlide": "Vorschau",
     "command.stopSlidePreview": "Beenden",
     "command.singleScroll": "Einzeln",
@@ -257,6 +258,23 @@ export const de: Messages = {
 
     // Slide show
     "slideShow.end": "Ende der Bildschirmpräsentation. Zum Beenden klicken.",
+    "slideShow.window": "Bildschirmpräsentation",
+    "slideShow.windowHint":
+        "Ziehen Sie dieses Fenster auf den Bildschirm, den Ihr Publikum sieht, und klicken Sie dann darauf, damit es den Bildschirm ausfüllt.",
+
+    // Presenter view
+    "presenter.label": "Referentenansicht",
+    "presenter.slideOf": "Folie {slide} von {count}",
+    "presenter.previous": "Zurück",
+    "presenter.next": "Weiter",
+    "presenter.endShow": "Präsentation beenden",
+    "presenter.nextSlide": "Nächste Folie",
+    "presenter.endOfShow": "Ende der Bildschirmpräsentation",
+    "presenter.pauseTimer": "Zeitgeber anhalten",
+    "presenter.resumeTimer": "Zeitgeber fortsetzen",
+    "presenter.restartTimer": "Zeitgeber neu starten",
+    "presenter.largerText": "Text vergrößern",
+    "presenter.smallerText": "Text verkleinern",
 
     // Thumbnails
     "thumbnails.pages": "Seitenminiaturen",

@@ -96,6 +96,7 @@ export const ko: Messages = {
     "command.notes": "슬라이드 노트",
     "command.slideShowFromBeginning": "처음부터",
     "command.slideShowFromCurrent": "현재 슬라이드부터",
+    "command.usePresenterView": "발표자 보기 사용",
     "command.previewSlide": "미리 보기",
     "command.stopSlidePreview": "중지",
     "command.singleScroll": "단일",
@@ -257,6 +258,22 @@ export const ko: Messages = {
 
     // Slide show
     "slideShow.end": "슬라이드 쇼의 끝입니다. 클릭하면 끝납니다.",
+    "slideShow.window": "슬라이드 쇼",
+    "slideShow.windowHint": "이 창을 청중이 보는 화면으로 끌어 놓은 다음 클릭하여 그 화면을 채우세요.",
+
+    // Presenter view
+    "presenter.label": "발표자 보기",
+    "presenter.slideOf": "슬라이드 {slide}/{count}",
+    "presenter.previous": "이전",
+    "presenter.next": "다음",
+    "presenter.endShow": "쇼 마침",
+    "presenter.nextSlide": "다음 슬라이드",
+    "presenter.endOfShow": "슬라이드 쇼 끝",
+    "presenter.pauseTimer": "타이머 일시 중지",
+    "presenter.resumeTimer": "타이머 계속",
+    "presenter.restartTimer": "타이머 다시 시작",
+    "presenter.largerText": "텍스트 크게",
+    "presenter.smallerText": "텍스트 작게",
 
     // Thumbnails
     "thumbnails.pages": "페이지 축소판 그림",

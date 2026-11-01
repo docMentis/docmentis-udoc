@@ -1490,11 +1490,16 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * show; from the first slide the show shows when omitted. In place of a
      * show playing; nothing for a document that is not a deck.
      *
-     * The browser fills the screen only in answer to a user gesture, so call
-     * it from the host's own click handler; without one, or where the browser
-     * refuses, the show fills the UI instead. `"slideShow:changed"` fires as
-     * it starts and ends, and once it ends the view shows the slide it was
-     * on.
+     * With the View tab's Use Presenter View on, as it is at first, and a
+     * second screen the browser knows of (Chrome's and Edge's), the show plays
+     * in a window of its own, for the audience's screen, and the presenter
+     * view — the slide, the next one, the notes and a timer — over the UI.
+     *
+     * The browser fills the screen, or opens that window, only in answer to a
+     * user gesture, so call it from the host's own click handler; without
+     * one, or where the browser refuses, the show fills the UI instead.
+     * `"slideShow:changed"` fires as it starts and ends, and once it ends the
+     * view shows the slide it was on.
      */
     startSlideShow(slide?: number): void {
         this.shell.startSlideShow(slide ?? null);

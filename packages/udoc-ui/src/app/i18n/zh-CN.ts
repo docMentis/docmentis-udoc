@@ -96,6 +96,7 @@ export const zhCN: Messages = {
     "command.notes": "备注",
     "command.slideShowFromBeginning": "从头开始",
     "command.slideShowFromCurrent": "从当前幻灯片开始",
+    "command.usePresenterView": "使用演示者视图",
     "command.previewSlide": "预览",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "单页",
@@ -257,6 +258,22 @@ export const zhCN: Messages = {
 
     // Slide show
     "slideShow.end": "放映结束，单击鼠标退出。",
+    "slideShow.window": "幻灯片放映",
+    "slideShow.windowHint": "将此窗口拖到观众看到的屏幕上，然后单击它以填满该屏幕。",
+
+    // Presenter view
+    "presenter.label": "演示者视图",
+    "presenter.slideOf": "幻灯片 {slide}/{count}",
+    "presenter.previous": "上一个",
+    "presenter.next": "下一个",
+    "presenter.endShow": "结束放映",
+    "presenter.nextSlide": "下一张幻灯片",
+    "presenter.endOfShow": "放映结束",
+    "presenter.pauseTimer": "暂停计时器",
+    "presenter.resumeTimer": "继续计时器",
+    "presenter.restartTimer": "重新开始计时器",
+    "presenter.largerText": "放大文本",
+    "presenter.smallerText": "缩小文本",
 
     // Thumbnails
     "thumbnails.pages": "页面缩略图",
