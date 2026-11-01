@@ -6,6 +6,21 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Changed
+
+- A large workbook opens in a fraction of the memory it took — a sheet of a
+  few hundred thousand cells in a quarter of it or less — and its cells take
+  about a fifth less once laid out.
+
+#### Fixed
+
+- A deck saved keeps its slides' transitions that PowerPoint 2010 and later
+  added — Morph, Vortex, Ripple, Curtains and the rest — and their duration,
+  where it could save a Morph as a fade and the others as no transition at
+  all; and an animation saved keeps its bounce.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -29,6 +44,8 @@ listed once, by package. Its major and minor version are those of the
   Page goes back to that slide. `setPresentationView("slideMaster")` and the
   `presentationView` option show it too. New Slide greys in it, and Print
   still prints the deck's slides.
+- `exportToBytes("pdf")` exports a workbook, every worksheet on the pages it
+  prints on, where it rejected one as `unsupported`.
 
 #### Changed
 
@@ -51,6 +68,10 @@ listed once, by package. Its major and minor version are those of the
   squeeze or stretch for a frame as it re-fits and spring back.
 - View mode shows Undo and Redo for a PDF alone, whose annotations it
   edits, where since the View tab they showed, greyed, for every document.
+- A large worksheet keeps only the rows around its view laid out as it is
+  scrolled, letting those far behind go and laying them out again on the way
+  back, where it laid the whole sheet out ahead and kept it: past 2 GB of
+  memory for a sheet of 460,000 cells.
 
 ### udoc-editor
 
@@ -88,6 +109,46 @@ listed once, by package. Its major and minor version are those of the
   their own, side by side, and Group and Ungroup as buttons beside them, in
   place of the one Arrange dropdown they nested in. The `translations` keys
   `command.shapeArrange` and `command.objectArrange` are gone.
+
+### udoc-node
+
+#### Added
+
+- `exportToBytes("pdf")` exports a workbook, every worksheet on the pages it
+  prints on, as Excel prints a workbook, where it rejected one as
+  `unsupported`.
+
+#### Changed
+
+- A workbook whose first sheet was saved in Page Layout view opens in it:
+  `pageCount` and `exportPageToBytes` count and render that sheet's pages of
+  paper, where it was one page, its whole grid.
+
+### udoc-cli
+
+#### Added
+
+- `udoc export` exports a workbook or CSV to a PDF, every worksheet on the
+  pages it prints on, where it failed as unsupported.
+
+#### Changed
+
+- A workbook whose first sheet was saved in Page Layout view opens in it:
+  `udoc page-count` and `udoc render` count and render that sheet's pages of
+  paper, where it was one page, its whole grid.
+
+### udoc-server
+
+#### Added
+
+- `GET /documents/:id/layout/pages.pdf` exports a workbook, every worksheet
+  on the pages it prints on, where it answered `422 unsupported`.
+
+#### Changed
+
+- A workbook whose first sheet was saved in Page Layout view opens in it:
+  `layout/page-count` and `layout/pages/:index` count and render that sheet's
+  pages of paper, where it was one page, its whole grid.
 
 ## [0.8.9] - 2026-10-30
 
