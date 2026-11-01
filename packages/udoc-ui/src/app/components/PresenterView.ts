@@ -1,7 +1,9 @@
 // A deck's presenter view, as PowerPoint's: what the presenter sees while a
 // slide show plays on the audience's screen, over the whole UI — the slide as
 // they see it, the slide after it, the slide's notes, a timer and the time,
-// and the buttons that step the show and end it.
+// and the buttons that step the show and end it. A line between each two of
+// its panes moves at a drag, resizing them, where the view keeps it from one
+// show to the next.
 //
 // The slide is the show's own: the worker copies the slide of each frame it
 // draws onto a canvas of the view's. The next slide is a picture of it, as a
@@ -42,6 +44,15 @@ const NOTES_ZOOM_OPEN = 2;
 /** No room around the notes text: the body's own insets keep it off the edges. */
 const NOTES_PADDING: ContentPadding = { top: { px: 0 }, right: { px: 0 }, bottom: { px: 0 }, left: { px: 0 } };
 const NOTES_GAP: PageGap = { horizontal: 0, vertical: 0 };
+
+/** The share of the view's width the next slide and the notes take at first,
+ *  and of their height the next slide does; and the narrowest a line between
+ *  two leaves either — room for the slide's buttons in a row — and the
+ *  shortest, CSS px. */
+const SIDE_SHARE = 1 / 3;
+const NEXT_SHARE = 0.45;
+const MIN_PANE_WIDTH = 320;
+const MIN_PANE_HEIGHT = 160;
 
 /** CSS px of a wheel tick that counts lines rather than pixels. */
 const WHEEL_LINE_PX = 16;
@@ -105,7 +116,7 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
 
     // The slide as the audience sees it, and the buttons that step it.
     const stage = document.createElement("div");
-    stage.className = "udoc-ui__presenter-stage";
+    stage.className = "udoc-ui__presenter-stage udoc-ui__presenter-pane";
     const slideBox = document.createElement("div");
     slideBox.className = "udoc-ui__presenter-slide";
     const slideEnd = document.createElement("div");
@@ -126,6 +137,8 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     // The slide after it, and the notes.
     const side = document.createElement("div");
     side.className = "udoc-ui__presenter-side";
+    const nextPane = document.createElement("div");
+    nextPane.className = "udoc-ui__presenter-pane";
     const nextHeading = document.createElement("div");
     nextHeading.className = "udoc-ui__presenter-heading";
     nextHeading.textContent = i18n.t("presenter.nextSlide");
@@ -138,6 +151,9 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     nextEnd.className = "udoc-ui__presenter-end";
     nextEnd.textContent = i18n.t("presenter.endOfShow");
     nextBox.append(nextCanvas, nextEnd);
+    nextPane.append(nextHeading, nextBox);
+    const notesPane = document.createElement("div");
+    notesPane.className = "udoc-ui__presenter-pane udoc-ui__presenter-notes-pane";
     const notesBar = document.createElement("div");
     notesBar.className = "udoc-ui__presenter-heading";
     const notesHeading = document.createElement("span");
@@ -147,12 +163,25 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     notesBar.append(notesHeading, spacer(), smaller, larger);
     const notesHost = document.createElement("div");
     notesHost.className = "udoc-ui__presenter-notes";
-    side.append(nextHeading, nextBox, notesBar, notesHost);
+    notesPane.append(notesBar, notesHost);
+    // A line between each two, which a drag moves.
+    const sideSplitter = splitter("column");
+    const notesSplitter = splitter("row");
+    side.append(nextPane, notesSplitter, notesPane);
 
     const main = document.createElement("div");
     main.className = "udoc-ui__presenter-main";
-    main.append(stage, side);
+    main.append(stage, sideSplitter, side);
     el.append(bar, main);
+
+    // The share of the view's width the side takes, and of the side's height
+    // the next slide takes, as the lines between them were last left — kept
+    // from one show to the next.
+    let sideShare = SIDE_SHARE;
+    let nextShare = NEXT_SHARE;
+    // Whether a line is being dragged.
+    let dragging = false;
+    applyShares();
 
     // The notes' viewer, added the first time a deck with notes shows here,
     // the canvas it paints into while the view shows, and the ground it draws
@@ -317,6 +346,18 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         });
         on(smaller, "click", () => zoomNotes(-1));
         on(larger, "click", () => zoomNotes(1));
+        on(sideSplitter, "pointerdown", (ev) =>
+            drag(ev, sideSplitter, (at) => {
+                const rect = main.getBoundingClientRect();
+                sideShare = clampShare((rect.right - at.clientX) / rect.width, rect.width, MIN_PANE_WIDTH);
+            }),
+        );
+        on(notesSplitter, "pointerdown", (ev) =>
+            drag(ev, notesSplitter, (at) => {
+                const rect = side.getBoundingClientRect();
+                nextShare = clampShare((at.clientY - rect.top) / rect.height, rect.height, MIN_PANE_HEIGHT);
+            }),
+        );
         on(
             notesHost,
             "wheel",
@@ -333,6 +374,40 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
             },
             { passive: false },
         );
+    }
+
+    /** Lay the panes out at the shares the lines between them leave. */
+    function applyShares(): void {
+        side.style.flexBasis = `${sideShare * 100}%`;
+        nextPane.style.flexBasis = `${nextShare * 100}%`;
+    }
+
+    /**
+     * Follow a drag on `line` from `ev`, `move` setting the shares from each
+     * point it reaches; the panes it resizes lay out again as it goes, the
+     * next slide its picture stretched until the line is let go.
+     */
+    function drag(ev: PointerEvent, line: HTMLElement, move: (at: PointerEvent) => void): void {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        line.setPointerCapture(ev.pointerId);
+        line.classList.add("udoc-ui__presenter-splitter--dragged");
+        dragging = true;
+        const onMove = (at: PointerEvent): void => {
+            move(at);
+            applyShares();
+        };
+        const onUp = (): void => {
+            line.removeEventListener("pointermove", onMove);
+            line.removeEventListener("pointerup", onUp);
+            line.removeEventListener("pointercancel", onUp);
+            line.classList.remove("udoc-ui__presenter-splitter--dragged");
+            dragging = false;
+            renderNext();
+        };
+        line.addEventListener("pointermove", onMove);
+        line.addEventListener("pointerup", onUp);
+        line.addEventListener("pointercancel", onUp);
     }
 
     /** Take in the sizes and the full screen of the window the view shows in,
@@ -390,6 +465,8 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         }
         const { width } = fitCanvas(nextCanvas, nextBox, deck.slideSize);
         const scale = width / deck.slideSize.width;
+        // Pictured again once a line dragged across it is let go.
+        if (dragging && nextShown?.slide === slide) return;
         if (nextShown?.slide === slide && nextShown.scale === scale) return;
         nextShown = { slide, scale };
         const generation = ++nextGeneration;
@@ -538,6 +615,23 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
 }
 
 export type PresenterView = ReturnType<typeof createPresenterView>;
+
+/** A line between two panes, which a drag moves: between a `column` and the
+ *  next, or a `row` and the next. */
+function splitter(between: "column" | "row"): HTMLElement {
+    const el = document.createElement("div");
+    el.className = `udoc-ui__presenter-splitter udoc-ui__presenter-splitter--${between}`;
+    el.setAttribute("role", "separator");
+    el.setAttribute("aria-orientation", between === "column" ? "vertical" : "horizontal");
+    return el;
+}
+
+/** `share` of `size` CSS px, kept so that it and the rest are each at least
+ *  `least` CSS px — halves where both can't be. */
+function clampShare(share: number, size: number, least: number): number {
+    const min = least / size;
+    return min >= 0.5 ? 0.5 : Math.min(1 - min, Math.max(min, share));
+}
 
 /** A space that pushes what follows it to the end of its row. */
 function spacer(): HTMLElement {

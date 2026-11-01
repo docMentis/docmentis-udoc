@@ -28,7 +28,8 @@ listed once, by package. Its major and minor version are those of the
   UI here — the slide as the audience sees it, transitions and animations
   playing, the next slide, the slide's notes with their text made larger or
   smaller, a timer to pause and restart, the time, and buttons to step the
-  show and end it. Closing the show's window ends the show. A browser that
+  show and end it, a line between each two of its panes that a drag moves
+  to resize them. Closing the show's window ends the show. A browser that
   can't tell of a second screen (any but Chrome and Edge) plays the show
   alone, as it did.
 - The View tab's Set Up Screens, in Chrome and Edge, lets the UI place

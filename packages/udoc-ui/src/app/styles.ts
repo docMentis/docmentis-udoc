@@ -2319,25 +2319,61 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-ui__presenter-timer {
         margin-inline-end: 8px;
     }
+    /* The panes: the slide on the left, the next slide and the notes on the
+   right, a line between each two that a drag moves (PresenterView), the
+   right's width and the next slide's height set inline as it leaves them. */
     .udoc-ui-root .udoc-ui__presenter-main {
         flex: 1 1 auto;
         display: flex;
-        gap: 16px;
         min-height: 0;
+    }
+    .udoc-ui-root .udoc-ui__presenter-side,
+    .udoc-ui-root .udoc-ui__presenter-pane {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+    }
+    .udoc-ui-root .udoc-ui__presenter-pane {
+        flex: 0 0 auto;
+        gap: 8px;
         padding: 16px;
     }
     .udoc-ui-root .udoc-ui__presenter-stage,
-    .udoc-ui-root .udoc-ui__presenter-side {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        min-width: 0;
-    }
-    .udoc-ui-root .udoc-ui__presenter-stage {
-        flex: 2 1 0;
-    }
-    .udoc-ui-root .udoc-ui__presenter-side {
+    .udoc-ui-root .udoc-ui__presenter-notes-pane {
         flex: 1 1 0;
+    }
+    .udoc-ui-root .udoc-ui__presenter-side {
+        flex: 0 0 auto;
+    }
+    /* The line, and astride it the band a drag holds it by, 7px as the notes
+   pane's splitter is. */
+    .udoc-ui-root .udoc-ui__presenter-splitter {
+        position: relative;
+        z-index: 1;
+        flex: none;
+        background: var(--udoc-color-outline-variant);
+        touch-action: none;
+    }
+    .udoc-ui-root .udoc-ui__presenter-splitter--column {
+        width: 1px;
+        cursor: col-resize;
+    }
+    .udoc-ui-root .udoc-ui__presenter-splitter--row {
+        height: 1px;
+        cursor: row-resize;
+    }
+    .udoc-ui-root .udoc-ui__presenter-splitter::after {
+        content: "";
+        position: absolute;
+        inset: -3px 0;
+    }
+    .udoc-ui-root .udoc-ui__presenter-splitter--column::after {
+        inset: 0 -3px;
+    }
+    .udoc-ui-root .udoc-ui__presenter-splitter:hover::after,
+    .udoc-ui-root .udoc-ui__presenter-splitter--dragged::after {
+        background: var(--udoc-state-selected);
     }
     /* The slide and the next one, each centred in its box, as large as fits
    (PresenterView's fitCanvas). A press on the slide steps the show on. */
@@ -2354,7 +2390,7 @@ export const uiStyles = css`
         cursor: pointer;
     }
     .udoc-ui-root .udoc-ui__presenter-next {
-        flex: 0 0 40%;
+        flex: 1 1 auto;
     }
     .udoc-ui-root .udoc-ui__presenter-slide-canvas,
     .udoc-ui-root .udoc-ui__presenter-next-canvas {
