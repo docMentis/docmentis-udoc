@@ -189,30 +189,23 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     let nextShown: { slide: number; scale: number } | null = null;
     let nextGeneration = 0;
 
-    // Whether the first click or key in the view's window fills its screen.
-    let fillAtPress = false;
-
     /** The window the view shows in. */
     const view = (): Window => el.ownerDocument.defaultView ?? window;
 
     /**
      * Show the presenter view on `host` — a stage in the UI's window, or in
-     * one of its own, which fills its screen — for a show of `deck`, whose
-     * buttons do `todo`. With `fill`, the first click or key in its window
-     * fills its screen with it. Returns the canvas the worker copies the
-     * show's slide onto, and its size in device pixels, for the show to
-     * transfer.
+     * one of its own, as large as its screen — for a show of `deck`, whose
+     * buttons do `todo`. Returns the canvas the worker copies the show's slide
+     * onto, and its size in device pixels, for the show to transfer.
      */
     function open(
         host: HTMLElement,
         shown: PresenterDeck,
         todo: PresenterActions,
-        fill: boolean,
     ): { canvas: HTMLCanvasElement; width: number; height: number } {
         close();
         deck = shown;
         actions = todo;
-        fillAtPress = fill;
         host.appendChild(el);
         el.focus({ preventScroll: true });
 
@@ -354,32 +347,6 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         doc.addEventListener("fullscreenchange", onFullscreenChange);
         windowCleanups.push(() => doc.removeEventListener("fullscreenchange", onFullscreenChange));
         onFullscreenChange();
-
-        // The first click or key in the window fills its screen with the view,
-        // when the show asks it to: the browser fills a screen only in answer
-        // to a press in the window, and the one that started the show went to
-        // the show. At the click,
-        // not the press under it: a screen filled while the button is still
-        // down moves the view from under the release, and the button never
-        // hears its click. Once a window — a view taken out of the full
-        // screen stays out — and never at the buttons that fill or leave the
-        // screen themselves: its own full-screen button, Swap Screens and End
-        // Show.
-        let pressed = !fillAtPress;
-        const onPress = (ev: Event): void => {
-            if (pressed || (ev instanceof KeyboardEvent && (ev.key === "Escape" || ev.repeat))) return;
-            const target = ev.target instanceof Node ? ev.target : null;
-            if (target && [fullscreen, swap, end].some((button) => button.contains(target))) return;
-            pressed = true;
-            if (!doc.fullscreenElement)
-                void el.parentElement?.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
-        };
-        el.addEventListener("click", onPress, true);
-        el.addEventListener("keydown", onPress, true);
-        windowCleanups.push(() => {
-            el.removeEventListener("click", onPress, true);
-            el.removeEventListener("keydown", onPress, true);
-        });
 
         // Observed in the view's own window, where it lays out — which also
         // tells of a screen of another scale, a resize there.

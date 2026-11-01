@@ -41,10 +41,6 @@ listed once, by package. Its major and minor version are those of the
 - The presenter view's Swap Screens trades the screens the show and the
   presenter view show on, the show playing on: each window keeps its
   screen, and the one pressed in fills it with the show.
-- With the screens set up, the presenter view fills its screen at the first
-  press in its window, a click or a key, as the browser lets only a press in
-  that window do; one taken out of the full screen stays out. Over the UI,
-  with the show in a window still to drag, it stays as it is.
 
 ## [0.8.10] - 2026-10-31
 

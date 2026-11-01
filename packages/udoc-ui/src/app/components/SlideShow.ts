@@ -433,9 +433,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
     /**
      * Open the presenter view on `place` for `current`, a show of `deck` from
      * `slide`, and return the canvas it copies the show's slide onto, for the
-     * show to transfer. In a window of its own — the screens set up — its
-     * first click or key fills its screen with it; in the UI's, it stays as
-     * it is, the show's window still to be dragged to the audience's screen.
+     * show to transfer.
      */
     function openPresenter(
         current: Show,
@@ -449,7 +447,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             end: endShow,
             swap: () => void swap(current),
         };
-        const copy = presenter.open(place.stage, deck, actions, place.own);
+        const copy = presenter.open(place.stage, deck, actions);
         current.cleanups.push(() => presenter.close());
         current.slide = slide ?? deck.shown[0] ?? 0;
         presenter.update({ slide: current.slide, ended: false });
