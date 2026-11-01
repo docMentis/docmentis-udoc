@@ -1596,10 +1596,10 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, session.entitlements());
                 break;
             }
-            case "previewSlide": {
-                if (!session) throw new Error("engine worker: previewSlide before start");
+            case "startSlideShowPreview": {
+                if (!session) throw new Error("engine worker: startSlideShowPreview before start");
                 stopSlideShow();
-                session.previewSlide(VIEWER, msg.slide, msg.canvas);
+                session.startSlideShowPreview(VIEWER, msg.slide, msg.canvas);
                 slideShow = "preview";
                 scheduleSlideShowFrame(0);
                 reply(id, undefined);

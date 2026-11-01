@@ -1010,7 +1010,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         el.insertBefore(surface, el.querySelector(".udoc-ui__branding"));
         preview = surface;
         globalThis.addEventListener("keydown", onPreviewKey, true);
-        client.previewSlide(surface, slide).catch(() => {
+        client.startSlideShowPreview(surface, slide).catch(() => {
             if (preview === surface) endPreview();
         });
     }
