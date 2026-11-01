@@ -7,7 +7,7 @@ import type { Action } from "../actions.js";
 import type { UIState, PanelTab, ThemeMode } from "../state.js";
 import type { I18n } from "../i18n/index.js";
 import { LEFT_PANEL_TABS, isLeftPanelTab } from "../state.js";
-import { tabsFor } from "../profiles.js";
+import { tabsFor, VIEW_TAB_ID } from "../profiles.js";
 import type { TabSource } from "../profiles.js";
 import { setupRovingTabindex } from "../a11y.js";
 import {
@@ -121,8 +121,9 @@ function selectSlice(state: UIState): ToolbarSlice {
  *   when `viewControlsPlacement` is `top-toolbar` (the shell parents it there);
  *   both the slot and its divider collapse otherwise. Undo/redo (document
  *   history, a different axis) trails the group, and is also the only
- *   mode-dependent element here — it shows only where the mode has tabs, so the
- *   trailing edge keeps that width change away from the navigation controls.
+ *   mode-dependent element here — it shows only where the mode has a tab of
+ *   edits, so the trailing edge keeps that width change away from the
+ *   navigation controls.
  * - **center** — `tabStripSlot`, taking the space the zones leave, where the
  *   shell parents the ribbon's tab strip (the ribbon owns the tabs; they
  *   bottom-anchor here and merge into the ribbon's tool surface below, and the
@@ -346,10 +347,14 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
             sidePanelBtn.innerHTML = slice.sidePanelOpen ? ICON_SIDE_PANEL_CLOSE : ICON_SIDE_PANEL_OPEN;
             nameButton(sidePanelBtn, i18n.t(slice.sidePanelOpen ? "toolbar.hideSidePanel" : "toolbar.showSidePanel"));
 
-            // Undo/redo: visible where the mode has tabs — the tabs' commands
-            // are its edits; greyed when the respective history stack is empty
-            // (or no doc is ready yet).
-            const showHistory = tabsFor(tabsOf(slice.docType, slice.mode), slice.features).length > 0;
+            // Undo/redo: visible where the mode has a tab of edits — any but
+            // the View tab, whose settings aren't on the history: in view mode
+            // a PDF's Annotate tab alone, so another doc type's viewer has
+            // none. Greyed when the respective history stack is empty (or no
+            // doc is ready yet).
+            const showHistory = tabsFor(tabsOf(slice.docType, slice.mode), slice.features).some(
+                (tab) => tab.id !== VIEW_TAB_ID,
+            );
             historySection.style.display = showHistory ? "" : "none";
             if (showHistory) {
                 undoBtn.disabled = !slice.ready || !slice.canUndo;

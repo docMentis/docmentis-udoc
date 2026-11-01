@@ -49,6 +49,8 @@ listed once, by package. Its major and minor version are those of the
   rather than after a fixed wait, and the scrollbars resize with the pane at
   once rather than after the page. Nor does the page, or a deck's notes,
   squeeze or stretch for a frame as it re-fits and spring back.
+- View mode shows Undo and Redo for a PDF alone, whose annotations it
+  edits, where since the View tab they showed, greyed, for every document.
 
 ### udoc-editor
 

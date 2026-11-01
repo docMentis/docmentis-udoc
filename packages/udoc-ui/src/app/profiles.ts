@@ -64,8 +64,12 @@ const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; sh
  */
 export function viewTab(docType: UDocType, guides: readonly string[] = []): ToolbarTab {
     const { pages, shows } = VIEW_COMMANDS[docType];
-    return { id: "view", label: "ribbon.view", commands: [...pages, ...guides, ...shows] };
+    return { id: VIEW_TAB_ID, label: "ribbon.view", commands: [...pages, ...guides, ...shows] };
 }
+
+/** The id of every doc type's {@link viewTab}: the one tab whose commands are
+ *  never edits, so a strip with none other has nothing to undo. */
+export const VIEW_TAB_ID = "view";
 
 /**
  * The chrome one document type gets. Selected by `docType` (see
