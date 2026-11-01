@@ -95,6 +95,7 @@ export const de: Messages = {
     "command.pageLayoutView": "Seitenlayout",
     "command.notes": "Notizen",
     "command.previewSlide": "Vorschau",
+    "command.stopSlidePreview": "Beenden",
     "command.singleScroll": "Einzeln",
     "command.continuousScroll": "Fortlaufend",
     "command.pageLayout": "Seitenlayout",

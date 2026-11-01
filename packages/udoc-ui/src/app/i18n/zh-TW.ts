@@ -95,6 +95,7 @@ export const zhTW: Messages = {
     "command.pageLayoutView": "整頁模式",
     "command.notes": "備忘稿",
     "command.previewSlide": "預覽",
+    "command.stopSlidePreview": "停止",
     "command.singleScroll": "單頁",
     "command.continuousScroll": "連續",
     "command.pageLayout": "頁面配置",

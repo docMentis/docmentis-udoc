@@ -95,6 +95,7 @@ export const ko: Messages = {
     "command.pageLayoutView": "페이지 레이아웃",
     "command.notes": "슬라이드 노트",
     "command.previewSlide": "미리 보기",
+    "command.stopSlidePreview": "중지",
     "command.singleScroll": "단일",
     "command.continuousScroll": "연속",
     "command.pageLayout": "페이지 레이아웃",

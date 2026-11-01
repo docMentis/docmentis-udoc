@@ -52,6 +52,7 @@ import {
     ICON_SUBTOOL_CLOUD,
     ICON_NOTES,
     ICON_PREVIEW_SLIDE,
+    ICON_STOP_SLIDE_PREVIEW,
     ICON_NOTES_PAGE_VIEW,
     ICON_SLIDE_MASTER_VIEW,
     ICON_NORMAL_VIEW,
@@ -103,6 +104,12 @@ export interface CommandContext {
     /** Whether every selected slide is hidden ({@link UIState.selectedSlidesHidden})
      *  — what Hide Slide reads checked by. */
     slidesHidden: boolean;
+    /** Whether a slide show plays anything on the slide shown
+     *  ({@link UIState.currentSlidePlays}) — what Preview is live by. */
+    currentSlidePlays: boolean;
+    /** Whether a slide preview plays ({@link UIState.slidePreviewing}) — what
+     *  Preview, as Stop, is live by. */
+    slidePreviewing: boolean;
     /** The open deck's sections as the section menu reads them: how many there
      *  are, the selected ones' indices in section order (ascending), and how
      *  many the thumbnails fold away. */
@@ -152,6 +159,8 @@ export function commandContext(state: UIState): CommandContext {
         canCopy: state.selectionCaps.copyable && copyAllowed(state),
         selection: state.selectionCaps,
         slidesHidden: state.selectedSlidesHidden,
+        currentSlidePlays: state.currentSlidePlays,
+        slidePreviewing: state.slidePreviewing,
         slideSections: {
             count: state.slideSections.length,
             selected: state.slideSections.flatMap((section, index) =>
@@ -597,7 +606,9 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  *   Pressing an armed tool's button again disarms it.
  * - `action` → a plain button whose click `press`es — for a command of an
  *   extension's that its own code runs (New Slide, Insert ▸ Image). `cluster`
- *   bunches it as a `control`'s does: the Shape tab's Group and Ungroup.
+ *   bunches it as a `control`'s does: the Shape tab's Group and Ungroup. And
+ *   `current`, when set, is the face its button shows for the state, as a
+ *   `menu`'s: the View tab's Preview shows Stop while a preview plays.
  * - `armPicker` → opens a sub-picker of `options` before arming: the Annotate
  *   tab's shapes or its standard stamps, an extension's own.
  * - `armGallery` → `armPicker` for a picker too long for a list: a panel of
@@ -627,7 +638,12 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  */
 export type CommandRun<K extends string = MessageKey> =
     | { kind: "history"; op: HistoryOp }
-    | { kind: "action"; cluster?: ClusterKind; press(store: Store<UIState, Action>): void }
+    | {
+          kind: "action";
+          cluster?: ClusterKind;
+          press(store: Store<UIState, Action>): void;
+          current?(state: UIState): { icon: string; label: K };
+      }
     | { kind: "arm"; tool: PlaceTool; sticky?: boolean }
     | { kind: "armPicker"; options: readonly PickerOption<K>[] }
     | { kind: "armGallery"; sections: readonly PickerSection<K>[] }
@@ -852,16 +868,27 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
 
     // View tab — a deck's slide shown, previewed where it shows as
     // PowerPoint's Preview plays it: its transition from the slide before,
-    // then its animations one after another. Not in the Slide Master view,
-    // which shows no slide.
+    // then its animations one after another — in Normal view, a slide at a
+    // time, which it switches to first. Stop while one plays. Greyed on a
+    // slide that plays nothing, and in the Slide Master view, which shows no
+    // slide.
     previewSlide: {
         id: "previewSlide",
         label: "command.previewSlide",
         icon: ICON_PREVIEW_SLIDE,
         group: "preview",
         labeled: true,
-        run: { kind: "action", press: (store) => store.dispatch({ type: "PREVIEW_SLIDE" }) },
-        enabledWhen: (c) => c.ready && c.presentationView !== "slideMaster",
+        run: {
+            kind: "action",
+            press: (store) =>
+                store.dispatch({ type: store.getState().slidePreviewing ? "STOP_SLIDE_PREVIEW" : "PREVIEW_SLIDE" }),
+            current: (state) =>
+                state.slidePreviewing
+                    ? { icon: ICON_STOP_SLIDE_PREVIEW, label: "command.stopSlidePreview" }
+                    : { icon: ICON_PREVIEW_SLIDE, label: "command.previewSlide" },
+        },
+        enabledWhen: (c) =>
+            c.slidePreviewing || (c.ready && c.presentationView !== "slideMaster" && c.currentSlidePlays),
     },
 
     // View tab — a deck's views, one segment button: its slides, the pages

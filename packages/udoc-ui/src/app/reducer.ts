@@ -116,6 +116,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 collapsedSlideSections: new Set(),
                 renamingSlideSection: null,
                 renamingSheet: null,
+                slidePreviewing: false,
             };
 
         case "OPEN_SUCCESS": {
@@ -240,6 +241,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 scrollX: 0,
                 scrollY: 0,
                 pageIndex: 0,
+                slidePreviewing: false,
             };
 
         case "DOC_RELAYOUT": {
@@ -293,9 +295,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         case "SET_CURRENT_PLANE": {
             if (action.plane === state.currentPlane) return state;
             // A move to a deck's other view — to a match on its slides — is a
-            // move to that view.
+            // move to that view, and stops a slide preview playing.
             const view = viewOfPlane(state.planeKinds, action.plane) ?? state.presentationView;
-            return { ...state, currentPlane: action.plane, presentationView: view };
+            return { ...state, currentPlane: action.plane, presentationView: view, slidePreviewing: false };
         }
 
         case "SET_SHEET_LAYOUT_MODE": {
@@ -316,16 +318,30 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             };
         }
 
-        case "PREVIEW_SLIDE":
-            return { ...state, slidePreviewSeq: state.slidePreviewSeq + 1 };
+        case "PREVIEW_SLIDE": {
+            // Played where the slide shows in Normal view, a slide at a time:
+            // the view switches there first.
+            const plane = planeOfView(state.planeKinds, "normal");
+            return {
+                ...state,
+                presentationView: "normal",
+                currentPlane: plane < 0 ? state.currentPlane : plane,
+                scrollMode: "spread",
+                slidePreviewSeq: state.slidePreviewSeq + 1,
+                slidePreviewing: true,
+            };
+        }
+
+        case "STOP_SLIDE_PREVIEW":
+            return state.slidePreviewing ? { ...state, slidePreviewing: false } : state;
 
         case "SET_PRESENTATION_VIEW": {
             // A deck shows it on its plane; one still opening, once its roster
-            // is in (SET_PLANES).
+            // is in (SET_PLANES). Another view stops a slide preview playing.
             const plane = planeOfView(state.planeKinds, action.view);
             const currentPlane = plane < 0 ? state.currentPlane : plane;
             if (action.view === state.presentationView && currentPlane === state.currentPlane) return state;
-            return { ...state, presentationView: action.view, currentPlane };
+            return { ...state, presentationView: action.view, currentPlane, slidePreviewing: false };
         }
 
         case "HISTORY_CHANGED":
@@ -376,6 +392,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...state, selectedPages: action.pages };
         case "SET_SELECTED_SLIDES_HIDDEN":
             return { ...state, selectedSlidesHidden: action.hidden };
+        case "SET_CURRENT_SLIDE_PLAYS":
+            return { ...state, currentSlidePlays: action.plays };
         case "SET_SLIDE_SECTIONS":
             return { ...state, slideSections: action.sections };
         case "SET_SLIDE_MASTERS":
@@ -497,7 +515,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_PAGE_INDEX":
             if (action.pageIndex === state.pageIndex) return state;
-            return { ...state, pageIndex: action.pageIndex };
+            // Another slide shown stops a slide preview playing.
+            return { ...state, pageIndex: action.pageIndex, slidePreviewing: false };
 
         case "SET_SHOWN_PAGES":
             if (action.start === state.shownPages.start && action.end === state.shownPages.end) return state;
@@ -509,16 +528,23 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             // the shell forwards to the worker (which owns per-page offsets and
             // does the actual scroll). The seq bumps even when the page is
             // unchanged so re-selecting the current page — re-centering after a
-            // fit change — still re-scrolls.
+            // fit change — still re-scrolls. Another page stops a slide preview
+            // playing.
             return {
                 ...state,
                 pageIndex,
                 navRequest: { pageIndex, seq: state.navRequest.seq + 1 },
+                slidePreviewing: state.slidePreviewing && pageIndex === state.pageIndex,
             };
         }
 
         case "SET_SCROLL_MODE":
-            return { ...state, scrollMode: action.mode };
+            // Another scroll mode stops a slide preview playing.
+            return {
+                ...state,
+                scrollMode: action.mode,
+                slidePreviewing: state.slidePreviewing && action.mode === state.scrollMode,
+            };
 
         case "SET_DEFAULT_SCROLL_MODE":
             return { ...state, defaultScrollMode: action.mode };

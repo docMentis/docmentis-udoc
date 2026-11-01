@@ -572,6 +572,14 @@ export interface UIState {
     selectedSlidesHidden: boolean;
 
     /**
+     * Whether a slide show plays anything on the slide shown — a transition,
+     * an animation — which Preview greys without. Read back at each open, edit
+     * and slide shown; `false` for any other document, and in the Slide Master
+     * view, which shows no slide.
+     */
+    currentSlidePlays: boolean;
+
+    /**
      * A workbook's active cell as the formula bar shows it, from the worker's
      * selection reports — `null` with no cell selected, or another doc type.
      */
@@ -712,10 +720,15 @@ export interface UIState {
 
     /**
      * Bumps on every Preview, so the Canvas lays a preview of the slide shown
-     * over the view and plays it — keyed on the seq, so pressing it again
-     * plays it again.
+     * over the view and plays it — keyed on the seq, so a slide's Preview mark
+     * pressed again plays it again.
      */
     slidePreviewSeq: number;
+    /**
+     * Whether a slide preview plays — from a Preview until it has played, or
+     * is stopped: by Stop, by another slide shown, by another view.
+     */
+    slidePreviewing: boolean;
 
     /** Visible canvas size in CSS px (updated by the Canvas on resize). */
     viewportWidth: number;
@@ -930,6 +943,7 @@ export const initialState: UIState = {
     selectionCaps: EMPTY_SELECTION_CAPABILITIES,
     selectedPages: [],
     selectedSlidesHidden: false,
+    currentSlidePlays: false,
     activeCell: null,
     slideSections: [],
     slideMasters: [],
@@ -967,6 +981,7 @@ export const initialState: UIState = {
     zoomRequest: { zoom: 1, x: 0, y: 0, seq: 0 },
     refitSeq: 0,
     slidePreviewSeq: 0,
+    slidePreviewing: false,
     viewportWidth: 0,
     viewportHeight: 0,
     pageIndex: 0,

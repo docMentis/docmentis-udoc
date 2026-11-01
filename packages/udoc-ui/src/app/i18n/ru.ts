@@ -95,6 +95,7 @@ export const ru: Messages = {
     "command.pageLayoutView": "Разметка страницы",
     "command.notes": "Заметки",
     "command.previewSlide": "Просмотр",
+    "command.stopSlidePreview": "Остановить",
     "command.singleScroll": "Одиночный",
     "command.continuousScroll": "Непрерывно",
     "command.pageLayout": "Макет страниц",

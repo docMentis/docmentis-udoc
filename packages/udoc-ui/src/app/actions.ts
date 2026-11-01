@@ -118,6 +118,9 @@ export type Action =
     // Whether every selected slide is hidden (read back after the worker's
     // selection reports). Drives Hide Slide's check.
     | { type: "SET_SELECTED_SLIDES_HIDDEN"; hidden: boolean }
+    // Whether a slide show plays anything on the slide shown (read back at
+    // each open, edit and slide shown). Drives Preview's enablement.
+    | { type: "SET_CURRENT_SLIDE_PLAYS"; plays: boolean }
     // The open deck's sections (read back after each change of the document).
     // Drives the thumbnails' section headers.
     | { type: "SET_SLIDE_SECTIONS"; sections: readonly SlideSectionRun[] }
@@ -202,8 +205,11 @@ export type Action =
     // How a deck shows: its slides, or its notes pages
     | { type: "SET_PRESENTATION_VIEW"; view: PresentationView }
     // Preview the slide shown — its transition, then its animations — over
-    // the view (bumps `slidePreviewSeq`, which the Canvas plays it on).
+    // the view, switched to Normal, a slide at a time (bumps
+    // `slidePreviewSeq`, which the Canvas plays it on)
     | { type: "PREVIEW_SLIDE" }
+    // Stop the slide preview playing, or mark one played to its end
+    | { type: "STOP_SLIDE_PREVIEW" }
     // Show the current worksheet as its grid or as Page Layout view's paper —
     // the View tab's Normal and Page Layout
     | { type: "SET_SHEET_LAYOUT_MODE"; mode: SheetLayoutMode }

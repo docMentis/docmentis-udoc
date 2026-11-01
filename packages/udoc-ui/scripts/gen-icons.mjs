@@ -77,6 +77,7 @@ const ICONS = {
     ICON_FORMULA_BAR: "function",
     ICON_NOTES: "speaker_notes",
     ICON_PREVIEW_SLIDE: "play_arrow",
+    ICON_STOP_SLIDE_PREVIEW: "stop",
     ICON_SLIDE_PLAYS: "animation",
     ICON_NORMAL_VIEW: "crop_landscape",
     ICON_NOTES_PAGE_VIEW: "article",

@@ -1937,6 +1937,44 @@ export function mountUIShell(
             });
     }
 
+    // Whether a slide show plays anything on the slide shown, read at each
+    // open, edit and slide shown — a slide moved, or an animation added, may
+    // change it. The latest read wins.
+    let currentSlidePlaysGeneration = 0;
+    function refreshCurrentSlidePlays(): void {
+        const generation = ++currentSlidePlaysGeneration;
+        const set = (plays: boolean) => {
+            if (generation !== currentSlidePlaysGeneration) return;
+            if (plays !== store.getState().currentSlidePlays) {
+                store.dispatch({ type: "SET_CURRENT_SLIDE_PLAYS", plays });
+            }
+        };
+        const state = store.getState();
+        // The Slide Master view's pages are no slides.
+        if (state.status !== "ready" || state.docType !== "presentation" || state.presentationView === "slideMaster") {
+            set(false);
+            return;
+        }
+        void client.presentation
+            .slidesPlay([state.pageIndex])
+            .then(([plays]) => set(plays === true))
+            .catch(() => {
+                // Worker gone or document closed — no slide shows any more.
+            });
+    }
+    const unsubCurrentSlidePlaysEdited = client.onDocumentChanged(refreshCurrentSlidePlays);
+    const unsubCurrentSlidePlaysShown = subscribeSelector(
+        store,
+        (s) => ({
+            ready: s.status === "ready",
+            generation: s.docGeneration,
+            page: s.pageIndex,
+            view: s.presentationView,
+        }),
+        refreshCurrentSlidePlays,
+        { equality: shallowEqual },
+    );
+
     // The latest selected-annotations read wins: a reply a newer selection report
     // has superseded is dropped, so a slow read can't show a stale style.
     let annotationsGeneration = 0;
@@ -3456,6 +3494,8 @@ export function mountUIShell(
         unsubSearchEdited();
         unsubSlideSectionsEdited();
         unsubSlideSectionsOpened();
+        unsubCurrentSlidePlaysEdited();
+        unsubCurrentSlidePlaysShown();
         unsubSearchFonts();
         unsubSearchOpened();
         unsubSearchNav();

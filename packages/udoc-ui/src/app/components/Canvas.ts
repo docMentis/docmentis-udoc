@@ -965,7 +965,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
 
     // The slide preview playing over the view, if one is: a canvas of its own,
     // transferred to the worker, which plays the preview on it and reports its
-    // end. A press on it, or Escape, stops it early.
+    // end. A press on it, or Escape, stops it early, as Stop does: through the
+    // store, whose `slidePreviewing` takes it down.
     let preview: HTMLCanvasElement | null = null;
     /** Take the preview's canvas down. */
     const endPreview = (): void => {
@@ -984,7 +985,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         if (ev.key !== "Escape") return;
         ev.preventDefault();
         ev.stopPropagation();
-        stopPreview();
+        store?.dispatch({ type: "STOP_SLIDE_PREVIEW" });
     }
     /**
      * Preview slide `slide` in place, in place of any playing: on a canvas laid
@@ -1003,7 +1004,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         surface.addEventListener("pointerdown", (ev) => {
             ev.preventDefault();
             ev.stopPropagation();
-            stopPreview();
+            store?.dispatch({ type: "STOP_SLIDE_PREVIEW" });
         });
         // Under the brand decal, which stays in view; over everything else.
         el.insertBefore(surface, el.querySelector(".udoc-ui__branding"));
@@ -1296,6 +1297,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // Whether a band change waits on the worker's frame at the pane's new
         // size — see `changeBandLayout`.
         let bandAwaitsFrame = false;
+        // Whether a Preview waits on the worker's frame at the host's new size
+        // — see `playPreview`.
+        let previewWaits = false;
 
         // Track the host's CSS size → viewport metrics, keeping the canvas's
         // CSS size in lock-step with the worker's backing store.
@@ -1336,6 +1340,10 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // host has since left, keeps it: it holds where the frame before it did.
         let committedLeft = 0;
         let committedTop = 0;
+        /** Whether the canvas's backing is painted at `host`'s size — no
+         *  resize in flight. */
+        const paintedAt = (host: DOMRect): boolean =>
+            Math.abs(host.width - committedCssW) < 0.5 && Math.abs(host.height - committedCssH) < 0.5;
         const commitCanvasSize = (cssW: number, cssH: number) => {
             const dpr = globalThis.devicePixelRatio || 1;
             const backingW = Math.max(1, Math.round(cssW * dpr));
@@ -1345,9 +1353,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             committedCssW = backingW / dpr;
             committedCssH = backingH / dpr;
             const host = el.getBoundingClientRect();
-            if (Math.abs(host.width - committedCssW) < 0.5 && Math.abs(host.height - committedCssH) < 0.5) {
-                ({ left: committedLeft, top: committedTop } = host);
-            }
+            if (paintedAt(host)) ({ left: committedLeft, top: committedTop } = host);
             applyCanvasTransform();
         };
         // Position the surface: the device-grid sub-pixel snap, plus — while a
@@ -1811,14 +1817,33 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // so it re-fires at an unchanged fit, so the engine re-frames
         // (re-centers) the current page on the active fit.
         // Each Preview bumps `slidePreviewSeq`: play the slide shown over the
-        // view, and take it down when the worker says it has played.
+        // view — in the effect phase, once the shell has asked the worker for
+        // the view the Preview switched to and the slide it shows, and once the
+        // view is painted at the size its host now has: Normal view, a slide
+        // at a time, opens the notes pane under the slides, and the preview
+        // plays where the view shows the slide, at the size the worker acks
+        // (`offResized` plays it then). A preview stopped — by Stop, another
+        // slide shown, another view — comes down; one played to its end tells
+        // the store, and Preview shows again.
+        const playPreview = (): void => {
+            previewWaits = !paintedAt(el.getBoundingClientRect());
+            if (!previewWaits) previewSlide(s.getState().pageIndex);
+        };
         cleanups.push(
+            subscribeSelector(s, (st) => st.slidePreviewSeq, playPreview, { phase: "effect" }),
             subscribeSelector(
                 s,
-                (st) => st.slidePreviewSeq,
-                () => previewSlide(s.getState().pageIndex),
+                (st) => st.slidePreviewing,
+                (previewing) => {
+                    if (previewing) return;
+                    previewWaits = false;
+                    stopPreview();
+                },
             ),
-            client.onSlideShowEnded(endPreview),
+            client.onSlideShowEnded(() => {
+                endPreview();
+                s.dispatch({ type: "STOP_SLIDE_PREVIEW" });
+            }),
             stopPreview,
         );
 
@@ -1993,6 +2018,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             }
             commitCanvasSize(width, height);
             if (frame) resizeCover.show(frame);
+            // A Preview waiting on the view at the host's size plays now.
+            if (previewWaits && paintedAt(el.getBoundingClientRect())) playPreview();
         });
         cleanups.push(offResized);
 

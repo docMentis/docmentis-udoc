@@ -173,6 +173,8 @@ export interface Messages {
     "command.notes": string;
     /** Preview */
     "command.previewSlide": string;
+    /** Stop — Preview, while a slide preview plays */
+    "command.stopSlidePreview": string;
     /** Single */
     "command.singleScroll": string;
     /** Continuous */

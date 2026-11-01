@@ -95,6 +95,7 @@ export const ar: Messages = {
     "command.pageLayoutView": "تخطيط الصفحة",
     "command.notes": "ملاحظات",
     "command.previewSlide": "معاينة",
+    "command.stopSlidePreview": "إيقاف",
     "command.singleScroll": "مفرد",
     "command.continuousScroll": "متواصل",
     "command.pageLayout": "تخطيط الصفحات",

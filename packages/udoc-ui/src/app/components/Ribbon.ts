@@ -182,6 +182,10 @@ interface RibbonSlice {
     showFormattingMarks: boolean;
     formulaBarVisible: boolean;
     hasLayers: boolean;
+    /** What a deck's Preview shows — Stop while a preview plays — and is
+     *  live by, with whether the slide shown plays anything. */
+    slidePreviewing: boolean;
+    currentSlidePlays: boolean;
 }
 
 /** The color a display paints its bar with — a solid or theme color's own hex;
@@ -215,7 +219,9 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.activePanel === b.activePanel &&
         a.showFormattingMarks === b.showFormattingMarks &&
         a.formulaBarVisible === b.formulaBarVisible &&
-        a.hasLayers === b.hasLayers
+        a.hasLayers === b.hasLayers &&
+        a.slidePreviewing === b.slidePreviewing &&
+        a.currentSlidePlays === b.currentSlidePlays
     );
 }
 
@@ -243,6 +249,8 @@ function selectSlice(s: UIState): RibbonSlice {
         showFormattingMarks: s.showFormattingMarks,
         formulaBarVisible: s.formulaBarVisible,
         hasLayers: s.hasLayers,
+        slidePreviewing: s.slidePreviewing,
+        currentSlidePlays: s.currentSlidePlays,
     };
 }
 
@@ -286,11 +294,12 @@ function isCommandActive(def: CommandDef<string>, pointer: PointerMode): boolean
     }
 }
 
-/** The glyph each dropdown whose choice follows the state shows now. */
+/** The glyph each button whose face follows the state shows now. */
 const shownIcons = new WeakMap<HTMLElement, string>();
 
-/** Show `icon` and, on a labeled one, `text` on `button`, a dropdown's trigger
- *  that shows the current choice — where it shows another. */
+/** Show `icon` and, on a labeled one, `text` on `button`, whose face follows
+ *  the state — a dropdown's trigger showing the current choice, a deck's
+ *  Preview showing Stop — where it shows another. */
 function showChoice(button: HTMLElement, icon: string, text: string): void {
     const label = button.querySelector(".udoc-btn__label");
     if (label && label.textContent !== text) label.textContent = text;
@@ -923,6 +932,14 @@ export function createRibbon(
                 } else if (def.run.kind === "menu") {
                     const current = def.run.current?.(store.getState());
                     if (current) showChoice(btn, current.icon, labelOf(current.label));
+                } else if (def.run.kind === "action" && def.run.current) {
+                    // Named by its face too: a click does what it says.
+                    const current = def.run.current(store.getState());
+                    const text = labelOf(current.label);
+                    showChoice(btn, current.icon, text);
+                    if (btn.getAttribute("aria-label") !== text) {
+                        nameButton(btn, text, def.shortcut && nameShortcut(def.shortcut, i18n));
+                    }
                 } else if (def.run.kind === "toggle") {
                     const pressed = def.run.pressed(store.getState());
                     if (btn.getAttribute("role") === "radio") {
