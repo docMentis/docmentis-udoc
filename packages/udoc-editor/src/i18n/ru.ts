@@ -88,10 +88,8 @@ export const ru: EditMessages = {
     "command.numberList": "Нумерованный список",
     "command.shapeFillColor": "Заливка",
     "command.shapeStrokeColor": "Контур",
-    "command.shapeArrange": "Упорядочить",
     "command.objectFillColor": "Заливка",
     "command.objectStrokeColor": "Контур",
-    "command.objectArrange": "Упорядочить",
 
     // New Slide dialog
     "newSlide.label": "Макет нового слайда",

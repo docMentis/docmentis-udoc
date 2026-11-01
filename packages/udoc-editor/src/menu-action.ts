@@ -11,7 +11,7 @@ import type { EditTools } from "./tools.js";
 /**
  * What activating one of edit mode's menu rows does. Each variant carries its
  * full payload, so the handler is a switch on `kind` with no side lookup
- * tables. `reorder` is the Arrange dropdown's z-order; `align` / `distribute`
+ * tables. `reorder` is the Order dropdown's z-order; `align` / `distribute`
  * / `flip` / `rotate` the Align and Rotate dropdowns; `alignToPage` the Align
  * dropdown's reference toggle (a UI flag, not a document edit). `clipboard` /
  * `delete` are the context menu's acts on the selection, and `selectTable` /
@@ -31,8 +31,6 @@ export type EditMenuAction =
     | { kind: "lineSpacing"; lines: number }
     | { kind: "paragraphSpace"; edge: ParagraphSpaceEdge }
     | { kind: "reorder"; order: ZOrder }
-    | { kind: "group" }
-    | { kind: "ungroup" }
     | { kind: "align"; edge: AlignEdge }
     | { kind: "alignToPage" }
     | { kind: "distribute"; axis: EditAxis }
@@ -55,12 +53,6 @@ export function runEditMenuAction(tools: EditTools, action: EditMenuAction): voi
     switch (action.kind) {
         case "reorder":
             void arrange.reorderSelection(action.order);
-            break;
-        case "group":
-            void arrange.groupSelection();
-            break;
-        case "ungroup":
-            void arrange.ungroupSelection();
             break;
         case "align":
             void arrange.alignSelection(action.edge);

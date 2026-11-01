@@ -89,10 +89,8 @@ export const en: EditMessages = {
     "command.numberList": "Numbered List",
     "command.shapeFillColor": "Fill",
     "command.shapeStrokeColor": "Line",
-    "command.shapeArrange": "Arrange",
     "command.objectFillColor": "Fill",
     "command.objectStrokeColor": "Line",
-    "command.objectArrange": "Arrange",
 
     // New Slide dialog
     "newSlide.label": "New slide layout",

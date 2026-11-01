@@ -88,10 +88,8 @@ export const zhTW: EditMessages = {
     "command.numberList": "編號清單",
     "command.shapeFillColor": "填滿",
     "command.shapeStrokeColor": "線條",
-    "command.shapeArrange": "排列",
     "command.objectFillColor": "填滿",
     "command.objectStrokeColor": "線條",
-    "command.objectArrange": "排列",
 
     // New Slide dialog
     "newSlide.label": "新投影片版面配置",

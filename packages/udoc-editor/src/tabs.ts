@@ -28,10 +28,18 @@ export type EditCommandId =
     | "numberList"
     | "shapeFillColor"
     | "shapeStrokeColor"
-    | "shapeArrange"
+    | "shapeOrder"
+    | "shapeAlign"
+    | "shapeRotate"
+    | "shapeGroup"
+    | "shapeUngroup"
     | "objectFillColor"
     | "objectStrokeColor"
-    | "objectArrange"
+    | "objectOrder"
+    | "objectAlign"
+    | "objectRotate"
+    | "objectGroup"
+    | "objectUngroup"
     | "ruler"
     | "createSlide"
     | "insertImage"
@@ -131,28 +139,44 @@ const PRESENTATION_TEXT_TAB: EditTab = {
 
 /**
  * The Shape tab — appearance + arrangement for graphics objects. Fill / Line
- * split buttons (color per channel), then the `arrange` dropdown whose fly-outs
- * cover Order (z-order), Align (align / distribute to the selection or the page),
- * and Rotate (quarter-turn rotations + flips), plus Group / Ungroup. Picked
- * shapes open it.
+ * split buttons (color per channel), then a button group of the arrangement
+ * dropdowns — Order (z-order), Align (align / distribute to the selection or the
+ * page) and Rotate (quarter-turn rotations + flips) — and one of Group and
+ * Ungroup. Picked shapes open it.
  */
 const SHAPE_TAB: EditTab = {
     id: "shape",
     label: "ribbon.shape",
-    commands: ["shapeFillColor", "shapeStrokeColor", "shapeArrange"] satisfies EditCommandId[],
+    commands: [
+        "shapeFillColor",
+        "shapeStrokeColor",
+        "shapeOrder",
+        "shapeAlign",
+        "shapeRotate",
+        "shapeGroup",
+        "shapeUngroup",
+    ] satisfies EditCommandId[],
     opensFor: pickedShapes,
 };
 
 /**
  * The Object tab — the portable (PDF) counterpart of {@link SHAPE_TAB}: its own
- * Fill / Line and Arrange, gated on the object edits, over the page's content
+ * Fill / Line and arrangement, gated on the object edits, over the page's content
  * objects (paths, text, images) rather than DrawingML shapes. Picked objects
  * open it, as does a caret in one's text.
  */
 const OBJECT_TAB: EditTab = {
     id: "object",
     label: "ribbon.object",
-    commands: ["objectFillColor", "objectStrokeColor", "objectArrange"] satisfies EditCommandId[],
+    commands: [
+        "objectFillColor",
+        "objectStrokeColor",
+        "objectOrder",
+        "objectAlign",
+        "objectRotate",
+        "objectGroup",
+        "objectUngroup",
+    ] satisfies EditCommandId[],
     opensFor: pageObjects,
 };
 

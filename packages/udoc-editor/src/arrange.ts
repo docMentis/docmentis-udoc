@@ -1,9 +1,10 @@
-// Arrange: the Shape and Object tabs' Arrange menus — z-order, align and
-// distribute, rotate and flip, group — and the edits they make of the
+// Arrange: the Shape and Object tabs' arrangement commands — the Order, Align
+// and Rotate dropdowns and Group / Ungroup — and the edits they make of the
 // selection.
 import { allowsEdit, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT, profileFor } from "@docmentis/udoc-ui/internal";
 import type {
     AlignEdge,
+    CommandDef,
     EditAxis,
     EnabledWhen,
     MenuItem,
@@ -41,22 +42,21 @@ const QUARTER_TURN = Math.PI / 2;
  *  axis only, so the horizontal one is {@link ICON_FLIP} given a quarter turn. */
 export const ICON_FLIP_VERTICAL = ICON_FLIP.replace("<svg ", '<svg style="transform: rotate(90deg)" ');
 
-/** True when any item in `items` is enabled — the enablement of a submenu row
- *  (and of an Arrange trigger), which lights up exactly when it has a live
- *  child to offer. */
+/** True when any item in `items` is enabled — the enablement of a dropdown,
+ *  which lights up exactly when it has a live row to offer. */
 const anyEnabled =
     (items: readonly MenuItem<MessageKey>[]): EnabledWhen =>
     (c) =>
         items.some((i) => i.enabledWhen(c));
 
 /**
- * The Order submenu: z-order moves ordered front→back (top of menu = top of the
- * stack). Lives under the Shape tab's Arrange ▸ Order.
+ * The Shape tab's Order dropdown: z-order moves ordered front→back (top of
+ * menu = top of the stack).
  */
 const SHAPE_ORDER_MENU: readonly MenuItem<MessageKey>[] = [
     // All four moves share one precondition (`reorderShapes`): the engine reports it
     // live when the selection isn't already the contiguous front-and-back block,
-    // so if no move would change anything the whole submenu greys out together.
+    // so if no move would change anything the whole dropdown greys out together.
     {
         action: editAction({ kind: "reorder", order: "front" }),
         label: "arrange.bringToFront",
@@ -188,48 +188,14 @@ const SHAPE_ROTATE_MENU: readonly MenuItem<MessageKey>[] = [
 ];
 
 /**
- * The Shape tab's Arrange dropdown: the arrangement submenus — Order (z-order),
- * Align (align / distribute), and Rotate (rotate / flip) as fly-outs — then the
- * grouping pair below a divider. Consolidates what used to be three sibling
- * toolbar buttons into one, matching the Office/Slides "Arrange" menu.
- *
- * Align's row uses {@link canAlignShapes} rather than `anyEnabled(SHAPE_ALIGN_MENU)` because
- * the submenu's always-on "Align to page" toggle would otherwise light the row
- * up with nothing aligned — the same guard the old Align button carried.
- */
-export const SHAPE_ARRANGE_MENU: readonly MenuItem<MessageKey>[] = [
-    { submenu: SHAPE_ORDER_MENU, label: "arrange.order", icon: ICON_ORDER, enabledWhen: anyEnabled(SHAPE_ORDER_MENU) },
-    { submenu: SHAPE_ALIGN_MENU, label: "arrange.align", icon: ICON_ALIGN_LEFT, enabledWhen: canAlignShapes },
-    {
-        submenu: SHAPE_ROTATE_MENU,
-        label: "arrange.rotate",
-        icon: ICON_ROTATE_RIGHT,
-        enabledWhen: anyEnabled(SHAPE_ROTATE_MENU),
-    },
-    {
-        action: editAction({ kind: "group" }),
-        label: "arrange.group",
-        icon: ICON_GROUP,
-        enabledWhen: (c) => allowsEdit(c.selection, "groupShapes"),
-        separatorBefore: true,
-    },
-    {
-        action: editAction({ kind: "ungroup" }),
-        label: "arrange.ungroup",
-        icon: ICON_UNGROUP,
-        enabledWhen: (c) => allowsEdit(c.selection, "ungroupShapes"),
-    },
-];
-
-/**
- * The Order submenu: z-order moves ordered front→back (top of menu = top of the
- * stack). Lives under the Object tab's Arrange ▸ Order.
+ * The Object tab's Order dropdown: z-order moves ordered front→back (top of
+ * menu = top of the stack).
  */
 const OBJECT_ORDER_MENU: readonly MenuItem<MessageKey>[] = [
     // All four moves share one precondition (`reorderObjects`, or
     // `reorderAnnotations` for selected annotations): the engine reports it live
     // when the selection isn't already the contiguous front-and-back block, so if
-    // no move would change anything the whole submenu greys out together.
+    // no move would change anything the whole dropdown greys out together.
     {
         action: editAction({ kind: "reorder", order: "front" }),
         label: "arrange.bringToFront",
@@ -361,43 +327,86 @@ const OBJECT_ROTATE_MENU: readonly MenuItem<MessageKey>[] = [
 ];
 
 /**
- * The Object tab's Arrange dropdown: the arrangement submenus — Order (z-order),
- * Align (align / distribute), and Rotate (rotate / flip) as fly-outs — then the
- * grouping pair below a divider. Consolidates what used to be three sibling
- * toolbar buttons into one, matching the Office/Slides "Arrange" menu.
+ * The Shape and Object tabs' arrangement commands, over the {@link ArrangeEdits}
+ * once edit mode is mounted: the Order, Align and Rotate dropdowns bunched into
+ * one button group, then Group and Ungroup into another past a divider. The
+ * Shape tab's are gated on a drawing's shape edits, the Object tab's on a PDF's
+ * page object edits.
  *
- * Align's row uses {@link canAlignObjects} rather than `anyEnabled(OBJECT_ALIGN_MENU)` because
- * the submenu's always-on "Align to page" toggle would otherwise light the row
- * up with nothing aligned — the same guard the old Align button carried.
+ * Align greys on {@link canAlignShapes} / {@link canAlignObjects} rather than
+ * on any of its rows being live, because its always-on "Align to page" toggle
+ * would otherwise light it up with nothing to align.
  */
-export const OBJECT_ARRANGE_MENU: readonly MenuItem<MessageKey>[] = [
-    {
-        submenu: OBJECT_ORDER_MENU,
-        label: "arrange.order",
-        icon: ICON_ORDER,
-        enabledWhen: anyEnabled(OBJECT_ORDER_MENU),
-    },
-    { submenu: OBJECT_ALIGN_MENU, label: "arrange.align", icon: ICON_ALIGN_LEFT, enabledWhen: canAlignObjects },
-    {
-        submenu: OBJECT_ROTATE_MENU,
-        label: "arrange.rotate",
-        icon: ICON_ROTATE_RIGHT,
-        enabledWhen: anyEnabled(OBJECT_ROTATE_MENU),
-    },
-    {
-        action: editAction({ kind: "group" }),
-        label: "arrange.group",
-        icon: ICON_GROUP,
-        enabledWhen: (c) => allowsEdit(c.selection, "groupObjects"),
-        separatorBefore: true,
-    },
-    {
-        action: editAction({ kind: "ungroup" }),
-        label: "arrange.ungroup",
-        icon: ICON_UNGROUP,
-        enabledWhen: (c) => allowsEdit(c.selection, "ungroupObjects"),
-    },
-];
+export function arrangeCommands(arrange: () => ArrangeEdits | null): Readonly<Record<string, CommandDef<MessageKey>>> {
+    const dropdown = (
+        id: string,
+        label: MessageKey,
+        icon: string,
+        menu: readonly MenuItem<MessageKey>[],
+        enabledWhen: EnabledWhen,
+    ): CommandDef<MessageKey> => ({
+        id,
+        label,
+        icon,
+        group: "arrange",
+        run: { kind: "menu", menu, cluster: "arrange" },
+        enabledWhen,
+    });
+    const button = (
+        id: string,
+        label: MessageKey,
+        icon: string,
+        press: () => void,
+        enabledWhen: EnabledWhen,
+    ): CommandDef<MessageKey> => ({
+        id,
+        label,
+        icon,
+        group: "grouping",
+        run: { kind: "action", cluster: "arrange", press },
+        enabledWhen,
+    });
+    const group = () => void arrange()?.groupSelection();
+    const ungroup = () => void arrange()?.ungroupSelection();
+    return {
+        shapeOrder: dropdown("shapeOrder", "arrange.order", ICON_ORDER, SHAPE_ORDER_MENU, anyEnabled(SHAPE_ORDER_MENU)),
+        shapeAlign: dropdown("shapeAlign", "arrange.align", ICON_ALIGN_LEFT, SHAPE_ALIGN_MENU, canAlignShapes),
+        shapeRotate: dropdown(
+            "shapeRotate",
+            "arrange.rotate",
+            ICON_ROTATE_RIGHT,
+            SHAPE_ROTATE_MENU,
+            anyEnabled(SHAPE_ROTATE_MENU),
+        ),
+        shapeGroup: button("shapeGroup", "arrange.group", ICON_GROUP, group, (c) =>
+            allowsEdit(c.selection, "groupShapes"),
+        ),
+        shapeUngroup: button("shapeUngroup", "arrange.ungroup", ICON_UNGROUP, ungroup, (c) =>
+            allowsEdit(c.selection, "ungroupShapes"),
+        ),
+        objectOrder: dropdown(
+            "objectOrder",
+            "arrange.order",
+            ICON_ORDER,
+            OBJECT_ORDER_MENU,
+            anyEnabled(OBJECT_ORDER_MENU),
+        ),
+        objectAlign: dropdown("objectAlign", "arrange.align", ICON_ALIGN_LEFT, OBJECT_ALIGN_MENU, canAlignObjects),
+        objectRotate: dropdown(
+            "objectRotate",
+            "arrange.rotate",
+            ICON_ROTATE_RIGHT,
+            OBJECT_ROTATE_MENU,
+            anyEnabled(OBJECT_ROTATE_MENU),
+        ),
+        objectGroup: button("objectGroup", "arrange.group", ICON_GROUP, group, (c) =>
+            allowsEdit(c.selection, "groupObjects"),
+        ),
+        objectUngroup: button("objectUngroup", "arrange.ungroup", ICON_UNGROUP, ungroup, (c) =>
+            allowsEdit(c.selection, "ungroupObjects"),
+        ),
+    };
+}
 
 /** The arrangement edits of the selection, on the shell `host` lends. */
 export function createArrangeEdits(host: UIShellHost) {

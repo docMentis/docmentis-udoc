@@ -80,8 +80,12 @@ listed once, by package. Its major and minor version are those of the
   an image's pages its Image tab — while a tab picked stays open as the
   selection moves within the same kind. New Slide moves to the Insert tab,
   an image's Rotate, Flip, Crop and Image Size to its new Image tab, and a
-  word document's drawings take their Fill, Line and Arrange from a Shape
-  tab.
+  word document's drawings take their Fill, Line and arrangement from a
+  Shape tab.
+- The Shape and Object tabs show Order, Align and Rotate as dropdowns of
+  their own, side by side, and Group and Ungroup as buttons beside them, in
+  place of the one Arrange dropdown they nested in. The `translations` keys
+  `command.shapeArrange` and `command.objectArrange` are gone.
 
 ## [0.8.9] - 2026-10-30
 

@@ -1031,8 +1031,9 @@ export const uiStyles = css`
 
     /* Button cluster — a related set of flat buttons butted together: the Text tab's
    Bold / Italic / Underline / Strikethrough toggles, its paragraph Align /
-   Spacing / list controls, and the Text Color / Highlight and Fill / Line color
-   dropdowns. These aren't one value, so the
+   Spacing / list controls, the Text Color / Highlight and Fill / Line color
+   dropdowns, the Shape tab's Order / Align / Rotate and its Group / Ungroup.
+   These aren't one value, so the
    cluster is drawn with proximity, NOT a border: a box would say "one control,
    one value" and read as a field (see .udoc-btn--field), which is the one thing a
    border means here. The buttons butt together (gap 0) into one solid run, fenced

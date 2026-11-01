@@ -1,9 +1,8 @@
 // The Text, Shape and Object tabs' commands: character and paragraph formatting
-// over the text selection, and the Fill / Line / Arrange controls over a
-// drawing's shapes or a PDF's page objects.
+// over the text selection, and the Fill / Line controls over a drawing's shapes
+// or a PDF's page objects (their arrangement commands are `arrange.ts`'s).
 import { allowsEdit, ICON_FILL, ICON_STROKE, ICON_TEXT_HIGHLIGHT } from "@docmentis/udoc-ui/internal";
 import type { CommandDef } from "@docmentis/udoc-ui/internal";
-import { OBJECT_ARRANGE_MENU, SHAPE_ARRANGE_MENU } from "./arrange.js";
 import {
     fontFamilyControl,
     fontSizeControl,
@@ -13,7 +12,6 @@ import {
 } from "./components/TextControls.js";
 import type { MessageKey } from "./i18n/index.js";
 import {
-    ICON_ARRANGE,
     ICON_BOLD,
     ICON_FONT_SIZE,
     ICON_FONTS,
@@ -235,22 +233,8 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
             enabledWhen: (c) => allowsEdit(c.selection, "setShapeLine"),
         },
 
-        // The Shape tab's one arrangement button. Its dropdown nests Order /
-        // Align / Rotate submenus plus Group / Ungroup; it greys out exactly when
-        // the whole menu would be dead (nothing selected, or a lone shape that
-        // can't move, align, rotate, or (un)group).
-        shapeArrange: {
-            id: "shapeArrange",
-            label: "command.shapeArrange",
-            icon: ICON_ARRANGE,
-            group: "arrange",
-            run: { kind: "menu", menu: SHAPE_ARRANGE_MENU },
-            enabledWhen: (c) => SHAPE_ARRANGE_MENU.some((i) => i.enabledWhen(c)),
-        },
-
-        // Object tab — the PDF twins of the Shape tab's three: Fill / Line gated
-        // on a page object's `setNonstrokingStyle` / `setStrokingStyle`, and
-        // Arrange over its own menu of object edits.
+        // Object tab — the PDF twins of the Shape tab's Fill / Line, gated on a
+        // page object's `setNonstrokingStyle` / `setStrokingStyle`.
         objectFillColor: {
             id: "objectFillColor",
             label: "command.objectFillColor",
@@ -276,14 +260,6 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
                     paintControl(env, { id: "objectStrokeColor", icon: ICON_STROKE, channel: "stroke" }, tools()),
             },
             enabledWhen: (c) => allowsEdit(c.selection, "setStrokingStyle"),
-        },
-        objectArrange: {
-            id: "objectArrange",
-            label: "command.objectArrange",
-            icon: ICON_ARRANGE,
-            group: "arrange",
-            run: { kind: "menu", menu: OBJECT_ARRANGE_MENU },
-            enabledWhen: (c) => OBJECT_ARRANGE_MENU.some((i) => i.enabledWhen(c)),
         },
     };
 }

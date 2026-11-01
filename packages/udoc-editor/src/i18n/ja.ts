@@ -88,10 +88,8 @@ export const ja: EditMessages = {
     "command.numberList": "段落番号",
     "command.shapeFillColor": "塗りつぶし",
     "command.shapeStrokeColor": "枠線",
-    "command.shapeArrange": "配置",
     "command.objectFillColor": "塗りつぶし",
     "command.objectStrokeColor": "枠線",
-    "command.objectArrange": "配置",
 
     // New Slide dialog
     "newSlide.label": "新しいスライドのレイアウト",

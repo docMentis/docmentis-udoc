@@ -88,10 +88,8 @@ export const zhCN: EditMessages = {
     "command.numberList": "编号",
     "command.shapeFillColor": "填充",
     "command.shapeStrokeColor": "线条",
-    "command.shapeArrange": "排列",
     "command.objectFillColor": "填充",
     "command.objectStrokeColor": "线条",
-    "command.objectArrange": "排列",
 
     // New Slide dialog
     "newSlide.label": "新建幻灯片版式",

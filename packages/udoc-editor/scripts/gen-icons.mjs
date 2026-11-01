@@ -64,7 +64,6 @@ const ICONS = {
     ICON_LIST_NUMBER: "format_list_numbered",
 
     // Arrange
-    ICON_ARRANGE: "stack",
     ICON_ORDER: "flip_to_front",
     ICON_BRING_TO_FRONT: "vertical_align_top",
     ICON_BRING_FORWARD: "arrow_upward",

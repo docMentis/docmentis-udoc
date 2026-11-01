@@ -595,13 +595,14 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  *   unless `sticky`, which keeps the tool armed placement after placement.
  *   Pressing an armed tool's button again disarms it.
  * - `action` → a plain button whose click `press`es — for a command of an
- *   extension's that its own code runs (New Slide, Insert ▸ Image).
+ *   extension's that its own code runs (New Slide, Insert ▸ Image). `cluster`
+ *   bunches it as a `control`'s does: the Shape tab's Group and Ungroup.
  * - `armPicker` → opens a sub-picker of `options` before arming: the Annotate
  *   tab's shapes or its standard stamps, an extension's own.
  * - `armGallery` → `armPicker` for a picker too long for a list: a panel of
  *   `sections`, each a heading over a grid of its options' icons, named by
  *   their tooltips — the Insert tab's shapes on a slide or an image.
- * - `menu` → opens a dropdown of {@link MenuItem}s (Arrange / Align / Rotate);
+ * - `menu` → opens a dropdown of {@link MenuItem}s (Order / Align / Rotate);
  *   selecting an item dispatches its {@link MenuAction} through the ribbon's
  *   `onMenuAction` callback. `cluster` bunches it as a `control`'s does, and
  *   `current`, when set, is the choice its button shows for the state — the
@@ -625,7 +626,7 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  */
 export type CommandRun<K extends string = MessageKey> =
     | { kind: "history"; op: HistoryOp }
-    | { kind: "action"; press(store: Store<UIState, Action>): void }
+    | { kind: "action"; cluster?: ClusterKind; press(store: Store<UIState, Action>): void }
     | { kind: "arm"; tool: PlaceTool; sticky?: boolean }
     | { kind: "armPicker"; options: readonly PickerOption<K>[] }
     | { kind: "armGallery"; sections: readonly PickerSection<K>[] }
@@ -647,10 +648,11 @@ export type CommandRun<K extends string = MessageKey> =
 
 /** Which segmented group a ribbon command bunches into: consecutive commands of
  *  one kind butt together with no gap between them — the character toggles, the
- *  color dropdowns, the paragraph controls. Consecutive `"segment"` toggles are
- *  the choices of one setting, one pressed at a time: they form a segment
- *  button (see `createSegmentButton`), which the ribbon never splits. */
-export type ClusterKind = "toggle" | "paint" | "paragraph" | "segment";
+ *  color dropdowns, the paragraph controls, the arrangement controls.
+ *  Consecutive `"segment"` toggles are the choices of one setting, one pressed
+ *  at a time: they form a segment button (see `createSegmentButton`), which the
+ *  ribbon never splits. */
+export type ClusterKind = "toggle" | "paint" | "paragraph" | "arrange" | "segment";
 
 /** A ribbon control an extension builds for one of its commands (a `control` {@link CommandRun}). */
 export interface RibbonControl {

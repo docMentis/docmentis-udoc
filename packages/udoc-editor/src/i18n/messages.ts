@@ -165,14 +165,10 @@ export interface Messages extends UIMessages {
     "command.shapeFillColor": string;
     /** Line */
     "command.shapeStrokeColor": string;
-    /** Arrange */
-    "command.shapeArrange": string;
     /** Fill */
     "command.objectFillColor": string;
     /** Line */
     "command.objectStrokeColor": string;
-    /** Arrange */
-    "command.objectArrange": string;
 
     // New Slide dialog
     /** New slide layout */

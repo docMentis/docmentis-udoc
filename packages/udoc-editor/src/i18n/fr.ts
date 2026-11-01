@@ -88,10 +88,8 @@ export const fr: EditMessages = {
     "command.numberList": "Liste numérotée",
     "command.shapeFillColor": "Remplissage",
     "command.shapeStrokeColor": "Contour",
-    "command.shapeArrange": "Organiser",
     "command.objectFillColor": "Remplissage",
     "command.objectStrokeColor": "Contour",
-    "command.objectArrange": "Organiser",
 
     // New Slide dialog
     "newSlide.label": "Disposition de la nouvelle diapositive",

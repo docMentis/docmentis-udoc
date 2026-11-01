@@ -88,10 +88,8 @@ export const de: EditMessages = {
     "command.numberList": "Nummerierung",
     "command.shapeFillColor": "Füllung",
     "command.shapeStrokeColor": "Linie",
-    "command.shapeArrange": "Anordnen",
     "command.objectFillColor": "Füllung",
     "command.objectStrokeColor": "Linie",
-    "command.objectArrange": "Anordnen",
 
     // New Slide dialog
     "newSlide.label": "Layout für neue Folie",

@@ -88,10 +88,8 @@ export const ptBR: EditMessages = {
     "command.numberList": "Lista Numerada",
     "command.shapeFillColor": "Preenchimento",
     "command.shapeStrokeColor": "Contorno",
-    "command.shapeArrange": "Organizar",
     "command.objectFillColor": "Preenchimento",
     "command.objectStrokeColor": "Contorno",
-    "command.objectArrange": "Organizar",
 
     // New Slide dialog
     "newSlide.label": "Layout do novo slide",

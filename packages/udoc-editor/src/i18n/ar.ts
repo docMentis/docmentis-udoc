@@ -88,10 +88,8 @@ export const ar: EditMessages = {
     "command.numberList": "تعداد رقمي",
     "command.shapeFillColor": "تعبئة",
     "command.shapeStrokeColor": "خط",
-    "command.shapeArrange": "ترتيب",
     "command.objectFillColor": "تعبئة",
     "command.objectStrokeColor": "خط",
-    "command.objectArrange": "ترتيب",
 
     // New Slide dialog
     "newSlide.label": "تخطيط الشريحة الجديدة",

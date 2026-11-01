@@ -88,10 +88,8 @@ export const ko: EditMessages = {
     "command.numberList": "번호 매기기",
     "command.shapeFillColor": "채우기",
     "command.shapeStrokeColor": "윤곽선",
-    "command.shapeArrange": "정렬",
     "command.objectFillColor": "채우기",
     "command.objectStrokeColor": "윤곽선",
-    "command.objectArrange": "정렬",
 
     // New Slide dialog
     "newSlide.label": "새 슬라이드 레이아웃",
