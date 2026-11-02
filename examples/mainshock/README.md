@@ -1,8 +1,8 @@
 # Mainshock
 
-A sales enablement app built on the docMentis udoc packages: Acme Corp's
-marketing keeps a library of decks, datasheets and case studies, and its
-sellers use them with their buyers. It shows the packages doing a real job, and
+A sales enablement app built on the docMentis udoc packages: Larchmere, an
+imaginary asset manager, keeps its pitch books, fact sheets and commentaries in
+it, and its sales team uses them with the institutions it pitches. It shows the packages doing a real job, and
 is where we dogfood them: what their public API lacks goes in
 [`GAPS.md`](GAPS.md). Its design is
 [`docs/design/examples-mainshock.md`](../../docs/design/examples-mainshock.md).
@@ -33,7 +33,7 @@ at http://127.0.0.1:5281.
 
 ## Signing in
 
-An empty database is seeded with Acme Corp and its users, who all sign in with
+An empty database is seeded with Larchmere and its users, who all sign in with
 the demo's password, `mainshock`:
 
 | Username | Who                                   |

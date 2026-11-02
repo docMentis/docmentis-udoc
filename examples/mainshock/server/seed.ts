@@ -1,14 +1,14 @@
-// The example tenant, Acme Corp, and its users (`shared/personas.ts`). An empty
-// database gets them.
+// The example tenant, Larchmere, an imaginary asset manager, and its users
+// (`shared/personas.ts`). An empty database gets them.
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 
 import { DEMO_PASSWORD, PERSONAS } from "../shared/personas.ts";
 import { hashPassword } from "./auth.ts";
 
-const TENANT = "Acme Corp";
+const TENANT = "Larchmere";
 
-/** Seed Acme Corp and its users, unless the database has a tenant already. */
+/** Seed Larchmere and its users, unless the database has a tenant already. */
 export async function seed(db: DatabaseSync): Promise<void> {
     if (db.prepare("SELECT 1 FROM tenants LIMIT 1").get()) return;
     const hashes = await Promise.all(PERSONAS.map(() => hashPassword(DEMO_PASSWORD)));

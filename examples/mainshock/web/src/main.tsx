@@ -42,7 +42,7 @@ const router = createBrowserRouter([
                         element: (
                             <PlaceholderPage
                                 title="Library"
-                                subtitle="Every deck, datasheet and case study Acme's sellers use."
+                                subtitle="Every pitch book, fact sheet and commentary the sales team uses."
                             />
                         ),
                     },

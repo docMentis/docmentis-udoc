@@ -4,8 +4,8 @@ Mainshock is a sales enablement app built on the udoc packages, in
 `examples/mainshock/`. The other examples each show one way to install the
 viewer and the editor; mainshock is a product a customer would build with them
 — a content library, decks personalized for a deal, links shared with buyers,
-presenting — run locally, with Acme Corp as its example tenant. It is there for
-two reasons:
+presenting — run locally, with Larchmere, an imaginary asset manager, as its
+example tenant. It is there for two reasons:
 
 - **A showcase.** Each workflow puts a udoc capability in front of someone with
   a reason to use it: the viewer for a buyer reading a proposal, the editor for
@@ -17,13 +17,26 @@ two reasons:
   `examples/mainshock/GAPS.md` — what was needed, what the API offers, the
   workaround if there is one — instead of being reached around.
 
+## The tenant
+
+Larchmere Investment Management, Larchmere for short, is a mid-sized asset
+manager selling to institutions: pension funds, endowments and foundations,
+often through their investment consultants. Financial services is where sales
+enablement is most at home, and its content gives the packages real work. It is
+reviewed by compliance, carries disclosures, dates with each quarter's figures,
+and comes in every format: pitch books (PPTX), fact sheets and commentaries
+(PDF), answers to RFPs and due diligence questionnaires (DOCX), performance and
+fee tables (XLSX). Larchmere is made up, and so is everything about it: its
+funds, benchmarks and figures, with no real ticker or index. Each of its
+documents says so.
+
 ## Who uses it
 
-| Role      | Who                      | Does                                                     |
-| --------- | ------------------------ | -------------------------------------------------------- |
-| marketing | Acme's content team      | keeps the library: uploads, tags, retires content        |
-| sales     | Acme's reps              | finds content, builds decks for a deal, shares, presents |
-| buyer     | a prospect, outside Acme | opens a shared link, with no account                     |
+| Role      | Who                                           | Does                                                     |
+| --------- | --------------------------------------------- | -------------------------------------------------------- |
+| marketing | Larchmere's marketing team                    | keeps the library: uploads, tags, retires content        |
+| sales     | Larchmere's institutional sales team          | finds content, builds decks for a deal, shares, presents |
+| buyer     | a prospect: an institution, or its consultant | opens a shared link, with no account                     |
 
 Marketing and sales are a tenant's users; a buyer comes through a share link.
 Each role is played by a persona, a seeded user whose name is still to be
@@ -76,7 +89,7 @@ command does.
 
 Mainshock looks like the product it is, and beside it a narrator speaks for
 docMentis. It's a panel docked at the window's right edge, styled apart from
-Acme's app so that no one takes one for the other, collapsing to a badge in the
+the app so that no one takes one for the other, collapsing to a badge in the
 corner, and gone with `?narrator=off` when the app is used as a product. It says
 two kinds of things:
 
@@ -134,10 +147,7 @@ formats it with the rest of the repo.
 
 ## Step 1: the skeleton
 
-- `examples/mainshock/` as laid out above: one `package.json`, a `tsconfig`
-  for the Node side (`server/`, `shared/`, Vite's config) and one for `web/`,
-  and a `typecheck` script.
-  The frontend and the backend, set up and running, with no udoc code yet:
+The frontend and the backend, set up and running, with no udoc code yet:
 
 - `examples/mainshock/` as laid out above: one `package.json`, the udoc
   packages linked in it, a `tsconfig` for the Node side (`server/`, `shared/`,
@@ -145,7 +155,7 @@ formats it with the rest of the repo.
 mainshock` from the root.
 - The backend: Fastify over the database, its migrations counted by `PRAGMA
 user_version`: `tenants`, `users` and `sessions`, and an empty one seeded
-  with Acme Corp and its personas, one in marketing and two in sales.
+  with Larchmere and its personas, one in marketing and two in sales.
 - Signing in: a username and a password, over `GET`, `POST` and
   `DELETE /api/session`, a session in an HTTP-only cookie.
 - The frontend: the sign-in page, and the shell, a sidebar — Home, Library,
@@ -158,7 +168,7 @@ user_version`: `tenants`, `users` and `sessions`, and an empty one seeded
 
 In an order picked as we go: udoc end to end, udoc-server in the backend behind
 the gate and the viewer and the editor in the frontend; the narrator; the
-library, with Acme's content (generated),
+library, with Larchmere's content (generated),
 thumbnails from udoc-server's page routes, tags and search; decks, a rep
 assembling slides from the library's decks and personalizing them for a deal;
 share links, a buyer's view with no account, and which pages they read and for
