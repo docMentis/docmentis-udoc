@@ -58,6 +58,17 @@ input {
     color: var(--ms-danger);
 }
 
+/* The stage: the app, and the narrator beside it. */
+.stage {
+    display: flex;
+    height: 100%;
+}
+
+.stage-app {
+    flex: 1;
+    min-width: 0;
+}
+
 /* The shell. */
 .shell {
     display: flex;

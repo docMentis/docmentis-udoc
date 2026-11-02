@@ -1,0 +1,166 @@
+/* The narrator, in docmentis.com's colors and type rather than Mainshock's:
+   white, slate, and indigo only for the mark and what's new. */
+.narrator {
+    --dm-text: #0f172a;
+    --dm-muted: #64748b;
+    --dm-line: #e2e8f0;
+    --dm-tint: #f8fafc;
+    --dm-indigo: #4f46e5;
+    --dm-shadow: 0 1px 3px rgb(15 23 42 / 10%);
+    position: relative;
+    flex-shrink: 0;
+    width: 0;
+    color: var(--dm-text);
+    font-family:
+        Geist,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.narrator-open {
+    width: 320px;
+}
+
+.narrator button {
+    font: inherit;
+    cursor: pointer;
+}
+
+/* The tab, half tucked into the right edge: at the window's edge with the
+   panel closed, at the panel's with it open. */
+.narrator-tab {
+    position: absolute;
+    top: 50%;
+    right: 100%;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 66px;
+    padding: 0;
+    border: 1px solid var(--dm-line);
+    border-right: 0;
+    border-radius: 10px 0 0 10px;
+    background: #fff;
+    box-shadow: var(--dm-shadow);
+    transform: translateY(-50%);
+    /* Its shadow and its flash stop at its right side: unfolded, the tab and
+       the panel are one surface, the tab covering the panel's border. */
+    clip-path: inset(-12px 0 -12px -12px);
+}
+
+.narrator:not(.narrator-open) .narrator-tab:hover {
+    background: var(--dm-tint);
+}
+
+/* Unfolded, over the panel's border, which it joins. */
+.narrator-open .narrator-tab {
+    right: calc(100% - 1px);
+}
+
+.narrator-dot {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--dm-indigo);
+}
+
+/* Something new: the tab's outline and the window's edge flash as one line,
+   until the panel unfolds. */
+.narrator-flash::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border: 3px solid var(--dm-indigo);
+    border-right: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    animation: narrator-flash 0.9s ease-in-out infinite;
+}
+
+.narrator-edge {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 19;
+    width: 3px;
+    background: var(--dm-indigo);
+    pointer-events: none;
+    animation: narrator-flash 0.9s ease-in-out infinite;
+}
+
+@keyframes narrator-flash {
+    0%,
+    100% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* The panel: its left edge bordered and shadowed as the tab is, the shadow
+   cast only to the left. */
+.narrator-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-left: 1px solid var(--dm-line);
+    background: #fff;
+    box-shadow: var(--dm-shadow);
+    clip-path: inset(0 0 0 -12px);
+}
+
+/* A setting chosen once, in one row at the panel's foot: what the guide tells
+   goes above. */
+.narrator-setting {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+    padding: 10px 16px;
+    border-top: 1px solid var(--dm-line);
+}
+
+.narrator-label {
+    color: var(--dm-muted);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.narrator-segmented {
+    display: flex;
+    padding: 2px;
+    border: 1px solid var(--dm-line);
+    border-radius: 7px;
+    background: var(--dm-tint);
+}
+
+.narrator-segmented button {
+    padding: 2px 10px;
+    border: 0;
+    border-radius: 5px;
+    background: none;
+    color: var(--dm-muted);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.narrator-segmented button:hover {
+    color: var(--dm-text);
+}
+
+.narrator-segmented button[aria-checked="true"] {
+    background: #fff;
+    color: var(--dm-text);
+    box-shadow: var(--dm-shadow);
+}

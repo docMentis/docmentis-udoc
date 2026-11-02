@@ -1,10 +1,12 @@
-// The page: who is signed in, around the app's routes — the sign-in page,
-// and the shell with a page for each section.
+// The page: the app — who is signed in, around its routes, the sign-in page
+// and the shell with a page for each section — and the narrator bolted on
+// beside it.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Outlet, RouterProvider, createBrowserRouter } from "react-router";
 
 import { AppShell } from "./AppShell";
+import { Narrator } from "./narrator/Narrator";
 import { NotFoundPage, PlaceholderPage } from "./pages/PlaceholderPage";
 import { SignInPage } from "./pages/SignInPage";
 import { RequireSession, SessionProvider } from "./session";
@@ -13,9 +15,14 @@ import "./app.css";
 const router = createBrowserRouter([
     {
         element: (
-            <SessionProvider>
-                <Outlet />
-            </SessionProvider>
+            <div className="stage">
+                <div className="stage-app">
+                    <SessionProvider>
+                        <Outlet />
+                    </SessionProvider>
+                </div>
+                <Narrator />
+            </div>
         ),
         children: [
             { path: "/sign-in", element: <SignInPage /> },
