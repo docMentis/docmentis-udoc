@@ -8,7 +8,7 @@ export function PlaceholderPage({ title, subtitle }: { title: string; subtitle: 
         <div className="page">
             <PageHeader title={title} subtitle={subtitle} />
             <div className="card">
-                <EmptyState title="Coming soon." />
+                <EmptyState title="Coming soon" />
             </div>
         </div>
     );
@@ -17,10 +17,11 @@ export function PlaceholderPage({ title, subtitle }: { title: string; subtitle: 
 export function NotFoundPage() {
     return (
         <div className="page">
-            <div className="card">
-                <EmptyState title="There's no page here.">
-                    <Link to="/">Go home</Link>
-                </EmptyState>
+            <PageHeader title="Page not found" subtitle="There's nothing at this address." />
+            <div>
+                <Link className="button" to="/">
+                    Go to Home
+                </Link>
             </div>
         </div>
     );

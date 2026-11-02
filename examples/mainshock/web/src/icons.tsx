@@ -5,8 +5,8 @@ function Icon({ children, ...props }: SVGProps<SVGSVGElement> & { children: Reac
     return (
         <svg
             viewBox="0 0 24 24"
-            width="20"
-            height="20"
+            width="24"
+            height="24"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.8"
@@ -71,8 +71,28 @@ export const AnalyticsIcon = () => (
     </Icon>
 );
 
-export const ChevronDownIcon = () => (
+/** A cog: eight teeth round an axle. */
+export const SettingsIcon = () => (
+    <Icon>
+        <path d="M10.01 4.56 10.44 2.12 13.56 2.12 13.99 4.56 15.85 5.33 17.88 3.91 20.09 6.12 18.67 8.15 19.44 10.01 21.88 10.44 21.88 13.56 19.44 13.99 18.67 15.85 20.09 17.88 17.88 20.09 15.85 18.67 13.99 19.44 13.56 21.88 10.44 21.88 10.01 19.44 8.15 18.67 6.12 20.09 3.91 17.88 5.33 15.85 4.56 13.99 2.12 13.56 2.12 10.44 4.56 10.01 5.33 8.15 3.91 6.12 6.12 3.91 8.15 5.33Z" />
+        <circle cx="12" cy="12" r="3.2" />
+    </Icon>
+);
+
+export const ChevronLeftIcon = () => (
+    <Icon width="14" height="14">
+        <path d="m15 6-6 6 6 6" />
+    </Icon>
+);
+
+export const ChevronRightIcon = () => (
+    <Icon width="14" height="14">
+        <path d="m9 6 6 6-6 6" />
+    </Icon>
+);
+
+export const ChevronsUpDownIcon = () => (
     <Icon width="16" height="16">
-        <path d="m6 9 6 6 6-6" />
+        <path d="m7 15 5 5 5-5M7 9l5-5 5 5" />
     </Icon>
 );

@@ -35,7 +35,7 @@ and its name head the sidebar, the logo kept with the tenant and served to its
 users alone (`/api/tenants/:id/logo`). Larchmere's is a larch cone, faceted
 scales on a shield, with a rising arrow breaking out of it. Mainshock's own
 mark is left to the sign-in page, where no tenant is known yet, and the foot of
-the sidebar.
+the sidebar, "Powered by Mainshock".
 
 Each of the three speaks in colors of its own, so that no one takes one for
 another: docMentis, the narrator, in its indigo; Mainshock, the app, in
@@ -171,10 +171,11 @@ user_version`: `tenants` and their logos, `users` and `sessions`, and an
   marketing and two in sales.
 - Signing in: a username and a password, over `GET`, `POST` and
   `DELETE /api/session`, a session in an HTTP-only cookie.
-- The frontend: the sign-in page, and the shell, a sidebar under the tenant's
-  logo and name — Home, Library, Decks, Deals, Analytics — with Mainshock's
-  mark at its foot, and a top bar with the user's menu (sign out); each
-  section a placeholder until its step.
+- The frontend: the sign-in page, and the shell, a sidebar beside the page,
+  folding to a rail of its icons: under the tenant's logo and name, Home,
+  Library, Decks, Deals and Analytics, and after a divider Settings; at its
+  foot the user's menu (sign out), then, under a divider, "Powered by
+  Mainshock". Each section is a placeholder until its step.
 - The examples harness and workflow leaving it out, and `examples/README.md`
   and `CLAUDE.md` saying what it is.
 

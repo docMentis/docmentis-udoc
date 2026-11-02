@@ -6,8 +6,10 @@ import { Navigate, useLocation } from "react-router";
 import { ApiError } from "../api";
 import { Logo } from "../icons";
 import { useSession } from "../session";
+import { useDocumentTitle } from "../ui";
 
 export function SignInPage() {
+    useDocumentTitle("Sign in");
     const { user, signIn } = useSession();
     const from = (useLocation().state as { from?: string } | null)?.from ?? "/";
     const [username, setUsername] = useState("");
@@ -62,7 +64,11 @@ export function SignInPage() {
                         onChange={(event) => setPassword(event.target.value)}
                     />
                 </label>
-                {error && <p className="error">{error}</p>}
+                {error && (
+                    <p className="error" role="alert">
+                        {error}
+                    </p>
+                )}
                 <button type="submit" className="button primary" disabled={signingIn}>
                     {signingIn ? "Signing in…" : "Sign in"}
                 </button>

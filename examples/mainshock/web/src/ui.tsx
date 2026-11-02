@@ -1,9 +1,18 @@
 // The pieces the pages are made of.
+import { useEffect } from "react";
 import type { ReactNode } from "react";
 
 import type { Tenant } from "../../shared/api.ts";
 
-export function PageHeader({ title, subtitle }: { title: ReactNode; subtitle?: ReactNode }) {
+/** Title the browser's tab after the page: "Library · Mainshock". */
+export function useDocumentTitle(title: string): void {
+    useEffect(() => {
+        document.title = `${title} · Mainshock`;
+    }, [title]);
+}
+
+export function PageHeader({ title, subtitle }: { title: string; subtitle?: ReactNode }) {
+    useDocumentTitle(title);
     return (
         <header className="page-header">
             <h1>{title}</h1>
@@ -34,7 +43,7 @@ export function TenantBrand({ tenant }: { tenant: Tenant }) {
                     {tenant.name[0]}
                 </span>
             )}
-            <span>{tenant.name}</span>
+            <span className="tenant-name">{tenant.name}</span>
         </>
     );
 }

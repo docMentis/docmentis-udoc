@@ -4,6 +4,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Outlet, RouterProvider, createBrowserRouter } from "react-router";
+import "@fontsource-variable/inter";
 
 import { AppShell } from "./AppShell";
 import { Narrator } from "./narrator/Narrator";
@@ -35,7 +36,7 @@ const router = createBrowserRouter([
                 children: [
                     {
                         index: true,
-                        element: <PlaceholderPage title="Home" subtitle="What's new, and what needs you." />,
+                        element: <PlaceholderPage title="Home" subtitle="What's new, and what needs your attention." />,
                     },
                     {
                         path: "library",
@@ -67,10 +68,13 @@ const router = createBrowserRouter([
                     {
                         path: "analytics",
                         element: (
-                            <PlaceholderPage
-                                title="Analytics"
-                                subtitle="How the library's content is used, and read."
-                            />
+                            <PlaceholderPage title="Analytics" subtitle="How the library's content is used and read." />
+                        ),
+                    },
+                    {
+                        path: "settings",
+                        element: (
+                            <PlaceholderPage title="Settings" subtitle="The workspace's name, logo and members." />
                         ),
                     },
                     { path: "*", element: <NotFoundPage /> },

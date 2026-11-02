@@ -12,10 +12,14 @@
     --ms-text: #1b1f26;
     --ms-muted: #636c7a;
     --ms-danger: #c92a2a;
+    --ms-danger-soft: #fff5f5;
+    --ms-danger-line: #ffc9c9;
     --ms-radius: 10px;
     --ms-shadow: 0 1px 2px rgb(16 24 40 / 6%);
+    --ms-shadow-overlay: 0 8px 24px rgb(16 24 40 / 12%);
+    /* Inter, bundled, so that every weight is the one asked for, on any machine. */
     font-family:
-        Inter,
+        "Inter Variable",
         -apple-system,
         BlinkMacSystemFont,
         "Segoe UI",
@@ -54,11 +58,24 @@ p {
 
 button,
 input {
+    color: inherit;
     font: inherit;
 }
 
+/* Focus, from the keyboard, in the brand's orange on every control. */
+:focus-visible {
+    outline: 2px solid var(--ms-brand);
+    outline-offset: 2px;
+}
+
+/* What went wrong, set apart from the brand's orange. */
 .error {
+    padding: 10px 12px;
+    border: 1px solid var(--ms-danger-line);
+    border-radius: 8px;
+    background: var(--ms-danger-soft);
     color: var(--ms-danger);
+    font-size: 13px;
 }
 
 /* The stage: the app, and the narrator beside it. */
@@ -72,21 +89,59 @@ input {
     min-width: 0;
 }
 
-/* The shell. */
+/* The shell: the sidebar, which folds to a rail of its icons, and the page. */
 .shell {
     display: flex;
     height: 100%;
 }
 
+/* What the sidebar shows is centered 32px in, on the folded rail's middle, so
+   that folding it takes the words away and moves nothing else. */
 .sidebar {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 24px;
     width: 220px;
     flex-shrink: 0;
-    padding: 0 12px 20px;
+    padding: 0 12px 12px;
     background: var(--ms-surface);
     border-right: 1px solid var(--ms-border);
+    transition: width 0.15s ease;
+}
+
+.shell-folded .sidebar {
+    width: 64px;
+}
+
+.shell-folded .tenant-name,
+.shell-folded .nav-label,
+.shell-folded .user-name,
+.shell-folded .user-button > svg {
+    display: none;
+}
+
+/* The fold's button, on the sidebar's edge, level with the brand. */
+.sidebar-fold {
+    position: absolute;
+    top: 18px;
+    right: -12px;
+    z-index: 5;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid var(--ms-border);
+    border-radius: 50%;
+    background: var(--ms-surface);
+    box-shadow: var(--ms-shadow);
+    color: var(--ms-muted);
+    cursor: pointer;
+}
+
+.sidebar-fold:hover {
+    background: var(--ms-bg);
+    color: var(--ms-text);
 }
 
 /* The tenant's brand, or on the sign-in page, Mainshock's. */
@@ -106,10 +161,11 @@ input {
     white-space: nowrap;
 }
 
-/* Heading the sidebar, level with the top bar. */
+/* Heading the sidebar. */
 .sidebar .brand {
     flex-shrink: 0;
     height: 60px;
+    padding: 0 4px;
     font-size: 19px;
 }
 
@@ -128,33 +184,26 @@ input {
     color: var(--ms-brand-strong);
 }
 
-/* Mainshock's own mark, quiet at the sidebar's foot: the brand above is the
-   tenant's. */
-.product {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: auto;
-    padding: 0 8px;
-    color: var(--ms-muted);
-    font-size: 12px;
-    font-weight: 600;
-}
-
 .nav {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    margin-top: 8px;
 }
 
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
+    gap: 8px;
+    padding: 6px 8px;
     border-radius: 8px;
     color: var(--ms-muted);
     font-weight: 500;
+    white-space: nowrap;
+}
+
+.nav-item svg {
+    flex-shrink: 0;
 }
 
 .nav-item:hover {
@@ -168,27 +217,42 @@ input {
     color: var(--ms-brand-strong);
 }
 
-.main {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    min-width: 0;
+/* Between the sections and the workspace's settings. */
+.nav-divider {
+    margin: 6px 8px;
+    border-top: 1px solid var(--ms-border);
 }
 
-.topbar {
+/* The sidebar's foot: the user; then, under a divider across the sidebar, the
+   product it runs on, Mainshock's own mark. */
+.sidebar-foot {
+    margin-top: auto;
+}
+
+.powered-by {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    height: 60px;
+    gap: 8px;
+    margin: 12px -12px 0;
+    padding: 12px 0 0 20px;
+    border-top: 1px solid var(--ms-border);
+    color: var(--ms-muted);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.powered-by svg {
     flex-shrink: 0;
-    padding: 0 24px;
-    background: var(--ms-surface);
-    border-bottom: 1px solid var(--ms-border);
+}
+
+.powered-by strong {
+    font-weight: 600;
 }
 
 .content {
     flex: 1;
-    min-height: 0;
+    min-width: 0;
     overflow: auto;
 }
 
@@ -200,8 +264,9 @@ input {
 .user-button {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 4px 8px 4px 4px;
+    gap: 6px;
+    width: 100%;
+    padding: 4px 8px 4px 6px;
     border: 0;
     border-radius: 8px;
     background: none;
@@ -214,25 +279,29 @@ input {
     background: var(--ms-bg);
 }
 
-.user-name {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.25;
+.user-button > svg {
+    flex-shrink: 0;
 }
 
-.user-name strong {
+.user-name,
+.menu-header {
     color: var(--ms-text);
     font-weight: 600;
 }
 
-.user-name small {
-    font-size: 12px;
+.user-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
+/* Up from the sidebar's foot; folded, out beside the rail. */
 .menu {
     position: absolute;
-    right: 0;
-    top: calc(100% + 6px);
+    bottom: calc(100% + 6px);
+    left: 0;
     z-index: 10;
     display: flex;
     flex-direction: column;
@@ -241,7 +310,18 @@ input {
     background: var(--ms-surface);
     border: 1px solid var(--ms-border);
     border-radius: var(--ms-radius);
-    box-shadow: 0 8px 24px rgb(16 24 40 / 12%);
+    box-shadow: var(--ms-shadow-overlay);
+}
+
+.shell-folded .menu {
+    bottom: 0;
+    left: calc(100% + 8px);
+}
+
+.menu-header {
+    margin-bottom: 4px;
+    padding: 6px 10px 8px;
+    border-bottom: 1px solid var(--ms-border);
 }
 
 .menu button {
@@ -260,22 +340,22 @@ input {
 .avatar {
     display: inline-grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     flex-shrink: 0;
     border-radius: 50%;
     background: var(--ms-brand-soft);
     color: var(--ms-brand-strong);
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 600;
 }
 
-/* Pages. */
+/* Pages: the title level with the tenant's brand across the sidebar. */
 .page {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    padding: 28px 32px;
+    padding: 14px 32px 28px;
 }
 
 .page-header h1 {
@@ -330,6 +410,7 @@ input {
 
 .button:hover {
     background: var(--ms-bg);
+    text-decoration: none;
 }
 
 .button.primary {
@@ -362,8 +443,9 @@ input {
 }
 
 .field input:focus {
-    outline: 2px solid var(--ms-brand-soft);
+    outline: none;
     border-color: var(--ms-brand);
+    box-shadow: 0 0 0 3px rgb(254 80 0 / 18%);
 }
 
 /* Signing in. */
@@ -395,4 +477,5 @@ input {
 .sign-in-card h1 {
     font-size: 20px;
     font-weight: 650;
+    letter-spacing: -0.01em;
 }
