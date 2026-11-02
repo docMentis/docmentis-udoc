@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+    <title>Larchmere Investment Management</title>
+    <defs>
+        <linearGradient id="facets">
+            <stop offset=".5" stop-color="#e8f4ec" />
+            <stop offset=".5" stop-color="#a3cdb2" />
+        </linearGradient>
+        <mask id="cut">
+            <rect width="64" height="64" fill="#fff" />
+            <path d="M6 50 19.5 37.5 27 45 44.5 24 52.67 14.47" fill="none" stroke="#000" stroke-width="8.6" />
+            <path d="M59.5 6.5 57.18 19.66 46.85 10.81Z" fill="#000" stroke="#000" stroke-width="4.2" stroke-linejoin="round" />
+        </mask>
+    </defs>
+    <g mask="url(#cut)" fill="url(#facets)" stroke="#1f4e3d" stroke-width="2.2" stroke-linejoin="round">
+        <path d="M7 27.6 49 27.6 49 42.5 28 60 7 42.5Z" />
+        <path d="M28 3 C32.2 6 35 9.3 35 12.6 C35 16.2 31.85 18 28 18 C24.15 18 21 16.2 21 12.6 C21 9.3 23.8 6 28 3Z" />
+        <path d="M21 10.5 C25.2 13.5 28 16.8 28 20.1 C28 23.7 24.85 25.5 21 25.5 C17.15 25.5 14 23.7 14 20.1 C14 16.8 16.8 13.5 21 10.5Z" />
+        <path d="M35 10.5 C39.2 13.5 42 16.8 42 20.1 C42 23.7 38.85 25.5 35 25.5 C31.15 25.5 28 23.7 28 20.1 C28 16.8 30.8 13.5 35 10.5Z" />
+        <path d="M14 18 C18.2 21 21 24.3 21 27.6 C21 31.2 17.85 33 14 33 C10.15 33 7 31.2 7 27.6 C7 24.3 9.8 21 14 18Z" />
+        <path d="M28 18 C32.2 21 35 24.3 35 27.6 C35 31.2 31.85 33 28 33 C24.15 33 21 31.2 21 27.6 C21 24.3 23.8 21 28 18Z" />
+        <path d="M42 18 C46.2 21 49 24.3 49 27.6 C49 31.2 45.85 33 42 33 C38.15 33 35 31.2 35 27.6 C35 24.3 37.8 21 42 18Z" />
+    </g>
+    <path d="M6 50 19.5 37.5 27 45 44.5 24 52.67 14.47" fill="none" stroke="#1f4e3d" stroke-width="4.4" />
+    <path d="M59.5 6.5 57.18 19.66 46.85 10.81Z" fill="#1f4e3d" />
+</svg>

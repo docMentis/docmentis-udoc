@@ -52,3 +52,4 @@ the demo's password, `mainshock`:
 | `server/` | The backend: Fastify, and SQLite (`node:sqlite`) |
 | `web/`    | The frontend: React, and React Router            |
 | `shared/` | The API's types, which both import               |
+| `seed/`   | The seed's files: Larchmere's logo               |

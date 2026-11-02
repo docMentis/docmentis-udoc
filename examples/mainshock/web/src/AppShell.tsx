@@ -1,5 +1,6 @@
-// The app around every signed-in page: the sidebar's navigation, and the top
-// bar with the tenant and the user's menu.
+// The app around every signed-in page, in its tenant's brand: the sidebar,
+// under the tenant's logo and name, with the navigation, and Mainshock's own
+// mark at its foot; and the top bar, with the user's menu.
 import { useEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { NavLink, Outlet } from "react-router";
@@ -7,7 +8,7 @@ import { NavLink, Outlet } from "react-router";
 import type { User } from "../../shared/api.ts";
 import { AnalyticsIcon, ChevronDownIcon, DealsIcon, DecksIcon, HomeIcon, LibraryIcon, Logo } from "./icons";
 import { useSession, useUser } from "./session";
-import { Avatar } from "./ui";
+import { Avatar, TenantBrand } from "./ui";
 
 const NAVIGATION: { to: string; label: string; icon: ComponentType }[] = [
     { to: "/", label: "Home", icon: HomeIcon },
@@ -23,8 +24,7 @@ export function AppShell() {
         <div className="shell">
             <aside className="sidebar">
                 <div className="brand">
-                    <Logo />
-                    <span>Mainshock</span>
+                    <TenantBrand tenant={user.tenant} />
                 </div>
                 <nav className="nav">
                     {NAVIGATION.map(({ to, label, icon: NavIcon }) => (
@@ -34,10 +34,13 @@ export function AppShell() {
                         </NavLink>
                     ))}
                 </nav>
+                <div className="product">
+                    <Logo size={18} />
+                    <span>Mainshock</span>
+                </div>
             </aside>
             <div className="main">
                 <header className="topbar">
-                    <span className="tenant">{user.tenant.name}</span>
                     <UserMenu user={user} />
                 </header>
                 <main className="content">

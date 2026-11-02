@@ -9,6 +9,7 @@ import Fastify from "fastify";
 import { config } from "./config.ts";
 import { openDatabase } from "./db.ts";
 import { sessionRoutes } from "./routes/session.ts";
+import { tenantRoutes } from "./routes/tenants.ts";
 import { seed } from "./seed.ts";
 
 if (config.webDir && !existsSync(config.webDir)) {
@@ -22,6 +23,7 @@ await seed(db);
 
 const app = Fastify({ logger: { level: "warn" } });
 sessionRoutes(app, db);
+tenantRoutes(app, db);
 if (config.webDir) {
     await app.register(fastifyStatic, { root: config.webDir });
     // Any other page is the frontend's to route.

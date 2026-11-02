@@ -20,7 +20,7 @@ function Icon({ children, ...props }: SVGProps<SVGSVGElement> & { children: Reac
     );
 }
 
-/** Mainshock's mark: a seismogram's spike, on its blue. */
+/** Mainshock's mark: a seismogram's spike, on its orange. */
 export function Logo({ size = 28 }: { size?: number }) {
     return (
         <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden="true">

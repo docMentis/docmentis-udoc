@@ -1,4 +1,5 @@
-// The app's data, in SQLite: tenants, their users, and the users' sessions.
+// The app's data, in SQLite: tenants and their logos, their users, and the
+// users' sessions.
 import { DatabaseSync } from "node:sqlite";
 
 /**
@@ -25,6 +26,11 @@ const MIGRATIONS = [
         user_id TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
         expires_at INTEGER NOT NULL
     );
+    `,
+    // A tenant's logo: its image, and the image's media type.
+    `
+    ALTER TABLE tenants ADD COLUMN logo BLOB;
+    ALTER TABLE tenants ADD COLUMN logo_type TEXT;
     `,
 ];
 

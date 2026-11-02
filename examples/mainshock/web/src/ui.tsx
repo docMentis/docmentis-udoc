@@ -1,6 +1,8 @@
 // The pieces the pages are made of.
 import type { ReactNode } from "react";
 
+import type { Tenant } from "../../shared/api.ts";
+
 export function PageHeader({ title, subtitle }: { title: ReactNode; subtitle?: ReactNode }) {
     return (
         <header className="page-header">
@@ -18,6 +20,22 @@ export function Avatar({ name }: { name: string }) {
         <span className="avatar" aria-hidden="true">
             {initials}
         </span>
+    );
+}
+
+/** A tenant's brand: its logo, a square, or for one without, its initial in one; and its name. */
+export function TenantBrand({ tenant }: { tenant: Tenant }) {
+    return (
+        <>
+            {tenant.logo ? (
+                <img className="tenant-logo" src={tenant.logo} alt="" />
+            ) : (
+                <span className="tenant-logo tenant-initial" aria-hidden="true">
+                    {tenant.name[0]}
+                </span>
+            )}
+            <span>{tenant.name}</span>
+        </>
     );
 }
 

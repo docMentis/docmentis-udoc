@@ -16,9 +16,12 @@ export interface User {
     tenant: Tenant;
 }
 
+/** A company using Mainshock, whose brand its users see the app in. */
 export interface Tenant {
     id: string;
     name: string;
+    /** Where its logo is, a square icon, for an `<img>`; `null` when it has none. */
+    logo: string | null;
 }
 
 /** What a request that fails answers. */

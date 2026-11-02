@@ -12,7 +12,7 @@ const COOKIE = "mainshock_session";
 /** How long a session lasts, in seconds. */
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
 
-/** A `users` row joined to its tenant's name. */
+/** A `users` row joined to its tenant's name, and whether the tenant has a logo. */
 interface UserRow {
     id: string;
     username: string;
@@ -21,14 +21,16 @@ interface UserRow {
     role: Role;
     tenant_id: string;
     tenant_name: string;
+    tenant_has_logo: number;
 }
 
 const USER_COLUMNS = `users.id, users.username, users.name, users.title, users.role,
-    users.tenant_id, tenants.name AS tenant_name`;
+    users.tenant_id, tenants.name AS tenant_name, tenants.logo IS NOT NULL AS tenant_has_logo`;
 
 function userOfRow(row: UserRow): User {
-    const { id, username, name, title, role } = row;
-    return { id, username, name, title, role, tenant: { id: row.tenant_id, name: row.tenant_name } };
+    const { id, username, name, title, role, tenant_id: tenantId } = row;
+    const logo = row.tenant_has_logo ? `/api/tenants/${tenantId}/logo` : null;
+    return { id, username, name, title, role, tenant: { id: tenantId, name: row.tenant_name, logo } };
 }
 
 /** `password`, hashed to keep: `scrypt:<salt>:<hash>`, each base64url. */

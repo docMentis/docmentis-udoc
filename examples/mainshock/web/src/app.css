@@ -1,8 +1,11 @@
-/* Mainshock's look: a light, quiet product, in its own blue. */
+/* Mainshock's look: a light, quiet product, in its own orange: the mark and
+   focus in it, and text and the primary button in a darker one, which white
+   reads on. Neither the narrator's indigo, docMentis's, nor a tenant's colors. */
 :root {
-    --ms-brand: #3b5bdb;
-    --ms-brand-strong: #2f4ac0;
-    --ms-brand-soft: #edf1ff;
+    --ms-brand: #fe5000;
+    --ms-brand-strong: #dc3400;
+    --ms-brand-deep: #b42b08;
+    --ms-brand-soft: #fff1eb;
     --ms-bg: #f5f6f8;
     --ms-surface: #ffffff;
     --ms-border: #e2e5ea;
@@ -36,7 +39,7 @@ body,
 }
 
 a {
-    color: var(--ms-brand);
+    color: var(--ms-brand-strong);
     text-decoration: none;
 }
 
@@ -81,11 +84,12 @@ input {
     gap: 24px;
     width: 220px;
     flex-shrink: 0;
-    padding: 20px 12px;
+    padding: 0 12px 20px;
     background: var(--ms-surface);
     border-right: 1px solid var(--ms-border);
 }
 
+/* The tenant's brand, or on the sign-in page, Mainshock's. */
 .brand {
     display: flex;
     align-items: center;
@@ -94,6 +98,47 @@ input {
     font-size: 17px;
     font-weight: 700;
     letter-spacing: -0.01em;
+}
+
+.brand span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Heading the sidebar, level with the top bar. */
+.sidebar .brand {
+    flex-shrink: 0;
+    height: 60px;
+    font-size: 19px;
+}
+
+/* A tenant's logo: a square. */
+.tenant-logo {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.tenant-initial {
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--ms-brand-soft);
+    color: var(--ms-brand-strong);
+}
+
+/* Mainshock's own mark, quiet at the sidebar's foot: the brand above is the
+   tenant's. */
+.product {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding: 0 8px;
+    color: var(--ms-muted);
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .nav {
@@ -133,16 +178,12 @@ input {
 .topbar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     height: 60px;
     flex-shrink: 0;
     padding: 0 24px;
     background: var(--ms-surface);
     border-bottom: 1px solid var(--ms-border);
-}
-
-.tenant {
-    font-weight: 600;
 }
 
 .content {
@@ -292,13 +333,13 @@ input {
 }
 
 .button.primary {
-    border-color: var(--ms-brand);
-    background: var(--ms-brand);
+    border-color: var(--ms-brand-strong);
+    background: var(--ms-brand-strong);
     color: #fff;
 }
 
 .button.primary:hover {
-    background: var(--ms-brand-strong);
+    background: var(--ms-brand-deep);
 }
 
 .button:disabled {

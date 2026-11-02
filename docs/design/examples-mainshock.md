@@ -30,6 +30,18 @@ fee tables (XLSX). Larchmere is made up, and so is everything about it: its
 funds, benchmarks and figures, with no real ticker or index. Each of its
 documents says so.
 
+Its users see the app in its brand, as a tenant's do: its logo, a square icon,
+and its name head the sidebar, the logo kept with the tenant and served to its
+users alone (`/api/tenants/:id/logo`). Larchmere's is a larch cone, faceted
+scales on a shield, with a rising arrow breaking out of it. Mainshock's own
+mark is left to the sign-in page, where no tenant is known yet, and the foot of
+the sidebar.
+
+Each of the three speaks in colors of its own, so that no one takes one for
+another: docMentis, the narrator, in its indigo; Mainshock, the app, in
+orange, `#fe5000`; and Larchmere, its logo and its documents, in green, forest
+`#1f4e3d` and sage `#b5dcc2`, the hue furthest from the other two.
+
 ## Who uses it
 
 | Role      | Who                                           | Does                                                     |
@@ -154,13 +166,15 @@ The frontend and the backend, set up and running, with no udoc code yet:
   Vite's config) and one for `web/`, and a `typecheck` script; `npm run
 mainshock` from the root.
 - The backend: Fastify over the database, its migrations counted by `PRAGMA
-user_version`: `tenants`, `users` and `sessions`, and an empty one seeded
-  with Larchmere and its personas, one in marketing and two in sales.
+user_version`: `tenants` and their logos, `users` and `sessions`, and an
+  empty one seeded with Larchmere, its logo and its personas, one in
+  marketing and two in sales.
 - Signing in: a username and a password, over `GET`, `POST` and
   `DELETE /api/session`, a session in an HTTP-only cookie.
-- The frontend: the sign-in page, and the shell, a sidebar — Home, Library,
-  Decks, Deals, Analytics — and a top bar with the tenant and the user's menu
-  (sign out); each section a placeholder until its step.
+- The frontend: the sign-in page, and the shell, a sidebar under the tenant's
+  logo and name — Home, Library, Decks, Deals, Analytics — with Mainshock's
+  mark at its foot, and a top bar with the user's menu (sign out); each
+  section a placeholder until its step.
 - The examples harness and workflow leaving it out, and `examples/README.md`
   and `CLAUDE.md` saying what it is.
 
