@@ -22,6 +22,30 @@ listed once, by package. Its major and minor version are those of the
   won't fill the screen, the show fills the UI. `startSlideShow(slide?)` and
   `endSlideShow()` play and end it, `isSlideShowPlaying` says whether one
   plays, and `"slideShow:changed"` fires as one starts and ends.
+- The Slide Show tab's Preview plays the slide shown where the view shows
+  it, as PowerPoint's Preview does: its transition from the slide before it,
+  then its animations one after another, the view first turned to Normal, a
+  slide at a time. Preview turns to Stop as it plays, and Stop, Escape, a
+  click on the slide, or another slide or view ends it. It greys on a slide
+  that plays nothing; a slide that plays something carries a mark on its
+  thumbnail, a click on which previews it.
+- A slide show and Preview play PowerPoint's transitions: Fade, Cut through
+  black, Push, Wipe, Split, Reveal, Random Bars, Shape, Uncover, Cover,
+  Flash, Dissolve, Clock, Zoom, Random, Flip, Cube, Box, Rotate, Orbit, Pan,
+  Fly Through, and Morph, which moves, stretches and cross-fades the shapes
+  two slides share. The rest — Blinds, Checkerboard, Vortex, Curtains and the
+  like — cut to the next slide for now.
+- A slide show and Preview play PowerPoint's animations: entrances and exits
+  that appear, fade, fly, zoom, grow and turn or spiral, or come and go
+  through a wipe, split, shape, wheel, wedge, blinds, checkerboard, strips,
+  random bars or dissolve; Grow/Shrink, Spin and Teeter; and motion paths.
+  Each repeats and reverses as it is set to, plays by paragraph, by word or
+  by letter, and plays on a shape inside a group by itself.
+- A slide show plays as the deck's Set Up Show has it: a range of its slides
+  or a custom show, looping until Escape, browsed at a kiosk (no clicks or
+  keys to step it, starting over after the last slide), without animation,
+  or advancing manually, its slides' timings aside. A slide timed to move on
+  plays its animations of itself, spread over its time, as PowerPoint does.
 - A slide show plays with PowerPoint's presenter view where there is a
   second screen, as the Slide Show tab's Use Presenter View has it, on at
   first: the show opens in a window of its own, which a click fills the
@@ -43,6 +67,15 @@ listed once, by package. Its major and minor version are those of the
 - The presenter view's Swap Screens trades the screens the show and the
   presenter view show on, the show playing on: each window keeps its
   screen, and the one pressed in fills it with the show.
+
+#### Changed
+
+- A deck's thumbnails number its slides in a column to their left, as
+  PowerPoint does, where they numbered them underneath; every other document
+  still numbers its pages under them.
+- Slide Master is on a deck's View tab in the editor's edit mode alone, where
+  slide masters and slide layouts are edited: the viewer's View tab, and the
+  editor's in view mode, leave it off.
 
 ## [0.8.10] - 2026-10-31
 
