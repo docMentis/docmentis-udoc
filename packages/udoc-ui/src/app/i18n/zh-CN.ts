@@ -97,8 +97,8 @@ export const zhCN: Messages = {
     "command.notes": "备注",
     "command.slideShowFromBeginning": "从头开始",
     "command.slideShowFromCurrent": "从当前幻灯片开始",
-    "command.usePresenterView": "使用演示者视图",
-    "command.setUpScreens": "设置屏幕",
+    "command.presenterView": "演示者视图",
+    "command.setUpSlideShow": "设置幻灯片放映",
     "command.previewSlide": "预览",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "单页",
@@ -261,7 +261,6 @@ export const zhCN: Messages = {
     // Slide show
     "slideShow.end": "放映结束，单击鼠标退出。",
     "slideShow.window": "幻灯片放映",
-    "slideShow.windowHint": "将此窗口拖到观众看到的屏幕上，然后单击它以填满该屏幕。",
 
     // Presenter view
     "presenter.label": "演示者视图",
@@ -278,10 +277,13 @@ export const zhCN: Messages = {
     "presenter.largerText": "放大文本",
     "presenter.smallerText": "缩小文本",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "屏幕",
-    "screens.message": "选择放映幻灯片的屏幕。演示者视图显示在另一个屏幕上。",
     "screens.oneScreen": "仅连接了一个屏幕。",
+    "slideShowSetup.displayOn": "显示于",
+    "slideShowSetup.setUpScreens": "设置屏幕",
+    "slideShowSetup.screensMessage": "允许浏览器在各屏幕上放置窗口，以选择放映幻灯片的屏幕。",
+    "slideShowSetup.screensRefused": "浏览器未允许。请在网站设置中允许窗口管理，然后重试。",
 
     // Thumbnails
     "thumbnails.pages": "页面缩略图",

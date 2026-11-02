@@ -6,6 +6,39 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Changed
+
+- The Slide Show tab has From Beginning, From Current Slide and Presenter
+  View, then Set Up Slide Show, then Preview, in place of Use Presenter View
+  and Set Up Screens. Presenter View plays the show from its first slide
+  with the presenter view, whatever the setup says. Set Up Slide Show opens a
+  dialog of how From Beginning and From Current Slide play it: Presenter
+  View, off at first; Fullscreen, on at first; and, in Chrome and Edge,
+  Display on — Set Up Screens, which lets the UI place windows on each
+  screen as the browser asks once and remembers, then the screens as they
+  stand, to choose the one the show fills. `startSlideShow(slide?)` plays it
+  as the dialog has it. The `translations` keys `command.usePresenterView`,
+  `command.setUpScreens`, `slideShow.windowHint` and `screens.message` are
+  gone; `command.presenterView`, `command.setUpSlideShow` and
+  `slideShowSetup.*` are new.
+- A slide show with Fullscreen off, or one the browser won't fill the
+  screen with, plays over the viewer or the editor, in window mode, a faint
+  button in its top right corner filling the screen with it; the button
+  fades a few seconds after the pointer stops moving over the show, and
+  comes back as it moves. Leaving the full screen ends a show that filled it
+  as it started, and takes one the button filled back to window mode.
+- The presenter view opens in a window of its own, and the show stays in
+  the UI's window, filling its screen or in window mode, where the show
+  opened in a window of its own and the presenter view covered the UI. The
+  presenter view's window never fills its screen of itself; its Fullscreen
+  button does. With the screens set up, the show fills the screen Display on
+  chose and the presenter view's window opens on another, at the one press;
+  without, the window takes the press and the show plays in window mode.
+  Swap Screens trades the windows the show and the presenter view stand in,
+  each still filling its screen or not.
+
 ## [0.8.11] - 2026-11-01
 
 Built on `@docmentis/udoc-wasm` 0.8.14.

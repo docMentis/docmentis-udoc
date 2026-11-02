@@ -42,16 +42,16 @@ const ARRANGEMENT: readonly CommandId[] = ["pageLayout", "pageGap"];
 const PORTABLE_ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLeft", "rotateViewRight", "pageGap"];
 
 /**
- * A deck's Slide Show tab, as PowerPoint's: the show started From Beginning
- * or From Current Slide, then the screens it plays on — Use Presenter View
- * and Set Up Screens — and last Preview, which plays the slide shown in
+ * A deck's Slide Show tab, as PowerPoint's: the show started From Beginning,
+ * From Current Slide, or with the Presenter View; then Set Up Slide Show, how
+ * the first two play it; and last Preview, which plays the slide shown in
  * place, no part of the show. Its commands are never edits, as the View
  * tab's aren't; it stands before it, in view mode and in edit mode.
  */
 export const SLIDE_SHOW_TAB: ToolbarTab = {
     id: "slideShow",
     label: "ribbon.slideShow",
-    commands: ["slideShowFromBeginning", "slideShowFromCurrent", "usePresenterView", "setUpScreens", "previewSlide"],
+    commands: ["slideShowFromBeginning", "slideShowFromCurrent", "presenterView", "setUpSlideShow", "previewSlide"],
 };
 
 /** Each doc type's View tab, around the guides an extension adds: before them

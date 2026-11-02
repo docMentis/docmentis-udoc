@@ -75,8 +75,8 @@ import { createBusyModal } from "./components/BusyModal.js";
 import { createLoadingOverlay } from "./components/LoadingOverlay.js";
 import { createLicenseNotice, isRefusal } from "./components/LicenseNotice.js";
 import { createSlideShow } from "./components/SlideShow.js";
-import { readScreens, watchScreensPermission } from "./screens.js";
-import { createScreensModal } from "./components/ScreensModal.js";
+import { hasScreensApi, readScreens, watchScreensPermission } from "./screens.js";
+import { createSlideShowSetupModal } from "./components/SlideShowSetupModal.js";
 import { createDelimiterModal } from "./components/DelimiterModal.js";
 import { createPasswordModal } from "./components/PasswordModal.js";
 import { createPrintModal } from "./components/PrintModal.js";
@@ -363,8 +363,8 @@ export interface UIShell {
     setTheme: (theme: ThemeMode) => void;
     /** Enter or leave fullscreen on the root; rejects when the browser refuses. */
     setFullscreen: (fullscreen: boolean) => Promise<void>;
-    /** Play the open deck full screen from slide `slide`, or from the first
-     *  slide the show shows when `null`. */
+    /** Play the open deck from slide `slide`, or from the first slide the
+     *  show shows when `null`, as Set Up Slide Show has it. */
     startSlideShow: (slide: number | null) => void;
     /** End the slide show playing, if one is. */
     endSlideShow: () => void;
@@ -517,8 +517,8 @@ export function mountUIShell(
     // before it opens — on the root for the same reason.
     const delimiterModal = createDelimiterModal(i18n);
     delimiterModal.mount(layout);
-    const screensModal = createScreensModal(i18n);
-    screensModal.mount(layout);
+    const slideShowSetupModal = createSlideShowSetupModal(i18n);
+    slideShowSetupModal.mount(layout);
 
     // --- slot scaffold (mirrors the viewer shell) ------------------------
     const toolbarSlot = document.createElement("div");
@@ -916,24 +916,37 @@ export function mountUIShell(
     const licenseNotice = createLicenseNotice(i18n);
     licenseNotice.mount(layout, store);
 
-    // A deck's slide show, the deck played full screen. On the root, as it
-    // covers the whole UI wherever the browser won't fill the screen with it.
+    // A deck's slide show. On the root, as it covers the whole UI in window
+    // mode, and wherever the browser won't fill the screen with it.
     const slideShow = createSlideShow(i18n, client);
     slideShow.mount(layout, store);
     // Whether the screens are set up, as the browser remembers it from a
     // Set Up Screens before, and as its site settings change it; and, at each
-    // Set Up Screens the browser lets through, the screen a show plays on.
+    // Set Up Slide Show, how a show plays.
     const unwatchScreens = watchScreensPermission((setUp) => store.dispatch({ type: "SET_SCREENS_SET_UP", setUp }));
-    async function chooseScreen(): Promise<void> {
-        const screens = await readScreens();
-        if (!screens) return;
-        const key = await screensModal.ask(screens, store.getState().audienceScreen);
-        if (key !== undefined) store.dispatch({ type: "SET_AUDIENCE_SCREEN", screen: key });
+    async function setUpSlideShow(): Promise<void> {
+        const state = store.getState();
+        const screens = state.screensSetUp ? await readScreens() : null;
+        const setup = await slideShowSetupModal.ask({
+            setup: {
+                presenterView: state.usePresenterView,
+                fullScreen: state.slideShowFullScreen,
+                audienceScreen: state.audienceScreen,
+            },
+            screens,
+            canPlaceWindows: hasScreensApi(),
+            setUpScreens: async () => {
+                const set = await readScreens();
+                if (set) store.dispatch({ type: "SET_SCREENS_SET_UP", setUp: true });
+                return set;
+            },
+        });
+        if (setup) store.dispatch({ type: "SET_SLIDE_SHOW_SETUP", ...setup });
     }
-    const unsubScreensDialog = subscribeSelector(
+    const unsubSlideShowSetup = subscribeSelector(
         store,
-        (s) => s.screensDialogSeq,
-        () => void chooseScreen(),
+        (s) => s.slideShowSetupSeq,
+        () => void setUpSlideShow(),
         {
             phase: "effect",
         },
@@ -3584,8 +3597,8 @@ export function mountUIShell(
         delimiterModal.destroy();
         licenseNotice.destroy();
         unwatchScreens();
-        unsubScreensDialog();
-        screensModal.destroy();
+        unsubSlideShowSetup();
+        slideShowSetupModal.destroy();
         slideShow.destroy();
         ribbon.destroy();
         annotationBar.destroy();

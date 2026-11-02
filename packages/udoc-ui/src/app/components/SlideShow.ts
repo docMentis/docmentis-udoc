@@ -1,23 +1,30 @@
-// A deck's slide show: the deck played a slide at a time, filling the screen,
-// as PowerPoint's Slide Show plays it — each slide's transition on the way in,
-// its animations a click at a time — on a canvas of the show's own, which the
-// worker draws on as the engine composites each frame.
+// A deck's slide show: the deck played a slide at a time, as PowerPoint's
+// Slide Show plays it — each slide's transition on the way in, its animations
+// a click at a time — on a canvas of the show's own, which the worker draws on
+// as the engine composites each frame.
 //
-// It fills the screen when the browser lets it, else the whole UI. With Use
-// Presenter View, where there is a screen for the audience, it plays in a
-// window of its own instead — dragged to that screen, a click fills it — and
-// the presenter view shows over the UI here. With the screens set up, it fills
-// the screen Set Up Screens chose from here at the press, and the presenter
-// view opens in a window of its own on another. Swap Screens trades the two:
-// each window keeps its screen, and the one pressed in fills it with the show.
+// It stands on a stage: a black layer over the UI — the viewer or the editor,
+// not the page around it — or over a window of its own. As Set Up Slide Show
+// has it, the stage fills the screen — the one Display on chose, where the
+// screens are set up — or stays over the UI, in window mode, a button in its
+// corner filling the screen with it. One the browser won't fill the screen
+// with plays in window mode. Leaving the full screen ends a show that filled
+// it as it started; one the button filled goes back to window mode.
+//
+// With the presenter view, the view opens on a stage in a window of its own,
+// which never fills its screen of itself — the view has a button for that:
+// on another screen where the screens are set up, the window opened in the
+// press that fills the screen Display on chose; else opened first, in the
+// press that starts the show, which the browser then won't fill the screen
+// at. Swap Screens trades the stages the show and the presenter view stand
+// on, each stage keeping its window, and the screen it fills or doesn't.
 //
 // It takes PowerPoint's keys: a click, Space, →, ↓, Enter, Page Down or N
 // steps on; ←, ↑, Backspace, Page Up or P steps back; Home and End go to the
 // first and last slide it shows, a slide's number then Enter to that slide;
-// Escape ends it, as leaving the full screen does when it plays alone. A swipe
-// steps on or back. Past its last slide it shows black, and a step on from
-// there ends it. The view then shows the slide the show was on, as
-// PowerPoint's does.
+// Escape ends it. A swipe steps on or back. Past its last slide it shows
+// black, and a step on from there ends it. The view then shows the slide the
+// show was on, as PowerPoint's does.
 
 import { subscribeSelector } from "../../framework/index.js";
 import type { Store } from "../../framework/index.js";
@@ -27,14 +34,19 @@ import type { Action } from "../actions.js";
 import { planeOfView, viewDpi } from "../state.js";
 import type { UIState } from "../state.js";
 import type { I18n } from "../i18n/index.js";
+import { ICON_FULLSCREEN } from "../icons.js";
 import { audienceScreen, presenterScreen, readScreens } from "../screens.js";
 import type { ScreenDetailed } from "../screens.js";
 import { uiStyles } from "../styles.js";
+import { nameButton } from "./controls.js";
 import { createPresenterView } from "./PresenterView.js";
 import type { PresenterActions, PresenterDeck } from "./PresenterView.js";
 
 /** How long the pointer rests before it hides, ms. */
 const POINTER_REST_MS = 2000;
+/** How long the button that fills the screen shows in window mode, once the
+ *  pointer stops moving, before it fades, ms. */
+const FILL_SHOWN_MS = 3000;
 /** How far a touch travels across, CSS px, for a swipe rather than a tap. */
 const SWIPE_PX = 50;
 /** Animation frames the screen holds its new size for, once full, before
@@ -47,10 +59,11 @@ const SETTLE_MS = 1500;
 const NEXT_KEYS: ReadonlySet<string> = new Set([" ", "ArrowRight", "ArrowDown", "Enter", "PageDown", "n", "N"]);
 const PREVIOUS_KEYS: ReadonlySet<string> = new Set(["ArrowLeft", "ArrowUp", "Backspace", "PageUp", "p", "P"]);
 
-/** The names of the windows a show plays in for the audience's screen, and
- *  the presenter view opens in on the presenter's. */
-const SHOW_WINDOW = "udoc-slide-show";
+/** The name of the window the presenter view opens in, and the smallest it
+ *  opens at, CSS px: room for its panes side by side. */
 const PRESENTER_WINDOW = "udoc-presenter-view";
+const PRESENTER_MIN_WIDTH = 720;
+const PRESENTER_MIN_HEIGHT = 480;
 /** The slides' size, points, where the deck's won't read: 16:9. */
 const FALLBACK_SLIDE: Size = { width: 960, height: 540 };
 
@@ -71,17 +84,20 @@ interface Place {
 /** The show playing. */
 interface Show {
     /** What the show is drawn on — its canvas, the line over the black past
-     *  its last slide, and how to put a window of its own on the audience's
-     *  screen — standing on its place's stage. */
+     *  its last slide, and the button that fills the screen with it in
+     *  window mode — standing on its place's stage. */
     surface: HTMLElement;
     canvas: HTMLCanvasElement;
     end: HTMLElement;
-    hint: HTMLElement;
+    fillButton: HTMLButtonElement;
     /** Where the show stands, and where the presenter view does, if one
      *  shows; every window it opened. */
     place: Place;
     presenterPlace: Place | null;
     places: Place[];
+    /** The place whose stage filled the screen as the show started, until it
+     *  leaves the full screen: with the show on it, that ends the show. */
+    filledAtStart: Place | null;
     /** Whether the worker plays it: its start resolved. */
     started: boolean;
     /** The size last handed the show, device pixels. */
@@ -114,89 +130,51 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
 
     /**
      * Play the deck from slide `slide` — the first slide it shows when `null`
-     * — in place of any show playing. Called in the press that starts it, or
-     * just after: the browser fills the screen, or opens a window, only in
+     * — with the presenter view when `presenting`, as Set Up Slide Show has
+     * it, in place of any show playing. Called in the press that starts it,
+     * or just after: the browser fills the screen, or opens a window, only in
      * answer to one, for a few seconds after it.
      */
-    async function play(slide: number | null): Promise<void> {
+    async function play(slide: number | null, presenting: boolean): Promise<void> {
         if (!store || !host) return;
         takeDown(false);
         const state = store.getState();
-        const presenting = state.usePresenterView && hasOtherScreen();
-        // The screens set up: filling the screen chosen from here, with the
-        // presenter view in a window of its own on another.
-        if (presenting && state.screensSetUp) {
-            const screens = await readScreens();
-            const audience = screens ? audienceScreen(screens, state.audienceScreen) : undefined;
-            const there = screens && audience ? presenterScreen(screens, audience) : undefined;
-            if (audience && there) {
-                await presentAcross(slide, audience, there);
-                return;
-            }
-        }
-        // Else in a window of its own for the audience's screen, with the
-        // presenter view here — opened first, in the press. One the browser
-        // blocks plays here, alone.
-        const own = presenting ? ownPlace(SHOW_WINDOW, showWindowFeatures(), i18n.t("slideShow.window")) : null;
-        if (own) await present(slide, own);
-        else await playAlone(slide);
-    }
-
-    /** Play the show alone over the UI, filling the screen when the browser
-     *  lets it; leaving the full screen ends it. */
-    async function playAlone(slide: number | null): Promise<void> {
+        // A frame that doesn't allow the full screen plays in window mode,
+        // asking the browser for nothing a refusal would spend the press on.
+        const full = state.slideShowFullScreen && document.fullscreenEnabled;
+        // The screens, where they're set up: the one the show fills, as
+        // Display on chose it, and another for the presenter view.
+        const screens = state.screensSetUp ? await readScreens() : null;
+        const audience = full && screens ? audienceScreen(screens, state.audienceScreen) : undefined;
+        const there = screens ? presenterScreen(screens, audience ?? screens.currentScreen) : undefined;
+        const features = windowFeatures(there, host);
         const place = mainPlace();
         if (!place) return;
-        const current = begin(slide, place);
-        const full = await fill(current);
-        if (show !== current) return;
-        if (full) {
-            const { stage } = place;
-            const onFullscreenChange = (): void => {
-                if (document.fullscreenElement !== stage) endShow();
-            };
-            document.addEventListener("fullscreenchange", onFullscreenChange);
-            current.cleanups.push(() => document.removeEventListener("fullscreenchange", onFullscreenChange));
-        }
-        await startShow(current, slide);
-    }
-
-    /** Play the show in `own`, a window of its own for the audience's screen,
-     *  with the presenter view over the UI here. */
-    async function present(slide: number | null, own: Place): Promise<void> {
-        const here = mainPlace();
-        if (!here) {
-            own.close();
-            return;
-        }
-        const current = begin(slide, own, here);
-        const deck = await readDeck();
-        if (show !== current) return;
-        const mirror = openPresenter(current, here, deck, slide);
-        await startShow(current, slide, mirror);
-    }
-
-    /**
-     * Play the show filling `audience` from the UI's window, and open the
-     * presenter view in a window of its own filling `there` — in the one
-     * press, as the browser lets a page with its screens set up open a window
-     * in the press that filled another screen.
-     */
-    async function presentAcross(slide: number | null, audience: ScreenDetailed, there: ScreenDetailed): Promise<void> {
-        const place = mainPlace();
-        if (!place) return;
-        const current = begin(slide, place);
+        // The presenter view's window: opened in the press that fills the
+        // screen Display on chose — the browser lets a page that may place
+        // windows open one then — else first, in the press, before the show
+        // tries to fill the screen, which the browser then won't.
         let own: Place | null = null;
-        const full = await fill(current, audience, () => {
-            own = ownPlace(PRESENTER_WINDOW, screenFeatures(there), i18n.t("presenter.label"));
-        });
+        let opening = presenting;
+        const openOwn = (): void => {
+            if (!opening) return;
+            opening = false;
+            own = ownPlace(PRESENTER_WINDOW, features, i18n.t("presenter.label"));
+        };
+        if (!audience) openOwn();
+        const current = begin(slide, place);
+        const filled = full && (await fill(current, audience, openOwn));
+        // The screen not filled, the window not yet opened: opened now.
+        openOwn();
         const opened = own as Place | null;
         if (show !== current) {
             opened?.close();
             return;
         }
-        if (!full || !opened) {
-            // The show plays alone.
+        if (filled) current.filledAtStart = place;
+        if (!opened) {
+            // The show plays alone: the browser blocked the window, or none
+            // was asked for.
             await startShow(current, slide);
             return;
         }
@@ -272,12 +250,9 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         };
     }
 
-    /**
-     * A show from `slide`, its surface standing on `place`'s stage, and the
-     * presenter view to stand on `presenterPlace`'s, if given: listening to
-     * both places, and their windows.
-     */
-    function begin(slide: number | null, place: Place, presenterPlace: Place | null = null): Show {
+    /** A show from `slide`, its surface standing on `place`'s stage: listening
+     *  to the place, and its window. */
+    function begin(slide: number | null, place: Place): Show {
         const surface = document.createElement("div");
         surface.className = "udoc-ui__slide-show";
         const canvas = document.createElement("canvas");
@@ -287,21 +262,22 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         end.className = "udoc-ui__slide-show-end";
         end.textContent = i18n.t("slideShow.end");
         end.hidden = true;
-        const hint = document.createElement("div");
-        hint.className = "udoc-ui__slide-show-hint";
-        const hintText = document.createElement("span");
-        hintText.textContent = i18n.t("slideShow.windowHint");
-        hint.append(hintText);
-        surface.append(canvas, end, hint);
+        const fillButton = document.createElement("button");
+        fillButton.type = "button";
+        fillButton.className = "udoc-ui__slide-show-fill";
+        fillButton.innerHTML = ICON_FULLSCREEN;
+        nameButton(fillButton, i18n.t("toolbar.fullscreen"));
+        surface.append(canvas, end, fillButton);
         place.stage.append(surface);
         const current: Show = {
             surface,
             canvas,
             end,
-            hint,
+            fillButton,
             place,
-            presenterPlace,
+            presenterPlace: null,
             places: [],
+            filledAtStart: null,
             started: false,
             sent: { width: 0, height: 0 },
             slide: slide ?? 0,
@@ -314,7 +290,6 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         };
         show = current;
         addPlace(current, place);
-        if (presenterPlace) addPlace(current, presenterPlace);
         listenPointer(current);
         place.stage.focus({ preventScroll: true });
         return current;
@@ -327,7 +302,18 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         const { stage, view } = place;
         const onKey = keys(current);
         const onPointerDown = (): void => stage.focus({ preventScroll: true });
-        const onFullscreenChange = (): void => showHint(current);
+        // Leaving the full screen ends a show that filled it as it started,
+        // standing on it still; else the stage is in window mode.
+        const onFullscreenChange = (): void => {
+            if (view.document.fullscreenElement !== stage && current.filledAtStart === place) {
+                current.filledAtStart = null;
+                if (current.place === place) {
+                    endShow();
+                    return;
+                }
+            }
+            showFill(current);
+        };
         const onClose = (): void => endShow();
         stage.addEventListener("keydown", onKey);
         stage.addEventListener("pointerdown", onPointerDown);
@@ -339,14 +325,14 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             view.document.removeEventListener("fullscreenchange", onFullscreenChange);
             view.removeEventListener("pagehide", onClose);
         });
-        showHint(current);
+        showFill(current);
     }
 
-    /** How to put the show's window on the audience's screen, shown while a
-     *  window of its own doesn't fill it. */
-    function showHint(current: Show): void {
-        const { own, view, stage } = current.place;
-        current.hint.hidden = !own || view.document.fullscreenElement === stage;
+    /** Show the button that fills the screen with the show while its stage
+     *  doesn't — in window mode — where the browser lets it. */
+    function showFill(current: Show): void {
+        const { document: doc } = current.place.view;
+        current.fillButton.hidden = doc.fullscreenElement === current.place.stage || !doc.fullscreenEnabled;
     }
 
     /**
@@ -357,8 +343,11 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
     async function fill(current: Show, screen?: ScreenDetailed, granted?: () => void): Promise<boolean> {
         const { view, stage } = current.place;
         if (view.document.fullscreenElement === stage) return true;
-        const { canvas } = current;
+        // Only in answer to a press, which a window opened in it has taken.
+        if (view.navigator.userActivation?.isActive === false) return false;
+        const { canvas, fillButton } = current;
         canvas.style.visibility = "hidden";
+        fillButton.hidden = true;
         try {
             // The show's black on screen before the screen fills: the browser
             // grows into the full screen from a picture of the page as last
@@ -381,6 +370,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             return false;
         } finally {
             canvas.style.visibility = "";
+            showFill(current);
         }
     }
 
@@ -445,7 +435,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             next: () => step(current),
             previous: () => client.slideShowInput("previous"),
             end: endShow,
-            swap: () => void swap(current),
+            swap: () => swap(current),
         };
         const copy = presenter.open(place.stage, deck, actions);
         current.cleanups.push(() => presenter.close());
@@ -455,26 +445,26 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
     }
 
     /**
-     * Swap the screens `current` and the presenter view show on: each window
-     * keeps its screen, the show standing where the presenter view stood and
-     * the presenter view where the show stood. Pressed in the presenter view,
-     * whose window then fills its screen with the show.
+     * Swap the stages `current` and the presenter view stand on: the show
+     * standing where the presenter view stood and the presenter view where
+     * the show stood, each stage keeping its window, and the screen it fills
+     * or doesn't. Pressed in the presenter view.
      */
-    async function swap(current: Show): Promise<void> {
+    function swap(current: Show): void {
         const there = current.presenterPlace;
         if (!there || !current.started) return;
         const here = current.place;
         current.place = there;
         current.presenterPlace = here;
-        current.canvas.style.visibility = "hidden";
         there.stage.append(current.surface);
         presenter.move(here.stage);
         there.stage.focus({ preventScroll: true });
-        showHint(current);
+        // A window of its own is named for what stands in it.
+        if (there.own) there.view.document.title = i18n.t("slideShow.window");
+        if (here.own) here.view.document.title = i18n.t("presenter.label");
+        showFill(current);
         watchSize(current);
         resize(current);
-        await fill(current);
-        current.canvas.style.visibility = "";
     }
 
     /** What the presenter view shows of the open deck. */
@@ -533,16 +523,17 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
 
     /**
      * Take in `current`'s clicks and swipes on its surface, and hide the
-     * pointer while it rests. With the presenter view, a click on a show whose
-     * window doesn't fill its screen fills it instead.
+     * pointer while it rests. In window mode, the button that fills the
+     * screen shows at first, and again as the pointer moves.
      */
     function listenPointer(current: Show): void {
-        const { surface, canvas } = current;
+        const { surface, canvas, fillButton } = current;
         // A tap or a click is a click on the slide; a swipe across steps on
         // or back.
         let down: { id: number; x: number; y: number } | null = null;
         const onPointerDown = (ev: PointerEvent): void => {
-            if (ev.button !== 0) return;
+            down = null;
+            if (ev.button !== 0 || fillButton.contains(ev.target as Node)) return;
             down = { id: ev.pointerId, x: ev.clientX, y: ev.clientY };
         };
         const onPointerUp = (ev: PointerEvent): void => {
@@ -555,31 +546,35 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
                 else client.slideShowInput("previous");
                 return;
             }
-            const { view, stage } = current.place;
-            if (current.presenterPlace && view.document.fullscreenElement !== stage) {
-                void fill(current);
-                return;
-            }
             if (current.ended) {
                 endShow();
                 return;
             }
             const rect = canvas.getBoundingClientRect();
-            const dpr = view.devicePixelRatio || 1;
+            const dpr = current.place.view.devicePixelRatio || 1;
             client.slideShowInput({ click: { x: (ev.clientX - rect.left) * dpr, y: (ev.clientY - rect.top) * dpr } });
         };
         const onPointerCancel = (): void => {
             down = null;
         };
         const onContextMenu = (ev: Event): void => ev.preventDefault();
+        const onFill = (): void => void fill(current);
 
+        let fade: ReturnType<typeof setTimeout> | null = null;
+        const revealFill = (): void => {
+            fillButton.classList.add("udoc-ui__slide-show-fill--shown");
+            if (fade !== null) clearTimeout(fade);
+            fade = setTimeout(() => fillButton.classList.remove("udoc-ui__slide-show-fill--shown"), FILL_SHOWN_MS);
+        };
+        revealFill();
         let rest: ReturnType<typeof setTimeout> | null = null;
         const onPointerMove = (): void => {
             surface.classList.remove("udoc-ui__slide-show--resting");
             if (rest !== null) clearTimeout(rest);
             rest = setTimeout(() => surface.classList.add("udoc-ui__slide-show--resting"), POINTER_REST_MS);
+            revealFill();
         };
-        onPointerMove();
+        rest = setTimeout(() => surface.classList.add("udoc-ui__slide-show--resting"), POINTER_REST_MS);
 
         const listeners: Array<[string, EventListener]> = [
             ["pointerdown", onPointerDown as EventListener],
@@ -589,9 +584,12 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             ["contextmenu", onContextMenu],
         ];
         for (const [type, listener] of listeners) surface.addEventListener(type, listener);
+        fillButton.addEventListener("click", onFill);
         current.cleanups.push(() => {
             for (const [type, listener] of listeners) surface.removeEventListener(type, listener);
+            fillButton.removeEventListener("click", onFill);
             if (rest !== null) clearTimeout(rest);
+            if (fade !== null) clearTimeout(fade);
         });
     }
 
@@ -629,7 +627,10 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             subscribeSelector(
                 s,
                 (st) => st.slideShowRequest.seq,
-                () => void play(s.getState().slideShowRequest.slide),
+                () => {
+                    const { slide, presenterView } = s.getState().slideShowRequest;
+                    void play(slide, presenterView);
+                },
                 { phase: "effect" },
             ),
             subscribeSelector(
@@ -666,13 +667,6 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
 
 export type SlideShow = ReturnType<typeof createSlideShow>;
 
-/** Whether the computer has a screen besides the one the UI is on, as the
- *  browser says where it can (`screen.isExtended`, Chrome's and Edge's);
- *  none where it can't. */
-function hasOtherScreen(): boolean {
-    return (screen as Screen & { isExtended?: boolean }).isExtended === true;
-}
-
 /** The text properties the UI's root inherits from the page it stands on. */
 const FONT_PROPERTIES = [
     "font-family",
@@ -697,20 +691,19 @@ function carryFont(host: HTMLElement, root: HTMLElement): void {
     }
 }
 
-/** A window of its own for the audience's screen: half the screen's width
- *  at most, 16:9, where the browser places it. */
-function showWindowFeatures(): string {
-    const width = Math.round(Math.min(960, screen.availWidth / 2));
-    const height = Math.round((width * 9) / 16);
+/** A window of its own for the presenter view: filling `on`'s available area
+ *  — never the full screen, which the view's own button fills — else two
+ *  thirds the size of `ui`, the UI, and no smaller than the view needs,
+ *  where the browser places it. */
+function windowFeatures(on: ScreenDetailed | undefined, ui: HTMLElement): string {
+    if (on) {
+        const { availLeft: left, availTop: top, availWidth: width, availHeight: height } = on;
+        return `popup,left=${left},top=${top},width=${width},height=${height}`;
+    }
+    const rect = ui.getBoundingClientRect();
+    const width = Math.max(PRESENTER_MIN_WIDTH, Math.round((rect.width * 2) / 3));
+    const height = Math.max(PRESENTER_MIN_HEIGHT, Math.round((rect.height * 2) / 3));
     return `popup,width=${width},height=${height}`;
-}
-
-/** A window of its own filling `screen` — full screen where the browser opens
- *  a window so for a page that may place windows (`fullscreen`, a Chrome
- *  trial), else its available area. */
-function screenFeatures(screen: ScreenDetailed): string {
-    const { availLeft: left, availTop: top, availWidth: width, availHeight: height } = screen;
-    return `popup,fullscreen,left=${left},top=${top},width=${width},height=${height}`;
 }
 
 /** Resolves once what `view` shows now has reached the screen: at the

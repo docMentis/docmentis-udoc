@@ -97,8 +97,8 @@ export const ar: Messages = {
     "command.notes": "ملاحظات",
     "command.slideShowFromBeginning": "من البداية",
     "command.slideShowFromCurrent": "من الشريحة الحالية",
-    "command.usePresenterView": "استخدام طريقة عرض مقدم العرض",
-    "command.setUpScreens": "إعداد الشاشات",
+    "command.presenterView": "طريقة عرض مقدم العرض",
+    "command.setUpSlideShow": "إعداد عرض الشرائح",
     "command.previewSlide": "معاينة",
     "command.stopSlidePreview": "إيقاف",
     "command.singleScroll": "مفرد",
@@ -261,7 +261,6 @@ export const ar: Messages = {
     // Slide show
     "slideShow.end": "نهاية عرض الشرائح. انقر للخروج.",
     "slideShow.window": "عرض الشرائح",
-    "slideShow.windowHint": "اسحب هذه النافذة إلى الشاشة التي يراها جمهورك، ثم انقر فوقها لتملأ تلك الشاشة.",
 
     // Presenter view
     "presenter.label": "طريقة عرض مقدم العرض",
@@ -278,10 +277,13 @@ export const ar: Messages = {
     "presenter.largerText": "تكبير النص",
     "presenter.smallerText": "تصغير النص",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "الشاشات",
-    "screens.message": "اختر الشاشة التي يُعرض عليها عرض الشرائح. تظهر طريقة عرض مقدم العرض على شاشة أخرى.",
     "screens.oneScreen": "شاشة واحدة فقط متصلة.",
+    "slideShowSetup.displayOn": "العرض على",
+    "slideShowSetup.setUpScreens": "إعداد الشاشات",
+    "slideShowSetup.screensMessage": "اسمح للمتصفح بوضع النوافذ على شاشاتك لاختيار الشاشة التي يملؤها عرض الشرائح.",
+    "slideShowSetup.screensRefused": "لم يسمح المتصفح بذلك. اسمح بإدارة النوافذ في إعدادات الموقع، ثم حاول مرة أخرى.",
 
     // Thumbnails
     "thumbnails.pages": "صور مصغرة للصفحات",

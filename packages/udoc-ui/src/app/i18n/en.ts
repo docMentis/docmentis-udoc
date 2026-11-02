@@ -98,8 +98,8 @@ export const en: Messages = {
     "command.notes": "Notes",
     "command.slideShowFromBeginning": "From Beginning",
     "command.slideShowFromCurrent": "From Current Slide",
-    "command.usePresenterView": "Use Presenter View",
-    "command.setUpScreens": "Set Up Screens",
+    "command.presenterView": "Presenter View",
+    "command.setUpSlideShow": "Set Up Slide Show",
     "command.previewSlide": "Preview",
     "command.stopSlidePreview": "Stop",
     "command.singleScroll": "Single",
@@ -262,7 +262,6 @@ export const en: Messages = {
     // Slide show
     "slideShow.end": "End of slide show, click to exit.",
     "slideShow.window": "Slide Show",
-    "slideShow.windowHint": "Drag this window to the screen your audience sees, then click it to fill that screen.",
 
     // Presenter view
     "presenter.label": "Presenter View",
@@ -279,10 +278,15 @@ export const en: Messages = {
     "presenter.largerText": "Make the Text Larger",
     "presenter.smallerText": "Make the Text Smaller",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "Screens",
-    "screens.message": "Choose the screen the slide show plays on. Presenter View shows on another.",
     "screens.oneScreen": "Only one screen is connected.",
+    "slideShowSetup.displayOn": "Display on",
+    "slideShowSetup.setUpScreens": "Set Up Screens",
+    "slideShowSetup.screensMessage":
+        "Let the browser place windows on your screens to choose the one the slide show fills.",
+    "slideShowSetup.screensRefused":
+        "The browser didn't allow it. Allow window management in the site's settings, then try again.",
 
     // Thumbnails
     "thumbnails.pages": "Page thumbnails",

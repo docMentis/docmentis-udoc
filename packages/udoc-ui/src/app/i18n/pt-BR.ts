@@ -97,8 +97,8 @@ export const ptBR: Messages = {
     "command.notes": "Anotações",
     "command.slideShowFromBeginning": "Do Começo",
     "command.slideShowFromCurrent": "Do Slide Atual",
-    "command.usePresenterView": "Usar Modo de Exibição do Apresentador",
-    "command.setUpScreens": "Configurar Telas",
+    "command.presenterView": "Modo de Exibição do Apresentador",
+    "command.setUpSlideShow": "Configurar Apresentação de Slides",
     "command.previewSlide": "Visualizar",
     "command.stopSlidePreview": "Parar",
     "command.singleScroll": "Individual",
@@ -261,8 +261,6 @@ export const ptBR: Messages = {
     // Slide show
     "slideShow.end": "Fim da apresentação de slides. Clique para sair.",
     "slideShow.window": "Apresentação de Slides",
-    "slideShow.windowHint":
-        "Arraste esta janela para a tela que o público vê e clique nela para que ela preencha essa tela.",
 
     // Presenter view
     "presenter.label": "Modo de Exibição do Apresentador",
@@ -279,11 +277,15 @@ export const ptBR: Messages = {
     "presenter.largerText": "Aumentar o Texto",
     "presenter.smallerText": "Diminuir o Texto",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "Telas",
-    "screens.message":
-        "Escolha a tela em que a apresentação de slides é exibida. O Modo de Exibição do Apresentador aparece em outra.",
     "screens.oneScreen": "Apenas uma tela está conectada.",
+    "slideShowSetup.displayOn": "Exibir em",
+    "slideShowSetup.setUpScreens": "Configurar Telas",
+    "slideShowSetup.screensMessage":
+        "Permita que o navegador posicione janelas nas suas telas para escolher a tela da apresentação de slides.",
+    "slideShowSetup.screensRefused":
+        "O navegador não permitiu. Permita o gerenciamento de janelas nas configurações do site e tente novamente.",
 
     // Thumbnails
     "thumbnails.pages": "Miniaturas das páginas",

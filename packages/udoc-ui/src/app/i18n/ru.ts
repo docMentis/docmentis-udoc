@@ -97,8 +97,8 @@ export const ru: Messages = {
     "command.notes": "Заметки",
     "command.slideShowFromBeginning": "С начала",
     "command.slideShowFromCurrent": "С текущего слайда",
-    "command.usePresenterView": "Использовать режим докладчика",
-    "command.setUpScreens": "Настроить экраны",
+    "command.presenterView": "Режим докладчика",
+    "command.setUpSlideShow": "Настроить показ слайдов",
     "command.previewSlide": "Просмотр",
     "command.stopSlidePreview": "Остановить",
     "command.singleScroll": "Одиночный",
@@ -261,8 +261,6 @@ export const ru: Messages = {
     // Slide show
     "slideShow.end": "Конец показа слайдов. Щелкните для выхода.",
     "slideShow.window": "Показ слайдов",
-    "slideShow.windowHint":
-        "Перетащите это окно на экран, который видят зрители, а затем щелкните его, чтобы оно заполнило этот экран.",
 
     // Presenter view
     "presenter.label": "Режим докладчика",
@@ -279,10 +277,15 @@ export const ru: Messages = {
     "presenter.largerText": "Увеличить текст",
     "presenter.smallerText": "Уменьшить текст",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "Экраны",
-    "screens.message": "Выберите экран для показа слайдов. Режим докладчика откроется на другом.",
     "screens.oneScreen": "Подключен только один экран.",
+    "slideShowSetup.displayOn": "Показывать на",
+    "slideShowSetup.setUpScreens": "Настроить экраны",
+    "slideShowSetup.screensMessage":
+        "Разрешите браузеру размещать окна на ваших экранах, чтобы выбрать экран для показа слайдов.",
+    "slideShowSetup.screensRefused":
+        "Браузер не разрешил это. Разрешите управление окнами в настройках сайта и повторите попытку.",
 
     // Thumbnails
     "thumbnails.pages": "Миниатюры страниц",

@@ -97,8 +97,8 @@ export const de: Messages = {
     "command.notes": "Notizen",
     "command.slideShowFromBeginning": "Von Beginn an",
     "command.slideShowFromCurrent": "Ab aktueller Folie",
-    "command.usePresenterView": "Referentenansicht verwenden",
-    "command.setUpScreens": "Bildschirme einrichten",
+    "command.presenterView": "Referentenansicht",
+    "command.setUpSlideShow": "Bildschirmpräsentation einrichten",
     "command.previewSlide": "Vorschau",
     "command.stopSlidePreview": "Beenden",
     "command.singleScroll": "Einzeln",
@@ -261,8 +261,6 @@ export const de: Messages = {
     // Slide show
     "slideShow.end": "Ende der Bildschirmpräsentation. Zum Beenden klicken.",
     "slideShow.window": "Bildschirmpräsentation",
-    "slideShow.windowHint":
-        "Ziehen Sie dieses Fenster auf den Bildschirm, den Ihr Publikum sieht, und klicken Sie dann darauf, damit es den Bildschirm ausfüllt.",
 
     // Presenter view
     "presenter.label": "Referentenansicht",
@@ -279,11 +277,15 @@ export const de: Messages = {
     "presenter.largerText": "Text vergrößern",
     "presenter.smallerText": "Text verkleinern",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "Bildschirme",
-    "screens.message":
-        "Wählen Sie den Bildschirm für die Bildschirmpräsentation. Die Referentenansicht erscheint auf einem anderen.",
     "screens.oneScreen": "Es ist nur ein Bildschirm angeschlossen.",
+    "slideShowSetup.displayOn": "Anzeigen auf",
+    "slideShowSetup.setUpScreens": "Bildschirme einrichten",
+    "slideShowSetup.screensMessage":
+        "Erlauben Sie dem Browser, Fenster auf Ihren Bildschirmen zu platzieren, um den Bildschirm für die Bildschirmpräsentation auszuwählen.",
+    "slideShowSetup.screensRefused":
+        "Der Browser hat es nicht erlaubt. Erlauben Sie die Fensterverwaltung in den Website-Einstellungen und versuchen Sie es erneut.",
 
     // Thumbnails
     "thumbnails.pages": "Seitenminiaturen",

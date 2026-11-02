@@ -97,8 +97,8 @@ export const es: Messages = {
     "command.notes": "Notas",
     "command.slideShowFromBeginning": "Desde el principio",
     "command.slideShowFromCurrent": "Desde la diapositiva actual",
-    "command.usePresenterView": "Usar vista Moderador",
-    "command.setUpScreens": "Configurar pantallas",
+    "command.presenterView": "Vista Moderador",
+    "command.setUpSlideShow": "Configurar presentación con diapositivas",
     "command.previewSlide": "Vista previa",
     "command.stopSlidePreview": "Detener",
     "command.singleScroll": "Individual",
@@ -261,8 +261,6 @@ export const es: Messages = {
     // Slide show
     "slideShow.end": "Fin de la presentación con diapositivas. Haga clic para salir.",
     "slideShow.window": "Presentación con diapositivas",
-    "slideShow.windowHint":
-        "Arrastre esta ventana a la pantalla que ve su público y haga clic en ella para que ocupe esa pantalla.",
 
     // Presenter view
     "presenter.label": "Vista Moderador",
@@ -279,11 +277,15 @@ export const es: Messages = {
     "presenter.largerText": "Aumentar el tamaño del texto",
     "presenter.smallerText": "Reducir el tamaño del texto",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "Pantallas",
-    "screens.message":
-        "Elija la pantalla en la que se reproduce la presentación. La vista Moderador se muestra en otra.",
     "screens.oneScreen": "Solo hay una pantalla conectada.",
+    "slideShowSetup.displayOn": "Mostrar en",
+    "slideShowSetup.setUpScreens": "Configurar pantallas",
+    "slideShowSetup.screensMessage":
+        "Permita que el navegador coloque ventanas en sus pantallas para elegir la que ocupa la presentación.",
+    "slideShowSetup.screensRefused":
+        "El navegador no lo permitió. Permita la administración de ventanas en la configuración del sitio y vuelva a intentarlo.",
 
     // Thumbnails
     "thumbnails.pages": "Miniaturas de páginas",

@@ -93,7 +93,7 @@ export function createDeveloperOptionsModal() {
         const input = document.createElement("input");
         input.type = "checkbox";
         input.id = id;
-        input.className = "udoc-dev-modal__switch";
+        input.className = "udoc-switch";
         input.addEventListener("change", () => {
             storeRef?.dispatch({ type: "SET_DEVELOPER_OPTION", key: row.key, value: input.checked });
         });

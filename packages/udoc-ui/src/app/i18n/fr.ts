@@ -97,8 +97,8 @@ export const fr: Messages = {
     "command.notes": "Notes",
     "command.slideShowFromBeginning": "À partir du début",
     "command.slideShowFromCurrent": "À partir de la diapositive actuelle",
-    "command.usePresenterView": "Utiliser le mode Présentateur",
-    "command.setUpScreens": "Configurer les écrans",
+    "command.presenterView": "Mode Présentateur",
+    "command.setUpSlideShow": "Configurer le diaporama",
     "command.previewSlide": "Aperçu",
     "command.stopSlidePreview": "Arrêter",
     "command.singleScroll": "Unique",
@@ -261,8 +261,6 @@ export const fr: Messages = {
     // Slide show
     "slideShow.end": "Fin du diaporama. Cliquez pour quitter.",
     "slideShow.window": "Diaporama",
-    "slideShow.windowHint":
-        "Faites glisser cette fenêtre sur l’écran que voit votre public, puis cliquez dessus pour qu’elle remplisse cet écran.",
 
     // Presenter view
     "presenter.label": "Mode Présentateur",
@@ -279,11 +277,15 @@ export const fr: Messages = {
     "presenter.largerText": "Agrandir le texte",
     "presenter.smallerText": "Réduire le texte",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "Écrans",
-    "screens.message":
-        "Choisissez l’écran sur lequel le diaporama s’affiche. Le mode Présentateur s’affiche sur un autre.",
     "screens.oneScreen": "Un seul écran est connecté.",
+    "slideShowSetup.displayOn": "Afficher sur",
+    "slideShowSetup.setUpScreens": "Configurer les écrans",
+    "slideShowSetup.screensMessage":
+        "Autorisez le navigateur à placer des fenêtres sur vos écrans pour choisir celui qu’occupe le diaporama.",
+    "slideShowSetup.screensRefused":
+        "Le navigateur ne l’a pas autorisé. Autorisez la gestion des fenêtres dans les paramètres du site, puis réessayez.",
 
     // Thumbnails
     "thumbnails.pages": "Miniatures des pages",

@@ -177,12 +177,12 @@ export interface Messages {
     "command.slideShowFromBeginning": string;
     /** From Current Slide — a deck's slide show, from the slide shown */
     "command.slideShowFromCurrent": string;
-    /** Use Presenter View — a deck's slide show in a window of its own for
-     *  the audience's screen, and the presenter view here */
-    "command.usePresenterView": string;
-    /** Set Up Screens — let the UI place windows on each of the computer's
-     *  screens, so a slide show fills the audience's at a press */
-    "command.setUpScreens": string;
+    /** Presenter View — a deck's slide show, from the first slide it shows,
+     *  with the presenter view in a window of its own */
+    "command.presenterView": string;
+    /** Set Up Slide Show — how a deck's slide show plays: with the presenter
+     *  view or not, full screen or over the UI, and on which screen */
+    "command.setUpSlideShow": string;
     /** Preview */
     "command.previewSlide": string;
     /** Stop — Preview, while a slide preview plays */
@@ -483,10 +483,9 @@ export interface Messages {
     // Slide show
     /** End of slide show, click to exit. — over the black past a slide show's last slide */
     "slideShow.end": string;
-    /** Slide Show — the title of the window a slide show plays in */
+    /** Slide Show — what the screen a slide show fills shows, and the title
+     *  of a window of its own it plays in */
     "slideShow.window": string;
-    /** Drag this window to the screen your audience sees, then click it to fill that screen. */
-    "slideShow.windowHint": string;
 
     // Presenter view
     /** Presenter View */
@@ -517,13 +516,20 @@ export interface Messages {
     /** Make the Text Smaller — the notes' */
     "presenter.smallerText": string;
 
-    // Set Up Screens
+    // Set Up Slide Show
     /** Screens — the dialog's screens, which one is picked from */
     "screens.label": string;
-    /** Choose the screen the slide show plays on. Presenter View shows on another. */
-    "screens.message": string;
     /** Only one screen is connected. */
     "screens.oneScreen": string;
+    /** Display on — the screen a slide show that fills the screen fills */
+    "slideShowSetup.displayOn": string;
+    /** Set Up Screens — let the UI place windows on each of the computer's
+     *  screens, so a slide show fills the one chosen at a press */
+    "slideShowSetup.setUpScreens": string;
+    /** Let the browser place windows on your screens to choose the one the slide show fills. */
+    "slideShowSetup.screensMessage": string;
+    /** The browser didn't allow it. Allow window management in the site's settings, then try again. */
+    "slideShowSetup.screensRefused": string;
 
     // Thumbnails
     /** Page thumbnails */

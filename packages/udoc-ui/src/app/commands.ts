@@ -56,7 +56,7 @@ import {
     ICON_SLIDE_SHOW_FROM_BEGINNING,
     ICON_SLIDE_SHOW_FROM_CURRENT,
     ICON_PRESENTER_VIEW,
-    ICON_SET_UP_SCREENS,
+    ICON_SET_UP_SLIDE_SHOW,
     ICON_NOTES_PAGE_VIEW,
     ICON_SLIDE_MASTER_VIEW,
     ICON_NORMAL_VIEW,
@@ -86,7 +86,6 @@ import {
     ICON_FORMATTING_MARKS,
     ICON_FORMULA_BAR,
 } from "./icons.js";
-import { hasScreensApi, readScreens } from "./screens.js";
 
 /**
  * The flat read-model every {@link CommandDef.enabledWhen} / {@link MenuItem.enabledWhen}
@@ -896,43 +895,30 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         },
         enabledWhen: (c) => c.ready && c.presentationView !== "slideMaster",
     },
-    // With a screen for the audience, a slide show plays there, in a window of
-    // its own, and the presenter view here: PowerPoint's Use Presenter View.
-    usePresenterView: {
-        id: "usePresenterView",
-        label: "command.usePresenterView",
+    // The show from its first slide with PowerPoint's presenter view, in a
+    // window of its own, whatever Set Up Slide Show says of it.
+    presenterView: {
+        id: "presenterView",
+        label: "command.presenterView",
         icon: ICON_PRESENTER_VIEW,
-        group: "screens",
+        group: "slideShowStart",
         labeled: true,
         run: {
-            kind: "toggle",
-            pressed: (state) => state.usePresenterView,
-            press: (store) =>
-                store.dispatch({ type: "SET_USE_PRESENTER_VIEW", use: !store.getState().usePresenterView }),
+            kind: "action",
+            press: (store) => store.dispatch({ type: "START_SLIDE_SHOW", slide: null, presenterView: true }),
         },
         enabledWhen: whenReady,
     },
-    // Let the UI place windows on each screen — a press the browser asks
-    // about once, and remembers — and choose the screen a slide show with the
-    // presenter view plays on, in a dialog: the show then fills that screen
-    // and opens the presenter view on another. Only where the browser can
-    // place windows.
-    setUpScreens: {
-        id: "setUpScreens",
-        label: "command.setUpScreens",
-        icon: ICON_SET_UP_SCREENS,
-        group: "screens",
+    // How From Beginning and From Current Slide play the show, in a dialog:
+    // with the presenter view or not, full screen or in window mode, and the
+    // screen it fills.
+    setUpSlideShow: {
+        id: "setUpSlideShow",
+        label: "command.setUpSlideShow",
+        icon: ICON_SET_UP_SLIDE_SHOW,
+        group: "setUp",
         labeled: true,
-        shownWhen: hasScreensApi,
-        run: {
-            kind: "action",
-            // Asked in the press, which the browser's question needs.
-            press: (store) => {
-                void readScreens().then((screens) => {
-                    if (screens) store.dispatch({ type: "OPEN_SCREENS_DIALOG" });
-                });
-            },
-        },
+        run: { kind: "action", press: (store) => store.dispatch({ type: "OPEN_SLIDE_SHOW_SETUP" }) },
         enabledWhen: whenReady,
     },
 

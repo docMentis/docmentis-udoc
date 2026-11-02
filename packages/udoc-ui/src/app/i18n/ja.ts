@@ -97,8 +97,8 @@ export const ja: Messages = {
     "command.notes": "ノート",
     "command.slideShowFromBeginning": "最初から",
     "command.slideShowFromCurrent": "現在のスライドから",
-    "command.usePresenterView": "発表者ツールを使用する",
-    "command.setUpScreens": "画面の設定",
+    "command.presenterView": "発表者ツール",
+    "command.setUpSlideShow": "スライド ショーの設定",
     "command.previewSlide": "プレビュー",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "単一",
@@ -261,8 +261,6 @@ export const ja: Messages = {
     // Slide show
     "slideShow.end": "スライド ショーの最後です。クリックすると終了します。",
     "slideShow.window": "スライド ショー",
-    "slideShow.windowHint":
-        "このウィンドウを聴衆が見る画面にドラッグしてから、クリックしてその画面いっぱいに表示します。",
 
     // Presenter view
     "presenter.label": "発表者ツール",
@@ -279,10 +277,15 @@ export const ja: Messages = {
     "presenter.largerText": "文字を拡大",
     "presenter.smallerText": "文字を縮小",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "画面",
-    "screens.message": "スライド ショーを表示する画面を選択してください。発表者ツールは別の画面に表示されます。",
     "screens.oneScreen": "接続されている画面は 1 つだけです。",
+    "slideShowSetup.displayOn": "表示先",
+    "slideShowSetup.setUpScreens": "画面の設定",
+    "slideShowSetup.screensMessage":
+        "ブラウザーが各画面にウィンドウを配置できるようにすると、スライド ショーを表示する画面を選択できます。",
+    "slideShowSetup.screensRefused":
+        "ブラウザーで許可されませんでした。サイトの設定でウィンドウ管理を許可してから、もう一度お試しください。",
 
     // Thumbnails
     "thumbnails.pages": "ページサムネイル",

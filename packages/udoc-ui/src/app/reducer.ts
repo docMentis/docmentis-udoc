@@ -343,7 +343,11 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             if (state.status !== "ready" || state.docType !== "presentation") return state;
             return {
                 ...state,
-                slideShowRequest: { slide: action.slide, seq: state.slideShowRequest.seq + 1 },
+                slideShowRequest: {
+                    slide: action.slide,
+                    presenterView: action.presenterView ?? state.usePresenterView,
+                    seq: state.slideShowRequest.seq + 1,
+                },
                 slideShowPlaying: true,
                 slidePreviewing: false,
             };
@@ -351,17 +355,19 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         case "END_SLIDE_SHOW":
             return state.slideShowPlaying ? { ...state, slideShowPlaying: false } : state;
 
-        case "SET_USE_PRESENTER_VIEW":
-            return action.use === state.usePresenterView ? state : { ...state, usePresenterView: action.use };
-
         case "SET_SCREENS_SET_UP":
             return action.setUp === state.screensSetUp ? state : { ...state, screensSetUp: action.setUp };
 
-        case "OPEN_SCREENS_DIALOG":
-            return { ...state, screensSetUp: true, screensDialogSeq: state.screensDialogSeq + 1 };
+        case "OPEN_SLIDE_SHOW_SETUP":
+            return { ...state, slideShowSetupSeq: state.slideShowSetupSeq + 1 };
 
-        case "SET_AUDIENCE_SCREEN":
-            return action.screen === state.audienceScreen ? state : { ...state, audienceScreen: action.screen };
+        case "SET_SLIDE_SHOW_SETUP":
+            return {
+                ...state,
+                usePresenterView: action.presenterView,
+                slideShowFullScreen: action.fullScreen,
+                audienceScreen: action.audienceScreen,
+            };
 
         case "SET_PRESENTATION_VIEW": {
             // A deck shows it on its plane; one still opening, once its roster

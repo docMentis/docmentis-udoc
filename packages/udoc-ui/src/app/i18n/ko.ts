@@ -97,8 +97,8 @@ export const ko: Messages = {
     "command.notes": "슬라이드 노트",
     "command.slideShowFromBeginning": "처음부터",
     "command.slideShowFromCurrent": "현재 슬라이드부터",
-    "command.usePresenterView": "발표자 보기 사용",
-    "command.setUpScreens": "화면 설정",
+    "command.presenterView": "발표자 보기",
+    "command.setUpSlideShow": "슬라이드 쇼 설정",
     "command.previewSlide": "미리 보기",
     "command.stopSlidePreview": "중지",
     "command.singleScroll": "단일",
@@ -261,7 +261,6 @@ export const ko: Messages = {
     // Slide show
     "slideShow.end": "슬라이드 쇼의 끝입니다. 클릭하면 끝납니다.",
     "slideShow.window": "슬라이드 쇼",
-    "slideShow.windowHint": "이 창을 청중이 보는 화면으로 끌어 놓은 다음 클릭하여 그 화면을 채우세요.",
 
     // Presenter view
     "presenter.label": "발표자 보기",
@@ -278,10 +277,15 @@ export const ko: Messages = {
     "presenter.largerText": "텍스트 크게",
     "presenter.smallerText": "텍스트 작게",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "화면",
-    "screens.message": "슬라이드 쇼를 표시할 화면을 선택하세요. 발표자 보기는 다른 화면에 표시됩니다.",
     "screens.oneScreen": "연결된 화면이 하나뿐입니다.",
+    "slideShowSetup.displayOn": "표시할 화면",
+    "slideShowSetup.setUpScreens": "화면 설정",
+    "slideShowSetup.screensMessage":
+        "브라우저가 화면에 창을 배치하도록 허용하면 슬라이드 쇼를 표시할 화면을 선택할 수 있습니다.",
+    "slideShowSetup.screensRefused":
+        "브라우저에서 허용하지 않았습니다. 사이트 설정에서 창 관리를 허용한 후 다시 시도하세요.",
 
     // Thumbnails
     "thumbnails.pages": "페이지 축소판 그림",

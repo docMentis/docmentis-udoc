@@ -324,8 +324,8 @@ export type CommandId =
     | "previewSlide"
     | "slideShowFromBeginning"
     | "slideShowFromCurrent"
-    | "usePresenterView"
-    | "setUpScreens"
+    | "presenterView"
+    | "setUpSlideShow"
     | "normalView"
     | "notesPageView"
     | "slideMasterView"
@@ -736,10 +736,11 @@ export interface UIState {
 
     /**
      * Bumps on every start of a slide show, so the shell's slide show plays the
-     * deck full screen from `slide` — its index in the deck, or `null` for the
-     * first slide the show shows.
+     * deck from `slide` — its index in the deck, or `null` for the first slide
+     * the show shows — with PowerPoint's presenter view in a window of its
+     * own when `presenterView` says so.
      */
-    slideShowRequest: { slide: number | null; seq: number };
+    slideShowRequest: { slide: number | null; presenterView: boolean; seq: number };
     /**
      * Whether a slide show plays — from its start until it ends: by Escape, by
      * a click past its last slide, by the host's `endSlideShow`, or by
@@ -747,28 +748,34 @@ export interface UIState {
      */
     slideShowPlaying: boolean;
     /**
-     * Whether a slide show plays with PowerPoint's presenter view where there
-     * is a screen for the audience: the show in a window of its own, for that
-     * screen, and the presenter view over the UI — the Slide Show tab's
-     * Use Presenter View.
+     * Whether From Beginning and From Current Slide play a slide show with
+     * PowerPoint's presenter view, in a window of its own — Set Up Slide
+     * Show's Presenter View, off at first. The Slide Show tab's Presenter View
+     * plays one with it whatever this says.
      */
     usePresenterView: boolean;
     /**
+     * Whether a slide show fills the screen — the one Set Up Slide Show's
+     * Display on chose, where the screens are set up — or plays over the UI
+     * as it stands, in window mode: Set Up Slide Show's Full Screen, on at
+     * first. One the browser won't fill the screen with plays in window mode.
+     */
+    slideShowFullScreen: boolean;
+    /**
      * Whether the screens are set up: the browser lets the UI place windows
-     * on each of the computer's screens — the Slide Show tab's Set Up
-     * Screens — so a slide show with the presenter view fills the audience's
-     * screen and opens the presenter view on this one at a press.
+     * on each of the computer's screens — Set Up Slide Show's Set Up
+     * Screens — so a slide show fills the screen Display on chose, and opens
+     * the presenter view on another, at a press.
      */
     screensSetUp: boolean;
     /**
-     * The screen a slide show with the presenter view plays on, as Set Up
-     * Screens chose it, by its name and where it stands (`screenKey`) — `null`
-     * for the first but the one the UI's window is on.
+     * The screen a full-screen slide show fills, as Set Up Slide Show's
+     * Display on chose it, by its name and where it stands (`screenKey`) —
+     * `null` for the first but the one the UI's window is on.
      */
     audienceScreen: string | null;
-    /** Bumps on every Set Up Screens the browser let the UI place windows
-     *  for, so the shell opens its dialog. */
-    screensDialogSeq: number;
+    /** Bumps on every Set Up Slide Show, so the shell opens its dialog. */
+    slideShowSetupSeq: number;
 
     /** Visible canvas size in CSS px (updated by the Canvas on resize). */
     viewportWidth: number;
@@ -1022,12 +1029,13 @@ export const initialState: UIState = {
     refitSeq: 0,
     slidePreviewSeq: 0,
     slidePreviewing: false,
-    slideShowRequest: { slide: null, seq: 0 },
+    slideShowRequest: { slide: null, presenterView: false, seq: 0 },
     slideShowPlaying: false,
-    usePresenterView: true,
+    usePresenterView: false,
+    slideShowFullScreen: true,
     screensSetUp: false,
     audienceScreen: null,
-    screensDialogSeq: 0,
+    slideShowSetupSeq: 0,
     viewportWidth: 0,
     viewportHeight: 0,
     pageIndex: 0,

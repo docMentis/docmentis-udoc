@@ -186,7 +186,6 @@ interface RibbonSlice {
      *  live by, with whether the slide shown plays anything. */
     slidePreviewing: boolean;
     currentSlidePlays: boolean;
-    usePresenterView: boolean;
 }
 
 /** The color a display paints its bar with — a solid or theme color's own hex;
@@ -222,8 +221,7 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.formulaBarVisible === b.formulaBarVisible &&
         a.hasLayers === b.hasLayers &&
         a.slidePreviewing === b.slidePreviewing &&
-        a.currentSlidePlays === b.currentSlidePlays &&
-        a.usePresenterView === b.usePresenterView
+        a.currentSlidePlays === b.currentSlidePlays
     );
 }
 
@@ -253,7 +251,6 @@ function selectSlice(s: UIState): RibbonSlice {
         hasLayers: s.hasLayers,
         slidePreviewing: s.slidePreviewing,
         currentSlidePlays: s.currentSlidePlays,
-        usePresenterView: s.usePresenterView,
     };
 }
 

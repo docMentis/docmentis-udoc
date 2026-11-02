@@ -97,8 +97,8 @@ export const zhTW: Messages = {
     "command.notes": "備忘稿",
     "command.slideShowFromBeginning": "從首張投影片",
     "command.slideShowFromCurrent": "從目前投影片",
-    "command.usePresenterView": "使用簡報者檢視畫面",
-    "command.setUpScreens": "設定螢幕",
+    "command.presenterView": "簡報者檢視畫面",
+    "command.setUpSlideShow": "設定投影片放映",
     "command.previewSlide": "預覽",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "單頁",
@@ -261,7 +261,6 @@ export const zhTW: Messages = {
     // Slide show
     "slideShow.end": "投影片放映結束，按一下即可結束。",
     "slideShow.window": "投影片放映",
-    "slideShow.windowHint": "將此視窗拖曳到觀眾看到的螢幕，然後按一下它以填滿該螢幕。",
 
     // Presenter view
     "presenter.label": "簡報者檢視畫面",
@@ -278,10 +277,13 @@ export const zhTW: Messages = {
     "presenter.largerText": "放大文字",
     "presenter.smallerText": "縮小文字",
 
-    // Set Up Screens
+    // Set Up Slide Show
     "screens.label": "螢幕",
-    "screens.message": "選擇播放投影片的螢幕。簡報者檢視畫面會顯示在另一個螢幕上。",
     "screens.oneScreen": "僅連接了一個螢幕。",
+    "slideShowSetup.displayOn": "顯示於",
+    "slideShowSetup.setUpScreens": "設定螢幕",
+    "slideShowSetup.screensMessage": "允許瀏覽器在各螢幕上放置視窗，以選擇放映投影片的螢幕。",
+    "slideShowSetup.screensRefused": "瀏覽器未允許。請在網站設定中允許視窗管理，然後再試一次。",
 
     // Thumbnails
     "thumbnails.pages": "頁面縮圖",
