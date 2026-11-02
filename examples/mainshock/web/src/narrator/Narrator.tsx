@@ -5,10 +5,17 @@
 // the viewer chose: not at all, with a dot, or with the dot and a flash of the
 // tab and the edge; the dot and the flash last until the panel unfolds.
 //
-// A mockup so far: the panel holds only that choice, and something new arrives
-// two seconds after the page loads, to show how it's announced.
+// On the sign-in page, the panel offers to sign in as each persona, through
+// the app's own form: the narrator fills it in and presses its button, as a
+// visitor would. It knows the app's pages and forms; the app knows nothing of
+// it.
+//
+// A mockup so far: something new arrives two seconds after the page loads, to
+// show how it's announced.
 import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router";
 
+import { DEMO_PASSWORD, PERSONAS } from "../../../shared/personas.ts";
 import { DocMentisMark } from "./DocMentisMark";
 import "./narrator.css";
 
@@ -37,6 +44,27 @@ function savedAnnounce(): Announce {
     return "flash";
 }
 
+/**
+ * Sign in as `username` through the app's sign-in form, as a visitor would:
+ * fill in its username and the demo's password, then press its button.
+ */
+function signInAs(username: string): void {
+    const user = document.querySelector<HTMLInputElement>('input[autocomplete="username"]');
+    const password = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]');
+    const submit = user?.form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (!user || !password || !submit) return;
+    enter(user, username);
+    enter(password, DEMO_PASSWORD);
+    // A moment to see it filled in before it's sent.
+    setTimeout(() => submit.click(), 400);
+}
+
+/** Put `value` in `input` as typing does, so that the app's form hears it. */
+function enter(input: HTMLInputElement, value: string): void {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, value);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
 function saveAnnounce(announce: Announce): void {
     try {
         localStorage.setItem(ANNOUNCE_KEY, announce);
@@ -46,6 +74,7 @@ function saveAnnounce(announce: Announce): void {
 }
 
 export function Narrator() {
+    const { pathname } = useLocation();
     const [open, setOpen] = useState(false);
     const [announce, setAnnounce] = useState(savedAnnounce);
     const [flashing, setFlashing] = useState(false);
@@ -95,6 +124,18 @@ export function Narrator() {
             {flashing && <div className="narrator-edge" />}
             {open && (
                 <div className="narrator-panel">
+                    {pathname === "/sign-in" && (
+                        <ul className="narrator-cards">
+                            {PERSONAS.map(({ username, name, title }) => (
+                                <li key={username}>
+                                    <button className="narrator-card" onClick={() => signInAs(username)}>
+                                        <strong>Sign in as {name}</strong>
+                                        <span>{title}</span>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                     <div className="narrator-setting">
                         <span id="narrator-announce" className="narrator-label">
                             Notify me
