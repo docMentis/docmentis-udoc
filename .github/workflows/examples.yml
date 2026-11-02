@@ -2,7 +2,8 @@
 # installed from their packed tarballs as an app installs them, and open it in
 # headless Chrome (scripts/examples.mjs): an example a job, so that one
 # framework's failure doesn't hide another's, and a new example needs no
-# change here.
+# change here. Mainshock, an app rather than an integration recipe, isn't one
+# (docs/design/examples-mainshock.md).
 #
 # On a change to what they test: the browser packages, the examples, the
 # script, or the lockfile. And nightly, since the examples install each
@@ -18,6 +19,7 @@ on:
             - "packages/udoc-viewer/**"
             - "packages/udoc-editor/**"
             - "examples/**"
+            - "!examples/mainshock/**"
             - "scripts/examples.mjs"
             - "scripts/packages.mjs"
             - "package-lock.json"
@@ -43,7 +45,7 @@ jobs:
         steps:
             - uses: actions/checkout@v7
             - id: list
-              run: echo "examples=$(ls -d examples/*/ | xargs -n1 basename | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
+              run: echo "examples=$(ls -d examples/*/ | xargs -n1 basename | grep -vx mainshock | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
 
     example:
         needs: list

@@ -40,6 +40,13 @@ const examples = join(root, "examples");
 /** What an example installs of this checkout's, packed. */
 const PACKED = ["@docmentis/udoc-ui", "@docmentis/udoc-viewer", "@docmentis/udoc-editor"];
 
+/**
+ * What examples/ holds that isn't an integration recipe: mainshock, an app with
+ * a server of its own, linked to this checkout's packages
+ * (docs/design/examples-mainshock.md).
+ */
+const NOT_RECIPES = new Set(["mainshock"]);
+
 /** Where an example's production build leaves its static site, when not `dist/`. */
 const SITE = {
     angular: "dist/angular/browser",
@@ -238,9 +245,12 @@ async function check(browser, site) {
 const names =
     process.argv.length > 2
         ? process.argv.slice(2)
-        : readdirSync(examples).filter((name) => existsSync(join(examples, name, "package.json")));
+        : readdirSync(examples).filter(
+              (name) => existsSync(join(examples, name, "package.json")) && !NOT_RECIPES.has(name),
+          );
 for (const name of names) {
     if (!existsSync(join(examples, name, "package.json"))) die(`examples/${name} isn't an example`);
+    if (NOT_RECIPES.has(name)) die(`examples/${name} isn't an integration example, which this checks`);
 }
 
 const work = mkdtempSync(join(tmpdir(), "udoc-examples-"));

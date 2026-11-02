@@ -1,0 +1,36 @@
+{
+    "name": "udoc-example-mainshock",
+    "private": true,
+    "description": "Mainshock, a sales enablement app on the docMentis udoc packages: a showcase, and their dogfood.",
+    "type": "module",
+    "scripts": {
+        "dev": "node scripts/dev.mjs",
+        "dev:server": "node --disable-warning=ExperimentalWarning --watch --watch-preserve-output server/main.ts",
+        "dev:web": "vite --clearScreen false",
+        "build": "vite build",
+        "start": "node --disable-warning=ExperimentalWarning server/main.ts --serve-web",
+        "typecheck": "tsc -p . && tsc -p web"
+    },
+    "engines": {
+        "node": ">=22.18"
+    },
+    "dependencies": {
+        "@docmentis/udoc-editor": "file:../../packages/udoc-editor",
+        "@docmentis/udoc-node": "file:../../packages/udoc-node",
+        "@docmentis/udoc-server": "file:../../packages/udoc-server",
+        "@docmentis/udoc-viewer": "file:../../packages/udoc-viewer",
+        "@fastify/static": "^10.1.8",
+        "fastify": "^5.12.7",
+        "react": "^19.3.1",
+        "react-dom": "^19.3.1",
+        "react-router": "^8.5.1"
+    },
+    "devDependencies": {
+        "@types/node": "^22.18.0",
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "@vitejs/plugin-react": "^6.1.2",
+        "typescript": "~6.0.3",
+        "vite": "^8.3.5"
+    }
+}

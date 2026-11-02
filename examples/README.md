@@ -19,6 +19,11 @@ Word document.
 | [`webpack`](webpack)                   | None, with webpack 5         | Nothing but the size hints off: the engine's binary is far over them.                                                                                                     |
 | [`no-bundler`](no-bundler)             | None, and no build step      | An import map onto jsDelivr, its versions in step with each other.                                                                                                        |
 
+[`mainshock`](mainshock) is different: not a way to install the packages but
+an app built on them, a sales enablement product with a backend of its own,
+which runs against this checkout's packages and is no part of the testing below
+([its design](../docs/design/examples-mainshock.md)).
+
 ## Running one
 
 ```sh

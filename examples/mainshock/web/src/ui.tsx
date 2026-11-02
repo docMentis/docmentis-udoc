@@ -1,0 +1,32 @@
+// The pieces the pages are made of.
+import type { ReactNode } from "react";
+
+export function PageHeader({ title, subtitle }: { title: ReactNode; subtitle?: ReactNode }) {
+    return (
+        <header className="page-header">
+            <h1>{title}</h1>
+            {subtitle && <p className="page-subtitle">{subtitle}</p>}
+        </header>
+    );
+}
+
+/** A person's initials, first and last, in a circle. */
+export function Avatar({ name }: { name: string }) {
+    const words = name.split(" ").filter(Boolean);
+    const initials = (words[0]?.[0] ?? "") + (words.length > 1 ? words[words.length - 1][0] : "");
+    return (
+        <span className="avatar" aria-hidden="true">
+            {initials}
+        </span>
+    );
+}
+
+/** What a page or a card shows with nothing in it yet. */
+export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
+    return (
+        <div className="empty">
+            <p className="empty-title">{title}</p>
+            {children && <div className="empty-body">{children}</div>}
+        </div>
+    );
+}

@@ -18,6 +18,7 @@
         "dev": "node scripts/dev.mjs",
         "docs": "npm run dev -w @docmentis/udoc-docs",
         "examples": "node scripts/examples.mjs",
+        "mainshock": "node scripts/mainshock.mjs",
         "typecheck": "npm run typecheck --workspaces --if-present",
         "test": "npm run test --workspaces --if-present",
         "lint": "eslint .",

@@ -31,3 +31,6 @@ examples/*/next-env.d.ts
 examples/*/.nuxt/
 examples/*/.output/
 examples/*/.angular/
+
+# Mainshock's database and documents
+examples/mainshock/data/

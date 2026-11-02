@@ -47,6 +47,12 @@ udoc-ui's generated engine version and the CDN URLs the docs write out.
   repo, builds it and opens it in headless Chrome; the Examples workflow runs
   it on a change to the browser packages or the examples, and nightly. A change to how the packages load (the engine, its
   fonts, the workers, a new bare import) runs it before it lands.
+- `examples/mainshock` is the exception: a sales enablement app on the
+  packages, with a Node backend, linked to this checkout's builds by `file:`
+  dependencies and left out of `npm run examples`. It showcases the packages
+  and dogfoods them through their public API alone, never
+  `@docmentis/udoc-ui/internal`; what that API lacks goes in its `GAPS.md`
+  ([`docs/design/examples-mainshock.md`](docs/design/examples-mainshock.md)).
 - Every package except `udoc-docs` is published, with its own copy of
   `LICENSE-MIT` and `LICENSE-APACHE` listed in its `files`, and a
   `repository` naming this repo, which npm's provenance checks.
@@ -104,5 +110,6 @@ npm run format:check
 npm run dev               # the demo, with the UI packages rebuilding
 npm run docs              # the docs site, its API reference from the built packages
 npm run examples          # each example, built and opened in a browser
+npm run mainshock         # mainshock, the sales enablement app, at localhost:5280
 npm run release -- patch  # cut a release, which CI publishes
 ```

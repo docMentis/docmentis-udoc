@@ -27,8 +27,9 @@ two reasons:
 
 Marketing and sales are a tenant's users; a buyer comes through a share link.
 Each role is played by a persona, a seeded user whose name is still to be
-picked. While mainshock runs only locally, signing in is choosing one, with no
-password, behind one seam (`server/auth.ts`) that a real sign-in can replace.
+picked. A user signs in with a username and a password, checked against the
+scrypt hash `users` keeps (`server/auth.ts`); the seeded users share the
+demo's password, which the README gives.
 
 ## How it fits together
 
@@ -91,14 +92,17 @@ two kinds of things:
   (its format, its pages, how long it took to open), and stays in the panel's
   list.
 
-The product knows nothing of the narrator. It announces **moments**, such as
-`signed-in`, `upload:previewed`, `asset:added` and each route change, through a
-small module of events of its own, and marks what a step can point at with
+The product knows nothing of the narrator. It announces **moments** through a
+small module of events of its own (`web/src/moments.ts`) — `route` and
+`session`, which say how things stand, and `document:opened` and `asset:added`,
+which say what just happened — and marks what a step can point at with
 `data-narrator="…"`; the narrator is their only listener. Taking it out leaves
 the product whole. The script, `web/src/narrator/script.ts`, is typed data: the
 chapters' steps, each with its target and the moment that ends it, and the
-highlights, each with its moment and what it says. Its progress is kept in the
-browser, so a chapter carries on when someone signs in as its next persona.
+highlights, each with the moments it tells about and what it says. A step that
+how things stand already does, such as opening a page already open, is passed
+as it comes. Its progress is kept in the browser, so a chapter carries on when
+someone signs in as its next persona.
 
 A step points at the app's own elements alone. The viewer's and the editor's
 controls are theirs, with no public way to find one, so a step that points at
@@ -112,11 +116,15 @@ Unlike them, it installs the udoc packages from this checkout: `file:` links to
 links alone, and what the packages import resolves from the repo's
 `node_modules`, so a linked engine checkout (`scripts/link-engine.mjs`) is the
 engine mainshock runs, and the root's `npm run dev` rebuilds what it serves. It
-needs the root's `npm install` and `npm run build` first.
+needs the root's `npm install` first.
 
-Its `npm run dev` starts the server under `node --watch`, which runs its
-TypeScript as is, and Vite, which proxies `/api` and `/udoc` to it; `npm run
-build` then `npm start` serves the built frontend from the server, on one port.
+`npm run mainshock`, from the repo's root, installs mainshock's dependencies
+when they're missing or out of date, builds any of the packages it links that
+isn't built (one built already, the root's `npm run dev` may be rebuilding),
+and runs its own `npm run dev`. That starts the server under `node --watch`,
+which runs its TypeScript as is, and Vite, which proxies `/api` and `/udoc` to
+it; `npm run build` then `npm start` serves the built frontend from the server,
+on one port.
 Its data, in `data/`, is ignored by git, and deleting it starts over from the
 seed.
 
@@ -127,27 +135,30 @@ formats it with the rest of the repo.
 ## Step 1: the skeleton
 
 - `examples/mainshock/` as laid out above: one `package.json`, a `tsconfig`
-  each for `server/` and `web/`, and a `typecheck` script.
-- The database, its migrations counted by `PRAGMA user_version`: `tenants`,
-  `users`, `sessions` and `assets`, and an empty one seeded with Acme Corp and
-  its personas, one in marketing and two in sales.
-- Signing in: a page listing the seeded users, choosing one setting an
-  HTTP-only session cookie, over `GET`, `POST` and `DELETE /api/session`.
-- The shell: a sidebar — Home, Library, Decks, Deals, Analytics — and a top bar
-  with the tenant and the user's menu (switch user, sign out); each page a
-  placeholder until its step.
-- udoc end to end: `UDocNode` and udoc-server in the backend, behind the gate;
-  on the Library page, a picked file shown in the viewer before it uploads, and
-  once added, opened from udoc-server in the viewer and in the editor.
-- The narrator: its panel, moments and targets, and the first chapter's opening
-  steps, signing in as the marketer and uploading a file, with the highlight on
-  viewing it before it uploads.
+  for the Node side (`server/`, `shared/`, Vite's config) and one for `web/`,
+  and a `typecheck` script.
+  The frontend and the backend, set up and running, with no udoc code yet:
+
+- `examples/mainshock/` as laid out above: one `package.json`, the udoc
+  packages linked in it, a `tsconfig` for the Node side (`server/`, `shared/`,
+  Vite's config) and one for `web/`, and a `typecheck` script; `npm run
+mainshock` from the root.
+- The backend: Fastify over the database, its migrations counted by `PRAGMA
+user_version`: `tenants`, `users` and `sessions`, and an empty one seeded
+  with Acme Corp and its personas, one in marketing and two in sales.
+- Signing in: a username and a password, over `GET`, `POST` and
+  `DELETE /api/session`, a session in an HTTP-only cookie.
+- The frontend: the sign-in page, and the shell, a sidebar — Home, Library,
+  Decks, Deals, Analytics — and a top bar with the tenant and the user's menu
+  (sign out); each section a placeholder until its step.
 - The examples harness and workflow leaving it out, and `examples/README.md`
   and `CLAUDE.md` saying what it is.
 
 ## Later steps
 
-In an order picked as we go: the library, with Acme's content (generated),
+In an order picked as we go: udoc end to end, udoc-server in the backend behind
+the gate and the viewer and the editor in the frontend; the narrator; the
+library, with Acme's content (generated),
 thumbnails from udoc-server's page routes, tags and search; decks, a rep
 assembling slides from the library's decks and personalizing them for a deal;
 share links, a buyer's view with no account, and which pages they read and for
