@@ -9,6 +9,7 @@
         "dev:web": "vite --clearScreen false",
         "build": "vite build",
         "start": "node --disable-warning=ExperimentalWarning server/main.ts --serve-web",
+        "clear": "node --disable-warning=ExperimentalWarning scripts/clear.mjs",
         "typecheck": "tsc -p . && tsc -p web"
     },
     "engines": {

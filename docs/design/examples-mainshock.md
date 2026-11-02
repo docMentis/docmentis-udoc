@@ -138,8 +138,8 @@ and runs its own `npm run dev`. That starts the server under `node --watch`,
 which runs its TypeScript as is, and Vite, which proxies `/api` and `/udoc` to
 it; `npm run build` then `npm start` serves the built frontend from the server,
 on one port.
-Its data, in `data/`, is ignored by git, and deleting it starts over from the
-seed.
+Its data, in `data/`, is ignored by git, and `npm run mainshock:clear` deletes
+it, with the backend stopped, to start over from the seed.
 
 It is no integration recipe, so `scripts/examples.mjs` and the Examples
 workflow leave it out; ESLint leaves out all of `examples/`, and Prettier

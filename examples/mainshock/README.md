@@ -29,7 +29,10 @@ at http://127.0.0.1:5281.
 | -------------------- | ------- | ------------------------------------------- |
 | `MAINSHOCK_PORT`     | `5281`  | The backend's port.                         |
 | `MAINSHOCK_WEB_PORT` | `5280`  | Where Vite serves the pages in development. |
-| `MAINSHOCK_DATA`     | `data/` | The database. Delete it to start over.      |
+| `MAINSHOCK_DATA`     | `data/` | The database.                               |
+
+To start over from the seed, stop mainshock and run `npm run mainshock:clear`
+from the repo's root (`npm run clear` here), which deletes its data.
 
 ## Signing in
 

@@ -19,6 +19,7 @@
         "docs": "npm run dev -w @docmentis/udoc-docs",
         "examples": "node scripts/examples.mjs",
         "mainshock": "node scripts/mainshock.mjs",
+        "mainshock:clear": "npm run clear --prefix examples/mainshock",
         "typecheck": "npm run typecheck --workspaces --if-present",
         "test": "npm run test --workspaces --if-present",
         "lint": "eslint .",
