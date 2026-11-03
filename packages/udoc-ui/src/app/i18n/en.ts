@@ -461,6 +461,7 @@ export const en: Messages = {
     "loading.opening": "Opening…",
     "loading.downloading": "Downloading…",
     "loading.progress": "{loaded} / {total} MB",
+    "media.openOnSite": "Open on {site}",
 
     // License notice
     "license.invalidLicense": "Invalid License",

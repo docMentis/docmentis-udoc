@@ -138,6 +138,7 @@ import { follow, textLinkFollows, textLinkUrl } from "./destinations.js";
 import { isFileFormat, mediaType, signaturelessFormat, sourceName, sourceReader } from "./source.js";
 import type { OpenSource } from "./source.js";
 import { createExtensionDocuments } from "./extension-documents.js";
+import { createMediaDocument } from "./media-document.js";
 import type {
     ExtensionDocument,
     ExtensionDocumentHost,
@@ -766,10 +767,10 @@ export function mountUIShell(
     });
     canvas.mount(viewportSlot, store);
 
-    // The extension documents the host registered, and the one shown: the
-    // `<div>` it renders into, over the canvas, and its viewer once its open
-    // resolves.
-    const extensionDocuments = createExtensionDocuments();
+    // The extension documents — those the host registered, then the built-in
+    // media document — and the one shown: the `<div>` it renders into, over
+    // the canvas, and its viewer once its open resolves.
+    const extensionDocuments = createExtensionDocuments([createMediaDocument(i18n)]);
     for (const registered of shellOptions.extensionDocuments ?? []) extensionDocuments.register(registered);
     let extensionShown: { container: HTMLDivElement; viewer: ExtensionDocumentViewer | null } | null = null;
 

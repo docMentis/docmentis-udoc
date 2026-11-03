@@ -459,6 +459,7 @@ export const ja: Messages = {
     "loading.opening": "開いています…",
     "loading.downloading": "ダウンロード中…",
     "loading.progress": "{loaded} / {total} MB",
+    "media.openOnSite": "{site} で開く",
 
     // License notice
     "license.invalidLicense": "無効なライセンス",

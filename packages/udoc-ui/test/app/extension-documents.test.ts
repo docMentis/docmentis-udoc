@@ -93,6 +93,26 @@ test("one of a doc type already registered replaces it, in its place", async () 
     assert.deepEqual(asked, ["media"]);
 });
 
+test("the built-ins are asked after every extension document registered", async () => {
+    const asked: string[] = [];
+    const documents = createExtensionDocuments([extensionDocument("media", ["mp4"], true, asked)]);
+    const host = extensionDocument("host", ["mp4"], true, asked);
+    documents.register(host);
+    assert.equal(await documents.choose(request()), host);
+    assert.equal(await documents.choose(request({ format: "mp4" })), host);
+    assert.deepEqual(asked, ["host"]);
+});
+
+test("one of a built-in's doc type replaces the built-in", async () => {
+    const asked: string[] = [];
+    const documents = createExtensionDocuments([extensionDocument("media", [], true, asked)]);
+    documents.register(extensionDocument("host", [], false, asked));
+    const replacement = extensionDocument("media", [], true, asked);
+    documents.register(replacement);
+    assert.equal(await documents.choose(request()), replacement);
+    assert.deepEqual(asked, ["host", "media"]);
+});
+
 test("none of the engine's doc types can be registered", () => {
     const documents = createExtensionDocuments();
     for (const docType of ["portable", "wordprocessing", "presentation", "spreadsheet", "image"]) {

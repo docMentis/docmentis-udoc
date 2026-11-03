@@ -457,6 +457,7 @@ export const zhCN: Messages = {
     "loading.opening": "正在打开…",
     "loading.downloading": "正在下载…",
     "loading.progress": "{loaded} / {total} MB",
+    "media.openOnSite": "在 {site} 上打开",
 
     // License notice
     "license.invalidLicense": "许可证无效",

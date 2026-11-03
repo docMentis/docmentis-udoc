@@ -461,6 +461,7 @@ export const ptBR: Messages = {
     "loading.opening": "Abrindo…",
     "loading.downloading": "Baixando…",
     "loading.progress": "{loaded} / {total} MB",
+    "media.openOnSite": "Abrir no {site}",
 
     // License notice
     "license.invalidLicense": "Licença Inválida",

@@ -462,6 +462,7 @@ export const ar: Messages = {
     "loading.opening": "جارٍ الفتح…",
     "loading.downloading": "جارٍ التنزيل…",
     "loading.progress": "{loaded} / {total} ميغابايت",
+    "media.openOnSite": "فتح في {site}",
 
     // License notice
     "license.invalidLicense": "ترخيص غير صالح",

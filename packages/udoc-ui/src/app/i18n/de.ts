@@ -460,6 +460,7 @@ export const de: Messages = {
     "loading.opening": "Wird geöffnet…",
     "loading.downloading": "Wird heruntergeladen…",
     "loading.progress": "{loaded} / {total} MB",
+    "media.openOnSite": "Auf {site} öffnen",
 
     // License notice
     "license.invalidLicense": "Ungültige Lizenz",

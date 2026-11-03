@@ -120,9 +120,10 @@ const ENGINE_DOC_TYPES = {
 /** The extension documents registered, and the choice of which opens what. */
 export interface ExtensionDocuments {
     /**
-     * Register `document`, after those registered before — in place of the
-     * one of its doc type, if one was. Throws an `invalidRequest` `UDocError`
-     * for one of the engine's doc types.
+     * Register `document`, after those registered before and ahead of the
+     * built-ins — in place of the one of its doc type, if one was, a
+     * built-in's included. Throws an `invalidRequest` `UDocError` for one of
+     * the engine's doc types.
      */
     register(document: ExtensionDocument): void;
     /**
@@ -133,8 +134,11 @@ export interface ExtensionDocuments {
     choose(request: ExtensionDocumentOpenRequest): Promise<ExtensionDocument | null>;
 }
 
-export function createExtensionDocuments(): ExtensionDocuments {
-    const documents: ExtensionDocument[] = [];
+/** The registry, starting with `builtIns`, which are asked after every extension document registered. */
+export function createExtensionDocuments(builtIns: readonly ExtensionDocument[] = []): ExtensionDocuments {
+    const registered: ExtensionDocument[] = [];
+    const builtIn = [...builtIns];
+    const inOrder = (): ExtensionDocument[] => [...registered, ...builtIn];
     return {
         register(document) {
             if (Object.hasOwn(ENGINE_DOC_TYPES, document.docType)) {
@@ -143,16 +147,21 @@ export function createExtensionDocuments(): ExtensionDocuments {
                     `an extension document can't be of the engine's doc type "${document.docType}"`,
                 );
             }
-            const at = documents.findIndex((registered) => registered.docType === document.docType);
-            if (at < 0) documents.push(document);
-            else documents[at] = document;
+            for (const list of [registered, builtIn]) {
+                const at = list.findIndex((other) => other.docType === document.docType);
+                if (at >= 0) {
+                    list[at] = document;
+                    return;
+                }
+            }
+            registered.push(document);
         },
         async choose(request) {
             const format = request.options.format;
             // A format given skips detection: the extension document that
             // reads it, else the engine.
-            if (format !== undefined) return documents.find((document) => document.formats.includes(format)) ?? null;
-            for (const document of documents) {
+            if (format !== undefined) return inOrder().find((document) => document.formats.includes(format)) ?? null;
+            for (const document of inOrder()) {
                 if (await document.canOpen(request)) return document;
             }
             return null;

@@ -457,6 +457,7 @@ export const zhTW: Messages = {
     "loading.opening": "正在開啟…",
     "loading.downloading": "正在下載…",
     "loading.progress": "{loaded} / {total} MB",
+    "media.openOnSite": "在 {site} 上開啟",
 
     // License notice
     "license.invalidLicense": "授權無效",

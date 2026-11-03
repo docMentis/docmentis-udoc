@@ -139,33 +139,47 @@ downloading, printing and collaboration reject; `close` closes it.
 
 ## Built-in extension documents
 
-**Media** (`"media"`) plays on Video.js 10 (`@videojs/html`), at an exact
-version, as the engine is pinned: one set of controls over a file (`video`,
-`audio`), HLS (`hlsjs-video`), DASH (`dash-video`), YouTube (`youtube-video`)
-and Vimeo (`vimeo-video`). Its `formats` are `mp4`, `m4v`, `mov`, `webm`,
-`mp3`, `m4a`, `aac`, `wav`, `ogg`, `opus`, `flac`, `hls`, `dash`, `youtube` and
-`vimeo` — the containers browsers play, and none they don't, MKV, AVI or WMV.
-It loads by dynamic `import` when a media document opens — Video.js, its skin
-and hls.js or dash.js — so a PDF's reader downloads none of it; a new bare
-import, so `npm run examples` passes before it lands.
+**Media** (`"media"`) plays on Video.js 10 (`@videojs/html`, with its
+`hlsjs-video`, `youtube-video` and `vimeo-video` packages), at an exact
+version, as the engine is pinned: `<media-i18n>` › the video or audio preset's
+player › its skin › the media element — a `<video>` or `<audio>` for a file,
+`hlsjs-video` for HLS, `youtube-video` and `vimeo-video` for the sites, one set
+of controls over each. Its `formats` are `mp4`, `m4v`, `mov`, `webm`, `mp3`,
+`m4a`, `aac`, `wav`, `ogg`, `opus`, `flac`, `hls`, `youtube` and `vimeo` — the
+containers browsers play, and none they don't, MKV, AVI or WMV. It loads by
+dynamic `import` when a media document opens — the preset, its skin and the
+media element's package, hls.js among them — so a PDF's reader downloads none
+of it; a new bare import, so `npm run examples` passes before it lands.
 
-- `canOpen`: a YouTube or Vimeo address, before anything is fetched, which
-  fetching would fail on CORS anyway; `.m3u8` and `.mpd`, or their media
-  types; a file name's extension; then `head()`'s signatures — `ftyp`, EBML,
-  `ID3`, `RIFF…WAVE`, `OggS`, `fLaC`.
+- `canOpen` (`media-formats.ts`): a YouTube or Vimeo address, before anything
+  is fetched, which fetching would fail on CORS anyway; a file name's
+  extension, a stream's manifest's among them; then `head()` — the media type
+  declared, else the signatures `ftyp` (by its brand), WebM's EBML header,
+  `ID3` or an MPEG frame's sync, ADTS, `RIFF…WAVE`, `OggS` (Opus by its first
+  packet), `fLaC`, `#EXTM3U` and `<MPD`.
 - A URL plays from the URL, never read whole; a Blob or bytes from an object
-  URL. Whether it shows as video or audio is the metadata's to say
-  (`videoWidth`), not the container's: a WebM, an MP4 or an Ogg file can hold
-  either.
-- The skin takes the chrome's colors through its `--media-*` variables, and the
-  locale and `translations` through Video.js's own i18n.
-- A codec the browser can't play shows so; a video its owner won't let be
-  embedded shows so with "Open on YouTube" or "Open on Vimeo".
-- Custom elements are the page's, so a host page running Video.js 10 already
-  has them defined: media reuses what is there, the host's version winning,
-  rather than throw defining them again. A host with a strict Content Security
-  Policy lets in the video sites' frames and the streams' origins; the guide
+  URL, revoked on `close`. A file in an audio format plays in the audio preset,
+  anything else in the video preset until its metadata shows no picture
+  (`videoWidth` and `videoHeight` 0), when it plays in the audio preset — a
+  WebM, an MP4 or an Ogg file can hold either. `open` resolves once the
+  metadata is read, the media fails, or ten seconds pass.
+- The skins inject their own styles, in shadow roots, plus one `<style>` in
+  the page's head, so a host's bundler handles no CSS. They take the chrome's
+  accent through `--media-accent-color`; the audio skin follows the
+  `color-scheme` the chrome sets, and the video skin is dark in either theme, so
+  `setTheme` has nothing to do. Their words follow `locale` through
+  `<media-i18n>`, whose 53 packs load as needed.
+- A source that fails shows the skin's own error dialog, which Video.js gives
+  no way to replace. A YouTube or Vimeo video that fails — private, removed,
+  or not to be embedded — adds an "Open on YouTube" or "Open on Vimeo" link
+  under it.
+- Video.js defines its custom elements only when they aren't, so a host page
+  running Video.js 10 already has them: media uses the host's version. A host
+  with a strict Content Security Policy lets in the inline styles, YouTube's
+  IFrame API script and the sites' frames, and the streams' origins; the guide
   says which.
+- DASH is left out: Video.js marks its `dash-video` experimental and maps none
+  of dash.js's errors, and dash.js would add 130 MB to every host's install.
 
 **Web page** (`"webpage"`) frames a page in an iframe. It isn't registered: a
 host registers `webpageDocument({ canOpen })` with its own rule — its Figma or
@@ -198,9 +212,11 @@ artifact for all. The CLI gains `udoc thumbnail`.
 
 - The "Powered by docMentis" decal: the engine paints it into the canvas, which
   an extension document hides — drawn over the container instead, or none.
-- Media: encrypted (DRM) and live streams, which want the Shaka element and key
+- Media: encrypted (DRM) streams, which want the Shaka element and key
   systems; and over a YouTube video, our controls or YouTube's own — YouTube's
-  developer policies limit what may be laid over its player.
+  developer policies limit what may be laid over its player. Video.js's skin
+  drives it now, YouTube's own controls hidden, as `youtube-video` does by
+  default.
 - A deck's online video: PowerPoint links it from outside the package, where
   `ShapeMedia.data` is unset, so the engine would report the link's URL for
   `MediaPlayer` to play it.
@@ -215,7 +231,7 @@ artifact for all. The CLI gains `udoc thumbnail`.
 registered by `extensionDocuments` or `registerExtensionDocument`;
 `ExtensionDocumentViewer` with `sourceFormat`, `close` and `setTheme`; the
 choice of which opens a source; `head()` over a source read once; the `<div>`
-and the chrome that hides around it; and the license gate on every open.
+and the chrome that hides around it; and the license gate on every open. The
+built-in media document — files, HLS, YouTube and Vimeo on Video.js 10.
 
-**Not built:** the built-in media and web page documents, and thumbnails in
-Node.
+**Not built:** the web page document, DASH, and thumbnails in Node.

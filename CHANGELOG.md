@@ -22,6 +22,14 @@ listed once, by package. Its major and minor version are those of the
   An open is licensed and metered as any other. `OpenOptions.format` now
   takes an extension document's formats too, and `docType` and
   `sourceFormat` are typed to include them.
+- A built-in media document plays video and audio: a file — MP4, M4V, MOV,
+  WebM, MP3, M4A, AAC, WAV, Ogg, Opus or FLAC, by URL, Blob or bytes — an HLS
+  stream, or a YouTube or Vimeo video by its address. It opens as any document
+  does, `docType` `"media"` and `sourceFormat` the format, on Video.js 10's
+  player, which loads only when a media document opens; a file with no picture
+  plays in its audio player. A YouTube or Vimeo video that won't play here
+  offers a link to it on its site. A host with a Content Security Policy
+  allows inline styles, YouTube's IFrame API script and the sites' frames.
 
 #### Changed
 

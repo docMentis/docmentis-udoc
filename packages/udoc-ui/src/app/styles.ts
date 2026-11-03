@@ -2072,6 +2072,54 @@ export const uiStyles = css`
     .udoc-ui-root.udoc-extension-document-open .udoc-ui__viewport-grid {
         visibility: hidden;
     }
+    /* The media document's player, in the extension document's <div>: a video
+   filling it, letterboxed, an audio bar across its middle, the skin's accent
+   the chrome's. The link to a video's own site, when the site won't let it
+   play here, under the skin's error. */
+    .udoc-ui-root .udoc-ui__media-document {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        --media-accent-color: var(--udoc-color-primary);
+        --media-accent-text-color: var(--udoc-color-on-primary);
+    }
+    /* The skin lays out in the area, its wrappers taking no box: Video.js's
+   own sheet leaves the audio player a block, which would shrink to fit it. */
+    .udoc-ui-root .udoc-ui__media-document :is(media-i18n, video-player, audio-player) {
+        display: contents;
+    }
+    .udoc-ui-root .udoc-ui__media-document video-skin {
+        display: block;
+        width: 100%;
+        height: 100%;
+        --media-border-radius: 0;
+    }
+    /* Video.js sizes a plain <video> in its skin, not a stream's or a video
+   site's element. */
+    .udoc-ui-root .udoc-ui__media-document :is(hlsjs-video, youtube-video, vimeo-video) {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+    .udoc-ui-root .udoc-ui__media-document audio-skin {
+        display: block;
+        width: min(640px, 100% - 48px);
+    }
+    .udoc-ui-root .udoc-ui__media-document-site {
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: var(--udoc-color-primary);
+        color: var(--udoc-color-on-primary);
+        font: inherit;
+        text-decoration: none;
+    }
     .udoc-ui-root.udoc-extension-document-open .udoc-floating-toolbar,
     .udoc-ui-root.udoc-extension-document-open .udoc-status-bar,
     .udoc-ui-root.udoc-extension-document-open .udoc-toolbar__left > *,

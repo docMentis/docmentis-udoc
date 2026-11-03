@@ -859,6 +859,10 @@ export interface Messages {
     /** {loaded} / {total} MB */
     "loading.progress": string;
 
+    // Media
+    /** Open on {site} — a YouTube or Vimeo video that won't play here, on its own site */
+    "media.openOnSite": string;
+
     // License notice
     /** Invalid License */
     "license.invalidLicense": string;
