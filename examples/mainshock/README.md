@@ -22,7 +22,9 @@ npm run mainshock  # the backend on 5281, and the pages on http://localhost:5280
 It runs against this checkout's packages: `npm run mainshock` installs
 mainshock's own dependencies when they're missing or out of date, builds any of
 those packages not built yet, and runs `npm run dev` here, which does the rest
-once those are in place.
+once those are in place. The viewer's and the editor's workers carry the
+engine's JavaScript from when they were built: after the engine's rebuilt
+(`just build-wasm` in its checkout), restart mainshock, which builds them again.
 
 `npm run build` then `npm start` serves the built app from the backend alone,
 at http://127.0.0.1:5281.

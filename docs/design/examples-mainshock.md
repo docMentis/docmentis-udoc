@@ -185,7 +185,10 @@ isn't built (one built already, the root's `npm run dev` may be rebuilding),
 and runs its own `npm run dev`. That starts the server under `node --watch`,
 which runs its TypeScript as is, and Vite, which proxies `/api` and `/udoc` to
 it; `npm run build` then `npm start` serves the built frontend from the server,
-on one port.
+on one port. A browser package's worker carries a copy of the engine's glue,
+while the binary is loaded as it is now, so `npm run mainshock` also builds
+again a browser package whose worker is older than the engine's glue: a
+restart after the engine's rebuilt brings them level.
 Its data, in `data/`, is ignored by git, and `npm run mainshock:clear` deletes
 it, with the backend stopped, to start over from the seed.
 
