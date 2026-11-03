@@ -1,13 +1,14 @@
 # UI Extension Document
 
 An extension document is a kind of document the engine doesn't read — video
-and audio from files, streams and video sites, a web page — that the viewer
-and the editor open, view only. A host registers one with
-`extensionDocuments` among the options, or `registerExtensionDocument` on the
-viewer or the editor later. Two ship built in: media, and a web page document
-that frames a URL only when `open` is given `format: "url"`, until a host
-registers one with its own rule. When one opens, the shell hands it a `<div>`
-where the document goes, and it renders itself there.
+and audio from files, streams and video sites, a web page, a Canva design, a
+Google document — that the viewer and the editor open, view only. A host
+registers one with `extensionDocuments` among the options, or
+`registerExtensionDocument` on the viewer or the editor later. Four ship built
+in: media; a web page document that frames a URL only when `open` is given
+`format: "url"`, until a host registers one with its own rule; and Canva and
+Google, which frame a link to one of theirs. When one opens, the shell hands it
+a `<div>` where the document goes, and it renders itself there.
 
 An extension document is not an extension. An extension (`UIExtension`,
 [UI Extension](ui-extension.md)) adds a mode to the shell — edit mode is
@@ -229,10 +230,56 @@ built-in one by its doc type.
   member of `ExtensionDocumentHost`, as a host's own document has no use for
   them. Opened anywhere else, it refuses, `invalidRequest`.
 
+**Canva** (`"canva"`, `canva-document.ts`) and **Google** (`"google"`,
+`google-document.ts`) each frame their service's own read-only page for a link.
+They are two extension documents rather than one, so a host's own `"google"`
+replaces Google and leaves Canva. Each has its rule and no options, so neither
+is exported. The frame and its bar are the web page document's
+(`openFramedPage`), with its `sandbox`, its `allow` and the chrome's words. The
+shell hands that function to each, so a test loads either from `src`, where a
+sibling can't be imported at runtime, and sees what it frames.
+
+| Address                               | `sourceFormat`  | What is framed                  |
+| ------------------------------------- | --------------- | ------------------------------- |
+| `canva.com/design/ID[/TOKEN]/…`       | `canva`         | `/design/ID[/TOKEN]/view?embed` |
+| `docs.google.com/document/d/ID/…`     | `google-docs`   | `/document/d/ID/preview`        |
+| `docs.google.com/spreadsheets/d/ID/…` | `google-sheets` | `/spreadsheets/d/ID/preview`    |
+| `docs.google.com/presentation/d/ID/…` | `google-slides` | `/presentation/d/ID/embed`      |
+
+- `canOpen` knows a link by its address, before anything is fetched, as media
+  knows a video site's. Both are asked ahead of media, whose `canOpen` reads a
+  URL's first bytes, which neither service lets a page read and which would fail
+  the open. Only the ways a link opens a file count: `view`, `watch` and `edit`
+  for Canva; `edit`, `view`, `preview`, `embed`, `present` or none for Google.
+  An `/export` address is no link to a page: `canOpen` says no, and `open`
+  fetches it as a document.
+- A link is rewritten, never framed as given: Google's `/edit` frames with its
+  whole editor, which isn't view only, and Canva refuses a frame on a plain
+  `/view`. The rewrite keeps what opens the file, Canva's share token and
+  Google's `resourcekey`, which some link-shared files need. So `openFramedPage`
+  takes two addresses. The frame loads the embed page; the bar shows and links
+  the address `open` was given, as an embed page alone in a tab is a bare one.
+- Given a `format`, no `canOpen` is asked, so `open` checks for itself and
+  refuses, `unsupported`, what it has no page for: a Blob or bytes, `canva` for
+  an address that isn't a design's, `google-slides` for a Docs link.
+- They open what the reader can already open. A link to nothing shows the
+  service's own error page in the frame, and a Canva design the reader can't see
+  its permission page, with the bar's link still there. The controls are the
+  service's: the chrome has no search, thumbnails, print or download for them,
+  and `setTheme` has nothing to do.
+- `?embed` is the address Canva's own oEmbed endpoint gives, which a browser
+  can't read (no CORS), so the rule rewrites it itself. We found no Google
+  documentation promising `/preview`, so it is behaviour, not a contract.
+- Tests cover the rules, not the services: Cloudflare challenges a headless
+  browser on Canva's pages, which refuses the frame, so `npm run examples` can't
+  open one. A reader it challenges sees the same, with the bar's link. A host
+  with a strict Content Security Policy lets in both services' frames; the guide
+  says which.
+
 ## Thumbnails in Node
 
 An extension document is browser code, so Node gets a thumbnail function for
-each built-in one, outside `UDocNode` — no engine is involved:
+media and the web page document, outside `UDocNode` — no engine is involved:
 
 - media: a frame for a file or a stream, a URL ffmpeg reads directly, by
   ffmpeg's `thumbnail` filter over the first seconds, which passes over a
@@ -262,6 +309,23 @@ artifact for all. The CLI gains `udoc thumbnail`.
 - Whether a thumbnail in Node is metered, and udoc-server: an upload kept as
   its original with no checkpoint, range requests on `original`, which Safari
   plays a video only with, and a thumbnail route.
+- Private Canva and Google files, which the built-in documents leave to a host.
+  A frame relies on the reader's own login: Canva's page recognizes a signed-in
+  session in the frame in Chrome, no private file has been tried on either
+  service, and Safari and Firefox restrict third-party cookies. A host can
+  export one instead and `open` the Blob — for Google the Picker with the
+  `drive.file` scope, then `files.export`, capped at 10 MB; for Canva the Connect
+  API, which needs a server for its confidential OAuth client. But an engine
+  document opens editable in the editor, which has no read-only option, so that
+  isn't view only there.
+- Canva and Google beyond public links in Chrome, all untried: Safari and
+  Firefox; a share token's link to a design the reader can see; Canva's `/edit`
+  links; and a `resourcekey` on a file that needs one. Neither rule knows Canva's
+  short links, or Google's published `/d/e/…/pub` links and `/u/N/` addresses, so
+  those go to the engine and fail; and a link's position, a sheet's `#gid=` or a
+  slide's `#slide=`, isn't carried to the page.
+- Thumbnails in Node for Canva and Google. Canva's oEmbed gives a
+  `thumbnail_url`; Google's is unexplored.
 
 ## Status
 
@@ -273,6 +337,6 @@ choice of which opens a source; `head()` over a source read once; the `<div>`
 and the chrome that hides around it; and the license gate on every open. The
 built-in media document — files, HLS, YouTube and Vimeo on Video.js 10. The
 web page document, built in for `format: "url"`, and `webpageDocument` for a
-host's rule.
+host's rule. The Canva and Google documents.
 
 **Not built:** DASH, and thumbnails in Node.

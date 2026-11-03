@@ -1,14 +1,14 @@
 ---
-description: Open documents the docMentis engine doesn't read, such as video, web pages or a format of your own, in the viewer and the editor by registering an extension document.
+description: Open what the docMentis engine doesn't read, such as video, web pages, Canva designs, Google Docs or a format of your own, in the viewer and the editor, and register an extension document for it.
 ---
 
 # Extension documents
 
 An extension document is a kind of document the docMentis engine doesn't read,
 which the viewer and the editor open anyway. Your code renders it into the
-document area, and the UI around it stays as it is. Two are built in, for video
-and audio and for web pages, and you can register your own for any other kind
-of file.
+document area, and the UI around it stays as it is. Four are built in, for video
+and audio, web pages, Canva designs and Google files, and you can register your
+own for any other kind of file.
 
 An extension document opens view only, in the editor too.
 
@@ -28,15 +28,27 @@ that refuses to be framed leaves the browser's error page in the frame, which
 is why the link always shows. The page follows the UI's theme through its
 `prefers-color-scheme`.
 
+**Canva** and **Google** show a link to a Canva design, or to a Google Docs,
+Sheets or Slides file, on that service's own read-only page, under the same bar.
+`open` knows the link by its address, so it needs no `format`, and an `/edit`
+link opens read-only too. The controls in the page are the service's.
+
+They show what the reader can already open, such as a public or link-shared
+file. A private file depends on the reader's own sign-in reaching the frame,
+which browsers that restrict third-party cookies, such as Safari and Firefox,
+can prevent. To show private files yourself, export them with the service's API
+and pass the result to `open`. That opens a copy in the engine, which people can
+edit in the editor, so use the viewer if it has to stay read-only.
+
 <<< @/snippets/extension-documents/built-in.ts
 
-[Supported formats](./supported-formats#video-audio-and-web-pages) lists the
-files and streams each one opens.
+[Supported formats](./supported-formats#video-audio-web-pages-and-online-documents)
+lists the files and streams each one opens.
 
 If your page has a Content Security Policy, it needs to allow what these load.
 Media needs inline styles, YouTube's IFrame API script, the YouTube and Vimeo
 frames, and the origins your media is served from. A web page needs its origin
-allowed as a frame.
+allowed as a frame, as Canva needs `www.canva.com` and Google `docs.google.com`.
 
 ## How `open` chooses
 
@@ -113,7 +125,8 @@ and still frames any URL given `format: "url"`.
 <<< @/snippets/extension-documents/webpage-rule.ts
 
 To replace the built-in media player with your own, register an extension
-document whose doc type is `"media"`.
+document whose doc type is `"media"`. The same goes for `"canva"` and `"google"`,
+and one with no `formats` whose `canOpen` always answers no turns that one off.
 
 ## While one is open
 

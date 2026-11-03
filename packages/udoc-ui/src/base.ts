@@ -248,10 +248,11 @@ export interface UDocOptions {
     /** Kinds of document the engine doesn't read, which open here view only
      *  — each an {@link ExtensionDocument}, asked in this order ahead of the
      *  engine. {@link UDocBase.registerExtensionDocument} adds more later.
-     *  Default none: the built-in ones alone, asked after any registered — the
-     *  media document, and a `webpageDocument` with no rule, which
-     *  frames a URL only given `format: "url"`. One of a built-in's doc type
-     *  replaces it. */
+     *  Default none: the built-in ones alone, asked after any registered —
+     *  `"canva"` and `"google"`, which frame a link to a Canva design or a
+     *  Google Docs, Sheets or Slides file on that service's read-only page; the
+     *  media document; and a `webpageDocument` with no rule, which frames a URL
+     *  only given `format: "url"`. One of a built-in's doc type replaces it. */
     extensionDocuments?: readonly ExtensionDocument[];
 }
 

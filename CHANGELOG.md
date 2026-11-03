@@ -6,6 +6,21 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Added
+
+- Built-in Canva and Google documents: `open` takes a link to a Canva design,
+  `docType` `"canva"`, or to a Google Docs, Sheets or Slides file, `docType`
+  `"google"` and `sourceFormat` `"google-docs"`, `"google-sheets"` or
+  `"google-slides"`, known by its address, with no `format` and nothing fetched.
+  Each opens view only: it frames the service's own read-only page, for an
+  `/edit` link too, under a bar with the link and "Open in new tab". They show
+  what the reader can already open, and a private file depends on the reader's
+  own sign-in reaching the frame. A host with a Content Security Policy allows
+  `www.canva.com` and `docs.google.com` as frames. Registering an extension
+  document of either doc type replaces that one.
+
 ## [0.8.12] - 2026-11-02
 
 Built on `@docmentis/udoc-wasm` 0.8.15.

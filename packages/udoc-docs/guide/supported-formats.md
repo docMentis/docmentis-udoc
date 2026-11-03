@@ -5,8 +5,9 @@ description: See which files the docMentis viewer and editor open, which of them
 # Supported formats
 
 The viewer and the editor open PDFs, Word, PowerPoint and Excel files and the
-text formats around them, images, video and audio, and web pages. Each opens as
-a _doc type_, which decides the tools the UI offers. Once a document is open,
+text formats around them, images, video and audio, web pages, and links to Canva
+designs and Google files. Each opens as a _doc type_, which decides the tools the
+UI offers. Once a document is open,
 `docType` says which doc type it opened as, and `sourceFormat` which format it
 came from.
 
@@ -39,16 +40,18 @@ the editor edits a format and saves the edits back to it:
 - A `.udoc` package, which `saveToPackage` saves, opens with `open` as the
   document it holds, its `sourceFormat` the format it recorded.
 
-## Video, audio and web pages
+## Video, audio, web pages and online documents
 
 These are extension documents: the browser plays or shows them in the document
-area, not the engine. Two are built in, and you can
+area, not the engine. Four are built in, and you can
 [add your own](./extension-documents).
 
 | Kind            | Sources                                                                                                                                                                    | `sourceFormat`                                               | `docType` | Editing |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------- | ------- |
 | Video and audio | `.mp4`, `.m4v`, `.mov`, `.webm`, `.mp3`, `.m4a`, `.aac`, `.wav`, `.ogg`, `.oga`, `.ogv`, `.opus` and `.flac` files; HLS streams; YouTube and Vimeo videos by their address | `mp4`, `webm`, `mp3` and the rest; `hls`, `youtube`, `vimeo` | `media`   | No      |
 | Web pages       | Any URL, given `format: "url"`                                                                                                                                             | `url`                                                        | `webpage` | No      |
+| Canva designs   | A design's link on `canva.com`                                                                                                                                             | `canva`                                                      | `canva`   | No      |
+| Google files    | A link on `docs.google.com` to a Docs, Sheets or Slides file                                                                                                               | `google-docs`, `google-sheets`, `google-slides`              | `google`  | No      |
 
 ## How a format is recognized
 
@@ -58,7 +61,8 @@ which variant it is), an image, and an HTML file that starts with
 no signature, so it's recognized by its name: a `File`'s name, the last segment
 of a URL's path, or the `filename` option. Video and audio are recognized by a
 YouTube or Vimeo address, then the file's extension, the media type the server
-or the `Blob` declares, and finally the file's first bytes.
+or the `Blob` declares, and finally the file's first bytes. A Canva or Google
+link is recognized by its address, before anything is fetched.
 
 Where none of that can work, as with bytes from an API, name the format with
 the `format` option. It skips detection entirely:
@@ -74,7 +78,7 @@ splits them.
 
 The viewer edits nothing but a PDF's annotations and form fields: it's for
 reading. The editor edits every document the engine opens, in its edit mode.
-Video, audio and web pages open view only in both.
+Video, audio, web pages, and Canva and Google links open view only in both.
 
 Edit mode needs the `editing` feature, which free usage includes and a
 commercial license includes if it lists it. Without it, the editor offers view
@@ -90,6 +94,7 @@ In the viewer, and in the editor's view mode:
 | Spreadsheet            | Sheet tabs, the formula bar, the Normal and Page Layout views, and search.                                                                                                                                         |
 | Image                  | Thumbnails of its pages.                                                                                                                                                                                           |
 | Video, audio, web page | The player or the page, and full screen.                                                                                                                                                                           |
+| Canva, Google          | The service's own read-only page and its controls, and full screen.                                                                                                                                                |
 
 In the editor's edit mode:
 
@@ -101,6 +106,7 @@ In the editor's edit mode:
 | Spreadsheet            | Type values and formulas into cells. Insert, delete, rename, hide, color and move sheets. Cells can't be formatted yet.                                                                                               |
 | Image                  | Rotate, flip, crop and resize it, and draw shapes with text over it. Rotate, delete and move the pages of a multi-page image, and duplicate a TIFF's.                                                                 |
 | Video, audio, web page | Nothing: they open view only.                                                                                                                                                                                         |
+| Canva, Google          | Nothing: they open view only.                                                                                                                                                                                         |
 
 ## Saving
 
@@ -183,5 +189,5 @@ These don't open:
 
 [`@docmentis/udoc-node`](/api/udoc-node/), the `udoc` command line and
 [`@docmentis/udoc-server`](/api/udoc-server/) open, save and export the same
-documents as the viewer and the editor. Video, audio and web pages are the
-browser's, so they don't open there.
+documents as the viewer and the editor. Video, audio, web pages, and Canva and
+Google links are the browser's, so they don't open there.

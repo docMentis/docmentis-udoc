@@ -11,6 +11,9 @@
 // shows. The frame inherits the chrome's `color-scheme`, which a page reads as
 // its `prefers-color-scheme`, so a theme change needs nothing from here.
 //
+// The frame and its bar, `openFramedPage`, are also the Canva and Google
+// documents', which frame a service's page for a link.
+//
 // Nothing here imports a sibling at runtime, so the tests can load it from `src`.
 
 import { UDocError } from "@docmentis/udoc-wasm/error";
@@ -76,7 +79,7 @@ export function webpageDocument(options: WebpageDocumentOptions = {}): Extension
             rule !== undefined && request.url !== undefined && (await rule({ ...request, url: request.url })),
         open: async (container, request, host) => {
             if (request.url === undefined) throw new UDocError("unsupported", "a web page opens from its URL");
-            return openPage(container, request.url, host, wordsOf(host));
+            return openFramedPage(container, { url: request.url, address: request.url, sourceFormat: "url" }, host);
         },
     };
 }
@@ -92,17 +95,28 @@ export function lendChromeWords(host: ExtensionDocumentHost, i18n: I18n): void {
 /** The chrome's words lent with `host`. */
 function wordsOf(host: ExtensionDocumentHost): I18n {
     const words = chromeWords.get(host);
-    if (!words) throw new UDocError("invalidRequest", "a web page document opens in the viewer or the editor");
+    if (!words) throw new UDocError("invalidRequest", "a framed page opens in the viewer or the editor");
     return words;
 }
 
-/** Frame `url` in `container` under its bar, resolving once it loads, or the wait runs out. */
-async function openPage(
+/** What {@link openFramedPage} shows. */
+export interface FramedPage {
+    /** The address the frame loads. */
+    readonly url: string;
+    /** The address the bar shows and links: what `open` was given, which a service's page may not be. */
+    readonly address: string;
+    /** The source format its viewer reports. */
+    readonly sourceFormat: string;
+}
+
+/** Frame `page` in `container` under its bar, resolving once it loads, or the wait runs out. */
+export async function openFramedPage(
     container: HTMLDivElement,
-    url: string,
+    page: FramedPage,
     host: ExtensionDocumentHost,
-    words: I18n,
 ): Promise<ExtensionDocumentViewer> {
+    const words = wordsOf(host);
+    const { url, address: shown, sourceFormat } = page;
     const area = document.createElement("div");
     area.className = "udoc-ui__webpage-document";
     const bar = document.createElement("div");
@@ -110,18 +124,18 @@ async function openPage(
     const address = document.createElement("span");
     address.className = "udoc-ui__webpage-document-address";
     address.dir = "ltr";
-    address.textContent = url;
-    address.title = url;
+    address.textContent = shown;
+    address.title = shown;
     const link = document.createElement("a");
     link.className = "udoc-ui__webpage-document-open";
-    link.href = url;
+    link.href = shown;
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.textContent = words.t("webpage.openInNewTab");
     bar.append(address, link);
     const frame = document.createElement("iframe");
     frame.className = "udoc-ui__webpage-document-frame";
-    frame.title = url;
+    frame.title = shown;
     frame.setAttribute("sandbox", SANDBOX);
     frame.allow = ALLOW;
     const loading = load(frame, host.signal);
@@ -138,7 +152,7 @@ async function openPage(
         throw error;
     }
     return {
-        sourceFormat: "url",
+        sourceFormat,
         close,
         // The page follows the chrome by itself (see the top of the file).
         setTheme: () => {},

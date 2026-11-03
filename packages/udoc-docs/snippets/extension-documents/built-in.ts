@@ -5,5 +5,9 @@ const viewer = await UDocViewer.create(document.getElementById("udoc")!);
 // A video or audio file, a stream, or a YouTube or Vimeo video by its address.
 await viewer.open("https://www.youtube.com/watch?v=VIDEO-ID");
 
+// A Canva design or a Google Docs, Sheets or Slides file by its link.
+await viewer.open("https://www.canva.com/design/DESIGN-ID/view");
+await viewer.open("https://docs.google.com/document/d/FILE-ID/edit");
+
 // A web page, framed: only with `format: "url"`.
 await viewer.open("https://example.com/", { format: "url" });
