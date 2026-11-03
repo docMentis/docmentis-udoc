@@ -96,6 +96,13 @@ export const MenuIcon = () => (
     </Icon>
 );
 
+export const PanelRightIcon = () => (
+    <Icon width="20" height="20">
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M15 4v16" />
+    </Icon>
+);
+
 export const SearchIcon = () => (
     <Icon width="18" height="18">
         <circle cx="11" cy="11" r="7" />

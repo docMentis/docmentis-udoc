@@ -1,7 +1,8 @@
 // A file in the library, under the path to its folder: a card, its title bar
 // the file's name and what the app knows of it, with a menu to rename or
 // delete it for those who manage the library, over the file open in the
-// viewer from udoc-server.
+// viewer from udoc-server, and beside it, unless folded, the app's own panel
+// on the file, its tabs each what a feature knows of it.
 import { Fragment, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
@@ -9,12 +10,23 @@ import { managesLibrary } from "../../../shared/api.ts";
 import type { Asset, Folder } from "../../../shared/api.ts";
 import { ApiError, api } from "../api";
 import { DocumentViewer } from "../DocumentViewer";
-import { formatDate, formatSize, typeLabel } from "../files";
-import { ChevronRightIcon } from "../icons";
+import { formatDate, formatDateTime, formatSize, typeLabel } from "../files";
+import { ChevronRightIcon, PanelRightIcon } from "../icons";
 import { DeleteDialog, NameDialog } from "../LibraryDialogs";
 import { useUser } from "../session";
 import { ActionsMenu, useDocumentTitle } from "../ui";
 import { NotFoundPage } from "./PlaceholderPage";
+
+const PANEL_KEY = "shockwave.file.panel";
+
+/** Whether the side panel is open: unless this browser folded it. */
+function savedPanel(): boolean {
+    try {
+        return localStorage.getItem(PANEL_KEY) !== "folded";
+    } catch {
+        return true;
+    }
+}
 
 export function FilePage() {
     const { assetId } = useParams();
@@ -23,6 +35,7 @@ export function FilePage() {
     const [found, setFound] = useState<{ asset: Asset; path: Folder[] } | null>();
     const [failed, setFailed] = useState(false);
     const [task, setTask] = useState<"rename" | "delete">();
+    const [panel, setPanel] = useState(savedPanel);
 
     useEffect(() => {
         let gone = false;
@@ -52,6 +65,15 @@ export function FilePage() {
     if (!found) return null;
     const { asset, path } = found;
     const parent = path.at(-1);
+
+    function togglePanel() {
+        setPanel(!panel);
+        try {
+            localStorage.setItem(PANEL_KEY, panel ? "folded" : "open");
+        } catch {
+            // Kept for this visit alone.
+        }
+    }
     const item = { kind: "file" as const, id: asset.id, name: asset.name };
 
     return (
@@ -74,6 +96,16 @@ export function FilePage() {
                             on {formatDate(asset.uploadedAt)}
                         </p>
                     </div>
+                    <button
+                        type="button"
+                        className="icon-button"
+                        aria-label="Side panel"
+                        aria-expanded={panel}
+                        aria-controls="document-panel"
+                        onClick={togglePanel}
+                    >
+                        <PanelRightIcon />
+                    </button>
                     {manages && (
                         <ActionsMenu
                             label={`Actions for ${asset.name}`}
@@ -84,8 +116,54 @@ export function FilePage() {
                         />
                     )}
                 </header>
-                <div className="document-viewer">
-                    <DocumentViewer documentId={asset.documentId} />
+                <div className={panel ? "document-body document-body-panel" : "document-body"}>
+                    <div className="document-viewer">
+                        <DocumentViewer documentId={asset.documentId} />
+                    </div>
+                    {panel && (
+                        <aside id="document-panel" className="document-panel" aria-label="Side panel">
+                            <div className="document-tabs" role="tablist">
+                                <button
+                                    type="button"
+                                    role="tab"
+                                    id="document-tab-details"
+                                    aria-selected="true"
+                                    aria-controls="document-tab-panel"
+                                >
+                                    Details
+                                </button>
+                            </div>
+                            <div
+                                id="document-tab-panel"
+                                className="document-tab-panel"
+                                role="tabpanel"
+                                aria-labelledby="document-tab-details"
+                            >
+                                <div className="field">
+                                    <span>Type</span>
+                                    <p className="field-value">{typeLabel(asset.format)}</p>
+                                </div>
+                                <div className="field">
+                                    <span>Size</span>
+                                    <p className="field-value">{formatSize(asset.size)}</p>
+                                </div>
+                                <div className="field">
+                                    <span>Location</span>
+                                    <p className="field-value">
+                                        {["Library", ...path.map((folder) => folder.name)].join(" / ")}
+                                    </p>
+                                </div>
+                                <div className="field">
+                                    <span>Uploaded by</span>
+                                    <p className="field-value">{asset.uploadedBy.name}</p>
+                                </div>
+                                <div className="field">
+                                    <span>Uploaded</span>
+                                    <p className="field-value">{formatDateTime(asset.uploadedAt)}</p>
+                                </div>
+                            </div>
+                        </aside>
+                    )}
                 </div>
             </section>
             {task === "rename" && (

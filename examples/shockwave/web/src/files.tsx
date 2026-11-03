@@ -157,6 +157,13 @@ export function formatDate(time: number): string {
     return DATE.format(time);
 }
 
+const DATE_TIME = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+
+/** A day and its time, in the reader's own way: "Nov 3, 2026, 2:56 PM". */
+export function formatDateTime(time: number): string {
+    return DATE_TIME.format(time);
+}
+
 /** A file's name without its extension: what an upload is named by default. */
 export function baseName(fileName: string): string {
     const dot = fileName.lastIndexOf(".");

@@ -1246,9 +1246,70 @@ input {
     white-space: nowrap;
 }
 
-.document-viewer {
+.document-title-bar .icon-button[aria-expanded="true"] {
+    background: var(--ms-bg);
+    color: var(--ms-text);
+}
+
+/* Under the title bar, the viewer, and with the side panel open, the panel
+   beside it, its tabs in a strip as tall as the viewer's toolbar. */
+.document-body {
+    display: grid;
     flex: 1;
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+}
+
+.document-body-panel {
+    grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.document-viewer {
+    min-width: 0;
     min-height: 0;
     overflow: hidden;
     border-radius: 0 0 calc(var(--ms-radius) - 1px) calc(var(--ms-radius) - 1px);
+}
+
+.document-body-panel .document-viewer {
+    border-bottom-right-radius: 0;
+}
+
+.document-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border-left: 1px solid var(--ms-border);
+}
+
+.document-tabs {
+    display: flex;
+    flex-shrink: 0;
+    gap: 4px;
+    height: 40px;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--ms-border);
+}
+
+.document-tabs [role="tab"] {
+    padding: 0 8px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--ms-muted);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.document-tabs [role="tab"][aria-selected="true"] {
+    border-bottom-color: var(--ms-brand);
+    color: var(--ms-text);
+}
+
+.document-tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    overflow: auto;
 }
