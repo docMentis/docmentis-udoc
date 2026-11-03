@@ -1,7 +1,8 @@
 // The library: `/api/library`, what a folder holds, and `/api/folders` and
 // `/api/assets`, its folders and its files. Everyone at a tenant reads its
 // library, and an admin changes it. A file's document is udoc-server's to
-// keep: an upload is imported into it, and a file deleted is forgotten by it.
+// keep: an upload is imported into it, its first page rendered and kept as
+// its thumbnail, and a file deleted is forgotten by it.
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 
@@ -11,6 +12,7 @@ import { managesLibrary } from "../../shared/api.ts";
 import type { Asset, Folder, FolderListing, User } from "../../shared/api.ts";
 import { Refusal, signedIn } from "../http.ts";
 import type { Udoc } from "../udoc.ts";
+import { keepThumbnail, thumbnailPath } from "./thumbnails.ts";
 
 /** The largest upload: udoc-server's own limit. */
 const MAX_UPLOAD_BYTES = 256 * 1024 * 1024;
@@ -37,10 +39,17 @@ interface AssetRow {
     uploaded_by: string;
     uploader_name: string;
     uploaded_at: number;
+    /** 1 for a document kept as having no thumbnail; one not rendered yet is rendered when asked for. */
+    no_thumbnail: number;
 }
 
 const ASSET_COLUMNS = `assets.id, assets.name, assets.folder_id, assets.format, assets.size,
-    assets.document_id, assets.uploaded_by, users.name AS uploader_name, assets.uploaded_at`;
+    assets.document_id, assets.uploaded_by, users.name AS uploader_name, assets.uploaded_at,
+    thumbnails.document_id IS NOT NULL AND thumbnails.png IS NULL AS no_thumbnail`;
+
+/** The assets, with their uploaders and their thumbnails. */
+const ASSETS = `assets JOIN users ON users.id = assets.uploaded_by
+    LEFT JOIN thumbnails ON thumbnails.document_id = assets.document_id`;
 
 function folderOfRow({ id, name, parent_id: parentId }: FolderRow): Folder {
     return { id, name, parentId };
@@ -54,6 +63,7 @@ function assetOfRow(row: AssetRow): Asset {
         format: row.format,
         size: row.size,
         documentId: row.document_id,
+        thumbnail: row.no_thumbnail ? null : thumbnailPath(row.document_id),
         uploadedBy: { id: row.uploaded_by, name: row.uploader_name },
         uploadedAt: row.uploaded_at,
     };
@@ -120,7 +130,7 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
     function assetOf(user: User, id: string): Asset {
         const row = db
             .prepare(
-                `SELECT ${ASSET_COLUMNS} FROM assets JOIN users ON users.id = assets.uploaded_by
+                `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
                 WHERE assets.id = ? AND assets.tenant_id = ?`,
             )
             .get(id, user.tenant.id) as AssetRow | undefined;
@@ -141,7 +151,7 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
             .all(user.tenant.id, folderId) as unknown as FolderRow[];
         const assets = db
             .prepare(
-                `SELECT ${ASSET_COLUMNS} FROM assets JOIN users ON users.id = assets.uploaded_by
+                `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
                 WHERE assets.tenant_id = ? AND assets.folder_id IS ? ORDER BY assets.name COLLATE NOCASE`,
             )
             .all(user.tenant.id, folderId) as unknown as AssetRow[];
@@ -195,8 +205,9 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
     /**
      * Upload a file into folder `?folder=`, or with none, the top, as
      * `?name=`: the body is its bytes, as `application/octet-stream`.
-     * udoc-server imports it: `201 { asset }`, or udoc-server's failure when
-     * it doesn't read it.
+     * udoc-server imports it, and renders its first page, kept as its
+     * thumbnail: `201 { asset }`, or udoc-server's failure when it doesn't
+     * read it.
      */
     app.post<{ Querystring: { folder?: string; name?: string }; Body: unknown }>(
         "/api/assets",
@@ -216,6 +227,7 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 format: document.format,
                 size: bytes.length,
                 documentId: document.id,
+                thumbnail: thumbnailPath(document.id),
                 uploadedBy: { id: user.id, name: user.name },
                 uploadedAt: Date.now(),
             };
@@ -238,6 +250,12 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 // Its folder deleted meanwhile, say: no asset, so no document.
                 await udoc.deleteDocument(document.id);
                 throw error;
+            }
+            try {
+                if (!(await keepThumbnail(db, udoc, document.id))) asset.thumbnail = null;
+            } catch (error) {
+                // The file is kept all the same; its thumbnail is rendered when it's asked for.
+                request.log.warn(error, "a thumbnail wasn't rendered");
             }
             return reply.code(201).send({ asset });
         },

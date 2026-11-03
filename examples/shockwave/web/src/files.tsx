@@ -31,26 +31,19 @@ export function FileBadge({ format }: { format: string }) {
 }
 
 /**
- * The scale a thumbnail is rendered at, in pixels per point: a letter page
- * 306 pixels wide, a 16:9 slide 480, sharp on a card at twice the pixels.
- */
-const THUMBNAIL_SCALE = 0.5;
-
-/**
- * A file's first page, rendered by udoc-server through the gate; a large
- * badge of its type while it can't be, as for a workbook, whose first page
- * is all of its first sheet (GAPS.md).
+ * A file's first page, kept by the backend; a large badge of its type for a
+ * file with none, as a workbook, whose first page is all of its first sheet
+ * (GAPS.md).
  */
 export function Thumbnail({ asset }: { asset: Asset }) {
     const [state, setState] = useState<"loading" | "shown" | "failed">("loading");
-    const source = `/udoc/documents/${encodeURIComponent(asset.documentId)}/layout/pages/0.png?scale=${THUMBNAIL_SCALE}`;
     return (
         <div className="thumbnail">
-            {state === "failed" ? (
+            {state === "failed" || !asset.thumbnail ? (
                 <FileBadge format={asset.format} />
             ) : (
                 <img
-                    src={source}
+                    src={asset.thumbnail}
                     alt=""
                     loading="lazy"
                     className={state === "shown" ? "thumbnail-shown" : undefined}

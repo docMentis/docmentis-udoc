@@ -47,6 +47,12 @@ export interface Udoc {
     importDocument(bytes: Uint8Array): Promise<{ id: string; format: string }>;
     /** Forget document `id`; one udoc-server doesn't keep is forgotten already. */
     deleteDocument(id: string): Promise<void>;
+    /**
+     * Document `id`'s first page as a PNG, `scale` pixels to a point; `null`
+     * for one udoc-server turns down, as a workbook's, all of its first sheet
+     * (GAPS.md).
+     */
+    renderFirstPage(id: string, scale: number): Promise<Uint8Array | null>;
     close(): Promise<void>;
 }
 
@@ -136,6 +142,17 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
                 await ask("DELETE", `/documents/${encodeURIComponent(id)}`);
             } catch (error) {
                 if (!(error instanceof UdocFailure && error.status === 404)) throw error;
+            }
+        },
+
+        async renderFirstPage(id, scale) {
+            try {
+                const page = await ask("GET", `/documents/${encodeURIComponent(id)}/layout/pages/0.png?scale=${scale}`);
+                return new Uint8Array(await page.arrayBuffer());
+            } catch (error) {
+                // A page it won't render is the request's fault; its own failing isn't.
+                if (error instanceof UdocFailure && error.status < 500) return null;
+                throw error;
             }
         },
 

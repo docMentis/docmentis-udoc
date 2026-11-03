@@ -14,6 +14,7 @@ import { answerFailure } from "./http.ts";
 import { libraryRoutes } from "./routes/library.ts";
 import { sessionRoutes } from "./routes/session.ts";
 import { tenantRoutes } from "./routes/tenants.ts";
+import { thumbnailRoutes } from "./routes/thumbnails.ts";
 import { seed } from "./seed.ts";
 import { createUdoc } from "./udoc.ts";
 
@@ -42,6 +43,7 @@ app.setErrorHandler(answerFailure);
 sessionRoutes(app, db);
 tenantRoutes(app, db);
 libraryRoutes(app, db, udoc);
+thumbnailRoutes(app, db, udoc);
 if (config.webDir) {
     await app.register(fastifyStatic, { root: config.webDir });
     // Any other page is the frontend's to route.

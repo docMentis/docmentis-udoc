@@ -44,13 +44,20 @@ schedule's is 1.47 million points wide, so its PNG is refused, "output width
 `layout/pages.pdf` exports aren't rendered one at a time, and no route
 renders a part of a page.
 
-**Workaround.** A workbook's card shows its type's badge in place of a
-thumbnail.
+**Workaround.** A workbook is kept as having no thumbnail, and its card
+shows its type's badge.
 
 ## A page's image is rendered again on each request
 
-**Seen.** udoc-server answers a page's image with no `Cache-Control`, `ETag`
-or `Last-Modified`, so the browser asks for every thumbnail again each time
-the grid shows it. The first answer for a document took 0.8 to 1.3 s, which
-opens it; later ones, while udoc-server kept it open, 5 to 25 ms. A grid of
-documents udoc-server has let go opens each of them again.
+**Needed.** A file's thumbnail, shown at once each time the grid shows the
+file.
+
+**Offered.** udoc-server renders a page's image on each request, and answers
+with no `Cache-Control`, `ETag` or `Last-Modified`, so a browser asks again
+each time. The first answer for a document took 0.8 to 1.3 s, which opens it;
+later ones, while udoc-server kept it open, 5 to 25 ms.
+
+**Workaround.** The backend renders a file's first page once, on upload, or
+for a file uploaded before, when it's first asked for; keeps it in its
+database; and serves it from `/api/thumbnails/:documentId`, for a browser to
+keep for good (`server/routes/thumbnails.ts`).

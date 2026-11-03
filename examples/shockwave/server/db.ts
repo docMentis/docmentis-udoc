@@ -1,5 +1,5 @@
-// The app's data, in SQLite: tenants and their logos, their users, and the
-// users' sessions.
+// The app's data, in SQLite: tenants and their logos, their users, the users'
+// sessions, and the library: its folders, its files and their thumbnails.
 import { DatabaseSync } from "node:sqlite";
 
 /**
@@ -77,6 +77,14 @@ const MIGRATIONS = [
         uploaded_at INTEGER NOT NULL
     );
     CREATE INDEX assets_by_folder ON assets (tenant_id, folder_id);
+    `,
+    // A file's thumbnail: its document's first page, as a PNG, rendered once
+    // and kept; \`png\` NULL for a document udoc-server can't render it of.
+    `
+    CREATE TABLE thumbnails (
+        document_id TEXT PRIMARY KEY REFERENCES assets (document_id) ON DELETE CASCADE,
+        png BLOB
+    );
     `,
 ];
 

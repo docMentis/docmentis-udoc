@@ -200,7 +200,8 @@ udoc-server with `createUDocServer` over a `DirectoryDocumentStore`, mounted at
 `/udoc` (`basePath`) on its own HTTP server, and it keeps every document,
 renders its pages and serves it part by part and for collaboration. SQLite,
 Node's own `node:sqlite`, keeps what the app adds: tenants, users, sessions, and
-an asset for each document, naming its tenant and its udoc document id. No
+an asset for each document, naming its tenant and its udoc document id, and
+its first page as a thumbnail, rendered by udoc-server once, on upload. No
 document is kept twice.
 
 **The gate.** udoc-server has no end-user authentication, and its ids are

@@ -53,6 +53,8 @@ export interface Asset {
     size: number;
     /** The document udoc-server keeps it as, opened from `/udoc/documents/:documentId/package`. */
     documentId: string;
+    /** Where its first page is, for an `<img>`; `null` when it has none, as a workbook. */
+    thumbnail: string | null;
     uploadedBy: { id: string; name: string };
     /** When it was uploaded, in milliseconds since the epoch. */
     uploadedAt: number;
