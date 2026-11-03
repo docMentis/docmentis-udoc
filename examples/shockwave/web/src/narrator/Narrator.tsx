@@ -3,15 +3,13 @@
 // the window's right edge, and folds and unfolds a panel that pushes the app
 // narrower. When something's new while the panel is folded, the tab says so as
 // the viewer chose: not at all, with a dot, or with the dot and a flash of the
-// tab and the edge; the dot and the flash last until the panel unfolds.
+// tab and the edge; the dot and the flash last until the panel unfolds, or
+// what's new is gone.
 //
 // On the sign-in page, the panel offers to sign in as each persona, through
 // the app's own form: the narrator fills it in and presses its button, as a
-// visitor would. It knows the app's pages and forms; the app knows nothing of
-// it.
-//
-// A mockup so far: something new arrives two seconds after the page loads, to
-// show how it's announced.
+// visitor would. Those offers are new from the moment the page shows, and go
+// with it. It knows the app's pages and forms; the app knows nothing of it.
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 
@@ -88,15 +86,13 @@ export function Narrator() {
         document.head.append(font);
     }, []);
 
-    // The mockup's arrival. With the panel unfolded, it's simply there.
+    // The sign-in page's offers, new as it shows and gone as it goes. With the
+    // panel unfolded, they're simply there.
     useEffect(() => {
-        const arrival = setTimeout(() => {
-            if (now.current.open || now.current.announce === "off") return;
-            setUnseen(true);
-            if (now.current.announce === "flash") setFlashing(true);
-        }, 2000);
-        return () => clearTimeout(arrival);
-    }, []);
+        const news = pathname === "/sign-in" && !now.current.open && now.current.announce !== "off";
+        setUnseen(news);
+        setFlashing(news && now.current.announce === "flash");
+    }, [pathname]);
 
     function toggle() {
         setOpen(!open);

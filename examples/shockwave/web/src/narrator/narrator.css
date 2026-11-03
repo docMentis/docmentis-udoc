@@ -160,13 +160,14 @@
     font-size: 12px;
 }
 
-/* A setting chosen once, in one row at the panel's foot, its choices beside
-   its label: what the guide tells goes above. */
+/* A setting chosen once, in one row centered at the panel's foot, its choices
+   beside its label: what the guide tells goes above. */
 .narrator-setting {
     grid-row: 3;
     align-self: end;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     padding: 10px 16px;
     border-top: 1px solid var(--dm-line);
