@@ -4432,8 +4432,8 @@ export const uiStyles = css`
         color: var(--udoc-color-on-surface-variant);
     }
 
-    /* A checkbox drawn as a switch: the developer options' and Set Up Slide
-   Show's. */
+    /* A checkbox drawn as a switch: the developer options' and Set Up
+   Presentation's. */
     .udoc-ui-root .udoc-switch {
         appearance: none;
         -webkit-appearance: none;
@@ -5171,7 +5171,7 @@ export const uiStyles = css`
         outline-offset: 2px;
     }
 
-    /* === Set Up Slide Show (SlideShowSetupModal) — how a slide show plays === */
+    /* === Set Up Presentation (SlideShowSetupModal) — how a slide show plays === */
     .udoc-ui-root .udoc-slide-show-setup {
         position: absolute;
         inset: 0;

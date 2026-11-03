@@ -349,7 +349,7 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
             nameButton(sidePanelBtn, i18n.t(slice.sidePanelOpen ? "toolbar.hideSidePanel" : "toolbar.showSidePanel"));
 
             // Undo/redo: visible where the mode has a tab of edits — any but
-            // the View tab and a deck's Slide Show, whose settings aren't on
+            // the View tab and the Present tab, whose settings aren't on
             // the history: in view mode a PDF's Annotate tab alone, so another
             // doc type's viewer has none. Greyed when the respective history
             // stack is empty (or no doc is ready yet).

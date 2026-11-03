@@ -1,7 +1,8 @@
 // A deck's presenter view, as PowerPoint's: what the presenter sees while a
 // slide show plays on the audience's screen, over the whole UI — the slide as
 // they see it, the slide after it, the slide's notes, a timer and the time,
-// and the buttons that step the show and end it. A line between each two of
+// and the buttons that step the show and end it. A PDF's shows its pages as
+// its slides, and no notes. A line between each two of
 // its panes moves at a drag, resizing them, where the view keeps it from one
 // show to the next.
 //
@@ -21,6 +22,7 @@ import type { ContentPadding, PageGap, PageViewsFrame, RgbColor, Size } from "..
 import type { ViewerClient } from "../../worker/ViewerClient.js";
 import type { WorkerClient } from "../../worker/WorkerClient.js";
 import type { I18n } from "../i18n/index.js";
+import type { DocProfile } from "../profiles.js";
 import {
     ICON_CHEVRON_LEFT,
     ICON_CHEVRON_RIGHT,
@@ -71,6 +73,8 @@ export interface PresenterDeck {
      *  from, and of its notes text — `-1` for none. */
     slidesPlane: number;
     notesPlane: number;
+    /** What the view calls one of its slides: a PDF's are pages. */
+    pageNoun: DocProfile["pageNoun"];
     /** The screen's CSS px per inch, which 100% is measured against. */
     dpi: number;
 }
@@ -141,7 +145,6 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     nextPane.className = "udoc-ui__presenter-pane";
     const nextHeading = document.createElement("div");
     nextHeading.className = "udoc-ui__presenter-heading";
-    nextHeading.textContent = i18n.t("presenter.nextSlide");
     const nextBox = document.createElement("div");
     nextBox.className = "udoc-ui__presenter-next";
     const nextCanvas = document.createElement("canvas");
@@ -235,6 +238,7 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         close();
         deck = shown;
         actions = todo;
+        nextHeading.textContent = i18n.t(shown.pageNoun === "Slide" ? "presenter.nextSlide" : "presenter.nextPage");
         host.appendChild(el);
         el.focus({ preventScroll: true });
 
@@ -269,7 +273,10 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         const was = position;
         position = at;
         if (!deck) return;
-        counter.textContent = i18n.t("presenter.slideOf", { slide: at.slide + 1, count: deck.slideCount });
+        counter.textContent =
+            deck.pageNoun === "Slide"
+                ? i18n.t("presenter.slideOf", { slide: at.slide + 1, count: deck.slideCount })
+                : i18n.t("presenter.pageOf", { page: at.slide + 1, count: deck.slideCount });
         slideEnd.hidden = !at.ended;
         renderNext();
         if (was?.slide !== at.slide) {
@@ -476,7 +483,13 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
                 if (generation === nextGeneration) {
                     const context = nextCanvas.getContext("2d");
                     Object.assign(nextCanvas, { width: picture.width, height: picture.height });
-                    context?.drawImage(picture, 0, 0);
+                    if (context) {
+                        // On white paper: a PDF's page is clear wherever it
+                        // paints nothing.
+                        context.fillStyle = "#fff";
+                        context.fillRect(0, 0, picture.width, picture.height);
+                        context.drawImage(picture, 0, 0);
+                    }
                 }
                 picture.close();
             })

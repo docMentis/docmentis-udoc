@@ -17,6 +17,7 @@ import type { Store } from "../framework/index.js";
 import type { Action } from "./actions.js";
 import type { Shortcut } from "./components/controls.js";
 import { annotationFormat } from "./annotations.js";
+import { profileFor } from "./profiles.js";
 import type { AnnotationFormat, AnnotationStyleChange } from "./annotations.js";
 import type { Message, MessageKey } from "./i18n/index.js";
 import { STANDARD_COLORS } from "./components/PaintPanel.js";
@@ -612,7 +613,7 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  *   extension's that its own code runs (New Slide, Insert ▸ Image). `cluster`
  *   bunches it as a `control`'s does: the Shape tab's Group and Ungroup. And
  *   `current`, when set, is the face its button shows for the state, as a
- *   `menu`'s: the Slide Show tab's Preview shows Stop while a preview plays.
+ *   `menu`'s: the Present tab's Preview shows Stop while a preview plays.
  * - `armPicker` → opens a sub-picker of `options` before arming: the Annotate
  *   tab's shapes or its standard stamps, an extension's own.
  * - `armGallery` → `armPicker` for a picker too long for a list: a panel of
@@ -870,10 +871,10 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
     },
 
-    // Slide Show tab — a deck's slide show, the deck played full screen a
-    // slide at a time as PowerPoint's Slide Show plays it: from the first
-    // slide it shows, or from the slide shown, which the Slide Master view has
-    // none of.
+    // Present tab — a deck's slide show, the deck played full screen a slide
+    // at a time as PowerPoint's Slide Show plays it, or a PDF's pages played
+    // alike: from the first slide it shows, or from the slide shown, which the
+    // Slide Master view has none of — a PDF's From Current Page.
     slideShowFromBeginning: {
         id: "slideShowFromBeginning",
         label: "command.slideShowFromBeginning",
@@ -892,11 +893,18 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         run: {
             kind: "action",
             press: (store) => store.dispatch({ type: "START_SLIDE_SHOW", slide: store.getState().pageIndex }),
+            current: (state) => ({
+                icon: ICON_SLIDE_SHOW_FROM_CURRENT,
+                label:
+                    profileFor(state.docType).pageNoun === "Slide"
+                        ? "command.slideShowFromCurrent"
+                        : "command.slideShowFromCurrentPage",
+            }),
         },
         enabledWhen: (c) => c.ready && c.presentationView !== "slideMaster",
     },
     // The show from its first slide with PowerPoint's presenter view, in a
-    // window of its own, whatever Set Up Slide Show says of it.
+    // window of its own, whatever Set Up Presentation says of it.
     presenterView: {
         id: "presenterView",
         label: "command.presenterView",
@@ -922,7 +930,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: whenReady,
     },
 
-    // Slide Show tab — a deck's slide shown, previewed where it shows as
+    // Present tab — a deck's slide shown, previewed where it shows as
     // PowerPoint's Preview plays it: its transition from the slide before,
     // then its animations one after another — in Normal view, a slide at a
     // time, which it switches to first. Stop while one plays. Greyed on a

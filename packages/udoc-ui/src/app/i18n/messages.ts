@@ -113,7 +113,7 @@ export interface Messages {
     // Ribbon tabs
     /** Annotate */
     "ribbon.annotate": string;
-    /** Slide Show */
+    /** Present — the tab that plays a deck or a PDF over the screen */
     "ribbon.slideShow": string;
     /** View */
     "ribbon.view": string;
@@ -177,11 +177,14 @@ export interface Messages {
     "command.slideShowFromBeginning": string;
     /** From Current Slide — a deck's slide show, from the slide shown */
     "command.slideShowFromCurrent": string;
+    /** From Current Page — a PDF's presentation, from the page shown */
+    "command.slideShowFromCurrentPage": string;
     /** Presenter View — a deck's slide show, from the first slide it shows,
      *  with the presenter view in a window of its own */
     "command.presenterView": string;
-    /** Set Up Slide Show — how a deck's slide show plays: with the presenter
-     *  view or not, full screen or over the UI, and on which screen */
+    /** Set Up Presentation — how a deck's or a PDF's presentation plays: with
+     *  the presenter view or not, full screen or over the UI, and on which
+     *  screen */
     "command.setUpSlideShow": string;
     /** Preview */
     "command.previewSlide": string;
@@ -480,11 +483,12 @@ export interface Messages {
     /** Resize notes */
     "notes.resizeHandle": string;
 
-    // Slide show
-    /** End of slide show, click to exit. — over the black past a slide show's last slide */
+    // Presentation
+    /** End of presentation, click to exit. — over the black past a
+     *  presentation's last slide or page */
     "slideShow.end": string;
-    /** Slide Show — what the screen a slide show fills shows, and the title
-     *  of a window of its own it plays in */
+    /** Presentation — what the screen a presentation fills shows, and the
+     *  title of a window of its own it plays in */
     "slideShow.window": string;
 
     // Presenter view
@@ -492,6 +496,8 @@ export interface Messages {
     "presenter.label": string;
     /** Slide {slide} of {count} */
     "presenter.slideOf": string;
+    /** Page {page} of {count} — a PDF's */
+    "presenter.pageOf": string;
     /** Previous — the step or slide before */
     "presenter.previous": string;
     /** Next — the next step or slide */
@@ -500,7 +506,9 @@ export interface Messages {
     "presenter.endShow": string;
     /** Next Slide — over the picture of the slide the show goes to next */
     "presenter.nextSlide": string;
-    /** End of slide show — where the next slide would be, after the last */
+    /** Next Page — a PDF's, over the picture of the page the show goes to next */
+    "presenter.nextPage": string;
+    /** End of presentation — where the next slide or page would be, after the last */
     "presenter.endOfShow": string;
     /** Pause Timer */
     "presenter.pauseTimer": string;
@@ -516,17 +524,17 @@ export interface Messages {
     /** Make the Text Smaller — the notes' */
     "presenter.smallerText": string;
 
-    // Set Up Slide Show
+    // Set Up Presentation
     /** Screens — the dialog's screens, which one is picked from */
     "screens.label": string;
     /** Only one screen is connected. */
     "screens.oneScreen": string;
-    /** Display on — the screen a slide show that fills the screen fills */
+    /** Display on — the screen a presentation that fills the screen fills */
     "slideShowSetup.displayOn": string;
     /** Set Up Screens — let the UI place windows on each of the computer's
-     *  screens, so a slide show fills the one chosen at a press */
+     *  screens, so a presentation fills the one chosen at a press */
     "slideShowSetup.setUpScreens": string;
-    /** Let the browser place windows on your screens to choose the one the slide show fills. */
+    /** Let the browser place windows on your screens to choose the one the presentation fills. */
     "slideShowSetup.screensMessage": string;
     /** The browser didn't allow it. Allow window management in the site's settings, then try again. */
     "slideShowSetup.screensRefused": string;

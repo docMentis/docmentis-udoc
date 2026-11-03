@@ -63,7 +63,7 @@ export const es: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Anotar",
-    "ribbon.slideShow": "Presentación con diapositivas",
+    "ribbon.slideShow": "Presentar",
     "ribbon.view": "Vista",
 
     // Ribbon
@@ -97,8 +97,9 @@ export const es: Messages = {
     "command.notes": "Notas",
     "command.slideShowFromBeginning": "Desde el principio",
     "command.slideShowFromCurrent": "Desde la diapositiva actual",
+    "command.slideShowFromCurrentPage": "Desde la página actual",
     "command.presenterView": "Vista Moderador",
-    "command.setUpSlideShow": "Configurar presentación con diapositivas",
+    "command.setUpSlideShow": "Configurar presentación",
     "command.previewSlide": "Vista previa",
     "command.stopSlidePreview": "Detener",
     "command.singleScroll": "Individual",
@@ -258,18 +259,20 @@ export const es: Messages = {
     // Notes pane
     "notes.resizeHandle": "Cambiar el tamaño de las notas",
 
-    // Slide show
-    "slideShow.end": "Fin de la presentación con diapositivas. Haga clic para salir.",
-    "slideShow.window": "Presentación con diapositivas",
+    // Presentation
+    "slideShow.end": "Fin de la presentación. Haga clic para salir.",
+    "slideShow.window": "Presentación",
 
     // Presenter view
     "presenter.label": "Vista Moderador",
     "presenter.slideOf": "Diapositiva {slide} de {count}",
+    "presenter.pageOf": "Página {page} de {count}",
     "presenter.previous": "Anterior",
     "presenter.next": "Siguiente",
     "presenter.endShow": "Finalizar presentación",
     "presenter.nextSlide": "Diapositiva siguiente",
-    "presenter.endOfShow": "Fin de la presentación con diapositivas",
+    "presenter.nextPage": "Página siguiente",
+    "presenter.endOfShow": "Fin de la presentación",
     "presenter.pauseTimer": "Pausar el temporizador",
     "presenter.resumeTimer": "Reanudar el temporizador",
     "presenter.restartTimer": "Reiniciar el temporizador",
@@ -277,7 +280,7 @@ export const es: Messages = {
     "presenter.largerText": "Aumentar el tamaño del texto",
     "presenter.smallerText": "Reducir el tamaño del texto",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "Pantallas",
     "screens.oneScreen": "Solo hay una pantalla conectada.",
     "slideShowSetup.displayOn": "Mostrar en",

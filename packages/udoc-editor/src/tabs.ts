@@ -7,7 +7,7 @@ import {
     allowsTableEdit,
     allowsTextEdit,
     ANNOTATE_TAB,
-    SLIDE_SHOW_TAB,
+    presentTab,
     viewTab,
 } from "@docmentis/udoc-ui/internal";
 import type { CommandId, SelectionCapabilities, ToolbarTab } from "@docmentis/udoc-ui/internal";
@@ -243,21 +243,22 @@ function editViewTab(docType: UDocType): EditTab {
 const DEFAULT_TABS: readonly EditTab[] = [];
 
 /** The portable (PDF) strip: its own Insert, then Object (the page's content
- *  objects) and Annotate, but no Text tab, and its View last. */
+ *  objects) and Annotate, but no Text tab, then Present, and its View last. */
 const PORTABLE_TABS: readonly EditTab[] = [
     PORTABLE_INSERT_TAB,
     OBJECT_TAB,
     PORTABLE_ANNOTATE_TAB,
+    presentTab("portable"),
     editViewTab("portable"),
 ];
 
 /** The presentation strip: its own Insert, then Text (character formatting)
- *  and Shape (free-floating graphics), then Slide Show, and its View last. */
+ *  and Shape (free-floating graphics), then Present, and its View last. */
 const PRESENTATION_TABS: readonly EditTab[] = [
     PRESENTATION_INSERT_TAB,
     PRESENTATION_TEXT_TAB,
     SHAPE_TAB,
-    SLIDE_SHOW_TAB,
+    presentTab("presentation"),
     editViewTab("presentation"),
 ];
 

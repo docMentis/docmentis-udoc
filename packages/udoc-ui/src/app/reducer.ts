@@ -14,7 +14,7 @@ import {
     viewDpi,
     viewOfPlane,
 } from "./state.js";
-import { profileDisabledPanels, selectionTab, tabsFor } from "./profiles.js";
+import { profileDisabledPanels, profileFor, selectionTab, tabsFor } from "./profiles.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
 import { visibleSpan } from "./components/Scrollbar.js";
 import { defaultScrollModeForDocType } from "../worker/protocol.js";
@@ -369,9 +369,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return state.slidePreviewing ? { ...state, slidePreviewing: false } : state;
 
         case "START_SLIDE_SHOW":
-            // A deck's alone, once it is open; it takes the place of a preview
-            // playing.
-            if (state.status !== "ready" || state.docType !== "presentation") return state;
+            // A deck's or a PDF's, once it is open; it takes the place of a
+            // preview playing.
+            if (state.status !== "ready" || !profileFor(state.docType).presentable) return state;
             return {
                 ...state,
                 slideShowRequest: {

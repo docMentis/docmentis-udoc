@@ -63,7 +63,7 @@ export const de: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Kommentieren",
-    "ribbon.slideShow": "Bildschirmpräsentation",
+    "ribbon.slideShow": "Präsentieren",
     "ribbon.view": "Ansicht",
 
     // Ribbon
@@ -97,8 +97,9 @@ export const de: Messages = {
     "command.notes": "Notizen",
     "command.slideShowFromBeginning": "Von Beginn an",
     "command.slideShowFromCurrent": "Ab aktueller Folie",
+    "command.slideShowFromCurrentPage": "Ab aktueller Seite",
     "command.presenterView": "Referentenansicht",
-    "command.setUpSlideShow": "Bildschirmpräsentation einrichten",
+    "command.setUpSlideShow": "Präsentation einrichten",
     "command.previewSlide": "Vorschau",
     "command.stopSlidePreview": "Beenden",
     "command.singleScroll": "Einzeln",
@@ -258,18 +259,20 @@ export const de: Messages = {
     // Notes pane
     "notes.resizeHandle": "Größe der Notizen ändern",
 
-    // Slide show
-    "slideShow.end": "Ende der Bildschirmpräsentation. Zum Beenden klicken.",
-    "slideShow.window": "Bildschirmpräsentation",
+    // Presentation
+    "slideShow.end": "Ende der Präsentation. Zum Beenden klicken.",
+    "slideShow.window": "Präsentation",
 
     // Presenter view
     "presenter.label": "Referentenansicht",
     "presenter.slideOf": "Folie {slide} von {count}",
+    "presenter.pageOf": "Seite {page} von {count}",
     "presenter.previous": "Zurück",
     "presenter.next": "Weiter",
     "presenter.endShow": "Präsentation beenden",
     "presenter.nextSlide": "Nächste Folie",
-    "presenter.endOfShow": "Ende der Bildschirmpräsentation",
+    "presenter.nextPage": "Nächste Seite",
+    "presenter.endOfShow": "Ende der Präsentation",
     "presenter.pauseTimer": "Zeitgeber anhalten",
     "presenter.resumeTimer": "Zeitgeber fortsetzen",
     "presenter.restartTimer": "Zeitgeber neu starten",
@@ -277,13 +280,13 @@ export const de: Messages = {
     "presenter.largerText": "Text vergrößern",
     "presenter.smallerText": "Text verkleinern",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "Bildschirme",
     "screens.oneScreen": "Es ist nur ein Bildschirm angeschlossen.",
     "slideShowSetup.displayOn": "Anzeigen auf",
     "slideShowSetup.setUpScreens": "Bildschirme einrichten",
     "slideShowSetup.screensMessage":
-        "Erlauben Sie dem Browser, Fenster auf Ihren Bildschirmen zu platzieren, um den Bildschirm für die Bildschirmpräsentation auszuwählen.",
+        "Erlauben Sie dem Browser, Fenster auf Ihren Bildschirmen zu platzieren, um den Bildschirm für die Präsentation auszuwählen.",
     "slideShowSetup.screensRefused":
         "Der Browser hat es nicht erlaubt. Erlauben Sie die Fensterverwaltung in den Website-Einstellungen und versuchen Sie es erneut.",
 

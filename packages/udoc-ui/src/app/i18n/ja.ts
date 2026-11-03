@@ -63,7 +63,7 @@ export const ja: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "注釈",
-    "ribbon.slideShow": "スライド ショー",
+    "ribbon.slideShow": "発表",
     "ribbon.view": "表示",
 
     // Ribbon
@@ -97,8 +97,9 @@ export const ja: Messages = {
     "command.notes": "ノート",
     "command.slideShowFromBeginning": "最初から",
     "command.slideShowFromCurrent": "現在のスライドから",
+    "command.slideShowFromCurrentPage": "現在のページから",
     "command.presenterView": "発表者ツール",
-    "command.setUpSlideShow": "スライド ショーの設定",
+    "command.setUpSlideShow": "発表の設定",
     "command.previewSlide": "プレビュー",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "単一",
@@ -258,18 +259,20 @@ export const ja: Messages = {
     // Notes pane
     "notes.resizeHandle": "ノートのサイズ変更",
 
-    // Slide show
-    "slideShow.end": "スライド ショーの最後です。クリックすると終了します。",
-    "slideShow.window": "スライド ショー",
+    // Presentation
+    "slideShow.end": "発表の最後です。クリックすると終了します。",
+    "slideShow.window": "発表",
 
     // Presenter view
     "presenter.label": "発表者ツール",
     "presenter.slideOf": "スライド {slide} / {count}",
+    "presenter.pageOf": "ページ {page} / {count}",
     "presenter.previous": "前へ",
     "presenter.next": "次へ",
     "presenter.endShow": "スライド ショーの終了",
     "presenter.nextSlide": "次のスライド",
-    "presenter.endOfShow": "スライド ショーの最後",
+    "presenter.nextPage": "次のページ",
+    "presenter.endOfShow": "発表の最後",
     "presenter.pauseTimer": "タイマーを一時停止",
     "presenter.resumeTimer": "タイマーを再開",
     "presenter.restartTimer": "タイマーをリスタート",
@@ -277,13 +280,13 @@ export const ja: Messages = {
     "presenter.largerText": "文字を拡大",
     "presenter.smallerText": "文字を縮小",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "画面",
     "screens.oneScreen": "接続されている画面は 1 つだけです。",
     "slideShowSetup.displayOn": "表示先",
     "slideShowSetup.setUpScreens": "画面の設定",
     "slideShowSetup.screensMessage":
-        "ブラウザーが各画面にウィンドウを配置できるようにすると、スライド ショーを表示する画面を選択できます。",
+        "ブラウザーが各画面にウィンドウを配置できるようにすると、発表を表示する画面を選択できます。",
     "slideShowSetup.screensRefused":
         "ブラウザーで許可されませんでした。サイトの設定でウィンドウ管理を許可してから、もう一度お試しください。",
 

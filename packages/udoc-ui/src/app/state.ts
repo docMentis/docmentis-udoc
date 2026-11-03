@@ -759,32 +759,32 @@ export interface UIState {
     slideShowPlaying: boolean;
     /**
      * Whether From Beginning and From Current Slide play a slide show with
-     * PowerPoint's presenter view, in a window of its own — Set Up Slide
-     * Show's Presenter View, off at first. The Slide Show tab's Presenter View
+     * PowerPoint's presenter view, in a window of its own — Set Up
+     * Presentation's Presenter View, off at first. The Present tab's Presenter View
      * plays one with it whatever this says.
      */
     usePresenterView: boolean;
     /**
-     * Whether a slide show fills the screen — the one Set Up Slide Show's
+     * Whether a slide show fills the screen — the one Set Up Presentation's
      * Display on chose, where the screens are set up — or plays over the UI
-     * as it stands, in window mode: Set Up Slide Show's Full Screen, on at
+     * as it stands, in window mode: Set Up Presentation's Full Screen, on at
      * first. One the browser won't fill the screen with plays in window mode.
      */
     slideShowFullScreen: boolean;
     /**
      * Whether the screens are set up: the browser lets the UI place windows
-     * on each of the computer's screens — Set Up Slide Show's Set Up
+     * on each of the computer's screens — Set Up Presentation's Set Up
      * Screens — so a slide show fills the screen Display on chose, and opens
      * the presenter view on another, at a press.
      */
     screensSetUp: boolean;
     /**
-     * The screen a full-screen slide show fills, as Set Up Slide Show's
+     * The screen a full-screen slide show fills, as Set Up Presentation's
      * Display on chose it, by its name and where it stands (`screenKey`) —
      * `null` for the first but the one the UI's window is on.
      */
     audienceScreen: string | null;
-    /** Bumps on every Set Up Slide Show, so the shell opens its dialog. */
+    /** Bumps on every Set Up Presentation, so the shell opens its dialog. */
     slideShowSetupSeq: number;
 
     /** Visible canvas size in CSS px (updated by the Canvas on resize). */

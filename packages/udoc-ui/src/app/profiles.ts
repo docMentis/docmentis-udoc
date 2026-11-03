@@ -42,17 +42,25 @@ const ARRANGEMENT: readonly CommandId[] = ["pageLayout", "pageGap"];
 const PORTABLE_ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLeft", "rotateViewRight", "pageGap"];
 
 /**
- * A deck's Slide Show tab, as PowerPoint's: the show started From Beginning,
- * From Current Slide, or with the Presenter View; then Set Up Slide Show, how
- * the first two play it; and last Preview, which plays the slide shown in
- * place, no part of the show. Its commands are never edits, as the View
- * tab's aren't; it stands before it, in view mode and in edit mode.
+ * `docType`'s Present tab, as PowerPoint's Slide Show tab: the document
+ * played a page at a time over the screen — a deck's slides, a PDF's pages —
+ * started From Beginning, From Current Slide, or with the Presenter View;
+ * then Set Up Presentation, how the first two play it; and last, a deck's
+ * alone, Preview, which plays the slide shown in place, no part of the show.
+ * Its commands are never edits, as the View tab's aren't; it stands before
+ * it, in view mode and in edit mode.
  */
-export const SLIDE_SHOW_TAB: ToolbarTab = {
-    id: "slideShow",
-    label: "ribbon.slideShow",
-    commands: ["slideShowFromBeginning", "slideShowFromCurrent", "presenterView", "setUpSlideShow", "previewSlide"],
-};
+export function presentTab(docType: UDocType): ToolbarTab {
+    const preview: readonly CommandId[] = docType === "presentation" ? ["previewSlide"] : [];
+    return {
+        id: PRESENT_TAB_ID,
+        label: "ribbon.slideShow",
+        commands: ["slideShowFromBeginning", "slideShowFromCurrent", "presenterView", "setUpSlideShow", ...preview],
+    };
+}
+
+/** The id of every doc type's {@link presentTab}. */
+export const PRESENT_TAB_ID = "present";
 
 /** Each doc type's View tab, around the guides an extension adds: before them
  *  its own views and how its pages scroll and are arranged, after them what
@@ -90,9 +98,9 @@ export function viewTab(docType: UDocType, edit?: { guides: readonly string[] })
 export const VIEW_TAB_ID = "view";
 
 /** The ids of the tabs whose commands are never edits — every doc type's
- *  {@link viewTab} and a deck's {@link SLIDE_SHOW_TAB} — so a strip with none
- *  other has nothing to undo. */
-export const VIEWING_TAB_IDS: ReadonlySet<string> = new Set([VIEW_TAB_ID, SLIDE_SHOW_TAB.id]);
+ *  {@link viewTab} and {@link presentTab} — so a strip with none other has
+ *  nothing to undo. */
+export const VIEWING_TAB_IDS: ReadonlySet<string> = new Set([VIEW_TAB_ID, PRESENT_TAB_ID]);
 
 /**
  * The chrome one document type gets. Selected by `docType` (see
@@ -177,6 +185,12 @@ export interface DocProfile {
      */
     pageSelection: boolean;
     /**
+     * Whether the document plays as a presentation, a page at a time over the
+     * screen — its {@link presentTab}'s show: a deck's slides, and a PDF's
+     * pages.
+     */
+    presentable: boolean;
+    /**
      * The guide band this doc type reserves around the content pane — a
      * spreadsheet's row/column `"header"` — or `null` for one with none of its
      * own (an extension's band may still be drawn there). Host-static: it's
@@ -224,6 +238,7 @@ export const FALLBACK_PROFILE: DocProfile = {
     pageGapToggle: false,
     drawingShapes: false,
     pageSelection: false,
+    presentable: false,
     // No band for an unprofiled type; a known paged type opts into the ruler
     // explicitly below.
     guide: null,
@@ -253,6 +268,7 @@ export const IMAGE_PROFILE: DocProfile = {
     pageGapToggle: true,
     drawingShapes: true,
     pageSelection: true,
+    presentable: false,
     // An image projects no guide.
     guide: null,
     // Gutters, like the page stacks.
@@ -263,7 +279,7 @@ export const IMAGE_PROFILE: DocProfile = {
 
 /** The portable (PDF) document type — the only one with real editing today. */
 export const PORTABLE_PROFILE: DocProfile = {
-    viewTabs: [ANNOTATE_TAB, viewTab("portable")],
+    viewTabs: [ANNOTATE_TAB, presentTab("portable"), viewTab("portable")],
     sheetTabs: false,
     leftPanels: LEFT_PANEL_TABS,
     rightPanels: RIGHT_PANEL_TABS,
@@ -277,6 +293,7 @@ export const PORTABLE_PROFILE: DocProfile = {
     pageGapToggle: true,
     drawingShapes: false,
     pageSelection: true,
+    presentable: true,
     guide: null,
     scrollbarGutters: true,
     // PDF carries device colors, not a DrawingML theme — standard swatches only.
@@ -289,7 +306,7 @@ export const PORTABLE_PROFILE: DocProfile = {
  * the Thumbnails navigator, not a page-control strip.
  */
 export const PRESENTATION_PROFILE: DocProfile = {
-    viewTabs: [SLIDE_SHOW_TAB, viewTab("presentation")],
+    viewTabs: [presentTab("presentation"), viewTab("presentation")],
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],
@@ -301,6 +318,7 @@ export const PRESENTATION_PROFILE: DocProfile = {
     pageGapToggle: false,
     drawingShapes: true,
     pageSelection: true,
+    presentable: true,
     guide: null,
     scrollbarGutters: true,
     // A deck re-themes per slide; the picker shows the current slide's palette.
@@ -331,6 +349,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
     pageGapToggle: false,
     drawingShapes: false,
     pageSelection: false,
+    presentable: false,
     guide: "header",
     // The sheet fills the pane edge to edge, so its bars float over the grid
     // rather than carving gutters out of it.
@@ -360,6 +379,7 @@ export const WORDPROCESSING_PROFILE: DocProfile = {
     pageGapToggle: true,
     drawingShapes: true,
     pageSelection: false,
+    presentable: false,
     guide: null,
     scrollbarGutters: true,
     // Word carries a single DrawingML theme (`w:clrSchemeMapping`); the Text

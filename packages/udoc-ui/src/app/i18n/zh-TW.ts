@@ -63,7 +63,7 @@ export const zhTW: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "註解",
-    "ribbon.slideShow": "投影片放映",
+    "ribbon.slideShow": "簡報",
     "ribbon.view": "檢視",
 
     // Ribbon
@@ -97,8 +97,9 @@ export const zhTW: Messages = {
     "command.notes": "備忘稿",
     "command.slideShowFromBeginning": "從首張投影片",
     "command.slideShowFromCurrent": "從目前投影片",
+    "command.slideShowFromCurrentPage": "從目前頁面",
     "command.presenterView": "簡報者檢視畫面",
-    "command.setUpSlideShow": "設定投影片放映",
+    "command.setUpSlideShow": "設定簡報",
     "command.previewSlide": "預覽",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "單頁",
@@ -258,18 +259,20 @@ export const zhTW: Messages = {
     // Notes pane
     "notes.resizeHandle": "調整備忘稿大小",
 
-    // Slide show
-    "slideShow.end": "投影片放映結束，按一下即可結束。",
-    "slideShow.window": "投影片放映",
+    // Presentation
+    "slideShow.end": "簡報結束，按一下即可結束。",
+    "slideShow.window": "簡報",
 
     // Presenter view
     "presenter.label": "簡報者檢視畫面",
     "presenter.slideOf": "投影片 {slide}/{count}",
+    "presenter.pageOf": "第 {page} 頁，共 {count} 頁",
     "presenter.previous": "上一個",
     "presenter.next": "下一個",
     "presenter.endShow": "結束放映",
     "presenter.nextSlide": "下一張投影片",
-    "presenter.endOfShow": "投影片放映結束",
+    "presenter.nextPage": "下一頁",
+    "presenter.endOfShow": "簡報結束",
     "presenter.pauseTimer": "暫停計時器",
     "presenter.resumeTimer": "繼續計時器",
     "presenter.restartTimer": "重新開始計時器",
@@ -277,12 +280,12 @@ export const zhTW: Messages = {
     "presenter.largerText": "放大文字",
     "presenter.smallerText": "縮小文字",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "螢幕",
     "screens.oneScreen": "僅連接了一個螢幕。",
     "slideShowSetup.displayOn": "顯示於",
     "slideShowSetup.setUpScreens": "設定螢幕",
-    "slideShowSetup.screensMessage": "允許瀏覽器在各螢幕上放置視窗，以選擇放映投影片的螢幕。",
+    "slideShowSetup.screensMessage": "允許瀏覽器在各螢幕上放置視窗，以選擇簡報的螢幕。",
     "slideShowSetup.screensRefused": "瀏覽器未允許。請在網站設定中允許視窗管理，然後再試一次。",
 
     // Thumbnails

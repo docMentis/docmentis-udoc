@@ -602,7 +602,7 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
             if (!slice.picking) navigateTo(page);
         });
 
-        // The slide shown, then previewed in place, as the Slide Show tab's
+        // The slide shown, then previewed in place, as the Present tab's
         // Preview plays it.
         const play = document.createElement("button");
         play.type = "button";

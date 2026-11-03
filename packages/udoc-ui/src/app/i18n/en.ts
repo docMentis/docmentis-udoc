@@ -64,7 +64,7 @@ export const en: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Annotate",
-    "ribbon.slideShow": "Slide Show",
+    "ribbon.slideShow": "Present",
     "ribbon.view": "View",
 
     // Ribbon
@@ -98,8 +98,9 @@ export const en: Messages = {
     "command.notes": "Notes",
     "command.slideShowFromBeginning": "From Beginning",
     "command.slideShowFromCurrent": "From Current Slide",
+    "command.slideShowFromCurrentPage": "From Current Page",
     "command.presenterView": "Presenter View",
-    "command.setUpSlideShow": "Set Up Slide Show",
+    "command.setUpSlideShow": "Set Up Presentation",
     "command.previewSlide": "Preview",
     "command.stopSlidePreview": "Stop",
     "command.singleScroll": "Single",
@@ -259,18 +260,20 @@ export const en: Messages = {
     // Notes pane
     "notes.resizeHandle": "Resize notes",
 
-    // Slide show
-    "slideShow.end": "End of slide show, click to exit.",
-    "slideShow.window": "Slide Show",
+    // Presentation
+    "slideShow.end": "End of presentation, click to exit.",
+    "slideShow.window": "Presentation",
 
     // Presenter view
     "presenter.label": "Presenter View",
     "presenter.slideOf": "Slide {slide} of {count}",
+    "presenter.pageOf": "Page {page} of {count}",
     "presenter.previous": "Previous",
     "presenter.next": "Next",
     "presenter.endShow": "End Show",
     "presenter.nextSlide": "Next Slide",
-    "presenter.endOfShow": "End of slide show",
+    "presenter.nextPage": "Next Page",
+    "presenter.endOfShow": "End of presentation",
     "presenter.pauseTimer": "Pause Timer",
     "presenter.resumeTimer": "Resume Timer",
     "presenter.restartTimer": "Restart Timer",
@@ -278,13 +281,13 @@ export const en: Messages = {
     "presenter.largerText": "Make the Text Larger",
     "presenter.smallerText": "Make the Text Smaller",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "Screens",
     "screens.oneScreen": "Only one screen is connected.",
     "slideShowSetup.displayOn": "Display on",
     "slideShowSetup.setUpScreens": "Set Up Screens",
     "slideShowSetup.screensMessage":
-        "Let the browser place windows on your screens to choose the one the slide show fills.",
+        "Let the browser place windows on your screens to choose the one the presentation fills.",
     "slideShowSetup.screensRefused":
         "The browser didn't allow it. Allow window management in the site's settings, then try again.",
 

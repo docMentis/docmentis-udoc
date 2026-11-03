@@ -41,6 +41,14 @@ listed once, by package. Its major and minor version are those of the
   a sandboxed iframe under a bar with its address and an "Open in new tab"
   link, which always shows, for a site that refuses to be framed. It follows
   the theme through its `prefers-color-scheme`.
+- A PDF plays as a presentation, as a deck does: its Present tab, in view
+  mode and in edit mode, has From Beginning, From Current Page, Presenter
+  View and Set Up Presentation, and plays its pages a page at a time over
+  the screen, each as large as fits on black, taking the same keys, clicks
+  and swipes. Its presenter view shows the page, the next one and the
+  timer. `startSlideShow(slide?)` plays a PDF from page `slide`. The
+  `translations` keys `command.slideShowFromCurrentPage`, `presenter.pageOf`
+  and `presenter.nextPage` are new.
 
 #### Changed
 
@@ -72,6 +80,10 @@ listed once, by package. Its major and minor version are those of the
   without, the window takes the press and the show plays in window mode.
   Swap Screens trades the windows the show and the presenter view stand in,
   each still filling its screen or not.
+- The Slide Show tab is Present, and its Set Up Slide Show is Set Up
+  Presentation; the line past the last slide, the presenter view's and the
+  show's own window say presentation where they said slide show. Their
+  `translations` keys are as they were.
 
 ### udoc-demo
 

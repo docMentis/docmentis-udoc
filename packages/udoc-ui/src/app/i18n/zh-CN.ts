@@ -63,7 +63,7 @@ export const zhCN: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "注释",
-    "ribbon.slideShow": "幻灯片放映",
+    "ribbon.slideShow": "演示",
     "ribbon.view": "视图",
 
     // Ribbon
@@ -97,8 +97,9 @@ export const zhCN: Messages = {
     "command.notes": "备注",
     "command.slideShowFromBeginning": "从头开始",
     "command.slideShowFromCurrent": "从当前幻灯片开始",
+    "command.slideShowFromCurrentPage": "从当前页开始",
     "command.presenterView": "演示者视图",
-    "command.setUpSlideShow": "设置幻灯片放映",
+    "command.setUpSlideShow": "设置演示",
     "command.previewSlide": "预览",
     "command.stopSlidePreview": "停止",
     "command.singleScroll": "单页",
@@ -258,18 +259,20 @@ export const zhCN: Messages = {
     // Notes pane
     "notes.resizeHandle": "调整备注大小",
 
-    // Slide show
-    "slideShow.end": "放映结束，单击鼠标退出。",
-    "slideShow.window": "幻灯片放映",
+    // Presentation
+    "slideShow.end": "演示结束，单击鼠标退出。",
+    "slideShow.window": "演示",
 
     // Presenter view
     "presenter.label": "演示者视图",
     "presenter.slideOf": "幻灯片 {slide}/{count}",
+    "presenter.pageOf": "第 {page} 页，共 {count} 页",
     "presenter.previous": "上一个",
     "presenter.next": "下一个",
     "presenter.endShow": "结束放映",
     "presenter.nextSlide": "下一张幻灯片",
-    "presenter.endOfShow": "放映结束",
+    "presenter.nextPage": "下一页",
+    "presenter.endOfShow": "演示结束",
     "presenter.pauseTimer": "暂停计时器",
     "presenter.resumeTimer": "继续计时器",
     "presenter.restartTimer": "重新开始计时器",
@@ -277,12 +280,12 @@ export const zhCN: Messages = {
     "presenter.largerText": "放大文本",
     "presenter.smallerText": "缩小文本",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "屏幕",
     "screens.oneScreen": "仅连接了一个屏幕。",
     "slideShowSetup.displayOn": "显示于",
     "slideShowSetup.setUpScreens": "设置屏幕",
-    "slideShowSetup.screensMessage": "允许浏览器在各屏幕上放置窗口，以选择放映幻灯片的屏幕。",
+    "slideShowSetup.screensMessage": "允许浏览器在各屏幕上放置窗口，以选择演示的屏幕。",
     "slideShowSetup.screensRefused": "浏览器未允许。请在网站设置中允许窗口管理，然后重试。",
 
     // Thumbnails

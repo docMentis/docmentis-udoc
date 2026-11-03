@@ -63,7 +63,7 @@ export const ru: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Аннотации",
-    "ribbon.slideShow": "Слайд-шоу",
+    "ribbon.slideShow": "Показ",
     "ribbon.view": "Вид",
 
     // Ribbon
@@ -97,8 +97,9 @@ export const ru: Messages = {
     "command.notes": "Заметки",
     "command.slideShowFromBeginning": "С начала",
     "command.slideShowFromCurrent": "С текущего слайда",
+    "command.slideShowFromCurrentPage": "С текущей страницы",
     "command.presenterView": "Режим докладчика",
-    "command.setUpSlideShow": "Настроить показ слайдов",
+    "command.setUpSlideShow": "Настроить показ",
     "command.previewSlide": "Просмотр",
     "command.stopSlidePreview": "Остановить",
     "command.singleScroll": "Одиночный",
@@ -258,18 +259,20 @@ export const ru: Messages = {
     // Notes pane
     "notes.resizeHandle": "Изменить размер заметок",
 
-    // Slide show
-    "slideShow.end": "Конец показа слайдов. Щелкните для выхода.",
-    "slideShow.window": "Показ слайдов",
+    // Presentation
+    "slideShow.end": "Конец показа. Щелкните для выхода.",
+    "slideShow.window": "Показ",
 
     // Presenter view
     "presenter.label": "Режим докладчика",
     "presenter.slideOf": "Слайд {slide} из {count}",
+    "presenter.pageOf": "Страница {page} из {count}",
     "presenter.previous": "Назад",
     "presenter.next": "Далее",
     "presenter.endShow": "Завершить показ",
     "presenter.nextSlide": "Следующий слайд",
-    "presenter.endOfShow": "Конец показа слайдов",
+    "presenter.nextPage": "Следующая страница",
+    "presenter.endOfShow": "Конец показа",
     "presenter.pauseTimer": "Приостановить таймер",
     "presenter.resumeTimer": "Возобновить таймер",
     "presenter.restartTimer": "Перезапустить таймер",
@@ -277,13 +280,13 @@ export const ru: Messages = {
     "presenter.largerText": "Увеличить текст",
     "presenter.smallerText": "Уменьшить текст",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "Экраны",
     "screens.oneScreen": "Подключен только один экран.",
     "slideShowSetup.displayOn": "Показывать на",
     "slideShowSetup.setUpScreens": "Настроить экраны",
     "slideShowSetup.screensMessage":
-        "Разрешите браузеру размещать окна на ваших экранах, чтобы выбрать экран для показа слайдов.",
+        "Разрешите браузеру размещать окна на ваших экранах, чтобы выбрать экран для показа.",
     "slideShowSetup.screensRefused":
         "Браузер не разрешил это. Разрешите управление окнами в настройках сайта и повторите попытку.",
 

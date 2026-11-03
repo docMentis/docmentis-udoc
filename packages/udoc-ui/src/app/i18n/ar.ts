@@ -63,7 +63,7 @@ export const ar: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "تعليق توضيحي",
-    "ribbon.slideShow": "عرض الشرائح",
+    "ribbon.slideShow": "تقديم",
     "ribbon.view": "عرض",
 
     // Ribbon
@@ -97,8 +97,9 @@ export const ar: Messages = {
     "command.notes": "ملاحظات",
     "command.slideShowFromBeginning": "من البداية",
     "command.slideShowFromCurrent": "من الشريحة الحالية",
+    "command.slideShowFromCurrentPage": "من الصفحة الحالية",
     "command.presenterView": "طريقة عرض مقدم العرض",
-    "command.setUpSlideShow": "إعداد عرض الشرائح",
+    "command.setUpSlideShow": "إعداد العرض التقديمي",
     "command.previewSlide": "معاينة",
     "command.stopSlidePreview": "إيقاف",
     "command.singleScroll": "مفرد",
@@ -258,18 +259,20 @@ export const ar: Messages = {
     // Notes pane
     "notes.resizeHandle": "تغيير حجم الملاحظات",
 
-    // Slide show
-    "slideShow.end": "نهاية عرض الشرائح. انقر للخروج.",
-    "slideShow.window": "عرض الشرائح",
+    // Presentation
+    "slideShow.end": "نهاية العرض التقديمي. انقر للخروج.",
+    "slideShow.window": "عرض تقديمي",
 
     // Presenter view
     "presenter.label": "طريقة عرض مقدم العرض",
     "presenter.slideOf": "الشريحة {slide} من {count}",
+    "presenter.pageOf": "الصفحة {page} من {count}",
     "presenter.previous": "السابق",
     "presenter.next": "التالي",
     "presenter.endShow": "إنهاء العرض",
     "presenter.nextSlide": "الشريحة التالية",
-    "presenter.endOfShow": "نهاية عرض الشرائح",
+    "presenter.nextPage": "الصفحة التالية",
+    "presenter.endOfShow": "نهاية العرض التقديمي",
     "presenter.pauseTimer": "إيقاف المؤقت مؤقتًا",
     "presenter.resumeTimer": "استئناف المؤقت",
     "presenter.restartTimer": "إعادة تشغيل المؤقت",
@@ -277,12 +280,12 @@ export const ar: Messages = {
     "presenter.largerText": "تكبير النص",
     "presenter.smallerText": "تصغير النص",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "الشاشات",
     "screens.oneScreen": "شاشة واحدة فقط متصلة.",
     "slideShowSetup.displayOn": "العرض على",
     "slideShowSetup.setUpScreens": "إعداد الشاشات",
-    "slideShowSetup.screensMessage": "اسمح للمتصفح بوضع النوافذ على شاشاتك لاختيار الشاشة التي يملؤها عرض الشرائح.",
+    "slideShowSetup.screensMessage": "اسمح للمتصفح بوضع النوافذ على شاشاتك لاختيار الشاشة التي يملؤها العرض التقديمي.",
     "slideShowSetup.screensRefused": "لم يسمح المتصفح بذلك. اسمح بإدارة النوافذ في إعدادات الموقع، ثم حاول مرة أخرى.",
 
     // Thumbnails

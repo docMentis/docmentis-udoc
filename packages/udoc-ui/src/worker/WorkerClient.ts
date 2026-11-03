@@ -410,7 +410,9 @@ export class WorkerClient {
      * where it is as it moves. With a `mirror` — a presenter view's canvas,
      * also transferred, `width × height` device pixels of the deck's `slide`
      * size's proportions — the worker copies each frame's slide onto it.
-     * Resolves once it plays; rejects when it can't — no deck open, no WebGL2.
+     * Any other document — a PDF — plays alike, a page at a time from page
+     * `slide`, or its first. Resolves once it plays; rejects when it can't —
+     * no document open, no WebGL2 for a deck.
      */
     async startSlideShow(
         canvas: HTMLCanvasElement,

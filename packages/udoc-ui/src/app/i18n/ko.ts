@@ -63,7 +63,7 @@ export const ko: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "주석",
-    "ribbon.slideShow": "슬라이드 쇼",
+    "ribbon.slideShow": "발표",
     "ribbon.view": "보기",
 
     // Ribbon
@@ -97,8 +97,9 @@ export const ko: Messages = {
     "command.notes": "슬라이드 노트",
     "command.slideShowFromBeginning": "처음부터",
     "command.slideShowFromCurrent": "현재 슬라이드부터",
+    "command.slideShowFromCurrentPage": "현재 페이지부터",
     "command.presenterView": "발표자 보기",
-    "command.setUpSlideShow": "슬라이드 쇼 설정",
+    "command.setUpSlideShow": "발표 설정",
     "command.previewSlide": "미리 보기",
     "command.stopSlidePreview": "중지",
     "command.singleScroll": "단일",
@@ -258,18 +259,20 @@ export const ko: Messages = {
     // Notes pane
     "notes.resizeHandle": "슬라이드 노트 크기 조정",
 
-    // Slide show
-    "slideShow.end": "슬라이드 쇼의 끝입니다. 클릭하면 끝납니다.",
-    "slideShow.window": "슬라이드 쇼",
+    // Presentation
+    "slideShow.end": "발표의 끝입니다. 클릭하면 끝납니다.",
+    "slideShow.window": "발표",
 
     // Presenter view
     "presenter.label": "발표자 보기",
     "presenter.slideOf": "슬라이드 {slide}/{count}",
+    "presenter.pageOf": "페이지 {page}/{count}",
     "presenter.previous": "이전",
     "presenter.next": "다음",
     "presenter.endShow": "쇼 마침",
     "presenter.nextSlide": "다음 슬라이드",
-    "presenter.endOfShow": "슬라이드 쇼 끝",
+    "presenter.nextPage": "다음 페이지",
+    "presenter.endOfShow": "발표 끝",
     "presenter.pauseTimer": "타이머 일시 중지",
     "presenter.resumeTimer": "타이머 계속",
     "presenter.restartTimer": "타이머 다시 시작",
@@ -277,13 +280,13 @@ export const ko: Messages = {
     "presenter.largerText": "텍스트 크게",
     "presenter.smallerText": "텍스트 작게",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "화면",
     "screens.oneScreen": "연결된 화면이 하나뿐입니다.",
     "slideShowSetup.displayOn": "표시할 화면",
     "slideShowSetup.setUpScreens": "화면 설정",
     "slideShowSetup.screensMessage":
-        "브라우저가 화면에 창을 배치하도록 허용하면 슬라이드 쇼를 표시할 화면을 선택할 수 있습니다.",
+        "브라우저가 화면에 창을 배치하도록 허용하면 발표를 표시할 화면을 선택할 수 있습니다.",
     "slideShowSetup.screensRefused":
         "브라우저에서 허용하지 않았습니다. 사이트 설정에서 창 관리를 허용한 후 다시 시도하세요.",
 

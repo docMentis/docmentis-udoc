@@ -20,6 +20,7 @@ import type {
     Peer,
     PeerPointer,
     PlaneInfo,
+    Rect,
     ScrollMode,
     SelectionGeometry,
     Size,
@@ -279,6 +280,31 @@ let slideShowResize: Extract<SlideShowInput, { resize: unknown }> | null = null;
 let slideShowSurface: { canvas: OffscreenCanvas; width: number; height: number } | null = null;
 let slideShowMirror: { canvas: OffscreenCanvas; context: OffscreenCanvasRenderingContext2D; slide: Size } | null = null;
 
+/**
+ * A show of a document the engine's slide show doesn't play — a PDF's — which
+ * the worker plays itself on the show's canvas: its pages a page at a time,
+ * each centred on black, as large as fits, rasterized as a thumbnail is; and
+ * past the last, black, as a deck's show ends. Its pages play nothing, so it
+ * draws a frame only as an input moves it.
+ */
+interface PageShow {
+    context: OffscreenCanvasRenderingContext2D;
+    /** The page it shows, by its index, and how many the document has. */
+    page: number;
+    count: number;
+    /** Whether it has gone past its last page, onto the black that ends it. */
+    ended: boolean;
+    /** Where it last drew a page on its canvas, device pixels: what a
+     *  presenter view copies. */
+    drawn: Rect | null;
+}
+
+// The page show playing, while the slide show playing is one.
+let pageShow: PageShow | null = null;
+
+/** The plane a page show's pages are on: a single-plane document's one. */
+const PAGE_SHOW_PLANE = 0;
+
 /** How long ahead of a frame due later its animation frame is asked for, ms. */
 const SLIDE_SHOW_FRAME_AHEAD = 20;
 
@@ -314,12 +340,13 @@ function drawSlideShowFrame(now: number): void {
     let status: SlideShowStatus;
     try {
         if (slideShowResize) {
-            session.slideShowInput(slideShowResize);
             const { width, height } = slideShowResize.resize;
+            if (pageShow) Object.assign(pageShow.context.canvas, { width, height });
+            else session.slideShowInput(slideShowResize);
             if (slideShowSurface) Object.assign(slideShowSurface, { width, height });
         }
         slideShowResize = null;
-        status = session.renderSlideShowFrame(now);
+        status = pageShow ? drawPageShow(session, pageShow) : session.renderSlideShowFrame(now);
         mirrorSlideShow();
     } catch {
         endSlideShowPlaying();
@@ -338,27 +365,32 @@ function drawSlideShowFrame(now: number): void {
  * Copy the slide the show has just drawn onto the presenter view's canvas, if
  * one watches it: the slide's own rectangle of the show's surface — where the
  * show stands it, centred, as large as fits — onto the whole of the copy,
- * which has the slide's proportions.
+ * which has the slide's proportions. A page show's page is copied from where
+ * it drew it, centred on the copy as large as fits: a PDF's pages may not all
+ * have the proportions of its first, which the copy has.
  */
 function mirrorSlideShow(): void {
     const surface = slideShowSurface;
     const mirror = slideShowMirror;
     if (!surface || !mirror) return;
-    const { width, height } = mirror.slide;
-    const scale = Math.min(surface.width / width, surface.height / height);
-    const [w, h] = [width * scale, height * scale];
     const { canvas, context } = mirror;
-    context.drawImage(
-        surface.canvas,
-        (surface.width - w) / 2,
-        (surface.height - h) / 2,
-        w,
-        h,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-    );
+    if (pageShow) {
+        const from = pageShow.drawn;
+        if (!from) return;
+        const to = centred(from, canvas);
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(surface.canvas, from.x, from.y, from.width, from.height, to.x, to.y, to.width, to.height);
+        return;
+    }
+    const from = centred(mirror.slide, surface);
+    context.drawImage(surface.canvas, from.x, from.y, from.width, from.height, 0, 0, canvas.width, canvas.height);
+}
+
+/** `size` centred on `box`, as large as fits. */
+function centred(size: Size, box: Size): Rect {
+    const scale = Math.min(box.width / size.width, box.height / size.height);
+    const [width, height] = [size.width * scale, size.height * scale];
+    return { x: (box.width - width) / 2, y: (box.height - height) / 2, width, height };
 }
 
 /** Tell the host where the show playing is, if it has moved. */
@@ -381,10 +413,85 @@ function endSlideShowPlaying(): void {
 function stopSlideShow(): void {
     cancelSlideShowFrame();
     slideShow = null;
+    pageShow = null;
     slideShowReported = null;
     slideShowResize = null;
     slideShowSurface = slideShowMirror = null;
     session?.endSlideShow();
+}
+
+/**
+ * A page show of `s` from page `page` on `canvas`, `width × height` device
+ * pixels.
+ *
+ * @throws if `page` is past the document's last page, or `canvas` draws no 2D.
+ */
+function startPageShow(s: WasmSession, page: number, canvas: OffscreenCanvas, width: number, height: number): PageShow {
+    const count = s.pageCount(VIEWER) ?? 0;
+    if (page >= count) throw new Error(`engine worker: no page ${page} to show`);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("engine worker: the show's canvas draws no 2D");
+    Object.assign(canvas, { width, height });
+    return { context, page, count, ended: false, drawn: null };
+}
+
+/**
+ * Take `input` into the page show, as a deck's show takes it: a click or the
+ * next steps on, past the last page onto black; the previous steps back, from
+ * the black onto the last page; and a page number goes there. Returns where
+ * it is now, asking for a frame at once. A resize is its frame's.
+ */
+function stepPageShow(show: PageShow, input: SlideShowInput): SlideShowStatus {
+    if (input === "previous") {
+        if (show.ended) show.ended = false;
+        else show.page = Math.max(0, show.page - 1);
+    } else if (input === "next" || "click" in input) {
+        if (show.page + 1 < show.count) show.page += 1;
+        else show.ended = true;
+    } else if ("goToSlide" in input) {
+        show.page = input.goToSlide;
+        show.ended = false;
+    }
+    return { slide: show.page, step: 0, nextFrame: 0, ended: show.ended };
+}
+
+/** Draw the page show's page on its canvas, centred on black, as large as
+ *  fits — black alone past its last page — and return where it is. */
+function drawPageShow(s: WasmSession, show: PageShow): SlideShowStatus {
+    const { context } = show;
+    const { width, height } = context.canvas;
+    context.fillStyle = "#000";
+    context.fillRect(0, 0, width, height);
+    if (!show.ended) {
+        const size = s.pageDisplaySize(PAGE_SHOW_PLANE, show.page);
+        const scale = Math.min(width / size.width, height / size.height);
+        // For the audience: the ephemeral annotations left out, as a print
+        // leaves them.
+        const raster = rasterPage(s, PAGE_SHOW_PLANE, show.page, scale, false);
+        const x = Math.round((width - raster.width) / 2);
+        const y = Math.round((height - raster.height) / 2);
+        const rgba = new Uint8ClampedArray(raster.rgba);
+        overPaper(rgba);
+        context.putImageData(new ImageData(rgba, raster.width, raster.height), x, y);
+        show.drawn = { x, y, width: raster.width, height: raster.height };
+    }
+    return { slide: show.page, step: 0, nextFrame: null, ended: show.ended };
+}
+
+/**
+ * Lay `rgba`, a page's premultiplied pixels, over white paper, in place: a
+ * PDF's raster is clear wherever the page paints nothing, which a canvas would
+ * show through. Opaque, the pixels are what `ImageData` reads them as.
+ */
+function overPaper(rgba: Uint8ClampedArray): void {
+    for (let i = 0; i < rgba.length; i += 4) {
+        const clear = 255 - rgba[i + 3]!;
+        if (clear === 0) continue;
+        rgba[i] = rgba[i]! + clear;
+        rgba[i + 1] = rgba[i + 1]! + clear;
+        rgba[i + 2] = rgba[i + 2]! + clear;
+        rgba[i + 3] = 255;
+    }
 }
 
 /**
@@ -1608,8 +1715,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "startSlideShow": {
                 if (!session) throw new Error("engine worker: startSlideShow before start");
                 stopSlideShow();
-                const slide = msg.slide ?? shownSlides(session)[0] ?? 0;
-                session.startSlideShow(slide, msg.canvas, msg.width, msg.height);
+                // A deck's the engine plays; any other document's pages the
+                // worker plays itself.
+                if (session.docType() === "presentation") {
+                    const slide = msg.slide ?? shownSlides(session)[0] ?? 0;
+                    session.startSlideShow(slide, msg.canvas, msg.width, msg.height);
+                } else {
+                    pageShow = startPageShow(session, msg.slide ?? 0, msg.canvas, msg.width, msg.height);
+                }
                 slideShow = "show";
                 slideShowSurface = { canvas: msg.canvas, width: msg.width, height: msg.height };
                 const mirror = msg.mirror;
@@ -1626,7 +1739,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (!session || slideShow !== "show") break;
                 let input: SlideShowInput;
                 if (msg.input === "firstSlide" || msg.input === "lastSlide") {
-                    const shown = shownSlides(session);
+                    // The first or last slide a deck's show shows; a page
+                    // show's first or last page.
+                    const shown = pageShow ? [0, pageShow.count - 1] : shownSlides(session);
                     const slide = msg.input === "firstSlide" ? shown[0] : shown.at(-1);
                     if (slide === undefined) break;
                     input = { goToSlide: slide };
@@ -1634,14 +1749,15 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                     input = msg.input;
                 }
                 // A slide number typed past the last slide goes nowhere.
-                if (typeof input === "object" && "goToSlide" in input && input.goToSlide >= slideCount(session)) break;
+                const count = pageShow?.count ?? slideCount(session);
+                if (typeof input === "object" && "goToSlide" in input && input.goToSlide >= count) break;
                 if (typeof input === "object" && "resize" in input) {
                     slideShowResize = input;
                     scheduleSlideShowFrame(0);
                     break;
                 }
                 try {
-                    const status = session.slideShowInput(input);
+                    const status = pageShow ? stepPageShow(pageShow, input) : session.slideShowInput(input);
                     reportSlideShow(status);
                     scheduleSlideShowFrame(status.nextFrame);
                 } catch {

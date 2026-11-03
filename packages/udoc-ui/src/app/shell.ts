@@ -374,7 +374,7 @@ export interface UIShell {
     /** Enter or leave fullscreen on the root; rejects when the browser refuses. */
     setFullscreen: (fullscreen: boolean) => Promise<void>;
     /** Play the open deck from slide `slide`, or from the first slide the
-     *  show shows when `null`, as Set Up Slide Show has it. */
+     *  show shows when `null`, as Set Up Presentation has it. */
     startSlideShow: (slide: number | null) => void;
     /** End the slide show playing, if one is. */
     endSlideShow: () => void;
@@ -943,7 +943,7 @@ export function mountUIShell(
     slideShow.mount(layout, store);
     // Whether the screens are set up, as the browser remembers it from a
     // Set Up Screens before, and as its site settings change it; and, at each
-    // Set Up Slide Show, how a show plays.
+    // Set Up Presentation, how a show plays.
     const unwatchScreens = watchScreensPermission((setUp) => store.dispatch({ type: "SET_SCREENS_SET_UP", setUp }));
     async function setUpSlideShow(): Promise<void> {
         const state = store.getState();

@@ -219,16 +219,16 @@ export type Action =
     | { type: "STOP_SLIDE_PREVIEW" }
     // Play the deck from slide `slide` (0-based), or from the first slide the
     // show shows when `null`, with the presenter view as `presenterView`
-    // says, else as Set Up Slide Show has it (bumps `slideShowRequest`, which
+    // says, else as Set Up Presentation has it (bumps `slideShowRequest`, which
     // the slide show plays it on)
     | { type: "START_SLIDE_SHOW"; slide: number | null; presenterView?: boolean }
     // End the slide show playing, or mark one ended
     | { type: "END_SLIDE_SHOW" }
     // The browser lets the UI place windows on each screen, or no longer does
     | { type: "SET_SCREENS_SET_UP"; setUp: boolean }
-    // Open the Set Up Slide Show dialog (bumps `slideShowSetupSeq`)
+    // Open the Set Up Presentation dialog (bumps `slideShowSetupSeq`)
     | { type: "OPEN_SLIDE_SHOW_SETUP" }
-    // Play a slide show as Set Up Slide Show chose: with the presenter view or
+    // Play a slide show as Set Up Presentation chose: with the presenter view or
     // not, full screen or in window mode, and full screen on this screen, by
     // its key, or on the first but the UI's
     | { type: "SET_SLIDE_SHOW_SETUP"; presenterView: boolean; fullScreen: boolean; audienceScreen: string | null }

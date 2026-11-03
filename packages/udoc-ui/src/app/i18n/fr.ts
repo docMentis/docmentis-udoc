@@ -63,7 +63,7 @@ export const fr: Messages = {
 
     // Ribbon tabs
     "ribbon.annotate": "Annoter",
-    "ribbon.slideShow": "Diaporama",
+    "ribbon.slideShow": "Présenter",
     "ribbon.view": "Affichage",
 
     // Ribbon
@@ -97,8 +97,9 @@ export const fr: Messages = {
     "command.notes": "Notes",
     "command.slideShowFromBeginning": "À partir du début",
     "command.slideShowFromCurrent": "À partir de la diapositive actuelle",
+    "command.slideShowFromCurrentPage": "À partir de la page actuelle",
     "command.presenterView": "Mode Présentateur",
-    "command.setUpSlideShow": "Configurer le diaporama",
+    "command.setUpSlideShow": "Configurer la présentation",
     "command.previewSlide": "Aperçu",
     "command.stopSlidePreview": "Arrêter",
     "command.singleScroll": "Unique",
@@ -258,18 +259,20 @@ export const fr: Messages = {
     // Notes pane
     "notes.resizeHandle": "Redimensionner les notes",
 
-    // Slide show
-    "slideShow.end": "Fin du diaporama. Cliquez pour quitter.",
-    "slideShow.window": "Diaporama",
+    // Presentation
+    "slideShow.end": "Fin de la présentation. Cliquez pour quitter.",
+    "slideShow.window": "Présentation",
 
     // Presenter view
     "presenter.label": "Mode Présentateur",
     "presenter.slideOf": "Diapositive {slide} sur {count}",
+    "presenter.pageOf": "Page {page} sur {count}",
     "presenter.previous": "Précédent",
     "presenter.next": "Suivant",
     "presenter.endShow": "Arrêter le diaporama",
     "presenter.nextSlide": "Diapositive suivante",
-    "presenter.endOfShow": "Fin du diaporama",
+    "presenter.nextPage": "Page suivante",
+    "presenter.endOfShow": "Fin de la présentation",
     "presenter.pauseTimer": "Suspendre le minuteur",
     "presenter.resumeTimer": "Reprendre le minuteur",
     "presenter.restartTimer": "Redémarrer le minuteur",
@@ -277,13 +280,13 @@ export const fr: Messages = {
     "presenter.largerText": "Agrandir le texte",
     "presenter.smallerText": "Réduire le texte",
 
-    // Set Up Slide Show
+    // Set Up Presentation
     "screens.label": "Écrans",
     "screens.oneScreen": "Un seul écran est connecté.",
     "slideShowSetup.displayOn": "Afficher sur",
     "slideShowSetup.setUpScreens": "Configurer les écrans",
     "slideShowSetup.screensMessage":
-        "Autorisez le navigateur à placer des fenêtres sur vos écrans pour choisir celui qu’occupe le diaporama.",
+        "Autorisez le navigateur à placer des fenêtres sur vos écrans pour choisir celui qu’occupe la présentation.",
     "slideShowSetup.screensRefused":
         "Le navigateur ne l’a pas autorisé. Autorisez la gestion des fenêtres dans les paramètres du site, puis réessayez.",
 

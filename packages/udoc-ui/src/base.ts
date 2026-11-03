@@ -366,7 +366,7 @@ export interface UDocEvents {
     "notesPanel:changed": { open: boolean };
     /** Fires when a deck's view changes — by the host, the View tab, or a search match on the slides from its notes pages. */
     "presentationView:changed": { view: PresentationView; previousView: PresentationView };
-    /** Fires when a deck's slide show starts or ends — by the host, the Slide Show tab, Escape, or a step past its last slide. */
+    /** Fires when a deck's or a PDF's slide show starts or ends — by the host, the Present tab, Escape, or a step past its last slide or page. */
     "slideShow:changed": { playing: boolean };
     /**
      * Fires after a *local* edit is applied (page edits, undo/redo) — not on
@@ -1515,24 +1515,25 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Play the open deck as a slide show, as the Slide Show tab's From
+     * Play the open deck as a slide show, as the Present tab's From
      * Beginning and From Current Slide do: a slide at a time, each slide's
      * transition and animations playing, stepped on by a click or a key and
      * ended by Escape. From slide `slide`, 0-based, even one hidden from the
-     * show; from the first slide the show shows when omitted. In place of a
-     * show playing; nothing for a document that is not a deck.
+     * show; from the first slide the show shows when omitted. A PDF plays
+     * alike, a page at a time, from page `slide` or its first. In place of a
+     * show playing; nothing for a document that is neither.
      *
-     * It plays as the Slide Show tab's Set Up Slide Show has it. With Full
+     * It plays as the Present tab's Set Up Presentation has it. With Full
      * Screen, as at first, it fills the screen — the one Display on chose,
      * where the screens are set up (Chrome's and Edge's) — and leaving the
      * full screen ends it. Without, or where the browser won't fill the
      * screen, it plays over the UI, in window mode, a button in its corner
      * filling the screen with it; leaving that full screen goes back to window
      * mode. With Presenter View, off at first, the presenter view — the slide,
-     * the next one, the notes and a timer — opens in a window of its own, on
-     * another screen where the screens are set up. Its Swap Screens trades
-     * the places the show and the presenter view stand in, each filling the
-     * screen or not as it did.
+     * the next one, a deck's notes and a timer — opens in a window of its
+     * own, on another screen where the screens are set up. Its Swap Screens
+     * trades the places the show and the presenter view stand in, each
+     * filling the screen or not as it did.
      *
      * The browser fills the screen, or opens that window, only in answer to a
      * user gesture, so call it from the host's own click handler; without
@@ -1700,7 +1701,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.getState().presentationView;
     }
 
-    /** Whether a slide show plays, by {@link startSlideShow} or the Slide Show tab; `"slideShow:changed"` fires when it starts or ends. */
+    /** Whether a slide show plays, by {@link startSlideShow} or the Present tab; `"slideShow:changed"` fires when it starts or ends. */
     get isSlideShowPlaying(): boolean {
         return this.shell.getState().slideShowPlaying;
     }

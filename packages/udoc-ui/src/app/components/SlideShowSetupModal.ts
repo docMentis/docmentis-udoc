@@ -1,5 +1,5 @@
-// Set Up Slide Show's dialog: how the Slide Show tab's From Beginning and
-// From Current Slide play a deck — with the presenter view, in a window of its
+// Set Up Presentation's dialog: how the Present tab's From Beginning and
+// From Current Slide play a deck or a PDF — with the presenter view, in a window of its
 // own, or not; filling the screen, or over the UI as it stands, in window mode
 // — and Display on, the screen a show that fills the screen fills: the
 // computer's screens drawn as they stand, each named, to choose from once its
@@ -52,8 +52,8 @@ export interface SlideShowSetupContext {
 }
 
 /**
- * Build the Set Up Slide Show dialog. The returned handle is mounted once by
- * the shell and asked for a setup at each Set Up Slide Show.
+ * Build the Set Up Presentation dialog. The returned handle is mounted once by
+ * the shell and asked for a setup at each Set Up Presentation.
  */
 export function createSlideShowSetupModal(i18n: I18n) {
     const el = document.createElement("div");

@@ -1,10 +1,11 @@
 // A deck's slide show: the deck played a slide at a time, as PowerPoint's
 // Slide Show plays it — each slide's transition on the way in, its animations
 // a click at a time — on a canvas of the show's own, which the worker draws on
-// as the engine composites each frame.
+// as the engine composites each frame. A PDF plays alike, a page at a time,
+// each page as the worker rasterizes it.
 //
 // It stands on a stage: a black layer over the UI — the viewer or the editor,
-// not the page around it — or over a window of its own. As Set Up Slide Show
+// not the page around it — or over a window of its own. As Set Up Presentation
 // has it, the stage fills the screen — the one Display on chose, where the
 // screens are set up — or stays over the UI, in window mode, a button in its
 // corner filling the screen with it. One the browser won't fill the screen
@@ -31,6 +32,7 @@ import type { Store } from "../../framework/index.js";
 import type { Size } from "../../geometry.js";
 import type { WorkerClient } from "../../worker/WorkerClient.js";
 import type { Action } from "../actions.js";
+import { profileFor } from "../profiles.js";
 import { planeOfView, viewDpi } from "../state.js";
 import type { UIState } from "../state.js";
 import type { I18n } from "../i18n/index.js";
@@ -130,7 +132,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
 
     /**
      * Play the deck from slide `slide` — the first slide it shows when `null`
-     * — with the presenter view when `presenting`, as Set Up Slide Show has
+     * — with the presenter view when `presenting`, as Set Up Presentation has
      * it, in place of any show playing. Called in the press that starts it,
      * or just after: the browser fills the screen, or opens a window, only in
      * answer to one, for a few seconds after it.
@@ -467,14 +469,16 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         resize(current);
     }
 
-    /** What the presenter view shows of the open deck. */
+    /** What the presenter view shows of the open deck — or PDF, whose pages
+     *  are its slides, every one shown. */
     async function readDeck(): Promise<PresenterDeck> {
         const state = store!.getState();
+        const deck = state.docType === "presentation";
         const slidesPlane = Math.max(0, planeOfView(state.planeKinds, "normal"));
-        const slideCount = await client.presentation.slideCount();
+        const slideCount = deck ? await client.presentation.slideCount() : state.pageCount;
         const indices = Array.from({ length: slideCount }, (_, index) => index);
         const [shows, size] = await Promise.all([
-            client.presentation.slidesShow(indices),
+            deck ? client.presentation.slidesShow(indices) : indices.map(() => true),
             client.pageDisplaySize(slidesPlane, 0),
         ]);
         return {
@@ -483,6 +487,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             slideSize: size.width > 0 && size.height > 0 ? size : FALLBACK_SLIDE,
             slidesPlane,
             notesPlane: state.planeKinds.indexOf("notesText"),
+            pageNoun: profileFor(state.docType).pageNoun,
             dpi: viewDpi(state),
         };
     }
