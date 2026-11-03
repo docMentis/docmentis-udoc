@@ -243,9 +243,8 @@ two kinds of things:
   click it asks for, and is done once the moment it waits for happens, or
   skipped.
 - **Highlights**, what just happened and the docMentis technology that made it
-  happen: "Previewed before it's uploaded: docMentis is client-first: the
-  viewer rendered this file in your browser, in WebAssembly, from its own
-  bytes." Each shows the first time its moment happens, with the moment's
+  happen: "Previewed before upload. Client-first: docMentis rendered this file
+  in your browser, so you see it before it's uploaded, not after." Each shows the first time its moment happens, with the moment's
   figures where it has them (its format, how long it took to open), and stays
   in the panel's list, newest first, until the page loads again.
 

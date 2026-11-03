@@ -82,7 +82,19 @@ interface Told {
     id: string;
     title: string;
     body: string;
-    figures: string;
+    figures: string[];
+}
+
+/** A four-pointed sparkle, marking a highlight. */
+function Sparkle() {
+    return (
+        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path
+                d="M8 0c.4 3.9 2.1 5.6 6 6-3.9.4-5.6 2.1-6 6-.4-3.9-2.1-5.6-6-6 3.9-.4 5.6-2.1 6-6Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
 }
 
 export function Narrator() {
@@ -168,9 +180,12 @@ export function Narrator() {
                             <ul className="narrator-highlights" aria-live="polite">
                                 {told.map(({ id, title, body, figures }) => (
                                     <li key={id} className="narrator-highlight">
-                                        <strong>{title}</strong>
+                                        <strong>
+                                            <Sparkle />
+                                            {title}
+                                        </strong>
                                         <p>{body}</p>
-                                        <span>{figures}</span>
+                                        <span>{figures.join(" · ")}</span>
                                     </li>
                                 ))}
                             </ul>

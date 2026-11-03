@@ -1,5 +1,7 @@
 /* The narrator, in docmentis.com's colors and type rather than Shockwave's:
-   white, slate, and indigo only for the mark and what's new. */
+   white, slate, and indigo only for the mark and what's new. Its type is
+   never smaller than the app's beside it: 14px for what it says, 13px for
+   what's secondary. */
 .narrator {
     --dm-text: #0f172a;
     --dm-muted: #64748b;
@@ -147,7 +149,7 @@
     flex-direction: column;
     align-items: flex-start;
     width: 100%;
-    padding: 10px 12px;
+    padding: 12px 14px;
     border: 1px solid var(--dm-line);
     border-radius: 8px;
     background: #fff;
@@ -161,21 +163,23 @@
 }
 
 .narrator-card strong {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
 }
 
 .narrator-card span {
     color: var(--dm-muted);
-    font-size: 12px;
+    font-size: 13px;
 }
 
 /* The highlights, newest first: each the technology behind what just
-   happened, marked in docMentis's indigo, its figures under it. */
+   happened, on a tint of docMentis's indigo, as docmentis.com sets apart
+   what it features; its figures under it. Its type is the app's size and
+   larger, never smaller: it's what the panel is for. One arriving slides in. */
 .narrator-highlights {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -184,29 +188,52 @@
 .narrator-highlight {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding: 12px 12px 12px 14px;
-    border: 1px solid var(--dm-line);
-    border-left: 3px solid var(--dm-indigo);
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: var(--dm-shadow);
+    gap: 8px;
+    padding: 16px 18px;
+    border: 1px solid #c7d2fe;
+    border-radius: 10px;
+    background: #eef2ff;
+    animation: narrator-highlight-in 0.35s ease-out;
 }
 
 .narrator-highlight strong {
-    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4338ca;
+    font-size: 16px;
     font-weight: 600;
+    line-height: 1.35;
+}
+
+.narrator-highlight strong svg {
+    flex-shrink: 0;
+    color: var(--dm-indigo);
 }
 
 .narrator-highlight p {
     margin: 0;
-    font-size: 13px;
-    line-height: 1.5;
+    color: #334155;
+    font-size: 14px;
+    line-height: 1.55;
 }
 
 .narrator-highlight span {
     color: var(--dm-muted);
-    font-size: 12px;
+    font-size: 13px;
+}
+
+@keyframes narrator-highlight-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .narrator-highlight {
+        animation: none;
+    }
 }
 
 /* A setting chosen once, in one row centered at the panel's foot, its choices
@@ -224,7 +251,7 @@
 
 .narrator-label {
     color: var(--dm-muted);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
 }
 
@@ -237,12 +264,12 @@
 }
 
 .narrator-segmented button {
-    padding: 2px 10px;
+    padding: 3px 10px;
     border: 0;
     border-radius: 5px;
     background: none;
     color: var(--dm-muted);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
 }
 
