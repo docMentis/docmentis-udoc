@@ -213,6 +213,7 @@ const header = new Header({
 const sidebar = new Sidebar({
     onOpenFile: () => fileInput.click(),
     onOpenUrl: () => void openUrl(),
+    onOpenWebPage: () => void openWebPage(),
     onSelectDoc: (doc) => {
         pushAddress({ sample: sampleFile(doc) });
         void openSample(doc);
@@ -236,8 +237,8 @@ let shownMode: Mode | null = null;
 
 /**
  * The document asked for last, by a name for it: `sample=<file>`, as the
- * address names it, or `file=<name>` or `url=<url>` for one it can't name.
- * `null` before the first.
+ * address names it, or `file=<name>`, `url=<url>` or `page=<url>` for one it
+ * can't name. `null` before the first.
  */
 let shownDoc: string | null = null;
 
@@ -336,6 +337,20 @@ async function openUrl(): Promise<void> {
     } catch (err) {
         console.error("udoc: failed to open URL", err);
         showError("Could not load that URL.");
+    }
+}
+
+async function openWebPage(): Promise<void> {
+    const url = prompt("Enter web page URL:");
+    if (!url) return;
+    askUnnamed(`page=${url}`);
+    try {
+        // Framed as a web page, which no URL says it is: given no format, the
+        // viewer would fetch it as a document.
+        await stage.openDoc({ name: url.split("/").pop() || url, source: url, format: "url" });
+    } catch (err) {
+        console.error("udoc: failed to open web page", err);
+        showError("Could not open that web page.");
     }
 }
 

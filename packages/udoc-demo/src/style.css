@@ -239,8 +239,13 @@ body {
 
 .sidebar-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     padding: 0 16px 12px;
+}
+/* A row of its own, over the two that share one. */
+.demo-btn.wide {
+    flex-basis: 100%;
 }
 .demo-btn {
     display: flex;
@@ -248,7 +253,9 @@ body {
     justify-content: center;
     gap: 6px;
     flex: 1;
-    padding: 8px 12px;
+    /* Narrow at the sides, so a label shares a row on one line. */
+    padding: 8px;
+    white-space: nowrap;
     background: var(--accent);
     color: #fff;
     border: none;

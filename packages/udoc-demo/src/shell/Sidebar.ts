@@ -5,6 +5,7 @@ import { SAMPLE_CATEGORIES, type SampleCategory, type SampleDoc } from "../sampl
 export interface SidebarHandlers {
     onOpenFile(): void;
     onOpenUrl(): void;
+    onOpenWebPage(): void;
     onSelectDoc(doc: SampleDoc): void;
     onOpenOptions(): void;
 }
@@ -68,7 +69,7 @@ export class Sidebar {
             { class: "sidebar-actions" },
             h(
                 "button",
-                { class: "demo-btn", type: "button", onclick: () => handlers.onOpenFile() },
+                { class: "demo-btn wide", type: "button", onclick: () => handlers.onOpenFile() },
                 svg(ICONS.openFile),
                 "Open File",
             ),
@@ -77,6 +78,12 @@ export class Sidebar {
                 { class: "demo-btn", type: "button", onclick: () => handlers.onOpenUrl() },
                 svg(ICONS.openUrl),
                 "Open URL",
+            ),
+            h(
+                "button",
+                { class: "demo-btn", type: "button", onclick: () => handlers.onOpenWebPage() },
+                svg(ICONS.openWebPage),
+                "Open Web Page",
             ),
         );
 
@@ -135,6 +142,11 @@ export class Sidebar {
             { class: "rail-btn", type: "button", title: "Open URL", onclick: () => handlers.onOpenUrl() },
             svg(ICONS.openUrl),
         );
+        const openWebPage = h(
+            "button",
+            { class: "rail-btn", type: "button", title: "Open Web Page", onclick: () => handlers.onOpenWebPage() },
+            svg(ICONS.openWebPage),
+        );
 
         const types = h("div", { class: "rail-types" });
         for (const cat of SAMPLE_CATEGORIES) {
@@ -161,6 +173,7 @@ export class Sidebar {
             expandBtn,
             openFile,
             openUrl,
+            openWebPage,
             h("div", { class: "rail-divider" }),
             types,
             h(
