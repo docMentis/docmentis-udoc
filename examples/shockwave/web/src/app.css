@@ -894,10 +894,13 @@ input {
     font-weight: 500;
 }
 
+/* Tiles and cards a fixed 240px wide, as many to a row as fit: more room
+   shows more of them, never smaller ones. Narrower than one, a card takes
+   the width. */
 .folder-grid,
 .file-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 240px));
     gap: 16px;
 }
 
