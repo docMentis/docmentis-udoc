@@ -41,6 +41,13 @@ export interface Folder {
     parentId: string | null;
 }
 
+/**
+ * Pixels to a point a file's card shows its pages at, the first kept and the
+ * others rendered as they're flipped to: a letter page 306 pixels wide, a 16:9
+ * slide 480, sharp on a card at twice the pixels.
+ */
+export const CARD_PAGE_SCALE = 0.5;
+
 /** A file in a tenant's library: an asset, its document kept by udoc-server. */
 export interface Asset {
     id: string;

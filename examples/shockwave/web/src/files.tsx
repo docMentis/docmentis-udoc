@@ -1,8 +1,12 @@
 // How the library shows a file: its type, as a word and a colored badge, its
-// first page, its size and its date.
-import { useState } from "react";
+// pages, its size and its date.
+import { useRef, useState } from "react";
+import type { MouseEvent } from "react";
 
+import { CARD_PAGE_SCALE } from "../../shared/api.ts";
 import type { Asset } from "../../shared/api.ts";
+import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
+import { announceMoment } from "./moments";
 
 /** Each format's name for people, and its badge's color, by udoc's name for it. */
 const TYPES: Record<string, { label: string; color: string }> = {
@@ -30,26 +34,94 @@ export function FileBadge({ format }: { format: string }) {
     );
 }
 
+/** Where page `index` of `asset` is: its first, kept by the backend; another, rendered by udoc-server as it's asked for. */
+function pageSource(asset: Asset, index: number): string {
+    if (index === 0 && asset.thumbnail) return asset.thumbnail;
+    const document = encodeURIComponent(asset.documentId);
+    return `/udoc/documents/${document}/layout/pages/${index}.png?scale=${CARD_PAGE_SCALE}`;
+}
+
 /**
- * A file's first page, kept by the backend; a large badge of its type for a
- * file with none, as a workbook, whose first page is all of its first sheet
- * (GAPS.md).
+ * A file's pages, on its card: its first, kept by the backend, and with the
+ * arrows over it, the others, which udoc-server renders as they're flipped to.
+ * The page shown stays until the one flipped to has loaded; the next arrow
+ * shows until udoc-server has no next page. A file with no first page, as a
+ * workbook, whose first page is all of its first sheet (GAPS.md), shows a
+ * large badge of its type.
  */
 export function Thumbnail({ asset }: { asset: Asset }) {
     const [state, setState] = useState<"loading" | "shown" | "failed">("loading");
+    // The page flipped to, and the one shown: another while it loads.
+    const [page, setPage] = useState(0);
+    const [shown, setShown] = useState(0);
+    const flippedAt = useRef(0);
+    // The pages udoc-server has rendered for this card, which the browser keeps while the page is open.
+    const rendered = useRef(new Set<number>());
+    // The last page, once a flip past it has found it.
+    const [lastPage, setLastPage] = useState(Infinity);
+
+    function flip(event: MouseEvent, by: number) {
+        // The card opens its file; its arrows only flip.
+        event.stopPropagation();
+        flippedAt.current = performance.now();
+        setPage(page + by);
+    }
+
+    function loaded() {
+        setState("shown");
+        setShown(page);
+        if (page === 0 || rendered.current.has(page)) return;
+        rendered.current.add(page);
+        const ms = performance.now() - flippedAt.current;
+        announceMoment({ kind: "page:rendered", where: "card", format: asset.format, ms });
+    }
+
+    // A page flipped to that doesn't load leaves the one shown, the last.
+    function failed() {
+        if (page === 0) {
+            setState("failed");
+            return;
+        }
+        setLastPage(shown);
+        setPage(shown);
+    }
+
     return (
-        <div className="thumbnail">
+        <div className="thumbnail" aria-busy={page !== shown}>
             {state === "failed" || !asset.thumbnail ? (
                 <FileBadge format={asset.format} />
             ) : (
-                <img
-                    src={asset.thumbnail}
-                    alt=""
-                    loading="lazy"
-                    className={state === "shown" ? "thumbnail-shown" : undefined}
-                    onLoad={() => setState("shown")}
-                    onError={() => setState("failed")}
-                />
+                <>
+                    <img
+                        src={pageSource(asset, page)}
+                        alt=""
+                        loading="lazy"
+                        className={state === "shown" ? "thumbnail-shown" : undefined}
+                        onLoad={loaded}
+                        onError={failed}
+                    />
+                    {page !== shown && <span className="page-loading" />}
+                    {state === "shown" && page > 0 && (
+                        <button
+                            type="button"
+                            className="page-flip page-flip-back"
+                            aria-label="Previous page"
+                            onClick={(event) => flip(event, -1)}
+                        >
+                            <ChevronLeftIcon />
+                        </button>
+                    )}
+                    {state === "shown" && page < lastPage && (
+                        <button
+                            type="button"
+                            className="page-flip page-flip-next"
+                            aria-label="Next page"
+                            onClick={(event) => flip(event, 1)}
+                        >
+                            <ChevronRightIcon />
+                        </button>
+                    )}
+                </>
             )}
         </div>
     );

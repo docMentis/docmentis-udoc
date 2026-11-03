@@ -911,7 +911,7 @@ input {
     overflow: hidden;
 }
 
-/* A file's first page, whole, on a tray across the card's top. */
+/* A file's page, whole, on a tray across the card's top: its first, or one flipped to. */
 .thumbnail {
     position: relative;
     display: grid;
@@ -943,6 +943,85 @@ input {
     height: 32px;
     border-radius: 6px;
     font-size: 13px;
+}
+
+/* The arrows that flip a card's pages, at the tray's sides: shown while the
+   card is pointed at or one of them has focus, and always on a screen with no
+   pointer to hover. */
+.page-flip {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--ms-border);
+    border-radius: 50%;
+    background: var(--ms-surface);
+    box-shadow: 0 1px 3px rgb(16 24 40 / 14%);
+    color: var(--ms-text);
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity 0.15s ease;
+}
+
+.page-flip-back {
+    left: 8px;
+}
+
+.page-flip-next {
+    right: 8px;
+}
+
+.page-flip svg {
+    width: 18px;
+    height: 18px;
+}
+
+.page-flip:hover {
+    background: var(--ms-bg);
+}
+
+.file-card:hover .page-flip,
+.thumbnail:focus-within .page-flip {
+    opacity: 1;
+}
+
+@media (hover: none) {
+    .page-flip {
+        opacity: 1;
+    }
+}
+
+/* A page flipped to, while udoc-server renders it: a ring over the page
+   shown, once it takes long enough to notice. */
+.page-loading {
+    position: absolute;
+    inset: 0;
+    width: 24px;
+    height: 24px;
+    margin: auto;
+    border: 3px solid rgb(16 24 40 / 12%);
+    border-top-color: var(--ms-brand);
+    border-radius: 50%;
+    opacity: 0;
+    animation:
+        page-loading-turn 0.8s linear infinite,
+        page-loading-show 0s 0.15s forwards;
+}
+
+@keyframes page-loading-turn {
+    to {
+        transform: rotate(1turn);
+    }
+}
+
+@keyframes page-loading-show {
+    to {
+        opacity: 1;
+    }
 }
 
 .file-card-body {

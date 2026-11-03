@@ -1,6 +1,6 @@
 // The library's two views of a folder's folders and files: a table, a row
 // each, and a grid, folders as tiles over files as cards, each card with its
-// file's first page. A row, a tile or a card opens what it is; its menu, for
+// file's pages to flip through. A row, a tile or a card opens what it is; its menu, for
 // those who manage the library, renames or deletes it.
 import type { MouseEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router";

@@ -5,16 +5,15 @@
 // (GAPS.md). A thumbnail's address names its document, whose first page never
 // changes, so a browser keeps it for good; a document edited in place, when
 // the editor comes, has its thumbnail rendered again, and its address needs a
-// revision then.
+// revision then. The other pages a file's card flips to, the card asks
+// udoc-server for itself: none of them is kept.
 import type { DatabaseSync } from "node:sqlite";
 
 import type { FastifyInstance } from "fastify";
 
+import { CARD_PAGE_SCALE } from "../../shared/api.ts";
 import { Refusal, signedIn } from "../http.ts";
 import type { Udoc } from "../udoc.ts";
-
-/** Pixels to a point: a letter page 306 pixels wide, a 16:9 slide 480, sharp on a card at twice the pixels. */
-const SCALE = 0.5;
 
 /** Where document `documentId`'s thumbnail is, for an `<img>`. */
 export function thumbnailPath(documentId: string): string {
@@ -28,7 +27,7 @@ export function thumbnailPath(documentId: string): string {
  * so the next asking tries again.
  */
 export async function keepThumbnail(db: DatabaseSync, udoc: Udoc, documentId: string): Promise<Uint8Array | null> {
-    const png = await udoc.renderFirstPage(documentId, SCALE);
+    const png = await udoc.renderFirstPage(documentId, CARD_PAGE_SCALE);
     db.prepare("INSERT OR REPLACE INTO thumbnails (document_id, png) VALUES (?, ?)").run(documentId, png);
     return png;
 }

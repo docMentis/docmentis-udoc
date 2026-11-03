@@ -201,8 +201,9 @@ udoc-server with `createUDocServer` over a `DirectoryDocumentStore`, mounted at
 renders its pages and serves it part by part and for collaboration. SQLite,
 Node's own `node:sqlite`, keeps what the app adds: tenants, users, sessions, and
 an asset for each document, naming its tenant and its udoc document id, and
-its first page as a thumbnail, rendered by udoc-server once, on upload. No
-document is kept twice.
+its first page as a thumbnail, rendered by udoc-server once, on upload. The
+other pages a file's card flips to, udoc-server renders as they're asked for,
+and none is kept. No document is kept twice.
 
 **The gate.** udoc-server has no end-user authentication, and its ids are
 global. So every `/udoc/*` request and WebSocket upgrade passes the gate first,
@@ -250,8 +251,8 @@ two kinds of things:
 
 The product knows nothing of the narrator. It announces **moments** through a
 small module of events of its own (`web/src/moments.ts`) — `route` and
-`session`, which say how things stand, and `document:opened` and `asset:added`,
-which say what just happened — and marks what a step can point at with
+`session`, which say how things stand, and `document:opened`, `page:rendered`
+and `asset:added`, which say what just happened — and marks what a step can point at with
 `data-narrator="…"`; the narrator is their only listener. Taking it out leaves
 the product whole. The product's root, `#app`, is all of the window it knows:
 its dialogs are modal to it alone, over it and not the narrator, which stays

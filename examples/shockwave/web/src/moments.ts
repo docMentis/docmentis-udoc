@@ -4,13 +4,27 @@
 // comes of it.
 
 /** Something that just happened in the app. */
-export interface Moment {
+export type Moment = DocumentOpened | PageRendered;
+
+/** A document opened in the browser. */
+export interface DocumentOpened {
     kind: "document:opened";
     /** Where: a file picked for upload, opened in the browser before it's sent. */
     where: "upload";
     /** udoc's name for its format, as the viewer read it: `pdf`, `pptx`, …; `null` when it didn't say. */
     format: string | null;
     /** From the viewer's making to the document open, in milliseconds. */
+    ms: number;
+}
+
+/** A page rendered by udoc-server as it was asked for, and shown. */
+export interface PageRendered {
+    kind: "page:rendered";
+    /** Where: a file's card in the library's grid, flipped to a page past its first. */
+    where: "card";
+    /** udoc's name for its document's format: `pdf`, `pptx`, … */
+    format: string;
+    /** From asking for the page to its image loaded, in milliseconds. */
     ms: number;
 }
 

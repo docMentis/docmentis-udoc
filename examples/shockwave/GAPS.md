@@ -60,7 +60,8 @@ later ones, while udoc-server kept it open, 5 to 25 ms.
 **Workaround.** The backend renders a file's first page once, on upload, or
 for a file uploaded before, when it's first asked for; keeps it in its
 database; and serves it from `/api/thumbnails/:documentId`, for a browser to
-keep for good (`server/routes/thumbnails.ts`).
+keep for good (`server/routes/thumbnails.ts`). The other pages a card flips
+to are asked of udoc-server, and rendered again after a reload.
 
 ## A page at an IPv6 address can't verify free usage
 
