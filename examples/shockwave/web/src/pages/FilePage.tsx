@@ -1,20 +1,28 @@
-// A file in the library, open in the viewer from udoc-server, under the path
-// to its folder.
+// A file in the library, under the path to its folder: a card, its title bar
+// the file's name and what the app knows of it, with a menu to rename or
+// delete it for those who manage the library, over the file open in the
+// viewer from udoc-server.
 import { Fragment, useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 
+import { managesLibrary } from "../../../shared/api.ts";
 import type { Asset, Folder } from "../../../shared/api.ts";
 import { ApiError, api } from "../api";
 import { DocumentViewer } from "../DocumentViewer";
 import { formatDate, formatSize, typeLabel } from "../files";
 import { ChevronRightIcon } from "../icons";
-import { useDocumentTitle } from "../ui";
+import { DeleteDialog, NameDialog } from "../LibraryDialogs";
+import { useUser } from "../session";
+import { ActionsMenu, useDocumentTitle } from "../ui";
 import { NotFoundPage } from "./PlaceholderPage";
 
 export function FilePage() {
     const { assetId } = useParams();
+    const navigate = useNavigate();
+    const manages = managesLibrary(useUser().role);
     const [found, setFound] = useState<{ asset: Asset; path: Folder[] } | null>();
     const [failed, setFailed] = useState(false);
+    const [task, setTask] = useState<"rename" | "delete">();
 
     useEffect(() => {
         let gone = false;
@@ -43,27 +51,63 @@ export function FilePage() {
         );
     if (!found) return null;
     const { asset, path } = found;
+    const parent = path.at(-1);
+    const item = { kind: "file" as const, id: asset.id, name: asset.name };
+
     return (
         <div className="page file-page">
-            <header className="page-header">
-                <nav className="breadcrumb" aria-label="Folders">
-                    <Link to="/library">Library</Link>
-                    {path.map((folder) => (
-                        <Fragment key={folder.id}>
-                            <ChevronRightIcon />
-                            <Link to={`/library/folders/${folder.id}`}>{folder.name}</Link>
-                        </Fragment>
-                    ))}
-                </nav>
-                <h1>{asset.name}</h1>
-                <p className="page-subtitle">
-                    {typeLabel(asset.format)} · {formatSize(asset.size)} · Uploaded by {asset.uploadedBy.name} on{" "}
-                    {formatDate(asset.uploadedAt)}
-                </p>
-            </header>
-            <div className="file-viewer">
-                <DocumentViewer documentId={asset.documentId} />
-            </div>
+            <nav className="breadcrumb" aria-label="Folders">
+                <Link to="/library">Library</Link>
+                {path.map((folder) => (
+                    <Fragment key={folder.id}>
+                        <ChevronRightIcon />
+                        <Link to={`/library/folders/${folder.id}`}>{folder.name}</Link>
+                    </Fragment>
+                ))}
+            </nav>
+            <section className="document-card">
+                <header className="document-title-bar">
+                    <div className="document-title">
+                        <h1>{asset.name}</h1>
+                        <p>
+                            {typeLabel(asset.format)} · {formatSize(asset.size)} · Uploaded by {asset.uploadedBy.name}{" "}
+                            on {formatDate(asset.uploadedAt)}
+                        </p>
+                    </div>
+                    {manages && (
+                        <ActionsMenu
+                            label={`Actions for ${asset.name}`}
+                            items={[
+                                { label: "Rename", onSelect: () => setTask("rename") },
+                                { label: "Delete", onSelect: () => setTask("delete") },
+                            ]}
+                        />
+                    )}
+                </header>
+                <div className="document-viewer">
+                    <DocumentViewer documentId={asset.documentId} />
+                </div>
+            </section>
+            {task === "rename" && (
+                <NameDialog
+                    title="Rename file"
+                    action="Rename"
+                    initial={asset.name}
+                    onClose={() => setTask(undefined)}
+                    onSubmit={async (name) => {
+                        const renamed = await api.renameAsset(asset.id, name);
+                        setFound({ asset: renamed, path });
+                        setTask(undefined);
+                    }}
+                />
+            )}
+            {task === "delete" && (
+                <DeleteDialog
+                    item={item}
+                    onClose={() => setTask(undefined)}
+                    onDeleted={() => navigate(parent ? `/library/folders/${parent.id}` : "/library")}
+                />
+            )}
         </div>
     );
 }

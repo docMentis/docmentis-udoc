@@ -1192,16 +1192,63 @@ input {
     height: 100%;
 }
 
-/* A file's page: its header, and the viewer filling the rest. */
+/* A file's page: the path to its folder, over a card that is the document,
+   its title bar over the viewer, which fills the rest. The viewer rounds its
+   own bottom corners into the card's, so the card clips nothing, and the
+   title bar's menu opens over the viewer. */
 .file-page {
     height: 100%;
+    gap: 12px;
 }
 
-.file-viewer {
+.file-page .breadcrumb {
+    margin: 0;
+}
+
+.document-card {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--ms-surface);
+    border: 1px solid var(--ms-border);
+    border-radius: var(--ms-radius);
+    box-shadow: var(--ms-shadow);
+}
+
+.document-title-bar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 12px 12px 20px;
+    border-bottom: 1px solid var(--ms-border);
+}
+
+.document-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.document-title h1 {
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.document-title p {
+    overflow: hidden;
+    color: var(--ms-muted);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.document-viewer {
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    border: 1px solid var(--ms-border);
-    border-radius: var(--ms-radius);
-    background: var(--ms-surface);
+    border-radius: 0 0 calc(var(--ms-radius) - 1px) calc(var(--ms-radius) - 1px);
 }
