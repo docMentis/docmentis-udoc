@@ -463,6 +463,7 @@ export const ru: Messages = {
     "loading.downloading": "Загрузка…",
     "loading.progress": "{loaded} / {total} МБ",
     "media.openOnSite": "Открыть на {site}",
+    "webpage.openInNewTab": "Открыть в новой вкладке",
 
     // License notice
     "license.invalidLicense": "Недействительная лицензия",

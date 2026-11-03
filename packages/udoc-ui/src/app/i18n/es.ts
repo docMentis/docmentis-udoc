@@ -462,6 +462,7 @@ export const es: Messages = {
     "loading.downloading": "Descargando…",
     "loading.progress": "{loaded} / {total} MB",
     "media.openOnSite": "Abrir en {site}",
+    "webpage.openInNewTab": "Abrir en una pestaña nueva",
 
     // License notice
     "license.invalidLicense": "Licencia no válida",

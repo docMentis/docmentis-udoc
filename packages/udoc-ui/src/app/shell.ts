@@ -139,6 +139,7 @@ import { isFileFormat, mediaType, signaturelessFormat, sourceName, sourceReader 
 import type { OpenSource } from "./source.js";
 import { createExtensionDocuments } from "./extension-documents.js";
 import { createMediaDocument } from "./media-document.js";
+import { lendChromeWords, webpageDocument } from "./webpage-document.js";
 import type {
     ExtensionDocument,
     ExtensionDocumentHost,
@@ -768,9 +769,11 @@ export function mountUIShell(
     canvas.mount(viewportSlot, store);
 
     // The extension documents — those the host registered, then the built-in
-    // media document — and the one shown: the `<div>` it renders into, over
-    // the canvas, and its viewer once its open resolves.
-    const extensionDocuments = createExtensionDocuments([createMediaDocument(i18n)]);
+    // media document and the web page document, which frames only a URL
+    // `format: "url"` names until a host's rule replaces it — and the one
+    // shown: the `<div>` it renders into, over the canvas, and its viewer once
+    // its open resolves.
+    const extensionDocuments = createExtensionDocuments([createMediaDocument(i18n), webpageDocument()]);
     for (const registered of shellOptions.extensionDocuments ?? []) extensionDocuments.register(registered);
     let extensionShown: { container: HTMLDivElement; viewer: ExtensionDocumentViewer | null } | null = null;
 
@@ -1963,6 +1966,9 @@ export function mountUIShell(
                 if (!signal.aborted) store.dispatch({ type: "SET_LOAD_PROGRESS", progress: { loaded, total } });
             },
         };
+        // The web page document's link is in the chrome's words, a host's
+        // `translations` included, which a host's own document has no use for.
+        lendChromeWords(host, i18n);
         let viewer: ExtensionDocumentViewer;
         try {
             viewer = await chosen.open(container, request, host);

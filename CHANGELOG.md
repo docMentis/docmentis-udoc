@@ -33,6 +33,14 @@ listed once, by package. Its major and minor version are those of the
   Video.js is bundled into `@docmentis/udoc-ui`, so a host installs none of it,
   and a page without a bundler plays media too; `dist/THIRD-PARTY-NOTICES.md`
   lists what it bundles, with their licenses.
+- A built-in web page document, `docType` `"webpage"`, frames a page:
+  `open(url, { format: "url" })`. A URL given no `format` is never taken for
+  one, as taking every URL would frame a PDF; to frame some without one — a
+  host's Figma or Loom embeds, say — register `webpageDocument({ canOpen })`
+  with a rule saying which, which replaces the built-in one. The page shows in
+  a sandboxed iframe under a bar with its address and an "Open in new tab"
+  link, which always shows, for a site that refuses to be framed. It follows
+  the theme through its `prefers-color-scheme`.
 
 #### Changed
 

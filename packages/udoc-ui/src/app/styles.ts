@@ -2120,6 +2120,58 @@ export const uiStyles = css`
         font: inherit;
         text-decoration: none;
     }
+    /* The web page document: a bar with the page's address and the link that
+   opens it in a new tab — always there, as a page that refuses to be framed
+   leaves the frame blank — over the frame, which fills the rest. */
+    .udoc-ui-root .udoc-ui__webpage-document {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    .udoc-ui-root .udoc-ui__webpage-document-bar {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex: none;
+        height: 32px;
+        padding: 0 12px;
+        background: var(--udoc-toolbar-background);
+        border-bottom: 1px solid var(--udoc-color-outline-variant);
+        color: var(--udoc-color-on-surface-variant);
+        font-size: 13px;
+    }
+    .udoc-ui-root .udoc-ui__webpage-document-address {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .udoc-ui-root .udoc-ui__webpage-document-open {
+        flex: none;
+        color: var(--udoc-color-on-surface);
+        font: inherit;
+        text-decoration: none;
+    }
+    .udoc-ui-root .udoc-ui__webpage-document-open:hover {
+        text-decoration: underline;
+    }
+    .udoc-ui-root .udoc-ui__webpage-document-open:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+    /* A page with no background of its own shows the browser's, as in a tab of
+   its own, in the theme's color scheme. */
+    .udoc-ui-root .udoc-ui__webpage-document-frame {
+        display: block;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        border: 0;
+        background: Canvas;
+    }
     .udoc-ui-root.udoc-extension-document-open .udoc-floating-toolbar,
     .udoc-ui-root.udoc-extension-document-open .udoc-status-bar,
     .udoc-ui-root.udoc-extension-document-open .udoc-toolbar__left > *,

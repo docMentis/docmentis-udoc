@@ -8,6 +8,9 @@ export type {
     ExtensionDocumentViewer,
     ExtensionDocumentOpenRequest,
 } from "./app/extension-documents.js";
+// The web page document, which a host registers with its own rule.
+export { webpageDocument } from "./app/webpage-document.js";
+export type { WebpageDocumentOptions } from "./app/webpage-document.js";
 // A PDF's annotations, as the page-annotation calls and events hand them to a
 // host and take them back (generated from the Rust serde), and the partial one
 // `patchPageAnnotation` merges in.

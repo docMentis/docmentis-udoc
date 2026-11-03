@@ -460,6 +460,7 @@ export const ko: Messages = {
     "loading.downloading": "다운로드 중…",
     "loading.progress": "{loaded} / {total} MB",
     "media.openOnSite": "{site}에서 열기",
+    "webpage.openInNewTab": "새 탭에서 열기",
 
     // License notice
     "license.invalidLicense": "유효하지 않은 라이선스",

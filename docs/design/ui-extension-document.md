@@ -4,8 +4,10 @@ An extension document is a kind of document the engine doesn't read — video
 and audio from files, streams and video sites, a web page — that the viewer
 and the editor open, view only. A host registers one with
 `extensionDocuments` among the options, or `registerExtensionDocument` on the
-viewer or the editor later; two ship built in. When one opens, the shell hands
-it a `<div>` where the document goes, and it renders itself there.
+viewer or the editor later. Two ship built in: media, and a web page document
+that frames a URL only when `open` is given `format: "url"`, until a host
+registers one with its own rule. When one opens, the shell hands it a `<div>`
+where the document goes, and it renders itself there.
 
 An extension document is not an extension. An extension (`UIExtension`,
 [UI Extension](ui-extension.md)) adds a mode to the shell — edit mode is
@@ -193,14 +195,39 @@ and its license text.
 - DASH is left out: Video.js marks its `dash-video` experimental and maps none
   of dash.js's errors, and dash.js would add 130 MB to every host's install.
 
-**Web page** (`"webpage"`) frames a page in an iframe. It isn't registered: a
-host registers `webpageDocument({ canOpen })` with its own rule — its Figma or
-Loom embeds, say. Taking every URL would frame `report.pdf`, which `open`
-fetches as a document, and an HTML file, which the engine reads — so its one
-format is `url`, not the engine's `html`. A site that refuses to be framed
-(`X-Frame-Options`, `frame-ancestors`) leaves a blank frame its parent can't
-reliably tell from a slow one, so an "Open in new tab" link always shows. The
-frame's `sandbox` and `allow` grant what a page needs to show and no more.
+**Web page** (`"webpage"`, `webpage-document.ts`) frames a page in an iframe.
+No URL says it is a page, as a media file says it is media: taking every URL
+would frame `report.pdf`, which `open` fetches as a document, and an HTML
+file, which the engine reads — and another site's page can't be read for its
+first bytes, which CORS refuses. So its one format is `url`, not the engine's
+`html`, and the built-in one, `webpageDocument()`, has no rule: it frames a URL
+`open` is given `format: "url"` for, and says no to every other. A host that
+wants pages opened without a `format` — its Figma or Loom embeds, say —
+registers `webpageDocument({ canOpen })` with its own rule, which replaces the
+built-in one by its doc type.
+
+- A host's `canOpen` is asked only of a URL source, typed with its `url` a
+  string; a Blob or bytes is no page. `format: "url"` refuses a Blob,
+  `unsupported`. Nothing is fetched: the frame loads the page.
+- Over the frame, a bar with the page's address and an "Open in new tab" link.
+  A site that refuses to be framed (`X-Frame-Options`, `frame-ancestors`)
+  leaves a frame its parent can't tell from a slow one — Chrome shows its
+  error page — so the link always shows. `open` resolves on the frame's
+  `load`, which fires for a refused page too, or after ten seconds.
+- The frame's `sandbox` grants what a page needs to show and no more: scripts,
+  its own origin (its cookies and storage), forms, and popups that escape the
+  sandbox, for its links to new tabs — not navigating the host's page, dialogs
+  or downloads. Its `allow`: autoplay, clipboard-write, encrypted-media,
+  fullscreen and picture-in-picture. A page from the host's own origin, allowed
+  scripts and its origin, can lift the sandbox: the rule that admits it is the
+  host's.
+- The frame inherits the `color-scheme` the chrome sets, which the page reads as
+  its `prefers-color-scheme`, so `setTheme` has nothing to do; its background
+  is `Canvas`, the browser's own, for a page with none.
+- The link is in the chrome's words, the host's `translations` included, which
+  the shell lends with the host it hands `open` (`lendChromeWords`) — not a
+  member of `ExtensionDocumentHost`, as a host's own document has no use for
+  them. Opened anywhere else, it refuses, `invalidRequest`.
 
 ## Thumbnails in Node
 
@@ -244,6 +271,8 @@ registered by `extensionDocuments` or `registerExtensionDocument`;
 `ExtensionDocumentViewer` with `sourceFormat`, `close` and `setTheme`; the
 choice of which opens a source; `head()` over a source read once; the `<div>`
 and the chrome that hides around it; and the license gate on every open. The
-built-in media document — files, HLS, YouTube and Vimeo on Video.js 10.
+built-in media document — files, HLS, YouTube and Vimeo on Video.js 10. The
+web page document, built in for `format: "url"`, and `webpageDocument` for a
+host's rule.
 
-**Not built:** the web page document, DASH, and thumbnails in Node.
+**Not built:** DASH, and thumbnails in Node.

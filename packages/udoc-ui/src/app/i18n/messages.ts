@@ -863,6 +863,10 @@ export interface Messages {
     /** Open on {site} — a YouTube or Vimeo video that won't play here, on its own site */
     "media.openOnSite": string;
 
+    // Web page
+    /** Open in new tab — the page a web page document frames, in a tab of its own */
+    "webpage.openInNewTab": string;
+
     // License notice
     /** Invalid License */
     "license.invalidLicense": string;

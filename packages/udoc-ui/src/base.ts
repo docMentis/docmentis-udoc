@@ -248,7 +248,10 @@ export interface UDocOptions {
     /** Kinds of document the engine doesn't read, which open here view only
      *  — each an {@link ExtensionDocument}, asked in this order ahead of the
      *  engine. {@link UDocBase.registerExtensionDocument} adds more later.
-     *  Default none. */
+     *  Default none: the built-in ones alone, asked after any registered — the
+     *  media document, and a `webpageDocument` with no rule, which
+     *  frames a URL only given `format: "url"`. One of a built-in's doc type
+     *  replaces it. */
     extensionDocuments?: readonly ExtensionDocument[];
 }
 
@@ -263,7 +266,8 @@ export interface RenderPageOptions {
 export interface OpenOptions {
     /** The source's format, for one detection gets wrong: given, it skips
      *  detection outright — the extension document whose `formats` hold it
-     *  opens it, else the engine, which takes its own formats alone. Default
+     *  opens it, else the engine, which takes its own formats alone —
+     *  `"url"` frames a URL as a web page (`webpageDocument`). Default
      *  detected — an extension document's `canOpen`, then the engine: a CSV, a
      *  TSV, a PSV, a text file or a Markdown file, which has no signature, and
      *  an HTML file, by the file's name — and a `.udoc` zip opens as a
@@ -607,8 +611,9 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * documents registered before it and ahead of the engine — by its
      * `formats` when given a `format`, else by its `canOpen` — and when it
      * takes the source, it renders it into the document area, view only. One
-     * of a doc type already registered replaces that one. Throws an
-     * `invalidRequest` `UDocError` for one of the engine's doc types.
+     * of a doc type already registered replaces that one, a built-in's
+     * included. Throws an `invalidRequest` `UDocError` for one of the
+     * engine's doc types.
      */
     registerExtensionDocument(document: ExtensionDocument): void {
         this.shell.registerExtensionDocument(document);
