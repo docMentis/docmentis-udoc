@@ -53,6 +53,14 @@ Built on `@docmentis/udoc-wasm` 0.8.15.
   timer. `startSlideShow(slide?)` plays a PDF from page `slide`. The
   `translations` keys `command.slideShowFromCurrentPage`, `presenter.pageOf`
   and `presenter.nextPage` are new.
+- A slide show and Preview play the transitions that cut to the next slide
+  before: Doors, Window, Switch, Gallery, Conveyor, Ferris Wheel, Blinds,
+  Checkerboard, Glitter, Ripple, Vortex, Shred, Honeycomb, and the sheets
+  that bend, fold and fly — Page Curl, Peel Off, Fall Over, Drape, Curtains,
+  Wind, Prestige, Fracture, Crush, Airplane and Origami.
+- Morph's By Word and By Character carry each word or letter two texts share
+  from where it stands to where it goes, the rest fading in or out, where the
+  whole text moved as one.
 
 #### Changed
 
@@ -88,6 +96,23 @@ Built on `@docmentis/udoc-wasm` 0.8.15.
   Presentation; the line past the last slide, the presenter view's and the
   show's own window say presentation where they said slide show. Their
   `translations` keys are as they were.
+
+#### Fixed
+
+- Morph pairs shapes as PowerPoint does where they faded: a picture with
+  one of the same image, even saved smaller or a little brighter, its crop
+  moving as its box does; text on its words, however it is formatted; and
+  plain rectangles, which stretch from box to box.
+- A morph whose slide takes a while to prepare plays whole, where it could
+  be skipped after a pause.
+- A slide that names no transition plays its slide layout's, or its slide
+  master's, as PowerPoint does; its thumbnail is marked and Preview plays
+  it.
+- Reveal moves the slides' shapes as it hides and shows them, as
+  PowerPoint's does, and Smoothly no longer plays as a plain fade.
+- Preview, where the view shows the slide, shows black under it as a
+  transition uncovers it, as the show does, where the view's backdrop
+  showed through.
 
 ### udoc-demo
 
