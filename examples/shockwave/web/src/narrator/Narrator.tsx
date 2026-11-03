@@ -10,11 +10,17 @@
 // the app's own form: the narrator fills it in and presses its button, as a
 // visitor would. Those offers are new from the moment the page shows, and go
 // with it. It knows the app's pages and forms; the app knows nothing of it.
+//
+// It hears the moments the app announces, and tells each highlight in its
+// script the first time its moment happens: new then, and kept in the panel,
+// newest first, until the page is loaded again.
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 
 import { DEMO_PASSWORD, PERSONAS } from "../../../shared/personas.ts";
+import { onMoment } from "../moments";
 import { DocMentisMark } from "./DocMentisMark";
+import { HIGHLIGHTS } from "./script";
 import "./narrator.css";
 
 /** The docmentis.com typeface the panel is set in. */
@@ -71,14 +77,27 @@ function saveAnnounce(announce: Announce): void {
     }
 }
 
+/** A highlight told: what it says, and its moment's figures. */
+interface Told {
+    id: string;
+    title: string;
+    body: string;
+    figures: string;
+}
+
 export function Narrator() {
     const { pathname } = useLocation();
     const [open, setOpen] = useState(false);
     const [announce, setAnnounce] = useState(savedAnnounce);
-    const [flashing, setFlashing] = useState(false);
-    const [unseen, setUnseen] = useState(false);
-    const now = useRef({ open, announce });
-    now.current = { open, announce };
+    const [offersNew, setOffersNew] = useState(false);
+    const [told, setTold] = useState<Told[]>([]);
+    const [toldNew, setToldNew] = useState(false);
+    const toldIds = useRef(new Set<string>());
+    const now = useRef({ open });
+    now.current = { open };
+    // What's new, told on the folded tab as the viewer chose.
+    const unseen = (offersNew || toldNew) && announce !== "off";
+    const flashing = unseen && announce === "flash";
 
     useEffect(() => {
         if (document.querySelector(`link[href="${FONT_URL}"]`)) return;
@@ -89,16 +108,28 @@ export function Narrator() {
     // The sign-in page's offers, new as it shows and gone as it goes. With the
     // panel unfolded, they're simply there.
     useEffect(() => {
-        const news = pathname === "/sign-in" && !now.current.open && now.current.announce !== "off";
-        setUnseen(news);
-        setFlashing(news && now.current.announce === "flash");
+        setOffersNew(pathname === "/sign-in" && !now.current.open);
     }, [pathname]);
+
+    // Each highlight, the first time its moment happens: new while the panel's folded.
+    useEffect(
+        () =>
+            onMoment((moment) => {
+                const highlight = HIGHLIGHTS.find((candidate) => candidate.tells(moment));
+                if (!highlight || toldIds.current.has(highlight.id)) return;
+                toldIds.current.add(highlight.id);
+                const { id, title, body } = highlight;
+                setTold((before) => [{ id, title, body, figures: highlight.figures(moment) }, ...before]);
+                if (!now.current.open) setToldNew(true);
+            }),
+        [],
+    );
 
     function toggle() {
         setOpen(!open);
         if (open) return;
-        setUnseen(false);
-        setFlashing(false);
+        setOffersNew(false);
+        setToldNew(false);
     }
 
     function choose(chosen: Announce) {
@@ -120,18 +151,31 @@ export function Narrator() {
             {flashing && <div className="narrator-edge" />}
             {open && (
                 <div className="narrator-panel">
-                    {pathname === "/sign-in" && (
-                        <ul className="narrator-cards">
-                            {PERSONAS.map(({ email, name, title }) => (
-                                <li key={email}>
-                                    <button className="narrator-card" onClick={() => signInAs(email)}>
-                                        <strong>Sign in as {name}</strong>
-                                        <span>{title}</span>
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
+                    <div className="narrator-body">
+                        {pathname === "/sign-in" && (
+                            <ul className="narrator-cards">
+                                {PERSONAS.map(({ email, name, title }) => (
+                                    <li key={email}>
+                                        <button className="narrator-card" onClick={() => signInAs(email)}>
+                                            <strong>Sign in as {name}</strong>
+                                            <span>{title}</span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        {told.length > 0 && (
+                            <ul className="narrator-highlights" aria-live="polite">
+                                {told.map(({ id, title, body, figures }) => (
+                                    <li key={id} className="narrator-highlight">
+                                        <strong>{title}</strong>
+                                        <p>{body}</p>
+                                        <span>{figures}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
                     <div className="narrator-setting">
                         <span id="narrator-announce" className="narrator-label">
                             Notify me

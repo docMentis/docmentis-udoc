@@ -110,10 +110,10 @@
 /* The panel: its left edge bordered and shadowed as the tab is, the shadow
    cast only to the left. What it tells sits in the middle row, centered on the
    panel's height and so level with the tab, the setting at the foot of the
-   last; a row grows rather than let them overlap. */
+   last; the middle row takes what the setting leaves, and scrolls. */
 .narrator-panel {
     display: grid;
-    grid-template-rows: 1fr auto 1fr;
+    grid-template-rows: 1fr minmax(0, auto) 1fr;
     height: 100%;
     border-left: 1px solid var(--dm-line);
     background: #fff;
@@ -121,14 +121,24 @@
     clip-path: inset(0 0 0 -12px);
 }
 
+/* What the guide tells, in the middle row, scrolling when it outgrows it:
+   the offers to act on, then the highlights. */
+.narrator-body {
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    overflow: auto;
+}
+
 /* Cards the viewer acts through, each a button. */
 .narrator-cards {
-    grid-row: 2;
     display: flex;
     flex-direction: column;
     gap: 8px;
     margin: 0;
-    padding: 16px;
+    padding: 0;
     list-style: none;
 }
 
@@ -156,6 +166,45 @@
 }
 
 .narrator-card span {
+    color: var(--dm-muted);
+    font-size: 12px;
+}
+
+/* The highlights, newest first: each the technology behind what just
+   happened, marked in docMentis's indigo, its figures under it. */
+.narrator-highlights {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.narrator-highlight {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 12px 12px 14px;
+    border: 1px solid var(--dm-line);
+    border-left: 3px solid var(--dm-indigo);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: var(--dm-shadow);
+}
+
+.narrator-highlight strong {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.narrator-highlight p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.narrator-highlight span {
     color: var(--dm-muted);
     font-size: 12px;
 }

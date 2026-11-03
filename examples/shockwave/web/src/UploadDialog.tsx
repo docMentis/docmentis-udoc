@@ -1,6 +1,6 @@
 // Uploading a file into the library: picked or dropped, it opens in the viewer
-// from its own bytes, in the browser, before anything is sent; then it's named,
-// and uploaded into the folder the user is in.
+// from its own bytes, in the browser, before anything is sent, a moment the
+// app announces; then it's named, and uploaded into the folder the user is in.
 import { useState } from "react";
 import type { FormEvent } from "react";
 
@@ -8,6 +8,7 @@ import type { Asset, Folder } from "../../shared/api.ts";
 import { ApiError, api } from "./api";
 import { DocumentViewer } from "./DocumentViewer";
 import { baseName, formatSize } from "./files";
+import { announceMoment } from "./moments";
 import { Dialog } from "./ui";
 
 /** The largest upload, the backend's limit. */
@@ -51,7 +52,13 @@ export function UploadDialog({
         <Dialog title="Upload a file" className="upload-dialog" onClose={onClose}>
             <form className="upload" onSubmit={(event) => void submit(event)}>
                 <div className="upload-preview">
-                    <DocumentViewer file={file} onFailed={() => setUnreadable(true)} />
+                    <DocumentViewer
+                        file={file}
+                        onOpened={({ format, ms }) =>
+                            announceMoment({ kind: "document:opened", where: "upload", format, ms })
+                        }
+                        onFailed={() => setUnreadable(true)}
+                    />
                 </div>
                 <div className="upload-details">
                     <label className="field">

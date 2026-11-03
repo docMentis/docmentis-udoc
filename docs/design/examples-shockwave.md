@@ -243,11 +243,11 @@ two kinds of things:
   click it asks for, and is done once the moment it waits for happens, or
   skipped.
 - **Highlights**, what just happened and the docMentis technology that made it
-  happen: "Viewed before uploading: the viewer rendered the file in your
-  browser, in WebAssembly, and it hasn't left your computer." Each shows the
-  first time its moment happens, with the moment's figures where it has them
-  (its format, its pages, how long it took to open), and stays in the panel's
-  list.
+  happen: "Previewed before it's uploaded: docMentis is client-first: the
+  viewer rendered this file in your browser, in WebAssembly, from its own
+  bytes." Each shows the first time its moment happens, with the moment's
+  figures where it has them (its format, how long it took to open), and stays
+  in the panel's list, newest first, until the page loads again.
 
 The product knows nothing of the narrator. It announces **moments** through a
 small module of events of its own (`web/src/moments.ts`) — `route` and

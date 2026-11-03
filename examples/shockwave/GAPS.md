@@ -61,3 +61,19 @@ later ones, while udoc-server kept it open, 5 to 25 ms.
 for a file uploaded before, when it's first asked for; keeps it in its
 database; and serves it from `/api/thumbnails/:documentId`, for a browser to
 keep for good (`server/routes/thumbnails.ts`).
+
+## A page at an IPv6 address can't verify free usage
+
+**Needed.** The viewer opening a document on a page served at an IPv6
+address, as `http://[::1]:5290`, an instance tested beside another whose
+cookies, at `localhost`, it mustn't touch.
+
+**Offered.** The browser packages send the page's `window.location.hostname`
+as its domain (udoc-ui's `sessionConfigOf`), which keeps an IPv6 address's
+brackets, `[::1]`; the permit comes back issued for `::1`, without them; and
+the engine compares the two as they are, so every open there fails: "Cannot
+verify free usage: permit issued for '::1', not '[::1]'". A page at a host
+name opens as it should.
+
+**Workaround.** None in shockwave: a second instance is tested at
+`shockwave.localhost` instead, a name, whose cookies are its own too.
