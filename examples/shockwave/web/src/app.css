@@ -1193,10 +1193,14 @@ input {
 }
 
 /* A file's page: the path to its folder, over a card that is the document,
-   its title bar over the viewer, which fills the rest. The viewer rounds its
-   own bottom corners into the card's, so the card clips nothing, and the
-   title bar's menu opens over the viewer. */
+   its title bar over the viewer, which fills the rest; and beside it, as
+   tall, a card of the app's own on the file, or folded, a strip. The side
+   card's tabs are in a strip as tall as the title bar, so the lines under
+   them meet, with the button that folds and unfolds it at their right. The
+   viewer rounds its own bottom corners into the card's, so the card clips
+   nothing, and the title bar's menu opens over the viewer. */
 .file-page {
+    --document-bar: 68px;
     height: 100%;
     gap: 12px;
 }
@@ -1205,10 +1209,27 @@ input {
     margin: 0;
 }
 
-.document-card {
-    display: flex;
+.file-columns {
+    display: grid;
     flex: 1;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    min-height: 0;
+}
+
+.file-columns-panel {
+    grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.file-columns-rail {
+    grid-template-columns: minmax(0, 1fr) 48px;
+}
+
+.document-card,
+.document-panel {
+    display: flex;
     flex-direction: column;
+    min-width: 0;
     min-height: 0;
     background: var(--ms-surface);
     border: 1px solid var(--ms-border);
@@ -1221,7 +1242,8 @@ input {
     flex-shrink: 0;
     align-items: center;
     gap: 12px;
-    padding: 12px 12px 12px 20px;
+    height: var(--document-bar);
+    padding: 0 12px 0 20px;
     border-bottom: 1px solid var(--ms-border);
 }
 
@@ -1246,49 +1268,32 @@ input {
     white-space: nowrap;
 }
 
-.document-title-bar .icon-button[aria-expanded="true"] {
-    background: var(--ms-bg);
-    color: var(--ms-text);
-}
-
-/* Under the title bar, the viewer, and with the side panel open, the panel
-   beside it, its tabs in a strip as tall as the viewer's toolbar. */
-.document-body {
-    display: grid;
-    flex: 1;
-    grid-template-columns: minmax(0, 1fr);
-    min-height: 0;
-}
-
-.document-body-panel {
-    grid-template-columns: minmax(0, 1fr) 300px;
-}
-
 .document-viewer {
-    min-width: 0;
+    flex: 1;
     min-height: 0;
     overflow: hidden;
     border-radius: 0 0 calc(var(--ms-radius) - 1px) calc(var(--ms-radius) - 1px);
 }
 
-.document-body-panel .document-viewer {
-    border-bottom-right-radius: 0;
-}
-
-.document-panel {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    border-left: 1px solid var(--ms-border);
-}
-
 .document-tabs {
     display: flex;
     flex-shrink: 0;
-    gap: 4px;
-    height: 40px;
-    padding: 0 12px;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--document-bar);
+    padding: 0 8px 0 12px;
     border-bottom: 1px solid var(--ms-border);
+}
+
+.file-columns-rail .document-tabs {
+    justify-content: center;
+    padding: 0;
+}
+
+.document-tablist {
+    display: flex;
+    align-self: stretch;
+    gap: 4px;
 }
 
 .document-tabs [role="tab"] {

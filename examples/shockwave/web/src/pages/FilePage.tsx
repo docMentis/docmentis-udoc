@@ -1,8 +1,9 @@
 // A file in the library, under the path to its folder: a card, its title bar
 // the file's name and what the app knows of it, with a menu to rename or
 // delete it for those who manage the library, over the file open in the
-// viewer from udoc-server, and beside it, unless folded, the app's own panel
-// on the file, its tabs each what a feature knows of it.
+// viewer from udoc-server; and beside the card, a card of the app's own on
+// the file, its tabs each what a feature knows of it, folded to a strip with
+// the button that unfolds it.
 import { Fragment, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
@@ -66,6 +67,20 @@ export function FilePage() {
     const { asset, path } = found;
     const parent = path.at(-1);
 
+    // Folding and unfolding the side panel, at its top right, open or folded.
+    const panelToggle = (
+        <button
+            type="button"
+            className="icon-button"
+            aria-label={panel ? "Fold the side panel" : "Unfold the side panel"}
+            aria-expanded={panel}
+            aria-controls="document-panel"
+            onClick={togglePanel}
+        >
+            <PanelRightIcon />
+        </button>
+    );
+
     function togglePanel() {
         setPanel(!panel);
         try {
@@ -87,42 +102,39 @@ export function FilePage() {
                     </Fragment>
                 ))}
             </nav>
-            <section className="document-card">
-                <header className="document-title-bar">
-                    <div className="document-title">
-                        <h1>{asset.name}</h1>
-                        <p>
-                            {typeLabel(asset.format)} · {formatSize(asset.size)} · Uploaded by {asset.uploadedBy.name}{" "}
-                            on {formatDate(asset.uploadedAt)}
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        className="icon-button"
-                        aria-label="Side panel"
-                        aria-expanded={panel}
-                        aria-controls="document-panel"
-                        onClick={togglePanel}
-                    >
-                        <PanelRightIcon />
-                    </button>
-                    {manages && (
-                        <ActionsMenu
-                            label={`Actions for ${asset.name}`}
-                            items={[
-                                { label: "Rename", onSelect: () => setTask("rename") },
-                                { label: "Delete", onSelect: () => setTask("delete") },
-                            ]}
-                        />
-                    )}
-                </header>
-                <div className={panel ? "document-body document-body-panel" : "document-body"}>
+            <div className={panel ? "file-columns file-columns-panel" : "file-columns file-columns-rail"}>
+                <section className="document-card">
+                    <header className="document-title-bar">
+                        <div className="document-title">
+                            <h1>{asset.name}</h1>
+                            <p>
+                                {typeLabel(asset.format)} · {formatSize(asset.size)} · Uploaded by{" "}
+                                {asset.uploadedBy.name} on {formatDate(asset.uploadedAt)}
+                            </p>
+                        </div>
+                        {manages && (
+                            <ActionsMenu
+                                label={`Actions for ${asset.name}`}
+                                items={[
+                                    { label: "Rename", onSelect: () => setTask("rename") },
+                                    { label: "Delete", onSelect: () => setTask("delete") },
+                                ]}
+                            />
+                        )}
+                    </header>
                     <div className="document-viewer">
                         <DocumentViewer documentId={asset.documentId} />
                     </div>
-                    {panel && (
-                        <aside id="document-panel" className="document-panel" aria-label="Side panel">
-                            <div className="document-tabs" role="tablist">
+                </section>
+                {!panel && (
+                    <aside className="document-panel" aria-label="Side panel">
+                        <div className="document-tabs">{panelToggle}</div>
+                    </aside>
+                )}
+                {panel && (
+                    <aside id="document-panel" className="document-panel" aria-label="Side panel">
+                        <div className="document-tabs">
+                            <div className="document-tablist" role="tablist">
                                 <button
                                     type="button"
                                     role="tab"
@@ -133,39 +145,40 @@ export function FilePage() {
                                     Details
                                 </button>
                             </div>
-                            <div
-                                id="document-tab-panel"
-                                className="document-tab-panel"
-                                role="tabpanel"
-                                aria-labelledby="document-tab-details"
-                            >
-                                <div className="field">
-                                    <span>Type</span>
-                                    <p className="field-value">{typeLabel(asset.format)}</p>
-                                </div>
-                                <div className="field">
-                                    <span>Size</span>
-                                    <p className="field-value">{formatSize(asset.size)}</p>
-                                </div>
-                                <div className="field">
-                                    <span>Location</span>
-                                    <p className="field-value">
-                                        {["Library", ...path.map((folder) => folder.name)].join(" / ")}
-                                    </p>
-                                </div>
-                                <div className="field">
-                                    <span>Uploaded by</span>
-                                    <p className="field-value">{asset.uploadedBy.name}</p>
-                                </div>
-                                <div className="field">
-                                    <span>Uploaded</span>
-                                    <p className="field-value">{formatDateTime(asset.uploadedAt)}</p>
-                                </div>
+                            {panelToggle}
+                        </div>
+                        <div
+                            id="document-tab-panel"
+                            className="document-tab-panel"
+                            role="tabpanel"
+                            aria-labelledby="document-tab-details"
+                        >
+                            <div className="field">
+                                <span>Type</span>
+                                <p className="field-value">{typeLabel(asset.format)}</p>
                             </div>
-                        </aside>
-                    )}
-                </div>
-            </section>
+                            <div className="field">
+                                <span>Size</span>
+                                <p className="field-value">{formatSize(asset.size)}</p>
+                            </div>
+                            <div className="field">
+                                <span>Location</span>
+                                <p className="field-value">
+                                    {["Library", ...path.map((folder) => folder.name)].join(" / ")}
+                                </p>
+                            </div>
+                            <div className="field">
+                                <span>Uploaded by</span>
+                                <p className="field-value">{asset.uploadedBy.name}</p>
+                            </div>
+                            <div className="field">
+                                <span>Uploaded</span>
+                                <p className="field-value">{formatDateTime(asset.uploadedAt)}</p>
+                            </div>
+                        </div>
+                    </aside>
+                )}
+            </div>
             {task === "rename" && (
                 <NameDialog
                     title="Rename file"
