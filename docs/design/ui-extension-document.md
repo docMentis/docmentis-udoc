@@ -25,10 +25,10 @@ the license gate.
 interface ExtensionDocument {
     docType: string;
     formats: readonly string[];
-    canOpen(request: ExtensionOpenRequest): boolean | Promise<boolean>;
+    canOpen(request: ExtensionDocumentOpenRequest): boolean | Promise<boolean>;
     open(
         container: HTMLDivElement,
-        request: ExtensionOpenRequest,
+        request: ExtensionDocumentOpenRequest,
         host: ExtensionDocumentHost,
     ): Promise<ExtensionDocumentViewer>;
 }
@@ -41,8 +41,9 @@ interface ExtensionDocumentViewer {
 ```
 
 An extension document is registered once and opens any number of times, each
-open handing back its `ExtensionDocumentViewer`. The request's and the host's
-names are provisional.
+open handing back its `ExtensionDocumentViewer`. What it is asked about is an
+`ExtensionDocumentOpenRequest`; the host's name, `ExtensionDocumentHost`, is
+provisional.
 
 - `docType` — what kind of document it is, as `"presentation"` is an engine
   one's: `"media"`. It is the extension document's identity: registering a

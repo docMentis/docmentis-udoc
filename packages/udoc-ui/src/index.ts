@@ -6,7 +6,7 @@ export type {
     ExtensionDocument,
     ExtensionDocumentHost,
     ExtensionDocumentViewer,
-    ExtensionOpenRequest,
+    ExtensionDocumentOpenRequest,
 } from "./app/extension-documents.js";
 // A PDF's annotations, as the page-annotation calls and events hand them to a
 // host and take them back (generated from the Rust serde), and the partial one

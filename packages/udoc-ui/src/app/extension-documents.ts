@@ -40,7 +40,7 @@ export interface ExtensionDocument {
      * the first to say yes opens it, and with none the engine does. A
      * rejection fails the open.
      */
-    canOpen(request: ExtensionOpenRequest): boolean | Promise<boolean>;
+    canOpen(request: ExtensionDocumentOpenRequest): boolean | Promise<boolean>;
     /**
      * Render what `request` names into `container`, a `<div>` filling the
      * document area, resolving with its viewer once it shows. The loading
@@ -49,7 +49,7 @@ export interface ExtensionDocument {
      */
     open(
         container: HTMLDivElement,
-        request: ExtensionOpenRequest,
+        request: ExtensionDocumentOpenRequest,
         host: ExtensionDocumentHost,
     ): Promise<ExtensionDocumentViewer>;
 }
@@ -69,7 +69,7 @@ export interface ExtensionDocumentViewer {
 }
 
 /** What `open` was given, as an {@link ExtensionDocument} is asked about it. */
-export interface ExtensionOpenRequest {
+export interface ExtensionDocumentOpenRequest {
     /** The source, as `open` was given it. */
     readonly source: string | URL | Blob | Uint8Array;
     /** The options, as `open` was given them. */
@@ -130,7 +130,7 @@ export interface ExtensionDocuments {
      * whose `formats` hold it; given none, the first whose `canOpen` says yes.
      * Null for none, so the engine opens it.
      */
-    choose(request: ExtensionOpenRequest): Promise<ExtensionDocument | null>;
+    choose(request: ExtensionDocumentOpenRequest): Promise<ExtensionDocument | null>;
 }
 
 export function createExtensionDocuments(): ExtensionDocuments {

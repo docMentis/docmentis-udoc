@@ -10,9 +10,9 @@ import { test } from "node:test";
 import { UDocError } from "@docmentis/udoc-wasm/error";
 
 import { createExtensionDocuments } from "../../src/app/extension-documents.ts";
-import type { ExtensionDocument, ExtensionOpenRequest } from "../../src/app/extension-documents.ts";
+import type { ExtensionDocument, ExtensionDocumentOpenRequest } from "../../src/app/extension-documents.ts";
 
-function request(options: ExtensionOpenRequest["options"] = {}): ExtensionOpenRequest {
+function request(options: ExtensionDocumentOpenRequest["options"] = {}): ExtensionDocumentOpenRequest {
     return {
         source: "https://example.com/clip",
         options,

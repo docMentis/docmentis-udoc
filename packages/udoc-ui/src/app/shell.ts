@@ -142,7 +142,7 @@ import type {
     ExtensionDocument,
     ExtensionDocumentHost,
     ExtensionDocumentViewer,
-    ExtensionOpenRequest,
+    ExtensionDocumentOpenRequest,
 } from "./extension-documents.js";
 import type { OpenOptions } from "../base.js";
 import { uiStyles } from "./styles.js";
@@ -1709,7 +1709,7 @@ export function mountUIShell(
         });
         return openDocument(
             async (signal) => {
-                const request: ExtensionOpenRequest = {
+                const request: ExtensionDocumentOpenRequest = {
                     source,
                     options,
                     url:
@@ -1942,7 +1942,7 @@ export function mountUIShell(
      */
     async function openExtensionDocument(
         chosen: ExtensionDocument,
-        request: ExtensionOpenRequest,
+        request: ExtensionDocumentOpenRequest,
         signal: AbortSignal,
     ): Promise<ExtensionOpened | null> {
         const container = document.createElement("div");
