@@ -78,15 +78,19 @@ input {
     font-size: 13px;
 }
 
-/* The stage: the app, and the narrator beside it. */
+/* The stage: the app, and the narrator beside it. The app stacks on its own,
+   so nothing of it, a dialog's backdrop included, rises over the narrator's
+   tab, which reaches in over its edge. */
 .stage {
     display: flex;
     height: 100%;
 }
 
 .stage-app {
+    position: relative;
     flex: 1;
     min-width: 0;
+    isolation: isolate;
 }
 
 /* The shell: the sidebar, which folds to a rail of its icons, and the page. */
@@ -663,18 +667,30 @@ input {
 }
 
 /* Dialogs: over the page, which dims behind. */
+/* A dialog, centered in the app over a backdrop that covers it alone. */
+.dialog-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(16 24 40 / 40%);
+}
+
 .dialog {
-    width: min(440px, calc(100vw - 32px));
+    position: relative;
+    width: 440px;
+    max-width: calc(100% - 32px);
+    max-height: calc(100% - 32px);
+    margin: 0;
     padding: 0;
+    overflow: auto;
     border: 1px solid var(--ms-border);
     border-radius: 14px;
     background: var(--ms-surface);
     color: var(--ms-text);
     box-shadow: 0 12px 32px rgb(16 24 40 / 16%);
-}
-
-.dialog::backdrop {
-    background: rgb(16 24 40 / 40%);
 }
 
 .dialog-header {
@@ -712,8 +728,8 @@ input {
 
 /* Uploading: the file in the viewer, and beside it what it's uploaded as. */
 .upload-dialog {
-    width: min(1120px, calc(100vw - 32px));
-    height: min(780px, calc(100vh - 32px));
+    width: 1120px;
+    height: 780px;
 }
 
 .upload-dialog[open] {

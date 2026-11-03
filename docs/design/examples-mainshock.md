@@ -155,7 +155,10 @@ small module of events of its own (`web/src/moments.ts`) — `route` and
 `session`, which say how things stand, and `document:opened` and `asset:added`,
 which say what just happened — and marks what a step can point at with
 `data-narrator="…"`; the narrator is their only listener. Taking it out leaves
-the product whole. The script, `web/src/narrator/script.ts`, is typed data: the
+the product whole. The product's root, `#app`, is all of the window it knows:
+its dialogs are modal to it alone, over it and not the narrator, which stays
+in view and in reach while one is open, as it must while a file is previewed
+before its upload. The script, `web/src/narrator/script.ts`, is typed data: the
 chapters' steps, each with its target and the moment that ends it, and the
 highlights, each with the moments it tells about and what it says. A step that
 how things stand already does, such as opening a page already open, is passed

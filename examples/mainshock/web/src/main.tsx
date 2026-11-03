@@ -1,6 +1,7 @@
 // The page: the app — who is signed in, around its routes, the sign-in page
 // and the shell with a page for each section — and the narrator bolted on
-// beside it.
+// beside it. The app's root, `#app`, is all of the window the app knows: its
+// dialogs open over it, and leave the narrator in view and in reach.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Outlet, RouterProvider, createBrowserRouter } from "react-router";
@@ -19,7 +20,7 @@ const router = createBrowserRouter([
     {
         element: (
             <div className="stage">
-                <div className="stage-app">
+                <div id="app" className="stage-app">
                     <SessionProvider>
                         <Outlet />
                     </SessionProvider>

@@ -1,6 +1,7 @@
 // The pieces the pages are made of.
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
+import { createPortal } from "react-dom";
 
 import type { Tenant } from "../../shared/api.ts";
 import { CloseIcon, MoreIcon } from "./icons";
@@ -79,7 +80,13 @@ export function useDismiss(ref: RefObject<HTMLElement | null>, open: boolean, cl
 /**
  * A modal dialog, open while it's shown: its title and a button to close it,
  * over its `children`. Escape closes it too, through `onClose`. It opens with
- * the focus on its element marked `data-autofocus`, if it has one.
+ * the focus on its element marked `data-autofocus`, if it has one, and gives
+ * it back on closing.
+ *
+ * It's modal to the app, not the window: it opens in the app's root, `#app`,
+ * over the rest of the app, which goes inert while it's open. The browser's
+ * own modal, `showModal()`, would cover the whole window, and make inert
+ * whatever is beside the app too.
  */
 export function Dialog({
     title,
@@ -93,29 +100,52 @@ export function Dialog({
     children: ReactNode;
 }) {
     const ref = useRef<HTMLDialogElement>(null);
+    const titleId = useId();
+    const latest = useRef(onClose);
+    latest.current = onClose;
     useEffect(() => {
         const dialog = ref.current!;
-        dialog.showModal();
+        const layer = dialog.parentElement!;
+        const app = layer.parentElement!;
+        const opener = document.activeElement;
+        const beneath = [...app.children].filter(
+            (child): child is HTMLElement => child !== layer && child instanceof HTMLElement && !child.inert,
+        );
+        for (const element of beneath) element.inert = true;
+        dialog.show();
         dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
-        return () => dialog.close();
+        // Escape pressed in the app, or with the focus nowhere, and not taken already; not beside the app.
+        const escape = (event: KeyboardEvent) => {
+            const target = event.target as Node;
+            if (event.key !== "Escape" || event.defaultPrevented) return;
+            if (app.contains(target) || target === document.body) latest.current();
+        };
+        document.addEventListener("keydown", escape);
+        return () => {
+            document.removeEventListener("keydown", escape);
+            dialog.close();
+            for (const element of beneath) element.inert = false;
+            if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
+        };
     }, []);
-    return (
-        <dialog
-            ref={ref}
-            className={className ? `dialog ${className}` : "dialog"}
-            onCancel={(event) => {
-                event.preventDefault();
-                onClose();
-            }}
-        >
-            <header className="dialog-header">
-                <h2>{title}</h2>
-                <button type="button" className="icon-button" aria-label="Close" onClick={onClose}>
-                    <CloseIcon />
-                </button>
-            </header>
-            {children}
-        </dialog>
+    return createPortal(
+        <div className="dialog-layer">
+            <dialog
+                ref={ref}
+                className={className ? `dialog ${className}` : "dialog"}
+                aria-modal="true"
+                aria-labelledby={titleId}
+            >
+                <header className="dialog-header">
+                    <h2 id={titleId}>{title}</h2>
+                    <button type="button" className="icon-button" aria-label="Close" onClick={onClose}>
+                        <CloseIcon />
+                    </button>
+                </header>
+                {children}
+            </dialog>
+        </div>,
+        document.getElementById("app")!,
     );
 }
 
