@@ -11,14 +11,15 @@
 // visitor would. Those offers are new from the moment the page shows, and go
 // with it. It knows the app's pages and forms; the app knows nothing of it.
 //
-// It hears the moments the app announces, and tells each highlight in its
-// script the first time its moment happens: new then, and kept in the panel,
-// newest first, until the page is loaded again.
+// It hears the moments the app announces. A highlight shows while what it
+// tells about shows: from the moment it shows to the moment it goes, in the
+// panel, newest first, and new as it shows while the panel is folded.
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 
 import { DEMO_PASSWORD, PERSONAS } from "../../../shared/personas.ts";
 import { onMoment } from "../moments";
+import type { Moment } from "../moments";
 import { DocMentisMark } from "./DocMentisMark";
 import { HIGHLIGHTS } from "./script";
 import "./narrator.css";
@@ -77,12 +78,13 @@ function saveAnnounce(announce: Announce): void {
     }
 }
 
-/** A highlight told: what it says, and its moment's figures. */
+/** A highlight told: what it says, its moment's figures, and the moment it goes with. */
 interface Told {
     id: string;
     title: string;
     body: string;
     figures: string[];
+    ends: (moment: Moment) => boolean;
 }
 
 /** A four-pointed sparkle, marking a highlight. */
@@ -104,11 +106,10 @@ export function Narrator() {
     const [offersNew, setOffersNew] = useState(false);
     const [told, setTold] = useState<Told[]>([]);
     const [toldNew, setToldNew] = useState(false);
-    const toldIds = useRef(new Set<string>());
     const now = useRef({ open });
     now.current = { open };
-    // What's new, told on the folded tab as the viewer chose.
-    const unseen = (offersNew || toldNew) && announce !== "off";
+    // What's new, told on the folded tab as the viewer chose: a highlight, while it's there.
+    const unseen = (offersNew || (toldNew && told.length > 0)) && announce !== "off";
     const flashing = unseen && announce === "flash";
 
     useEffect(() => {
@@ -123,15 +124,19 @@ export function Narrator() {
         setOffersNew(pathname === "/sign-in" && !now.current.open);
     }, [pathname]);
 
-    // Each highlight, the first time its moment happens: new while the panel's folded.
+    // Each highlight as what it tells about shows, and gone as that goes.
     useEffect(
         () =>
             onMoment((moment) => {
+                setTold((before) => {
+                    const kept = before.filter(({ ends }) => !ends(moment));
+                    return kept.length === before.length ? before : kept;
+                });
                 const highlight = HIGHLIGHTS.find((candidate) => candidate.tells(moment));
-                if (!highlight || toldIds.current.has(highlight.id)) return;
-                toldIds.current.add(highlight.id);
-                const { id, title, body } = highlight;
-                setTold((before) => [{ id, title, body, figures: highlight.figures(moment) }, ...before]);
+                if (!highlight) return;
+                const { id, title, body, ends } = highlight;
+                const telling = { id, title, body, figures: highlight.figures(moment), ends };
+                setTold((before) => [telling, ...before.filter((other) => other.id !== id)]);
                 if (!now.current.open) setToldNew(true);
             }),
         [],

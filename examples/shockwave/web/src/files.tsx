@@ -1,6 +1,6 @@
 // How the library shows a file: its type, as a word and a colored badge, its
 // pages, its size and its date.
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 
 import { CARD_PAGE_SCALE } from "../../shared/api.ts";
@@ -41,6 +41,9 @@ function pageSource(asset: Asset, index: number): string {
     return `/udoc/documents/${document}/layout/pages/${index}.png?scale=${CARD_PAGE_SCALE}`;
 }
 
+/** How many thumbnails are in view: the first to show, and the last to go, are moments. */
+let inView = 0;
+
 /**
  * A file's pages, on its card: its first, kept by the backend, and with the
  * arrows over it, the others, which udoc-server renders as they're flipped to.
@@ -54,26 +57,33 @@ export function Thumbnail({ asset }: { asset: Asset }) {
     // The page flipped to, and the one shown: another while it loads.
     const [page, setPage] = useState(0);
     const [shown, setShown] = useState(0);
-    const flippedAt = useRef(0);
-    // The pages udoc-server has rendered for this card, which the browser keeps while the page is open.
-    const rendered = useRef(new Set<number>());
     // The last page, once a flip past it has found it.
     const [lastPage, setLastPage] = useState(Infinity);
+    const madeAt = useRef(performance.now());
+    const shownAfter = useRef(0);
+    const showing = state === "shown";
+
+    // In view from its first page loaded until it goes.
+    useEffect(() => {
+        if (!showing) return;
+        if (inView++ === 0) {
+            announceMoment({ kind: "thumbnails:shown", where: "card", format: asset.format, ms: shownAfter.current });
+        }
+        return () => {
+            if (--inView === 0) announceMoment({ kind: "thumbnails:hidden", where: "card" });
+        };
+    }, [showing, asset.format]);
 
     function flip(event: MouseEvent, by: number) {
         // The card opens its file; its arrows only flip.
         event.stopPropagation();
-        flippedAt.current = performance.now();
         setPage(page + by);
     }
 
     function loaded() {
+        if (!showing) shownAfter.current = performance.now() - madeAt.current;
         setState("shown");
         setShown(page);
-        if (page === 0 || rendered.current.has(page)) return;
-        rendered.current.add(page);
-        const ms = performance.now() - flippedAt.current;
-        announceMoment({ kind: "page:rendered", where: "card", format: asset.format, ms });
     }
 
     // A page flipped to that doesn't load leaves the one shown, the last.

@@ -15,17 +15,21 @@ export interface Opened {
 }
 
 /**
- * A viewer on `source`; `onOpened` hears when it's open, and `onFailed` when
- * it doesn't open, which the viewer shows itself.
+ * A viewer on `source`; `onOpened` hears when it's open, `onClosed` when it
+ * closes, opened, and `onFailed` when it doesn't open, which the viewer shows
+ * itself.
  */
 export function DocumentViewer({
     onOpened,
+    onClosed,
     onFailed,
     ...source
-}: ViewerSource & { onOpened?: (opened: Opened) => void; onFailed?: () => void }) {
+}: ViewerSource & { onOpened?: (opened: Opened) => void; onClosed?: () => void; onFailed?: () => void }) {
     const ref = useRef<HTMLDivElement>(null);
     const opened = useRef(onOpened);
     opened.current = onOpened;
+    const closed = useRef(onClosed);
+    closed.current = onClosed;
     const failed = useRef(onFailed);
     failed.current = onFailed;
     const { file, documentId } = source;
@@ -34,6 +38,7 @@ export function DocumentViewer({
         // An effect that is cleaned up before `create` resolves, as StrictMode's
         // first run is, destroys the viewer it made.
         let gone = false;
+        let open = false;
         const started = performance.now();
         UDocViewer.create(ref.current!)
             .then(async (created) => {
@@ -41,7 +46,9 @@ export function DocumentViewer({
                 viewer = created;
                 if (file) await viewer.open(file);
                 else await viewer.openRemote(new URL(`/udoc/documents/${documentId}/package`, location.href).href);
-                if (!gone) opened.current?.({ format: viewer.sourceFormat, ms: performance.now() - started });
+                if (gone) return;
+                open = true;
+                opened.current?.({ format: viewer.sourceFormat, ms: performance.now() - started });
             })
             .catch((error: unknown) => {
                 if (gone) return;
@@ -51,6 +58,7 @@ export function DocumentViewer({
         return () => {
             gone = true;
             viewer?.destroy();
+            if (open) closed.current?.();
         };
     }, [file, documentId]);
     return <div ref={ref} className="viewer" />;

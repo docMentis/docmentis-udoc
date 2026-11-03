@@ -57,6 +57,7 @@ export function UploadDialog({
                         onOpened={({ format, ms }) =>
                             announceMoment({ kind: "document:opened", where: "upload", format, ms })
                         }
+                        onClosed={() => announceMoment({ kind: "document:closed", where: "upload" })}
                         onFailed={() => setUnreadable(true)}
                     />
                 </div>

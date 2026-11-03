@@ -4,7 +4,7 @@
 // comes of it.
 
 /** Something that just happened in the app. */
-export type Moment = DocumentOpened | PageRendered;
+export type Moment = DocumentOpened | DocumentClosed | ThumbnailsShown | ThumbnailsHidden;
 
 /** A document opened in the browser. */
 export interface DocumentOpened {
@@ -17,15 +17,29 @@ export interface DocumentOpened {
     ms: number;
 }
 
-/** A page rendered by udoc-server as it was asked for, and shown. */
-export interface PageRendered {
-    kind: "page:rendered";
-    /** Where: a file's card in the library's grid, flipped to a page past its first. */
+/** A document opened in the browser closed, its viewer gone. */
+export interface DocumentClosed {
+    kind: "document:closed";
+    /** Where: the upload's preview, gone with its dialog, the file uploaded or not. */
+    where: "upload";
+}
+
+/** Thumbnails in view, where there were none: the first of them shown, its file's first page, kept at upload. */
+export interface ThumbnailsShown {
+    kind: "thumbnails:shown";
+    /** Where: files' cards, in the library's grid or on Home. */
     where: "card";
-    /** udoc's name for its document's format: `pdf`, `pptx`, … */
+    /** udoc's name for the format of the first one's document: `pdf`, `pptx`, … */
     format: string;
-    /** From asking for the page to its image loaded, in milliseconds. */
+    /** From its card's making to its thumbnail loaded, in milliseconds. */
     ms: number;
+}
+
+/** No thumbnail in view any more: the last of them gone. */
+export interface ThumbnailsHidden {
+    kind: "thumbnails:hidden";
+    /** Where: files' cards, in the library's grid or on Home. */
+    where: "card";
 }
 
 const moments = new EventTarget();

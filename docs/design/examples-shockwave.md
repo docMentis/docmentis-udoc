@@ -249,14 +249,17 @@ two kinds of things:
   skipped.
 - **Highlights**, what just happened and the docMentis technology that made it
   happen: "Previewed before upload. Client-first: docMentis rendered this file
-  in your browser, so you see it before it's uploaded, not after." Each shows the first time its moment happens, with the moment's
-  figures where it has them (its format, how long it took to open), and stays
-  in the panel's list, newest first, until the page loads again.
+  in your browser, so you see it before it's uploaded, not after." A
+  highlight shows when what it tells about shows, and goes when it goes: the
+  preview's, while the preview is open; the thumbnails', while a thumbnail is
+  in view. It has the moment's figures where it has them (its format, how
+  long it took to open), and sits in the panel's list, newest first.
 
 The product knows nothing of the narrator. It announces **moments** through a
 small module of events of its own (`web/src/moments.ts`) — `route` and
-`session`, which say how things stand, and `document:opened`, `page:rendered`
-and `asset:added`, which say what just happened — and marks what a step can point at with
+`session`, which say how things stand, and `document:opened`,
+`document:closed`, `thumbnails:shown`, `thumbnails:hidden` and `asset:added`,
+which say what just happened — and marks what a step can point at with
 `data-narrator="…"`; the narrator is their only listener. Taking it out leaves
 the product whole. The product's root, `#app`, is all of the window it knows:
 its dialogs are modal to it alone, over it and not the narrator, which stays

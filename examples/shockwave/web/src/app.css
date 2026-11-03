@@ -938,10 +938,11 @@ input {
 .file-card {
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
-/* A file's page, whole, on a tray across the card's top: its first, or one flipped to. */
+/* A file's page, whole, on a tray across the card's top: its first, or one
+   flipped to. The tray rounds its own top corners into the card's, which
+   clips nothing, so a card's menu opens over what's below it. */
 .thumbnail {
     position: relative;
     display: grid;
@@ -949,6 +950,7 @@ input {
     aspect-ratio: 4 / 3;
     background: var(--ms-bg);
     border-bottom: 1px solid var(--ms-border);
+    border-radius: calc(var(--ms-radius) - 1px) calc(var(--ms-radius) - 1px) 0 0;
 }
 
 /* Centered at its own shape, 16px clear of the tray's edges. */
