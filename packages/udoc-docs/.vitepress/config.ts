@@ -122,7 +122,30 @@ export default defineConfig({
         editLink: { pattern: `${REPO}/edit/main/packages/udoc-docs/:path`, text: "Edit this page on GitHub" },
         sidebar: {
             // In reading order, which is the guides' own, not their files'.
-            "/guide/": [{ text: "Guide", items: [{ text: "Quick start", link: "/guide/quick-start" }] }],
+            "/guide/": [
+                {
+                    text: "Guide",
+                    items: [
+                        { text: "Quick start", link: "/guide/quick-start" },
+                        { text: "Supported formats", link: "/guide/supported-formats" },
+                        { text: "Customize the UI", link: "/guide/customize-the-ui" },
+                        { text: "Extension documents", link: "/guide/extension-documents" },
+                    ],
+                },
+                {
+                    text: "Frameworks",
+                    items: [
+                        { text: "React", link: "/guide/react" },
+                        { text: "Next.js", link: "/guide/nextjs" },
+                        { text: "Vue", link: "/guide/vue" },
+                        { text: "Nuxt", link: "/guide/nuxt" },
+                        { text: "Svelte", link: "/guide/svelte" },
+                        { text: "Angular", link: "/guide/angular" },
+                        { text: "Without a framework", link: "/guide/without-a-framework" },
+                    ],
+                },
+                { text: "Upgrading", items: [{ text: "Migrate from 0.7", link: "/guide/migrate-from-0-7" }] },
+            ],
             "/api/": [{ text: "API reference", link: "/api/", items: apiSidebar }],
         },
         // A class's members are its page's h3s, under h2s by kind.
