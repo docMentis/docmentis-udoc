@@ -147,13 +147,13 @@ export class Stage {
     }
 
     /**
-     * Open `doc` in `editors`, from its bytes. The two editors of Co-edit open
+     * Open `doc` in `editors`, from its source. The two editors of Co-edit open
      * it through a local collaboration service instead — each opening the
      * bytes itself would mint ids of its own — and this resolves with its id.
      */
     async #openIn(editors: UDocBase[], doc: OpenDoc): Promise<string | undefined> {
         if (this.#mode !== "coedit") {
-            await Promise.all(editors.map((ed) => ed.open(doc.bytes, { filename: doc.name }))).catch(openFailed);
+            await Promise.all(editors.map((ed) => ed.open(doc.source, { filename: doc.name }))).catch(openFailed);
             return undefined;
         }
         // The service loads the whole document before either editor can open
@@ -164,7 +164,7 @@ export class Stage {
         try {
             let service: string;
             try {
-                service = await UDocEditor.startLocalCollaborationService(doc.bytes, {
+                service = await UDocEditor.startLocalCollaborationService(await bytesOf(doc.source), {
                     filename: doc.name,
                     wasm: ENGINE,
                 });
@@ -184,7 +184,7 @@ export class Stage {
      * Join `editors`, just opened from the local collaboration service
      * `service`, to its collaboration, each named (see `COEDIT_NAMES`) so the
      * other flags its selection with a readable label. Editors opened from
-     * their bytes, `service` undefined, join none.
+     * their source, `service` undefined, join none.
      */
     #syncEditors(editors: UDocBase[], service: string | undefined): void {
         this.#teardownSync?.();
@@ -240,6 +240,15 @@ function preparingOverlay(): HTMLElement {
 }
 
 /** A document that didn't open: the editor shows why itself, so the stage only logs it. */
+/** The bytes of `source`, which a local collaboration service opens: a file read, a URL fetched. */
+async function bytesOf(source: OpenDoc["source"]): Promise<Uint8Array> {
+    if (source instanceof Uint8Array) return source;
+    if (source instanceof Blob) return new Uint8Array(await source.arrayBuffer());
+    const res = await fetch(source);
+    if (!res.ok) throw new Error(`fetch ${source} → ${res.status}`);
+    return new Uint8Array(await res.arrayBuffer());
+}
+
 function openFailed(err: unknown): void {
     console.error("udoc: the document didn't open", err);
 }

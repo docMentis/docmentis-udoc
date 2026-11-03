@@ -307,7 +307,7 @@ async function openSample(doc: SampleDoc): Promise<void> {
         const bytes = await fetchBytes(doc.path);
         // Another document was asked for while this one downloaded.
         if (shownDoc !== asked) return;
-        await stage.openDoc({ name, bytes });
+        await stage.openDoc({ name, source: bytes });
     } catch (err) {
         console.error("udoc: failed to open sample", err);
         showError(`Could not load "${doc.name}".`);
@@ -328,11 +328,11 @@ function askUnnamed(asked: string): string {
 async function openUrl(): Promise<void> {
     const url = prompt("Enter document URL:");
     if (!url) return;
-    const asked = askUnnamed(`url=${url}`);
+    askUnnamed(`url=${url}`);
     try {
-        const bytes = await fetchBytes(url);
-        if (shownDoc !== asked) return;
-        await stage.openDoc({ name: url.split("/").pop() || url, bytes });
+        // The URL itself: the viewer fetches it, or streams it — a video
+        // site's or an HLS stream's, which a fetch here couldn't.
+        await stage.openDoc({ name: url.split("/").pop() || url, source: url });
     } catch (err) {
         console.error("udoc: failed to open URL", err);
         showError("Could not load that URL.");
@@ -342,10 +342,9 @@ async function openUrl(): Promise<void> {
 fileInput.addEventListener("change", () => {
     const file = fileInput.files?.[0];
     if (!file) return;
-    const asked = askUnnamed(`file=${file.name}`);
-    void file.arrayBuffer().then(async (buf) => {
-        if (shownDoc === asked) await stage.openDoc({ name: file.name, bytes: new Uint8Array(buf) });
-    });
+    askUnnamed(`file=${file.name}`);
+    // The file as picked: the viewer reads it, or a video plays from it.
+    void stage.openDoc({ name: file.name, source: file });
     fileInput.value = "";
 });
 

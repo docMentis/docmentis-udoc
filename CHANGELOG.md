@@ -62,6 +62,18 @@ listed once, by package. Its major and minor version are those of the
   Swap Screens trades the windows the show and the presenter view stand in,
   each still filling its screen or not.
 
+### udoc-demo
+
+#### Added
+
+- Open File takes a video or audio file — `.mp4`, `.m4v`, `.mov`, `.webm`,
+  `.mp3`, `.m4a`, `.aac`, `.wav`, `.ogg`, `.oga`, `.ogv`, `.opus` or `.flac` —
+  which plays in the media document.
+- Open URL hands the URL to the viewer or the editor, which fetches it, or
+  streams it — a YouTube or Vimeo address, an HLS stream — where the demo
+  fetched it first; Open File hands over the file as picked. Co-edit still
+  reads either first, for its local collaboration service.
+
 ## [0.8.11] - 2026-11-01
 
 Built on `@docmentis/udoc-wasm` 0.8.14.

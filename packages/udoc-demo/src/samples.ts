@@ -79,4 +79,6 @@ export function findSample(file: string | null): SampleDoc | undefined {
 }
 
 export const FILE_ACCEPT =
-    ".pdf,.pptx,.pptm,.potx,.potm,.ppsx,.ppsm,.docx,.docm,.dotx,.dotm,.txt,.md,.markdown,.html,.htm,.eml,.xlsx,.xlsm,.xltx,.xltm,.csv,.tsv,.tab,.psv,.svg,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.webp,.ico";
+    ".pdf,.pptx,.pptm,.potx,.potm,.ppsx,.ppsm,.docx,.docm,.dotx,.dotm,.txt,.md,.markdown,.html,.htm,.eml,.xlsx,.xlsm,.xltx,.xltm,.csv,.tsv,.tab,.psv,.svg,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.tif,.webp,.ico," +
+    // The media document's files.
+    ".mp4,.m4v,.mov,.webm,.mp3,.m4a,.aac,.wav,.ogg,.oga,.ogv,.opus,.flac";
