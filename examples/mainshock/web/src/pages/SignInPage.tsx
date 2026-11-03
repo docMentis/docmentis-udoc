@@ -1,4 +1,4 @@
-// Signing in: a username and a password.
+// Signing in: a work email and a password.
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Navigate, useLocation } from "react-router";
@@ -12,7 +12,7 @@ export function SignInPage() {
     useDocumentTitle("Sign in");
     const { user, signIn } = useSession();
     const from = (useLocation().state as { from?: string } | null)?.from ?? "/";
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [signingIn, setSigningIn] = useState(false);
     const [error, setError] = useState<string>();
@@ -23,11 +23,11 @@ export function SignInPage() {
         setError(undefined);
         try {
             // Signed in, the page sends them on, below.
-            await signIn(username, password);
+            await signIn(email, password);
         } catch (failure) {
             setError(
                 failure instanceof ApiError && failure.status === 401
-                    ? "That username and password don't match."
+                    ? "That email and password don't match."
                     : "Mainshock's server didn't answer. Try again.",
             );
             setSigningIn(false);
@@ -45,13 +45,14 @@ export function SignInPage() {
                 </div>
                 <h1>Sign in</h1>
                 <label className="field">
-                    <span>Username</span>
+                    <span>Email</span>
                     <input
-                        value={username}
+                        type="email"
+                        value={email}
                         autoComplete="username"
                         autoFocus
                         required
-                        onChange={(event) => setUsername(event.target.value)}
+                        onChange={(event) => setEmail(event.target.value)}
                     />
                 </label>
                 <label className="field">

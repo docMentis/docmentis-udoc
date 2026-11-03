@@ -10,7 +10,7 @@ import { api } from "./api";
 interface Session {
     /** The user signed in: `null` for no one, `undefined` until it's known. */
     user: User | null | undefined;
-    signIn(username: string, password: string): Promise<void>;
+    signIn(email: string, password: string): Promise<void>;
     signOut(): Promise<void>;
 }
 
@@ -26,7 +26,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         };
     }, []);
     const signIn = useCallback(
-        async (username: string, password: string) => setUser(await api.signIn(username, password)),
+        async (email: string, password: string) => setUser(await api.signIn(email, password)),
         [],
     );
     const signOut = useCallback(async () => {

@@ -1,4 +1,4 @@
-// Who is signed in. Signing in is a username and a password, checked against
+// Who is signed in. Signing in is a work email and a password, checked against
 // the scrypt hash `users` keeps; it starts a session, a random token in an
 // HTTP-only cookie, kept in `sessions` until it expires or its user signs out.
 import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
@@ -15,7 +15,7 @@ const SESSION_SECONDS = 7 * 24 * 60 * 60;
 /** A `users` row joined to its tenant's name, and whether the tenant has a logo. */
 interface UserRow {
     id: string;
-    username: string;
+    email: string;
     name: string;
     title: string;
     role: Role;
@@ -24,13 +24,13 @@ interface UserRow {
     tenant_has_logo: number;
 }
 
-const USER_COLUMNS = `users.id, users.username, users.name, users.title, users.role,
+const USER_COLUMNS = `users.id, users.email, users.name, users.title, users.role,
     users.tenant_id, tenants.name AS tenant_name, tenants.logo IS NOT NULL AS tenant_has_logo`;
 
 function userOfRow(row: UserRow): User {
-    const { id, username, name, title, role, tenant_id: tenantId } = row;
+    const { id, email, name, title, role, tenant_id: tenantId } = row;
     const logo = row.tenant_has_logo ? `/api/tenants/${tenantId}/logo` : null;
-    return { id, username, name, title, role, tenant: { id: tenantId, name: row.tenant_name, logo } };
+    return { id, email, name, title, role, tenant: { id: tenantId, name: row.tenant_name, logo } };
 }
 
 /** `password`, hashed to keep: `scrypt:<salt>:<hash>`, each base64url. */
@@ -56,22 +56,22 @@ function scryptOf(password: string, salt: Buffer, length: number): Promise<Buffe
 }
 
 /**
- * Sign in as `username`, with `password`: the user, and the `Set-Cookie` that
+ * Sign in as `email`, with `password`: the user, and the `Set-Cookie` that
  * holds their new session; `undefined` when there's no such user or the
  * password is wrong.
  */
 export async function signIn(
     db: DatabaseSync,
-    username: string,
+    email: string,
     password: string,
 ): Promise<{ user: User; cookie: string } | undefined> {
     const row = db
         .prepare(
             `SELECT ${USER_COLUMNS}, users.password_hash FROM users
             JOIN tenants ON tenants.id = users.tenant_id
-            WHERE users.username = ?`,
+            WHERE users.email = ?`,
         )
-        .get(username.trim().toLowerCase()) as (UserRow & { password_hash: string }) | undefined;
+        .get(email.trim().toLowerCase()) as (UserRow & { password_hash: string }) | undefined;
     if (!row || !(await passwordMatches(password, row.password_hash))) return undefined;
     const token = randomBytes(32).toString("base64url");
     db.prepare("INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)").run(

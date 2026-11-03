@@ -32,6 +32,27 @@ const MIGRATIONS = [
     ALTER TABLE tenants ADD COLUMN logo BLOB;
     ALTER TABLE tenants ADD COLUMN logo_type TEXT;
     `,
+    // Signing in with a work email, and a role for what a user may do. SQLite
+    // changes a CHECK only by building the table anew: the users so far, all
+    // Larchmere's, get its domain after their usernames, marketing becomes an
+    // admin and sales a member, and dropping the old table ends every session.
+    `
+    CREATE TABLE users_new (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL REFERENCES tenants (id),
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        name TEXT NOT NULL,
+        title TEXT NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('admin', 'reviewer', 'member'))
+    );
+    INSERT INTO users_new
+        SELECT id, tenant_id, username || '@larchmere.example', password_hash, name, title,
+            CASE role WHEN 'marketing' THEN 'admin' ELSE 'member' END
+        FROM users;
+    DROP TABLE users;
+    ALTER TABLE users_new RENAME TO users;
+    `,
 ];
 
 /** Open the database in `file`, migrated to the latest schema. */

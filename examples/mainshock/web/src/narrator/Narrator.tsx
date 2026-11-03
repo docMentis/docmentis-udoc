@@ -45,15 +45,15 @@ function savedAnnounce(): Announce {
 }
 
 /**
- * Sign in as `username` through the app's sign-in form, as a visitor would:
- * fill in its username and the demo's password, then press its button.
+ * Sign in as `email` through the app's sign-in form, as a visitor would:
+ * fill in the email and the demo's password, then press its button.
  */
-function signInAs(username: string): void {
+function signInAs(email: string): void {
     const user = document.querySelector<HTMLInputElement>('input[autocomplete="username"]');
     const password = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]');
     const submit = user?.form?.querySelector<HTMLButtonElement>('button[type="submit"]');
     if (!user || !password || !submit) return;
-    enter(user, username);
+    enter(user, email);
     enter(password, DEMO_PASSWORD);
     // A moment to see it filled in before it's sent.
     setTimeout(() => submit.click(), 400);
@@ -126,9 +126,9 @@ export function Narrator() {
                 <div className="narrator-panel">
                     {pathname === "/sign-in" && (
                         <ul className="narrator-cards">
-                            {PERSONAS.map(({ username, name, title }) => (
-                                <li key={username}>
-                                    <button className="narrator-card" onClick={() => signInAs(username)}>
+                            {PERSONAS.map(({ email, name, title }) => (
+                                <li key={email}>
+                                    <button className="narrator-card" onClick={() => signInAs(email)}>
                                         <strong>Sign in as {name}</strong>
                                         <span>{title}</span>
                                     </button>

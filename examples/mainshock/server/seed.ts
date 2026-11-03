@@ -28,10 +28,10 @@ export async function seed(db: DatabaseSync): Promise<void> {
         "image/svg+xml",
     );
     const insert = db.prepare(
-        "INSERT INTO users (id, tenant_id, username, password_hash, name, title, role) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO users (id, tenant_id, email, password_hash, name, title, role) VALUES (?, ?, ?, ?, ?, ?, ?)",
     );
-    PERSONAS.forEach(({ username, name, title, role }, i) =>
-        insert.run(randomUUID(), tenantId, username, hashes[i], name, title, role),
+    PERSONAS.forEach(({ email, name, title, role }, i) =>
+        insert.run(randomUUID(), tenantId, email, hashes[i], name, title, role),
     );
     db.exec("COMMIT");
 }

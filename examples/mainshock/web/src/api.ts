@@ -31,12 +31,12 @@ export const api = {
             throw error;
         }
     },
-    /** Sign in as `username`, with `password`; an `ApiError` with status `401` when either is wrong. */
-    async signIn(username: string, password: string): Promise<User> {
+    /** Sign in as `email`, with `password`; an `ApiError` with status `401` when either is wrong. */
+    async signIn(email: string, password: string): Promise<User> {
         const init = {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ email, password }),
         };
         return (await request<{ user: User }>("/api/session", init)).user;
     },

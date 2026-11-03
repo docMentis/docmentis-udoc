@@ -1,14 +1,18 @@
 // What the backend's API answers and the frontend reads: the one definition
 // of each, imported by both.
 
-/** What a user does at their tenant: marketing keeps the content, sales uses it. */
-export type Role = "marketing" | "sales";
+/**
+ * What a user may do at their tenant: an admin keeps the library and the
+ * workspace's settings, a reviewer approves what's submitted to the library,
+ * and a member uses it.
+ */
+export type Role = "admin" | "reviewer" | "member";
 
 /** A tenant's user, as the API shows one. */
 export interface User {
     id: string;
-    /** What they sign in with. */
-    username: string;
+    /** Their work email, which they sign in with. */
+    email: string;
     name: string;
     /** Their job title. */
     title: string;

@@ -1,12 +1,22 @@
 // The users an empty database is seeded with, one for each part of the story,
-// and the demo's password, which they share: mainshock runs only locally. The
-// seed creates them; the narrator signs in as them.
+// in its order, and the demo's password, which they share: mainshock runs only
+// locally. The seed creates them; the narrator signs in as them. Each first
+// name starts with the letter of the job, to tell them apart by: Maya in
+// marketing, Colin in compliance, Simon in sales, Paula on the portfolio.
+// Their emails are at `.example`, a domain kept for examples, so that none is
+// anyone's.
 import type { Role } from "./api.ts";
 
 export const DEMO_PASSWORD = "mainshock";
 
-export const PERSONAS: { username: string; name: string; title: string; role: Role }[] = [
-    { username: "maya", name: "Maya Patel", title: "Product Marketing Manager", role: "marketing" },
-    { username: "dan", name: "Dan Brooks", title: "Account Executive", role: "sales" },
-    { username: "lena", name: "Lena Ortiz", title: "Sales Engineer", role: "sales" },
+export const PERSONAS: { email: string; name: string; title: string; role: Role }[] = [
+    { email: "maya.patel@larchmere.example", name: "Maya Patel", title: "Product Marketing Manager", role: "admin" },
+    { email: "colin.okafor@larchmere.example", name: "Colin Okafor", title: "Compliance Officer", role: "reviewer" },
+    {
+        email: "simon.brooks@larchmere.example",
+        name: "Simon Brooks",
+        title: "Director, Institutional Sales",
+        role: "member",
+    },
+    { email: "paula.ortiz@larchmere.example", name: "Paula Ortiz", title: "Client Portfolio Manager", role: "member" },
 ];

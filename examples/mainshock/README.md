@@ -39,11 +39,15 @@ from the repo's root (`npm run clear` here), which deletes its data.
 An empty database is seeded with Larchmere and its users, who all sign in with
 the demo's password, `mainshock`:
 
-| Username | Who                                   |
-| -------- | ------------------------------------- |
-| `maya`   | Maya Patel, Product Marketing Manager |
-| `dan`    | Dan Brooks, Account Executive         |
-| `lena`   | Lena Ortiz, Sales Engineer            |
+| Email                            | Who                                         | Role     |
+| -------------------------------- | ------------------------------------------- | -------- |
+| `maya.patel@larchmere.example`   | Maya Patel, Product Marketing Manager       | admin    |
+| `colin.okafor@larchmere.example` | Colin Okafor, Compliance Officer            | reviewer |
+| `simon.brooks@larchmere.example` | Simon Brooks, Director, Institutional Sales | member   |
+| `paula.ortiz@larchmere.example`  | Paula Ortiz, Client Portfolio Manager       | member   |
+
+A database from before these users keeps the ones it was seeded with; clear it
+to get them.
 
 ## How it's laid out
 

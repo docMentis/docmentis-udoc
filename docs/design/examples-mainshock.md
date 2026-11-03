@@ -44,17 +44,49 @@ orange, `#fe5000`; and Larchmere, its logo and its documents, in green, forest
 
 ## Who uses it
 
-| Role      | Who                                           | Does                                                     |
-| --------- | --------------------------------------------- | -------------------------------------------------------- |
-| marketing | Larchmere's marketing team                    | keeps the library: uploads, tags, retires content        |
-| sales     | Larchmere's institutional sales team          | finds content, builds decks for a deal, shares, presents |
-| buyer     | a prospect: an institution, or its consultant | opens a shared link, with no account                     |
+A user's role is what they may do in the app; their job is a title on their
+profile, as Seismic and Highspot keep the two apart:
 
-Marketing and sales are a tenant's users; a buyer comes through a share link.
-Each role is played by a persona, a seeded user whose name is still to be
-picked. A user signs in with a username and a password, checked against the
-scrypt hash `users` keeps (`server/auth.ts`); the seeded users share the
-demo's password, which the README gives.
+| Role     | May                                                                                       |
+| -------- | ----------------------------------------------------------------------------------------- |
+| admin    | keep the library (upload, tag, publish, retire), and the workspace's settings and members |
+| reviewer | approve what's submitted to the library, or return it                                     |
+| member   | find content, personalize it for a deal, share it, present it                             |
+
+A buyer, a prospect institution or its investment consultant, is no user: they
+open a link a member shared with them, with no account.
+
+Larchmere's users are four personas, each a job a sales enablement platform
+serves at an asset manager, and each with a udoc capability of their own to
+show:
+
+| Persona      | Title                         | Role     | Shows                                                              |
+| ------------ | ----------------------------- | -------- | ------------------------------------------------------------------ |
+| Maya Patel   | Product Marketing Manager     | admin    | a file viewed before it's uploaded; importing; thumbnails          |
+| Colin Okafor | Compliance Officer            | reviewer | a submission marked up in the editor, approved or returned         |
+| Simon Brooks | Director, Institutional Sales | member   | a deck personalized for a deal, shared with a buyer, presented     |
+| Paula Ortiz  | Client Portfolio Manager      | member   | an RFP response co-edited with Simon; the presenter view at finals |
+
+Maya keeps the library and, as marketing does at many firms Larchmere's size,
+runs the platform. Colin is there because an asset manager's fact sheets and
+pitch books quote performance, so compliance approves each before sales may
+use it. Simon owns the relationship with an institution and runs its search
+from the RFP to the finals presentation; Paula is the investment expert at his
+side, who answers the RFP's questions on the strategy and presents its
+performance. Seismic's sales enabler, who trains and coaches the sales team and
+builds its plays, has no persona: none of that is a document. Nor has a content
+manager, an admin without the workspace's settings, until Settings has members
+to invite.
+
+Each first name starts with the letter of the job, so that someone switching
+between them in the narrator keeps them apart: Maya in marketing, Colin in
+compliance, Simon in sales, Paula on the portfolio; a buyer, named when share
+links come, gets a B. The surnames are ordinary.
+
+A user signs in with their work email, `first.last@larchmere.example` for the
+seeded ones, at a domain kept for examples so that none is anyone's, and a
+password, checked against the scrypt hash `users` keeps (`server/auth.ts`); the
+seeded users share the demo's password, which the README gives.
 
 ## How it fits together
 
@@ -167,9 +199,8 @@ The frontend and the backend, set up and running, with no udoc code yet:
 mainshock` from the root.
 - The backend: Fastify over the database, its migrations counted by `PRAGMA
 user_version`: `tenants` and their logos, `users` and `sessions`, and an
-  empty one seeded with Larchmere, its logo and its personas, one in
-  marketing and two in sales.
-- Signing in: a username and a password, over `GET`, `POST` and
+  empty one seeded with Larchmere, its logo and its personas.
+- Signing in: a work email and a password, over `GET`, `POST` and
   `DELETE /api/session`, a session in an HTTP-only cookie.
 - The frontend: the sign-in page, and the shell, a sidebar beside the page,
   folding to a rail of its icons: under the tenant's logo and name, Home,
@@ -184,8 +215,10 @@ user_version`: `tenants` and their logos, `users` and `sessions`, and an
 In an order picked as we go: udoc end to end, udoc-server in the backend behind
 the gate and the viewer and the editor in the frontend; the narrator; the
 library, with Larchmere's content (generated),
-thumbnails from udoc-server's page routes, tags and search; decks, a rep
-assembling slides from the library's decks and personalizing them for a deal;
-share links, a buyer's view with no account, and which pages they read and for
-how long; presenting, the slide show and its presenter view; and co-editing a
-proposal over udoc-server's collaboration.
+thumbnails from udoc-server's page routes, tags and search; compliance review,
+a reviewer approving what's submitted to the library before members see it, or
+marking it up and returning it; decks, a rep assembling slides from the
+library's decks and personalizing them for a deal; share links, a buyer's view
+with no account, and which pages they read and for how long; presenting, the
+slide show and its presenter view; and co-editing an RFP response over
+udoc-server's collaboration.
