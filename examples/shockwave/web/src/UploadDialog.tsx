@@ -54,6 +54,7 @@ export function UploadDialog({
                 <div className="upload-preview">
                     <DocumentViewer
                         file={file}
+                        showToolbar={false}
                         onOpened={({ format, ms }) =>
                             announceMoment({ kind: "document:opened", where: "upload", format, ms })
                         }

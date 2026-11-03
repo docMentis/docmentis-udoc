@@ -15,16 +15,22 @@ export interface Opened {
 }
 
 /**
- * A viewer on `source`; `onOpened` hears when it's open, `onClosed` when it
- * closes, opened, and `onFailed` when it doesn't open, which the viewer shows
- * itself.
+ * A viewer on `source`, with its top toolbar unless `showToolbar` is false;
+ * `onOpened` hears when it's open, `onClosed` when it closes, opened, and
+ * `onFailed` when it doesn't open, which the viewer shows itself.
  */
 export function DocumentViewer({
+    showToolbar = true,
     onOpened,
     onClosed,
     onFailed,
     ...source
-}: ViewerSource & { onOpened?: (opened: Opened) => void; onClosed?: () => void; onFailed?: () => void }) {
+}: ViewerSource & {
+    showToolbar?: boolean;
+    onOpened?: (opened: Opened) => void;
+    onClosed?: () => void;
+    onFailed?: () => void;
+}) {
     const ref = useRef<HTMLDivElement>(null);
     const opened = useRef(onOpened);
     opened.current = onOpened;
@@ -40,7 +46,7 @@ export function DocumentViewer({
         let gone = false;
         let open = false;
         const started = performance.now();
-        UDocViewer.create(ref.current!)
+        UDocViewer.create(ref.current!, { showToolbar })
             .then(async (created) => {
                 if (gone) return created.destroy();
                 viewer = created;
@@ -60,6 +66,6 @@ export function DocumentViewer({
             viewer?.destroy();
             if (open) closed.current?.();
         };
-    }, [file, documentId]);
+    }, [file, documentId, showToolbar]);
     return <div ref={ref} className="viewer" />;
 }
