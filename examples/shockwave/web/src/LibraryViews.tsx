@@ -120,29 +120,33 @@ export function FileGrid({ folders, assets, menu }: ViewProps) {
                     <h2 className="grid-heading">Files</h2>
                     <div className="file-grid">
                         {assets.map((asset) => (
-                            <div key={asset.id} className="file-card" onClick={() => navigate(filePath(asset))}>
-                                <Thumbnail asset={asset} />
-                                <div className="file-card-body">
-                                    <div className="file-card-title">
-                                        <Link className="file-name" to={filePath(asset)}>
-                                            <FileBadge format={asset.format} />
-                                            <span>{asset.name}</span>
-                                        </Link>
-                                        {menu && (
-                                            <div onClick={keep}>
-                                                {menu({ kind: "file", id: asset.id, name: asset.name })}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <p className="file-card-meta">
-                                        {asset.uploadedBy.name} · {formatDate(asset.uploadedAt)}
-                                    </p>
-                                </div>
-                            </div>
+                            <FileCard key={asset.id} asset={asset} menu={menu} />
                         ))}
                     </div>
                 </section>
             )}
+        </div>
+    );
+}
+
+/** A file as a card: its pages, its name, who uploaded it and when. */
+export function FileCard({ asset, menu }: { asset: Asset; menu?: ViewProps["menu"] }) {
+    const navigate = useNavigate();
+    return (
+        <div className="file-card" onClick={() => navigate(filePath(asset))}>
+            <Thumbnail asset={asset} />
+            <div className="file-card-body">
+                <div className="file-card-title">
+                    <Link className="file-name" to={filePath(asset)}>
+                        <FileBadge format={asset.format} />
+                        <span>{asset.name}</span>
+                    </Link>
+                    {menu && <div onClick={keep}>{menu({ kind: "file", id: asset.id, name: asset.name })}</div>}
+                </div>
+                <p className="file-card-meta">
+                    {asset.uploadedBy.name} · {formatDate(asset.uploadedAt)}
+                </p>
+            </div>
         </div>
     );
 }

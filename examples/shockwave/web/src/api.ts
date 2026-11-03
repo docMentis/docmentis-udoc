@@ -45,6 +45,10 @@ export const api = {
     /** What folder `folderId` holds, or with none, the library's top. */
     library: (folderId?: string) =>
         request<FolderListing>(folderId ? `/api/library?folder=${encodeURIComponent(folderId)}` : "/api/library"),
+    /** The files uploaded last, in any folder, newest first. */
+    async recentAssets(): Promise<Asset[]> {
+        return (await request<{ assets: Asset[] }>("/api/library/recent")).assets;
+    },
     /** Make folder `name` in `parentId`, or at the top for `null`; an `ApiError` `409` when the name's taken there. */
     async createFolder(name: string, parentId: string | null): Promise<Folder> {
         return (await request<{ folder: Folder }>("/api/folders", withJson("POST", { name, parentId }))).folder;

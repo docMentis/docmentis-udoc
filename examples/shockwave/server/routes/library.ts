@@ -17,6 +17,9 @@ import { keepThumbnail, thumbnailPath } from "./thumbnails.ts";
 /** The largest upload: udoc-server's own limit. */
 const MAX_UPLOAD_BYTES = 256 * 1024 * 1024;
 
+/** How many of the files uploaded last Home shows. */
+const RECENT_FILES = 8;
+
 /** The longest name a folder or a file is given. */
 const MAX_NAME = 200;
 
@@ -156,6 +159,18 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
             )
             .all(user.tenant.id, folderId) as unknown as AssetRow[];
         return { path, folders: folders.map(folderOfRow), assets: assets.map(assetOfRow) };
+    });
+
+    /** `{ assets }`: the files uploaded last, in any folder, newest first. */
+    app.get("/api/library/recent", async (request): Promise<{ assets: Asset[] }> => {
+        const user = signedIn(db, request);
+        const assets = db
+            .prepare(
+                `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
+                WHERE assets.tenant_id = ? ORDER BY assets.uploaded_at DESC LIMIT ?`,
+            )
+            .all(user.tenant.id, RECENT_FILES) as unknown as AssetRow[];
+        return { assets: assets.map(assetOfRow) };
     });
 
     /** Make a folder, `{ name, parentId }`, `parentId` `null` at the top: `201 { folder }`. */

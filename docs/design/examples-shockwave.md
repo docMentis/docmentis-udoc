@@ -112,7 +112,11 @@ marketing prepares,   a sales manager arranges,      backstage: prepared   front
 compliance approves   sales find                     and personalized      what they see
 ```
 
-- **Home**: what needs the user, and what's new for them.
+- **Home**: what needs the user, and what's new for them, in the sections
+  their role has: what needs their attention, for everyone; what's new in the
+  Library, for those who keep and review it; and for sales, their deal rooms
+  and their collections. A section whose feature isn't built yet says what it
+  will hold.
 - **Library**: content before it's sold with. Marketing creates and prepares
   it, and compliance reviews it, through a workflow in which only approved
   content is published. Sales never see it. Outside vendors and partners who

@@ -10,6 +10,7 @@ import "@fontsource-variable/inter";
 import { AppShell } from "./AppShell";
 import { Narrator } from "./narrator/Narrator";
 import { FilePage } from "./pages/FilePage";
+import { HomePage } from "./pages/HomePage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { NotFoundPage, PlaceholderPage } from "./pages/PlaceholderPage";
 import { SignInPage } from "./pages/SignInPage";
@@ -37,10 +38,7 @@ const router = createBrowserRouter([
                     </RequireSession>
                 ),
                 children: [
-                    {
-                        index: true,
-                        element: <PlaceholderPage title="Home" subtitle="What's new, and what needs your attention." />,
-                    },
+                    { index: true, element: <HomePage /> },
                     { path: "library", element: <LibraryPage /> },
                     { path: "library/folders/:folderId", element: <LibraryPage /> },
                     { path: "library/files/:assetId", element: <FilePage /> },

@@ -395,6 +395,36 @@ input {
     box-shadow: var(--ms-shadow);
 }
 
+/* Home's sections, one under another, each its heading over what it holds. */
+.home-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.home-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.home-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.home-section-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.home-section-header a {
+    font-weight: 500;
+}
+
 .empty {
     display: flex;
     flex-direction: column;
