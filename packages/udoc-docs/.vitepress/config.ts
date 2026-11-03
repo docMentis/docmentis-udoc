@@ -38,6 +38,27 @@ function packageJson(dir: string): { name: string; version: string; description:
     return JSON.parse(readFileSync(new URL(`../../${dir}/package.json`, import.meta.url), "utf8"));
 }
 
+/** The guide in `guide/<name>.md`: its h1, and the description its frontmatter gives. */
+function guide(name: string): { title: string; description: string } {
+    const text = readFileSync(new URL(`../guide/${name}.md`, import.meta.url), "utf8");
+    const title = /^# (.+)$/m.exec(text)?.[1];
+    const description = /^description: (.+)$/m.exec(text)?.[1];
+    if (title === undefined || description === undefined) {
+        throw new Error(`guide/${name}.md has no h1 or no description`);
+    }
+    return { title, description };
+}
+
+/** A card of the home page's guides, as `index.md` names it and as it's filled in. */
+interface GuideCard {
+    guide?: string;
+    guides?: string[];
+    summary?: string;
+    title?: string;
+    details?: string;
+    link?: string;
+}
+
 const REPO = "https://github.com/docMentis/docmentis-udoc";
 
 // Served at docmentis.com/docs: the site proxies `/docs/*` to the GitHub Pages
@@ -94,6 +115,21 @@ export default defineConfig({
                 if (!feature.package) continue;
                 const { name, description } = packageJson(feature.package);
                 feature.details = `<code>${name}</code> ${description}`;
+            }
+            // A guide's card is the guide's title and description, as search
+            // engines show it, and one of several guides links each. A link in
+            // a card's details is HTML, so its address carries the base.
+            for (const card of pageData.frontmatter.guides.items as GuideCard[]) {
+                if (card.guide) {
+                    const { title, description } = guide(card.guide);
+                    card.title = title;
+                    card.details = description;
+                    card.link = `/guide/${card.guide}`;
+                }
+                if (card.guides) {
+                    const links = card.guides.map((name) => `<a href="${base}guide/${name}">${guide(name).title}</a>`);
+                    card.details = `${card.summary ?? ""} <span class="guide-links">${links.join("")}</span>`;
+                }
             }
         }
     },

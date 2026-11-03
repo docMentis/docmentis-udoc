@@ -15,8 +15,25 @@ hero:
           text: Try the demo
           link: https://www.docmentis.com/viewer/demo
 
+# The guides' cards, under their heading, over the packages' (the theme's
+# HomeGuides). A card that names a guide is its title and description, and
+# links to it; one that names several links each by its title, under its
+# summary (`transformPageData` in .vitepress/config.ts).
+guides:
+    title: Guides
+    items:
+        - guide: quick-start
+        - title: Frameworks
+          summary: Set up the viewer or the editor in your app's framework, or with none.
+          guides: [react, nextjs, vue, nuxt, svelte, angular, without-a-framework]
+        - guide: supported-formats
+        - guide: customize-the-ui
+        - guide: extension-documents
+        - guide: migrate-from-0-7
+
 # A card that names a package says what its package.json does: its name and
 # description (`transformPageData` in .vitepress/config.ts).
+featuresTitle: Packages
 features:
     - title: Viewer
       package: udoc-viewer

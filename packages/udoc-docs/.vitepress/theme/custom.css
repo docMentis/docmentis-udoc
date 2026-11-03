@@ -134,6 +134,55 @@
     padding-top: 16px;
 }
 
+/* A heading over a section of the home page's cards, lined up with them as
+   the default theme lines its cards up with the page, and set well apart from
+   the section before it. */
+.home-section {
+    padding: 0 24px;
+}
+
+@media (min-width: 640px) {
+    .home-section {
+        padding: 0 48px;
+    }
+}
+
+@media (min-width: 960px) {
+    .home-section {
+        padding: 0 64px;
+    }
+}
+
+.VPFeatures + .home-section {
+    margin-top: 64px;
+}
+
+.home-section-title {
+    margin: 0 auto 24px;
+    max-width: 1152px;
+    line-height: 28px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--vp-c-text-1);
+}
+
+/* A card's guides, each a link, wrapped in rows under its summary. */
+.VPFeature .details .guide-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin-top: 12px;
+}
+
+.VPFeature .details .guide-links a {
+    color: var(--vp-c-brand-1);
+    transition: color 0.25s;
+}
+
+.VPFeature .details .guide-links a:hover {
+    color: var(--vp-c-brand-2);
+}
+
 /* A card's package, on its own line over the description, as inline code is
    in the docs. */
 .VPFeature .details code {
