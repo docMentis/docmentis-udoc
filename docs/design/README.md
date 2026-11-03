@@ -19,6 +19,13 @@ the packages here call through — is documented with the engine, not here.
   through: what the shell lends it, what the shell asks it (its mode, tab
   strips and commands, ribbon controls, menu actions, context menu, guide band,
   place tools, selection chrome and canvas gestures), and its worker requests.
+- [UI Extension Document](ui-extension-document.md) — a kind of document the
+  engine doesn't read, which the viewer and the editor open view only: the
+  `ExtensionDocument` a host registers (its `docType`, `formats`, `canOpen`
+  and `open`), asked after the license gate and before the engine, the
+  `<div>` it renders into, the `ExtensionDocumentViewer` an open hands back
+  and the optional members that grow it; the built-in media document on
+  Video.js 10 and the web page document; thumbnails in Node.
 - [UI Thumbnail Panel](ui-thumbnail-panel.md) — the left-panel page/slide
   navigator: engine-raster previews over a new `render_page_to_rgba` wasm
   entry, the yield-gated render priority the autonomous viewport forces, the

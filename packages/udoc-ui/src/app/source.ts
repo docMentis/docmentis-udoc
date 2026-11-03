@@ -24,6 +24,18 @@ export async function readSource(source: OpenSource, progress: ReadProgress): Pr
         return source;
     }
     if (source instanceof Blob) return readStream(source.stream(), source.size, progress);
+    const response = await fetchResponse(source, progress);
+    const total = Number(response.headers.get("Content-Length")) || 0;
+    if (!response.body) {
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        progress(bytes.byteLength, bytes.byteLength);
+        return bytes;
+    }
+    return readStream(response.body, total, progress);
+}
+
+/** The response to fetching `source`, reporting nothing read yet; rejects with an `io` `UDocError` when the fetch fails or the server answers with an error. */
+async function fetchResponse(source: string | URL, progress: ReadProgress): Promise<Response> {
     progress(0, 0);
     let response: Response;
     try {
@@ -34,13 +46,130 @@ export async function readSource(source: OpenSource, progress: ReadProgress): Pr
     if (!response.ok) {
         throw new UDocError("io", `fetching ${String(source)}: ${response.status} ${response.statusText}`);
     }
-    const total = Number(response.headers.get("Content-Length")) || 0;
-    if (!response.body) {
-        const bytes = new Uint8Array(await response.arrayBuffer());
-        progress(bytes.byteLength, bytes.byteLength);
-        return bytes;
+    return response;
+}
+
+/** The most of a source {@link SourceReader.head} reads. */
+export const HEAD_BYTES = 4096;
+
+/** A source read once: its first bytes when asked for, then the whole from there. */
+export interface SourceReader {
+    /**
+     * The first bytes, at most {@link HEAD_BYTES}, and the media type the
+     * Blob or the response declares, without its parameters — `undefined`
+     * where neither does. Read once: a URL is fetched the first time it is
+     * asked, and {@link all} reads on from there.
+     */
+    head(): Promise<{ bytes: Uint8Array; mediaType: string | undefined }>;
+    /** The whole, as {@link readSource} reads it, reporting progress — a URL's from where {@link head} stopped. */
+    all(): Promise<Uint8Array>;
+    /** Stop reading a URL {@link head} began fetching, which another reader takes from here. */
+    cancel(): void;
+}
+
+/** A reader of `source`, reporting `progress` as {@link readSource} does. */
+export function sourceReader(source: OpenSource, progress: ReadProgress): SourceReader {
+    if (source instanceof Uint8Array) {
+        return {
+            head: async () => ({ bytes: source.subarray(0, HEAD_BYTES), mediaType: undefined }),
+            all: () => readSource(source, progress),
+            cancel: () => {},
+        };
     }
-    return readStream(response.body, total, progress);
+    if (source instanceof Blob) {
+        return {
+            head: async () => ({
+                bytes: new Uint8Array(await source.slice(0, HEAD_BYTES).arrayBuffer()),
+                mediaType: mediaTypeEssence(source.type),
+            }),
+            all: () => readSource(source, progress),
+            cancel: () => {},
+        };
+    }
+    // A URL is fetched once, by whichever asks first; what `head` read stays
+    // the start of what `all` returns.
+    let fetched: Promise<FetchedSource> | undefined;
+    let headRead: Promise<{ bytes: Uint8Array; mediaType: string | undefined }> | undefined;
+    return {
+        head() {
+            headRead ??= (async () => {
+                fetched ??= fetchSource(source, progress);
+                const read = await fetched;
+                await read.until(HEAD_BYTES);
+                return { bytes: read.bytes().subarray(0, HEAD_BYTES), mediaType: read.mediaType };
+            })();
+            return headRead;
+        },
+        async all() {
+            if (!fetched) return readSource(source, progress);
+            await headRead;
+            const read = await fetched;
+            await read.until(Infinity);
+            return read.bytes();
+        },
+        cancel() {
+            void fetched?.then((read) => read.cancel()).catch(() => {});
+        },
+    };
+}
+
+/** A URL's response, read as far as asked so far. */
+interface FetchedSource {
+    readonly mediaType: string | undefined;
+    /** Read on until at least `length` bytes are in, or the body ends. */
+    until(length: number): Promise<void>;
+    /** What has been read so far, whole. */
+    bytes(): Uint8Array;
+    cancel(): void;
+}
+
+/** Fetch `source`, rejecting as {@link readSource} does, to read its body as far as asked. */
+async function fetchSource(source: string | URL, progress: ReadProgress): Promise<FetchedSource> {
+    const response = await fetchResponse(source, progress);
+    const total = Number(response.headers.get("Content-Length")) || 0;
+    const reader = response.body?.getReader();
+    const chunks: Uint8Array[] = [];
+    let loaded = 0;
+    let done = reader === undefined;
+    if (!reader) {
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        chunks.push(bytes);
+        loaded = bytes.byteLength;
+        progress(loaded, loaded);
+    } else {
+        progress(0, total);
+    }
+    return {
+        mediaType: mediaTypeEssence(response.headers.get("Content-Type") ?? ""),
+        async until(length) {
+            while (!done && loaded < length) {
+                const { done: ended, value } = await reader!.read();
+                if (ended) {
+                    done = true;
+                    break;
+                }
+                chunks.push(value);
+                loaded += value.byteLength;
+                progress(loaded, total);
+            }
+        },
+        bytes: () => concat(chunks, loaded),
+        cancel() {
+            if (!done) void reader?.cancel().catch(() => {});
+            done = true;
+        },
+    };
+}
+
+/** A media type without its parameters, lowercased: `video/mp4` of `video/MP4; codecs=avc1`; `undefined` for none. */
+function mediaTypeEssence(type: string): string | undefined {
+    const essence = type.split(";")[0]!.trim().toLowerCase();
+    return essence === "" ? undefined : essence;
+}
+
+/** Whether `value` is the name of a file format the engine opens. */
+export function isFileFormat(value: string): value is FileFormat {
+    return Object.hasOwn(MEDIA_TYPES, value);
 }
 
 /**
@@ -174,8 +303,13 @@ async function readStream(
         loaded += value.byteLength;
         progress(loaded, total);
     }
+    return concat(chunks, loaded);
+}
+
+/** `chunks` in one array, `length` bytes long. */
+function concat(chunks: readonly Uint8Array[], length: number): Uint8Array {
     if (chunks.length === 1) return chunks[0]!;
-    const bytes = new Uint8Array(loaded);
+    const bytes = new Uint8Array(length);
     let at = 0;
     for (const chunk of chunks) {
         bytes.set(chunk, at);

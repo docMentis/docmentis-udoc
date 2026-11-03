@@ -8,6 +8,21 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- Extension documents: kinds of document the engine doesn't read, which a
+  host registers with the `extensionDocuments` option or
+  `registerExtensionDocument` and which then open view only. An
+  `ExtensionDocument` has a `docType`, the source `formats` it opens, a
+  `canOpen` that `open` asks ahead of the engine when given no `format`, and
+  an `open` that renders the source into a `<div>` filling the document area
+  and resolves with an `ExtensionDocumentViewer` (`sourceFormat`, `close`,
+  `setTheme`). While one is open, `docType` and `sourceFormat` are its, the
+  page chrome and the side panels hide, and the calls that need pages reject.
+  An open is licensed and metered as any other. `OpenOptions.format` now
+  takes an extension document's formats too, and `docType` and
+  `sourceFormat` are typed to include them.
+
 #### Changed
 
 - The Slide Show tab has From Beginning, From Current Slide and Presenter

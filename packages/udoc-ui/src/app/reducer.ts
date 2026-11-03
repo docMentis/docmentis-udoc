@@ -2,7 +2,9 @@ import { cssPxPerPt } from "../geometry.js";
 import type { Action } from "./actions.js";
 import type { UIState, PanelTab } from "./state.js";
 import {
+    LEFT_PANEL_TABS,
     NO_FIT,
+    RIGHT_PANEL_TABS,
     VIEW_MODE,
     initialState,
     isLeftPanelTab,
@@ -108,6 +110,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 refusal: null,
                 docType: null,
                 sourceFormat: null,
+                extensionDocument: null,
                 // The sections are read back once the open is sent, the slide
                 // masters when they show; the folds and a rename were the last
                 // document's.
@@ -190,6 +193,32 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             };
         }
 
+        case "OPEN_EXTENSION_SUCCESS":
+            // An extension document has nothing for a panel to show, so none
+            // does; the next engine document's open sets its own again. The
+            // engine holds no document, so the page state is a closed one's,
+            // and `docGeneration` stays: what reads the engine's document
+            // when it moves on would find none.
+            return {
+                ...state,
+                status: "extension",
+                loadProgress: null,
+                error: null,
+                extensionDocument: { docType: action.docType, sourceFormat: action.sourceFormat },
+                features: action.features,
+                pageCount: 0,
+                firstUncomposedPage: 0,
+                scrollSize: { width: 0, height: 0 },
+                disabledPanels: new Set<PanelTab>([...LEFT_PANEL_TABS, ...RIGHT_PANEL_TABS]),
+                activePanel: null,
+                activeTab: null,
+                canUndo: false,
+                canRedo: false,
+                scrollX: 0,
+                scrollY: 0,
+                pageIndex: 0,
+            };
+
         case "OPEN_FAILURE":
             return {
                 ...state,
@@ -201,6 +230,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 firstUncomposedPage: 0,
                 docType: null,
                 sourceFormat: null,
+                extensionDocument: null,
             };
 
         case "SET_LOAD_PROGRESS":
@@ -220,6 +250,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 refusal: null,
                 docType: null,
                 sourceFormat: null,
+                extensionDocument: null,
                 slideSections: [],
                 slideMasters: [],
                 collapsedSlideSections: new Set(),

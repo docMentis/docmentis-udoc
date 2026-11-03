@@ -2057,6 +2057,27 @@ export const uiStyles = css`
         position: relative;
         overflow: hidden;
     }
+    /* An extension document renders into a <div> of its own over the document
+   area, where the canvas hides — keeping its size, so nothing lays out again
+   when an engine document shows once more. Hidden with it: the chrome that
+   works on pages (the view controls wherever they dock, the pointer modes, the
+   status bar) and an extension's mode switch, as an extension document shows
+   in view mode alone. */
+    .udoc-ui-root .udoc-ui__extension-document {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        background: var(--udoc-canvas-background);
+    }
+    .udoc-ui-root.udoc-extension-document-open .udoc-ui__viewport-grid {
+        visibility: hidden;
+    }
+    .udoc-ui-root.udoc-extension-document-open .udoc-floating-toolbar,
+    .udoc-ui-root.udoc-extension-document-open .udoc-status-bar,
+    .udoc-ui-root.udoc-extension-document-open .udoc-toolbar__left > *,
+    .udoc-ui-root.udoc-extension-document-open .udoc-toolbar__mode-slot > * {
+        display: none;
+    }
     .udoc-ui-root .udoc-ui__band {
         display: block;
         width: 100%;

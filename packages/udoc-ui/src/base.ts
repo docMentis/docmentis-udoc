@@ -29,6 +29,7 @@ import type {
     UrlFont,
 } from "@docmentis/udoc-wasm";
 import type { OverlayOptions, OverlaySource } from "./app/components/OverlayManager.js";
+import type { ExtensionDocument } from "./app/extension-documents.js";
 import type { PrintOptions } from "./app/print.js";
 import type { Messages } from "./app/i18n/index.js";
 import { subscribeSelector } from "./framework/index.js";
@@ -243,6 +244,12 @@ export interface UDocOptions {
     /** Where to load the WASM from, for a host that serves it itself. Default
      *  the copy bundled with `@docmentis/udoc-wasm`, then jsDelivr's. */
     wasm?: WasmLocateOptions;
+
+    /** Kinds of document the engine doesn't read, which open here view only
+     *  — each an {@link ExtensionDocument}, asked in this order ahead of the
+     *  engine. {@link UDocBase.registerExtensionDocument} adds more later.
+     *  Default none. */
+    extensionDocuments?: readonly ExtensionDocument[];
 }
 
 /** Options for {@link UDocBase.renderPage}. Every field is optional; each says its default. */
@@ -254,11 +261,14 @@ export interface RenderPageOptions {
 
 /** Options for {@link UDocBase.open}. Every field is optional; each says its default. */
 export interface OpenOptions {
-    /** The bytes' format, for bytes detection gets wrong: given, it skips
-     *  detection outright. Default detected — a CSV, a TSV, a PSV, a text file
-     *  or a Markdown file, which has no signature, and an HTML file, by the
-     *  file's name — and a `.udoc` zip opens as a package. */
-    format?: FileFormat;
+    /** The source's format, for one detection gets wrong: given, it skips
+     *  detection outright — the extension document whose `formats` hold it
+     *  opens it, else the engine, which takes its own formats alone. Default
+     *  detected — an extension document's `canOpen`, then the engine: a CSV, a
+     *  TSV, a PSV, a text file or a Markdown file, which has no signature, and
+     *  an HTML file, by the file's name — and a `.udoc` zip opens as a
+     *  package. */
+    format?: FileFormat | (string & {});
     /** The file's name — what {@link UDocBase.download} names the saved
      *  document. Default a `File`'s own name, or a URL's last path segment,
      *  else `document.<format>`. */
@@ -592,6 +602,19 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
+     * Register `document`, a kind of document the engine doesn't read, for
+     * every open after this call. {@link open} asks it, after the extension
+     * documents registered before it and ahead of the engine — by its
+     * `formats` when given a `format`, else by its `canOpen` — and when it
+     * takes the source, it renders it into the document area, view only. One
+     * of a doc type already registered replaces that one. Throws an
+     * `invalidRequest` `UDocError` for one of the engine's doc types.
+     */
+    registerExtensionDocument(document: ExtensionDocument): void {
+        this.shell.registerExtensionDocument(document);
+    }
+
+    /**
      * Open a document — `source` its URL, which is fetched, a `Blob`
      * such as a `File`, which it reads, or its bytes — as {@link OpenOptions}
      * says: its format, detected unless given, its file's name, and the
@@ -601,6 +624,10 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * The opened document's doc type and source format are then
      * {@link docType} and {@link sourceFormat}, and a workbook's sheets
      * {@link sheetCount} and {@link currentSheet}.
+     *
+     * An extension document ({@link registerExtensionDocument}) that takes
+     * the source opens it in place of the engine, rendered in the document
+     * area, view only: it has no pages, so the calls that need them reject.
      *
      * Rejects with a `UDocError` when the document doesn't open — an `io` one
      * when its URL can't be fetched — after showing it, with the
@@ -1519,18 +1546,22 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         this.shell.endSlideShow();
     }
 
-    /** The open document's doc type, or `null` with no document open. */
-    get docType(): UDocType | null {
-        return this.shell.getState().docType;
+    /** The open document's doc type — the engine's, `"portable"` and the
+     *  rest, or an extension document's — or `null` with no document open. */
+    get docType(): UDocType | (string & {}) | null {
+        const state = this.shell.getState();
+        return state.extensionDocument?.docType ?? state.docType;
     }
 
     /**
-     * The file format the open document came from — what saving it back
-     * means — or `null` with no document open, or for a package that recorded
-     * none.
+     * The format the open document came from — an engine document's file
+     * format, what saving it back means, or the one an extension document's
+     * viewer reports — or `null` with no document open, or for a package that
+     * recorded none.
      */
-    get sourceFormat(): FileFormat | null {
-        return this.shell.getState().sourceFormat;
+    get sourceFormat(): FileFormat | (string & {}) | null {
+        const state = this.shell.getState();
+        return state.extensionDocument?.sourceFormat ?? state.sourceFormat;
     }
 
     /**

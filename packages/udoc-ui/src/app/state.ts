@@ -22,8 +22,10 @@ import type { Fit, LayoutMode, PageGap, ScrollAlignment, ScrollMode } from "../g
 
 export type { LayoutMode, ScrollMode };
 
-/** Status of the current document load. */
-export type LoadStatus = "empty" | "loading" | "ready" | "error";
+/** Status of the current document load: `"extension"` once an extension
+ *  document is open, which the engine holds nothing of — `"ready"` is an
+ *  engine document's. */
+export type LoadStatus = "empty" | "loading" | "ready" | "extension" | "error";
 
 // -----------------------------------------------------------------------------
 // Theme
@@ -447,6 +449,14 @@ export interface UIState {
      * that recorded none.
      */
     sourceFormat: FileFormat | null;
+
+    /**
+     * The extension document open, by its doc type and its viewer's source
+     * format, or null with none open — an engine document's are
+     * {@link UIState.docType} and {@link UIState.sourceFormat}, both null
+     * while one is.
+     */
+    extensionDocument: { docType: string; sourceFormat: string } | null;
 
     /**
      * The open document's page count — the count the page chrome shows and
@@ -966,6 +976,7 @@ export const initialState: UIState = {
     refusal: null,
     docType: null,
     sourceFormat: null,
+    extensionDocument: null,
     pageCount: 0,
     firstUncomposedPage: 0,
     planeCount: 0,

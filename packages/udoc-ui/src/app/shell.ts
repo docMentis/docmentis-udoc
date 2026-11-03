@@ -135,8 +135,16 @@ import type { AnnotationStyleChange, Comment } from "./annotations.js";
 import { fillKind, toggled, widgetAlternateNames, widgetFills } from "./forms.js";
 import type { FillKind } from "./forms.js";
 import { follow, textLinkFollows, textLinkUrl } from "./destinations.js";
-import { mediaType, readSource, signaturelessFormat, sourceName } from "./source.js";
+import { isFileFormat, mediaType, signaturelessFormat, sourceName, sourceReader } from "./source.js";
 import type { OpenSource } from "./source.js";
+import { createExtensionDocuments } from "./extension-documents.js";
+import type {
+    ExtensionDocument,
+    ExtensionDocumentHost,
+    ExtensionDocumentViewer,
+    ExtensionOpenRequest,
+} from "./extension-documents.js";
+import type { OpenOptions } from "../base.js";
 import { uiStyles } from "./styles.js";
 import { createPageAnnotations } from "./page-annotations.js";
 import { createI18n, MESSAGE_PACKS } from "./i18n/index.js";
@@ -205,12 +213,10 @@ function cssColorToRgb(value: string): RgbColor | null {
     return null;
 }
 
-/** How {@link UIShell.openSource} opens its source — the public `OpenOptions`. */
-export interface OpenSourceOptions {
-    format?: FileFormat | undefined;
-    filename?: string | undefined;
-    delimiter?: string | undefined;
-    password?: string | undefined;
+/** An extension document opened, by its doc type and its viewer's source format. */
+interface ExtensionOpened {
+    docType: string;
+    sourceFormat: string;
 }
 
 export interface UIShell {
@@ -219,14 +225,16 @@ export interface UIShell {
     dispatch: (action: Action) => void;
     /** Subscribe to the frames the worker paints: the pages on screen and the view's scroll and scale with them; returns the unsubscribe. */
     onPageViews: (listener: (frame: PageViewsFrame) => void) => () => void;
-    /** Open a document from bytes — as `format` when given, which skips detection, a CSV split by `delimiter` when given, named `filename` for {@link download}, and unlocked with `password` when it asks for one (drives the engine + dispatches load actions). */
-    openSource: (source: OpenSource, options?: OpenSourceOptions) => Promise<void>;
+    /** Open a document from bytes — an extension document's, or else the engine's: as `format` when given, which skips detection, a CSV split by `delimiter` when given, named `filename` for {@link download}, and unlocked with `password` when it asks for one (drives the engine + dispatches load actions). */
+    openSource: (source: OpenSource, options?: OpenOptions) => Promise<void>;
     /** Open the package a server keeps at `url`, part by part (drives the engine + dispatches load actions). */
     openRemote: (url: string) => Promise<void>;
     /** Open the package the local collaboration service `id` keeps, then its edit log (drives the engine + dispatches load actions). */
     openLocal: (id: string) => Promise<void>;
     /** Offer the host's fonts — a font file's bytes, or a {@link UrlFont} — to every document opened after this. */
     registerFonts: (fonts: ReadonlyArray<Uint8Array | UrlFont>) => void;
+    /** Register an extension document, which every open after this asks before the engine; replaces the one of its doc type. */
+    registerExtensionDocument: (document: ExtensionDocument) => void;
     /** Apply a document-wide history op (undo / redo); refreshes the layout. */
     history: (op: HistoryOp) => Promise<void>;
     /** Mint a fresh CRDT-safe id (hex key) for a new object to insert — a read; `null` with no doc. */
@@ -456,6 +464,8 @@ export interface UIShellOptions {
     locale?: string;
     /** Strings that replace the built-in ones, by key. */
     translations?: Partial<Messages>;
+    /** The extension documents registered from the start, asked in this order. */
+    extensionDocuments?: readonly ExtensionDocument[];
 }
 
 /** The page-local box around a search quad's four corners — the rect a
@@ -755,6 +765,13 @@ export function mountUIShell(
         pointerLeave: () => sharePointer(null),
     });
     canvas.mount(viewportSlot, store);
+
+    // The extension documents the host registered, and the one shown: the
+    // `<div>` it renders into, over the canvas, and its viewer once its open
+    // resolves.
+    const extensionDocuments = createExtensionDocuments();
+    for (const registered of shellOptions.extensionDocuments ?? []) extensionDocuments.register(registered);
+    let extensionShown: { container: HTMLDivElement; viewer: ExtensionDocumentViewer | null } | null = null;
 
     // A deck's speaker notes, in a pane under the slides: a second viewer on
     // the document, whose caret types through the canvas's hidden text input
@@ -1407,6 +1424,14 @@ export function mountUIShell(
         syncBackdrop(isDark);
         syncPageBorder();
         syncGuideColors();
+        const viewer = extensionShown?.viewer;
+        if (viewer) {
+            try {
+                viewer.setTheme(isDark ? "dark" : "light");
+            } catch (error) {
+                console.error("udoc: an extension document's setTheme failed", error);
+            }
+        }
     }
     // Push the canvas background (the Rust-painted gaps around the pages) to the
     // engine so it matches the theme, resolved through the probe (see above)
@@ -1669,19 +1694,55 @@ export function mountUIShell(
 
     /** Bumped by every {@link openSource}, so a read an open has been replaced by stops reporting. */
     let sourceGeneration = 0;
+    /** The open in flight, aborted once another document opens or this one closes. */
+    let openInFlight: AbortController | null = null;
 
-    function openSource(
-        source: OpenSource,
-        { format, filename, delimiter, password }: OpenSourceOptions = {},
-    ): Promise<void> {
+    function openSource(source: OpenSource, options: OpenOptions = {}): Promise<void> {
+        const { format, filename, delimiter, password } = options;
         const generation = ++sourceGeneration;
         const name = filename ?? sourceName(source);
+        // Read once, whoever reads first: an extension document's `canOpen`
+        // looking at its first bytes, or the engine reading it whole.
+        const reader = sourceReader(source, (loaded, total) => {
+            if (generation !== sourceGeneration) return;
+            store.dispatch({ type: "SET_LOAD_PROGRESS", progress: { loaded, total } });
+        });
         return openDocument(
-            async () => {
-                const bytes = await readSource(source, (loaded, total) => {
-                    if (generation !== sourceGeneration) return;
-                    store.dispatch({ type: "SET_LOAD_PROGRESS", progress: { loaded, total } });
-                });
+            async (signal) => {
+                const request: ExtensionOpenRequest = {
+                    source,
+                    options,
+                    url:
+                        typeof source === "string" || source instanceof URL
+                            ? new URL(source, location.href).href
+                            : undefined,
+                    name,
+                    head: () => reader.head(),
+                };
+                let chosen: ExtensionDocument | null;
+                try {
+                    chosen = await extensionDocuments.choose(request);
+                } catch (error) {
+                    // A `canOpen` failing fails the open — unless another
+                    // document was opened, or this one closed, meanwhile.
+                    if (signal.aborted) return null;
+                    throw error;
+                }
+                // Another document was opened, or this one closed, while it asked.
+                if (signal.aborted) return null;
+                if (chosen) {
+                    // It loads the source its own way.
+                    reader.cancel();
+                    const opened = await openExtensionDocument(chosen, request, signal);
+                    return opened && { extension: opened };
+                }
+                if (format !== undefined && !isFileFormat(format)) {
+                    throw new UDocError(
+                        "unsupported",
+                        `neither an extension document nor the engine opens "${format}"`,
+                    );
+                }
+                const bytes = await reader.all();
                 // The engine has it from here: the overlay's bar runs on.
                 if (generation === sourceGeneration) store.dispatch({ type: "SET_LOAD_PROGRESS", progress: null });
                 const opening = format ?? signaturelessFormat(name);
@@ -1741,9 +1802,13 @@ export function mountUIShell(
      * another document opened, or this one closed, before they answered.
      */
     async function openDocument(
-        open: () => Promise<DocumentLayout | null>,
+        open: (signal: AbortSignal) => Promise<DocumentLayout | { extension: ExtensionOpened } | null>,
         from: { packageUrl?: string | undefined; filename?: string | undefined } = {},
     ): Promise<void> {
+        // What was opening gives way to this.
+        openInFlight?.abort();
+        const abort = new AbortController();
+        openInFlight = abort;
         void leaveCollaboration(); // it was the previous document's
         passwordModal.dismiss(); // so was a password it asked for
         delimiterModal.dismiss(); // and a delimiter
@@ -1754,13 +1819,24 @@ export function mountUIShell(
         filling = null;
         canvas.setOverlay("udoc:form-field", formFieldSource, { aboveSelection: true });
         resetMedia(); // and the media it played
+        closeExtensionDocument(); // and the extension document it was
         store.dispatch({ type: "OPEN_START" });
         try {
             // The session first, before any bytes are read: a refusal comes
             // before a download, and the loading overlay knows whether the
-            // license lets it hide.
+            // license lets it hide. An extension document's too: it is
+            // licensed as an engine document is, and its session opens nothing.
             await client.start();
-            const opened = await open();
+            const opened = await open(abort.signal);
+            if (opened && "extension" in opened) {
+                store.dispatch({
+                    type: "OPEN_EXTENSION_SUCCESS",
+                    ...opened.extension,
+                    features: client.entitlements?.features ?? [],
+                });
+                sourceFilename = from.filename;
+                return;
+            }
             const layout = opened && (await unlock(opened));
             // Another document was opened, or this one closed, while it asked.
             if (!layout) return;
@@ -1857,6 +1933,70 @@ export function mountUIShell(
         }
         passwordModal.dismiss();
         return layout;
+    }
+
+    /**
+     * Open `chosen` on `request`, into a `<div>` of its own laid over the
+     * canvas, resolving with what opened; null when another document opens,
+     * or this one closes, first. A rejection takes the `<div>` down.
+     */
+    async function openExtensionDocument(
+        chosen: ExtensionDocument,
+        request: ExtensionOpenRequest,
+        signal: AbortSignal,
+    ): Promise<ExtensionOpened | null> {
+        const container = document.createElement("div");
+        container.className = "udoc-ui__extension-document";
+        viewportSlot.appendChild(container);
+        layout.classList.add("udoc-extension-document-open");
+        const shown: { container: HTMLDivElement; viewer: ExtensionDocumentViewer | null } = {
+            container,
+            viewer: null,
+        };
+        extensionShown = shown;
+        const host: ExtensionDocumentHost = {
+            theme: resolveIsDark(store.getState().theme) ? "dark" : "light",
+            locale: i18n.locale,
+            signal,
+            progress: (loaded, total) => {
+                if (!signal.aborted) store.dispatch({ type: "SET_LOAD_PROGRESS", progress: { loaded, total } });
+            },
+        };
+        let viewer: ExtensionDocumentViewer;
+        try {
+            viewer = await chosen.open(container, request, host);
+        } catch (error) {
+            if (extensionShown === shown) closeExtensionDocument();
+            if (signal.aborted) return null;
+            throw error;
+        }
+        // Another document opened, or this one closed, while it opened: its
+        // `<div>` went then, and its viewer goes now.
+        if (extensionShown !== shown) {
+            closeViewer(viewer);
+            return null;
+        }
+        shown.viewer = viewer;
+        return { docType: chosen.docType, sourceFormat: viewer.sourceFormat };
+    }
+
+    /** Close the extension document shown, if one is, and take its `<div>` down. */
+    function closeExtensionDocument(): void {
+        const shown = extensionShown;
+        if (!shown) return;
+        extensionShown = null;
+        layout.classList.remove("udoc-extension-document-open");
+        if (shown.viewer) closeViewer(shown.viewer);
+        shown.container.remove();
+    }
+
+    /** Close `viewer`, reporting a failure rather than throwing it: what opens next goes on. */
+    function closeViewer(viewer: ExtensionDocumentViewer): void {
+        try {
+            viewer.close();
+        } catch (error) {
+            console.error("udoc: closing an extension document failed", error);
+        }
     }
 
     /**
@@ -3380,6 +3520,8 @@ export function mountUIShell(
     }
 
     function close(): void {
+        openInFlight?.abort();
+        openInFlight = null;
         void leaveCollaboration();
         passwordModal.dismiss();
         delimiterModal.dismiss();
@@ -3390,6 +3532,7 @@ export function mountUIShell(
         filling = null;
         canvas.setOverlay("udoc:form-field", formFieldSource, { aboveSelection: true });
         resetMedia();
+        closeExtensionDocument();
         client.close();
         store.dispatch({ type: "CLOSE_DOC" });
     }
@@ -3520,6 +3663,8 @@ export function mountUIShell(
 
     function destroy(): void {
         destroyed = true;
+        openInFlight?.abort();
+        closeExtensionDocument();
         pageAnnotations.destroy();
         pageAnnotationListeners.clear();
         unsubComposed();
@@ -3617,6 +3762,7 @@ export function mountUIShell(
         openRemote,
         openLocal,
         registerFonts: (fonts) => client.registerFonts(fonts),
+        registerExtensionDocument: (registered) => extensionDocuments.register(registered),
         history,
         mintId,
         selectedObjectIds,

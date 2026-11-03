@@ -91,8 +91,9 @@ function selectSlice(state: UIState): ToolbarSlice {
     return {
         toolbarVisible: state.toolbarVisible,
         fullscreenButtonVisible: state.fullscreenButtonVisible,
-        downloadButtonVisible: state.downloadButtonVisible,
-        printButtonVisible: state.printButtonVisible,
+        // An extension document's viewer has neither, yet.
+        downloadButtonVisible: state.downloadButtonVisible && state.status !== "extension",
+        printButtonVisible: state.printButtonVisible && state.status !== "extension",
         developerButtonVisible: state.developerButtonVisible,
         isFullscreen: state.isFullscreen,
         theme: state.theme,

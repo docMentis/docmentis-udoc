@@ -51,6 +51,13 @@ export type Action =
           docType?: UDocType;
           sourceFormat?: FileFormat;
       }
+    | {
+          type: "OPEN_EXTENSION_SUCCESS";
+          docType: string;
+          sourceFormat: string;
+          /** The features the document's session is entitled to. */
+          features: readonly Feature[];
+      }
     | { type: "OPEN_FAILURE"; error: string; refusal?: StartError["code"] }
     | { type: "CLOSE_DOC" }
     // How far the document being opened has been read; `null` once the engine
