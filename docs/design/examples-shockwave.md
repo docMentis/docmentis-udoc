@@ -98,46 +98,85 @@ another: docMentis, the narrator, in its indigo; Shockwave, the app, in
 orange, `#fe5000`; and Larchmere, its logo and its documents, in green, forest
 `#1f4e3d` and sage `#b5dcc2`, the hue furthest from the other two.
 
+## The app
+
+The app is its sections, in the sidebar under the tenant's brand, and a topbar
+across the page, with search in its middle. Content moves through the sections
+one way:
+
+```
+Library ──publish──▶ Collections ──add to a deal──▶ Deal Room ──share──▶ buyer
+marketing prepares,   a sales manager arranges,      backstage: prepared   frontstage:
+compliance approves   sales find                     and personalized      what they see
+```
+
+- **Home**: what needs the user, and what's new for them.
+- **Library**: content before it's sold with. Marketing creates and prepares
+  it, and compliance reviews it, through a workflow in which only approved
+  content is published. Sales never see it. Outside vendors and partners who
+  work on its content come later.
+- **Collections**: how sales get content. A sales manager arranges published
+  content into collections, picking it from what's published, and gives each
+  collection a description and instructions, and each document in it its own.
+  Sales find their content here.
+- **Deal Rooms**: where sales prepare content for a deal and share it. Content
+  comes in from collections. A deal room's backstage is where sales prepare and
+  personalize it; its frontstage is what the buyer sees, at a link, with no
+  account.
+- **Learning**: where sales learn, and their managers prepare what they teach.
+- **Insights**: how content is used and read, from the Library to the buyer.
+- **Settings**: the workspace's, after a divider.
+
+Search finds what the user may see, by name, description and tag: the Library
+for those who keep it, collections and deal rooms for sales. A document's text
+waits on the engine (above).
+
 ## Who uses it
 
 A user's role is what they may do in the app; their job is a title on their
 profile, as Seismic and Highspot keep the two apart:
 
-| Role     | May                                                                                       |
-| -------- | ----------------------------------------------------------------------------------------- |
-| admin    | keep the library (upload, tag, publish, retire), and the workspace's settings and members |
-| reviewer | approve what's submitted to the library, or return it                                     |
-| member   | find content, personalize it for a deal, share it, present it                             |
+| Role     | May                                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------------------- |
+| admin    | keep the Library (create, prepare, submit, publish what's approved, retire), see Insights, and Settings |
+| reviewer | review what's submitted to the Library: approve it, or mark it up and return it                         |
+| manager  | arrange Collections, teach in Learning, see the team's deal rooms and Insights, and all a member may    |
+| member   | find content in Collections, prepare it and share it in Deal Rooms, and learn in Learning               |
 
-A buyer, a prospect institution or its investment consultant, is no user: they
-open a link a member shared with them, with no account.
+A user sees Home and the sections their role may use: neither a manager nor a
+member sees the Library. A buyer, a prospect institution or its investment
+consultant, is no user: they open a deal room's frontstage at a link a seller
+shared with them, with no account.
 
-Larchmere's users are four personas, each a job a sales enablement platform
+Larchmere's users are five personas, each a job a sales enablement platform
 serves at an asset manager, and each with a udoc capability of their own to
 show:
 
-| Persona      | Title                         | Role     | Shows                                                              |
-| ------------ | ----------------------------- | -------- | ------------------------------------------------------------------ |
-| Maya Patel   | Product Marketing Manager     | admin    | a file viewed before it's uploaded; importing; thumbnails          |
-| Colin Okafor | Compliance Officer            | reviewer | a submission marked up in the editor, approved or returned         |
-| Simon Brooks | Director, Institutional Sales | member   | a deck personalized for a deal, shared with a buyer, presented     |
-| Paula Ortiz  | Client Portfolio Manager      | member   | an RFP response co-edited with Simon; the presenter view at finals |
+| Persona      | Title                         | Role     | Shows                                                                            |
+| ------------ | ----------------------------- | -------- | -------------------------------------------------------------------------------- |
+| Maya Patel   | Product Marketing Manager     | admin    | a file viewed before it's uploaded; importing; thumbnails                        |
+| Colin Okafor | Compliance Officer            | reviewer | a submission marked up in the editor, approved or returned                       |
+| Sam Hughes   | Head of Institutional Sales   | manager  | published content arranged in collections; a lesson's deck and video             |
+| Ryan Brooks  | Director, Institutional Sales | member   | a collection's deck personalized in a deal room's backstage, shared, presented   |
+| Paula Ortiz  | Client Portfolio Manager      | member   | an RFP response co-edited with Ryan in a deal room; the presenter view at finals |
 
-Maya keeps the library and, as marketing does at many firms Larchmere's size,
+Maya keeps the Library and, as marketing does at many firms Larchmere's size,
 runs the platform. Colin is there because an asset manager's fact sheets and
-pitch books quote performance, so compliance approves each before sales may
-use it. Simon owns the relationship with an institution and runs its search
-from the RFP to the finals presentation; Paula is the investment expert at his
-side, who answers the RFP's questions on the strategy and presents its
-performance. Seismic's sales enabler, who trains and coaches the sales team and
-builds its plays, has no persona: none of that is a document. Nor has a content
-manager, an admin without the workspace's settings, until Settings has members
-to invite.
+pitch books quote performance, so compliance approves each before it's
+published. Sam heads the institutional sales team, arranging what's published
+into the collections it sells from, and teaching it in Learning. Ryan is on
+the front line: Ryan owns the relationship with an institution and runs its
+search from the RFP to the finals presentation, and Paula is the investment
+expert at Ryan's side, who answers the RFP's questions on the strategy and
+presents its performance. An outside vendor or partner working on the
+Library's content has no persona yet; nor has a content manager, an admin
+without the workspace's settings, until Settings has members to invite.
 
 Each first name starts with the letter of the job, so that someone switching
 between them in the narrator keeps them apart: Maya in marketing, Colin in
-compliance, Simon in sales, Paula on the portfolio; a buyer, named when share
-links come, gets a B. The surnames are ordinary.
+compliance, Sam heading sales, Ryan owning the relationship, Paula on the
+portfolio; a buyer, named when deal rooms come, gets a B. The surnames are
+ordinary.
 
 A user signs in with their work email, `first.last@larchmere.example` for the
 seeded ones, at a domain kept for examples so that none is anyone's, and a
@@ -165,8 +204,8 @@ document is kept twice.
 **The gate.** udoc-server has no end-user authentication, and its ids are
 global. So every `/udoc/*` request and WebSocket upgrade passes the gate first,
 which wants a signed-in session and a document id the user's tenant has an
-asset for, and lets a user only read it; later, a share link's token admits a
-buyer to one document's read routes. The browser never imports or deletes a
+asset for, and lets a user only read it; later, a deal room's link admits a
+buyer to the read routes of what its frontstage shares. The browser never imports or deletes a
 document in udoc-server: the backend does. Until the editor, no upgrade
 passes.
 

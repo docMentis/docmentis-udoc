@@ -70,8 +70,10 @@ the packages here call through — is documented with the engine, not here.
   tenant: a showcase of the packages doing a real job, and dogfooding them
   through their public API alone, each gap logged; what a sales enablement
   platform has to provide, where docMentis fits and what makes it unique
-  there; a React frontend and a Fastify backend embedding udoc-server behind a
-  tenant gate, SQLite keeping the app's own data; the narrator beside it,
+  there; the app's sections, content moving from the Library through
+  Collections to Deal Rooms and a buyer, and who sees which; a React frontend
+  and a Fastify backend embedding udoc-server behind a tenant gate, SQLite
+  keeping the app's own data; the narrator beside it,
   guiding a visitor through each persona's steps and highlighting the
   technology behind what just happened, off moments the product announces;
   and run against this checkout's packages by `file:` links.
