@@ -87,11 +87,11 @@ funds, benchmarks and figures, with no real ticker or index. Each of its
 documents says so.
 
 Its users see the app in its brand, as a tenant's do: its logo, a square icon,
-and its name head the sidebar, the logo kept with the tenant and served to its
+and its name lead the header, the logo kept with the tenant and served to its
 users alone (`/api/tenants/:id/logo`). Larchmere's is a larch cone, faceted
 scales on a shield, with a rising arrow breaking out of it. Shockwave's own
 mark is left to the sign-in page, where no tenant is known yet, and the foot of
-the sidebar, "Powered by Shockwave".
+the navigation, "Powered by Shockwave".
 
 Each of the three speaks in colors of its own, so that no one takes one for
 another: docMentis, the narrator, in its indigo; Shockwave, the app, in
@@ -100,9 +100,11 @@ orange, `#fe5000`; and Larchmere, its logo and its documents, in green, forest
 
 ## The app
 
-The app is its sections, in the sidebar under the tenant's brand, and a topbar
-across the page, with search in its middle. Content moves through the sections
-one way:
+The app is its sections, in a navigation down the window's left, and a header
+across the rest: the tenant's brand, search in its middle, and the user's
+avatar, which opens their menu. A menu button at the navigation's top turns it
+from a panel of the sections' names to a bar of their icons and back. Content
+moves through the sections one way:
 
 ```
 Library ──publish──▶ Collections ──add to a deal──▶ Deal Room ──share──▶ buyer

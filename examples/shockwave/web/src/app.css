@@ -93,59 +93,49 @@ input {
     isolation: isolate;
 }
 
-/* The shell: the sidebar, which folds to a rail of its icons, and the page. */
+/* The shell: the navigation down the window's left, from top to bottom, and
+   the header across the rest, over the page. */
 .shell {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: 56px minmax(0, 1fr);
     height: 100%;
 }
 
-/* What the sidebar shows is centered 32px in, on the folded rail's middle, so
-   that folding it takes the words away and moves nothing else. */
-.sidebar {
-    position: relative;
+/* What the navigation shows is centered 32px in, on the bar's middle, so that
+   turning the panel to the bar takes the names away and moves nothing else. */
+.navigation {
+    grid-row: 1 / -1;
+    grid-column: 1;
     display: flex;
     flex-direction: column;
     width: 220px;
-    flex-shrink: 0;
     padding: 0 12px 12px;
     background: var(--ms-surface);
     border-right: 1px solid var(--ms-border);
     transition: width 0.15s ease;
 }
 
-.shell-folded .sidebar {
+.shell-bar .navigation {
     width: 64px;
 }
 
-.shell-folded .tenant-name,
-.shell-folded .nav-label,
-.shell-folded .user-name,
-.shell-folded .user-button > svg {
+.shell-bar .nav-label {
     display: none;
 }
 
-/* The fold's button, on the sidebar's edge, level with the brand. */
-.sidebar-fold {
-    position: absolute;
-    top: 18px;
-    right: -12px;
-    z-index: 5;
-    display: grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    border: 1px solid var(--ms-border);
-    border-radius: 50%;
-    background: var(--ms-surface);
-    box-shadow: var(--ms-shadow);
-    color: var(--ms-muted);
-    cursor: pointer;
+/* The menu button, level with the header. */
+.navigation-top {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    height: 56px;
 }
 
-.sidebar-fold:hover {
-    background: var(--ms-bg);
-    color: var(--ms-text);
+.icon-button.navigation-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
 }
 
 /* The tenant's brand, or on the sign-in page, Shockwave's. */
@@ -153,7 +143,7 @@ input {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 0 8px;
+    min-width: 0;
     font-size: 17px;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -163,14 +153,6 @@ input {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-/* Heading the sidebar. */
-.sidebar .brand {
-    flex-shrink: 0;
-    height: 60px;
-    padding: 0 4px;
-    font-size: 19px;
 }
 
 /* A tenant's logo: a square. */
@@ -191,8 +173,8 @@ input {
 .nav {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    margin-top: 8px;
+    gap: 4px;
+    padding-top: 8px;
 }
 
 .nav-item {
@@ -223,21 +205,17 @@ input {
 
 /* Between the sections and the workspace's settings. */
 .nav-divider {
-    margin: 6px 8px;
+    margin: 4px 8px;
     border-top: 1px solid var(--ms-border);
 }
 
-/* The sidebar's foot: the user; then, under a divider across the sidebar, the
-   product it runs on, Shockwave's own mark. */
-.sidebar-foot {
-    margin-top: auto;
-}
-
+/* The navigation's foot, under a divider across it: the product it runs on,
+   Shockwave's own mark. */
 .powered-by {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin: 12px -12px 0;
+    margin: auto -12px 0;
     padding: 12px 0 0 20px;
     border-top: 1px solid var(--ms-border);
     color: var(--ms-muted);
@@ -254,58 +232,88 @@ input {
     font-weight: 600;
 }
 
+/* The header: the tenant's brand at its left and the user's avatar at its
+   right, each in line with the page under it, and search in its middle. */
+.header {
+    grid-row: 1;
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 560px) minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+    background: var(--ms-surface);
+    border-bottom: 1px solid var(--ms-border);
+}
+
+.search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search svg {
+    position: absolute;
+    left: 10px;
+    color: var(--ms-muted);
+    pointer-events: none;
+}
+
+.search input {
+    width: 100%;
+    height: 36px;
+    padding: 0 12px 0 36px;
+    border: 1px solid var(--ms-border);
+    border-radius: 8px;
+    background: var(--ms-bg);
+}
+
+.search input:focus {
+    outline: none;
+    border-color: var(--ms-brand);
+    background: var(--ms-surface);
+    box-shadow: 0 0 0 3px rgb(254 80 0 / 18%);
+}
+
 .content {
-    flex: 1;
+    grid-row: 2;
+    grid-column: 2;
     min-width: 0;
     overflow: auto;
 }
 
-/* The user's menu. */
+/* The user's menu, at the header's right. */
 .user-menu {
     position: relative;
+    justify-self: end;
 }
 
 .user-button {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    padding: 4px 8px 4px 6px;
+    display: grid;
+    place-items: center;
+    padding: 0;
     border: 0;
-    border-radius: 8px;
+    border-radius: 50%;
     background: none;
-    color: var(--ms-muted);
     cursor: pointer;
-    text-align: left;
 }
 
-.user-button:hover {
-    background: var(--ms-bg);
+.user-button:hover .avatar,
+.user-button[aria-expanded="true"] .avatar {
+    box-shadow: 0 0 0 3px var(--ms-border);
 }
 
-.user-button > svg {
-    flex-shrink: 0;
+.user-menu .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
 }
 
-.user-name,
-.menu-header {
-    color: var(--ms-text);
-    font-weight: 600;
-}
-
-.user-name {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-/* Up from the sidebar's foot; folded, out beside the rail. */
+/* A menu, down from its button, at its right. */
 .menu {
     position: absolute;
-    bottom: calc(100% + 6px);
-    left: 0;
+    top: calc(100% + 4px);
+    right: 0;
     z-index: 10;
     display: flex;
     flex-direction: column;
@@ -317,15 +325,21 @@ input {
     box-shadow: var(--ms-shadow-overlay);
 }
 
-.shell-folded .menu {
-    bottom: 0;
-    left: calc(100% + 8px);
-}
-
 .menu-header {
+    display: flex;
+    flex-direction: column;
     margin-bottom: 4px;
     padding: 6px 10px 8px;
     border-bottom: 1px solid var(--ms-border);
+}
+
+.menu-header strong {
+    font-weight: 600;
+}
+
+.menu-header span {
+    color: var(--ms-muted);
+    font-size: 13px;
 }
 
 .menu button {
@@ -354,12 +368,12 @@ input {
     font-weight: 600;
 }
 
-/* Pages: the title level with the tenant's brand across the sidebar. */
+/* Pages: under the header, in line with the tenant's brand in it. */
 .page {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    padding: 14px 32px 28px;
+    padding: 24px;
 }
 
 .page-header h1 {
@@ -440,7 +454,7 @@ input {
 }
 
 .field input {
-    height: 38px;
+    height: 36px;
     padding: 0 10px;
     border: 1px solid var(--ms-border);
     border-radius: 8px;
@@ -472,10 +486,6 @@ input {
     border: 1px solid var(--ms-border);
     border-radius: 14px;
     box-shadow: 0 12px 32px rgb(16 24 40 / 8%);
-}
-
-.sign-in-card .brand {
-    padding: 0;
 }
 
 .sign-in-card h1 {
@@ -612,9 +622,21 @@ input {
     text-align: right;
 }
 
-.file-table .row-actions {
+/* Inset from the card's edges as a card's content is. */
+.file-table th:first-child,
+.file-table td:first-child {
+    padding-left: 20px;
+}
+
+.file-table th:last-child,
+.file-table td:last-child {
+    padding-right: 20px;
+}
+
+/* Its menu's button as near the edge as a dialog's close. */
+.file-table td.row-actions {
     width: 1%;
-    padding: 4px 8px;
+    padding: 4px 12px 4px 8px;
 }
 
 .file-name {
@@ -653,16 +675,12 @@ input {
     letter-spacing: 0.02em;
 }
 
-/* A row's menu, down from its button, at its right. */
+/* A row's menu. */
 .actions-menu {
     position: relative;
 }
 
 .actions-menu .menu {
-    top: calc(100% + 4px);
-    right: 0;
-    bottom: auto;
-    left: auto;
     min-width: 140px;
 }
 

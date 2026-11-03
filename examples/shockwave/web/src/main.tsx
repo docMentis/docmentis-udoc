@@ -45,27 +45,34 @@ const router = createBrowserRouter([
                     { path: "library/folders/:folderId", element: <LibraryPage /> },
                     { path: "library/files/:assetId", element: <FilePage /> },
                     {
-                        path: "decks",
+                        path: "collections",
                         element: (
                             <PlaceholderPage
-                                title="Decks"
-                                subtitle="Decks built for a deal, from the library's slides."
+                                title="Collections"
+                                subtitle="Content arranged for selling, and how to use it."
                             />
                         ),
                     },
                     {
-                        path: "deals",
+                        path: "deal-rooms",
                         element: (
                             <PlaceholderPage
-                                title="Deals"
-                                subtitle="Each deal's buyers, and what's been shared with them."
+                                title="Deal Rooms"
+                                subtitle="Content prepared for each deal, and shared with its buyers."
                             />
                         ),
                     },
                     {
-                        path: "analytics",
+                        path: "learning",
+                        element: <PlaceholderPage title="Learning" subtitle="What to learn, and what to teach." />,
+                    },
+                    {
+                        path: "insights",
                         element: (
-                            <PlaceholderPage title="Analytics" subtitle="How the library's content is used and read." />
+                            <PlaceholderPage
+                                title="Insights"
+                                subtitle="How content is used and read, up to the buyer."
+                            />
                         ),
                     },
                     {

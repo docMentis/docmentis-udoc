@@ -51,21 +51,31 @@ export const LibraryIcon = () => (
     </Icon>
 );
 
-export const DecksIcon = () => (
+/** Three sheets, one on another: content gathered together. */
+export const CollectionsIcon = () => (
     <Icon>
-        <rect x="3" y="5" width="18" height="12" rx="1.5" />
-        <path d="M12 17v3M8 20h8M7 13l3-3 2 2 4-4" />
+        <path d="m12 3 9 4.5-9 4.5-9-4.5z" />
+        <path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5" />
     </Icon>
 );
 
-export const DealsIcon = () => (
+/** A door and its handle: a room. */
+export const DealRoomsIcon = () => (
     <Icon>
-        <rect x="3" y="7" width="18" height="13" rx="1.5" />
-        <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 12.5h18" />
+        <path d="M6 21V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v17M3 21h18" />
+        <circle cx="14.5" cy="12" r="0.9" fill="currentColor" />
     </Icon>
 );
 
-export const AnalyticsIcon = () => (
+/** A mortarboard. */
+export const LearningIcon = () => (
+    <Icon>
+        <path d="m2 9 10-5 10 5-10 5z" />
+        <path d="M6 11v5c0 1.4 2.7 3 6 3s6-1.6 6-3v-5M22 9v6" />
+    </Icon>
+);
+
+export const InsightsIcon = () => (
     <Icon>
         <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
     </Icon>
@@ -79,21 +89,23 @@ export const SettingsIcon = () => (
     </Icon>
 );
 
-export const ChevronLeftIcon = () => (
-    <Icon width="14" height="14">
-        <path d="m15 6-6 6 6 6" />
+/** Three lines: the navigation's menu button. */
+export const MenuIcon = () => (
+    <Icon width="20" height="20">
+        <path d="M4 6h16M4 12h16M4 18h16" />
+    </Icon>
+);
+
+export const SearchIcon = () => (
+    <Icon width="18" height="18">
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-4-4" />
     </Icon>
 );
 
 export const ChevronRightIcon = () => (
     <Icon width="14" height="14">
         <path d="m9 6 6 6-6 6" />
-    </Icon>
-);
-
-export const ChevronsUpDownIcon = () => (
-    <Icon width="16" height="16">
-        <path d="m7 15 5 5 5-5M7 9l5-5 5 5" />
     </Icon>
 );
 

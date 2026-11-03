@@ -1,41 +1,45 @@
-// The app around every signed-in page, in its tenant's brand: the sidebar and
-// the page. The sidebar has the tenant's logo and name, the navigation and,
-// after a divider, the workspace's settings; at its foot the user's menu, then,
-// under a divider, "Powered by Shockwave". It folds to a rail of its icons,
-// which this browser remembers.
+// The app around every signed-in page, in its tenant's brand: the navigation
+// down the window's left, the header across the rest, and the page under it.
+// The navigation has, under its menu button, the sections and, after a
+// divider, the workspace's settings; at its foot, under a divider, "Powered by
+// Shockwave". The menu button turns it from a panel of the sections' names to
+// a bar of their icons and back, which this browser remembers. The header has
+// the tenant's logo and name, search in its middle, and the user's avatar,
+// which opens their menu.
 import { useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { NavLink, Outlet } from "react-router";
 
 import type { User } from "../../shared/api.ts";
 import {
-    AnalyticsIcon,
-    ChevronLeftIcon,
-    ChevronRightIcon,
-    ChevronsUpDownIcon,
-    DealsIcon,
-    DecksIcon,
+    CollectionsIcon,
+    DealRoomsIcon,
     HomeIcon,
+    InsightsIcon,
+    LearningIcon,
     LibraryIcon,
     Logo,
+    MenuIcon,
+    SearchIcon,
     SettingsIcon,
 } from "./icons";
 import { useSession, useUser } from "./session";
 import { Avatar, TenantBrand, useDismiss } from "./ui";
 
-const NAVIGATION: { to: string; label: string; icon: ComponentType }[] = [
+const SECTIONS: { to: string; label: string; icon: ComponentType }[] = [
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/library", label: "Library", icon: LibraryIcon },
-    { to: "/decks", label: "Decks", icon: DecksIcon },
-    { to: "/deals", label: "Deals", icon: DealsIcon },
-    { to: "/analytics", label: "Analytics", icon: AnalyticsIcon },
+    { to: "/collections", label: "Collections", icon: CollectionsIcon },
+    { to: "/deal-rooms", label: "Deal Rooms", icon: DealRoomsIcon },
+    { to: "/learning", label: "Learning", icon: LearningIcon },
+    { to: "/insights", label: "Insights", icon: InsightsIcon },
 ];
 
-const FOLDED_KEY = "shockwave.sidebar.folded";
+const BAR_KEY = "shockwave.navigation.bar";
 
-function savedFolded(): boolean {
+function savedBar(): boolean {
     try {
-        return localStorage.getItem(FOLDED_KEY) === "true";
+        return localStorage.getItem(BAR_KEY) === "true";
     } catch {
         return false;
     }
@@ -43,48 +47,54 @@ function savedFolded(): boolean {
 
 export function AppShell() {
     const user = useUser();
-    const [folded, setFolded] = useState(savedFolded);
+    const [bar, setBar] = useState(savedBar);
 
-    function fold() {
-        setFolded(!folded);
+    function toggle() {
+        setBar(!bar);
         try {
-            localStorage.setItem(FOLDED_KEY, String(!folded));
+            localStorage.setItem(BAR_KEY, String(!bar));
         } catch {
             // Kept for this visit alone.
         }
     }
 
     return (
-        <div className={folded ? "shell shell-folded" : "shell"}>
-            <aside className="sidebar">
-                <div className="brand">
-                    <TenantBrand tenant={user.tenant} />
+        <div className={bar ? "shell shell-bar" : "shell"}>
+            <aside className="navigation">
+                <div className="navigation-top">
+                    <button
+                        className="icon-button navigation-toggle"
+                        aria-label={bar ? "Expand the navigation" : "Collapse the navigation"}
+                        aria-expanded={!bar}
+                        onClick={toggle}
+                    >
+                        <MenuIcon />
+                    </button>
                 </div>
-                <button
-                    className="sidebar-fold"
-                    aria-label={folded ? "Unfold the sidebar" : "Fold the sidebar"}
-                    aria-expanded={!folded}
-                    onClick={fold}
-                >
-                    {folded ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-                </button>
                 <nav className="nav">
-                    {NAVIGATION.map(({ to, label, icon }) => (
-                        <SidebarLink key={to} to={to} label={label} icon={icon} folded={folded} />
+                    {SECTIONS.map(({ to, label, icon }) => (
+                        <NavigationLink key={to} to={to} label={label} icon={icon} bar={bar} />
                     ))}
                     <div className="nav-divider" role="separator" />
-                    <SidebarLink to="/settings" label="Settings" icon={SettingsIcon} folded={folded} />
+                    <NavigationLink to="/settings" label="Settings" icon={SettingsIcon} bar={bar} />
                 </nav>
-                <div className="sidebar-foot">
-                    <UserMenu user={user} folded={folded} />
-                </div>
-                <div className="powered-by" title={folded ? "Powered by Shockwave" : undefined}>
+                <div className="powered-by" title={bar ? "Powered by Shockwave" : undefined}>
                     <Logo size={24} />
                     <span className="nav-label">
                         Powered by <strong>Shockwave</strong>
                     </span>
                 </div>
             </aside>
+            <header className="header">
+                <div className="brand">
+                    <TenantBrand tenant={user.tenant} />
+                </div>
+                <form className="search" role="search" onSubmit={(event) => event.preventDefault()}>
+                    <SearchIcon />
+                    <input type="search" placeholder="Search" aria-label="Search" />
+                </form>
+                <UserMenu user={user} />
+            </header>
             <main className="content">
                 <Outlet />
             </main>
@@ -92,28 +102,28 @@ export function AppShell() {
     );
 }
 
-/** A link in the sidebar: its icon and its label, the label a tooltip when folded. */
-function SidebarLink({
+/** A section in the navigation: its icon and its name, the name a tooltip in the bar. */
+function NavigationLink({
     to,
     label,
     icon: Icon,
-    folded,
+    bar,
 }: {
     to: string;
     label: string;
     icon: ComponentType;
-    folded: boolean;
+    bar: boolean;
 }) {
     return (
-        <NavLink to={to} end={to === "/"} className="nav-item" title={folded ? label : undefined}>
+        <NavLink to={to} end={to === "/"} className="nav-item" title={bar ? label : undefined}>
             <Icon />
             <span className="nav-label">{label}</span>
         </NavLink>
     );
 }
 
-/** The user, and their menu, opening up from the sidebar's foot; folded, beside it, with their name. */
-function UserMenu({ user, folded }: { user: User; folded: boolean }) {
+/** The user's avatar, opening their menu down from it: their name and email, then signing out. */
+function UserMenu({ user }: { user: User }) {
     const { signOut } = useSession();
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -122,18 +132,20 @@ function UserMenu({ user, folded }: { user: User; folded: boolean }) {
         <div className="user-menu" ref={ref}>
             <button
                 className="user-button"
+                aria-label={user.name}
+                aria-haspopup="menu"
                 aria-expanded={open}
-                aria-label={folded ? user.name : undefined}
-                title={folded ? user.name : undefined}
+                title={user.name}
                 onClick={() => setOpen(!open)}
             >
                 <Avatar name={user.name} />
-                <span className="user-name">{user.name}</span>
-                <ChevronsUpDownIcon />
             </button>
             {open && (
                 <div className="menu" role="menu">
-                    {folded && <div className="menu-header">{user.name}</div>}
+                    <div className="menu-header">
+                        <strong>{user.name}</strong>
+                        <span>{user.email}</span>
+                    </div>
                     <button role="menuitem" onClick={() => void signOut()}>
                         Sign out
                     </button>
