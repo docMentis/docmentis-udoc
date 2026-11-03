@@ -8,16 +8,16 @@ import type { Asset } from "../../shared/api.ts";
 import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
 import { announceMoment } from "./moments";
 
-/** Each format's name for people, and its badge's color, by udoc's name for it. */
+/** Each format's name for people, and its badge's color (app.css), by udoc's name for it. */
 const TYPES: Record<string, { label: string; color: string }> = {
-    pdf: { label: "PDF", color: "#d93025" },
-    docx: { label: "Word", color: "#2b579a" },
-    doc: { label: "Word", color: "#2b579a" },
-    pptx: { label: "PowerPoint", color: "#c43e1c" },
-    ppt: { label: "PowerPoint", color: "#c43e1c" },
-    xlsx: { label: "Excel", color: "#217346" },
-    xls: { label: "Excel", color: "#217346" },
-    csv: { label: "CSV", color: "#217346" },
+    pdf: { label: "PDF", color: "var(--sw-format-pdf)" },
+    docx: { label: "Word", color: "var(--sw-format-word)" },
+    doc: { label: "Word", color: "var(--sw-format-word)" },
+    pptx: { label: "PowerPoint", color: "var(--sw-format-powerpoint)" },
+    ppt: { label: "PowerPoint", color: "var(--sw-format-powerpoint)" },
+    xlsx: { label: "Excel", color: "var(--sw-format-excel)" },
+    xls: { label: "Excel", color: "var(--sw-format-excel)" },
+    csv: { label: "CSV", color: "var(--sw-format-excel)" },
 };
 
 /** A file's type in words: "PowerPoint"; a format with none, in capitals. */
@@ -25,10 +25,11 @@ export function typeLabel(format: string): string {
     return TYPES[format]?.label ?? format.toUpperCase();
 }
 
-/** A file's type as a small badge: its format, on its color. */
+/** A file's type as a small badge: its format, on its color, or for a format with none, on-surface-variant. */
 export function FileBadge({ format }: { format: string }) {
+    const background = TYPES[format]?.color ?? "var(--md-sys-color-on-surface-variant)";
     return (
-        <span className="file-badge" style={{ background: TYPES[format]?.color ?? "#636c7a" }} aria-hidden="true">
+        <span className="file-badge" style={{ background }} aria-hidden="true">
             {format.slice(0, 4).toUpperCase()}
         </span>
     );

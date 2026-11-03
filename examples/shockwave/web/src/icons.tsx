@@ -24,7 +24,7 @@ function Icon({ children, ...props }: SVGProps<SVGSVGElement> & { children: Reac
 export function Logo({ size = 28 }: { size?: number }) {
     return (
         <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden="true">
-            <rect width="32" height="32" rx="8" fill="var(--ms-brand)" />
+            <rect width="32" height="32" rx="8" fill="var(--sw-brand)" />
             <polyline
                 points="4,17 9,17 11,13 13,21 16,6 19,26 21,14 23,17 28,17"
                 fill="none"

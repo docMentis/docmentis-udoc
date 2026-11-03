@@ -1,22 +1,57 @@
-/* Shockwave's look: a light, quiet product, in its own orange: the mark and
-   focus in it, and text and the primary button in a darker one, which white
-   reads on. Neither the narrator's indigo, docMentis's, nor a tenant's colors. */
+/* Shockwave's colors: Material 3's color roles, each at its tone in the
+   baseline light scheme, from the tonal palettes Shockwave's orange seeds
+   (#fe5000: hue 36, chroma 89, as Material's HCT measures them): the primary
+   at its hue and chroma, the secondary at chroma 16, the neutrals tinted
+   with its hue at chroma 4 and 8, the error at Material's red. Every color
+   here is a role, what's on a role is its on- role, and a state is a layer
+   of what's on a container over it. The orange itself is the mark's alone.
+   Neither the narrator's indigo, docMentis's, nor a tenant's colors. */
 :root {
-    --ms-brand: #fe5000;
-    --ms-brand-strong: #dc3400;
-    --ms-brand-deep: #b42b08;
-    --ms-brand-soft: #fff1eb;
-    --ms-bg: #f5f6f8;
-    --ms-surface: #ffffff;
-    --ms-border: #e2e5ea;
-    --ms-text: #1b1f26;
-    --ms-muted: #636c7a;
-    --ms-danger: #c92a2a;
-    --ms-danger-soft: #fff5f5;
-    --ms-danger-line: #ffc9c9;
+    --md-sys-color-primary: #ae3200;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-primary-container: #ffdbcf;
+    --md-sys-color-on-primary-container: #3a0a00;
+    --md-sys-color-secondary: #77574c;
+    --md-sys-color-secondary-container: #ffdbcf;
+    --md-sys-color-on-secondary-container: #2c150e;
+    --md-sys-color-error: #ba1a1a;
+    --md-sys-color-on-error: #ffffff;
+    --md-sys-color-error-container: #ffdad4;
+    --md-sys-color-on-error-container: #410001;
+    --md-sys-color-surface: #fff8f5;
+    --md-sys-color-surface-container-lowest: #ffffff;
+    --md-sys-color-surface-container-low: #fef1ed;
+    --md-sys-color-surface-container: #f9ebe8;
+    --md-sys-color-surface-container-high: #f3e6e2;
+    --md-sys-color-on-surface: #201a18;
+    --md-sys-color-on-surface-variant: #53433f;
+    --md-sys-color-outline: #85736e;
+    --md-sys-color-outline-variant: #d8c2bb;
+    --md-sys-color-scrim: #000000;
+    --md-sys-color-shadow: #000000;
+    /* A state's layer: how much of what's on a container covers it. */
+    --md-sys-state-hover: 8%;
+    --md-sys-state-dragged: 16%;
+    /* Elevation's levels, in the shadow role. */
+    --md-sys-elevation-1:
+        0 1px 2px color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
+        0 1px 3px 1px color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+    --md-sys-elevation-2:
+        0 1px 2px color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
+        0 2px 6px 2px color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+    --md-sys-elevation-3:
+        0 1px 3px color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
+        0 4px 8px 3px color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+    /* Shockwave's mark, the seed: its brand's color, not a role. */
+    --sw-brand: #fe5000;
+    /* Each format's badge, custom colors kept to the formats' own, so that
+       they're known at a glance, and what's on them. */
+    --sw-format-pdf: #d93025;
+    --sw-format-word: #2b579a;
+    --sw-format-powerpoint: #c43e1c;
+    --sw-format-excel: #217346;
+    --sw-on-format: #ffffff;
     --ms-radius: 10px;
-    --ms-shadow: 0 1px 2px rgb(16 24 40 / 6%);
-    --ms-shadow-overlay: 0 8px 24px rgb(16 24 40 / 12%);
     /* Inter, bundled, so that every weight is the one asked for, on any machine. */
     font-family:
         "Inter Variable",
@@ -27,8 +62,8 @@
         sans-serif;
     font-size: 14px;
     line-height: 1.5;
-    color: var(--ms-text);
-    background: var(--ms-bg);
+    color: var(--md-sys-color-on-surface);
+    background: var(--md-sys-color-surface-container-low);
 }
 
 * {
@@ -43,7 +78,7 @@ body,
 }
 
 a {
-    color: var(--ms-brand-strong);
+    color: var(--md-sys-color-primary);
     text-decoration: none;
 }
 
@@ -62,19 +97,18 @@ input {
     font: inherit;
 }
 
-/* Focus, from the keyboard, in the brand's orange on every control. */
+/* Focus, from the keyboard: Material's focus ring, in the secondary role. */
 :focus-visible {
-    outline: 2px solid var(--ms-brand);
+    outline: 3px solid var(--md-sys-color-secondary);
     outline-offset: 2px;
 }
 
-/* What went wrong, set apart from the brand's orange. */
+/* What went wrong, on the error's container. */
 .error {
     padding: 10px 12px;
-    border: 1px solid var(--ms-danger-line);
     border-radius: 8px;
-    background: var(--ms-danger-soft);
-    color: var(--ms-danger);
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
     font-size: 13px;
 }
 
@@ -111,8 +145,8 @@ input {
     flex-direction: column;
     width: 220px;
     padding: 0 12px 12px;
-    background: var(--ms-surface);
-    border-right: 1px solid var(--ms-border);
+    background: var(--md-sys-color-surface);
+    border-right: 1px solid var(--md-sys-color-outline-variant);
     transition: width 0.15s ease;
 }
 
@@ -166,8 +200,8 @@ input {
     display: grid;
     place-items: center;
     border-radius: 8px;
-    background: var(--ms-brand-soft);
-    color: var(--ms-brand-strong);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
 }
 
 .nav {
@@ -183,7 +217,7 @@ input {
     gap: 8px;
     padding: 6px 8px;
     border-radius: 8px;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     font-weight: 500;
     white-space: nowrap;
 }
@@ -193,20 +227,29 @@ input {
 }
 
 .nav-item:hover {
-    background: var(--ms-bg);
-    color: var(--ms-text);
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
+    color: var(--md-sys-color-on-surface);
     text-decoration: none;
 }
 
+/* The section open: Material's active indicator, in the secondary container. */
 .nav-item.active {
-    background: var(--ms-brand-soft);
-    color: var(--ms-brand-strong);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.nav-item.active:hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-secondary-container) var(--md-sys-state-hover),
+        var(--md-sys-color-secondary-container)
+    );
 }
 
 /* Between the sections and the workspace's settings. */
 .nav-divider {
     margin: 4px 8px;
-    border-top: 1px solid var(--ms-border);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
 /* The navigation's foot, under a divider across it: the product it runs on,
@@ -217,8 +260,8 @@ input {
     gap: 8px;
     margin: auto -12px 0;
     padding: 12px 0 0 20px;
-    border-top: 1px solid var(--ms-border);
-    color: var(--ms-muted);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface-variant);
     font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
@@ -242,8 +285,8 @@ input {
     align-items: center;
     gap: 16px;
     padding: 0 24px;
-    background: var(--ms-surface);
-    border-bottom: 1px solid var(--ms-border);
+    background: var(--md-sys-color-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .search {
@@ -255,24 +298,29 @@ input {
 .search svg {
     position: absolute;
     left: 10px;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     pointer-events: none;
 }
 
+/* Material's search bar: filled, in the high container. */
 .search input {
     width: 100%;
     height: 36px;
     padding: 0 12px 0 36px;
-    border: 1px solid var(--ms-border);
+    border: 1px solid transparent;
     border-radius: 8px;
-    background: var(--ms-bg);
+    background: var(--md-sys-color-surface-container-high);
+}
+
+.search input::placeholder,
+.name-filter input::placeholder {
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .search input:focus {
     outline: none;
-    border-color: var(--ms-brand);
-    background: var(--ms-surface);
-    box-shadow: 0 0 0 3px rgb(254 80 0 / 18%);
+    border-color: var(--md-sys-color-primary);
+    box-shadow: inset 0 0 0 1px var(--md-sys-color-primary);
 }
 
 .content {
@@ -300,7 +348,7 @@ input {
 
 .user-button:hover .avatar,
 .user-button[aria-expanded="true"] .avatar {
-    box-shadow: 0 0 0 3px var(--ms-border);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
 }
 
 .user-menu .avatar {
@@ -319,10 +367,9 @@ input {
     flex-direction: column;
     min-width: 180px;
     padding: 6px;
-    background: var(--ms-surface);
-    border: 1px solid var(--ms-border);
+    background: var(--md-sys-color-surface-container);
     border-radius: var(--ms-radius);
-    box-shadow: var(--ms-shadow-overlay);
+    box-shadow: var(--md-sys-elevation-2);
 }
 
 .menu-header {
@@ -330,7 +377,7 @@ input {
     flex-direction: column;
     margin-bottom: 4px;
     padding: 6px 10px 8px;
-    border-bottom: 1px solid var(--ms-border);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .menu-header strong {
@@ -338,7 +385,7 @@ input {
 }
 
 .menu-header span {
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     font-size: 13px;
 }
 
@@ -352,7 +399,7 @@ input {
 }
 
 .menu button:hover {
-    background: var(--ms-bg);
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
 }
 
 .avatar {
@@ -362,8 +409,8 @@ input {
     height: 28px;
     flex-shrink: 0;
     border-radius: 50%;
-    background: var(--ms-brand-soft);
-    color: var(--ms-brand-strong);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
     font-size: 11px;
     font-weight: 600;
 }
@@ -384,15 +431,15 @@ input {
 
 .page-subtitle {
     margin-top: 2px;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
 }
 
+/* Material's outlined card: the lowest container, outlined, flat. */
 .card {
     padding: 20px;
-    background: var(--ms-surface);
-    border: 1px solid var(--ms-border);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--ms-radius);
-    box-shadow: var(--ms-shadow);
 }
 
 /* Home's sections, one under another, each its heading over what it holds. */
@@ -432,15 +479,18 @@ input {
     gap: 4px;
     padding: 24px 12px;
     text-align: center;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .empty-title {
-    color: var(--ms-text);
+    color: var(--md-sys-color-on-surface);
     font-weight: 500;
 }
 
-/* Buttons and fields. */
+/* Buttons and fields. A button is Material's outlined button: no fill, its
+   label in the primary role; the primary one, the filled button; a danger,
+   the filled button in the error role. Disabled, each is on-surface: its
+   label at 38%, a filled one's container at 12%. */
 .button {
     display: inline-flex;
     align-items: center;
@@ -448,33 +498,44 @@ input {
     gap: 6px;
     height: 36px;
     padding: 0 14px;
-    border: 1px solid var(--ms-border);
+    border: 1px solid var(--md-sys-color-outline);
     border-radius: 8px;
-    background: var(--ms-surface);
-    box-shadow: var(--ms-shadow);
-    color: var(--ms-text);
+    background: transparent;
+    color: var(--md-sys-color-primary);
     font-weight: 500;
     cursor: pointer;
 }
 
-.button:hover {
-    background: var(--ms-bg);
+.button:not(:disabled):hover {
+    background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-hover), transparent);
     text-decoration: none;
 }
 
 .button.primary {
-    border-color: var(--ms-brand-strong);
-    background: var(--ms-brand-strong);
-    color: #fff;
+    border-color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
 }
 
-.button.primary:hover {
-    background: var(--ms-brand-deep);
+.button.primary:not(:disabled):hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-primary) var(--md-sys-state-hover),
+        var(--md-sys-color-primary)
+    );
+    box-shadow: var(--md-sys-elevation-1);
 }
 
 .button:disabled {
-    opacity: 0.5;
+    border-color: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+    color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
     cursor: default;
+}
+
+.button.primary:disabled,
+.button.danger:disabled {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
 }
 
 .field {
@@ -484,17 +545,25 @@ input {
     font-weight: 500;
 }
 
+/* Material's outlined text field: outlined in the outline role, which reads
+   at 3:1; pointed at, on-surface; focused, two pixels of the primary. */
 .field input {
     height: 36px;
     padding: 0 10px;
-    border: 1px solid var(--ms-border);
+    border: 1px solid var(--md-sys-color-outline);
     border-radius: 8px;
+    background: transparent;
+}
+
+.field input:hover,
+.name-filter input:hover {
+    border-color: var(--md-sys-color-on-surface);
 }
 
 .field input:focus {
     outline: none;
-    border-color: var(--ms-brand);
-    box-shadow: 0 0 0 3px rgb(254 80 0 / 18%);
+    border-color: var(--md-sys-color-primary);
+    box-shadow: inset 0 0 0 1px var(--md-sys-color-primary);
 }
 
 /* Signing in. */
@@ -513,10 +582,9 @@ input {
     width: 100%;
     max-width: 380px;
     padding: 32px;
-    background: var(--ms-surface);
-    border: 1px solid var(--ms-border);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: 14px;
-    box-shadow: 0 12px 32px rgb(16 24 40 / 8%);
 }
 
 .sign-in-card h1 {
@@ -526,13 +594,14 @@ input {
 }
 
 .button.danger {
-    border-color: var(--ms-danger);
-    background: var(--ms-danger);
-    color: #fff;
+    border-color: var(--md-sys-color-error);
+    background: var(--md-sys-color-error);
+    color: var(--md-sys-color-on-error);
 }
 
-.button.danger:hover {
-    background: #a61e1e;
+.button.danger:not(:disabled):hover {
+    background: color-mix(in srgb, var(--md-sys-color-on-error) var(--md-sys-state-hover), var(--md-sys-color-error));
+    box-shadow: var(--md-sys-elevation-1);
 }
 
 /* A button that is an icon alone: a menu's, a dialog's close. */
@@ -546,13 +615,12 @@ input {
     border: 0;
     border-radius: 6px;
     background: none;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     cursor: pointer;
 }
 
 .icon-button:hover {
-    background: var(--ms-bg);
-    color: var(--ms-text);
+    background: color-mix(in srgb, var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover), transparent);
 }
 
 /* Read by a screen reader, not shown. */
@@ -586,16 +654,16 @@ input {
     align-items: center;
     gap: 4px;
     margin-bottom: 2px;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     font-size: 13px;
 }
 
 .breadcrumb a {
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .breadcrumb a:hover {
-    color: var(--ms-text);
+    color: var(--md-sys-color-on-surface);
 }
 
 /* The library's list: its folders, then its files, a row each; files can be
@@ -611,8 +679,8 @@ input {
 
 .file-table th {
     padding: 10px 16px;
-    border-bottom: 1px solid var(--ms-border);
-    color: var(--ms-muted);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface-variant);
     font-size: 12px;
     font-weight: 500;
     text-align: left;
@@ -621,8 +689,8 @@ input {
 
 .file-table td {
     padding: 8px 16px;
-    border-bottom: 1px solid var(--ms-border);
-    color: var(--ms-muted);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface-variant);
     white-space: nowrap;
 }
 
@@ -631,7 +699,7 @@ input {
 }
 
 .file-table tbody tr:hover {
-    background: var(--ms-bg);
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
 }
 
 .file-table tbody tr:last-child td {
@@ -669,7 +737,7 @@ input {
     display: flex;
     align-items: center;
     gap: 10px;
-    color: var(--ms-text);
+    color: var(--md-sys-color-on-surface);
     font-weight: 500;
 }
 
@@ -684,7 +752,7 @@ input {
 
 .file-name > svg {
     flex-shrink: 0;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 /* In the list, a folder's icon as wide as a file's badge, drawn at its middle,
@@ -701,7 +769,7 @@ input {
     height: 20px;
     flex-shrink: 0;
     border-radius: 4px;
-    color: #fff;
+    color: var(--sw-on-format);
     font-size: 9.5px;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -739,7 +807,7 @@ input {
 .name-filter svg {
     position: absolute;
     left: 10px;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     pointer-events: none;
 }
 
@@ -747,16 +815,16 @@ input {
     width: 220px;
     height: 32px;
     padding: 0 8px 0 36px;
-    border: 1px solid var(--ms-border);
+    border: 1px solid var(--md-sys-color-outline);
     border-radius: 8px;
-    background: var(--ms-surface);
+    background: transparent;
     font-size: 13px;
 }
 
 .name-filter input:focus {
     outline: none;
-    border-color: var(--ms-brand);
-    box-shadow: 0 0 0 3px rgb(254 80 0 / 18%);
+    border-color: var(--md-sys-color-primary);
+    box-shadow: inset 0 0 0 1px var(--md-sys-color-primary);
 }
 
 /* A filter's chip, its menu down from it at its left. */
@@ -769,34 +837,43 @@ input {
     left: 0;
 }
 
+/* Material's filter chip: outlined in outline-variant, its label
+   on-surface-variant; set, filled with the secondary container. */
 .chip {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     height: 32px;
     padding: 0 8px 0 12px;
-    border: 1px solid var(--ms-border);
+    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: 8px;
-    background: var(--ms-surface);
-    color: var(--ms-text);
+    background: transparent;
+    color: var(--md-sys-color-on-surface-variant);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
 }
 
 .chip:hover {
-    background: var(--ms-bg);
+    background: color-mix(in srgb, var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover), transparent);
 }
 
 .chip svg {
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
 }
 
-.chip-set,
+.chip-set {
+    border-color: var(--md-sys-color-secondary-container);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
 .chip-set:hover {
-    border-color: var(--ms-brand-soft);
-    background: var(--ms-brand-soft);
-    color: var(--ms-brand-strong);
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-secondary-container) var(--md-sys-state-hover),
+        var(--md-sys-color-secondary-container)
+    );
 }
 
 .chip-set svg {
@@ -814,37 +891,38 @@ input {
 .menu [role="menuitemradio"] svg {
     flex-shrink: 0;
     visibility: hidden;
-    color: var(--ms-brand-strong);
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .menu [role="menuitemradio"][aria-checked="true"] svg {
     visibility: visible;
 }
 
-/* A button that is a word alone, in the brand's text color. */
+/* Material's text button: a word alone, in the primary role. */
 .text-button {
     height: 32px;
-    padding: 0 4px;
+    padding: 0 8px;
     border: 0;
+    border-radius: 6px;
     background: none;
-    color: var(--ms-brand-strong);
+    color: var(--md-sys-color-primary);
     font-weight: 500;
     cursor: pointer;
 }
 
 .text-button:hover {
-    text-decoration: underline;
+    background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-hover), transparent);
 }
 
-/* A choice of a few, side by side, the one made raised: as tall as a chip. */
+/* Material's segmented buttons: a choice of a few, side by side, outlined,
+   the one made filled with the secondary container; as tall as a chip. */
 .segmented {
     display: flex;
     flex-shrink: 0;
     gap: 2px;
     padding: 2px;
-    border: 1px solid var(--ms-border);
+    border: 1px solid var(--md-sys-color-outline);
     border-radius: 8px;
-    background: var(--ms-bg);
 }
 
 .segmented button {
@@ -856,28 +934,27 @@ input {
     border: 0;
     border-radius: 6px;
     background: none;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     cursor: pointer;
 }
 
 .segmented button:hover {
-    color: var(--ms-text);
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
 }
 
 .segmented button[aria-checked="true"] {
-    background: var(--ms-surface);
-    box-shadow: var(--ms-shadow);
-    color: var(--ms-text);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
 }
 
 .file-drop {
     border-radius: var(--ms-radius);
 }
 
+/* A file dragged over the list: the primary, and its dragged layer. */
 .file-drop-active {
-    box-shadow:
-        0 0 0 1px var(--ms-brand),
-        0 0 0 4px rgb(254 80 0 / 18%);
+    background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-dragged), transparent);
+    box-shadow: 0 0 0 2px var(--md-sys-color-primary);
 }
 
 /* The grid: folders as tiles, then files as cards, under their headings. */
@@ -889,7 +966,7 @@ input {
 
 .grid-heading {
     margin: 0 0 8px;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     font-size: 12px;
     font-weight: 500;
 }
@@ -904,19 +981,24 @@ input {
     gap: 16px;
 }
 
+/* Tiles and cards, Material's outlined cards: pointed at, the hover layer,
+   raised a level. */
 .folder-tile,
 .file-card {
-    background: var(--ms-surface);
-    border: 1px solid var(--ms-border);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--ms-radius);
-    box-shadow: var(--ms-shadow);
     cursor: pointer;
 }
 
 .folder-tile:hover,
 .file-card:hover {
-    border-color: #cdd2da;
-    box-shadow: var(--ms-shadow-overlay);
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container-lowest)
+    );
+    box-shadow: var(--md-sys-elevation-1);
 }
 
 .folder-tile {
@@ -951,8 +1033,8 @@ input {
     display: grid;
     place-items: center;
     aspect-ratio: 4 / 3;
-    background: var(--ms-bg);
-    border-bottom: 1px solid var(--ms-border);
+    background: var(--md-sys-color-surface-container);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
     border-radius: calc(var(--ms-radius) - 1px) calc(var(--ms-radius) - 1px) 0 0;
 }
 
@@ -963,8 +1045,8 @@ input {
     max-width: calc(100% - 32px);
     max-height: calc(100% - 32px);
     margin: auto;
-    background: #fff;
-    box-shadow: 0 1px 3px rgb(16 24 40 / 14%);
+    background: var(--md-sys-color-surface-container-lowest);
+    box-shadow: var(--md-sys-elevation-1);
     opacity: 0;
     transition: opacity 0.15s ease;
 }
@@ -991,11 +1073,11 @@ input {
     width: 32px;
     height: 32px;
     padding: 0;
-    border: 1px solid var(--ms-border);
+    border: 0;
     border-radius: 50%;
-    background: var(--ms-surface);
-    box-shadow: 0 1px 3px rgb(16 24 40 / 14%);
-    color: var(--ms-text);
+    background: var(--md-sys-color-surface-container-lowest);
+    box-shadow: var(--md-sys-elevation-1);
+    color: var(--md-sys-color-on-surface-variant);
     cursor: pointer;
     opacity: 0;
     transform: translateY(-50%);
@@ -1016,7 +1098,11 @@ input {
 }
 
 .page-flip:hover {
-    background: var(--ms-bg);
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container-lowest)
+    );
 }
 
 .file-card:hover .page-flip,
@@ -1030,7 +1116,8 @@ input {
     }
 }
 
-/* A page flipped to, while udoc-server renders it: a ring over the page
+/* A page flipped to, while udoc-server renders it: Material's circular
+   progress, the primary on a secondary-container track, over the page
    shown, once it takes long enough to notice. */
 .page-loading {
     position: absolute;
@@ -1038,8 +1125,8 @@ input {
     width: 24px;
     height: 24px;
     margin: auto;
-    border: 3px solid rgb(16 24 40 / 12%);
-    border-top-color: var(--ms-brand);
+    border: 3px solid var(--md-sys-color-secondary-container);
+    border-top-color: var(--md-sys-color-primary);
     border-radius: 50%;
     opacity: 0;
     animation:
@@ -1075,7 +1162,7 @@ input {
 
 .file-card-meta {
     overflow: hidden;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1090,8 +1177,8 @@ input {
     min-width: 140px;
 }
 
-/* Dialogs: over the page, which dims behind. */
-/* A dialog, centered in the app over a backdrop that covers it alone. */
+/* A dialog, centered in the app over Material's scrim, which covers it
+   alone; the dialog in the high container, three levels up. */
 .dialog-layer {
     position: absolute;
     inset: 0;
@@ -1099,7 +1186,7 @@ input {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgb(16 24 40 / 40%);
+    background: color-mix(in srgb, var(--md-sys-color-scrim) 32%, transparent);
 }
 
 .dialog {
@@ -1110,11 +1197,11 @@ input {
     margin: 0;
     padding: 0;
     overflow: auto;
-    border: 1px solid var(--ms-border);
+    border: 0;
     border-radius: 14px;
-    background: var(--ms-surface);
-    color: var(--ms-text);
-    box-shadow: 0 12px 32px rgb(16 24 40 / 16%);
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+    box-shadow: var(--md-sys-elevation-3);
 }
 
 .dialog-header {
@@ -1122,7 +1209,7 @@ input {
     align-items: center;
     justify-content: space-between;
     padding: 12px 12px 12px 20px;
-    border-bottom: 1px solid var(--ms-border);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .dialog-header h2 {
@@ -1145,7 +1232,7 @@ input {
 }
 
 .field-value {
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     font-weight: 400;
     overflow-wrap: anywhere;
 }
@@ -1171,7 +1258,7 @@ input {
 .upload-preview {
     min-width: 0;
     min-height: 0;
-    border-right: 1px solid var(--ms-border);
+    border-right: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .upload-details {
@@ -1231,10 +1318,9 @@ input {
     flex-direction: column;
     min-width: 0;
     min-height: 0;
-    background: var(--ms-surface);
-    border: 1px solid var(--ms-border);
+    background: var(--md-sys-color-surface-container-lowest);
+    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--ms-radius);
-    box-shadow: var(--ms-shadow);
 }
 
 .document-title-bar {
@@ -1244,7 +1330,7 @@ input {
     gap: 12px;
     height: var(--document-bar);
     padding: 0 12px 0 20px;
-    border-bottom: 1px solid var(--ms-border);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .document-title {
@@ -1262,7 +1348,7 @@ input {
 
 .document-title p {
     overflow: hidden;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     font-size: 13px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1282,7 +1368,7 @@ input {
     justify-content: space-between;
     height: var(--document-bar);
     padding: 0 8px 0 12px;
-    border-bottom: 1px solid var(--ms-border);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .file-columns-rail .document-tabs {
@@ -1296,19 +1382,25 @@ input {
     gap: 4px;
 }
 
+/* Material's primary tabs: the one open, its label and its indicator in
+   the primary role; the others on-surface-variant. */
 .document-tabs [role="tab"] {
     padding: 0 8px;
     border: 0;
-    border-bottom: 2px solid transparent;
+    border-bottom: 3px solid transparent;
     background: none;
-    color: var(--ms-muted);
+    color: var(--md-sys-color-on-surface-variant);
     font-weight: 500;
     cursor: pointer;
 }
 
+.document-tabs [role="tab"]:hover {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
+}
+
 .document-tabs [role="tab"][aria-selected="true"] {
-    border-bottom-color: var(--ms-brand);
-    color: var(--ms-text);
+    border-bottom-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
 }
 
 .document-tab-panel {
