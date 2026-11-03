@@ -1,5 +1,5 @@
 // udoc-server, which keeps the library's documents, behind the gate
-// (docs/design/examples-mainshock.md). Its routes sit under `/udoc` on the
+// (docs/design/examples-shockwave.md). Its routes sit under `/udoc` on the
 // backend's own HTTP server. udoc-server has no end-user authentication, and
 // its ids are global, so a request reaches it only past the gate: the
 // backend's own, with this process's token, or a signed-in user's, reading a
@@ -21,7 +21,7 @@ import { config } from "./config.ts";
 const BASE = "/udoc";
 
 /** The header the backend's own requests carry this process's token in. */
-const TOKEN_HEADER = "x-mainshock-token";
+const TOKEN_HEADER = "x-shockwave-token";
 
 /** A document's routes: `/udoc/documents/:id`, and those under it. */
 const DOCUMENT_PATH = new RegExp(`^${BASE}/documents/([^/]+)(?:/|$)`);

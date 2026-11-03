@@ -6,10 +6,10 @@ import { createPortal } from "react-dom";
 import type { Tenant } from "../../shared/api.ts";
 import { CloseIcon, MoreIcon } from "./icons";
 
-/** Title the browser's tab after the page: "Library · Mainshock". */
+/** Title the browser's tab after the page: "Library · Shockwave". */
 export function useDocumentTitle(title: string): void {
     useEffect(() => {
-        document.title = `${title} · Mainshock`;
+        document.title = `${title} · Shockwave`;
     }, [title]);
 }
 

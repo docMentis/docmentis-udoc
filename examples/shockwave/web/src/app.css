@@ -1,4 +1,4 @@
-/* Mainshock's look: a light, quiet product, in its own orange: the mark and
+/* Shockwave's look: a light, quiet product, in its own orange: the mark and
    focus in it, and text and the primary button in a darker one, which white
    reads on. Neither the narrator's indigo, docMentis's, nor a tenant's colors. */
 :root {
@@ -148,7 +148,7 @@ input {
     color: var(--ms-text);
 }
 
-/* The tenant's brand, or on the sign-in page, Mainshock's. */
+/* The tenant's brand, or on the sign-in page, Shockwave's. */
 .brand {
     display: flex;
     align-items: center;
@@ -228,7 +228,7 @@ input {
 }
 
 /* The sidebar's foot: the user; then, under a divider across the sidebar, the
-   product it runs on, Mainshock's own mark. */
+   product it runs on, Shockwave's own mark. */
 .sidebar-foot {
     margin-top: auto;
 }

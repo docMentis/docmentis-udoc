@@ -1,6 +1,6 @@
 # Gaps
 
-What building mainshock found the udoc packages lacking, or doing other than
+What building shockwave found the udoc packages lacking, or doing other than
 it needed, through their public API: one entry each, with what was needed,
 what the API offers, and the workaround, if any. An entry stays until a
 release fixes it, and then says which.

@@ -7,7 +7,7 @@ import type { DatabaseSync } from "node:sqlite";
 
 import type { Role, User } from "../shared/api.ts";
 
-const COOKIE = "mainshock_session";
+const COOKIE = "shockwave_session";
 
 /** How long a session lasts, in seconds. */
 const SESSION_SECONDS = 7 * 24 * 60 * 60;

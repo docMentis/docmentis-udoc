@@ -28,7 +28,7 @@ export function SignInPage() {
             setError(
                 failure instanceof ApiError && failure.status === 401
                     ? "That email and password don't match."
-                    : "Mainshock's server didn't answer. Try again.",
+                    : "Shockwave's server didn't answer. Try again.",
             );
             setSigningIn(false);
         }
@@ -41,7 +41,7 @@ export function SignInPage() {
             <form className="sign-in-card" onSubmit={(event) => void submit(event)}>
                 <div className="brand">
                     <Logo size={32} />
-                    <span>Mainshock</span>
+                    <span>Shockwave</span>
                 </div>
                 <h1>Sign in</h1>
                 <label className="field">

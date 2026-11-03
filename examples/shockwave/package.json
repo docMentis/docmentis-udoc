@@ -1,7 +1,7 @@
 {
-    "name": "udoc-example-mainshock",
+    "name": "udoc-example-shockwave",
     "private": true,
-    "description": "Mainshock, a sales enablement app on the docMentis udoc packages: a showcase, and their dogfood.",
+    "description": "Shockwave, a sales enablement app on the docMentis udoc packages: a showcase, and their dogfood.",
     "type": "module",
     "scripts": {
         "dev": "node scripts/dev.mjs",

@@ -6,7 +6,7 @@ import { defineConfig } from "vite";
 
 import { config } from "./server/config.ts";
 
-/** The repo's root, whose packages mainshock links to. */
+/** The repo's root, whose packages shockwave links to. */
 const repo = resolve(import.meta.dirname, "../..");
 
 const backend = `http://127.0.0.1:${config.port}`;

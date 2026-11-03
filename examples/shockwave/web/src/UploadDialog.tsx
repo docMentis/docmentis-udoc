@@ -40,7 +40,7 @@ export function UploadDialog({
         } catch (failure) {
             setError(
                 failure instanceof ApiError && failure.status === 422
-                    ? "Mainshock can't read this file."
+                    ? "Shockwave can't read this file."
                     : "The upload didn't go through. Try again.",
             );
             setUploading(false);

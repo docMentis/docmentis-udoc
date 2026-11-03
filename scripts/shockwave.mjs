@@ -1,7 +1,7 @@
-// `npm run mainshock`: run examples/mainshock, the sales enablement app, in
-// development, from the repo's root (docs/design/examples-mainshock.md).
+// `npm run shockwave`: run examples/shockwave, the sales enablement app, in
+// development, from the repo's root (docs/design/examples-shockwave.md).
 //
-// Mainshock is an app of its own, linked to the packages this checkout builds
+// Shockwave is an app of its own, linked to the packages this checkout builds
 // by `file:` dependencies. So first:
 //
 //   1. Install its dependencies, when it has none, or its package.json has
@@ -16,16 +16,16 @@
 //      last was is built again, or its worker calls what the binary no longer
 //      has. A restart after the engine's rebuilt brings them level.
 //
-// Then run mainshock's own `npm run dev`: its backend, and Vite serving its
+// Then run shockwave's own `npm run dev`: its backend, and Vite serving its
 // pages on http://localhost:5280.
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { root } from "./packages.mjs";
 
-const app = join(root, "examples", "mainshock");
+const app = join(root, "examples", "shockwave");
 
-/** The packages mainshock runs on, each after the ones it's built on. */
+/** The packages shockwave runs on, each after the ones it's built on. */
 const PACKAGES = ["udoc-ui", "udoc-editor", "udoc-viewer", "udoc-node", "udoc-server"];
 
 /** The engine's glue, through the repo's link to the engine. */
@@ -56,26 +56,26 @@ function npm(cwd, ...args) {
 
 // What the linked packages import resolves from the repo's own install.
 if (!existsSync(join(root, "node_modules"))) {
-    console.error("[mainshock] the repo's dependencies aren't installed: run `npm install` first");
+    console.error("[shockwave] the repo's dependencies aren't installed: run `npm install` first");
     process.exit(1);
 }
 
 // npm writes this beside what it installs.
 const installed = join(app, "node_modules", ".package-lock.json");
 if (!existsSync(installed) || statSync(join(app, "package.json")).mtimeMs > statSync(installed).mtimeMs) {
-    console.log("[mainshock] installing its dependencies");
+    console.log("[shockwave] installing its dependencies");
     npm(app, "install", "--no-audit", "--no-fund");
 }
 
 for (const name of PACKAGES) {
     const why = needsBuild(name);
     if (!why) continue;
-    console.log(`[mainshock] building @docmentis/${name}, ${why}`);
+    console.log(`[shockwave] building @docmentis/${name}, ${why}`);
     npm(root, "run", "build", "--workspace", `@docmentis/${name}`);
 }
 
 const dev = spawn("npm", ["run", "dev"], { cwd: app, stdio: "inherit" });
-// Ctrl-C reaches mainshock's processes as well as this one, which waits for
+// Ctrl-C reaches shockwave's processes as well as this one, which waits for
 // them to stop.
 process.on("SIGINT", () => {});
 process.on("SIGTERM", () => dev.kill("SIGTERM"));

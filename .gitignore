@@ -32,5 +32,5 @@ examples/*/.nuxt/
 examples/*/.output/
 examples/*/.angular/
 
-# Mainshock's database and documents
-examples/mainshock/data/
+# Shockwave's database and documents
+examples/shockwave/data/

@@ -1,4 +1,4 @@
-// Mainshock in development: the backend under `node --watch`, restarted on a
+// Shockwave in development: the backend under `node --watch`, restarted on a
 // change to it, and Vite serving the frontend, which proxies `/api` and
 // `/udoc` to the backend. Both share this terminal, so neither clears it.
 import { spawn } from "node:child_process";

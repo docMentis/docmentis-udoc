@@ -1,7 +1,7 @@
 // The app around every signed-in page, in its tenant's brand: the sidebar and
 // the page. The sidebar has the tenant's logo and name, the navigation and,
 // after a divider, the workspace's settings; at its foot the user's menu, then,
-// under a divider, "Powered by Mainshock". It folds to a rail of its icons,
+// under a divider, "Powered by Shockwave". It folds to a rail of its icons,
 // which this browser remembers.
 import { useRef, useState } from "react";
 import type { ComponentType } from "react";
@@ -31,7 +31,7 @@ const NAVIGATION: { to: string; label: string; icon: ComponentType }[] = [
     { to: "/analytics", label: "Analytics", icon: AnalyticsIcon },
 ];
 
-const FOLDED_KEY = "mainshock.sidebar.folded";
+const FOLDED_KEY = "shockwave.sidebar.folded";
 
 function savedFolded(): boolean {
     try {
@@ -78,10 +78,10 @@ export function AppShell() {
                 <div className="sidebar-foot">
                     <UserMenu user={user} folded={folded} />
                 </div>
-                <div className="powered-by" title={folded ? "Powered by Mainshock" : undefined}>
+                <div className="powered-by" title={folded ? "Powered by Shockwave" : undefined}>
                     <Logo size={24} />
                     <span className="nav-label">
-                        Powered by <strong>Mainshock</strong>
+                        Powered by <strong>Shockwave</strong>
                     </span>
                 </div>
             </aside>

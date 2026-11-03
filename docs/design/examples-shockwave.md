@@ -1,8 +1,8 @@
-# Examples Mainshock
+# Examples Shockwave
 
-Mainshock is a sales enablement app built on the udoc packages, in
-`examples/mainshock/`. The other examples each show one way to install the
-viewer and the editor; mainshock is a product a customer would build with them
+Shockwave is a sales enablement app built on the udoc packages, in
+`examples/shockwave/`. The other examples each show one way to install the
+viewer and the editor; shockwave is a product a customer would build with them
 — a content library, decks personalized for a deal, links shared with buyers,
 presenting — run locally, with Larchmere, an imaginary asset manager, as its
 example tenant. It is there for two reasons:
@@ -14,7 +14,7 @@ example tenant. It is there for two reasons:
 - **Dogfooding.** It uses the public API alone, as a customer can: what
   `@docmentis/udoc-viewer`, `-editor`, `-node` and `-server` export, never
   `@docmentis/udoc-ui/internal`. Where the API falls short, the gap goes in
-  `examples/mainshock/GAPS.md` — what was needed, what the API offers, the
+  `examples/shockwave/GAPS.md` — what was needed, what the API offers, the
   workaround if there is one — instead of being reached around.
 
 ## The tenant
@@ -33,12 +33,12 @@ documents says so.
 Its users see the app in its brand, as a tenant's do: its logo, a square icon,
 and its name head the sidebar, the logo kept with the tenant and served to its
 users alone (`/api/tenants/:id/logo`). Larchmere's is a larch cone, faceted
-scales on a shield, with a rising arrow breaking out of it. Mainshock's own
+scales on a shield, with a rising arrow breaking out of it. Shockwave's own
 mark is left to the sign-in page, where no tenant is known yet, and the foot of
-the sidebar, "Powered by Mainshock".
+the sidebar, "Powered by Shockwave".
 
 Each of the three speaks in colors of its own, so that no one takes one for
-another: docMentis, the narrator, in its indigo; Mainshock, the app, in
+another: docMentis, the narrator, in its indigo; Shockwave, the app, in
 orange, `#fe5000`; and Larchmere, its logo and its documents, in green, forest
 `#1f4e3d` and sage `#b5dcc2`, the hue furthest from the other two.
 
@@ -92,7 +92,7 @@ seeded users share the demo's password, which the README gives.
 
 ```
 web/  React, Vite, React Router       server/  Node, Fastify
-  pages ───────── /api/* ───────────▶   app routes ──▶ node:sqlite   data/mainshock.db
+  pages ───────── /api/* ───────────▶   app routes ──▶ node:sqlite   data/shockwave.db
   udoc-viewer ─── /udoc/* ──────────▶   gate ──▶ udoc-server ──▶ store   data/udoc/
   udoc-editor     HTTP and WebSocket                   └─ UDocNode (udoc-node)
 ```
@@ -132,7 +132,7 @@ command does.
 
 ## The narrator
 
-Mainshock looks like the product it is, and beside it a narrator speaks for
+Shockwave looks like the product it is, and beside it a narrator speaks for
 docMentis. It's a panel docked at the window's right edge, styled apart from
 the app so that no one takes one for the other, collapsing to a badge in the
 corner, and gone with `?narrator=off` when the app is used as a product. It says
@@ -171,25 +171,25 @@ a button in their toolbar is likely a gap.
 
 ## Running it against this checkout
 
-Like the other examples, mainshock is an app of its own and not a workspace.
+Like the other examples, shockwave is an app of its own and not a workspace.
 Unlike them, it installs the udoc packages from this checkout: `file:` links to
 `packages/udoc-viewer`, `-editor`, `-node` and `-server`, not npm. npm adds the
 links alone, and what the packages import resolves from the repo's
 `node_modules`, so a linked engine checkout (`scripts/link-engine.mjs`) is the
-engine mainshock runs, and the root's `npm run dev` rebuilds what it serves. It
+engine shockwave runs, and the root's `npm run dev` rebuilds what it serves. It
 needs the root's `npm install` first.
 
-`npm run mainshock`, from the repo's root, installs mainshock's dependencies
+`npm run shockwave`, from the repo's root, installs shockwave's dependencies
 when they're missing or out of date, builds any of the packages it links that
 isn't built (one built already, the root's `npm run dev` may be rebuilding),
 and runs its own `npm run dev`. That starts the server under `node --watch`,
 which runs its TypeScript as is, and Vite, which proxies `/api` and `/udoc` to
 it; `npm run build` then `npm start` serves the built frontend from the server,
 on one port. A browser package's worker carries a copy of the engine's glue,
-while the binary is loaded as it is now, so `npm run mainshock` also builds
+while the binary is loaded as it is now, so `npm run shockwave` also builds
 again a browser package whose worker is older than the engine's glue: a
 restart after the engine's rebuilt brings them level.
-Its data, in `data/`, is ignored by git, and `npm run mainshock:clear` deletes
+Its data, in `data/`, is ignored by git, and `npm run shockwave:clear` deletes
 it, with the backend stopped, to start over from the seed.
 
 It is no integration recipe, so `scripts/examples.mjs` and the Examples
@@ -200,10 +200,10 @@ formats it with the rest of the repo.
 
 The frontend and the backend, set up and running, with no udoc code yet:
 
-- `examples/mainshock/` as laid out above: one `package.json`, the udoc
+- `examples/shockwave/` as laid out above: one `package.json`, the udoc
   packages linked in it, a `tsconfig` for the Node side (`server/`, `shared/`,
   Vite's config) and one for `web/`, and a `typecheck` script; `npm run
-mainshock` from the root.
+shockwave` from the root.
 - The backend: Fastify over the database, its migrations counted by `PRAGMA
 user_version`: `tenants` and their logos, `users` and `sessions`, and an
   empty one seeded with Larchmere, its logo and its personas.
@@ -213,7 +213,7 @@ user_version`: `tenants` and their logos, `users` and `sessions`, and an
   folding to a rail of its icons: under the tenant's logo and name, Home,
   Library, Decks, Deals and Analytics, and after a divider Settings; at its
   foot the user's menu (sign out), then, under a divider, "Powered by
-  Mainshock". Each section is a placeholder until its step.
+  Shockwave". Each section is a placeholder until its step.
 - The examples harness and workflow leaving it out, and `examples/README.md`
   and `CLAUDE.md` saying what it is.
 

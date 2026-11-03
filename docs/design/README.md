@@ -65,8 +65,8 @@ the packages here call through — is documented with the engine, not here.
 
 ### Examples
 
-- [Examples Mainshock](examples-mainshock.md) — the sales enablement app in
-  `examples/mainshock/`, with an imaginary asset manager, Larchmere, as its
+- [Examples Shockwave](examples-shockwave.md) — the sales enablement app in
+  `examples/shockwave/`, with an imaginary asset manager, Larchmere, as its
   tenant: a showcase of the packages doing a real job, and dogfooding them
   through their public API alone, each gap logged; a React frontend and a Fastify backend embedding udoc-server behind
   a tenant gate, SQLite keeping the app's own data; the narrator beside it,

@@ -25,7 +25,7 @@ export interface User {
     tenant: Tenant;
 }
 
-/** A company using Mainshock, whose brand its users see the app in. */
+/** A company using Shockwave, whose brand its users see the app in. */
 export interface Tenant {
     id: string;
     name: string;

@@ -41,11 +41,11 @@ const examples = join(root, "examples");
 const PACKED = ["@docmentis/udoc-ui", "@docmentis/udoc-viewer", "@docmentis/udoc-editor"];
 
 /**
- * What examples/ holds that isn't an integration recipe: mainshock, an app with
+ * What examples/ holds that isn't an integration recipe: shockwave, an app with
  * a server of its own, linked to this checkout's packages
- * (docs/design/examples-mainshock.md).
+ * (docs/design/examples-shockwave.md).
  */
-const NOT_RECIPES = new Set(["mainshock"]);
+const NOT_RECIPES = new Set(["shockwave"]);
 
 /** Where an example's production build leaves its static site, when not `dist/`. */
 const SITE = {

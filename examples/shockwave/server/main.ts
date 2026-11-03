@@ -1,4 +1,4 @@
-// Mainshock's backend: the app's API on Fastify, over its SQLite database;
+// Shockwave's backend: the app's API on Fastify, over its SQLite database;
 // udoc-server, behind the gate, on the same HTTP server; and under
 // `npm start`, the built frontend.
 import { existsSync, mkdirSync } from "node:fs";
@@ -18,12 +18,12 @@ import { seed } from "./seed.ts";
 import { createUdoc } from "./udoc.ts";
 
 if (config.webDir && !existsSync(config.webDir)) {
-    console.error("mainshock: there's no built frontend to serve; run `npm run build` first");
+    console.error("shockwave: there's no built frontend to serve; run `npm run build` first");
     process.exit(1);
 }
 
 mkdirSync(config.dataDir, { recursive: true });
-const db = openDatabase(join(config.dataDir, "mainshock.db"));
+const db = openDatabase(join(config.dataDir, "shockwave.db"));
 await seed(db);
 const udoc = await createUdoc(db);
 
@@ -56,8 +56,8 @@ const origin = `http://127.0.0.1:${config.port}`;
 await app.listen({ host: "127.0.0.1", port: config.port });
 console.log(
     config.webDir
-        ? `mainshock: open ${origin}`
-        : `mainshock: backend at ${origin}; open the pages Vite serves, at http://localhost:${config.webPort}`,
+        ? `shockwave: open ${origin}`
+        : `shockwave: backend at ${origin}; open the pages Vite serves, at http://localhost:${config.webPort}`,
 );
 
 async function stop(): Promise<void> {

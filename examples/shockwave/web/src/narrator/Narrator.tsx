@@ -1,5 +1,5 @@
 // The narrator: docMentis's guide, bolted on beside the app, which never calls
-// it (docs/design/examples-mainshock.md). A tab with docMentis's mark sits at
+// it (docs/design/examples-shockwave.md). A tab with docMentis's mark sits at
 // the window's right edge, and folds and unfolds a panel that pushes the app
 // narrower. When something's new while the panel is folded, the tab says so as
 // the viewer chose: not at all, with a dot, or with the dot and a flash of the
@@ -31,7 +31,7 @@ const ANNOUNCE_STYLES: { value: Announce; label: string }[] = [
     { value: "flash", label: "Flash" },
 ];
 
-const ANNOUNCE_KEY = "mainshock.narrator.announce";
+const ANNOUNCE_KEY = "shockwave.narrator.announce";
 
 /** The style this browser chose, or the flash: a first-time visitor finds the guide by it. */
 function savedAnnounce(): Announce {
