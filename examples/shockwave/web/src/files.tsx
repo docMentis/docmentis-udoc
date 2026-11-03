@@ -1,5 +1,8 @@
 // How the library shows a file: its type, as a word and a colored badge, its
-// size and its date.
+// first page, its size and its date.
+import { useState } from "react";
+
+import type { Asset } from "../../shared/api.ts";
 
 /** Each format's name for people, and its badge's color, by udoc's name for it. */
 const TYPES: Record<string, { label: string; color: string }> = {
@@ -24,6 +27,38 @@ export function FileBadge({ format }: { format: string }) {
         <span className="file-badge" style={{ background: TYPES[format]?.color ?? "#636c7a" }} aria-hidden="true">
             {format.slice(0, 4).toUpperCase()}
         </span>
+    );
+}
+
+/**
+ * The scale a thumbnail is rendered at, in pixels per point: a letter page
+ * 306 pixels wide, a 16:9 slide 480, sharp on a card at twice the pixels.
+ */
+const THUMBNAIL_SCALE = 0.5;
+
+/**
+ * A file's first page, rendered by udoc-server through the gate; a large
+ * badge of its type while it can't be, as for a workbook, whose first page
+ * is all of its first sheet (GAPS.md).
+ */
+export function Thumbnail({ asset }: { asset: Asset }) {
+    const [state, setState] = useState<"loading" | "shown" | "failed">("loading");
+    const source = `/udoc/documents/${encodeURIComponent(asset.documentId)}/layout/pages/0.png?scale=${THUMBNAIL_SCALE}`;
+    return (
+        <div className="thumbnail">
+            {state === "failed" ? (
+                <FileBadge format={asset.format} />
+            ) : (
+                <img
+                    src={source}
+                    alt=""
+                    loading="lazy"
+                    className={state === "shown" ? "thumbnail-shown" : undefined}
+                    onLoad={() => setState("shown")}
+                    onError={() => setState("failed")}
+                />
+            )}
+        </div>
     );
 }
 

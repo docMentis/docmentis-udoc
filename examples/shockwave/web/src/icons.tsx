@@ -109,6 +109,35 @@ export const ChevronRightIcon = () => (
     </Icon>
 );
 
+export const ChevronDownIcon = () => (
+    <Icon width="14" height="14">
+        <path d="m6 9 6 6 6-6" />
+    </Icon>
+);
+
+export const CheckIcon = () => (
+    <Icon width="16" height="16">
+        <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </Icon>
+);
+
+/** Rows, each with its mark: the library as a list. */
+export const ListIcon = () => (
+    <Icon width="18" height="18">
+        <path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" />
+    </Icon>
+);
+
+/** Four tiles: the library as a grid. */
+export const GridIcon = () => (
+    <Icon width="18" height="18">
+        <rect x="4" y="4" width="6.5" height="6.5" rx="1.2" />
+        <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.2" />
+        <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.2" />
+        <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.2" />
+    </Icon>
+);
+
 export const FolderIcon = () => (
     <Icon width="20" height="20">
         <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.3l2 2.2h8.7A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" />

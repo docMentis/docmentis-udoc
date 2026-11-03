@@ -1,25 +1,34 @@
 // The library: a folder's folders and files, or the top's, under the path to
-// it. Everyone reads it; an admin makes folders, uploads files, picking one or
-// dropping it on the list, and renames and deletes them.
+// it, in a table or a grid, which this browser remembers, narrowed by the
+// filters over it. Everyone reads it; an admin makes folders, uploads files,
+// picking one or dropping it on the list, and renames and deletes them.
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { DragEvent, FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 
 import { managesLibrary } from "../../../shared/api.ts";
 import type { FolderListing } from "../../../shared/api.ts";
 import { ApiError, api } from "../api";
-import { FileBadge, formatDate, formatSize, typeLabel } from "../files";
-import { ChevronRightIcon, FolderIcon, FolderPlusIcon, UploadIcon } from "../icons";
+import { ChevronRightIcon, FolderPlusIcon, GridIcon, ListIcon, UploadIcon } from "../icons";
+import { FilterBar, NO_FILTERS, applyFilters, filtersOf, paramsOf } from "../LibraryFilters";
+import type { Filters } from "../LibraryFilters";
+import { FileGrid, FileTable } from "../LibraryViews";
+import type { Item } from "../LibraryViews";
 import { useUser } from "../session";
 import { ActionsMenu, Dialog, EmptyState, useDocumentTitle } from "../ui";
 import { UploadDialog } from "../UploadDialog";
 import { NotFoundPage } from "./PlaceholderPage";
 
-/** A row of the list: a folder or a file. */
-interface Item {
-    kind: "folder" | "file";
-    id: string;
-    name: string;
+type View = "list" | "grid";
+
+const VIEW_KEY = "shockwave.library.view";
+
+function savedView(): View {
+    try {
+        return localStorage.getItem(VIEW_KEY) === "grid" ? "grid" : "list";
+    } catch {
+        return "list";
+    }
 }
 
 /** What a dialog is open for. */
@@ -33,7 +42,19 @@ export function LibraryPage() {
     const { folderId } = useParams();
     const user = useUser();
     const manages = managesLibrary(user.role);
-    const navigate = useNavigate();
+    const [params, setParams] = useSearchParams();
+    // The name typed is the page's own, which each key sets at once, and the
+    // address catches up with it, in a transition: a name read from the
+    // address would lose the keys typed meanwhile. Another folder starts with
+    // its own address's.
+    const [name, setName] = useState(params.get("name"));
+    const [nameFolder, setNameFolder] = useState(folderId);
+    if (nameFolder !== folderId) {
+        setNameFolder(folderId);
+        setName(params.get("name"));
+    }
+    const filters = { ...filtersOf(params), name };
+    const [view, setView] = useState(savedView);
     const [listing, setListing] = useState<FolderListing>();
     const [failure, setFailure] = useState<"notFound" | "failed">();
     const [loads, setLoads] = useState(0);
@@ -73,6 +94,20 @@ export function LibraryPage() {
         if (file) setTask({ kind: "upload", file });
     }
 
+    function filter(next: Filters) {
+        setName(next.name);
+        setParams(paramsOf(next), { replace: true });
+    }
+
+    function show(chosen: View) {
+        setView(chosen);
+        try {
+            localStorage.setItem(VIEW_KEY, chosen);
+        } catch {
+            // Kept for this visit alone.
+        }
+    }
+
     function dragOver(event: DragEvent) {
         if (!manages || !event.dataTransfer.types.includes("Files")) return;
         event.preventDefault();
@@ -88,15 +123,18 @@ export function LibraryPage() {
 
     const folders = listing?.folders ?? [];
     const assets = listing?.assets ?? [];
-    const itemMenu = (item: Item) => (
-        <ActionsMenu
-            label={`Actions for ${item.name}`}
-            items={[
-                { label: "Rename", onSelect: () => setTask({ kind: "rename", item }) },
-                { label: "Delete", onSelect: () => setTask({ kind: "delete", item }) },
-            ]}
-        />
-    );
+    const shown = applyFilters(folders, assets, filters);
+    const menu = manages
+        ? (item: Item) => (
+              <ActionsMenu
+                  label={`Actions for ${item.name}`}
+                  items={[
+                      { label: "Rename", onSelect: () => setTask({ kind: "rename", item }) },
+                      { label: "Delete", onSelect: () => setTask({ kind: "delete", item }) },
+                  ]}
+              />
+          )
+        : undefined;
 
     return (
         <div className="page">
@@ -143,77 +181,65 @@ export function LibraryPage() {
                 </p>
             )}
             {listing && (
-                <div
-                    className={dropping ? "card file-list file-list-dropping" : "card file-list"}
-                    onDragOver={dragOver}
-                    onDragLeave={(event) =>
-                        event.currentTarget.contains(event.relatedTarget as Node) || setDropping(false)
-                    }
-                    onDrop={drop}
-                >
-                    {folders.length + assets.length === 0 ? (
-                        <EmptyState title={current ? "This folder is empty" : "The library is empty"}>
-                            {manages && "Upload a file, or drop one here."}
-                        </EmptyState>
-                    ) : (
-                        <table className="file-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Type</th>
-                                    <th>Uploaded by</th>
-                                    <th>Uploaded</th>
-                                    <th className="numeric">Size</th>
-                                    {manages && (
-                                        <th>
-                                            <span className="visually-hidden">Actions</span>
-                                        </th>
-                                    )}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {folders.map((folder) => (
-                                    <tr key={folder.id} onClick={() => navigate(`/library/folders/${folder.id}`)}>
-                                        <td>
-                                            <Link className="file-name" to={`/library/folders/${folder.id}`}>
-                                                <FolderIcon />
-                                                <span>{folder.name}</span>
-                                            </Link>
-                                        </td>
-                                        <td>Folder</td>
-                                        <td />
-                                        <td />
-                                        <td />
-                                        {manages && (
-                                            <td className="row-actions" onClick={(event) => event.stopPropagation()}>
-                                                {itemMenu({ kind: "folder", id: folder.id, name: folder.name })}
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))}
-                                {assets.map((asset) => (
-                                    <tr key={asset.id} onClick={() => navigate(`/library/files/${asset.id}`)}>
-                                        <td>
-                                            <Link className="file-name" to={`/library/files/${asset.id}`}>
-                                                <FileBadge format={asset.format} />
-                                                <span>{asset.name}</span>
-                                            </Link>
-                                        </td>
-                                        <td>{typeLabel(asset.format)}</td>
-                                        <td>{asset.uploadedBy.name}</td>
-                                        <td>{formatDate(asset.uploadedAt)}</td>
-                                        <td className="numeric">{formatSize(asset.size)}</td>
-                                        {manages && (
-                                            <td className="row-actions" onClick={(event) => event.stopPropagation()}>
-                                                {itemMenu({ kind: "file", id: asset.id, name: asset.name })}
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                <section className="library">
+                    {folders.length + assets.length > 0 && (
+                        <div className="library-toolbar">
+                            <FilterBar folders={folders} assets={assets} filters={filters} onChange={filter} />
+                            <div className="segmented" role="radiogroup" aria-label="View">
+                                <button
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={view === "list"}
+                                    aria-label="List"
+                                    title="List"
+                                    onClick={() => show("list")}
+                                >
+                                    <ListIcon />
+                                </button>
+                                <button
+                                    type="button"
+                                    role="radio"
+                                    aria-checked={view === "grid"}
+                                    aria-label="Grid"
+                                    title="Grid"
+                                    onClick={() => show("grid")}
+                                >
+                                    <GridIcon />
+                                </button>
+                            </div>
+                        </div>
                     )}
-                </div>
+                    <div
+                        className={dropping ? "file-drop file-drop-active" : "file-drop"}
+                        onDragOver={dragOver}
+                        onDragLeave={(event) =>
+                            event.currentTarget.contains(event.relatedTarget as Node) || setDropping(false)
+                        }
+                        onDrop={drop}
+                    >
+                        {folders.length + assets.length === 0 ? (
+                            <div className="card">
+                                <EmptyState title={current ? "This folder is empty" : "The library is empty"}>
+                                    {manages && "Upload a file, or drop one here."}
+                                </EmptyState>
+                            </div>
+                        ) : shown.folders.length + shown.assets.length === 0 ? (
+                            <div className="card">
+                                <EmptyState title="Nothing here matches these filters">
+                                    <button type="button" className="text-button" onClick={() => filter(NO_FILTERS)}>
+                                        Clear filters
+                                    </button>
+                                </EmptyState>
+                            </div>
+                        ) : view === "list" ? (
+                            <div className="card file-list">
+                                <FileTable folders={shown.folders} assets={shown.assets} menu={menu} />
+                            </div>
+                        ) : (
+                            <FileGrid folders={shown.folders} assets={shown.assets} menu={menu} />
+                        )}
+                    </div>
+                </section>
             )}
             {task?.kind === "upload" && listing && (
                 <UploadDialog

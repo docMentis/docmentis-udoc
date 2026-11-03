@@ -31,3 +31,26 @@ cost of the import itself, not of the bytes. The backend's own work beside it
 is one database insert. Why isn't looked into yet: the import opens the
 upload, a session that asks for a permit, and saves it as a checkpoint.
 Before, with an earlier engine, it was about 2.5 s.
+
+## A workbook's first page is all of its first sheet
+
+**Needed.** A thumbnail of each file in the library's grid: its first page,
+as an image.
+
+**Offered.** udoc-server's `GET /documents/:id/layout/pages/0.png` renders
+page 0, and a workbook's page 0 is the whole of its first sheet: a sample
+schedule's is 1.47 million points wide, so its PNG is refused, "output width
+736527 exceeds u16", and its SVG is 58 MB. The print pages
+`layout/pages.pdf` exports aren't rendered one at a time, and no route
+renders a part of a page.
+
+**Workaround.** A workbook's card shows its type's badge in place of a
+thumbnail.
+
+## A page's image is rendered again on each request
+
+**Seen.** udoc-server answers a page's image with no `Cache-Control`, `ETag`
+or `Last-Modified`, so the browser asks for every thumbnail again each time
+the grid shows it. The first answer for a document took 0.8 to 1.3 s, which
+opens it; later ones, while udoc-server kept it open, 5 to 25 ms. A grid of
+documents udoc-server has let go opens each of them again.

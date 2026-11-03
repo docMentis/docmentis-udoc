@@ -421,6 +421,7 @@ input {
     border: 1px solid var(--ms-border);
     border-radius: 8px;
     background: var(--ms-surface);
+    box-shadow: var(--ms-shadow);
     color: var(--ms-text);
     font-weight: 500;
     cursor: pointer;
@@ -573,11 +574,6 @@ input {
     padding: 0;
 }
 
-.file-list-dropping {
-    border-color: var(--ms-brand);
-    box-shadow: 0 0 0 3px rgb(254 80 0 / 18%);
-}
-
 .file-table {
     width: 100%;
     border-collapse: collapse;
@@ -661,6 +657,12 @@ input {
     color: var(--ms-muted);
 }
 
+/* In the list, a folder's icon as wide as a file's badge, drawn at its middle,
+   so that every name starts at the same place. */
+.file-table .file-name > svg {
+    width: 34px;
+}
+
 /* A file's type: its format on its color. */
 .file-badge {
     display: inline-grid;
@@ -673,6 +675,296 @@ input {
     font-size: 9.5px;
     font-weight: 700;
     letter-spacing: 0.02em;
+}
+
+/* The library under its page's header: the filters and the view's toggle,
+   over the list or the grid, on which a file is dropped to upload it. */
+.library {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.library-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+/* The box a name is typed in, as tall as the chips beside it. */
+.name-filter {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.name-filter svg {
+    position: absolute;
+    left: 10px;
+    color: var(--ms-muted);
+    pointer-events: none;
+}
+
+.name-filter input {
+    width: 220px;
+    height: 32px;
+    padding: 0 8px 0 36px;
+    border: 1px solid var(--ms-border);
+    border-radius: 8px;
+    background: var(--ms-surface);
+    font-size: 13px;
+}
+
+.name-filter input:focus {
+    outline: none;
+    border-color: var(--ms-brand);
+    box-shadow: 0 0 0 3px rgb(254 80 0 / 18%);
+}
+
+/* A filter's chip, its menu down from it at its left. */
+.filter {
+    position: relative;
+}
+
+.filter .menu {
+    right: auto;
+    left: 0;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 8px 0 12px;
+    border: 1px solid var(--ms-border);
+    border-radius: 8px;
+    background: var(--ms-surface);
+    color: var(--ms-text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.chip:hover {
+    background: var(--ms-bg);
+}
+
+.chip svg {
+    color: var(--ms-muted);
+}
+
+.chip-set,
+.chip-set:hover {
+    border-color: var(--ms-brand-soft);
+    background: var(--ms-brand-soft);
+    color: var(--ms-brand-strong);
+}
+
+.chip-set svg {
+    color: inherit;
+}
+
+/* A choice in a menu, checked when it's the one made. */
+.menu [role="menuitemradio"] {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.menu [role="menuitemradio"] svg {
+    flex-shrink: 0;
+    visibility: hidden;
+    color: var(--ms-brand-strong);
+}
+
+.menu [role="menuitemradio"][aria-checked="true"] svg {
+    visibility: visible;
+}
+
+/* A button that is a word alone, in the brand's text color. */
+.text-button {
+    height: 32px;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    color: var(--ms-brand-strong);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.text-button:hover {
+    text-decoration: underline;
+}
+
+/* A choice of a few, side by side, the one made raised: as tall as a chip. */
+.segmented {
+    display: flex;
+    flex-shrink: 0;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--ms-border);
+    border-radius: 8px;
+    background: var(--ms-bg);
+}
+
+.segmented button {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--ms-muted);
+    cursor: pointer;
+}
+
+.segmented button:hover {
+    color: var(--ms-text);
+}
+
+.segmented button[aria-checked="true"] {
+    background: var(--ms-surface);
+    box-shadow: var(--ms-shadow);
+    color: var(--ms-text);
+}
+
+.file-drop {
+    border-radius: var(--ms-radius);
+}
+
+.file-drop-active {
+    box-shadow:
+        0 0 0 1px var(--ms-brand),
+        0 0 0 4px rgb(254 80 0 / 18%);
+}
+
+/* The grid: folders as tiles, then files as cards, under their headings. */
+.grid-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.grid-heading {
+    margin: 0 0 8px;
+    color: var(--ms-muted);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.folder-grid,
+.file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.folder-tile,
+.file-card {
+    background: var(--ms-surface);
+    border: 1px solid var(--ms-border);
+    border-radius: var(--ms-radius);
+    box-shadow: var(--ms-shadow);
+    cursor: pointer;
+}
+
+.folder-tile:hover,
+.file-card:hover {
+    border-color: #cdd2da;
+    box-shadow: var(--ms-shadow-overlay);
+}
+
+.folder-tile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 48px;
+    padding: 0 8px 0 16px;
+}
+
+.folder-tile .file-name,
+.file-card .file-name {
+    min-width: 0;
+}
+
+.folder-tile .file-name span,
+.file-card .file-name span {
+    white-space: nowrap;
+}
+
+.file-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* A file's first page, whole, on a tray across the card's top. */
+.thumbnail {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    background: var(--ms-bg);
+    border-bottom: 1px solid var(--ms-border);
+}
+
+/* Centered at its own shape, 16px clear of the tray's edges. */
+.thumbnail img {
+    position: absolute;
+    inset: 0;
+    max-width: calc(100% - 32px);
+    max-height: calc(100% - 32px);
+    margin: auto;
+    background: #fff;
+    box-shadow: 0 1px 3px rgb(16 24 40 / 14%);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.thumbnail img.thumbnail-shown {
+    opacity: 1;
+}
+
+.thumbnail .file-badge {
+    width: 56px;
+    height: 32px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.file-card-body {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 8px 12px 12px;
+}
+
+.file-card-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 32px;
+}
+
+.file-card-meta {
+    overflow: hidden;
+    color: var(--ms-muted);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* A row's menu. */
