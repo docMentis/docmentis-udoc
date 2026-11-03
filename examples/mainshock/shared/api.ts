@@ -8,6 +8,11 @@
  */
 export type Role = "admin" | "reviewer" | "member";
 
+/** Whether a user in `role` changes the library: makes its folders, uploads its files, renames and deletes them. */
+export function managesLibrary(role: Role): boolean {
+    return role === "admin";
+}
+
 /** A tenant's user, as the API shows one. */
 export interface User {
     id: string;
@@ -26,6 +31,39 @@ export interface Tenant {
     name: string;
     /** Where its logo is, a square icon, for an `<img>`; `null` when it has none. */
     logo: string | null;
+}
+
+/** A folder in a tenant's library. */
+export interface Folder {
+    id: string;
+    name: string;
+    /** The folder it's in; `null` at the library's top. */
+    parentId: string | null;
+}
+
+/** A file in a tenant's library: an asset, its document kept by udoc-server. */
+export interface Asset {
+    id: string;
+    name: string;
+    /** The folder it's in; `null` at the library's top. */
+    folderId: string | null;
+    /** What it was read as, udoc's name for its format: `pdf`, `pptx`, … */
+    format: string;
+    /** Its upload's size, in bytes. */
+    size: number;
+    /** The document udoc-server keeps it as, opened from `/udoc/documents/:documentId/package`. */
+    documentId: string;
+    uploadedBy: { id: string; name: string };
+    /** When it was uploaded, in milliseconds since the epoch. */
+    uploadedAt: number;
+}
+
+/** What a folder holds, or the library's top. */
+export interface FolderListing {
+    /** The folders from the top down to this one, this one last; empty at the top. */
+    path: Folder[];
+    folders: Folder[];
+    assets: Asset[];
 }
 
 /** What a request that fails answers. */

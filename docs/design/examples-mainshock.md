@@ -108,15 +108,16 @@ document is kept twice.
 **The gate.** udoc-server has no end-user authentication, and its ids are
 global. So every `/udoc/*` request and WebSocket upgrade passes the gate first,
 which wants a signed-in session and a document id the user's tenant has an
-asset for; later, a share link's token admits a buyer to one document's read
-routes. The browser never imports a document into udoc-server: the backend
-does.
+asset for, and lets a user only read it; later, a share link's token admits a
+buyer to one document's read routes. The browser never imports or deletes a
+document in udoc-server: the backend does. Until the editor, no upgrade
+passes.
 
 **Importing.** An upload goes to `POST /api/assets`, and the backend imports it
-and records the asset under the id udoc-server answers. udoc-server imports only
-over HTTP, through its `POST /documents` route, so the backend posts to its own
-`/udoc/documents` over loopback, with a per-process token the gate admits: the
-first entry in `GAPS.md`.
+and records the asset under the id udoc-server answers. udoc-server is driven
+only over HTTP, through its `POST /documents` and `DELETE /documents/:id`
+routes, so the backend asks its own `/udoc/documents` over loopback, with a
+per-process token the gate admits: the first entry in `GAPS.md`.
 
 **Opening.** A file picked for upload opens in the viewer from its own bytes,
 in the browser, before it is uploaded. The viewer and the editor open a kept
@@ -210,12 +211,46 @@ user_version`: `tenants` and their logos, `users` and `sessions`, and an
 - The examples harness and workflow leaving it out, and `examples/README.md`
   and `CLAUDE.md` saying what it is.
 
+## Step 2: the library
+
+udoc end to end, as Maya keeps Larchmere's library: udoc-server behind the
+gate, the viewer in the frontend, and the library's folders and files.
+
+- **One tree.** A tenant's library is a tree: folders, each in its parent or
+  at the top and named apart from its siblings, and files, the assets, each in
+  a folder or at the top. Nothing sits above it. Seismic puts its folders in a
+  teamsite and Highspot its content in spots, each a container with members
+  of its own, to wall off what some users mustn't see: a retail arm's content
+  from the institutional sales team, one region's disclosures from another's.
+  Larchmere is one business selling to institutions, so it would have one: a
+  picker with nothing to pick. A tenant that needs a second gets that level
+  above its tree then. A salesperson's own decks are kept in Decks, not the
+  library, as Seismic keeps them in its Workspace.
+- **A file is not its document.** An asset has a name and a folder, and
+  points at the udoc document it is now. That leaves room for versions: next
+  quarter's fact sheet in place of this one's, its links kept.
+- **Uploading.** An admin picks a file, or drops one on the list, and it opens
+  in the viewer from its own bytes before anything is sent, beside its name,
+  filled in from the file's, and where it goes, the folder they're in.
+  Uploaded, it's published at once: compliance review is a step of its own.
+- **Reading.** The list shows each file's type, who uploaded it, when, and
+  its size; a file opens on a page of its own, in the viewer, from
+  udoc-server.
+- **Managing.** An admin makes, renames and deletes folders, and renames and
+  deletes files; a folder is deleted only once it's empty. Deleting stands in
+  for retiring, which comes with a file's review and expiry. A member sees
+  none of it, and the API refuses them (`managesLibrary`).
+
+`GET /api/library` lists a folder, or the top; `/api/folders` and
+`/api/assets` make, rename and delete them, and `GET /api/assets/:id` is a
+file and the path to it.
+
 ## Later steps
 
-In an order picked as we go: udoc end to end, udoc-server in the backend behind
-the gate and the viewer and the editor in the frontend; the narrator; the
-library, with Larchmere's content (generated),
-thumbnails from udoc-server's page routes, tags and search; compliance review,
+In an order picked as we go: the narrator; the editor; more of the library,
+with Larchmere's content (generated), thumbnails from udoc-server's page
+routes, tags and search, moving files between folders, and a file's versions;
+compliance review,
 a reviewer approving what's submitted to the library before members see it, or
 marking it up and returning it; decks, a rep assembling slides from the
 library's decks and personalizing them for a deal; share links, a buyer's view

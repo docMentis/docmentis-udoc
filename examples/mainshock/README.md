@@ -6,7 +6,9 @@ it, and its sales team uses them with the institutions it pitches. It shows the 
 is where we dogfood them: what their public API lacks goes in
 [`GAPS.md`](GAPS.md). Its design is
 [`docs/design/examples-mainshock.md`](../../docs/design/examples-mainshock.md).
-So far it's the skeleton: signing in, and the app's shell.
+So far: signing in, the app's shell, and the library, its folders and files,
+each opened in the viewer from its own bytes before it's uploaded, and from
+udoc-server once it is.
 
 ## Running it
 
@@ -25,11 +27,13 @@ once those are in place.
 `npm run build` then `npm start` serves the built app from the backend alone,
 at http://127.0.0.1:5281.
 
-| Setting              | Default | What it is                                  |
-| -------------------- | ------- | ------------------------------------------- |
-| `MAINSHOCK_PORT`     | `5281`  | The backend's port.                         |
-| `MAINSHOCK_WEB_PORT` | `5280`  | Where Vite serves the pages in development. |
-| `MAINSHOCK_DATA`     | `data/` | The database.                               |
+| Setting              | Default | What it is                                                                                   |
+| -------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| `MAINSHOCK_PORT`     | `5281`  | The backend's port.                                                                          |
+| `MAINSHOCK_WEB_PORT` | `5280`  | Where Vite serves the pages in development.                                                  |
+| `MAINSHOCK_DATA`     | `data/` | The database, and the documents udoc-server keeps.                                           |
+| `UDOC_LICENSE`       | none    | A docMentis license key for the backend's udoc-node; without one, usage is free and metered. |
+| `UDOC_DOMAIN`        | none    | The domain that license is issued for.                                                       |
 
 To start over from the seed, stop mainshock and run `npm run mainshock:clear`
 from the repo's root (`npm run clear` here), which deletes its data.

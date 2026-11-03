@@ -26,7 +26,7 @@ export default defineConfig({
     server: {
         port: config.webPort,
         strictPort: true,
-        proxy: { "/api": backend },
+        proxy: { "/api": backend, "/udoc": { target: backend, ws: true } },
         fs: { allow: [repo, realpathSync(resolve(repo, "node_modules/@docmentis/udoc-wasm"))] },
     },
 });

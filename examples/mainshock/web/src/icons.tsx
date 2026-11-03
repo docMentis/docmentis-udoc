@@ -96,3 +96,36 @@ export const ChevronsUpDownIcon = () => (
         <path d="m7 15 5 5 5-5M7 9l5-5 5 5" />
     </Icon>
 );
+
+export const FolderIcon = () => (
+    <Icon width="20" height="20">
+        <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.3l2 2.2h8.7A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" />
+    </Icon>
+);
+
+export const FolderPlusIcon = () => (
+    <Icon width="18" height="18">
+        <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.3l2 2.2h8.7A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5zM12 11v6M9 14h6" />
+    </Icon>
+);
+
+export const UploadIcon = () => (
+    <Icon width="18" height="18">
+        <path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15" />
+    </Icon>
+);
+
+/** Three dots in a row: a menu of what's done to something. */
+export const MoreIcon = () => (
+    <Icon width="18" height="18">
+        <circle cx="6" cy="12" r="0.9" fill="currentColor" />
+        <circle cx="12" cy="12" r="0.9" fill="currentColor" />
+        <circle cx="18" cy="12" r="0.9" fill="currentColor" />
+    </Icon>
+);
+
+export const CloseIcon = () => (
+    <Icon width="18" height="18">
+        <path d="M6 6l12 12M18 6 6 18" />
+    </Icon>
+);

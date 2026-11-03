@@ -8,6 +8,8 @@ import "@fontsource-variable/inter";
 
 import { AppShell } from "./AppShell";
 import { Narrator } from "./narrator/Narrator";
+import { FilePage } from "./pages/FilePage";
+import { LibraryPage } from "./pages/LibraryPage";
 import { NotFoundPage, PlaceholderPage } from "./pages/PlaceholderPage";
 import { SignInPage } from "./pages/SignInPage";
 import { RequireSession, SessionProvider } from "./session";
@@ -38,15 +40,9 @@ const router = createBrowserRouter([
                         index: true,
                         element: <PlaceholderPage title="Home" subtitle="What's new, and what needs your attention." />,
                     },
-                    {
-                        path: "library",
-                        element: (
-                            <PlaceholderPage
-                                title="Library"
-                                subtitle="Every pitch book, fact sheet and commentary the sales team uses."
-                            />
-                        ),
-                    },
+                    { path: "library", element: <LibraryPage /> },
+                    { path: "library/folders/:folderId", element: <LibraryPage /> },
+                    { path: "library/files/:assetId", element: <FilePage /> },
                     {
                         path: "decks",
                         element: (

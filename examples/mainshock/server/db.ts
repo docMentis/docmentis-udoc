@@ -53,6 +53,31 @@ const MIGRATIONS = [
     DROP TABLE users;
     ALTER TABLE users_new RENAME TO users;
     `,
+    // The library: its folders, a tree, each in its parent or at the top, and
+    // named apart from its siblings; and its files, the assets, each in a
+    // folder or at the top, the document udoc-server keeps as `document_id`.
+    `
+    CREATE TABLE folders (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL REFERENCES tenants (id),
+        parent_id TEXT REFERENCES folders (id),
+        name TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+    );
+    CREATE UNIQUE INDEX folders_by_name ON folders (tenant_id, coalesce(parent_id, ''), lower(name));
+    CREATE TABLE assets (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL REFERENCES tenants (id),
+        folder_id TEXT REFERENCES folders (id),
+        name TEXT NOT NULL,
+        format TEXT NOT NULL,
+        size INTEGER NOT NULL,
+        document_id TEXT NOT NULL UNIQUE,
+        uploaded_by TEXT NOT NULL REFERENCES users (id),
+        uploaded_at INTEGER NOT NULL
+    );
+    CREATE INDEX assets_by_folder ON assets (tenant_id, folder_id);
+    `,
 ];
 
 /** Open the database in `file`, migrated to the latest schema. */

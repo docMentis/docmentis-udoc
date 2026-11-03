@@ -1,6 +1,8 @@
 // Mainshock's backend: the app's API on Fastify, over its SQLite database;
-// and under `npm start`, the built frontend.
+// udoc-server, behind the gate, on the same HTTP server; and under
+// `npm start`, the built frontend.
 import { existsSync, mkdirSync } from "node:fs";
+import { createServer } from "node:http";
 import { join } from "node:path";
 
 import fastifyStatic from "@fastify/static";
@@ -8,9 +10,12 @@ import Fastify from "fastify";
 
 import { config } from "./config.ts";
 import { openDatabase } from "./db.ts";
+import { answerFailure } from "./http.ts";
+import { libraryRoutes } from "./routes/library.ts";
 import { sessionRoutes } from "./routes/session.ts";
 import { tenantRoutes } from "./routes/tenants.ts";
 import { seed } from "./seed.ts";
+import { createUdoc } from "./udoc.ts";
 
 if (config.webDir && !existsSync(config.webDir)) {
     console.error("mainshock: there's no built frontend to serve; run `npm run build` first");
@@ -20,10 +25,23 @@ if (config.webDir && !existsSync(config.webDir)) {
 mkdirSync(config.dataDir, { recursive: true });
 const db = openDatabase(join(config.dataDir, "mainshock.db"));
 await seed(db);
+const udoc = await createUdoc(db);
 
-const app = Fastify({ logger: { level: "warn" } });
+const app = Fastify({
+    logger: { level: "warn" },
+    // udoc-server answers what's under `/udoc`, past the gate; Fastify the rest.
+    serverFactory: (handler) => {
+        const server = createServer((request, response) => {
+            if (!udoc.handleRequest(request, response)) handler(request, response);
+        });
+        server.on("upgrade", (request, socket) => udoc.handleUpgrade(request, socket) || socket.destroy());
+        return server;
+    },
+});
+app.setErrorHandler(answerFailure);
 sessionRoutes(app, db);
 tenantRoutes(app, db);
+libraryRoutes(app, db, udoc);
 if (config.webDir) {
     await app.register(fastifyStatic, { root: config.webDir });
     // Any other page is the frontend's to route.
@@ -44,6 +62,7 @@ console.log(
 
 async function stop(): Promise<void> {
     await app.close();
+    await udoc.close();
     db.close();
     process.exit(0);
 }

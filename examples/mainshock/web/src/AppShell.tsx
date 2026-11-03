@@ -3,7 +3,7 @@
 // after a divider, the workspace's settings; at its foot the user's menu, then,
 // under a divider, "Powered by Mainshock". It folds to a rail of its icons,
 // which this browser remembers.
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { NavLink, Outlet } from "react-router";
 
@@ -21,7 +21,7 @@ import {
     SettingsIcon,
 } from "./icons";
 import { useSession, useUser } from "./session";
-import { Avatar, TenantBrand } from "./ui";
+import { Avatar, TenantBrand, useDismiss } from "./ui";
 
 const NAVIGATION: { to: string; label: string; icon: ComponentType }[] = [
     { to: "/", label: "Home", icon: HomeIcon },
@@ -117,17 +117,7 @@ function UserMenu({ user, folded }: { user: User; folded: boolean }) {
     const { signOut } = useSession();
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (!open) return;
-        const close = (event: PointerEvent) => ref.current?.contains(event.target as Node) || setOpen(false);
-        const escape = (event: KeyboardEvent) => event.key === "Escape" && setOpen(false);
-        document.addEventListener("pointerdown", close);
-        document.addEventListener("keydown", escape);
-        return () => {
-            document.removeEventListener("pointerdown", close);
-            document.removeEventListener("keydown", escape);
-        };
-    }, [open]);
+    useDismiss(ref, open, () => setOpen(false));
     return (
         <div className="user-menu" ref={ref}>
             <button

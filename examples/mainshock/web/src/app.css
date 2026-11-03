@@ -479,3 +479,289 @@ input {
     font-weight: 650;
     letter-spacing: -0.01em;
 }
+
+.button.danger {
+    border-color: var(--ms-danger);
+    background: var(--ms-danger);
+    color: #fff;
+}
+
+.button.danger:hover {
+    background: #a61e1e;
+}
+
+/* A button that is an icon alone: a menu's, a dialog's close. */
+.icon-button {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: none;
+    color: var(--ms-muted);
+    cursor: pointer;
+}
+
+.icon-button:hover {
+    background: var(--ms-bg);
+    color: var(--ms-text);
+}
+
+/* Read by a screen reader, not shown. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* A page's header with its actions at its right. */
+.page-header-actions {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.page-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+/* The folders down to the page's, over its title. */
+.breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 2px;
+    color: var(--ms-muted);
+    font-size: 13px;
+}
+
+.breadcrumb a {
+    color: var(--ms-muted);
+}
+
+.breadcrumb a:hover {
+    color: var(--ms-text);
+}
+
+/* The library's list: its folders, then its files, a row each; files can be
+   dropped on it. */
+.file-list {
+    padding: 0;
+}
+
+.file-list-dropping {
+    border-color: var(--ms-brand);
+    box-shadow: 0 0 0 3px rgb(254 80 0 / 18%);
+}
+
+.file-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.file-table th {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--ms-border);
+    color: var(--ms-muted);
+    font-size: 12px;
+    font-weight: 500;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.file-table td {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--ms-border);
+    color: var(--ms-muted);
+    white-space: nowrap;
+}
+
+.file-table tbody tr {
+    cursor: pointer;
+}
+
+.file-table tbody tr:hover {
+    background: var(--ms-bg);
+}
+
+.file-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+/* The name takes what the other columns leave, cut short when it's long. */
+.file-table td:first-child {
+    width: 100%;
+    max-width: 0;
+}
+
+.file-table .numeric {
+    text-align: right;
+}
+
+.file-table .row-actions {
+    width: 1%;
+    padding: 4px 8px;
+}
+
+.file-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ms-text);
+    font-weight: 500;
+}
+
+.file-name:hover {
+    text-decoration: none;
+}
+
+.file-name span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-name > svg {
+    flex-shrink: 0;
+    color: var(--ms-muted);
+}
+
+/* A file's type: its format on its color. */
+.file-badge {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+/* A row's menu, down from its button, at its right. */
+.actions-menu {
+    position: relative;
+}
+
+.actions-menu .menu {
+    top: calc(100% + 4px);
+    right: 0;
+    bottom: auto;
+    left: auto;
+    min-width: 140px;
+}
+
+/* Dialogs: over the page, which dims behind. */
+.dialog {
+    width: min(440px, calc(100vw - 32px));
+    padding: 0;
+    border: 1px solid var(--ms-border);
+    border-radius: 14px;
+    background: var(--ms-surface);
+    color: var(--ms-text);
+    box-shadow: 0 12px 32px rgb(16 24 40 / 16%);
+}
+
+.dialog::backdrop {
+    background: rgb(16 24 40 / 40%);
+}
+
+.dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px 12px 20px;
+    border-bottom: 1px solid var(--ms-border);
+}
+
+.dialog-header h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 650;
+}
+
+.dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.field-value {
+    color: var(--ms-muted);
+    font-weight: 400;
+    overflow-wrap: anywhere;
+}
+
+/* Uploading: the file in the viewer, and beside it what it's uploaded as. */
+.upload-dialog {
+    width: min(1120px, calc(100vw - 32px));
+    height: min(780px, calc(100vh - 32px));
+}
+
+.upload-dialog[open] {
+    display: flex;
+    flex-direction: column;
+}
+
+.upload {
+    display: grid;
+    flex: 1;
+    grid-template-columns: 1fr 300px;
+    min-height: 0;
+}
+
+.upload-preview {
+    min-width: 0;
+    min-height: 0;
+    border-right: 1px solid var(--ms-border);
+}
+
+.upload-details {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+    overflow: auto;
+}
+
+.upload-details .dialog-actions {
+    margin-top: auto;
+}
+
+/* A viewer fills what it's put in. */
+.viewer {
+    width: 100%;
+    height: 100%;
+}
+
+/* A file's page: its header, and the viewer filling the rest. */
+.file-page {
+    height: 100%;
+}
+
+.file-viewer {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid var(--ms-border);
+    border-radius: var(--ms-radius);
+    background: var(--ms-surface);
+}
