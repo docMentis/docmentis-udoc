@@ -20,3 +20,5 @@ The source is maintained in the [docMentis udoc monorepo](https://github.com/doc
 ## Licensing
 
 This package's source code is available under **MIT OR Apache-2.0**. It depends on the separately licensed, proprietary [`@docmentis/udoc-wasm`](https://www.npmjs.com/package/@docmentis/udoc-wasm) runtime.
+
+Its `dist` also bundles [Video.js](https://videojs.org) and the libraries it plays streams and video sites with, each under its own license — Apache-2.0, MIT or BSD-3-Clause — listed with their license texts in `dist/THIRD-PARTY-NOTICES.md`.

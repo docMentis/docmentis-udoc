@@ -27,6 +27,8 @@ import {
     videoSiteOf,
 } from "./media-formats.js";
 import type { MediaFormat } from "./media-formats.js";
+import { loadMediaElement, loadPreset } from "./video-js.js";
+import type { CustomMediaTag } from "./video-js.js";
 
 /** How long an open waits for the media's metadata before showing the player as it is, loading. */
 const METADATA_WAIT_MS = 10_000;
@@ -156,16 +158,13 @@ async function mountPlayer(
     src: string,
     locale: string,
 ): Promise<Player> {
-    await Promise.all([
-        preset === "video" ? import("@videojs/html/video/player") : import("@videojs/html/audio/player"),
-        preset === "video" ? import("@videojs/html/video/skin") : import("@videojs/html/audio/skin"),
-        importMediaElement(format),
-    ]);
+    const tag = mediaTag(preset, format);
+    await Promise.all([loadPreset(preset), tag === "video" || tag === "audio" ? undefined : loadMediaElement(tag)]);
     const words = document.createElement("media-i18n");
     words.setAttribute("lang", locale);
     const player = document.createElement(`${preset}-player`) as HTMLElement & { destroy?(): void };
     const skin = document.createElement(`${preset}-skin`);
-    const media = document.createElement(mediaTag(preset, format)) as MediaElement;
+    const media = document.createElement(tag) as MediaElement;
     media.setAttribute("playsinline", "");
     skin.append(media);
     player.append(skin);
@@ -195,22 +194,8 @@ async function mountPlayer(
     };
 }
 
-/** Load the custom media element `format` plays in, if it plays in one. */
-async function importMediaElement(format: MediaFormat): Promise<unknown> {
-    switch (format) {
-        case "hls":
-            return import("@videojs/html/media/hlsjs-video");
-        case "youtube":
-            return import("@videojs/html/media/youtube-video");
-        case "vimeo":
-            return import("@videojs/html/media/vimeo-video");
-        default:
-            return undefined;
-    }
-}
-
-/** The tag of the media element `format` plays in under `preset`. */
-function mediaTag(preset: "video" | "audio", format: MediaFormat): string {
+/** The tag of the media element `format` plays in under `preset`: the preset's own native element, or one of Video.js's. */
+function mediaTag(preset: "video" | "audio", format: MediaFormat): "video" | "audio" | CustomMediaTag {
     switch (format) {
         case "hls":
             return "hlsjs-video";

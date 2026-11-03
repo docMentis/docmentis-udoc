@@ -149,7 +149,19 @@ of controls over each. Its `formats` are `mp4`, `m4v`, `mov`, `webm`, `mp3`,
 containers browsers play, and none they don't, MKV, AVI or WMV. It loads by
 dynamic `import` when a media document opens — the preset, its skin and the
 media element's package, hls.js among them — so a PDF's reader downloads none
-of it; a new bare import, so `npm run examples` passes before it lands.
+of it.
+
+Video.js is bundled into udoc-ui's `dist`, as the workers are
+(`scripts/bundle-video-js.mjs`): the imports `src/app/video-js.ts` makes become
+chunks in `dist/app/video-js/`, which it names relatively. So a host resolves
+no Video.js package and installs none — the `@videojs` packages are udoc-ui's
+dev dependencies — and a host without a bundler, whose import map names udoc's
+packages alone, plays media too. It adds 1.2 MB to the package, 0.35 MB
+packed, where the packages as dependencies added 59 MB to every host's install.
+`npm run dev` runs tsc's output, the imports resolved from the workspace. What
+the bundle holds is others' software, so the same script writes
+`dist/THIRD-PARTY-NOTICES.md` from it: each package, its version, its license
+and its license text.
 
 - `canOpen` (`media-formats.ts`): a YouTube or Vimeo address, before anything
   is fetched, which fetching would fail on CORS anyway; a file name's

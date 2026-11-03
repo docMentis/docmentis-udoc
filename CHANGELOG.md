@@ -30,6 +30,9 @@ listed once, by package. Its major and minor version are those of the
   plays in its audio player. A YouTube or Vimeo video that won't play here
   offers a link to it on its site. A host with a Content Security Policy
   allows inline styles, YouTube's IFrame API script and the sites' frames.
+  Video.js is bundled into `@docmentis/udoc-ui`, so a host installs none of it,
+  and a page without a bundler plays media too; `dist/THIRD-PARTY-NOTICES.md`
+  lists what it bundles, with their licenses.
 
 #### Changed
 

@@ -47,7 +47,7 @@
     "scripts": {
         "dev": "tsc -p tsconfig.json --watch",
         "build": "npm run clean && npm run compile",
-        "compile": "node scripts/gen-version.mjs && tsc -p tsconfig.json && node scripts/bundle-workers.mjs",
+        "compile": "node scripts/gen-version.mjs && tsc -p tsconfig.json && node scripts/bundle-workers.mjs && node scripts/bundle-video-js.mjs",
         "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
         "test": "node --test",
         "gen:icons": "node scripts/gen-icons.mjs",
@@ -55,13 +55,13 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-wasm": "0.8.14",
+        "@docmentis/udoc-wasm": "0.8.14"
+    },
+    "devDependencies": {
         "@videojs/hlsjs-video": "10.2.0",
         "@videojs/html": "10.2.0",
         "@videojs/vimeo-video": "10.2.0",
-        "@videojs/youtube-video": "10.2.0"
-    },
-    "devDependencies": {
+        "@videojs/youtube-video": "10.2.0",
         "esbuild": "^0.25.12"
     }
 }
