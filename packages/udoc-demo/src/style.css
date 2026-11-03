@@ -34,6 +34,7 @@
     --pptx: #ea580c;
     --xlsx: #16a34a;
     --img: #0891b2;
+    --video: #9333ea;
 }
 
 html,
@@ -331,6 +332,14 @@ body {
     padding: 10px 12px;
     font-weight: 600;
 }
+.sample-credit {
+    margin: 10px 0 0;
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: center;
+    text-wrap: balance;
+    color: var(--text-muted);
+}
 .doc-icon.pdf {
     color: var(--pdf);
 }
@@ -345,6 +354,9 @@ body {
 }
 .doc-icon.img {
     color: var(--img);
+}
+.doc-icon.video {
+    color: var(--video);
 }
 
 /* folded rail */
@@ -389,6 +401,9 @@ body {
 }
 .rail-btn.type.img {
     color: var(--img);
+}
+.rail-btn.type.video {
+    color: var(--video);
 }
 .rail-divider {
     width: 24px;

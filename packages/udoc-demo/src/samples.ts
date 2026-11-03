@@ -1,19 +1,28 @@
 // Sample document catalog. Files live in `public/` (copied from the viewer
-// demo — public-domain NASA material). Editing modes favor the editable
-// formats (DOCX/PPTX), but every type is here so the type-rail has full cover.
+// demo — NASA material, credited at the sidebar's foot by `SAMPLE_CREDIT`).
+// Editing modes favor the editable formats (DOCX/PPTX), but every type is here
+// so the type-rail has full cover. The videos are NASA's own, on its YouTube
+// and Vimeo channels, which the viewer and the editor stream from the sites:
+// the demo hosts none of them.
 
-export type DocType = "pdf" | "docx" | "pptx" | "xlsx" | "img";
+export type DocType = "pdf" | "docx" | "pptx" | "xlsx" | "img" | "video";
 
 export interface SampleDoc {
     name: string;
+    /** Its file in `public/`, which the demo fetches; or an online video's address on its site. */
     path: string;
+    /**
+     * An online video's name in the demo's address (`?sample=`), as its
+     * address names no file. Set for an online video alone, which the viewer
+     * or the editor streams from its address, and which is only viewed.
+     */
+    slug?: string;
 }
 
 export interface SampleCategory {
     type: DocType;
     /** Short uppercase label shown in the sidebar / type-rail. */
     label: string;
-    description?: string;
     documents: SampleDoc[];
 }
 
@@ -26,7 +35,6 @@ export const SAMPLE_CATEGORIES: SampleCategory[] = [
     {
         type: "pdf",
         label: "PDF",
-        description: "NASA documents are public-domain.",
         documents: [
             {
                 name: "Hubble Fact Sheet: Mission Operations",
@@ -39,13 +47,11 @@ export const SAMPLE_CATEGORIES: SampleCategory[] = [
     {
         type: "docx",
         label: "DOCX",
-        description: "Editable word-processing documents.",
         documents: [{ name: "NASA Artemis Status Report", path: asset("docx/nasa-artemis-status-report.docx") }],
     },
     {
         type: "pptx",
         label: "PPTX",
-        description: "Editable presentations.",
         documents: [{ name: "James Webb Space Telescope", path: asset("pptx/james-webb-space-telescope.pptx") }],
     },
     {
@@ -56,21 +62,47 @@ export const SAMPLE_CATEGORIES: SampleCategory[] = [
     {
         type: "img",
         label: "Image",
-        description: "Public-domain NASA/JWST images.",
         documents: [
             { name: "Cosmic Cliffs in Carina Nebula", path: asset("image/cosmic-cliffs-carina-nebula.png") },
             { name: "Pillars of Creation", path: asset("image/pillars-of-creation.png") },
             { name: "Stephan's Quintet", path: asset("image/stephans-quintet.png") },
         ],
     },
+    {
+        type: "video",
+        label: "Video",
+        documents: [
+            {
+                name: "Webb's First Images (YouTube)",
+                path: "https://www.youtube.com/watch?v=1C_zuHf6lP4",
+                slug: "webb-first-images-youtube",
+            },
+            {
+                name: "Parker Solar Probe (Vimeo)",
+                path: "https://vimeo.com/283977617",
+                slug: "parker-solar-probe-vimeo",
+            },
+        ],
+    },
 ];
+
+/**
+ * The samples' credit, at the sidebar's foot: NASA's media guidelines ask for credit
+ * and rule out implying NASA endorses a product, and the Webb images are
+ * ESA's, CSA's and STScI's as well as NASA's.
+ */
+export const SAMPLE_CREDIT =
+    "Samples courtesy of NASA; Webb images NASA, ESA, CSA, STScI. NASA does not endorse docMentis.";
 
 /** What the demo opens on first load. */
 export const DEFAULT_SAMPLE: SampleDoc = SAMPLE_CATEGORIES.find((c) => c.type === "pdf")!.documents[0]!;
 
-/** A sample's file name: what names it in the demo's address (`?sample=`), and what a download saves. */
+/**
+ * A sample's file name — an online video's slug — what names it in the demo's
+ * address (`?sample=`), and what a download saves.
+ */
 export function sampleFile(doc: SampleDoc): string {
-    return doc.path.slice(doc.path.lastIndexOf("/") + 1);
+    return doc.slug ?? doc.path.slice(doc.path.lastIndexOf("/") + 1);
 }
 
 /** The sample whose file is named `file`; `undefined` for none. */

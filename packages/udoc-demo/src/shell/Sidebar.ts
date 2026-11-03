@@ -1,6 +1,6 @@
 import { h, svg, replaceChildren } from "../dom.js";
 import { ICONS } from "../icons.js";
-import { SAMPLE_CATEGORIES, type SampleCategory, type SampleDoc } from "../samples.js";
+import { SAMPLE_CATEGORIES, SAMPLE_CREDIT, type SampleCategory, type SampleDoc } from "../samples.js";
 
 export interface SidebarHandlers {
     onOpenFile(): void;
@@ -109,6 +109,7 @@ export class Sidebar {
                     svg(ICONS.gear),
                     "Options",
                 ),
+                h("p", { class: "sample-credit" }, SAMPLE_CREDIT),
             ),
         );
     }

@@ -305,6 +305,12 @@ async function openSample(doc: SampleDoc): Promise<void> {
     shownDoc = asked;
     sidebar.setActiveDoc(doc.path);
     try {
+        // An online video streams from its site's address, where the viewer
+        // or the editor reaches it.
+        if (doc.slug !== undefined) {
+            await stage.openDoc({ name, source: doc.path, viewOnly: true });
+            return;
+        }
         const bytes = await fetchBytes(doc.path);
         // Another document was asked for while this one downloaded.
         if (shownDoc !== asked) return;
@@ -347,7 +353,7 @@ async function openWebPage(): Promise<void> {
     try {
         // Framed as a web page, which no URL says it is: given no format, the
         // viewer would fetch it as a document.
-        await stage.openDoc({ name: url.split("/").pop() || url, source: url, format: "url" });
+        await stage.openDoc({ name: url.split("/").pop() || url, source: url, format: "url", viewOnly: true });
     } catch (err) {
         console.error("udoc: failed to open web page", err);
         showError("Could not open that web page.");

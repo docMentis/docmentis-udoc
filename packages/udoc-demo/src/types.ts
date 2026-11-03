@@ -16,6 +16,8 @@ export const MODES: { id: Mode; label: string; icon: "edit" | "view" | "sparkle"
  * A document the demo can open, as `open` takes it — its bytes in memory, a
  * picked file, or a URL the viewer or the editor fetches or streams itself —
  * a display name, and the format to open it as where detection can't tell:
- * `url`, a web page the viewer or the editor frames.
+ * `url`, a web page the viewer or the editor frames. `viewOnly` for one with
+ * nothing to co-edit, a web page or an online video, which Co-edit's editors
+ * each open from its source.
  */
-export type OpenDoc = { name: string; source: Uint8Array | Blob | string; format?: string };
+export type OpenDoc = { name: string; source: Uint8Array | Blob | string; format?: string; viewOnly?: boolean };

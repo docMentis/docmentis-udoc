@@ -87,6 +87,12 @@ listed once, by package. Its major and minor version are those of the
 - Open Web Page frames a page by its URL in the web page document, in View,
   Edit and Co-edit alike — where Co-edit's two editors each frame it, as a
   page has nothing to co-edit.
+- A Video sample category: two NASA videos streamed from their sites,
+  Webb's first images on YouTube and the Parker Solar Probe on Vimeo.
+  Co-edit's two editors each play one, as a video has nothing to co-edit.
+- A credit at the foot of the sidebar: the samples courtesy of NASA, the Webb
+  images NASA's, ESA's, CSA's and STScI's, and NASA's endorsement of
+  docMentis disclaimed.
 
 ## [0.8.11] - 2026-11-01
 

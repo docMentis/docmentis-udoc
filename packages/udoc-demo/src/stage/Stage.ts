@@ -152,8 +152,9 @@ export class Stage {
      * bytes itself would mint ids of its own — and this resolves with its id.
      */
     async #openIn(editors: UDocBase[], doc: OpenDoc): Promise<string | undefined> {
-        // A web page has nothing to co-edit: each editor of Co-edit frames it.
-        if (this.#mode !== "coedit" || doc.format === "url") {
+        // A web page or an online video has nothing to co-edit: each editor
+        // of Co-edit opens it.
+        if (this.#mode !== "coedit" || doc.viewOnly) {
             await Promise.all(
                 editors.map((ed) =>
                     ed.open(doc.source, { filename: doc.name, ...(doc.format && { format: doc.format }) }),
