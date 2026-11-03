@@ -12,21 +12,22 @@ came from.
 
 ## Documents
 
-The docMentis engine reads and renders these:
+The docMentis engine reads and renders these. The Editing column says whether
+the editor edits a format and saves the edits back to it:
 
-| Format         | Extensions                                                        | `sourceFormat`                               | `docType`        |
-| -------------- | ----------------------------------------------------------------- | -------------------------------------------- | ---------------- |
-| PDF            | `.pdf`                                                            | `pdf`                                        | `portable`       |
-| Word           | `.docx`, `.docm`, `.dotx`, `.dotm`                                | the extension                                | `wordprocessing` |
-| Plain text     | `.txt`                                                            | `txt`                                        | `wordprocessing` |
-| Markdown       | `.md`, `.markdown`                                                | `md`                                         | `wordprocessing` |
-| HTML           | `.html`, `.htm`                                                   | `html`                                       | `wordprocessing` |
-| Email          | `.eml`                                                            | `eml`                                        | `wordprocessing` |
-| PowerPoint     | `.pptx`, `.pptm`, `.potx`, `.potm`, `.ppsx`, `.ppsm`              | the extension                                | `presentation`   |
-| Excel          | `.xlsx`, `.xlsm`, `.xltx`, `.xltm`                                | the extension                                | `spreadsheet`    |
-| Delimited text | `.csv`, `.tsv`, `.tab`, `.psv`                                    | `csv`, `tsv` or `psv`                        | `spreadsheet`    |
-| Images         | `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tif`, `.tiff`, `.webp` | `jpg`, `png`, `gif`, `bmp`, `tiff` or `webp` | `image`          |
-| Vector images  | `.svg`, `.emf`, `.wmf`                                            | the extension                                | `image`          |
+| Format         | Extensions                                                        | `sourceFormat`                               | `docType`        | Editing                                      |
+| -------------- | ----------------------------------------------------------------- | -------------------------------------------- | ---------------- | -------------------------------------------- |
+| PDF            | `.pdf`                                                            | `pdf`                                        | `portable`       | Yes                                          |
+| Word           | `.docx`, `.docm`, `.dotx`, `.dotm`                                | the extension                                | `wordprocessing` | Yes                                          |
+| Plain text     | `.txt`                                                            | `txt`                                        | `wordprocessing` | Yes                                          |
+| Markdown       | `.md`, `.markdown`                                                | `md`                                         | `wordprocessing` | Yes                                          |
+| HTML           | `.html`, `.htm`                                                   | `html`                                       | `wordprocessing` | Yes                                          |
+| Email          | `.eml`                                                            | `eml`                                        | `wordprocessing` | Yes, but saved as another format, not `.eml` |
+| PowerPoint     | `.pptx`, `.pptm`, `.potx`, `.potm`, `.ppsx`, `.ppsm`              | the extension                                | `presentation`   | Yes                                          |
+| Excel          | `.xlsx`, `.xlsm`, `.xltx`, `.xltm`                                | the extension                                | `spreadsheet`    | Yes                                          |
+| Delimited text | `.csv`, `.tsv`, `.tab`, `.psv`                                    | `csv`, `tsv` or `psv`                        | `spreadsheet`    | Yes                                          |
+| Images         | `.jpg`, `.jpeg`, `.png`, `.gif`, `.bmp`, `.tif`, `.tiff`, `.webp` | `jpg`, `png`, `gif`, `bmp`, `tiff` or `webp` | `image`          | Yes                                          |
+| Vector images  | `.svg`, `.emf`, `.wmf`                                            | the extension                                | `image`          | Yes, but an edited one can't be saved        |
 
 - A template, a slide show or a macro-enabled Office file opens as the document
   it is a variant of, and `sourceFormat` names the variant: `dotx`, `ppsx`,
@@ -44,10 +45,10 @@ These are extension documents: the browser plays or shows them in the document
 area, not the engine. Two are built in, and you can
 [add your own](./extension-documents).
 
-| Kind            | Sources                                                                                                                                                                    | `sourceFormat`                                               | `docType` |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------- |
-| Video and audio | `.mp4`, `.m4v`, `.mov`, `.webm`, `.mp3`, `.m4a`, `.aac`, `.wav`, `.ogg`, `.oga`, `.ogv`, `.opus` and `.flac` files; HLS streams; YouTube and Vimeo videos by their address | `mp4`, `webm`, `mp3` and the rest; `hls`, `youtube`, `vimeo` | `media`   |
-| Web pages       | Any URL, given `format: "url"`                                                                                                                                             | `url`                                                        | `webpage` |
+| Kind            | Sources                                                                                                                                                                    | `sourceFormat`                                               | `docType` | Editing |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | --------- | ------- |
+| Video and audio | `.mp4`, `.m4v`, `.mov`, `.webm`, `.mp3`, `.m4a`, `.aac`, `.wav`, `.ogg`, `.oga`, `.ogv`, `.opus` and `.flac` files; HLS streams; YouTube and Vimeo videos by their address | `mp4`, `webm`, `mp3` and the rest; `hls`, `youtube`, `vimeo` | `media`   | No      |
+| Web pages       | Any URL, given `format: "url"`                                                                                                                                             | `url`                                                        | `webpage` | No      |
 
 ## How a format is recognized
 
@@ -70,6 +71,14 @@ one does, a dialog shows its first lines and asks the reader which character
 splits them.
 
 ## What people can do with each
+
+The viewer edits nothing but a PDF's annotations and form fields: it's for
+reading. The editor edits every document the engine opens, in its edit mode.
+Video, audio and web pages open view only in both.
+
+Edit mode needs the `editing` feature, which free usage includes and a
+commercial license includes if it lists it. Without it, the editor offers view
+mode alone, and `setMode("edit")` does nothing.
 
 In the viewer, and in the editor's view mode:
 
