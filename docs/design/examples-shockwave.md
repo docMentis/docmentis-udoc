@@ -17,6 +17,62 @@ example tenant. It is there for two reasons:
   `examples/shockwave/GAPS.md` — what was needed, what the API offers, the
   workaround if there is one — instead of being reached around.
 
+## What a sales enablement platform has to provide
+
+Seismic, Highspot, Showpad and Letter AI each do these jobs:
+
+| Job                        | What it means in practice                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Content management         | one library, governed: compliance approval, versions, expiry, disclosures, tags, search                   |
+| Creating and personalizing | decks assembled from approved slides, made for one deal; answers to RFPs and due diligence questionnaires |
+| Sharing with buyers        | links or deal rooms a buyer opens with no account, downloading and copying under control                  |
+| Buyer engagement           | who opened what, which pages, for how long; the rep alerted                                               |
+| Presenting                 | in the meeting, with the presenter view, the deck as it was built                                         |
+| Collaborating              | proposals and RFPs co-edited; review markup                                                               |
+| Training and coaching      | learning paths, roleplay; mostly not about documents                                                      |
+| Analytics and AI           | content performance, revenue attribution, AI search and generation, the CRM                               |
+
+## Where docMentis fits
+
+| Job                                 | docMentis today                                                                                                              | Strength                            |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| Previewing the library, any format  | the viewer: PDF, DOCX, PPTX, XLSX, images, Markdown, HTML, CSV, video and audio, web pages                                   | core                                |
+| Previewing before uploading         | the viewer renders the file in the browser, in WebAssembly; it never leaves the computer                                     | core                                |
+| Thumbnails                          | udoc-server's page routes, PNG or SVG; udoc-node's `exportPageToBytes`                                                       | core                                |
+| Personalizing a deck                | the editor edits the PPTX, DOCX or XLSX itself, in the browser, with no trip to desktop Office                               | core                                |
+| A frozen PDF of an approved version | `exportToBytes("pdf")`, udoc-server's `pages.pdf`                                                                            | core                                |
+| Compliance review                   | annotations, and comment threads with their replies                                                                          | partial: checked for a PDF alone    |
+| Co-editing an RFP                   | udoc-server's collaboration over WebSocket, with presence and each other's pointers                                          | core                                |
+| Presenting                          | the slide show: PowerPoint's transitions, animations and Morph, the presenter view on a second screen; a PDF too             | core                                |
+| Buyer engagement, page by page      | the viewer's `currentPage:changed`, `viewport:changed`, `document:downloaded` and `document:printed`, which the host records | core                                |
+| Sharing under control               | `showDownloadButton`, `showPrintButton` and `enableCopy` turned off                                                          | partial: no watermark, no redaction |
+| Searching the library, AI on it     | search within one document alone: only a word document saves as text or Markdown, and a PDF's or a deck's text can't be had  | gap                                 |
+| Decks generated from a template     | udoc-node opens, saves and exports a document, with no API to edit it                                                        | gap                                 |
+| Copying slides between decks        | not looked into yet                                                                                                          | likely gap                          |
+
+The gaps are what Shockwave logs in `GAPS.md` as it reaches them, and the
+strongest candidates for the engine's roadmap.
+
+## What makes docMentis unique here
+
+1. **One engine everywhere.** The browser, udoc-node, the CLI and udoc-server
+   all run one WebAssembly build. The thumbnail, the preview, the buyer's view,
+   the exported PDF and the presentation are one rendering, so they never
+   disagree.
+2. **Native formats from start to finish.** A rep views, edits, presents and
+   co-edits the PPTX itself, inside the product. Incumbents commonly convert
+   documents to images or PDF to show them, and send people to PowerPoint or
+   Office Online to edit them; that's not yet checked product by product.
+3. **Presenting without loss.** Morph, transitions, animations and the
+   presenter view, in a browser, with no PowerPoint installed. A converted deck
+   loses them all.
+4. **Self-hosted and client-side.** Documents stay on the tenant's servers or
+   in the browser, with no third-party conversion service, and no Microsoft 365
+   behind an Office Online integration: what a regulated buyer, Larchmere's
+   kind, asks of its vendors.
+5. **Embeddable.** A sales enablement vendor builds its product on it, where it
+   would otherwise license and integrate several pieces.
+
 ## The tenant
 
 Larchmere Investment Management, Larchmere for short, is a mid-sized asset
@@ -85,7 +141,8 @@ links come, gets a B. The surnames are ordinary.
 
 A user signs in with their work email, `first.last@larchmere.example` for the
 seeded ones, at a domain kept for examples so that none is anyone's, and a
-password, checked against the scrypt hash `users` keeps (`server/auth.ts`); the
+password, checked against the scrypt hash `users` keeps (`server/auth.ts`), and
+stays signed in by a session in an HTTP-only cookie (`/api/session`); the
 seeded users share the demo's password, which the README gives.
 
 ## How it fits together
@@ -195,71 +252,3 @@ it, with the backend stopped, to start over from the seed.
 It is no integration recipe, so `scripts/examples.mjs` and the Examples
 workflow leave it out; ESLint leaves out all of `examples/`, and Prettier
 formats it with the rest of the repo.
-
-## Step 1: the skeleton
-
-The frontend and the backend, set up and running, with no udoc code yet:
-
-- `examples/shockwave/` as laid out above: one `package.json`, the udoc
-  packages linked in it, a `tsconfig` for the Node side (`server/`, `shared/`,
-  Vite's config) and one for `web/`, and a `typecheck` script; `npm run
-shockwave` from the root.
-- The backend: Fastify over the database, its migrations counted by `PRAGMA
-user_version`: `tenants` and their logos, `users` and `sessions`, and an
-  empty one seeded with Larchmere, its logo and its personas.
-- Signing in: a work email and a password, over `GET`, `POST` and
-  `DELETE /api/session`, a session in an HTTP-only cookie.
-- The frontend: the sign-in page, and the shell, a sidebar beside the page,
-  folding to a rail of its icons: under the tenant's logo and name, Home,
-  Library, Decks, Deals and Analytics, and after a divider Settings; at its
-  foot the user's menu (sign out), then, under a divider, "Powered by
-  Shockwave". Each section is a placeholder until its step.
-- The examples harness and workflow leaving it out, and `examples/README.md`
-  and `CLAUDE.md` saying what it is.
-
-## Step 2: the library
-
-udoc end to end, as Maya keeps Larchmere's library: udoc-server behind the
-gate, the viewer in the frontend, and the library's folders and files.
-
-- **One tree.** A tenant's library is a tree: folders, each in its parent or
-  at the top and named apart from its siblings, and files, the assets, each in
-  a folder or at the top. Nothing sits above it. Seismic puts its folders in a
-  teamsite and Highspot its content in spots, each a container with members
-  of its own, to wall off what some users mustn't see: a retail arm's content
-  from the institutional sales team, one region's disclosures from another's.
-  Larchmere is one business selling to institutions, so it would have one: a
-  picker with nothing to pick. A tenant that needs a second gets that level
-  above its tree then. A salesperson's own decks are kept in Decks, not the
-  library, as Seismic keeps them in its Workspace.
-- **A file is not its document.** An asset has a name and a folder, and
-  points at the udoc document it is now. That leaves room for versions: next
-  quarter's fact sheet in place of this one's, its links kept.
-- **Uploading.** An admin picks a file, or drops one on the list, and it opens
-  in the viewer from its own bytes before anything is sent, beside its name,
-  filled in from the file's, and where it goes, the folder they're in.
-  Uploaded, it's published at once: compliance review is a step of its own.
-- **Reading.** The list shows each file's type, who uploaded it, when, and
-  its size; a file opens on a page of its own, in the viewer, from
-  udoc-server.
-- **Managing.** An admin makes, renames and deletes folders, and renames and
-  deletes files; a folder is deleted only once it's empty. Deleting stands in
-  for retiring, which comes with a file's review and expiry. A member sees
-  none of it, and the API refuses them (`managesLibrary`).
-
-`GET /api/library` lists a folder, or the top; `/api/folders` and
-`/api/assets` make, rename and delete them, and `GET /api/assets/:id` is a
-file and the path to it.
-
-## Later steps
-
-In an order picked as we go: the narrator; the editor; more of the library,
-with Larchmere's content (generated), thumbnails from udoc-server's page
-routes, tags and search, moving files between folders, and a file's versions;
-compliance review,
-a reviewer approving what's submitted to the library before members see it, or
-marking it up and returning it; decks, a rep assembling slides from the
-library's decks and personalizing them for a deal; share links, a buyer's view
-with no account, and which pages they read and for how long; presenting, the
-slide show and its presenter view; and co-editing an RFP response over
-udoc-server's collaboration.

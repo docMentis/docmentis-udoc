@@ -68,12 +68,13 @@ the packages here call through — is documented with the engine, not here.
 - [Examples Shockwave](examples-shockwave.md) — the sales enablement app in
   `examples/shockwave/`, with an imaginary asset manager, Larchmere, as its
   tenant: a showcase of the packages doing a real job, and dogfooding them
-  through their public API alone, each gap logged; a React frontend and a Fastify backend embedding udoc-server behind
-  a tenant gate, SQLite keeping the app's own data; the narrator beside it,
+  through their public API alone, each gap logged; what a sales enablement
+  platform has to provide, where docMentis fits and what makes it unique
+  there; a React frontend and a Fastify backend embedding udoc-server behind a
+  tenant gate, SQLite keeping the app's own data; the narrator beside it,
   guiding a visitor through each persona's steps and highlighting the
   technology behind what just happened, off moments the product announces;
-  run against this checkout's packages by `file:` links; and its first step,
-  the skeleton.
+  and run against this checkout's packages by `file:` links.
 
 ### Release
 
