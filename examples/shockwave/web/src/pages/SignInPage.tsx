@@ -45,23 +45,25 @@ export function SignInPage() {
                 </div>
                 <h1>Sign in</h1>
                 <label className="field">
-                    <span>Email</span>
+                    <span className="visually-hidden">Email</span>
                     <input
                         type="email"
                         value={email}
                         autoComplete="username"
                         autoFocus
                         required
+                        placeholder="Email"
                         onChange={(event) => setEmail(event.target.value)}
                     />
                 </label>
                 <label className="field">
-                    <span>Password</span>
+                    <span className="visually-hidden">Password</span>
                     <input
                         type="password"
                         value={password}
                         autoComplete="current-password"
                         required
+                        placeholder="Password"
                         onChange={(event) => setPassword(event.target.value)}
                     />
                 </label>

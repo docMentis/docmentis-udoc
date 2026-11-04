@@ -22,13 +22,13 @@ export type ColorRole =
     | "error-container"
     | "on-error-container"
     | "surface"
-    | "surface-container-lowest"
     | "surface-container-low"
     | "surface-container"
     | "surface-container-high"
     | "surface-container-highest"
     | "on-surface"
     | "on-surface-variant"
+    | "outline"
     | "outline-variant"
     | "scrim"
     | "shadow";
@@ -259,13 +259,13 @@ const TONES: Record<
     "error-container": ["error", 90, 30],
     "on-error-container": ["error", 10, 90],
     surface: ["neutral", 98, 6],
-    "surface-container-lowest": ["neutral", 100, 4],
     "surface-container-low": ["neutral", 96, 10],
     "surface-container": ["neutral", 94, 12],
     "surface-container-high": ["neutral", 92, 17],
     "surface-container-highest": ["neutral", 90, 22],
     "on-surface": ["neutral", 10, 90],
     "on-surface-variant": ["neutralVariant", 30, 80],
+    outline: ["neutralVariant", 50, 60],
     "outline-variant": ["neutralVariant", 80, 30],
     scrim: ["neutral", 0, 0],
     shadow: ["neutral", 0, 0],

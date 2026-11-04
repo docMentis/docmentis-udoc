@@ -44,11 +44,12 @@ export function NameDialog({
         <Dialog title={title} onClose={onClose}>
             <form className="dialog-body" onSubmit={(event) => void submit(event)}>
                 <label className="field">
-                    <span>Name</span>
+                    <span className="visually-hidden">Name</span>
                     <input
                         value={name}
                         maxLength={200}
                         required
+                        placeholder="Name"
                         data-autofocus
                         onFocus={(event) => event.target.select()}
                         onChange={(event) => setName(event.target.value)}
@@ -60,7 +61,7 @@ export function NameDialog({
                     </p>
                 )}
                 <div className="dialog-actions">
-                    <button type="button" className="button" onClick={onClose}>
+                    <button type="button" className="button text" onClick={onClose}>
                         Cancel
                     </button>
                     <button type="submit" className="button primary" disabled={busy || !name.trim()}>
@@ -104,7 +105,7 @@ export function DeleteDialog({ item, onClose, onDeleted }: { item: Item; onClose
                     </p>
                 )}
                 <div className="dialog-actions">
-                    <button type="button" className="button" onClick={onClose}>
+                    <button type="button" className="button text" onClick={onClose}>
                         Cancel
                     </button>
                     <button type="button" className="button danger" disabled={busy} onClick={() => void remove()}>

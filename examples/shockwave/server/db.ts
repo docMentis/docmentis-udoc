@@ -94,6 +94,11 @@ const MIGRATIONS = [
     ALTER TABLE tenants ADD COLUMN logo_changed_at INTEGER NOT NULL DEFAULT 0;
     UPDATE tenants SET brand_color = '#1f4e3d' WHERE name = 'Larchmere';
     `,
+    // The document viewer's colors in the app, a tenant's: JSON, a
+    // ViewerColors; NULL for the viewer's own.
+    `
+    ALTER TABLE tenants ADD COLUMN viewer_colors TEXT;
+    `,
 ];
 
 /** Open the database in `file`, migrated to the latest schema. */

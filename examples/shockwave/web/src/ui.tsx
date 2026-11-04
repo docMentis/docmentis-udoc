@@ -4,7 +4,7 @@ import type { ReactNode, RefObject } from "react";
 import { createPortal } from "react-dom";
 
 import type { Tenant } from "../../shared/api.ts";
-import { CloseIcon, MoreIcon } from "./icons";
+import { MoreIcon } from "./icons";
 
 /** Title the browser's tab after the page: "Library · Shockwave". */
 export function useDocumentTitle(title: string): void {
@@ -78,10 +78,10 @@ export function useDismiss(ref: RefObject<HTMLElement | null>, open: boolean, cl
 }
 
 /**
- * A modal dialog, open while it's shown: its title and a button to close it,
- * over its `children`. Escape closes it too, through `onClose`. It opens with
- * the focus on its element marked `data-autofocus`, if it has one, and gives
- * it back on closing.
+ * A modal dialog, Material's, open while it's shown: its headline over its
+ * `children`, which close it through `onClose`, as Escape and a press on the
+ * scrim do. It opens with the focus on its element marked `data-autofocus`,
+ * if it has one, and gives it back on closing.
  *
  * It's modal to the app, not the window: it opens in the app's root, `#app`,
  * over the rest of the app, which goes inert while it's open. The browser's
@@ -129,7 +129,8 @@ export function Dialog({
         };
     }, []);
     return createPortal(
-        <div className="dialog-layer">
+        // A press on the scrim, outside the dialog, closes it, as Escape does.
+        <div className="dialog-layer" onClick={(event) => event.target === event.currentTarget && onClose()}>
             <dialog
                 ref={ref}
                 className={className ? `dialog ${className}` : "dialog"}
@@ -138,9 +139,6 @@ export function Dialog({
             >
                 <header className="dialog-header">
                     <h2 id={titleId}>{title}</h2>
-                    <button type="button" className="icon-button" aria-label="Close" onClick={onClose}>
-                        <CloseIcon />
-                    </button>
                 </header>
                 {children}
             </dialog>

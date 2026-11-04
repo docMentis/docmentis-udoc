@@ -190,7 +190,7 @@ export function Narrator() {
                                             {title}
                                         </strong>
                                         <p>{body}</p>
-                                        <span>{figures.join(" · ")}</span>
+                                        {figures.length > 0 && <span>{figures.join(" · ")}</span>}
                                     </li>
                                 ))}
                             </ul>

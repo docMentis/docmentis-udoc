@@ -227,7 +227,7 @@ export function LibraryPage() {
                         ) : shown.folders.length + shown.assets.length === 0 ? (
                             <div className="card">
                                 <EmptyState title="Nothing here matches these filters">
-                                    <button type="button" className="text-button" onClick={() => filter(NO_FILTERS)}>
+                                    <button type="button" className="button text" onClick={() => filter(NO_FILTERS)}>
                                         Clear filters
                                     </button>
                                 </EmptyState>

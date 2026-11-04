@@ -153,27 +153,25 @@ export function FilePage() {
                             role="tabpanel"
                             aria-labelledby="document-tab-details"
                         >
-                            <div className="field">
+                            <div className="detail">
                                 <span>Type</span>
-                                <p className="field-value">{typeLabel(asset.format)}</p>
+                                <p>{typeLabel(asset.format)}</p>
                             </div>
-                            <div className="field">
+                            <div className="detail">
                                 <span>Size</span>
-                                <p className="field-value">{formatSize(asset.size)}</p>
+                                <p>{formatSize(asset.size)}</p>
                             </div>
-                            <div className="field">
+                            <div className="detail">
                                 <span>Location</span>
-                                <p className="field-value">
-                                    {["Library", ...path.map((folder) => folder.name)].join(" / ")}
-                                </p>
+                                <p>{["Library", ...path.map((folder) => folder.name)].join(" / ")}</p>
                             </div>
-                            <div className="field">
+                            <div className="detail">
                                 <span>Uploaded by</span>
-                                <p className="field-value">{asset.uploadedBy.name}</p>
+                                <p>{asset.uploadedBy.name}</p>
                             </div>
-                            <div className="field">
+                            <div className="detail">
                                 <span>Uploaded</span>
-                                <p className="field-value">{formatDateTime(asset.uploadedAt)}</p>
+                                <p>{formatDateTime(asset.uploadedAt)}</p>
                             </div>
                         </div>
                     </aside>

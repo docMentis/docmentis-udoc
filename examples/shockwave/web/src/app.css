@@ -1,16 +1,28 @@
-/* The app's colors: Material 3's color roles, each at its tone in the
-   baseline schemes, light and dark, from the tonal palettes a seed makes
-   (scheme.ts): the primary at its hue and chroma, the secondary at chroma
-   16, the neutrals tinted with its hue at chroma 4 and 8, the error at
-   Material's red. Each role is its light color and its dark one, the page's
-   color scheme choosing: the system's, unless the user chose light or dark
+/* Shockwave is Material 3, all of it: its color roles, shape scale, type
+   scale, state layers and elevation, and each component as Material's tokens
+   give it (material-web's md-comp-* and md-sys-*), named below by the
+   component it is. Where Material has no component for a thing, the rule
+   says so and builds it from the system's roles, shapes and type.
+
+   Its density is Material's -2, a desktop app's, pointed at, not touched:
+   each component the height Angular Material's Material 3 tokens give it at
+   -2, its touch target dropped. Filled text fields are 48, with no label in
+   them; buttons and icon buttons 32; chips 24; tabs 40; table headers 48
+   and rows 44; the top app bar 56; segmented buttons stay 40. A component
+   Material gives no density, the search bar and the navigation rail's and
+   menu's items, is 8 less than its height, the scale's two 4-high steps.
+
+   The colors: Material 3's color roles, each at its tone in the baseline
+   schemes, light and dark, from the tonal palettes a seed makes (scheme.ts):
+   the primary at its hue and chroma, the secondary at chroma 16, the
+   neutrals tinted with its hue at chroma 4 and 8, the error at Material's
+   red. Each role is its light color and its dark one, the page's color
+   scheme choosing: the system's, unless the user chose light or dark
    (theme.ts), which the root's data-theme says. Here, the schemes
    Shockwave's orange seeds (#fe5000: hue 36, chroma 89, as Material's HCT
    measures them), before a tenant is known; signed in, the app's shell sets
-   the ones its tenant's brand color seeds over them. Every color is a role,
-   what's on a role is its on- role, and a state is a layer of what's on a
-   container over it. The orange itself is Shockwave's mark's. The narrator
-   keeps docMentis's indigo, light. */
+   the ones its tenant's brand color seeds over them. The orange itself is
+   Shockwave's mark's. The narrator keeps docMentis's indigo, light. */
 :root {
     color-scheme: light dark;
     --md-sys-color-primary: light-dark(#ae3200, #ffb59c);
@@ -25,19 +37,54 @@
     --md-sys-color-error-container: light-dark(#ffdad4, #930006);
     --md-sys-color-on-error-container: light-dark(#410001, #ffdad4);
     --md-sys-color-surface: light-dark(#fff8f5, #181211);
-    --md-sys-color-surface-container-lowest: light-dark(#ffffff, #120d0b);
     --md-sys-color-surface-container-low: light-dark(#fef1ed, #201a18);
     --md-sys-color-surface-container: light-dark(#f9ebe8, #251e1d);
     --md-sys-color-surface-container-high: light-dark(#f3e6e2, #2f2826);
     --md-sys-color-surface-container-highest: light-dark(#eddfdc, #3a3331);
     --md-sys-color-on-surface: light-dark(#201a18, #eddfdc);
     --md-sys-color-on-surface-variant: light-dark(#53433f, #d8c2bb);
+    --md-sys-color-outline: light-dark(#85736e, #a08c87);
     --md-sys-color-outline-variant: light-dark(#d8c2bb, #53433f);
     --md-sys-color-scrim: light-dark(#000000, #000000);
     --md-sys-color-shadow: light-dark(#000000, #000000);
+
+    /* The shape scale: each corner's radius. */
+    --md-sys-shape-corner-extra-small: 4px;
+    --md-sys-shape-corner-small: 8px;
+    --md-sys-shape-corner-medium: 12px;
+    --md-sys-shape-corner-large: 16px;
+    --md-sys-shape-corner-extra-large: 28px;
+    --md-sys-shape-corner-full: 9999px;
+
+    /* The type scale, in Inter, bundled, so that every weight is the one
+       asked for on any machine: each role's font, and its tracking. */
+    --md-sys-typescale-font: "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --md-sys-typescale-headline-small: 400 24px / 32px var(--md-sys-typescale-font);
+    --md-sys-typescale-headline-small-tracking: 0;
+    --md-sys-typescale-title-large: 400 22px / 28px var(--md-sys-typescale-font);
+    --md-sys-typescale-title-large-tracking: 0;
+    --md-sys-typescale-title-medium: 500 16px / 24px var(--md-sys-typescale-font);
+    --md-sys-typescale-title-medium-tracking: 0.15px;
+    --md-sys-typescale-title-small: 500 14px / 20px var(--md-sys-typescale-font);
+    --md-sys-typescale-title-small-tracking: 0.1px;
+    --md-sys-typescale-body-large: 400 16px / 24px var(--md-sys-typescale-font);
+    --md-sys-typescale-body-large-tracking: 0.5px;
+    --md-sys-typescale-body-medium: 400 14px / 20px var(--md-sys-typescale-font);
+    --md-sys-typescale-body-medium-tracking: 0.25px;
+    --md-sys-typescale-body-small: 400 12px / 16px var(--md-sys-typescale-font);
+    --md-sys-typescale-body-small-tracking: 0.4px;
+    --md-sys-typescale-label-large: 500 14px / 20px var(--md-sys-typescale-font);
+    --md-sys-typescale-label-large-tracking: 0.1px;
+    --md-sys-typescale-label-medium: 500 12px / 16px var(--md-sys-typescale-font);
+    --md-sys-typescale-label-medium-tracking: 0.5px;
+    --md-sys-typescale-label-small: 500 11px / 16px var(--md-sys-typescale-font);
+    --md-sys-typescale-label-small-tracking: 0.5px;
+
     /* A state's layer: how much of what's on a container covers it. */
     --md-sys-state-hover: 8%;
+    --md-sys-state-pressed: 10%;
     --md-sys-state-dragged: 16%;
+
     /* Elevation's levels, in the shadow role. */
     --md-sys-elevation-1:
         0 1px 2px color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
@@ -48,6 +95,7 @@
     --md-sys-elevation-3:
         0 1px 3px color-mix(in srgb, var(--md-sys-color-shadow) 30%, transparent),
         0 4px 8px 3px color-mix(in srgb, var(--md-sys-color-shadow) 15%, transparent);
+
     /* Shockwave's mark, the seed: its brand's color, not a role. */
     --sw-brand: #fe5000;
     /* Each format's badge, custom colors kept to the formats' own, so that
@@ -59,17 +107,9 @@
     --sw-on-format: #ffffff;
     /* A document's page, which is white, light or dark. */
     --sw-paper: #ffffff;
-    --ms-radius: 10px;
-    /* Inter, bundled, so that every weight is the one asked for, on any machine. */
-    font-family:
-        "Inter Variable",
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
+
+    font: var(--md-sys-typescale-body-medium);
+    letter-spacing: var(--md-sys-typescale-body-medium-tracking);
     color: var(--md-sys-color-on-surface);
     background: var(--md-sys-color-surface);
 }
@@ -103,6 +143,7 @@ a:hover {
 }
 
 h1,
+h2,
 p {
     margin: 0;
 }
@@ -111,6 +152,7 @@ button,
 input {
     color: inherit;
     font: inherit;
+    letter-spacing: inherit;
 }
 
 /* Focus, from the keyboard: Material's focus ring, in the secondary role. */
@@ -119,17 +161,27 @@ input {
     outline-offset: 2px;
 }
 
-/* What went wrong, on the error's container. */
+/* What went wrong, on the error's container. Material has no inline
+   message; this is its error container and body type, in the small shape. */
 .error {
-    padding: 10px 12px;
-    border-radius: 8px;
+    padding: 12px 16px;
+    border-radius: var(--md-sys-shape-corner-small);
     background: var(--md-sys-color-error-container);
     color: var(--md-sys-color-on-error-container);
-    font-size: 13px;
+}
+
+/* Read by a screen reader, not shown. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 /* The stage: the app, and the narrator beside it. The app stacks on its own,
-   so nothing of it, a dialog's backdrop included, rises over the narrator's
+   so nothing of it, a dialog's scrim included, rises over the narrator's
    tab, which reaches in over its edge. */
 .stage {
     display: flex;
@@ -144,7 +196,10 @@ input {
 }
 
 /* The shell: the navigation down the window's left, from top to bottom, and
-   the header across the rest, over the page. */
+   the top app bar across the rest, over the page. It, the navigation and the
+   page are one surface, the window's, Material's surface role, as its top app
+   bar and navigation drawer are, with no line between them: what's on it,
+   Material's elevated cards, stands out in the low container, a level up. */
 .shell {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -152,8 +207,12 @@ input {
     height: 100%;
 }
 
-/* What the navigation shows is centered 32px in, on the bar's middle, so that
-   turning the panel to the bar takes the names away and moves nothing else. */
+/* Material 3 Expressive's navigation rail (Compose's NavigationRail*Tokens):
+   expanded, 220 wide, its least, each section a 48-high item, its icon and
+   label-large label 8 apart, 16 in, in a full-shape pill as wide as they are,
+   the active one in the secondary container; collapsed, 96 wide, each
+   section its icon in a 56 by 32 pill, 4 over its label-medium label. Items
+   stand 4 apart. The menu button collapses and expands it, at its top. */
 .navigation {
     grid-row: 1 / -1;
     grid-column: 1;
@@ -165,36 +224,180 @@ input {
 }
 
 .shell-bar .navigation {
-    width: 64px;
+    width: 96px;
+    padding: 0 0 12px;
 }
 
-.shell-bar .nav-label {
-    display: none;
-}
-
-/* The menu button, level with the header. */
+/* The menu button, level with the top app bar. */
 .navigation-top {
     display: flex;
     align-items: center;
     flex-shrink: 0;
     height: 56px;
+    padding-left: 12px;
 }
 
-.icon-button.navigation-toggle {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
+.shell-bar .navigation-top {
+    justify-content: center;
+    padding: 0;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.shell-bar .nav {
+    align-items: center;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+    padding: 0 16px;
+    border-radius: var(--md-sys-shape-corner-full);
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-label-large);
+    letter-spacing: var(--md-sys-typescale-label-large-tracking);
+    white-space: nowrap;
+}
+
+.nav-item svg {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+}
+
+.nav-item:hover {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
+    color: var(--md-sys-color-on-surface);
+    text-decoration: none;
+}
+
+.nav-item:active {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-pressed), transparent);
+}
+
+.nav-item.active {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.nav-item.active:hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-secondary-container) var(--md-sys-state-hover),
+        var(--md-sys-color-secondary-container)
+    );
+}
+
+/* The rail: the pill is the icon's, the label under it in label-medium; the
+   active label on-surface. */
+.shell-bar .nav-item,
+.shell-bar .nav-item:hover,
+.shell-bar .nav-item:active,
+.shell-bar .nav-item.active {
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 96px;
+    height: auto;
+    padding: 0;
+    background: none;
+    font: var(--md-sys-typescale-label-medium);
+    letter-spacing: var(--md-sys-typescale-label-medium-tracking);
+}
+
+.shell-bar .nav-item svg {
+    box-sizing: content-box;
+    padding: 4px 16px;
+    border-radius: var(--md-sys-shape-corner-full);
+}
+
+.shell-bar .nav-item:hover svg {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
+}
+
+.shell-bar .nav-item.active {
+    color: var(--md-sys-color-on-surface);
+}
+
+.shell-bar .nav-item.active svg {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+/* Between the sections and the workspace's settings: a divider, inset. */
+.nav-divider {
+    align-self: stretch;
+    margin: 4px 16px;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.shell-bar .nav-divider {
+    align-self: center;
+    width: 56px;
+    margin: 4px 0;
+}
+
+/* The navigation's foot: the product it runs on, Shockwave's own mark. */
+.powered-by {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: auto;
+    padding: 12px 16px 0;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.shell-bar .powered-by {
+    justify-content: center;
+    padding: 12px 0 0;
+}
+
+.shell-bar .powered-by .nav-label {
+    display: none;
+}
+
+.powered-by svg {
+    flex-shrink: 0;
+}
+
+.powered-by strong {
+    font-weight: 500;
+}
+
+/* Material's small top app bar, 56 high: the tenant's brand, its headline in
+   title-large, at its left; the search bar in its middle; and at its right,
+   its icon buttons and the user's avatar, each in line with the page under
+   it. */
+.header {
+    grid-row: 1;
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(200px, 720px) minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
 }
 
 /* The tenant's brand, or on the sign-in page, Shockwave's. */
 .brand {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-title-large);
+    letter-spacing: var(--md-sys-typescale-title-large-tracking);
 }
 
 .brand span {
@@ -213,117 +416,43 @@ input {
 .tenant-initial {
     display: grid;
     place-items: center;
-    border-radius: 8px;
+    border-radius: var(--md-sys-shape-corner-small);
     background: var(--md-sys-color-primary-container);
     color: var(--md-sys-color-on-primary-container);
+    font: var(--md-sys-typescale-title-medium);
 }
 
-.nav {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding-top: 8px;
-}
-
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    color: var(--md-sys-color-on-surface-variant);
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.nav-item svg {
-    flex-shrink: 0;
-}
-
-.nav-item:hover {
-    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
-    color: var(--md-sys-color-on-surface);
-    text-decoration: none;
-}
-
-/* The section open: Material's active indicator, in the secondary container. */
-.nav-item.active {
-    background: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-on-secondary-container);
-}
-
-.nav-item.active:hover {
-    background: color-mix(
-        in srgb,
-        var(--md-sys-color-on-secondary-container) var(--md-sys-state-hover),
-        var(--md-sys-color-secondary-container)
-    );
-}
-
-/* Between the sections and the workspace's settings. */
-.nav-divider {
-    margin: 4px 8px;
-    border-top: 1px solid var(--md-sys-color-outline-variant);
-}
-
-/* The navigation's foot: the product it runs on, Shockwave's own mark. */
-.powered-by {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: auto -12px 0;
-    padding: 12px 0 0 20px;
-    color: var(--md-sys-color-on-surface-variant);
-    font-size: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.powered-by svg {
-    flex-shrink: 0;
-}
-
-.powered-by strong {
-    font-weight: 600;
-}
-
-/* The header: the tenant's brand at its left and the user's avatar at its
-   right, each in line with the page under it, and search in its middle. It,
-   the navigation and the page are one surface, the window's, Material's
-   surface role, as its top app bar and navigation drawer are, with no line
-   between them: what's on it, the cards, stands out in the lowest container,
-   by tone, as Material separates surfaces. */
-.header {
-    grid-row: 1;
-    grid-column: 2;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(200px, 560px) minmax(0, 1fr);
-    align-items: center;
-    gap: 16px;
-    padding: 0 24px;
-}
-
-.search {
+/* Material's search bar, in the top app bar and over the library: full
+   shape, in the high container; its leading icon on-surface, its input
+   body-large; 48 high. */
+.search,
+.name-filter {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.search svg {
+.search svg,
+.name-filter svg {
     position: absolute;
-    left: 10px;
-    color: var(--md-sys-color-on-surface-variant);
+    left: 16px;
+    width: 24px;
+    height: 24px;
+    color: var(--md-sys-color-on-surface);
     pointer-events: none;
 }
 
-/* Material's search bar: filled, in the high container. */
-.search input {
+.search input,
+.name-filter input {
     width: 100%;
-    height: 36px;
-    padding: 0 12px 0 36px;
+    height: 48px;
+    padding: 0 16px 0 52px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--md-sys-shape-corner-full);
     background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-body-large);
+    letter-spacing: var(--md-sys-typescale-body-large-tracking);
 }
 
 .search input::placeholder,
@@ -331,9 +460,17 @@ input {
     color: var(--md-sys-color-on-surface-variant);
 }
 
-.search input:focus {
-    outline: none;
-    box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
+.search input:hover,
+.name-filter input:hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container-high)
+    );
+}
+
+.name-filter input {
+    width: 280px;
 }
 
 .content {
@@ -343,9 +480,9 @@ input {
     overflow: auto;
 }
 
-/* The header's buttons, at its right: the theme's and the bell, Material's
-   standard icon buttons, as large as its, and the user's avatar. Each opens
-   what it opens down from it. */
+/* The top app bar's trailing actions: the theme's and the bell, Material's
+   standard icon buttons, and the user's avatar. Each opens what it opens
+   down from it. */
 .header-actions {
     display: flex;
     align-items: center;
@@ -355,12 +492,6 @@ input {
 
 .header-popover {
     position: relative;
-}
-
-.icon-button.header-button {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
 }
 
 .notifications {
@@ -373,7 +504,7 @@ input {
     margin-left: 4px;
     padding: 0;
     border: 0;
-    border-radius: 50%;
+    border-radius: var(--md-sys-shape-corner-full);
     background: none;
     cursor: pointer;
 }
@@ -383,13 +514,25 @@ input {
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
 }
 
-.user-button .avatar {
+/* A person's initials. Material has no avatar component; this is the primary
+   container, full shape, in label-medium. */
+.avatar {
+    display: inline-grid;
+    place-items: center;
     width: 32px;
     height: 32px;
-    font-size: 12px;
+    flex-shrink: 0;
+    border-radius: var(--md-sys-shape-corner-full);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    font: var(--md-sys-typescale-label-medium);
+    letter-spacing: var(--md-sys-typescale-label-medium-tracking);
 }
 
-/* A menu, down from its button, at its right. */
+/* Material's menu: the container, extra-small shape, two levels up, 8 of
+   padding top and bottom; each item a list item, 48 high, its label
+   body-large, 16 in from each side, its leading icon 24. A menu opens down
+   from its button, at its right. */
 .menu {
     position: absolute;
     top: calc(100% + 4px);
@@ -397,36 +540,27 @@ input {
     z-index: 10;
     display: flex;
     flex-direction: column;
-    min-width: 180px;
-    padding: 6px;
+    min-width: 112px;
+    max-width: 280px;
+    padding: 8px 0;
     background: var(--md-sys-color-surface-container);
-    border-radius: var(--ms-radius);
+    border-radius: var(--md-sys-shape-corner-extra-small);
     box-shadow: var(--md-sys-elevation-2);
 }
 
-.menu-header {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 4px;
-    padding: 6px 10px 8px;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.menu-header strong {
-    font-weight: 600;
-}
-
-.menu-header span {
-    color: var(--md-sys-color-on-surface-variant);
-    font-size: 13px;
-}
-
 .menu button {
-    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 16px;
     border: 0;
-    border-radius: 6px;
     background: none;
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-body-large);
+    letter-spacing: var(--md-sys-typescale-body-large-tracking);
     text-align: left;
+    white-space: nowrap;
     cursor: pointer;
 }
 
@@ -434,235 +568,67 @@ input {
     background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
 }
 
-.avatar {
-    display: inline-grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-    font-size: 11px;
-    font-weight: 600;
+.menu button:active {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-pressed), transparent);
 }
 
-/* Pages: under the header, in line with the tenant's brand in it. */
+.menu svg {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+/* A menu's header, over a divider: who it's for. */
+.menu-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+    padding: 8px 16px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.menu-header strong {
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
+}
+
+.menu-header span {
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+/* A choice in a menu, checked when it's the one made: the check its leading
+   icon. */
+.menu [role="menuitemradio"] svg {
+    visibility: hidden;
+}
+
+.menu [role="menuitemradio"][aria-checked="true"] svg {
+    visibility: visible;
+}
+
+/* A row's menu. */
+.actions-menu {
+    position: relative;
+}
+
+/* Pages: under the top app bar, 24 from the window's edges, in line with
+   the tenant's brand. */
 .page {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
     padding: 24px;
 }
 
 .page-header h1 {
-    font-size: 22px;
-    font-weight: 650;
-    letter-spacing: -0.01em;
+    font: var(--md-sys-typescale-headline-small);
+    letter-spacing: var(--md-sys-typescale-headline-small-tracking);
 }
 
 .page-subtitle {
-    margin-top: 2px;
+    margin-top: 4px;
     color: var(--md-sys-color-on-surface-variant);
-}
-
-/* A card: the lowest container on the window's, set apart by its tone. */
-.card {
-    padding: 20px;
-    background: var(--md-sys-color-surface-container-lowest);
-    border-radius: var(--ms-radius);
-}
-
-/* Home's sections, one under another, each its heading over what it holds. */
-.home-sections {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-}
-
-.home-section {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.home-section-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-}
-
-.home-section-header h2 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.home-section-header a {
-    font-weight: 500;
-}
-
-.empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 24px 12px;
-    text-align: center;
-    color: var(--md-sys-color-on-surface-variant);
-}
-
-.empty-title {
-    color: var(--md-sys-color-on-surface);
-    font-weight: 500;
-}
-
-/* Buttons and fields. A button is Material's filled tonal button, in the
-   secondary container; the primary one, the filled button; a danger, the
-   filled button in the error role. Pointed at, each has its hover layer,
-   raised a level. Disabled, each is on-surface: its label at 38%, its
-   container at 12%. */
-.button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    height: 36px;
-    padding: 0 14px;
-    border: 0;
-    border-radius: 8px;
-    background: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-on-secondary-container);
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.button:not(:disabled):hover {
-    background: color-mix(
-        in srgb,
-        var(--md-sys-color-on-secondary-container) var(--md-sys-state-hover),
-        var(--md-sys-color-secondary-container)
-    );
-    box-shadow: var(--md-sys-elevation-1);
-    text-decoration: none;
-}
-
-.button.primary {
-    background: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
-}
-
-.button.primary:not(:disabled):hover {
-    background: color-mix(
-        in srgb,
-        var(--md-sys-color-on-primary) var(--md-sys-state-hover),
-        var(--md-sys-color-primary)
-    );
-    box-shadow: var(--md-sys-elevation-1);
-}
-
-.button:disabled {
-    background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
-    color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
-    cursor: default;
-}
-
-.field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-weight: 500;
-}
-
-/* Material's filled text field: the highest container, and under it its
-   active indicator, on-surface-variant, which reads at 3:1; pointed at, its
-   hover layer; focused, the indicator two pixels of the primary. */
-.field input {
-    height: 36px;
-    padding: 0 10px;
-    border: 0;
-    border-radius: 4px 4px 0 0;
-    background: var(--md-sys-color-surface-container-highest);
-    box-shadow: inset 0 -1px 0 var(--md-sys-color-on-surface-variant);
-}
-
-.field input:hover {
-    background: color-mix(
-        in srgb,
-        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
-        var(--md-sys-color-surface-container-highest)
-    );
-}
-
-.field input:focus {
-    outline: none;
-    box-shadow: inset 0 -2px 0 var(--md-sys-color-primary);
-}
-
-/* Signing in. */
-.sign-in {
-    display: grid;
-    place-items: center;
-    height: 100%;
-    padding: 24px;
-    overflow: auto;
-}
-
-.sign-in-card {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    width: 100%;
-    max-width: 380px;
-    padding: 32px;
-    background: var(--md-sys-color-surface-container-lowest);
-    border-radius: 14px;
-}
-
-.sign-in-card h1 {
-    font-size: 20px;
-    font-weight: 650;
-    letter-spacing: -0.01em;
-}
-
-.button.danger {
-    background: var(--md-sys-color-error);
-    color: var(--md-sys-color-on-error);
-}
-
-.button.danger:not(:disabled):hover {
-    background: color-mix(in srgb, var(--md-sys-color-on-error) var(--md-sys-state-hover), var(--md-sys-color-error));
-    box-shadow: var(--md-sys-elevation-1);
-}
-
-/* A button that is an icon alone: a menu's, a dialog's close. */
-.icon-button {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    padding: 0;
-    border: 0;
-    border-radius: 6px;
-    background: none;
-    color: var(--md-sys-color-on-surface-variant);
-    cursor: pointer;
-}
-
-.icon-button:hover {
-    background: color-mix(in srgb, var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover), transparent);
-}
-
-/* Read by a screen reader, not shown. */
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
 }
 
 /* A page's header with its actions at its right. */
@@ -685,9 +651,13 @@ input {
     flex-wrap: wrap;
     align-items: center;
     gap: 4px;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 13px;
+}
+
+.breadcrumb svg {
+    width: 18px;
+    height: 18px;
 }
 
 .breadcrumb a {
@@ -698,10 +668,297 @@ input {
     color: var(--md-sys-color-on-surface);
 }
 
-/* The library's list: its folders, then its files, a row each; files can be
-   dropped on it. */
+/* Material's elevated card: the low container, medium shape, a level up from
+   the surface, 16 of padding; one that acts, pointed at, its hover layer and
+   a level more. */
+.card {
+    padding: 16px;
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--md-sys-shape-corner-medium);
+    box-shadow: var(--md-sys-elevation-1);
+}
+
+/* Home's sections, one under another, each its heading over what it holds. */
+.home-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.home-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.home-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 32px;
+}
+
+.home-section-header h2,
+.settings-section h2 {
+    font: var(--md-sys-typescale-title-medium);
+    letter-spacing: var(--md-sys-typescale-title-medium-tracking);
+}
+
+/* What a card shows with nothing in it yet. Material has no empty state; this
+   is title-medium over body-medium. */
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.empty-title {
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-title-medium);
+    letter-spacing: var(--md-sys-typescale-title-medium-tracking);
+}
+
+/* Material's buttons: 32 high, full shape, label-large, 24 in from each
+   side, 16 on the side of an 18 icon. A button is the filled tonal button,
+   in the secondary container; the primary one, the filled button; a danger,
+   the filled button in the error role; a text button, the label alone in the
+   primary, 12 in. Pointed at, each has its hover layer, and those with a
+   container rise a level; pressed, its pressed layer. Disabled, each is
+   on-surface: its label at 38%, its container at 12%. */
+.button {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: var(--md-sys-shape-corner-full);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+    font: var(--md-sys-typescale-label-large);
+    letter-spacing: var(--md-sys-typescale-label-large-tracking);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.button:has(> svg:first-child) {
+    padding-left: 16px;
+}
+
+.button svg {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+
+.button:not(:disabled):hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-secondary-container) var(--md-sys-state-hover),
+        var(--md-sys-color-secondary-container)
+    );
+    box-shadow: var(--md-sys-elevation-1);
+    text-decoration: none;
+}
+
+.button:not(:disabled):active {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-secondary-container) var(--md-sys-state-pressed),
+        var(--md-sys-color-secondary-container)
+    );
+    box-shadow: none;
+}
+
+.button.primary {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+}
+
+.button.primary:not(:disabled):hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-primary) var(--md-sys-state-hover),
+        var(--md-sys-color-primary)
+    );
+}
+
+.button.primary:not(:disabled):active {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-primary) var(--md-sys-state-pressed),
+        var(--md-sys-color-primary)
+    );
+}
+
+.button.danger {
+    background: var(--md-sys-color-error);
+    color: var(--md-sys-color-on-error);
+}
+
+.button.danger:not(:disabled):hover {
+    background: color-mix(in srgb, var(--md-sys-color-on-error) var(--md-sys-state-hover), var(--md-sys-color-error));
+}
+
+.button.danger:not(:disabled):active {
+    background: color-mix(in srgb, var(--md-sys-color-on-error) var(--md-sys-state-pressed), var(--md-sys-color-error));
+}
+
+.button.text {
+    padding: 0 12px;
+    background: none;
+    color: var(--md-sys-color-primary);
+}
+
+.button.text:not(:disabled):hover {
+    background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-hover), transparent);
+    box-shadow: none;
+}
+
+.button.text:not(:disabled):active {
+    background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-pressed), transparent);
+}
+
+.button:disabled {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+    color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
+    cursor: default;
+}
+
+.button.text:disabled {
+    background: none;
+}
+
+/* Material's standard icon button: a 32 full-shape state layer round a 24
+   icon, on-surface-variant. */
+.icon-button {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    border-radius: var(--md-sys-shape-corner-full);
+    background: none;
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+}
+
+.icon-button svg {
+    width: 24px;
+    height: 24px;
+}
+
+.icon-button:hover {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover), transparent);
+}
+
+.icon-button:active {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface-variant) var(--md-sys-state-pressed), transparent);
+}
+
+/* Material's filled text field: the highest container, extra-small shape at
+   its top, and under it its active indicator, on-surface-variant, which
+   reads at 3:1. 48 high, at -2 it has no label in it: its label is read, not
+   shown, and its placeholder, on-surface-variant, says what goes in it; its
+   input is body-large, 12 from its top and bottom. Pointed at, its hover
+   layer and the indicator on-surface; focused, the indicator two pixels of
+   the primary. */
+.field {
+    display: block;
+}
+
+.field input {
+    width: 100%;
+    height: 48px;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: var(--md-sys-shape-corner-extra-small) var(--md-sys-shape-corner-extra-small) 0 0;
+    background: var(--md-sys-color-surface-container-highest);
+    box-shadow: inset 0 -1px 0 var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-on-surface);
+    caret-color: var(--md-sys-color-primary);
+    font: var(--md-sys-typescale-body-large);
+    letter-spacing: var(--md-sys-typescale-body-large-tracking);
+}
+
+.field input::placeholder {
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.field input:hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container-highest)
+    );
+    box-shadow: inset 0 -1px 0 var(--md-sys-color-on-surface);
+}
+
+.field input:focus {
+    outline: none;
+    box-shadow: inset 0 -2px 0 var(--md-sys-color-primary);
+}
+
+/* What's known of a thing, a label over its value. Material has no component
+   for it; this is body-small, on-surface-variant, over body-medium. */
+.detail {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail > span {
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+}
+
+.detail > p {
+    overflow-wrap: anywhere;
+}
+
+/* Signing in: an elevated card in the window's middle. */
+.sign-in {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    padding: 24px;
+    overflow: auto;
+}
+
+.sign-in-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 400px;
+    padding: 24px;
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--md-sys-shape-corner-medium);
+    box-shadow: var(--md-sys-elevation-1);
+}
+
+.sign-in-card h1 {
+    font: var(--md-sys-typescale-headline-small);
+    letter-spacing: var(--md-sys-typescale-headline-small-tracking);
+}
+
+/* The library's list, a data table in an elevated card. Material 3 has no
+   data table component; its tokens in material-web give one: a header 48
+   high, title-small, on-surface-variant, over a divider; rows 44 high,
+   body-medium, on-surface, each with its hover and pressed layers. */
 .file-list {
     padding: 0;
+    overflow: hidden;
 }
 
 .file-table,
@@ -712,19 +969,21 @@ input {
 
 .file-table th,
 .user-table th {
-    padding: 10px 16px;
+    height: 48px;
+    padding: 0 16px;
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 12px;
-    font-weight: 500;
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
     text-align: left;
     white-space: nowrap;
 }
 
 .file-table td,
 .user-table td {
-    padding: 8px 16px;
-    color: var(--md-sys-color-on-surface-variant);
+    height: 44px;
+    padding: 0 16px;
+    color: var(--md-sys-color-on-surface);
     white-space: nowrap;
 }
 
@@ -734,6 +993,10 @@ input {
 
 .file-table tbody tr:hover {
     background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
+}
+
+.file-table tbody tr:active {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-pressed), transparent);
 }
 
 /* The name takes what the other columns leave, cut short when it's long. */
@@ -746,33 +1009,17 @@ input {
     text-align: right;
 }
 
-/* Inset from the card's edges as a card's content is. */
-.file-table th:first-child,
-.file-table td:first-child,
-.user-table th:first-child,
-.user-table td:first-child {
-    padding-left: 20px;
-}
-
-.file-table th:last-child,
-.file-table td:last-child,
-.user-table th:last-child,
-.user-table td:last-child {
-    padding-right: 20px;
-}
-
-/* Its menu's button as near the edge as a dialog's close. */
+/* Its menu's icon button, at the row's end. */
 .file-table td.row-actions {
     width: 1%;
-    padding: 4px 12px 4px 8px;
+    padding: 0 8px;
 }
 
 .file-name {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     color: var(--md-sys-color-on-surface);
-    font-weight: 500;
 }
 
 .file-name:hover {
@@ -786,35 +1033,38 @@ input {
 
 .file-name > svg {
     flex-shrink: 0;
+    width: 24px;
+    height: 24px;
     color: var(--md-sys-color-on-surface-variant);
 }
 
 /* In the list, a folder's icon as wide as a file's badge, drawn at its middle,
    so that every name starts at the same place. */
 .file-table .file-name > svg {
-    width: 34px;
+    width: 36px;
 }
 
-/* A file's type: its format on its color. */
+/* A file's type: its format on its color. Material has no such badge; this
+   is label-small, on the format's custom color, extra-small shape. */
 .file-badge {
     display: inline-grid;
     place-items: center;
-    width: 34px;
+    width: 36px;
     height: 20px;
     flex-shrink: 0;
-    border-radius: 4px;
+    border-radius: var(--md-sys-shape-corner-extra-small);
     color: var(--sw-on-format);
-    font-size: 9.5px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
+    font: var(--md-sys-typescale-label-small);
+    letter-spacing: var(--md-sys-typescale-label-small-tracking);
 }
 
-/* The library under its page's header: the filters and the view's toggle,
-   over the list or the grid, on which a file is dropped to upload it. */
+/* The library under its page's header: the search bar, the filter chips and
+   the view's segmented buttons, over the list or the grid, on which a file
+   is dropped to upload it. */
 .library {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
 }
 
 .library-toolbar {
@@ -831,45 +1081,6 @@ input {
     gap: 8px;
 }
 
-/* The box a name is typed in, as tall as the chips beside it. */
-.name-filter {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.name-filter svg {
-    position: absolute;
-    left: 10px;
-    color: var(--md-sys-color-on-surface-variant);
-    pointer-events: none;
-}
-
-/* The page's controls, unoutlined: the name's box, a search bar, in the
-   high container, as the header's is. */
-.name-filter input {
-    width: 220px;
-    height: 32px;
-    padding: 0 8px 0 36px;
-    border: 0;
-    border-radius: 8px;
-    background: var(--md-sys-color-surface-container-high);
-    font-size: 13px;
-}
-
-.name-filter input:hover {
-    background: color-mix(
-        in srgb,
-        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
-        var(--md-sys-color-surface-container-high)
-    );
-}
-
-.name-filter input:focus {
-    outline: none;
-    box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
-}
-
 /* A filter's chip, its menu down from it at its left. */
 .filter {
     position: relative;
@@ -880,22 +1091,29 @@ input {
     left: 0;
 }
 
-/* Material's elevated filter chip: the low container, a level up, its label
-   on-surface-variant; set, filled with the secondary container. */
+/* Material's elevated filter chip: 24 high, small shape, the low container
+   a level up, its label label-large, on-surface-variant, 16 in, its trailing
+   icon 18, 8 from its end; pointed at, its hover layer and a level more; set,
+   filled with the secondary container. */
 .chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    height: 32px;
-    padding: 0 8px 0 12px;
+    gap: 8px;
+    height: 24px;
+    padding: 0 8px 0 16px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--md-sys-shape-corner-small);
     background: var(--md-sys-color-surface-container-low);
     box-shadow: var(--md-sys-elevation-1);
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 13px;
-    font-weight: 500;
+    font: var(--md-sys-typescale-label-large);
+    letter-spacing: var(--md-sys-typescale-label-large-tracking);
     cursor: pointer;
+}
+
+.chip svg {
+    width: 18px;
+    height: 18px;
 }
 
 .chip:hover {
@@ -904,10 +1122,16 @@ input {
         var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover),
         var(--md-sys-color-surface-container-low)
     );
+    box-shadow: var(--md-sys-elevation-2);
 }
 
-.chip svg {
-    color: var(--md-sys-color-on-surface-variant);
+.chip:active {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface-variant) var(--md-sys-state-pressed),
+        var(--md-sys-color-surface-container-low)
+    );
+    box-shadow: var(--md-sys-elevation-1);
 }
 
 .chip-set {
@@ -923,71 +1147,49 @@ input {
     );
 }
 
-.chip-set svg {
-    color: inherit;
-}
-
-/* A choice in a menu, checked when it's the one made. */
-.menu [role="menuitemradio"] {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-}
-
-.menu [role="menuitemradio"] svg {
-    flex-shrink: 0;
-    visibility: hidden;
-    color: var(--md-sys-color-on-surface-variant);
-}
-
-.menu [role="menuitemradio"][aria-checked="true"] svg {
-    visibility: visible;
-}
-
-/* Material's text button: a word alone, in the primary role. */
-.text-button {
-    height: 32px;
-    padding: 0 8px;
-    border: 0;
-    border-radius: 6px;
-    background: none;
-    color: var(--md-sys-color-primary);
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.text-button:hover {
-    background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-hover), transparent);
-}
-
-/* A choice of a few, side by side, as Material's connected button group:
-   in the container, the one made filled with the secondary container; as
-   tall as a chip. */
+/* Material's segmented buttons: a choice of a few, side by side, 40 high,
+   as at -2 still, full shape, outlined in the outline role, a segment at least 48 wide, its
+   label label-large, its icon 18; the one made filled with the secondary
+   container. */
 .segmented {
     display: flex;
     flex-shrink: 0;
-    gap: 2px;
-    padding: 3px;
-    border-radius: 8px;
-    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: var(--md-sys-shape-corner-full);
+    overflow: hidden;
 }
 
 .segmented button {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 26px;
-    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 48px;
+    height: 38px;
+    padding: 0 12px;
     border: 0;
-    border-radius: 6px;
     background: none;
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-label-large);
+    letter-spacing: var(--md-sys-typescale-label-large-tracking);
     cursor: pointer;
+}
+
+.segmented button + button {
+    border-left: 1px solid var(--md-sys-color-outline);
+}
+
+.segmented button svg {
+    width: 18px;
+    height: 18px;
 }
 
 .segmented button:hover {
     background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
+}
+
+.segmented button:active {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-pressed), transparent);
 }
 
 .segmented button[aria-checked="true"] {
@@ -996,7 +1198,7 @@ input {
 }
 
 .file-drop {
-    border-radius: var(--ms-radius);
+    border-radius: var(--md-sys-shape-corner-medium);
 }
 
 /* A file dragged over the list: the primary, and its dragged layer. */
@@ -1009,19 +1211,19 @@ input {
 .grid-sections {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
 }
 
 .grid-heading {
     margin: 0 0 8px;
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 12px;
-    font-weight: 500;
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
 }
 
-/* Tiles and cards a fixed 240px wide, as many to a row as fit: more room
-   shows more of them, never smaller ones. Narrower than one, a card takes
-   the width. */
+/* Tiles and cards a fixed 240 wide, as many to a row as fit: more room shows
+   more of them, never smaller ones. Narrower than one, a card takes the
+   width. */
 .folder-grid,
 .file-grid {
     display: grid;
@@ -1029,12 +1231,13 @@ input {
     gap: 16px;
 }
 
-/* Tiles and cards, in the lowest container: pointed at, the hover layer,
-   raised a level. */
+/* Tiles and cards, elevated cards that act: pointed at, the hover layer and
+   a level more; pressed, the pressed layer. */
 .folder-tile,
 .file-card {
-    background: var(--md-sys-color-surface-container-lowest);
-    border-radius: var(--ms-radius);
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--md-sys-shape-corner-medium);
+    box-shadow: var(--md-sys-elevation-1);
     cursor: pointer;
 }
 
@@ -1043,7 +1246,17 @@ input {
     background: color-mix(
         in srgb,
         var(--md-sys-color-on-surface) var(--md-sys-state-hover),
-        var(--md-sys-color-surface-container-lowest)
+        var(--md-sys-color-surface-container-low)
+    );
+    box-shadow: var(--md-sys-elevation-2);
+}
+
+.folder-tile:active,
+.file-card:active {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-pressed),
+        var(--md-sys-color-surface-container-low)
     );
     box-shadow: var(--md-sys-elevation-1);
 }
@@ -1053,7 +1266,7 @@ input {
     background: color-mix(
         in srgb,
         var(--md-sys-color-on-surface) var(--md-sys-state-hover),
-        var(--md-sys-color-surface-container)
+        var(--md-sys-color-surface-container-highest)
     );
 }
 
@@ -1062,13 +1275,15 @@ input {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    height: 48px;
-    padding: 0 8px 0 16px;
+    height: 56px;
+    padding: 0 4px 0 16px;
 }
 
 .folder-tile .file-name,
 .file-card .file-name {
     min-width: 0;
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
 }
 
 .folder-tile .file-name span,
@@ -1081,7 +1296,8 @@ input {
     flex-direction: column;
 }
 
-/* A file's page, whole, on a tray across the card's top: its first, or one
+/* A file's page, whole, on a tray across the card's top, in the highest
+   container, as the document viewer's background is: its first, or one
    flipped to. The tray rounds its own top corners into the card's, which
    clips nothing, so a card's menu opens over what's below it. */
 .thumbnail {
@@ -1089,11 +1305,11 @@ input {
     display: grid;
     place-items: center;
     aspect-ratio: 4 / 3;
-    background: var(--md-sys-color-surface-container);
-    border-radius: var(--ms-radius) var(--ms-radius) 0 0;
+    background: var(--md-sys-color-surface-container-highest);
+    border-radius: var(--md-sys-shape-corner-medium) var(--md-sys-shape-corner-medium) 0 0;
 }
 
-/* Centered at its own shape, 16px clear of the tray's edges. */
+/* Centered at its own shape, 16 clear of the tray's edges. */
 .thumbnail img {
     position: absolute;
     inset: 0;
@@ -1113,13 +1329,15 @@ input {
 .thumbnail .file-badge {
     width: 56px;
     height: 32px;
-    border-radius: 6px;
-    font-size: 13px;
+    border-radius: var(--md-sys-shape-corner-small);
+    font: var(--md-sys-typescale-label-large);
+    letter-spacing: var(--md-sys-typescale-label-large-tracking);
 }
 
 /* The arrows that flip a card's pages, Material's filled tonal icon buttons,
-   at the tray's sides: shown while the card is pointed at or one of them has
-   focus, and always on a screen with no pointer to hover. */
+   32, full shape, their icons 24, at the tray's sides: shown while the card
+   is pointed at or one of them has focus, and always on a screen with no
+   pointer to hover. */
 .page-flip {
     position: absolute;
     top: 50%;
@@ -1129,7 +1347,7 @@ input {
     height: 32px;
     padding: 0;
     border: 0;
-    border-radius: 50%;
+    border-radius: var(--md-sys-shape-corner-full);
     background: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
     cursor: pointer;
@@ -1147,14 +1365,22 @@ input {
 }
 
 .page-flip svg {
-    width: 18px;
-    height: 18px;
+    width: 24px;
+    height: 24px;
 }
 
 .page-flip:hover {
     background: color-mix(
         in srgb,
         var(--md-sys-color-on-secondary-container) var(--md-sys-state-hover),
+        var(--md-sys-color-secondary-container)
+    );
+}
+
+.page-flip:active {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-secondary-container) var(--md-sys-state-pressed),
         var(--md-sys-color-secondary-container)
     );
 }
@@ -1181,7 +1407,7 @@ input {
     margin: auto;
     border: 3px solid var(--md-sys-color-secondary-container);
     border-top-color: var(--md-sys-color-primary);
-    border-radius: 50%;
+    border-radius: var(--md-sys-shape-corner-full);
     opacity: 0;
     animation:
         page-loading-turn 0.8s linear infinite,
@@ -1200,10 +1426,12 @@ input {
     }
 }
 
+/* A card's text: its file's name, title-small, beside its menu's icon
+   button, over who uploaded it and when, body-small. */
 .file-card-body {
     display: flex;
     flex-direction: column;
-    padding: 8px 8px 12px 12px;
+    padding: 8px 4px 16px 16px;
 }
 
 .file-card-title {
@@ -1216,23 +1444,18 @@ input {
 
 .file-card-meta {
     overflow: hidden;
+    padding-right: 12px;
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 12px;
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* A row's menu. */
-.actions-menu {
-    position: relative;
-}
-
-.actions-menu .menu {
-    min-width: 140px;
-}
-
-/* A dialog, centered in the app over Material's scrim, which covers it
-   alone; the dialog in the high container, three levels up. */
+/* Material's dialog: centered in the app over its scrim, which covers the app
+   alone, at 32%; the dialog in the high container, extra-large shape, three
+   levels up, 24 of padding; its headline headline-small, its supporting text
+   body-medium, on-surface-variant; its actions at its end. */
 .dialog-layer {
     position: absolute;
     inset: 0;
@@ -1246,48 +1469,44 @@ input {
 .dialog {
     position: relative;
     width: 440px;
-    max-width: calc(100% - 32px);
-    max-height: calc(100% - 32px);
+    min-width: 280px;
+    max-width: calc(100% - 48px);
+    max-height: calc(100% - 48px);
     margin: 0;
     padding: 0;
     overflow: auto;
     border: 0;
-    border-radius: 14px;
+    border-radius: var(--md-sys-shape-corner-extra-large);
     background: var(--md-sys-color-surface-container-high);
     color: var(--md-sys-color-on-surface);
     box-shadow: var(--md-sys-elevation-3);
 }
 
 .dialog-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 12px 12px 20px;
+    padding: 24px 24px 0;
 }
 
 .dialog-header h2 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 650;
+    font: var(--md-sys-typescale-headline-small);
+    letter-spacing: var(--md-sys-typescale-headline-small-tracking);
 }
 
 .dialog-body {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 20px;
+    padding: 16px 24px 24px;
+}
+
+.dialog-body > p {
+    color: var(--md-sys-color-on-surface-variant);
 }
 
 .dialog-actions {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-}
-
-.field-value {
-    color: var(--md-sys-color-on-surface-variant);
-    font-weight: 400;
-    overflow-wrap: anywhere;
+    padding-top: 8px;
 }
 
 /* Uploading: the file in the viewer, and beside it what it's uploaded as. */
@@ -1304,8 +1523,9 @@ input {
 .upload {
     display: grid;
     flex: 1;
-    grid-template-columns: 1fr 300px;
+    grid-template-columns: 1fr 320px;
     min-height: 0;
+    padding-top: 16px;
 }
 
 .upload-preview {
@@ -1317,7 +1537,7 @@ input {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 20px;
+    padding: 0 24px 24px;
     overflow: auto;
 }
 
@@ -1331,17 +1551,14 @@ input {
     height: 100%;
 }
 
-/* A file's page: the path to its folder, over a card that is the document,
-   its title bar over the viewer, which fills the rest; and beside it, as
-   tall, a card of the app's own on the file, or folded, a strip. The side
-   card's tabs are in a strip as tall as the title bar, so the lines under
-   them meet, with the button that folds and unfolds it at their right. The
-   viewer rounds its own bottom corners into the card's, so the card clips
-   nothing, and the title bar's menu opens over the viewer. */
+/* A file's page: the path to its folder, over an elevated card that is the
+   document, its title bar over the viewer, which fills the rest; and beside
+   it, as tall, an elevated card of the app's own on the file, or folded, a
+   strip. The viewer rounds its own bottom corners into the card's, so the
+   card clips nothing, and the title bar's menu opens over the viewer. */
 .file-page {
-    --document-bar: 68px;
     height: 100%;
-    gap: 12px;
+    gap: 16px;
 }
 
 .file-page .breadcrumb {
@@ -1357,11 +1574,11 @@ input {
 }
 
 .file-columns-panel {
-    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-columns: minmax(0, 1fr) 320px;
 }
 
 .file-columns-rail {
-    grid-template-columns: minmax(0, 1fr) 48px;
+    grid-template-columns: minmax(0, 1fr) 56px;
 }
 
 .document-card,
@@ -1370,17 +1587,19 @@ input {
     flex-direction: column;
     min-width: 0;
     min-height: 0;
-    background: var(--md-sys-color-surface-container-lowest);
-    border-radius: var(--ms-radius);
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--md-sys-shape-corner-medium);
+    box-shadow: var(--md-sys-elevation-1);
 }
 
+/* The card's headline: the file's name, title-medium, over its supporting
+   text, body-medium. */
 .document-title-bar {
     display: flex;
     flex-shrink: 0;
     align-items: center;
     gap: 12px;
-    height: var(--document-bar);
-    padding: 0 12px 0 20px;
+    padding: 12px 8px 12px 16px;
 }
 
 .document-title {
@@ -1390,8 +1609,8 @@ input {
 
 .document-title h1 {
     overflow: hidden;
-    font-size: 16px;
-    font-weight: 600;
+    font: var(--md-sys-typescale-title-medium);
+    letter-spacing: var(--md-sys-typescale-title-medium-tracking);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -1399,7 +1618,6 @@ input {
 .document-title p {
     overflow: hidden;
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 13px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -1408,85 +1626,93 @@ input {
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    border-radius: 0 0 var(--ms-radius) var(--ms-radius);
+    border-radius: 0 0 var(--md-sys-shape-corner-medium) var(--md-sys-shape-corner-medium);
 }
 
+/* The side card's header: its primary tabs over their divider, and the
+   icon button that folds and unfolds it at their end. */
 .document-tabs {
     display: flex;
     flex-shrink: 0;
     align-items: center;
     justify-content: space-between;
-    height: var(--document-bar);
-    padding: 0 8px 0 12px;
+    padding-right: 8px;
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .file-columns-rail .document-tabs {
     justify-content: center;
+    height: 40px;
     padding: 0;
+    border: 0;
 }
 
 .document-tablist {
     display: flex;
     align-self: stretch;
-    gap: 4px;
-}
-
-/* Material's primary tabs: the one open, its label and its indicator in
-   the primary role; the others on-surface-variant. */
-.document-tabs [role="tab"] {
-    padding: 0 8px;
-    border: 0;
-    border-bottom: 3px solid transparent;
-    background: none;
-    color: var(--md-sys-color-on-surface-variant);
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.document-tabs [role="tab"]:hover {
-    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
-}
-
-.document-tabs [role="tab"][aria-selected="true"] {
-    border-bottom-color: var(--md-sys-color-primary);
-    color: var(--md-sys-color-primary);
 }
 
 .document-tab-panel {
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 20px;
+    padding: 16px;
     overflow: auto;
 }
 
-/* Settings: its pages as Material's primary tabs under its title, the one
-   open in the primary role; a page's sections as cards, a form's as wide as
-   it reads. */
-.settings-tabs {
-    display: flex;
-    gap: 4px;
-    margin-top: -8px;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
+/* Material's primary tabs: 40 high, each label title-small, 16 in; the one
+   open, its label and its 3-high indicator, as wide as its label, its top
+   corners rounded, in the primary; the others on-surface-variant; each with
+   its hover and pressed layers, over a divider. */
+.document-tabs [role="tab"],
 .settings-tabs a {
-    margin-bottom: -1px;
-    padding: 10px 12px 9px;
-    border-bottom: 3px solid transparent;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 16px;
+    border: 0;
+    background: none;
     color: var(--md-sys-color-on-surface-variant);
-    font-weight: 500;
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
+    cursor: pointer;
 }
 
+.document-tabs [role="tab"]:hover,
 .settings-tabs a:hover {
     background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
     text-decoration: none;
 }
 
+.document-tabs [role="tab"]:active,
+.settings-tabs a:active {
+    background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-pressed), transparent);
+}
+
+.document-tabs [role="tab"][aria-selected="true"],
 .settings-tabs a.active {
-    border-bottom-color: var(--md-sys-color-primary);
     color: var(--md-sys-color-primary);
+}
+
+.document-tabs [role="tab"][aria-selected="true"]::after,
+.settings-tabs a.active::after {
+    content: "";
+    position: absolute;
+    right: 16px;
+    bottom: 0;
+    left: 16px;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: var(--md-sys-color-primary);
+}
+
+/* Settings: its pages as primary tabs under its title, over their divider; a
+   page's sections as elevated cards, a form's as wide as it reads. */
+.settings-tabs {
+    display: flex;
+    margin-top: -8px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .settings-sections {
@@ -1499,13 +1725,7 @@ input {
 .settings-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-}
-
-.settings-section h2 {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 600;
+    gap: 16px;
 }
 
 .settings-help {
@@ -1518,14 +1738,14 @@ input {
     gap: 8px;
 }
 
-/* The logo as large as reads, on the surface, as the header holds it. */
+/* The logo as large as reads, on the surface, as the top app bar holds it. */
 .logo-preview {
     display: grid;
     place-items: center;
     width: 72px;
     height: 72px;
     margin-right: 8px;
-    border-radius: var(--ms-radius);
+    border-radius: var(--md-sys-shape-corner-medium);
     background: var(--md-sys-color-surface);
 }
 
@@ -1536,35 +1756,174 @@ input {
 }
 
 .logo-preview .tenant-initial {
-    font-size: 22px;
-    font-weight: 700;
+    font: var(--md-sys-typescale-headline-small);
 }
 
+/* The brand's color: a well of it to pick it from, beside a filled text
+   field for its hex, and saving it. Material has no color picker; the well
+   is a 32 full-shape button, in the highest container. */
 .brand-color {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
 .brand-color input[type="color"] {
-    width: 36px;
-    height: 36px;
-    padding: 3px;
+    width: 32px;
+    height: 32px;
+    padding: 4px;
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--md-sys-shape-corner-full);
     background: var(--md-sys-color-surface-container-highest);
     cursor: pointer;
 }
 
+.brand-color input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.brand-color input[type="color"]::-webkit-color-swatch {
+    border: 0;
+    border-radius: var(--md-sys-shape-corner-full);
+}
+
+.brand-hex {
+    width: 180px;
+}
+
 .brand-hex input {
-    width: 120px;
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 .user-name {
     display: flex;
     align-items: center;
-    gap: 10px;
-    color: var(--md-sys-color-on-surface);
-    font-weight: 500;
+    gap: 12px;
+}
+
+/* The document viewer in the workspace's colors (Settings, Brand), set over
+   its own on its root, as its guide, Customize the UI, has it. The brand's
+   fit it to the app around it, from its roles, light and dark: its chrome,
+   the toolbar and ribbon, the panels and the status bar, and the background
+   around its pages, each in one of Material's surface containers, low to
+   highest (Brand 1 to 4); its primary, the app's. */
+.viewer[data-toolbar="surface-container-low"] {
+    --sw-viewer-toolbar: var(--md-sys-color-surface-container-low);
+}
+
+.viewer[data-toolbar="surface-container"] {
+    --sw-viewer-toolbar: var(--md-sys-color-surface-container);
+}
+
+.viewer[data-toolbar="surface-container-high"] {
+    --sw-viewer-toolbar: var(--md-sys-color-surface-container-high);
+}
+
+.viewer[data-toolbar="surface-container-highest"] {
+    --sw-viewer-toolbar: var(--md-sys-color-surface-container-highest);
+}
+
+.viewer:not([data-toolbar="default"]) .udoc-ui-root {
+    --udoc-toolbar-background: var(--sw-viewer-toolbar);
+    --udoc-ribbon-background: var(--sw-viewer-toolbar);
+    --udoc-panel-background: var(--sw-viewer-toolbar);
+    --udoc-status-bar-background: var(--sw-viewer-toolbar);
+}
+
+.viewer[data-background="surface-container-low"] {
+    --sw-viewer-background: var(--md-sys-color-surface-container-low);
+}
+
+.viewer[data-background="surface-container"] {
+    --sw-viewer-background: var(--md-sys-color-surface-container);
+}
+
+.viewer[data-background="surface-container-high"] {
+    --sw-viewer-background: var(--md-sys-color-surface-container-high);
+}
+
+.viewer[data-background="surface-container-highest"] {
+    --sw-viewer-background: var(--md-sys-color-surface-container-highest);
+}
+
+.viewer:not([data-background="default"]) .udoc-ui-root {
+    --udoc-canvas-background: var(--sw-viewer-background);
+}
+
+.viewer[data-primary="brand"] .udoc-ui-root {
+    --udoc-color-primary: var(--md-sys-color-primary);
+    --udoc-color-on-primary: var(--md-sys-color-on-primary);
+}
+
+/* The viewer's colors, chosen: segmented buttons for each, a swatch each
+   segment's icon, over a preview of a sample document. */
+.viewer-colors {
+    display: grid;
+    grid-template-columns: max-content max-content;
+    align-items: center;
+    gap: 12px 24px;
+}
+
+.viewer-colors > span {
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
+}
+
+.viewer-colors > .segmented {
+    justify-self: start;
+}
+
+.swatch {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--md-sys-shape-corner-full);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-on-surface) 20%, transparent);
+}
+
+/* Each color, as the viewer takes it: its own, as its guide gives them; the
+   brand's, by the app's roles. */
+.swatch-toolbar-default {
+    background: light-dark(#f3f3f3, #252525);
+}
+
+.swatch-background-default {
+    background: light-dark(#e6e6e6, #181818);
+}
+
+.swatch-primary-default {
+    background: light-dark(#2b2b2b, #e0e0e0);
+}
+
+.swatch-toolbar-surface-container-low,
+.swatch-background-surface-container-low {
+    background: var(--md-sys-color-surface-container-low);
+}
+
+.swatch-toolbar-surface-container,
+.swatch-background-surface-container {
+    background: var(--md-sys-color-surface-container);
+}
+
+.swatch-toolbar-surface-container-high,
+.swatch-background-surface-container-high {
+    background: var(--md-sys-color-surface-container-high);
+}
+
+.swatch-toolbar-surface-container-highest,
+.swatch-background-surface-container-highest {
+    background: var(--md-sys-color-surface-container-highest);
+}
+
+.swatch-primary-brand {
+    background: var(--md-sys-color-primary);
+}
+
+/* The sample, outlined as Material's outlined card is: a line of the
+   outline variant, medium shape. */
+.viewer-preview {
+    height: 420px;
+    overflow: hidden;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-corner-medium);
 }

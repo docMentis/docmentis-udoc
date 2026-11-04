@@ -4,7 +4,13 @@
 // comes of it.
 
 /** Something that just happened in the app. */
-export type Moment = DocumentOpened | DocumentClosed | ThumbnailsShown | ThumbnailsHidden;
+export type Moment =
+    | DocumentOpened
+    | DocumentClosed
+    | ThumbnailsShown
+    | ThumbnailsHidden
+    | ViewerColorsShown
+    | ViewerColorsHidden;
 
 /** A document opened in the browser. */
 export interface DocumentOpened {
@@ -40,6 +46,20 @@ export interface ThumbnailsHidden {
     kind: "thumbnails:hidden";
     /** Where: files' cards, in the library's grid or on Home. */
     where: "card";
+}
+
+/** The document viewer's colors in view, to choose, with a viewer showing them. */
+export interface ViewerColorsShown {
+    kind: "viewer-colors:shown";
+    /** Where: the workspace's brand settings. */
+    where: "settings";
+}
+
+/** The document viewer's colors out of view. */
+export interface ViewerColorsHidden {
+    kind: "viewer-colors:hidden";
+    /** Where: the workspace's brand settings. */
+    where: "settings";
 }
 
 const moments = new EventTarget();

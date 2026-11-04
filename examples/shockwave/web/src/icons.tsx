@@ -197,9 +197,3 @@ export const MoreIcon = () => (
         <circle cx="18" cy="12" r="0.9" fill="currentColor" />
     </Icon>
 );
-
-export const CloseIcon = () => (
-    <Icon width="18" height="18">
-        <path d="M6 6l12 12M18 6 6 18" />
-    </Icon>
-);

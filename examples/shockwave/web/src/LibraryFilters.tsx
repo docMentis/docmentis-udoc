@@ -153,7 +153,7 @@ export function FilterBar({
                 onPick={(uploaded) => onChange({ ...filters, uploaded })}
             />
             {isFiltered(filters) && (
-                <button type="button" className="text-button" onClick={() => onChange(NO_FILTERS)}>
+                <button type="button" className="button text" onClick={() => onChange(NO_FILTERS)}>
                     Clear filters
                 </button>
             )}

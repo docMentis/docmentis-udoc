@@ -34,6 +34,50 @@ export interface User extends Person {
     tenant: Tenant;
 }
 
+/**
+ * A surface the document viewer takes: its own, or one of the surface
+ * containers Material 3 makes from the brand's color, low to highest.
+ */
+export type ViewerSurface =
+    | "default"
+    | "surface-container-low"
+    | "surface-container"
+    | "surface-container-high"
+    | "surface-container-highest";
+
+export const VIEWER_SURFACES: readonly ViewerSurface[] = [
+    "default",
+    "surface-container-low",
+    "surface-container",
+    "surface-container-high",
+    "surface-container-highest",
+];
+
+/** The document viewer's primary: its own, or the brand's, the app's. */
+export type ViewerPrimary = "default" | "brand";
+
+export const VIEWER_PRIMARIES: readonly ViewerPrimary[] = ["default", "brand"];
+
+/** The document viewer's colors, wherever the app shows it: its toolbar, the background under its pages, its primary. */
+export interface ViewerColors {
+    /** Its toolbar, ribbon, panels and status bar. */
+    toolbar: ViewerSurface;
+    /** The background around its pages. */
+    background: ViewerSurface;
+    /** Its primary, `--udoc-color-primary`: focus, selection, switches and filled buttons. */
+    primary: ViewerPrimary;
+}
+
+export const DEFAULT_VIEWER_COLORS: ViewerColors = { toolbar: "default", background: "default", primary: "default" };
+
+/** Whether `value` is a `ViewerColors`. */
+export function isViewerColors(value: unknown): value is ViewerColors {
+    if (typeof value !== "object" || value === null) return false;
+    const { toolbar, background, primary } = value as Record<string, unknown>;
+    const surface = (s: unknown) => VIEWER_SURFACES.includes(s as ViewerSurface);
+    return surface(toolbar) && surface(background) && VIEWER_PRIMARIES.includes(primary as ViewerPrimary);
+}
+
 /** A company using Shockwave, whose brand its users see the app in. */
 export interface Tenant {
     id: string;
@@ -42,6 +86,7 @@ export interface Tenant {
     logo: string | null;
     /** Its brand's color, `#rrggbb`, which seeds the app's colors; `null` for Shockwave's own. */
     brandColor: string | null;
+    viewerColors: ViewerColors;
 }
 
 /** A folder in a tenant's library. */

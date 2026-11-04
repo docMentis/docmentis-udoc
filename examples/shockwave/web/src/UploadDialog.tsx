@@ -64,22 +64,23 @@ export function UploadDialog({
                 </div>
                 <div className="upload-details">
                     <label className="field">
-                        <span>Name</span>
+                        <span className="visually-hidden">Name</span>
                         <input
                             value={name}
                             maxLength={200}
                             required
+                            placeholder="Name"
                             data-autofocus
                             onChange={(event) => setName(event.target.value)}
                         />
                     </label>
-                    <div className="field">
+                    <div className="detail">
                         <span>Location</span>
-                        <p className="field-value">{["Library", ...path.map((folder) => folder.name)].join(" / ")}</p>
+                        <p>{["Library", ...path.map((folder) => folder.name)].join(" / ")}</p>
                     </div>
-                    <div className="field">
+                    <div className="detail">
                         <span>File</span>
-                        <p className="field-value">
+                        <p>
                             {file.name} · {formatSize(file.size)}
                         </p>
                     </div>
@@ -99,7 +100,7 @@ export function UploadDialog({
                         </p>
                     )}
                     <div className="dialog-actions">
-                        <button type="button" className="button" onClick={onClose}>
+                        <button type="button" className="button text" onClick={onClose}>
                             Cancel
                         </button>
                         <button

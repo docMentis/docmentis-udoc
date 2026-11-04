@@ -91,7 +91,14 @@ function NewInLibrary() {
         };
     }, []);
     return (
-        <HomeSection title="New in the library" link={<Link to="/library">View library</Link>}>
+        <HomeSection
+            title="New in the library"
+            link={
+                <Link className="button text" to="/library">
+                    View library
+                </Link>
+            }
+        >
             {failed && (
                 <p className="error" role="alert">
                     The library didn't load. Try again.

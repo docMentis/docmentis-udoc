@@ -5,7 +5,8 @@ import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 import type { DatabaseSync } from "node:sqlite";
 
-import type { Role, User } from "../shared/api.ts";
+import { DEFAULT_VIEWER_COLORS, isViewerColors } from "../shared/api.ts";
+import type { Role, User, ViewerColors } from "../shared/api.ts";
 
 const COOKIE = "shockwave_session";
 
@@ -24,17 +25,35 @@ interface UserRow {
     tenant_has_logo: number;
     tenant_logo_changed_at: number;
     tenant_brand_color: string | null;
+    tenant_viewer_colors: string | null;
 }
 
 const USER_COLUMNS = `users.id, users.email, users.name, users.title, users.role,
     users.tenant_id, tenants.name AS tenant_name, tenants.logo IS NOT NULL AS tenant_has_logo,
-    tenants.logo_changed_at AS tenant_logo_changed_at, tenants.brand_color AS tenant_brand_color`;
+    tenants.logo_changed_at AS tenant_logo_changed_at, tenants.brand_color AS tenant_brand_color,
+    tenants.viewer_colors AS tenant_viewer_colors`;
+
+/** The viewer's colors kept as JSON; the viewer's own for none, or for what isn't one. */
+function viewerColorsOf(json: string | null): ViewerColors {
+    try {
+        const colors: unknown = json ? JSON.parse(json) : null;
+        return isViewerColors(colors) ? colors : DEFAULT_VIEWER_COLORS;
+    } catch {
+        return DEFAULT_VIEWER_COLORS;
+    }
+}
 
 function userOfRow(row: UserRow): User {
     const { id, email, name, title, role, tenant_id: tenantId } = row;
     // Its address names when it changed, so that a new one isn't an old one kept.
     const logo = row.tenant_has_logo ? `/api/tenants/${tenantId}/logo?v=${row.tenant_logo_changed_at}` : null;
-    const tenant = { id: tenantId, name: row.tenant_name, logo, brandColor: row.tenant_brand_color };
+    const tenant = {
+        id: tenantId,
+        name: row.tenant_name,
+        logo,
+        brandColor: row.tenant_brand_color,
+        viewerColors: viewerColorsOf(row.tenant_viewer_colors),
+    };
     return { id, email, name, title, role, tenant };
 }
 

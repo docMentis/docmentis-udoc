@@ -1,13 +1,19 @@
 // The workspace's settings, an admin's: its pages as tabs under the title.
-// Brand: the tenant's logo, which leads the header, and its brand's color,
-// which the app's colors are made from. Users: who's in the workspace.
+// Brand: the tenant's logo, which leads the header; its brand's color, which
+// the app's colors are made from; and the document viewer's colors, from
+// those, over a viewer showing them. Users: who's in the workspace.
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { NavLink, Outlet } from "react-router";
 
-import { managesWorkspace } from "../../../shared/api.ts";
-import type { Person, Role } from "../../../shared/api.ts";
+// A deck the viewer's colors are shown on, the demo's own.
+import sampleDeck from "../../../../../packages/udoc-demo/public/pptx/james-webb-space-telescope.pptx?url";
+
+import { VIEWER_PRIMARIES, VIEWER_SURFACES, managesWorkspace } from "../../../shared/api.ts";
+import type { Person, Role, ViewerColors, ViewerPrimary, ViewerSurface } from "../../../shared/api.ts";
 import { ApiError, api } from "../api";
+import { DocumentViewer } from "../DocumentViewer";
+import { announceMoment } from "../moments";
 import { useSession, useUser } from "../session";
 import { Avatar, EmptyState, PageHeader } from "../ui";
 
@@ -159,7 +165,7 @@ export function BrandSettings() {
                         onChange={(event) => setColor(event.target.value)}
                     />
                     <label className="field brand-hex">
-                        <span className="visually-hidden">Hex</span>
+                        <span className="visually-hidden">Color</span>
                         <input
                             value={color}
                             placeholder="#rrggbb"
@@ -183,6 +189,116 @@ export function BrandSettings() {
                     </p>
                 )}
             </section>
+            <ViewerColorsSection />
+        </div>
+    );
+}
+
+// The brand's surfaces, Brand 1 to 4, low to highest.
+const TONE_LABELS: Record<ViewerSurface | ViewerPrimary, string> = {
+    default: "Default",
+    "surface-container-low": "Brand 1",
+    "surface-container": "Brand 2",
+    "surface-container-high": "Brand 3",
+    "surface-container-highest": "Brand 4",
+    brand: "Brand",
+};
+
+/**
+ * The document viewer's colors, a swatch each to choose from, shown at once
+ * and saved as they're chosen, over a viewer on a sample deck that shows
+ * them; announced as they show, for the narrator.
+ */
+function ViewerColorsSection() {
+    const { user, setTenant } = useSession();
+    const tenant = user!.tenant;
+    const colors = tenant.viewerColors;
+    const [error, setError] = useState<string>();
+
+    useEffect(() => {
+        announceMoment({ kind: "viewer-colors:shown", where: "settings" });
+        return () => announceMoment({ kind: "viewer-colors:hidden", where: "settings" });
+    }, []);
+
+    async function choose(next: ViewerColors) {
+        setError(undefined);
+        setTenant({ ...tenant, viewerColors: next });
+        try {
+            setTenant(await api.setViewerColors(tenant.id, next));
+        } catch {
+            setTenant(tenant);
+            setError("That didn't go through. Try again.");
+        }
+    }
+
+    return (
+        <section className="card settings-section">
+            <h2>Document viewer</h2>
+            <p className="settings-help">
+                The viewer&apos;s colors wherever it shows a document in {tenant.name}: its own, or your brand&apos;s,
+                which fit it to the app around it, light and dark.
+            </p>
+            <div className="viewer-colors">
+                <span id="viewer-toolbar">Toolbar</span>
+                <Swatches
+                    kind="toolbar"
+                    tones={VIEWER_SURFACES}
+                    value={colors.toolbar}
+                    onChoose={(toolbar) => void choose({ ...colors, toolbar })}
+                />
+                <span id="viewer-background">Background</span>
+                <Swatches
+                    kind="background"
+                    tones={VIEWER_SURFACES}
+                    value={colors.background}
+                    onChoose={(background) => void choose({ ...colors, background })}
+                />
+                <span id="viewer-primary">Primary</span>
+                <Swatches
+                    kind="primary"
+                    tones={VIEWER_PRIMARIES}
+                    value={colors.primary}
+                    onChoose={(primary) => void choose({ ...colors, primary })}
+                />
+            </div>
+            {error && (
+                <p className="error" role="alert">
+                    {error}
+                </p>
+            )}
+            <div className="viewer-preview">
+                <DocumentViewer url={sampleDeck} />
+            </div>
+        </section>
+    );
+}
+
+/** The tones `kind` may take, as swatches, `value` the one chosen. */
+function Swatches<T extends ViewerSurface | ViewerPrimary>({
+    kind,
+    tones,
+    value,
+    onChoose,
+}: {
+    kind: keyof ViewerColors;
+    tones: readonly T[];
+    value: T;
+    onChoose: (tone: T) => void;
+}) {
+    return (
+        <div className="segmented" role="radiogroup" aria-labelledby={`viewer-${kind}`}>
+            {tones.map((tone) => (
+                <button
+                    key={tone}
+                    type="button"
+                    role="radio"
+                    aria-checked={value === tone}
+                    onClick={() => onChoose(tone)}
+                >
+                    <span className={`swatch swatch-${kind}-${tone}`} aria-hidden="true" />
+                    {TONE_LABELS[tone]}
+                </button>
+            ))}
         </div>
     );
 }

@@ -91,9 +91,15 @@ and its name lead the header, the logo kept with the tenant and served to its
 users alone (`/api/tenants/:id/logo`). An admin replaces it in Settings, and
 sets the brand's color there, which seeds the app's colors: Material 3's
 light and dark schemes, its tonal palettes made from the color in HCT, in
-the browser (`web/src/scheme.ts`). A user switches the theme, light or dark,
-with the button beside their avatar, the system's until they do and again
-once they switch to it, and the viewer follows it; the narrator stays light. Larchmere's is a larch cone, faceted
+the browser (`web/src/scheme.ts`). The admin colors the document viewer
+there too, over a preview of a sample deck that changes as they choose: its
+toolbar and the background around its pages, each the viewer's own or one
+of the four surface containers the brand's color makes, low to highest
+(Brand 1 to 4), and its primary, the viewer's own or the app's. Every
+viewer in the app
+takes them. A user switches the theme, light or dark, with the button
+beside their avatar, the system's until they do and again once they switch
+to it, and the viewer follows it; the narrator stays light. Larchmere's is a larch cone, faceted
 scales on a shield, with a rising arrow breaking out of it. Shockwave's own
 mark is left to the sign-in page, where no tenant is known yet, and the foot of
 the navigation, "Powered by Shockwave".
@@ -107,11 +113,19 @@ its users see.
 
 ## The app
 
-The app is its sections, in a navigation down the window's left, and a header
-across the rest: the tenant's brand, search in its middle, and at its right
-the theme's button, the bell for notifications, and the user's avatar, which
-opens their menu. A menu button at the navigation's top turns it
-from a panel of the sections' names to a bar of their icons and back. Content
+The app is Material 3, all of it: its color roles and schemes, shape scale,
+type scale, state layers and elevation, and each component as Material's
+tokens give it (`web/src/app.css`); what Material has no component for is
+built from those, and says so. Its density is Material's −2, a desktop
+app's: each component the height Angular Material's Material 3 tokens give
+it at −2 (filled text fields 48, their labels read but not shown; buttons
+32), and one Material gives no density, 8 less than its own. It is its
+sections, in a navigation down the window's left, Material 3 Expressive's
+navigation rail, and its top app bar across the rest: the tenant's brand, the search bar in its middle, and at its right the
+theme's button, the bell for notifications, and the user's avatar, which
+opens their menu. A menu button at the navigation's top collapses the rail
+from its expanded form, each section's icon and name side by side, to its
+icons over their names, and back. Content
 moves through the sections one way:
 
 ```
@@ -261,14 +275,16 @@ two kinds of things:
   in your browser, so you see it before it's uploaded, not after." A
   highlight shows when what it tells about shows, and goes when it goes: the
   preview's, while the preview is open; the thumbnails', while a thumbnail is
-  in view. It has the moment's figures where it has them (its format, how
-  long it took to open), and sits in the panel's list, newest first.
+  in view; the viewer's colors', while the brand settings show them. It has
+  the moment's figures where it has them (its format, how long it took to
+  open), and sits in the panel's list, newest first.
 
 The product knows nothing of the narrator. It announces **moments** through a
 small module of events of its own (`web/src/moments.ts`) — `route` and
 `session`, which say how things stand, and `document:opened`,
-`document:closed`, `thumbnails:shown`, `thumbnails:hidden` and `asset:added`,
-which say what just happened — and marks what a step can point at with
+`document:closed`, `thumbnails:shown`, `thumbnails:hidden`,
+`viewer-colors:shown`, `viewer-colors:hidden` and `asset:added`, which say
+what just happened — and marks what a step can point at with
 `data-narrator="…"`; the narrator is their only listener. Taking it out leaves
 the product whole. The product's root, `#app`, is all of the window it knows:
 its dialogs are modal to it alone, over it and not the narrator, which stays

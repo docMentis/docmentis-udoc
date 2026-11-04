@@ -78,3 +78,18 @@ name opens as it should.
 
 **Workaround.** None in shockwave: a second instance is tested at
 `shockwave.localhost` instead, a name, whose cookies are its own too.
+
+## A background changed on the fly isn't painted until the theme changes
+
+**Needed.** The viewer's background changed while it's open, the preview in
+the brand settings showing it as it's chosen.
+
+**Offered.** The engine paints the background around the pages, and the
+viewer hands it `--udoc-canvas-background` only as it applies a theme, when
+it opens and when its theme changes. The toolbar's and the primary's colors,
+which the browser paints, show at once; the background stays as it was.
+
+**Workaround.** When the background changes, `DocumentViewer` sets the
+viewer's theme to one that looks the same, the system's or the one the
+system shows, and its own again, a microtask apart, so that it hands the
+engine the background again.

@@ -1,5 +1,5 @@
 // The backend's API, as the pages call it.
-import type { Asset, Failure, Folder, FolderListing, Person, Tenant, User } from "../../shared/api.ts";
+import type { Asset, Failure, Folder, FolderListing, Person, Tenant, User, ViewerColors } from "../../shared/api.ts";
 
 /** A request the backend refused: its status, and its failure. */
 export class ApiError extends Error {
@@ -83,6 +83,10 @@ export const api = {
     /** Set tenant `id`'s brand color, `#rrggbb`, or none for `null`. */
     async setBrandColor(id: string, brandColor: string | null): Promise<Tenant> {
         return (await request<{ tenant: Tenant }>(`/api/tenants/${id}`, withJson("PATCH", { brandColor }))).tenant;
+    },
+    /** Set tenant `id`'s document viewer colors. */
+    async setViewerColors(id: string, viewerColors: ViewerColors): Promise<Tenant> {
+        return (await request<{ tenant: Tenant }>(`/api/tenants/${id}`, withJson("PATCH", { viewerColors }))).tenant;
     },
     /** Tenant `id`'s users, by name. */
     async users(id: string): Promise<Person[]> {

@@ -1,11 +1,12 @@
 // A tenant's own things, for its users alone: `/api/tenants/:id/…`. Its
 // logo, which any of them sees and an admin replaces or removes; its brand's
-// color, which an admin sets; and its users, whom an admin lists.
+// color and its viewer's colors, which an admin sets; and its users, whom an
+// admin lists.
 import type { DatabaseSync } from "node:sqlite";
 
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
-import { managesWorkspace } from "../../shared/api.ts";
+import { isViewerColors, managesWorkspace } from "../../shared/api.ts";
 import type { Person, Tenant, User } from "../../shared/api.ts";
 import { userOf } from "../auth.ts";
 import { Refusal, signedIn } from "../http.ts";
@@ -97,18 +98,38 @@ export function tenantRoutes(app: FastifyInstance, db: DatabaseSync): void {
         return { tenant: tenantFor(request) };
     });
 
-    /** Set `{ brandColor }`, `#rrggbb`, or `null` for none: `{ tenant }`. */
-    app.patch<{ Params: { id: string }; Body: { brandColor?: unknown } | undefined }>(
+    /**
+     * Set what's given of `{ brandColor, viewerColors }`: the brand's color,
+     * `#rrggbb` or `null` for none, and the viewer's colors: `{ tenant }`.
+     */
+    app.patch<{ Params: { id: string }; Body: { brandColor?: unknown; viewerColors?: unknown } | undefined }>(
         "/api/tenants/:id",
         async (request) => {
             const user = adminOf(request);
-            const color = request.body?.brandColor;
-            if (color !== null && (typeof color !== "string" || !COLOR.test(color)))
-                throw new Refusal(400, "badRequest", "a brand's color is #rrggbb, or null for none");
-            db.prepare("UPDATE tenants SET brand_color = ? WHERE id = ?").run(
-                color?.toLowerCase() ?? null,
-                user.tenant.id,
-            );
+            const body = request.body ?? {};
+            if ("brandColor" in body) {
+                const color = body.brandColor;
+                if (color !== null && (typeof color !== "string" || !COLOR.test(color)))
+                    throw new Refusal(400, "badRequest", "a brand's color is #rrggbb, or null for none");
+                db.prepare("UPDATE tenants SET brand_color = ? WHERE id = ?").run(
+                    color?.toLowerCase() ?? null,
+                    user.tenant.id,
+                );
+            }
+            if ("viewerColors" in body) {
+                const colors = body.viewerColors;
+                if (!isViewerColors(colors))
+                    throw new Refusal(
+                        400,
+                        "badRequest",
+                        "the viewer's colors are a toolbar, a background and a primary",
+                    );
+                const { toolbar, background, primary } = colors;
+                db.prepare("UPDATE tenants SET viewer_colors = ? WHERE id = ?").run(
+                    JSON.stringify({ toolbar, background, primary }),
+                    user.tenant.id,
+                );
+            }
             return { tenant: tenantFor(request) };
         },
     );

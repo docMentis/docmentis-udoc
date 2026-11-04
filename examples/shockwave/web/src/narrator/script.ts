@@ -10,7 +10,7 @@ export interface Highlight {
     tells: (moment: Moment) => boolean;
     title: string;
     body: string;
-    /** The moment's figures, in a line under the body. */
+    /** The moment's figures, in a line under the body; none for a moment without. */
     figures: (moment: Moment) => string[];
     /** Whether `moment` takes away what this highlight tells about, and the highlight with it. */
     ends: (moment: Moment) => boolean;
@@ -40,5 +40,13 @@ export const HIGHLIGHTS: Highlight[] = [
         body: "udoc-server generates thumbnails on the server. The first page's is generated and stored at upload; the other pages' are generated in real time, upon request. This reduces your storage cost while providing the best user experience.",
         figures: formatAndTime,
         ends: (moment) => moment.kind === "thumbnails:hidden" && moment.where === "card",
+    },
+    {
+        id: "viewer-in-your-brand",
+        tells: (moment) => moment.kind === "viewer-colors:shown",
+        title: "The document viewer, in your brand",
+        body: "An enterprise SaaS app like Shockwave is customized to fit each customer's brand, and the document viewer embedded in it should be no exception. Choose its toolbar, background and primary colors here: the viewer changes as you do.",
+        figures: () => [],
+        ends: (moment) => moment.kind === "viewer-colors:hidden",
     },
 ];
