@@ -42,8 +42,8 @@ edit in the editor, so use the viewer if it has to stay read-only.
 
 <<< @/snippets/extension-documents/built-in.ts
 
-[Supported formats](./supported-formats#video-audio-web-pages-and-online-documents)
-lists the files and streams each one opens.
+[Supported formats](./supported-formats) lists the files and streams each one
+opens.
 
 If your page has a Content Security Policy, it needs to allow what these load.
 Media needs inline styles, YouTube's IFrame API script, the YouTube and Vimeo

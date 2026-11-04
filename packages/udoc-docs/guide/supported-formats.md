@@ -12,14 +12,14 @@ format.
 | PDF                         | `.pdf`                                                                                                    | ✓    | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
 | Word                        | `.docx`, `.docm`, `.dotx`, `.dotm`                                                                        | ✓¹   | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
 | PowerPoint                  | `.pptx`, `.pptm`, `.potx`, `.potm`, `.ppsx`, `.ppsm`                                                      | ✓¹   | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
-| Excel                       | `.xlsx`, `.xlsm`, `.xltx`, `.xltm`                                                                        | ✓¹   | ✓    | PDF                     |
+| Excel                       | `.xlsx`, `.xlsm`, `.xltx`, `.xltm`                                                                        | ✓¹   | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
 | Plain text                  | `.txt`                                                                                                    | ✓    | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
 | Markdown                    | `.md`, `.markdown`                                                                                        | ✓    | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
 | HTML                        | `.html`, `.htm`                                                                                           | ✓    | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
 | Email                       | `.eml`                                                                                                    | ✓    | ✓²   | PDF,&nbsp;SVG,&nbsp;PNG |
-| CSV                         | `.csv`                                                                                                    | ✓    | ✓    | PDF                     |
-| TSV                         | `.tsv`, `.tab`                                                                                            | ✓    | ✓    | PDF                     |
-| PSV                         | `.psv`                                                                                                    | ✓    | ✓    | PDF                     |
+| CSV                         | `.csv`                                                                                                    | ✓    | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
+| TSV                         | `.tsv`, `.tab`                                                                                            | ✓    | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
+| PSV                         | `.psv`                                                                                                    | ✓    | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
 | JPEG                        | `.jpg`, `.jpeg`                                                                                           | ✓    | ✓³   | PDF,&nbsp;SVG,&nbsp;PNG |
 | PNG                         | `.png`                                                                                                    | ✓    | ✓    | PDF,&nbsp;SVG,&nbsp;PNG |
 | GIF                         | `.gif`                                                                                                    | ✓    | ✓³   | PDF,&nbsp;SVG,&nbsp;PNG |
