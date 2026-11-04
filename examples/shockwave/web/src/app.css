@@ -65,7 +65,7 @@
     font-size: 14px;
     line-height: 1.5;
     color: var(--md-sys-color-on-surface);
-    background: var(--md-sys-color-surface-container-low);
+    background: var(--md-sys-color-surface);
 }
 
 * {
@@ -275,9 +275,10 @@ input {
 
 /* The header: the tenant's brand at its left and the user's avatar at its
    right, each in line with the page under it, and search in its middle. It,
-   the navigation and the page are one surface, the window's, the low
-   container, with no line between them: what's on it, the cards, stands out
-   in the lowest container, by tone, as Material separates surfaces. */
+   the navigation and the page are one surface, the window's, Material's
+   surface role, as its top app bar and navigation drawer are, with no line
+   between them: what's on it, the cards, stands out in the lowest container,
+   by tone, as Material separates surfaces. */
 .header {
     grid-row: 1;
     grid-column: 2;
@@ -811,15 +812,15 @@ input {
     pointer-events: none;
 }
 
-/* The page's controls, the name's box, the chips and the view's choice, are
-   in the lowest container, as the cards under them, with no outline. */
+/* The page's controls, unoutlined: the name's box, a search bar, in the
+   high container, as the header's is. */
 .name-filter input {
     width: 220px;
     height: 32px;
     padding: 0 8px 0 36px;
     border: 0;
     border-radius: 8px;
-    background: var(--md-sys-color-surface-container-lowest);
+    background: var(--md-sys-color-surface-container-high);
     font-size: 13px;
 }
 
@@ -827,7 +828,7 @@ input {
     background: color-mix(
         in srgb,
         var(--md-sys-color-on-surface) var(--md-sys-state-hover),
-        var(--md-sys-color-surface-container-lowest)
+        var(--md-sys-color-surface-container-high)
     );
 }
 
@@ -846,8 +847,8 @@ input {
     left: 0;
 }
 
-/* Material's filter chip, its label on-surface-variant; set, filled with
-   the secondary container. */
+/* Material's elevated filter chip: the low container, a level up, its label
+   on-surface-variant; set, filled with the secondary container. */
 .chip {
     display: inline-flex;
     align-items: center;
@@ -856,7 +857,8 @@ input {
     padding: 0 8px 0 12px;
     border: 0;
     border-radius: 8px;
-    background: var(--md-sys-color-surface-container-lowest);
+    background: var(--md-sys-color-surface-container-low);
+    box-shadow: var(--md-sys-elevation-1);
     color: var(--md-sys-color-on-surface-variant);
     font-size: 13px;
     font-weight: 500;
@@ -867,7 +869,7 @@ input {
     background: color-mix(
         in srgb,
         var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover),
-        var(--md-sys-color-surface-container-lowest)
+        var(--md-sys-color-surface-container-low)
     );
 }
 
@@ -926,15 +928,16 @@ input {
     background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-hover), transparent);
 }
 
-/* Material's segmented buttons: a choice of a few, side by side, the one
-   made filled with the secondary container; as tall as a chip. */
+/* A choice of a few, side by side, as Material's connected button group:
+   in the container, the one made filled with the secondary container; as
+   tall as a chip. */
 .segmented {
     display: flex;
     flex-shrink: 0;
     gap: 2px;
     padding: 3px;
     border-radius: 8px;
-    background: var(--md-sys-color-surface-container-lowest);
+    background: var(--md-sys-color-surface-container);
 }
 
 .segmented button {
@@ -1072,9 +1075,9 @@ input {
     font-size: 13px;
 }
 
-/* The arrows that flip a card's pages, at the tray's sides: shown while the
-   card is pointed at or one of them has focus, and always on a screen with no
-   pointer to hover. */
+/* The arrows that flip a card's pages, Material's filled tonal icon buttons,
+   at the tray's sides: shown while the card is pointed at or one of them has
+   focus, and always on a screen with no pointer to hover. */
 .page-flip {
     position: absolute;
     top: 50%;
@@ -1085,9 +1088,8 @@ input {
     padding: 0;
     border: 0;
     border-radius: 50%;
-    background: var(--md-sys-color-surface-container-lowest);
-    box-shadow: var(--md-sys-elevation-1);
-    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
     cursor: pointer;
     opacity: 0;
     transform: translateY(-50%);
@@ -1110,8 +1112,8 @@ input {
 .page-flip:hover {
     background: color-mix(
         in srgb,
-        var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover),
-        var(--md-sys-color-surface-container-lowest)
+        var(--md-sys-color-on-secondary-container) var(--md-sys-state-hover),
+        var(--md-sys-color-secondary-container)
     );
 }
 
@@ -1474,7 +1476,7 @@ input {
     gap: 8px;
 }
 
-/* The logo as large as reads, on the window's surface, as the header holds it. */
+/* The logo as large as reads, on the surface, as the header holds it. */
 .logo-preview {
     display: grid;
     place-items: center;
@@ -1482,7 +1484,7 @@ input {
     height: 72px;
     margin-right: 8px;
     border-radius: var(--ms-radius);
-    background: var(--md-sys-color-surface-container-low);
+    background: var(--md-sys-color-surface);
 }
 
 .logo-preview img,
