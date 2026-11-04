@@ -1,11 +1,12 @@
-// Material 3's light color scheme from a seed color, in the browser: HCT, a
-// color's hue and chroma as CAM16 measures them under Material's default
-// viewing conditions and its tone as CIELAB's L*, and the tonal palettes
-// built in it, after material-color-utilities (its older solver). The
-// palettes are CorePalette's: the primary at the seed's hue and its chroma or
-// 48, whichever is more; the secondary at chroma 16; the neutrals at 4 and 8;
-// the error at Material's red. Each role is at its tone in the baseline
-// scheme. app.css holds the scheme Shockwave's orange seeds, the default.
+// Material 3's color schemes, light and dark, from a seed color, in the
+// browser: HCT, a color's hue and chroma as CAM16 measures them under
+// Material's default viewing conditions and its tone as CIELAB's L*, and the
+// tonal palettes built in it, after material-color-utilities (its older
+// solver). The palettes are CorePalette's: the primary at the seed's hue and
+// its chroma or 48, whichever is more; the secondary at chroma 16; the
+// neutrals at 4 and 8; the error at Material's red. Each role is at its tone
+// in the baseline schemes. app.css holds the schemes Shockwave's orange
+// seeds, the default.
 
 /** The roles app.css uses, by the name of their `--md-sys-color-*` property. */
 export type ColorRole =
@@ -241,37 +242,48 @@ function rgbOfHex(hex: string): Rgb {
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-/** The light scheme `seed`, `#rrggbb`, makes: each role's color. */
-export function schemeOf(seed: string): Record<ColorRole, string> {
+/** Each role's tone in Material's baseline schemes, light and dark, and the palette it's in. */
+const TONES: Record<
+    ColorRole,
+    [palette: "primary" | "secondary" | "neutral" | "neutralVariant" | "error", light: number, dark: number]
+> = {
+    primary: ["primary", 40, 80],
+    "on-primary": ["primary", 100, 20],
+    "primary-container": ["primary", 90, 30],
+    "on-primary-container": ["primary", 10, 90],
+    secondary: ["secondary", 40, 80],
+    "secondary-container": ["secondary", 90, 30],
+    "on-secondary-container": ["secondary", 10, 90],
+    error: ["error", 40, 80],
+    "on-error": ["error", 100, 20],
+    "error-container": ["error", 90, 30],
+    "on-error-container": ["error", 10, 90],
+    surface: ["neutral", 98, 6],
+    "surface-container-lowest": ["neutral", 100, 4],
+    "surface-container-low": ["neutral", 96, 10],
+    "surface-container": ["neutral", 94, 12],
+    "surface-container-high": ["neutral", 92, 17],
+    "surface-container-highest": ["neutral", 90, 22],
+    "on-surface": ["neutral", 10, 90],
+    "on-surface-variant": ["neutralVariant", 30, 80],
+    "outline-variant": ["neutralVariant", 80, 30],
+    scrim: ["neutral", 0, 0],
+    shadow: ["neutral", 0, 0],
+};
+
+/** The scheme `seed`, `#rrggbb`, makes, light or dark: each role's color. */
+export function schemeOf(seed: string, mode: "light" | "dark" = "light"): Record<ColorRole, string> {
     const { chroma, hue } = camOf(rgbOfHex(seed));
-    const tone = (h: number, c: number) => (t: number) => hexOf(hct(h, c, t));
-    const primary = tone(hue, Math.max(48, chroma));
-    const secondary = tone(hue, 16);
-    const neutral = tone(hue, 4);
-    const neutralVariant = tone(hue, 8);
-    const error = tone(25, 84);
-    return {
-        primary: primary(40),
-        "on-primary": primary(100),
-        "primary-container": primary(90),
-        "on-primary-container": primary(10),
-        secondary: secondary(40),
-        "secondary-container": secondary(90),
-        "on-secondary-container": secondary(10),
-        error: error(40),
-        "on-error": error(100),
-        "error-container": error(90),
-        "on-error-container": error(10),
-        surface: neutral(98),
-        "surface-container-lowest": neutral(100),
-        "surface-container-low": neutral(96),
-        "surface-container": neutral(94),
-        "surface-container-high": neutral(92),
-        "surface-container-highest": neutral(90),
-        "on-surface": neutral(10),
-        "on-surface-variant": neutralVariant(30),
-        "outline-variant": neutralVariant(80),
-        scrim: neutral(0),
-        shadow: neutral(0),
+    const palettes = {
+        primary: [hue, Math.max(48, chroma)],
+        secondary: [hue, 16],
+        neutral: [hue, 4],
+        neutralVariant: [hue, 8],
+        error: [25, 84],
     };
+    const roles = Object.entries(TONES).map(([role, [palette, light, dark]]) => {
+        const [h, c] = palettes[palette];
+        return [role, hexOf(hct(h, c, mode === "light" ? light : dark))];
+    });
+    return Object.fromEntries(roles) as Record<ColorRole, string>;
 }

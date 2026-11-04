@@ -90,8 +90,10 @@ Its users see the app in its brand, as a tenant's do: its logo, a square icon,
 and its name lead the header, the logo kept with the tenant and served to its
 users alone (`/api/tenants/:id/logo`). An admin replaces it in Settings, and
 sets the brand's color there, which seeds the app's colors: Material 3's
-light scheme, its tonal palettes made from the color in HCT, in the browser
-(`web/src/scheme.ts`). Larchmere's is a larch cone, faceted
+light and dark schemes, its tonal palettes made from the color in HCT, in
+the browser (`web/src/scheme.ts`). A user switches the theme, light or dark,
+with the button beside their avatar, the system's until they do and again
+once they switch to it, and the viewer follows it; the narrator stays light. Larchmere's is a larch cone, faceted
 scales on a shield, with a rising arrow breaking out of it. Shockwave's own
 mark is left to the sign-in page, where no tenant is known yet, and the foot of
 the navigation, "Powered by Shockwave".
@@ -106,8 +108,9 @@ its users see.
 ## The app
 
 The app is its sections, in a navigation down the window's left, and a header
-across the rest: the tenant's brand, search in its middle, and the user's
-avatar, which opens their menu. A menu button at the navigation's top turns it
+across the rest: the tenant's brand, search in its middle, and at its right
+the theme's button, the bell for notifications, and the user's avatar, which
+opens their menu. A menu button at the navigation's top turns it
 from a panel of the sections' names to a bar of their icons and back. Content
 moves through the sections one way:
 

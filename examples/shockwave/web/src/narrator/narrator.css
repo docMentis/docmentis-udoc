@@ -3,6 +3,8 @@
    never smaller than the app's beside it: 14px for what it says, 13px for
    what's secondary. */
 .narrator {
+    /* docmentis.com's, light, whatever the app's theme. */
+    color-scheme: light;
     --dm-text: #0f172a;
     --dm-muted: #64748b;
     --dm-line: #e2e8f0;

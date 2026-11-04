@@ -5,6 +5,13 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <title>Shockwave</title>
+        <script>
+            // The theme chosen (src/theme.ts), before the page shows.
+            try {
+                const theme = localStorage.getItem("shockwave.theme");
+                if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme;
+            } catch {}
+        </script>
     </head>
     <body>
         <div id="root"></div>

@@ -103,6 +103,26 @@ export const PanelRightIcon = () => (
     </Icon>
 );
 
+export const SunIcon = () => (
+    <Icon width="20" height="20">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+    </Icon>
+);
+
+export const MoonIcon = () => (
+    <Icon width="20" height="20">
+        <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
+    </Icon>
+);
+
+export const BellIcon = () => (
+    <Icon width="20" height="20">
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.9 1.9 0 0 0 3.4 0" />
+    </Icon>
+);
+
 export const SearchIcon = () => (
     <Icon width="18" height="18">
         <circle cx="11" cy="11" r="7" />

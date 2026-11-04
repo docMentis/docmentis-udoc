@@ -1,9 +1,12 @@
 // A viewer filling its element, on a document: a file from the user's own disk,
 // opened in the browser before it's uploaded, or one udoc-server keeps, opened
 // part by part through the gate with the session's cookie. Made as the
-// react-vite example makes one, StrictMode's second effect run included.
+// react-vite example makes one, StrictMode's second effect run included. It
+// is in the app's theme, and follows it as it changes.
 import { useEffect, useRef } from "react";
 import { UDocViewer } from "@docmentis/udoc-viewer";
+
+import { useTheme } from "./theme";
 
 /** What the viewer opens: a file's own bytes, or the id of a document udoc-server keeps. */
 export type ViewerSource = { file: File; documentId?: never } | { documentId: string; file?: never };
@@ -32,6 +35,10 @@ export function DocumentViewer({
     onFailed?: () => void;
 }) {
     const ref = useRef<HTMLDivElement>(null);
+    const viewerRef = useRef<UDocViewer>(undefined);
+    const theme = useTheme();
+    const themeRef = useRef(theme);
+    themeRef.current = theme;
     const opened = useRef(onOpened);
     opened.current = onOpened;
     const closed = useRef(onClosed);
@@ -46,10 +53,11 @@ export function DocumentViewer({
         let gone = false;
         let open = false;
         const started = performance.now();
-        UDocViewer.create(ref.current!, { showToolbar })
+        UDocViewer.create(ref.current!, { showToolbar, theme: themeRef.current })
             .then(async (created) => {
                 if (gone) return created.destroy();
                 viewer = created;
+                viewerRef.current = created;
                 if (file) await viewer.open(file);
                 else await viewer.openRemote(new URL(`/udoc/documents/${documentId}/package`, location.href).href);
                 if (gone) return;
@@ -63,9 +71,12 @@ export function DocumentViewer({
             });
         return () => {
             gone = true;
+            viewerRef.current = undefined;
             viewer?.destroy();
             if (open) closed.current?.();
         };
     }, [file, documentId, showToolbar]);
+
+    useEffect(() => viewerRef.current?.setTheme(theme), [theme]);
     return <div ref={ref} className="viewer" />;
 }
