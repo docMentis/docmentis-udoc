@@ -1528,9 +1528,11 @@ input {
     padding-top: 16px;
 }
 
+/* The preview clips its viewer, whose skip link waits above it (GAPS.md). */
 .upload-preview {
     min-width: 0;
     min-height: 0;
+    overflow: hidden;
 }
 
 .upload-details {

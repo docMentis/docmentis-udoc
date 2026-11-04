@@ -1,7 +1,7 @@
 // Uploading a file into the library: picked or dropped, it opens in the viewer
 // from its own bytes, in the browser, before anything is sent, a moment the
 // app announces; then it's named, and uploaded into the folder the user is in.
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import type { Asset, Folder } from "../../shared/api.ts";
@@ -29,11 +29,15 @@ export function UploadDialog({
     const [name, setName] = useState(() => baseName(file.name));
     const [unreadable, setUnreadable] = useState(false);
     const [uploading, setUploading] = useState(false);
+    // Sending, at once: a second press before the button disables sends nothing.
+    const sending = useRef(false);
     const [error, setError] = useState<string>();
     const tooLarge = file.size > MAX_BYTES;
 
     async function submit(event: FormEvent) {
         event.preventDefault();
+        if (sending.current) return;
+        sending.current = true;
         setUploading(true);
         setError(undefined);
         try {
@@ -44,13 +48,15 @@ export function UploadDialog({
                     ? "Shockwave can't read this file."
                     : "The upload didn't go through. Try again.",
             );
+            sending.current = false;
             setUploading(false);
         }
     }
 
     return (
         <Dialog title="Upload a file" className="upload-dialog" onClose={onClose}>
-            <form className="upload" onSubmit={(event) => void submit(event)}>
+            <div className="upload">
+                {/* Beside the form, not in it: the viewer's buttons would submit it (GAPS.md). */}
                 <div className="upload-preview">
                     <DocumentViewer
                         file={file}
@@ -62,7 +68,7 @@ export function UploadDialog({
                         onFailed={() => setUnreadable(true)}
                     />
                 </div>
-                <div className="upload-details">
+                <form className="upload-details" onSubmit={(event) => void submit(event)}>
                     <label className="field">
                         <span className="visually-hidden">Name</span>
                         <input
@@ -111,8 +117,8 @@ export function UploadDialog({
                             {uploading ? "Uploading…" : "Upload"}
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </Dialog>
     );
 }

@@ -93,3 +93,26 @@ which the browser paints, show at once; the background stays as it was.
 viewer's theme to one that looks the same, the system's or the one the
 system shows, and its own again, a microtask apart, so that it hands the
 engine the background again.
+
+## A viewer in a form submits it
+
+**Needed.** The upload dialog's preview, a viewer on the file, beside the
+fields that name it.
+
+**Offered.** The viewer's buttons have no `type`, so in a form each is a
+submit button: going to a page, zooming or choosing a tool submits it, as
+Enter in its page or zoom number does.
+
+**Workaround.** The dialog's form holds its fields alone, the preview beside
+it.
+
+## A viewer's skip link shows outside it until something clips it
+
+**Needed.** A viewer in a dialog, with nothing above it hidden.
+
+**Offered.** The viewer's "Skip to document" link waits 100 pixels above
+the viewer until it's focused, hidden only when something around the viewer
+clips it; over a dialog's scrim, it shows.
+
+**Workaround.** The upload dialog's preview clips its viewer, as the file's
+page and the brand settings do theirs.
