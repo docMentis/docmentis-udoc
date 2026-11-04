@@ -356,12 +356,13 @@ input {
 /* Material's small top app bar, 56 high: the tenant's brand, its headline in
    title-large, at its left; the search bar in its middle; and at its right,
    its icon buttons and the user's avatar, each in line with the page under
-   it. */
+   it. The brand and the actions keep their width; the search bar takes
+   what's left, at most 720. */
 .header {
     grid-row: 1;
     grid-column: 2;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(200px, 720px) minmax(0, 1fr);
+    grid-template-columns: minmax(max-content, 1fr) minmax(0, 720px) minmax(max-content, 1fr);
     align-items: center;
     gap: 16px;
     padding: 0 24px;
