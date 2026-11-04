@@ -188,6 +188,28 @@ export interface Wrapper {
 /** Where the anonymous per-user id is kept between visits. */
 const DISTINCT_ID_KEY = "udoc_distinct_id";
 
+/** What {@link WorkerClient.destroy} rejected the calls in flight with. */
+const teardownErrors = new WeakSet<object>();
+let hushingTeardowns = false;
+
+/**
+ * Stop `error`, what a teardown rejects the calls in flight with, from being
+ * reported as uncaught. The UI reads what it shows without waiting on it, after
+ * an open or an edit, so a teardown right after one, as headless code does, has
+ * those reads to reject with nobody listening. A call anyone waits on still
+ * rejects with it.
+ */
+function hushTeardown(error: UDocError): UDocError {
+    teardownErrors.add(error);
+    if (!hushingTeardowns) {
+        hushingTeardowns = true;
+        addEventListener("unhandledrejection", (event) => {
+            if (teardownErrors.has(event.reason as object)) event.preventDefault();
+        });
+    }
+    return error;
+}
+
 /** Everything {@link WorkerClient.create} needs: where to find the WASM, the
  *  license, the fonts and the features offered. */
 export type CreateClientOptions = { wasm?: WasmLocateOptions } & LicenseOptions & FontOptions & FeatureOptions;
@@ -2094,7 +2116,7 @@ export class WorkerClient {
     /** Tear down the worker. Not reusable afterwards. */
     destroy(): void {
         this.invalidateThumbnails();
-        this.#failAll(new UDocError("invalidRequest", "worker destroyed"));
+        this.#failAll(hushTeardown(new UDocError("invalidRequest", "worker destroyed")));
         this.#worker.terminate();
     }
 

@@ -47,11 +47,9 @@ client's options and the viewer's together:
 
 <<< @/snippets/migrate-from-0-7/create.ts
 
-- `create` takes the container element itself, not a selector. A viewer with
-  no container, 0.7's headless mode, has no counterpart. To render pages
-  without the UI, use [`@docmentis/udoc-node`](/api/udoc-node/) on a server;
-  the viewer's `renderPage` and `exportPageToBytes` also render a page without
-  showing it.
+- `create` takes the container element itself, not a selector. For a viewer
+  with no container, 0.7's headless mode, pass
+  [`null`](/api/udoc-viewer/classes/UDocViewer#create).
 - `load` is `open`. It takes a URL, a `Blob` or bytes, as before, and its
   options are `format`, `filename`, `delimiter` and `password`. A format is
   named by its file extension, an image's too: `"jpg"`, `"png"`.

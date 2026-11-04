@@ -65,16 +65,20 @@ export class UDocEditor extends UDocBase<UDocEditorEvents> {
      * Create an editor mounted into `container`. Spawns the render worker and loads
      * the WASM (async), then mounts the UI. Rejects with an `unsupported`
      * `UDocError` on runtimes without OffscreenCanvas-in-worker support.
+     *
+     * With `null` for `container` the editor is headless: it puts nothing on
+     * the page, and you drive it by its calls alone, to change, render, export
+     * and save documents in the browser. Nothing it does waits on a person:
+     * `open` and `print` say what they do in place of asking.
      */
-    static create(container: HTMLElement, options: UDocEditorOptions = {}): Promise<UDocEditor> {
-        const mode = editMode(options);
+    static create(container: HTMLElement | null, options: UDocEditorOptions = {}): Promise<UDocEditor> {
         return createAs(
             container,
             options,
             EDITOR_WRAPPER,
             startRenderWorker,
-            mode,
-            (shell) => new UDocEditor(shell, mode),
+            () => editMode(options),
+            (shell, mode) => new UDocEditor(shell, mode),
         );
     }
 

@@ -21,6 +21,7 @@ on:
             - "examples/**"
             - "!examples/shockwave/**"
             - "scripts/examples.mjs"
+            - "scripts/headless*"
             - "scripts/packages.mjs"
             - "package-lock.json"
             - ".github/workflows/examples.yml"
@@ -46,6 +47,22 @@ jobs:
             - uses: actions/checkout@v7
             - id: list
               run: echo "examples=$(ls -d examples/*/ | xargs -n1 basename | grep -vx shockwave | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
+
+    # The viewer and the editor with no container, which no example shows.
+    headless:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci
+            - run: |
+                  npm run build -w @docmentis/udoc-ui
+                  npm run build -w @docmentis/udoc-editor
+                  npm run build -w @docmentis/udoc-viewer
+            - run: npm run headless
 
     example:
         needs: list

@@ -34,9 +34,21 @@ export class UDocViewer extends UDocBase {
      * loads the WASM (async), then mounts the UI. Rejects with an
      * `unsupported` `UDocError` on runtimes without OffscreenCanvas-in-worker
      * support.
+     *
+     * With `null` for `container` the viewer is headless: it puts nothing on
+     * the page, and you drive it by its calls alone, to render, export, search
+     * and save documents in the browser. Nothing it does waits on a person:
+     * `open` and `print` say what they do in place of asking.
      */
-    static create(container: HTMLElement, options: UDocViewerOptions = {}): Promise<UDocViewer> {
-        return createAs(container, options, VIEWER_WRAPPER, startRenderWorker, null, (shell) => new UDocViewer(shell));
+    static create(container: HTMLElement | null, options: UDocViewerOptions = {}): Promise<UDocViewer> {
+        return createAs(
+            container,
+            options,
+            VIEWER_WRAPPER,
+            startRenderWorker,
+            () => null,
+            (shell) => new UDocViewer(shell),
+        );
     }
 
     /**

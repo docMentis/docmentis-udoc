@@ -77,7 +77,7 @@ status takes more than a few words, a note under the table says the rest.
 
 | Legacy                             | New                                | Status                                             |
 | ---------------------------------- | ---------------------------------- | -------------------------------------------------- |
-| `container`                        | `create`'s `container`             | different shape: an element, no selector           |
+| `container`                        | `create`'s `container`             | different shape: an element or `null`, no selector |
 | `scrollMode`                       | `scrollMode`                       | same                                               |
 | `layoutMode`                       | `layoutMode`                       | different shape: camelCase; PDF and Word only      |
 | `zoomMode`                         | `fit`                              | different shape: a `Fit` (see `ZoomMode`)          |

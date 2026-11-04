@@ -490,11 +490,18 @@ function quadBounds(quad: SearchQuad): { x0: number; y0: number; x1: number; y1:
  * right}) mirrors `mountViewerShell`.
  */
 export function mountUIShell(
-    root: HTMLElement,
+    root: HTMLElement | null,
     client: WorkerClient,
     shellOptions: UIShellOptions,
     extension: UIExtension | null,
 ): UIShell {
+    // No root: headless. The UI is built and driven as ever, its canvas and its
+    // state with it, but mounted nowhere, so nobody sees it or answers it. A
+    // public call that would show a dialog takes the dialog's default instead
+    // (`csvDelimiter`, `print`) or, with none to take, rejects (`unlock`). What
+    // shows only itself has nowhere to show (`openSource`).
+    const headless = root === null;
+
     // The chrome's words, in the host's language — one for the shell's life,
     // speaking the extension's messages too where it brings its own.
     const i18n = createI18n(extension?.messages ?? MESSAGE_PACKS, shellOptions.locale, shellOptions.translations);
@@ -595,7 +602,7 @@ export function mountUIShell(
     ownForm.noValidate = true;
     ownForm.addEventListener("submit", (e) => e.preventDefault());
     ownForm.appendChild(layout);
-    root.appendChild(ownForm);
+    root?.appendChild(ownForm);
 
     // The mode the shell opens in: view, or the extension's when it says so.
     const startMode = extension?.initialMode ?? VIEW_MODE;
@@ -1763,6 +1770,12 @@ export function mountUIShell(
                 if (chosen) {
                     // It loads the source its own way.
                     reader.cancel();
+                    if (headless) {
+                        throw new UDocError(
+                            "unsupported",
+                            `a "${chosen.docType}" document shows in the document area, which a headless UI doesn't have`,
+                        );
+                    }
                     const opened = await openExtensionDocument(chosen, request, signal);
                     return opened && { extension: opened };
                 }
@@ -1791,14 +1804,14 @@ export function mountUIShell(
     /**
      * The delimiter the CSV `bytes`, opened by the `generation`th
      * {@link openSource}, are split by when the host names none: the
-     * engine's guess when it is certain, else the one the reader picks in the
-     * dialog. Null when another document was opened, or this one closed,
-     * before it was picked.
+     * engine's guess when it is certain or there's no reader to ask, else the
+     * one the reader picks in the dialog. Null when another document was
+     * opened, or this one closed, before it was picked.
      */
     async function csvDelimiter(bytes: Uint8Array, generation: number): Promise<string | null> {
         const guess = await client.guessCsvDelimiter(bytes);
         if (generation !== sourceGeneration) return null;
-        return guess.certain ? guess.delimiter : delimiterModal.ask(bytes, guess.delimiter);
+        return guess.certain || headless ? guess.delimiter : delimiterModal.ask(bytes, guess.delimiter);
     }
 
     /** The package resource the open document was opened from with `openRemote`, absolute; `undefined` for any other. */
@@ -1953,9 +1966,16 @@ export function mountUIShell(
      * itself when it needs no password, else the one it opens with when the
      * reader gives a password the engine takes — asked for again as often as
      * one is refused. Null when another document is opened, or this one
-     * closed, while it asks; the dialog is theirs then.
+     * closed, while it asks; the dialog is theirs then. Headless there's no
+     * reader to ask, so it rejects: the host's password was the only one.
      */
     async function unlock(layout: DocumentLayout): Promise<DocumentLayout | null> {
+        if (headless && layout.needsPassword) {
+            throw new UDocError(
+                "passwordRequired",
+                "this document is protected, and a headless UI has no one to ask: pass the password it opens with to `open` as `password`",
+            );
+        }
         for (let refused = false; layout.needsPassword; refused = true) {
             const password = await passwordModal.ask(refused);
             if (password === null) return null;
@@ -3219,7 +3239,7 @@ export function mountUIShell(
         if (!(await busyModal.hold(i18n.t("busy.preparingPrint"), counting))) return;
         const pageCount = await counting;
         if (pageCount === 0) throw new Error("print: the open document has no pages to print");
-        if (options === undefined) {
+        if (options === undefined && !headless) {
             // The page shown is current where the pages printed are the ones
             // shown — not a sheet shown as its grid; from a deck's Slide Master
             // view, the slide it was entered from.
@@ -3236,7 +3256,7 @@ export function mountUIShell(
             });
             return;
         }
-        await printPages(options, pageCount, sheet);
+        await printPages(options ?? {}, pageCount, sheet);
     }
 
     /** Print the pages `options` names, of the `pageCount` printed: the

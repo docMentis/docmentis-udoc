@@ -26,6 +26,13 @@ listed once, by package. Its major and minor version are those of the
 
 #### Added
 
+- Headless: `create` takes `null` for its container, for a viewer or an editor
+  that puts nothing on the page and is driven by its calls alone, to render,
+  export, search, edit and save documents in the browser. No call waits on a
+  person: `open` rejects a protected document with a `passwordRequired`
+  `UDocError` unless its `password` opens it, and a CSV with an unclear split
+  opens on the likeliest delimiter; `print()` prints every page; `open` rejects
+  an extension document with an `unsupported` `UDocError`.
 - Built-in Canva and Google documents: `open` takes a link to a Canva design,
   `docType` `"canva"`, or to a Google Docs, Sheets or Slides file, `docType`
   `"google"` and `sourceFormat` `"google-docs"`, `"google-sheets"` or
@@ -67,6 +74,9 @@ listed once, by package. Its major and minor version are those of the
 
 #### Fixed
 
+- `destroy` no longer sets off uncaught `worker destroyed` errors. The reads the
+  UI starts after an open or an edit each rejected with one when it was
+  destroyed before they answered. A call you're waiting on still rejects.
 - A viewer or an editor placed inside a `<form>` no longer submits it: its
   buttons are `type="button"`, and Enter in one of its fields stays in that
   field, where a click on Next Page or Zoom In, or Enter in a print range radio

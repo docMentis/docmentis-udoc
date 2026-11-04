@@ -110,6 +110,7 @@ npm run format:check
 npm run dev               # the demo, with the UI packages rebuilding
 npm run docs              # the docs site, its API reference from the built packages
 npm run examples          # each example, built and opened in a browser
+npm run headless          # the viewer and the editor with no container, in a browser
 npm run shockwave         # shockwave, the sales enablement app, at localhost:5280
 npm run release -- patch  # cut a release, which CI publishes
 ```

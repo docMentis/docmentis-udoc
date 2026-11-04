@@ -281,12 +281,14 @@ export interface OpenOptions {
     /** The character a CSV's fields are split by, `";"`, `"|"`, …, which
      *  skips detection. Default the comma, semicolon, tab or vertical bar that
      *  splits the file's first records alike; where no one or more than one
-     *  does, a dialog asks the reader, the likeliest picked. Saving back to
-     *  CSV keeps it. No other format takes one. */
+     *  does, a dialog asks the reader, the likeliest picked, and a headless UI
+     *  takes the likeliest. Saving back to CSV keeps it. No other format takes
+     *  one. */
     delimiter?: string;
     /** The password a protected document opens with, for a host that holds
      *  it: tried first, and the user is asked only when it doesn't open the
-     *  document. Default none — the user is asked. */
+     *  document. Default none — the user is asked. A headless UI has no user to
+     *  ask: `open` rejects with a `passwordRequired` `UDocError` instead. */
     password?: string;
 }
 
@@ -484,25 +486,29 @@ function sameViewport(a: Viewport, b: Viewport): boolean {
 }
 
 /**
- * Mount a document UI into `container`, run as `wrapper` — the docMentis
+ * Mount a document UI into `container`, or with `null` mount it nowhere, for a
+ * headless one, run as `wrapper` — the docMentis
  * package embedding it, which the engine reports with every permit request and
  * usage event — on the render worker `startWorker` starts (the package's own,
- * serving the requests its UI sends), with the package's `extension` of the
- * shell, if any, and hand the shell to `construct`, the package's own class. Exported from the
- * `./internal` entry only: the wrapper is a docMentis package's to declare,
- * never an embedder's option.
+ * serving the requests its UI sends), with the package's extension of the
+ * shell `extend` builds, if any, and hand both to `construct`, the package's own
+ * class. `extend` runs once the runtime is known to support the UI, as an
+ * extension can need the DOM, so a runtime without it still rejects as
+ * `unsupported`. Exported from the `./internal` entry only: the wrapper is a
+ * docMentis package's to declare, never an embedder's option.
  */
-export async function createAs<T>(
-    container: HTMLElement,
+export async function createAs<T, X extends UIExtension | null>(
+    container: HTMLElement | null,
     options: UDocOptions,
     wrapper: Wrapper,
     startWorker: () => Worker,
-    extension: UIExtension | null,
-    construct: (shell: UIShell) => T,
+    extend: () => X,
+    construct: (shell: UIShell, extension: X) => T,
 ): Promise<T> {
     const client = await WorkerClient.create(options, wrapper, startWorker);
+    const extension = extend();
     const shell = mountUIShell(container, client, options, extension);
-    return construct(shell);
+    return construct(shell, extension);
 }
 
 /**
@@ -633,7 +639,9 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      *
      * An extension document ({@link registerExtensionDocument}) that takes
      * the source opens it in place of the engine, rendered in the document
-     * area, view only: it has no pages, so the calls that need them reject.
+     * area, view only: it has no pages, so the calls that need them reject. A
+     * headless UI has no document area, so `open` rejects with an `unsupported`
+     * `UDocError`.
      *
      * Rejects with a `UDocError` when the document doesn't open — an `io` one
      * when its URL can't be fetched — after showing it, with the
@@ -1042,7 +1050,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * Print the open document through the browser's print dialog. Without
      * `options` it opens its own print dialog first, to choose the pages
      * and quality — what the toolbar's Print does; with them it prints as
-     * they say.
+     * they say. A headless UI has no dialog of its own to open: without
+     * `options` it prints every page, at `"standard"` quality.
      *
      * A workbook prints its current sheet, as Excel prints the active sheet:
      * on the pages its Page Layout view shows, whichever view it is shown in,
@@ -1371,8 +1380,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * Fill the screen with the document UI, or leave it, as the toolbar menu's
      * Fullscreen button does. The browser enters fullscreen only in answer to a
      * user gesture, so call it from the host's own click handler; the promise
-     * rejects when the browser refuses. Leaving resolves at once when it isn't
-     * fullscreen.
+     * rejects when the browser refuses, as it does for a headless UI, which
+     * isn't on the page. Leaving resolves at once when it isn't fullscreen.
      */
     setFullscreen(fullscreen: boolean): Promise<void> {
         return this.shell.setFullscreen(fullscreen);
@@ -1795,7 +1804,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         this.shell.close();
     }
 
-    /** Tear down components, listeners, and the render worker. */
+    /** Tear down components, listeners, and the render worker. A call still in flight rejects. */
     destroy(): void {
         for (const unsub of this.#unsubscribes) unsub();
         this.#unsubscribes.length = 0;
