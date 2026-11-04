@@ -15,8 +15,11 @@ export type Moment =
 /** A document opened in the browser. */
 export interface DocumentOpened {
     kind: "document:opened";
-    /** Where: a file picked for upload, opened in the browser before it's sent. */
-    where: "upload";
+    /**
+     * Where: a file picked for upload, opened in the browser before it's
+     * sent; or a file in the library, on its page, streamed from udoc-server.
+     */
+    where: "upload" | "file";
     /** udoc's name for its format, as the viewer read it: `pdf`, `pptx`, …; `null` when it didn't say. */
     format: string | null;
     /** From the viewer's making to the document open, in milliseconds. */
@@ -26,8 +29,8 @@ export interface DocumentOpened {
 /** A document opened in the browser closed, its viewer gone. */
 export interface DocumentClosed {
     kind: "document:closed";
-    /** Where: the upload's preview, gone with its dialog, the file uploaded or not. */
-    where: "upload";
+    /** Where: the upload's preview, gone with its dialog, the file uploaded or not; or a file's page, left. */
+    where: "upload" | "file";
 }
 
 /** Thumbnails in view, where there were none: the first of them shown, its file's first page, kept at upload. */

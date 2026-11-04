@@ -14,6 +14,7 @@ import { DocumentViewer } from "../DocumentViewer";
 import { formatDate, formatDateTime, formatSize, typeLabel } from "../files";
 import { ChevronRightIcon, PanelRightIcon } from "../icons";
 import { DeleteDialog, NameDialog } from "../LibraryDialogs";
+import { announceMoment } from "../moments";
 import { useUser } from "../session";
 import { ActionsMenu, useDocumentTitle } from "../ui";
 import { NotFoundPage } from "./PlaceholderPage";
@@ -123,7 +124,13 @@ export function FilePage() {
                         )}
                     </header>
                     <div className="document-viewer">
-                        <DocumentViewer documentId={asset.documentId} />
+                        <DocumentViewer
+                            documentId={asset.documentId}
+                            onOpened={({ format, ms }) =>
+                                announceMoment({ kind: "document:opened", where: "file", format, ms })
+                            }
+                            onClosed={() => announceMoment({ kind: "document:closed", where: "file" })}
+                        />
                     </div>
                 </section>
                 {!panel && (

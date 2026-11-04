@@ -276,8 +276,9 @@ two kinds of things:
   happen: "Previewed before upload. Client-first: docMentis rendered this file
   in your browser, so you see it before it's uploaded, not after." A
   highlight shows when what it tells about shows, and goes when it goes: the
-  preview's, while the preview is open; the thumbnails', while a thumbnail is
-  in view; the viewer's colors', while the brand settings show them. It has
+  preview's, while the preview is open; the streaming's, while a file's page
+  shows it open; the thumbnails', while a thumbnail is in view; the viewer's
+  colors', while the brand settings show them. It has
   the moment's figures where it has them (its format, how long it took to
   open), and sits in the panel's list, newest first.
 

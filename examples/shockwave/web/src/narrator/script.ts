@@ -34,6 +34,14 @@ export const HIGHLIGHTS: Highlight[] = [
         ends: (moment) => moment.kind === "document:closed" && moment.where === "upload",
     },
     {
+        id: "streamed-from-the-server",
+        tells: (moment) => moment.kind === "document:opened" && moment.where === "file",
+        title: "Streamed from the server",
+        body: "docMentis udoc-viewer is designed client-first, but for large documents you can pair it with udoc-server to do streaming. This way you get the first render instantly, without waiting for the whole file to download.",
+        figures: () => [],
+        ends: (moment) => moment.kind === "document:closed" && moment.where === "file",
+    },
+    {
         id: "thumbnails-on-the-server",
         tells: (moment) => moment.kind === "thumbnails:shown" && moment.where === "card",
         title: "Thumbnails rendered on the server",
