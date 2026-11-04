@@ -54,6 +54,7 @@ import initEngine, {
     fetchFontBinaries,
     guessCsvDelimiter,
     startSession,
+    validateWatermarks,
 } from "@docmentis/udoc-wasm";
 import type {
     CanvasText,
@@ -492,6 +493,23 @@ function overPaper(rgba: Uint8ClampedArray): void {
         rgba[i + 2] = rgba[i + 2]! + clear;
         rgba[i + 3] = 255;
     }
+}
+
+/**
+ * `raster`, a page's premultiplied pixels divided back out, in place, as
+ * `ImageData` reads them: a PDF's raster is clear wherever the page paints
+ * nothing, so what is translucent there would read too dark.
+ */
+function straightened(raster: ThumbnailResult): ThumbnailResult {
+    const rgba = new Uint8ClampedArray(raster.rgba);
+    for (let i = 0; i < rgba.length; i += 4) {
+        const alpha = rgba[i + 3]!;
+        if (alpha === 0 || alpha === 255) continue;
+        rgba[i] = (rgba[i]! * 255) / alpha;
+        rgba[i + 1] = (rgba[i + 1]! * 255) / alpha;
+        rgba[i + 2] = (rgba[i + 2]! * 255) / alpha;
+    }
+    return raster;
 }
 
 /**
@@ -1462,7 +1480,7 @@ function renderQueuedThumbnail(id: number | undefined, plane: number, index: num
         return;
     }
     try {
-        const raster = rasterPage(session, plane, index, scale, true);
+        const raster = straightened(rasterPage(session, plane, index, scale, true));
         reply(id, raster, undefined, [raster.rgba]);
     } catch (error) {
         reply(id, undefined, error);
@@ -2132,7 +2150,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "renderThumbnail": {
                 if (!session) throw new Error("engine worker: renderThumbnail before open");
                 // A one-off preview, now — a slide layout's, a page to print.
-                const raster = rasterPage(session, msg.plane, msg.index, msg.scale, msg.ephemeral ?? true);
+                const raster = straightened(
+                    rasterPage(session, msg.plane, msg.index, msg.scale, msg.ephemeral ?? true),
+                );
                 reply(id, raster, undefined, [raster.rgba]);
                 break;
             }
@@ -2146,7 +2166,9 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "renderPrintPage": {
                 if (!session) throw new Error("engine worker: renderPrintPage before open");
-                const raster = rasterOf(session.spreadsheet.renderPrintPageToRgba(msg.plane, msg.index, msg.scale));
+                const raster = straightened(
+                    rasterOf(session.spreadsheet.renderPrintPageToRgba(msg.plane, msg.index, msg.scale)),
+                );
                 reply(id, raster, undefined, [raster.rgba]);
                 break;
             }
@@ -2807,6 +2829,22 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // change. No document state changes, so no repaint.
                 session?.setUserInfo(msg.name);
                 emitSelection(true);
+                break;
+            }
+            case "setWatermarks": {
+                // Checked here, with a session up or not, and recorded only
+                // then: one refused leaves the last in place, and what a later
+                // open replays is known to draw.
+                validateWatermarks(msg.watermarks);
+                sticky.set(stickyKey(msg), msg);
+                session?.setWatermarks(msg.watermarks);
+                // Text may put fonts on order, and every page shows it. With no
+                // document yet, the open composes it again and orders then.
+                if (session?.docType() !== undefined) {
+                    fetchFontOrders();
+                    scheduleFrame();
+                }
+                reply(id, undefined);
                 break;
             }
             case "presence": {

@@ -15,6 +15,7 @@ import type {
     PageExportFormat,
     SaveStrategy,
     UDocType,
+    Watermark,
 } from "@docmentis/udoc-wasm";
 import { UDocError } from "@docmentis/udoc-wasm/error";
 import type { UDocErrorCode } from "@docmentis/udoc-wasm/error";
@@ -383,6 +384,30 @@ export class UDocSession {
             );
         }
         return this.#call((id) => ({ id, type: "exportPageToBytes", index, format }));
+    }
+
+    /**
+     * Draw `watermarks` — text, a shape or an image each — over the pages they
+     * target in everything {@link exportToBytes} and {@link exportPageToBytes}
+     * write from now on, the later on top, in place of any set before; `[]` clears
+     * them. {@link saveToBytes} never writes one.
+     *
+     * Where one lands is measured on the page as it is shown, in points.
+     * `placement: { at: { anchor, offsetX, offsetY, rotation } }` places one copy:
+     * rotate it about its own centre by `rotation` degrees, clockwise; take the
+     * upright rectangle holding the result; align that rectangle to the page by
+     * `anchor`, which names the same point on both, so `"center"` is its centre on
+     * the page's centre; then move it `offsetX` right and `offsetY` down.
+     * `placement: { tile: { gapX, gapY, rotation } }` fills the page with copies,
+     * the first rectangle in the top-left corner, each next one `gapX` to the right
+     * and each next row `gapY` below.
+     *
+     * An image's `pixels` are decoded RGBA8, alpha not premultiplied, top row
+     * first. Rejects `invalidRequest`, leaving those before in place, if one can't
+     * be drawn.
+     */
+    setWatermarks(watermarks: readonly Watermark[]): Promise<void> {
+        return this.#call((id) => ({ id, type: "setWatermarks", watermarks: [...watermarks] }));
     }
 
     /**

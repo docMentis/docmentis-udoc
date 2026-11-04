@@ -165,6 +165,7 @@ export default defineConfig({
                         { text: "Quick start", link: "/guide/quick-start" },
                         { text: "Supported formats", link: "/guide/supported-formats" },
                         { text: "Customize the UI", link: "/guide/customize-the-ui" },
+                        { text: "Watermarks", link: "/guide/watermarks" },
                         { text: "Extension documents", link: "/guide/extension-documents" },
                     ],
                 },

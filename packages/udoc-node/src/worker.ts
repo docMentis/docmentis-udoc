@@ -140,6 +140,10 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 await updateLayoutSettled(s, WHOLE_DOCUMENT);
                 return { id, ok: true, result: s.exportToBytes(request.format) };
             }
+            case "setWatermarks":
+                // Its fonts are fetched as the export that needs them composes.
+                opened().setWatermarks(request.watermarks);
+                return { id, ok: true, result: undefined };
             case "exportPageToBytes": {
                 const s = opened();
                 // A page is known only once composed, so compose through the

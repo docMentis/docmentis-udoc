@@ -18,6 +18,7 @@ import type {
     PaintLine,
     Rect as CornerRect,
     TextBodyProperties,
+    Watermark,
     TextCharacterProperty,
     TextCharacterPropertyKey,
     TextParagraphProperty,
@@ -1769,6 +1770,17 @@ export interface SetUserInfoRequest {
 }
 
 /**
+ * Draw these over the pages they target, in place of any set before. Sticky
+ * across opens like the backdrop, but recorded only once checked: replaying one
+ * into a new session has no one to tell it can't be drawn, and the document would
+ * open without it. Replies once set, or with why not.
+ */
+export interface SetWatermarksRequest {
+    type: "setWatermarks";
+    watermarks: Watermark[];
+}
+
+/**
  * Serialize the session's presence (its selection) for sync with a peer — the
  * transient channel beside {@link SnapshotRequest}: last-write-wins, no
  * history, never part of a save. Replies with the bytes to feed another
@@ -1971,7 +1983,7 @@ export interface ReaderActivityRequest {
 }
 
 /**
- * The reply payload of a {@link RenderThumbnailRequest}: the premultiplied
+ * The reply payload of a {@link RenderThumbnailRequest}: the straight-alpha
  * RGBA8 pixels (`width * height * 4` bytes, row-major, Y-down — its backing
  * `ArrayBuffer` is transferred, not copied) plus the dimensions the renderer
  * chose. The host wraps `rgba` in an `ImageData` of those dimensions and
@@ -2101,6 +2113,7 @@ export type WorkerRequest =
     | ExportToBytesRequest
     | ExportPageToBytesRequest
     | SetUserInfoRequest
+    | SetWatermarksRequest
     | PresenceRequest
     | MergePresenceRequest
     | SetPointerRequest

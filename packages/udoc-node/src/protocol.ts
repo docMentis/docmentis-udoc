@@ -13,6 +13,7 @@ import type {
     UDocError,
     UDocType,
     UrlFont,
+    Watermark,
 } from "@docmentis/udoc-wasm";
 
 /**
@@ -73,6 +74,7 @@ export type WorkerRequest =
     | { id: number; type: "saveToPackage"; version?: number }
     | { id: number; type: "exportToBytes"; format: ExportFormat }
     | { id: number; type: "exportPageToBytes"; index: number; format: PageExportFormat }
+    | { id: number; type: "setWatermarks"; watermarks: Watermark[] }
     | { id: number; type: "snapshot" }
     | { id: number; type: "versionVector" }
     | { id: number; type: "patchSince"; peer: Uint8Array }
@@ -104,6 +106,7 @@ export interface WorkerResult {
     saveToPackage: Uint8Array;
     exportToBytes: Uint8Array;
     exportPageToBytes: Uint8Array;
+    setWatermarks: undefined;
     snapshot: Uint8Array;
     versionVector: Uint8Array;
     patchSince: Uint8Array;

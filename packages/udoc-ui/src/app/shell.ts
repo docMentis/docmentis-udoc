@@ -28,6 +28,7 @@ import type {
     SheetLayoutMode,
     SlideMasterSummary,
     TextHyperlink,
+    Watermark,
 } from "@docmentis/udoc-wasm";
 import { allowsEdit, cssPxPerPt } from "../geometry.js";
 import type {
@@ -323,6 +324,8 @@ export interface UIShell {
     mergePresence: (data: Uint8Array) => Promise<void>;
     /** Set the local user's info (display name) peers draw on this client's selection and its annotations are authored by (sticky across opens). */
     setUserInfo: (name: string) => void;
+    /** Draw `watermarks` over the pages they target; see `UDocBase.setWatermarks`. */
+    setWatermarks: (watermarks: readonly Watermark[]) => Promise<void>;
     /**
      * Subscribe to *local* edits (page edits, undo/redo) — not merges, so a
      * sync listener that pushes a snapshot to a peer can't loop. Returns an
@@ -3322,7 +3325,8 @@ export function mountUIShell(
         // Every page of a PDF at standard quality prints as the PDF itself,
         // through the browser's own viewer — vectors, not a rendering — as the
         // viewer's print did.
-        if (sourceFormat === "pdf" && options.pages === undefined && quality === "standard") {
+        // A watermark is drawn, not saved: with one set, the print is rendered.
+        if (sourceFormat === "pdf" && options.pages === undefined && quality === "standard" && !watermarked) {
             const saving = savedCopy("pdf");
             if (!(await busyModal.hold(i18n.t("busy.preparingPrint"), saving))) return;
             // A PDF that can't be saved — one opened from a package keeps no
@@ -3479,6 +3483,14 @@ export function mountUIShell(
     // The local user's display name, from {@link setUserInfo}: the author of
     // the annotations drawn here. Null until the host sets one.
     let userName: string | null = null;
+
+    // Whether a print must be rendered to carry one, from {@link setWatermarks}.
+    let watermarked = false;
+
+    async function setWatermarks(watermarks: readonly Watermark[]): Promise<void> {
+        await client.setWatermarks(watermarks);
+        watermarked = watermarks.length > 0;
+    }
 
     function setUserInfo(name: string): void {
         // Sticky in the worker, so it's fine before a document is open — it
@@ -3913,6 +3925,7 @@ export function mountUIShell(
         presence,
         mergePresence,
         setUserInfo,
+        setWatermarks,
         onEdit,
         onSelectionEdit,
         joinRemoteCollaboration,

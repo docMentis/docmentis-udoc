@@ -35,6 +35,7 @@ import type {
     SheetState,
     UDocType,
     UrlFont,
+    Watermark,
 } from "@docmentis/udoc-wasm";
 import type { OverlayOptions, OverlaySource } from "./app/components/OverlayManager.js";
 import type { ExtensionDocument } from "./app/extension-documents.js";
@@ -1283,6 +1284,56 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      */
     setUserInfo(name: string): void {
         this.shell.setUserInfo(name);
+    }
+
+    /**
+     * Draw `watermarks` — text, a shape or an image each — over the pages they
+     * target, the later on top, in place of any set before; `[]` clears them.
+     * They show on screen, in thumbnails and a slide show, in a print, and in
+     * {@link exportToBytes} and {@link exportPageToBytes}. Sticky: it applies
+     * even when set before a document is open, from that document's first frame.
+     *
+     * **They are never saved.** {@link saveToBytes} and the Download button give
+     * the document as it is, so set `showDownloadButton: false` if that shouldn't
+     * be handed out. A watermark in a browser deters; it doesn't protect.
+     *
+     * **Where one lands**, measured on the page as it is shown, in points:
+     *
+     * `placement: { at: { anchor, offsetX, offsetY, rotation } }` places one copy:
+     * 1. Rotate the watermark about its own centre by `rotation` degrees; positive
+     *    is clockwise, so `-45` is the diagonal rising to the right.
+     * 2. Take the upright rectangle just holding the rotated watermark.
+     * 3. Align that rectangle to the page by `anchor`, which names the same point
+     *    on both: `"center"` puts its centre on the page's centre, `"topRight"`
+     *    its top-right corner on the page's top-right corner.
+     * 4. Move it by `offsetX` to the right and `offsetY` down; negative goes the
+     *    other way. So `"topRight"` with `(-24, 24)` sits 24 points in from the
+     *    right and from the top.
+     *
+     * `placement: { tile: { gapX, gapY, rotation } }` fills the page with copies:
+     * the first copy's rectangle in the top-left corner, each next one `gapX` to
+     * the right of the last, each next row `gapY` below.
+     *
+     * Rejects, leaving those set before in place, if one can't be drawn: an
+     * opacity past 0 to 1, a size or scale that isn't positive, or pixels that
+     * aren't `width * height * 4` bytes.
+     *
+     * @example
+     * ```ts
+     * await viewer.setWatermarks([{
+     *     content: { text: {
+     *         fontFamily: "Arial", bold: true, italic: false, size: 72,
+     *         color: { colorSpace: "srgb", components: [0.5, 0.5, 0.5] },
+     *         text: "CONFIDENTIAL",
+     *     } },
+     *     opacity: 0.2,
+     *     target: "all",
+     *     placement: { at: { anchor: "center", offsetX: 0, offsetY: 0, rotation: -45 } },
+     * }]);
+     * ```
+     */
+    setWatermarks(watermarks: readonly Watermark[]): Promise<void> {
+        return this.shell.setWatermarks(watermarks);
     }
 
     /**

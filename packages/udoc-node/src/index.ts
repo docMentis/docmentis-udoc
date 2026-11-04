@@ -8,6 +8,17 @@ export type { UDocErrorCode, UDocErrorDetail } from "@docmentis/udoc-wasm/error"
 // A document in and out: what it opened as, and the formats it saves and
 // exports to.
 export type { ExportFormat, FileFormat, PageExportFormat, SaveStrategy, UDocType } from "@docmentis/udoc-wasm";
+// A watermark, for `UDocSession.setWatermarks`.
+export type {
+    Watermark,
+    WatermarkAnchor,
+    WatermarkContent,
+    WatermarkImage,
+    WatermarkPlacement,
+    WatermarkShape,
+    WatermarkTarget,
+    WatermarkText,
+} from "@docmentis/udoc-wasm";
 // What a session is entitled to, and the features a call can need.
 export type { Entitlements, Feature } from "@docmentis/udoc-wasm";
 export { isFileFormat } from "./format.js";

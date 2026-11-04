@@ -10,6 +10,10 @@ listed once, by package. Its major and minor version are those of the
 
 #### Added
 
+- `setWatermarks` draws text, a shape or an image over the whole document or
+  chosen pages, on screen, in thumbnails and slide shows, in print and in every
+  export. It is never saved: `saveToBytes` and the Download button give the
+  document as it is. See the Watermarks guide for exactly where one lands.
 - `setWordprocessingView(view)` shows a word document as `"pages"` or
   `"pageless"`, as the View tab's Pages and Pageless do, with a
   `wordprocessingView` getter and option and a `wordprocessingView:changed`
@@ -25,6 +29,21 @@ listed once, by package. Its major and minor version are those of the
 
 - The presenter view shows the next slide every time it opens, where from the
   second time on Chrome showed a broken image in its place.
+- What is translucent over a clear part of a PDF or word document's page keeps
+  its colour in a print, a thumbnail, `renderPage` and a PNG export, where it
+  read too dark.
+
+### udoc-node
+
+#### Added
+
+- `UDocSession.setWatermarks` draws text, a shape or an image over the whole
+  document or chosen pages in `exportToBytes` and `exportPageToBytes`.
+
+#### Fixed
+
+- What is translucent over a clear part of a PDF or word document's page keeps
+  its colour in a PNG export, where it read too dark.
 
 ## [0.8.13] - 2026-11-03
 

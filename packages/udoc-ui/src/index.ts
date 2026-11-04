@@ -58,6 +58,18 @@ export type {
 // formats it and its pages export to, `exportToBytes` and `exportPageToBytes`.
 export type { ExportFormat, FileFormat, PageExportFormat, SaveStrategy, UDocType } from "@docmentis/udoc-wasm";
 
+// A watermark, for `UDocBase.setWatermarks` (generated from the Rust serde).
+export type {
+    Watermark,
+    WatermarkAnchor,
+    WatermarkContent,
+    WatermarkImage,
+    WatermarkPlacement,
+    WatermarkShape,
+    WatermarkTarget,
+    WatermarkText,
+} from "@docmentis/udoc-wasm";
+
 // A PDF destination, for `UDocBase.goToDestination` (generated from the Rust
 // serde): a page and the view it lands by, or a name the document resolves.
 export type { Destination, DestinationView } from "@docmentis/udoc-wasm";

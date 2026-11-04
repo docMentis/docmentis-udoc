@@ -61,6 +61,7 @@ import type {
     SlideMasterSummary,
     SlideShowInput,
     UrlFont,
+    Watermark,
 } from "@docmentis/udoc-wasm";
 import { UDocError } from "@docmentis/udoc-wasm/error";
 import type {
@@ -1660,6 +1661,18 @@ export class WorkerClient {
     }
 
     /**
+     * Draw `watermarks` over the pages they target, in place of any set before.
+     * Sticky in the worker, so it reaches every document opened later and a
+     * document's first frame. Rejects, leaving those before in place, if one
+     * can't be drawn. Every thumbnail shows them, so all redraw
+     * ({@link invalidateThumbnails}).
+     */
+    async setWatermarks(watermarks: readonly Watermark[]): Promise<void> {
+        await this.#send({ type: "setWatermarks", watermarks: [...watermarks] });
+        this.invalidateThumbnails();
+    }
+
+    /**
      * Serialize the session's presence (its selection) for sync with a peer —
      * the transient channel beside {@link snapshot}: last-write-wins, no
      * history, never part of a save. Feed the bytes to another client's
@@ -1913,8 +1926,6 @@ export class WorkerClient {
         const promise = (this.#send({ type: "queueThumbnail", plane, index, scale }) as Promise<ThumbnailResult | null>)
             .then(async (result) => {
                 if (result === null) throw new Error(THUMBNAIL_DROPPED);
-                // The page is opaque (a white media box), so the premultiplied
-                // bytes equal straight-alpha bytes; `ImageData` reads them as-is.
                 const image = new ImageData(new Uint8ClampedArray(result.rgba), result.width, result.height);
                 const bitmap = await createImageBitmap(image);
                 // A new document / edit landed while this rendered: the pixels

@@ -34,21 +34,21 @@ Seismic, Highspot, Showpad and Letter AI each do these jobs:
 
 ## Where docMentis fits
 
-| Job                                 | docMentis today                                                                                                              | Strength                            |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| Previewing the library, any format  | the viewer: PDF, DOCX, PPTX, XLSX, images, Markdown, HTML, CSV, video and audio, web pages                                   | core                                |
-| Previewing before uploading         | the viewer renders the file in the browser, in WebAssembly; it never leaves the computer                                     | core                                |
-| Thumbnails                          | udoc-server's page routes, PNG or SVG; udoc-node's `exportPageToBytes`                                                       | core                                |
-| Personalizing a deck                | the editor edits the PPTX, DOCX or XLSX itself, in the browser, with no trip to desktop Office                               | core                                |
-| A frozen PDF of an approved version | `exportToBytes("pdf")`, udoc-server's `pages.pdf`                                                                            | core                                |
-| Compliance review                   | annotations, and comment threads with their replies                                                                          | partial: checked for a PDF alone    |
-| Co-editing an RFP                   | udoc-server's collaboration over WebSocket, with presence and each other's pointers                                          | core                                |
-| Presenting                          | the slide show: PowerPoint's transitions, animations and Morph, the presenter view on a second screen; a PDF too             | core                                |
-| Buyer engagement, page by page      | the viewer's `currentPage:changed`, `viewport:changed`, `document:downloaded` and `document:printed`, which the host records | core                                |
-| Sharing under control               | `showDownloadButton`, `showPrintButton` and `enableCopy` turned off                                                          | partial: no watermark, no redaction |
-| Searching the library, AI on it     | search within one document alone: only a word document saves as text or Markdown, and a PDF's or a deck's text can't be had  | gap                                 |
-| Decks generated from a template     | udoc-node opens, saves and exports a document, with no API to edit it                                                        | gap                                 |
-| Copying slides between decks        | not looked into yet                                                                                                          | likely gap                          |
+| Job                                 | docMentis today                                                                                                              | Strength                         |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| Previewing the library, any format  | the viewer: PDF, DOCX, PPTX, XLSX, images, Markdown, HTML, CSV, video and audio, web pages                                   | core                             |
+| Previewing before uploading         | the viewer renders the file in the browser, in WebAssembly; it never leaves the computer                                     | core                             |
+| Thumbnails                          | udoc-server's page routes, PNG or SVG; udoc-node's `exportPageToBytes`                                                       | core                             |
+| Personalizing a deck                | the editor edits the PPTX, DOCX or XLSX itself, in the browser, with no trip to desktop Office                               | core                             |
+| A frozen PDF of an approved version | `exportToBytes("pdf")`, udoc-server's `pages.pdf`                                                                            | core                             |
+| Compliance review                   | annotations, and comment threads with their replies                                                                          | partial: checked for a PDF alone |
+| Co-editing an RFP                   | udoc-server's collaboration over WebSocket, with presence and each other's pointers                                          | core                             |
+| Presenting                          | the slide show: PowerPoint's transitions, animations and Morph, the presenter view on a second screen; a PDF too             | core                             |
+| Buyer engagement, page by page      | the viewer's `currentPage:changed`, `viewport:changed`, `document:downloaded` and `document:printed`, which the host records | core                             |
+| Sharing under control               | `setWatermarks`; `showDownloadButton`, `showPrintButton` and `enableCopy` turned off                                         | partial: no redaction            |
+| Searching the library, AI on it     | search within one document alone: only a word document saves as text or Markdown, and a PDF's or a deck's text can't be had  | gap                              |
+| Decks generated from a template     | udoc-node opens, saves and exports a document, with no API to edit it                                                        | gap                              |
+| Copying slides between decks        | not looked into yet                                                                                                          | likely gap                       |
 
 The gaps are what Shockwave logs in `GAPS.md` as it reaches them, and the
 strongest candidates for the engine's roadmap.
