@@ -116,10 +116,12 @@ its users see.
 The app is Material 3, all of it: its color roles and schemes, shape scale,
 type scale, state layers and elevation, and each component as Material's
 tokens give it (`web/src/app.css`); what Material has no component for is
-built from those, and says so. Its density is Material's −2, a desktop
-app's: each component the height Angular Material's Material 3 tokens give
-it at −2 (filled text fields 48, their labels read but not shown; buttons
-32), and one Material gives no density, 8 less than its own. It is its
+built from those, and says so. Its controls are one height, 32, a desktop
+app's: buttons and icon buttons Material 3 Expressive's extra-small ones,
+chips their own height, and segmented buttons, text fields (their labels
+read but not shown) and search bars taken to it, below any size Material
+gives them. The rest is Material's density −2, each component the height
+Angular Material's Material 3 tokens give it there. It is its
 sections, in a navigation down the window's left, Material 3 Expressive's
 navigation rail, and its top app bar across the rest: the tenant's brand, the search bar in its middle, and at its right the
 theme's button, the bell for notifications, and the user's avatar, which

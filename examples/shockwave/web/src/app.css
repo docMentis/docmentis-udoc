@@ -4,13 +4,14 @@
    component it is. Where Material has no component for a thing, the rule
    says so and builds it from the system's roles, shapes and type.
 
-   Its density is Material's -2, a desktop app's, pointed at, not touched:
-   each component the height Angular Material's Material 3 tokens give it at
-   -2, its touch target dropped. Filled text fields are 48, with no label in
-   them; buttons and icon buttons 32; chips 24; tabs 40; table headers 48
-   and rows 44; the top app bar 56; segmented buttons stay 40. A component
-   Material gives no density, the search bar and the navigation rail's and
-   menu's items, is 8 less than its height, the scale's two 4-high steps.
+   Its controls are one height, 32, a desktop app's, pointed at, not
+   touched: buttons and icon buttons Material 3 Expressive's extra-small
+   ones, chips their own height; segmented buttons, filled text fields and
+   search bars taken to it, below any size Material gives them, which their
+   rules name. The rest is Material's density -2, each component the height
+   Angular Material's Material 3 tokens give it there: tabs 40, table
+   headers 48 and rows 44, the top app bar 56; one Material gives no
+   density, the navigation rail's and menu's items, 8 less than its own.
 
    The colors: Material 3's color roles, each at its tone in the baseline
    schemes, light and dark, from the tonal palettes a seed makes (scheme.ts):
@@ -424,7 +425,8 @@ input {
 
 /* Material's search bar, in the top app bar and over the library: full
    shape, in the high container; its leading icon on-surface, its input
-   body-large; 48 high. */
+   body-large. 32 high, the controls' height, not its 56, which Material
+   gives no density, its icon 20 to fit, as the extra-small buttons'. */
 .search,
 .name-filter {
     position: relative;
@@ -435,9 +437,9 @@ input {
 .search svg,
 .name-filter svg {
     position: absolute;
-    left: 16px;
-    width: 24px;
-    height: 24px;
+    left: 12px;
+    width: 20px;
+    height: 20px;
     color: var(--md-sys-color-on-surface);
     pointer-events: none;
 }
@@ -445,8 +447,8 @@ input {
 .search input,
 .name-filter input {
     width: 100%;
-    height: 48px;
-    padding: 0 16px 0 52px;
+    height: 32px;
+    padding: 0 16px 0 40px;
     border: 0;
     border-radius: var(--md-sys-shape-corner-full);
     background: var(--md-sys-color-surface-container-high);
@@ -723,8 +725,8 @@ input {
     letter-spacing: var(--md-sys-typescale-title-medium-tracking);
 }
 
-/* Material's buttons: 32 high, full shape, label-large, 24 in from each
-   side, 16 on the side of an 18 icon. A button is the filled tonal button,
+/* Material's extra-small buttons: 32 high, full shape, label-large, 16 in
+   from each side, a 20 icon 8 from it. A button is the filled tonal button,
    in the secondary container; the primary one, the filled button; a danger,
    the filled button in the error role; a text button, the label alone in the
    primary, 12 in. Pointed at, each has its hover layer, and those with a
@@ -737,7 +739,7 @@ input {
     justify-content: center;
     gap: 8px;
     height: 32px;
-    padding: 0 24px;
+    padding: 0 16px;
     border: 0;
     border-radius: var(--md-sys-shape-corner-full);
     background: var(--md-sys-color-secondary-container);
@@ -748,14 +750,10 @@ input {
     cursor: pointer;
 }
 
-.button:has(> svg:first-child) {
-    padding-left: 16px;
-}
-
 .button svg {
     flex-shrink: 0;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 }
 
 .button:not(:disabled):hover {
@@ -836,8 +834,8 @@ input {
     background: none;
 }
 
-/* Material's standard icon button: a 32 full-shape state layer round a 24
-   icon, on-surface-variant. */
+/* Material's extra-small standard icon button: a 32 full-shape state layer
+   round a 20 icon, on-surface-variant. */
 .icon-button {
     display: grid;
     place-items: center;
@@ -853,8 +851,8 @@ input {
 }
 
 .icon-button svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
 }
 
 .icon-button:hover {
@@ -867,19 +865,19 @@ input {
 
 /* Material's filled text field: the highest container, extra-small shape at
    its top, and under it its active indicator, on-surface-variant, which
-   reads at 3:1. 48 high, at -2 it has no label in it: its label is read, not
-   shown, and its placeholder, on-surface-variant, says what goes in it; its
-   input is body-large, 12 from its top and bottom. Pointed at, its hover
-   layer and the indicator on-surface; focused, the indicator two pixels of
-   the primary. */
+   reads at 3:1. 32 high, the controls' height, below the 36 Material's
+   densest gives it, and so with no label in it, as from -2: its label is
+   read, not shown, and its placeholder, on-surface-variant, says what goes
+   in it; its input is body-large. Pointed at, its hover layer and the
+   indicator on-surface; focused, the indicator two pixels of the primary. */
 .field {
     display: block;
 }
 
 .field input {
     width: 100%;
-    height: 48px;
-    padding: 12px 16px;
+    height: 32px;
+    padding: 4px 16px;
     border: 0;
     border-radius: var(--md-sys-shape-corner-extra-small) var(--md-sys-shape-corner-extra-small) 0 0;
     background: var(--md-sys-color-surface-container-highest);
@@ -1091,7 +1089,7 @@ input {
     left: 0;
 }
 
-/* Material's elevated filter chip: 24 high, small shape, the low container
+/* Material's elevated filter chip: 32 high, small shape, the low container
    a level up, its label label-large, on-surface-variant, 16 in, its trailing
    icon 18, 8 from its end; pointed at, its hover layer and a level more; set,
    filled with the secondary container. */
@@ -1099,7 +1097,7 @@ input {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    height: 24px;
+    height: 32px;
     padding: 0 8px 0 16px;
     border: 0;
     border-radius: var(--md-sys-shape-corner-small);
@@ -1147,8 +1145,9 @@ input {
     );
 }
 
-/* Material's segmented buttons: a choice of a few, side by side, 40 high,
-   as at -2 still, full shape, outlined in the outline role, a segment at least 48 wide, its
+/* Material's segmented buttons: a choice of a few, side by side, 32 high,
+   the controls' height, below the 36 Material's densest gives them; full
+   shape, outlined in the outline role, a segment at least 48 wide, its
    label label-large, its icon 18; the one made filled with the secondary
    container. */
 .segmented {
@@ -1165,7 +1164,7 @@ input {
     justify-content: center;
     gap: 8px;
     min-width: 48px;
-    height: 38px;
+    height: 30px;
     padding: 0 12px;
     border: 0;
     background: none;
@@ -1335,7 +1334,7 @@ input {
 }
 
 /* The arrows that flip a card's pages, Material's filled tonal icon buttons,
-   32, full shape, their icons 24, at the tray's sides: shown while the card
+   extra-small, 32, full shape, their icons 20, at the tray's sides: shown while the card
    is pointed at or one of them has focus, and always on a screen with no
    pointer to hover. */
 .page-flip {
@@ -1365,8 +1364,8 @@ input {
 }
 
 .page-flip svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
 }
 
 .page-flip:hover {
