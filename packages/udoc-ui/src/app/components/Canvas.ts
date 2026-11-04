@@ -43,6 +43,7 @@ import { GuideBands } from "./GuideBands.js";
 import type { BandKind, BandPalette, GuideBand } from "./GuideBands.js";
 import { ResizeCover } from "./ResizeCover.js";
 import { SCROLLBAR_THICKNESS_PX, visibleSpan } from "./Scrollbar.js";
+import { scrollKeyAction } from "../scroll-keys.js";
 import { MAC } from "./controls.js";
 import { applyPoint, applyVector, invert, translate } from "./affine.js";
 import type { I18n } from "../i18n/index.js";
@@ -266,6 +267,8 @@ const ZOOM_CAP_EPSILON = 1e-3;
 
 /** Quiet gap (ms) after which a single-page wheel flip re-arms (see `pageFlipArmed`). */
 const WHEEL_REST_MS = 120;
+/** CSS pixels an arrow key scrolls, and what a view's-height key keeps on screen to read on from. */
+const KEY_LINE_PX = 40;
 
 /**
  * The viewport surface: a single canvas pinned to its container. The canvas is
@@ -798,10 +801,16 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // typed on a selected cell opens one.
         const cell = st.docType === "spreadsheet" ? st.activeCell : null;
         textInput.setFocused(editable || (copyable && copyAllowed(st)) || cell !== null);
-        textInput.setEditingText(
-            editable && editingText && (profileFor(st.docType).textEditing === true || cell?.entry != null),
-        );
+        textInput.setEditingText(caretLive(st));
         textInput.setTypingBegins(st.mode !== VIEW_MODE && cell !== null && cell.entry === null);
+    }
+
+    /** Whether keystrokes edit text in `st`: a caret is live, in a doc type whose
+     *  text edits in place or a cell being typed into. */
+    function caretLive(st: UIState): boolean {
+        const editable = st.mode !== VIEW_MODE || annotationSelected;
+        const cell = st.docType === "spreadsheet" ? st.activeCell : null;
+        return editable && editingText && (profileFor(st.docType).textEditing === true || cell?.entry != null);
     }
 
     // The HTML overlay layer: a sibling above the canvas (and below the
@@ -3854,17 +3863,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         if (now - lastWheelTs > WHEEL_REST_MS) pageFlipArmed = true;
         lastWheelTs = now;
 
-        const z = renderZoom(s);
-        // When the page is smaller than the viewport the engine centers it, so
-        // the reported scroll offset is negative and never reaches `maxY`. Treat
-        // a fully-visible page as sitting at both edges, so a wheel in either
-        // direction flips rather than dead-ending against the centered clamp.
-        const visibleDocHeight = z > 0 ? visibleSpan(s, "y") / (z * cssPxPerPt(viewDpi(s))) : 0;
-        const maxY = Math.max(0, s.scrollSize.height - visibleDocHeight);
-        const fits = z > 0 && s.scrollSize.height <= visibleDocHeight + PAGE_EDGE_EPSILON;
-        const atBottom = fits || s.scrollY >= maxY - PAGE_EDGE_EPSILON;
-        const atTop = fits || s.scrollY <= PAGE_EDGE_EPSILON;
-        const target = dy > 0 && atBottom ? pageStep(s, 1) : dy < 0 && atTop ? pageStep(s, -1) : null;
+        const target = pageAcrossEdge(s, dy);
         if (target === null) return false; // mid-spread, or no adjacent spread
 
         // At the boundary with an adjacent page: consume the event either way.
@@ -3874,6 +3873,60 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             pageFlipArmed = false;
             st.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: target });
         }
+        return true;
+    }
+
+    /** Whether the page shows whole along `axis`, in single-page view. */
+    function fitsView(s: UIState, axis: "x" | "y"): boolean {
+        const z = renderZoom(s);
+        const size = axis === "y" ? s.scrollSize.height : s.scrollSize.width;
+        return z > 0 && size <= visibleSpan(s, axis) / (z * cssPxPerPt(viewDpi(s))) + PAGE_EDGE_EPSILON;
+    }
+
+    /** The page a vertical move of `dy` from `s`, in single-page view, goes on to
+     *  past the page's edge; null mid-page, or with no page there. */
+    function pageAcrossEdge(s: UIState, dy: number): number | null {
+        const z = renderZoom(s);
+        // When the page is smaller than the viewport the engine centers it, so
+        // the reported scroll offset is negative and never reaches `maxY`. Treat
+        // a fully-visible page as sitting at both edges, so a move in either
+        // direction flips rather than dead-ending against the centered clamp.
+        const visibleDocHeight = z > 0 ? visibleSpan(s, "y") / (z * cssPxPerPt(viewDpi(s))) : 0;
+        const maxY = Math.max(0, s.scrollSize.height - visibleDocHeight);
+        const fits = fitsView(s, "y");
+        const atBottom = fits || s.scrollY >= maxY - PAGE_EDGE_EPSILON;
+        const atTop = fits || s.scrollY <= PAGE_EDGE_EPSILON;
+        return dy > 0 && atBottom ? pageStep(s, 1) : dy < 0 && atTop ? pageStep(s, -1) : null;
+    }
+
+    /**
+     * Move the view for a key pressed where the document has the keyboard: on
+     * the host or the hidden text input, not a control on the page. In
+     * single-page view a step past the page's edge turns the page, as the wheel
+     * does, and a sideways step turns it where the page fits across. Returns
+     * whether it took the key.
+     */
+    function scrollKey(ev: KeyboardEvent): boolean {
+        if (!store || ev.isComposing || (ev.target !== el && ev.target !== textInput.el)) return false;
+        const s = store.getState();
+        if (s.status !== "ready") return false;
+        const action = scrollKeyAction(ev, { grid: s.docType === "spreadsheet", typing: caretLive(s) });
+        if (!action) return false;
+        if (action.kind === "edge") {
+            store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: action.page === "first" ? 0 : s.pageCount - 1 });
+            return true;
+        }
+        const { axis, by } = action;
+        const px = action.step === "line" ? KEY_LINE_PX : Math.max(KEY_LINE_PX, visibleSpan(s, axis) - KEY_LINE_PX);
+        const delta = (by * px) / (renderZoom(s) * cssPxPerPt(viewDpi(s)));
+        if (s.scrollMode === "spread") {
+            const target = axis === "y" ? pageAcrossEdge(s, delta) : fitsView(s, "x") ? pageStep(s, by) : null;
+            if (target !== null) {
+                store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: target });
+                return true;
+            }
+        }
+        store.dispatch({ type: "SCROLL_BY", dx: axis === "x" ? delta : 0, dy: axis === "y" ? delta : 0 });
         return true;
     }
 
@@ -3980,6 +4033,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             el.focus();
             syncTextInput();
         },
+        scrollKey,
         /** Show the local caret, or hide it while a field outside the canvas
          *  types into the same text — a workbook's formula bar, whose own
          *  caret is the one shown. */

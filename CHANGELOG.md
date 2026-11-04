@@ -20,6 +20,12 @@ listed once, by package. Its major and minor version are those of the
   own sign-in reaching the frame. A host with a Content Security Policy allows
   `www.canva.com` and `docs.google.com` as frames. Registering an extension
   document of either doc type replaces that one.
+- The keyboard moves through a document once it has focus: an arrow scrolls a
+  line, Page Up and Page Down or Shift+Space and Space scroll a view's height,
+  and Home and End go to the first and last page. In single-page view, moving
+  past a page's edge turns the page, and Left and Right turn it where the page
+  fits across. A workbook's grid and a text caret keep their own keys, so only
+  Page Up and Page Down scroll there.
 
 #### Fixed
 
@@ -29,9 +35,10 @@ listed once, by package. Its major and minor version are those of the
   or a page size list, submitted the form. Enter in the form's own fields now
   presses the form's own submit button, where it pressed the viewer's first
   button. The password and CSV delimiter dialogs still submit their own forms.
-- The print dialog's fields stay out of a `<form>` around the viewer or the
-  editor: its `FormData` no longer holds `udoc-print-range`, and a page number
-  out of range left in the dialog no longer stops the form submitting.
+- The viewer's and the editor's fields stay out of a `<form>` around them: its
+  `FormData` no longer holds `udoc-print-range`, a page number out of range left
+  in the print dialog no longer stops it submitting, and resetting it leaves the
+  page and zoom fields showing their values, where it blanked them.
 - The "Skip to document" link stays out of sight until Tab focuses it, then shows
   in the viewer's top-left corner, where it showed 100 pixels above a viewer in a
   container that doesn't clip. Activating it moves focus to the document, where

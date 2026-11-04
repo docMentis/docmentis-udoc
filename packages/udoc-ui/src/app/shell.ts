@@ -583,7 +583,19 @@ export function mountUIShell(
 
     bodySlot.append(leftPanelSlot, viewportSlot, rightPanelSlot, panelOverlay);
     layout.append(skipLink, toolbarSlot, ribbonSlot, bodySlot);
-    root.appendChild(layout);
+
+    // The UI's fields answer to a form of its own, so that a form around it, a
+    // host's, doesn't take them for its own: its data would carry them, its
+    // validation would weigh them, Enter in one would submit it and resetting it
+    // would blank them. This form makes no box, so the root still sizes to the
+    // container and a host's styles for forms have nothing to land on, and it
+    // has no submit button, so nothing here submits it.
+    const ownForm = document.createElement("form");
+    ownForm.style.display = "contents";
+    ownForm.noValidate = true;
+    ownForm.addEventListener("submit", (e) => e.preventDefault());
+    ownForm.appendChild(layout);
+    root.appendChild(ownForm);
 
     // The mode the shell opens in: view, or the extension's when it says so.
     const startMode = extension?.initialMode ?? VIEW_MODE;
@@ -1636,6 +1648,10 @@ export function mountUIShell(
         // its alone.
         extension?.keydown(e);
         if (e.defaultPrevented) return;
+        if (canvas.scrollKey(e)) {
+            e.preventDefault();
+            return;
+        }
         // Delete / Backspace removes the selected objects — but only in edit
         // mode, bar annotations, which edit in view mode too where their
         // capabilities allow (a session not entitled to annotate has none),
@@ -1678,18 +1694,6 @@ export function mountUIShell(
         }
     };
     layout.addEventListener("keydown", handleKeyDown);
-
-    // Enter in a field submits the form it's in, even from a field that does
-    // nothing with the key: a radio, a checkbox, a select. A form of the UI's
-    // own dialogs takes that; any other is the host's, which no field here is
-    // part of filling in.
-    const keepEnterFromHostForm = (e: KeyboardEvent) => {
-        if (e.key !== "Enter") return;
-        const field = e.target;
-        if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement)) return;
-        if (field.form && !layout.contains(field.form)) e.preventDefault();
-    };
-    layout.addEventListener("keydown", keepEnterFromHostForm);
 
     const handleOverlayClick = () => store.dispatch({ type: "CLOSE_PANEL" });
     panelOverlay.addEventListener("click", handleOverlayClick);
@@ -3703,7 +3707,6 @@ export function mountUIShell(
         const leaving = leaveCollaboration();
         cleanupSystemListener();
         layout.removeEventListener("keydown", handleKeyDown);
-        layout.removeEventListener("keydown", keepEnterFromHostForm);
         for (const type of ACTIVITY_INPUTS) layout.removeEventListener(type, noteInput, { capture: true });
         panelOverlay.removeEventListener("click", handleOverlayClick);
         unsubChrome();
@@ -3780,7 +3783,7 @@ export function mountUIShell(
         toolbar.destroy();
         if (leaving) void leaving.finally(() => client.destroy());
         else client.destroy();
-        layout.remove();
+        ownForm.remove();
     }
 
     return {
