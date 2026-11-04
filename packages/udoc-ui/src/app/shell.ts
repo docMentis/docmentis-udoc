@@ -96,7 +96,9 @@ import {
     VIEW_MODE,
     initialState,
     planeOfView,
+    planeOfWordprocessingView,
     renderZoom,
+    sheetLayoutModeOfView,
     showsPageless,
     showsPaper,
     showsSlides,
@@ -111,8 +113,10 @@ import type {
     MarkupTool,
     PanelTab,
     PresentationView,
+    SheetView,
     ThemeMode,
     ViewControlsPlacement,
+    WordprocessingView,
 } from "./state.js";
 import type { ShapePoint } from "./shapes.js";
 import {
@@ -416,6 +420,11 @@ export interface UIShell {
     /** Show a deck as `view`, resolving once a frame shows it — at once for
      *  a document that is not a deck, which keeps it for the next one. */
     setPresentationView: (view: PresentationView) => Promise<void>;
+    /** Show a word document as `view`, resolving once a frame shows it — at
+     *  once for a document that is not one, which keeps it for the next. */
+    setWordprocessingView: (view: WordprocessingView) => Promise<void>;
+    /** Show the current worksheet as `view`, resolving once a frame shows it. */
+    setSheetView: (view: SheetView) => Promise<void>;
     /** Dock the view-state controls in the top toolbar, the floating bar, or the status bar. */
     setViewControlsPlacement: (placement: ViewControlsPlacement) => void;
     /** Close the current document. */
@@ -454,6 +463,7 @@ export interface UIShellOptions {
     activePanel?: PanelTab | null;
     showNotesPanel?: boolean;
     presentationView?: PresentationView;
+    wordprocessingView?: WordprocessingView;
     showFormulaBar?: boolean;
     showLoadingOverlay?: boolean;
     zoomSteps?: readonly number[];
@@ -636,6 +646,7 @@ export function mountUIShell(
         rightPanelVisible: shellOptions.showRightPanel ?? initialState.rightPanelVisible,
         notesOpen: shellOptions.showNotesPanel ?? initialState.notesOpen,
         presentationView: shellOptions.presentationView ?? initialState.presentationView,
+        wordprocessingView: shellOptions.wordprocessingView ?? initialState.wordprocessingView,
         formulaBarVisible: shellOptions.showFormulaBar ?? initialState.formulaBarVisible,
         disabledPanels: hostDisabledPanels,
         hostDisabledPanels,
@@ -1284,10 +1295,13 @@ export function mountUIShell(
     // tab's Normal and Page Layout set the store's mode at once and raise a
     // request, watched here by its seq — a sheet switch changes the mode shown
     // too, with nothing to tell the worker.
+    let sheetLayoutModeSwitched: Promise<void> = Promise.resolve();
     const unsubSheetLayoutMode = subscribeSelector(
         store,
         (s) => s.sheetLayoutModeRequest,
-        ({ plane, mode }) => void switchSheetLayoutMode(plane, mode),
+        ({ plane, mode }) => {
+            sheetLayoutModeSwitched = switchSheetLayoutMode(plane, mode);
+        },
     );
 
     // Push the arrangement — scroll mode, layout mode, page rotation — to the
@@ -1388,12 +1402,8 @@ export function mountUIShell(
         },
     );
 
-    async function goToPlane(plane: number): Promise<void> {
-        store.dispatch({ type: "SET_CURRENT_PLANE", plane });
-        // The store tells its subscribers in a microtask: by the end of it the
-        // switch is asked for, or a later choice made in the same task has
-        // superseded it.
-        await Promise.resolve();
+    /** Settles once a frame shows `plane`, or the view has moved on without it. */
+    async function planePainted(plane: number): Promise<void> {
         if (requestedPlane !== plane || paintedPlane === plane) return;
         await new Promise<void>((resolve) => {
             const settle = (): void => {
@@ -1404,10 +1414,41 @@ export function mountUIShell(
         });
     }
 
+    async function goToPlane(plane: number): Promise<void> {
+        store.dispatch({ type: "SET_CURRENT_PLANE", plane });
+        // The store tells its subscribers in a microtask: by the end of it the
+        // switch is asked for, or a later choice made in the same task has
+        // superseded it.
+        await Promise.resolve();
+        await planePainted(plane);
+    }
+
     async function setPresentationView(view: PresentationView): Promise<void> {
         store.dispatch({ type: "SET_PRESENTATION_VIEW", view });
         const plane = planeOfView(store.getState().planeKinds, view);
         if (plane >= 0) await goToPlane(plane);
+    }
+
+    async function setWordprocessingView(view: WordprocessingView): Promise<void> {
+        store.dispatch({ type: "SET_WORDPROCESSING_VIEW", view });
+        const plane = planeOfWordprocessingView(store.getState(), view);
+        if (plane >= 0) await goToPlane(plane);
+    }
+
+    async function setSheetView(view: SheetView): Promise<void> {
+        // What's typed into a cell is saved before the sheet's view starts
+        // over, as before another sheet shows. Refused, the entry stays open,
+        // and the sheet in its view.
+        if (store.getState().activeCell?.entry != null && !(await saveCellEntry(false, null))) return;
+        const { seq } = store.getState().sheetLayoutModeRequest;
+        store.dispatch({ type: "SET_SHEET_LAYOUT_MODE", mode: sheetLayoutModeOfView(view) });
+        const state = store.getState();
+        if (state.sheetLayoutModeRequest.seq === seq) return;
+        // The switch is asked for as the store notifies, in the microtask it
+        // queues; the frame after its reply is the first to show the view.
+        await Promise.resolve();
+        await sheetLayoutModeSwitched;
+        await planePainted(state.sheetLayoutModeRequest.plane);
     }
 
     // Performance counter: the toggle both enables the worker's counter and
@@ -1899,6 +1940,7 @@ export function mountUIShell(
             // Asked before the first paint, which the worker answers it ahead
             // of; awaited last, so the document opens with its sheets known.
             const planesRead = client.planeInfo().then((planes) => {
+                const before = store.getState().currentPlane;
                 store.dispatch({
                     type: "SET_PLANES",
                     count: planes.count,
@@ -1910,6 +1952,11 @@ export function mountUIShell(
                     kinds: planes.kinds,
                     sheetLayoutModes: planes.sheetLayoutModes,
                 });
+                // A view chosen can be the plane the store already stands on,
+                // where the document opened on another — a text file, its pages
+                // chosen — so no change of it tells the worker.
+                const shown = store.getState().currentPlane;
+                if (shown === before && shown !== planes.current) void switchPlane(shown);
             });
             // A PDF that asks to open with its outline showing opens the outline
             // tab — async, off the critical path.
@@ -2382,6 +2429,8 @@ export function mountUIShell(
     async function switchSheetLayoutMode(plane: number, mode: SheetLayoutMode): Promise<void> {
         if (store.getState().status !== "ready") return;
         const layout = await client.setSheetLayoutMode(plane, mode);
+        // What has painted of the sheet so far shows its other mode.
+        paintedPlane = -1;
         store.dispatch({
             type: "DOC_RELAYOUT",
             pageCount: layout.pageCount ?? null,
@@ -3914,6 +3963,8 @@ export function mountUIShell(
         openNotesPanel: () => store.dispatch({ type: "SET_NOTES_OPEN", open: true }),
         closeNotesPanel: () => store.dispatch({ type: "SET_NOTES_OPEN", open: false }),
         setPresentationView,
+        setWordprocessingView,
+        setSheetView,
         setViewControlsPlacement: (placement) => store.dispatch({ type: "SET_VIEW_CONTROLS_PLACEMENT", placement }),
         close,
         destroy,

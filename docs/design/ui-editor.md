@@ -112,6 +112,16 @@ the one shown, `currentPlane` follows it once the plane roster names its plane
 — moves it back. The shell's plane switch lands a deck's on the page the last
 one showed, where a sheet opens at its top.
 
+A word document's two views are planes of viewer 0 as well: its pages, and its
+pageless flow (`PAGELESS_PLANE`). The store's `wordprocessingView` names the
+view chosen, by the host or the View tab, and each word document after opens on
+its plane. It is `null` until one is chosen, and each then opens on the plane
+the engine opens it on, the view it was saved in; `wordprocessingViewOf` reads
+either as the view shown. A worksheet's Normal and Page Layout aren't planes but
+a mode of its plane, each sheet's its own (`planeSheetLayoutModes`, from the
+engine). So the store keeps no sheet view for the next workbook, and
+`setSheetView` acts on the sheet shown.
+
 The dirty-rect core is the Rust `WasmSession` (in `docmentis-udoc-facade-wasm`).
 It stacks pages into one document-space coordinate system and, on scroll, **blits
 the existing pixels by the (integer device-pixel) scroll delta and re-rasterizes

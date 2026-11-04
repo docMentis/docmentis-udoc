@@ -6,8 +6,16 @@ import { mountUIShell } from "./app/shell.js";
 import type { UIShell } from "./app/shell.js";
 import type { RemoteCheckpointResponse } from "./app/remote.js";
 import type { AnnotationPatch } from "./app/annotation-patch.js";
-import { pageStep, renderZoom, viewDpi } from "./app/state.js";
-import type { PanelTab, PresentationView, ThemeMode, UIState, ViewControlsPlacement } from "./app/state.js";
+import { pageStep, renderZoom, sheetViewOf, viewDpi, wordprocessingViewOf } from "./app/state.js";
+import type {
+    PanelTab,
+    PresentationView,
+    SheetView,
+    ThemeMode,
+    UIState,
+    ViewControlsPlacement,
+    WordprocessingView,
+} from "./app/state.js";
 import { profileFor } from "./app/profiles.js";
 import { cssPxPerPt } from "./geometry.js";
 import type { Fit, LayoutMode, PageGap, PageViewsFrame, ScrollAlignment, ScrollMode } from "./geometry.js";
@@ -99,6 +107,15 @@ export interface UDocOptions {
      *  Default `"normal"`; {@link UDocBase.setPresentationView} and the View
      *  tab change it. Other document types keep it for the next deck. */
     presentationView?: PresentationView;
+    /** How a word document shows: `"pages"`, its pages; or `"pageless"`, its
+     *  body flowed to the pane's width on one page as tall as its text, with
+     *  no headers, footers or page breaks. Each word document opens in it,
+     *  whatever view it was saved in. Default: none, so each opens in the view
+     *  it was saved in: its pages, unless saved in Web Layout, and pageless for
+     *  a text, Markdown, HTML or email file. {@link UDocBase.setWordprocessingView}
+     *  and the View tab choose one from then on. Other document types keep it
+     *  for the next word document. */
+    wordprocessingView?: WordprocessingView;
     /** Show a workbook's formula bar above its grid: the active cell's
      *  reference and its contents, which in edit mode it edits. Default
      *  `true`; the View tab's Formula Bar changes it. */
@@ -369,6 +386,10 @@ export interface UDocEvents {
     "notesPanel:changed": { open: boolean };
     /** Fires when a deck's view changes — by the host, the View tab, or a search match on the slides from its notes pages. */
     "presentationView:changed": { view: PresentationView; previousView: PresentationView };
+    /** Fires when {@link UDocBase.wordprocessingView} changes — by the host, the View tab, or a word document opening or closing in another view. */
+    "wordprocessingView:changed": { view: WordprocessingView; previousView: WordprocessingView };
+    /** Fires when {@link UDocBase.sheetView} changes — by the host, the View tab, a move to a sheet in another view, or a workbook opening or closing. */
+    "sheetView:changed": { view: SheetView | null; previousView: SheetView | null };
     /** Fires when a deck's or a PDF's slide show starts or ends — by the host, the Present tab, Escape, or a step past its last slide or page. */
     "slideShow:changed": { playing: boolean };
     /**
@@ -568,6 +589,12 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
                 shell.store,
                 (s) => s.presentationView,
                 (view, previousView) => this.#emit("presentationView:changed", { view, previousView }),
+            ),
+            subscribeSelector(shell.store, wordprocessingViewOf, (view, previousView) =>
+                this.#emit("wordprocessingView:changed", { view, previousView }),
+            ),
+            subscribeSelector(shell.store, sheetViewOf, (view, previousView) =>
+                this.#emit("sheetView:changed", { view, previousView }),
             ),
             subscribeSelector(
                 shell.store,
@@ -1525,6 +1552,48 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
+     * Show a word document as `view` — its pages, or its body pageless, flowed
+     * to the pane's width on one page as tall as its text, with no headers,
+     * footers or page breaks — as the View tab's Pages and Pageless do. The view
+     * starts over from the document's top. Resolves once the view has painted.
+     * Each word document opened after opens in it, whatever view it was saved
+     * in. With no word document open, it resolves at once, and the next one to
+     * open is the first in it.
+     */
+    setWordprocessingView(view: WordprocessingView): Promise<void> {
+        return this.shell.setWordprocessingView(view);
+    }
+
+    /**
+     * Show the sheet shown as `view` — its grid, or the paper it prints on — as
+     * the View tab's Normal and Page Layout do. That sheet alone, as in Excel:
+     * each sheet has its own view, which it opens in as its file left it, and
+     * {@link goToSheet} moves to another in that one's. The sheet's view starts
+     * over from A1 or its first page. Not an edit: nothing to undo, and no
+     * `"document:edited"`. Resolves once the view has painted, or once the view
+     * has moved on without it: another sheet chosen first or the document closed.
+     *
+     * What's typed into a cell is saved first, as before {@link goToSheet} moves
+     * on. Refused, the entry stays open, the sheet stays in its view, and this
+     * resolves.
+     *
+     * Rejects with no workbook open, on a chartsheet, which has no views, or on
+     * a sheet not loaded yet: await {@link goToSheet} before calling this.
+     */
+    async setSheetView(view: SheetView): Promise<void> {
+        const state = this.shell.getState();
+        if (sheetCountOf(state) === 0) throw new Error("setSheetView: the open document has no sheets");
+        if (sheetViewOf(state) === null) {
+            throw new Error(
+                `setSheetView: the sheet at index ${state.currentPlane} is ${
+                    state.planeChartsheets[state.currentPlane] ? "a chartsheet" : "not loaded yet"
+                }`,
+            );
+        }
+        await this.shell.setSheetView(view);
+    }
+
+    /**
      * Play the open deck as a slide show, as the Present tab's From
      * Beginning and From Current Slide do: a slide at a time, each slide's
      * transition and animations playing, stepped on by a click or a key and
@@ -1709,6 +1778,25 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     /** How a deck shows, as {@link setPresentationView} last set it; `"presentationView:changed"` fires when it changes. */
     get presentationView(): PresentationView {
         return this.shell.getState().presentationView;
+    }
+
+    /**
+     * How a word document shows: the view chosen by {@link setWordprocessingView},
+     * the `wordprocessingView` option or the View tab; with none chosen, the
+     * view the open word document opened in; with no word document open either,
+     * `"pages"`. `"wordprocessingView:changed"` fires when it changes.
+     */
+    get wordprocessingView(): WordprocessingView {
+        return wordprocessingViewOf(this.shell.getState());
+    }
+
+    /**
+     * How the sheet shown shows, as {@link setSheetView}, the View tab or its
+     * file left it; `null` for a chartsheet, a sheet not loaded yet, or with no
+     * workbook open. `"sheetView:changed"` fires when it changes.
+     */
+    get sheetView(): SheetView | null {
+        return sheetViewOf(this.shell.getState());
     }
 
     /** Whether a slide show plays, by {@link startSlideShow} or the Present tab; `"slideShow:changed"` fires when it starts or ends. */

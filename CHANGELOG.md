@@ -8,6 +8,19 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- `setWordprocessingView(view)` shows a word document as `"pages"` or
+  `"pageless"`, as the View tab's Pages and Pageless do, with a
+  `wordprocessingView` getter and option and a `wordprocessingView:changed`
+  event. Once a view is chosen, by any of these or the View tab, each word
+  document after opens in it. Until then each opens in the view it was saved
+  in, as before.
+- `setSheetView(view)` shows the sheet shown as `"normal"` or `"pageLayout"`, as
+  the View tab's Normal and Page Layout do, with a `sheetView` getter and a
+  `sheetView:changed` event. It sets that sheet's view alone: each sheet opens
+  in its own, as its file left it.
+
 #### Fixed
 
 - The presenter view shows the next slide every time it opens, where from the

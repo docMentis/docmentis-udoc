@@ -4,11 +4,13 @@ import type { UIState, PanelTab } from "./state.js";
 import {
     LEFT_PANEL_TABS,
     NO_FIT,
+    PAGELESS_PLANE,
     RIGHT_PANEL_TABS,
     VIEW_MODE,
     initialState,
     isLeftPanelTab,
     planeOfView,
+    planeOfWordprocessingView,
     renderZoom,
     sheetLayoutModeOf,
     viewDpi,
@@ -291,8 +293,12 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         }
 
         case "SET_PLANES": {
-            // A deck opens in the view it was last shown in.
-            const shown = planeOfView(action.kinds, state.presentationView);
+            // A deck opens in the view it was last shown in, a word document in
+            // the view chosen.
+            const shown =
+                state.docType === "wordprocessing"
+                    ? planeOfWordprocessingView({ ...state, planeCount: action.count }, state.wordprocessingView)
+                    : planeOfView(action.kinds, state.presentationView);
             return {
                 ...state,
                 planeCount: action.count,
@@ -330,7 +336,19 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             // A move to a deck's other view — to a match on its slides — is a
             // move to that view, and stops a slide preview playing.
             const view = viewOfPlane(state.planeKinds, action.plane) ?? state.presentationView;
-            return { ...state, currentPlane: action.plane, presentationView: view, slidePreviewing: false };
+            return {
+                ...state,
+                currentPlane: action.plane,
+                presentationView: view,
+                // A move to a word document's other view is the view chosen.
+                wordprocessingView:
+                    state.docType === "wordprocessing"
+                        ? action.plane === PAGELESS_PLANE
+                            ? "pageless"
+                            : "pages"
+                        : state.wordprocessingView,
+                slidePreviewing: false,
+            };
         }
 
         case "SET_SHEET_LAYOUT_MODE": {
@@ -407,6 +425,15 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             const currentPlane = plane < 0 ? state.currentPlane : plane;
             if (action.view === state.presentationView && currentPlane === state.currentPlane) return state;
             return { ...state, presentationView: action.view, currentPlane, slidePreviewing: false };
+        }
+
+        case "SET_WORDPROCESSING_VIEW": {
+            // A word document shows it on its plane; one still opening, once
+            // its roster is in (SET_PLANES).
+            const plane = planeOfWordprocessingView(state, action.view);
+            const currentPlane = plane < 0 ? state.currentPlane : plane;
+            if (action.view === state.wordprocessingView && currentPlane === state.currentPlane) return state;
+            return { ...state, wordprocessingView: action.view, currentPlane };
         }
 
         case "HISTORY_CHANGED":

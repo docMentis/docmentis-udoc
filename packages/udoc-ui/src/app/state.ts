@@ -193,6 +193,35 @@ export function showsPageless(state: { docType: UDocType | null; currentPlane: n
     return state.docType === "wordprocessing" && state.currentPlane === PAGELESS_PLANE;
 }
 
+/**
+ * How a word document shows: `"pages"`, its pages, as Word's Print Layout view
+ * does; `"pageless"`, its body flowed to the pane's width on one page as tall
+ * as its text, with no headers, footers or page breaks, as its Web Layout view
+ * does.
+ */
+export type WordprocessingView = "pages" | "pageless";
+
+/** The plane of a word document that shows `view`, or `-1` when no plane does:
+ *  no view chosen, not a word document, or no roster yet. */
+export function planeOfWordprocessingView(
+    state: { docType: UDocType | null; planeCount: number },
+    view: WordprocessingView | null,
+): number {
+    if (view === null || state.docType !== "wordprocessing") return -1;
+    const plane = view === "pageless" ? PAGELESS_PLANE : 0;
+    return plane < state.planeCount ? plane : -1;
+}
+
+/** How a word document shows in `state`: the view chosen, else the one the
+ *  open document opened in, else its pages. */
+export function wordprocessingViewOf(state: {
+    docType: UDocType | null;
+    currentPlane: number;
+    wordprocessingView: WordprocessingView | null;
+}): WordprocessingView {
+    return state.wordprocessingView ?? (showsPageless(state) ? "pageless" : "pages");
+}
+
 /** The sheet layout mode the current sheet of a workbook shows — `"normal"`,
  *  its grid, or `"print"`, Page Layout view's paper — or null for a
  *  chartsheet, a sheet not loaded yet, or any other doc type. */
@@ -203,6 +232,25 @@ export function sheetLayoutModeOf(state: {
 }): SheetLayoutMode | null {
     if (state.docType !== "spreadsheet") return null;
     return state.planeSheetLayoutModes[state.currentPlane] ?? null;
+}
+
+/**
+ * How a worksheet shows: `"normal"`, its grid, as Excel's Normal view does;
+ * `"pageLayout"`, the paper it prints on, as its Page Layout view does.
+ */
+export type SheetView = "normal" | "pageLayout";
+
+/** The sheet layout mode that shows `view`. */
+export function sheetLayoutModeOfView(view: SheetView): SheetLayoutMode {
+    return view === "pageLayout" ? "print" : "normal";
+}
+
+/** The view of the current sheet of a workbook, or null for a chartsheet, a
+ *  sheet not loaded yet, or any other doc type. */
+export function sheetViewOf(state: Parameters<typeof sheetLayoutModeOf>[0]): SheetView | null {
+    const mode = sheetLayoutModeOf(state);
+    if (mode === null) return null;
+    return mode === "print" ? "pageLayout" : "normal";
 }
 
 /** Whether `state` shows a worksheet as Page Layout view's paper. */
@@ -872,6 +920,12 @@ export interface UIState {
      *  deck shows it on the plane {@link planeOfView} names, which
      *  `currentPlane` follows, and a move to another plane follows back. */
     presentationView: PresentationView;
+    /** How a word document shows, once a view is chosen — the View tab's Pages
+     *  and Pageless, the host's `wordprocessingView`. Kept for every doc type,
+     *  and across documents; a word document shows it on the plane
+     *  {@link planeOfWordprocessingView} names, and a move to its other plane
+     *  follows back. `null` until then: each opens in the view it asks for. */
+    wordprocessingView: WordprocessingView | null;
     /** Whether a deck's notes pane is open under its slides, or closed to its
      *  edge — the View tab's Notes, the host's `showNotesPanel`, the splitter
      *  dragged to the edge. Kept for every doc type; only a deck has notes to
@@ -1076,6 +1130,7 @@ export const initialState: UIState = {
     panelTransitionsDisabled: false,
 
     presentationView: "normal",
+    wordprocessingView: null,
     notesOpen: false,
     notesHeight: null,
     formulaBarVisible: true,

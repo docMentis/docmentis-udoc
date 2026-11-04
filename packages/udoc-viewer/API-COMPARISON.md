@@ -440,6 +440,11 @@ What the new viewer offers that the legacy one has no row for.
 | option `presentationView`                          | as above                                                            |
 | option `showFormulaBar`                            | a workbook's formula bar                                            |
 | event `presentationView:changed`                   | as above                                                            |
+| `setWordprocessingView(view)`                      | a word document as its pages or pageless                            |
+| `wordprocessingView`, option `wordprocessingView`  | as above                                                            |
+| event `wordprocessingView:changed`                 | as above                                                            |
+| `setSheetView(view)`, `sheetView`                  | the sheet shown as its grid or the paper it prints on               |
+| event `sheetView:changed`                          | as above                                                            |
 | `removeOverlay(id)`                                | drop an overlay, the built-ins included                             |
 | event `document:edited`                            |                                                                     |
 | event `selection:changed`                          |                                                                     |

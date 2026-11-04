@@ -24,6 +24,7 @@ import type {
     PointerMode,
     PresentationView,
     ThemeMode,
+    WordprocessingView,
     LayoutMode,
     ScrollMode,
     ViewControlsPlacement,
@@ -211,6 +212,9 @@ export type Action =
     | { type: "SET_RIGHT_PANEL_WIDTH"; width: number }
     // How a deck shows: its slides, or its notes pages
     | { type: "SET_PRESENTATION_VIEW"; view: PresentationView }
+    // How a word document shows, and each opened after it: its pages, or
+    // pageless
+    | { type: "SET_WORDPROCESSING_VIEW"; view: WordprocessingView }
     // Preview the slide shown — its transition, then its animations — over
     // the view, switched to Normal, a slide at a time (bumps
     // `slidePreviewSeq`, which the Canvas plays it on)
