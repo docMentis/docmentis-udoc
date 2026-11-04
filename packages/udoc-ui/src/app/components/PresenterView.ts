@@ -8,10 +8,12 @@
 //
 // The slide is the show's own: the worker copies the slide of each frame it
 // draws onto a canvas of the view's. The next slide is a picture of it, as a
-// thumbnail is. The notes are a viewer of the deck's notes text, as the notes
-// pane shows them, their text made larger or smaller here; the view keeps its
-// viewer from one show to the next, as a viewer added stays, and hands it a
-// canvas of its own each time.
+// thumbnail is, on a canvas of its own for each show: a canvas's 2D context is
+// lost for good when the window it drew in closes, and Chrome shows a lost one
+// as a broken image. The notes are a viewer of the deck's notes text, as
+// the notes pane shows them, their text made larger or smaller here; the view
+// keeps its viewer from one show to the next, as a viewer added stays, and
+// hands it a canvas of its own each time.
 //
 // It opens in the UI's window, or in a window of its own on the presenter's
 // screen, its elements moved there: what it measures, observes and fills the
@@ -147,13 +149,10 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     nextHeading.className = "udoc-ui__presenter-heading";
     const nextBox = document.createElement("div");
     nextBox.className = "udoc-ui__presenter-next";
-    const nextCanvas = document.createElement("canvas");
-    nextCanvas.className = "udoc-ui__presenter-next-canvas";
-    nextCanvas.setAttribute("aria-hidden", "true");
     const nextEnd = document.createElement("div");
     nextEnd.className = "udoc-ui__presenter-end";
     nextEnd.textContent = i18n.t("presenter.endOfShow");
-    nextBox.append(nextCanvas, nextEnd);
+    nextBox.append(nextEnd);
     nextPane.append(nextHeading, nextBox);
     const notesPane = document.createElement("div");
     notesPane.className = "udoc-ui__presenter-pane udoc-ui__presenter-notes-pane";
@@ -198,6 +197,7 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     let actions: PresenterActions | null = null;
     let position: PresenterPosition | null = null;
     let mirror: HTMLCanvasElement | null = null;
+    let nextCanvas: HTMLCanvasElement | null = null;
     const cleanups: Array<() => void> = [];
     // What is bound to the window the view shows in, let go as it moves.
     const windowCleanups: Array<() => void> = [];
@@ -248,6 +248,10 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         slideBox.prepend(canvas);
         mirror = canvas;
         const size = fitMirror();
+        nextCanvas = document.createElement("canvas");
+        nextCanvas.className = "udoc-ui__presenter-next-canvas";
+        nextCanvas.setAttribute("aria-hidden", "true");
+        nextBox.prepend(nextCanvas);
         if (shown.notesPlane >= 0) {
             notesCanvas = document.createElement("canvas");
             notesCanvas.className = "udoc-ui__presenter-notes-canvas";
@@ -305,7 +309,8 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
         if (tick !== null) clearInterval(tick);
         tick = null;
         mirror?.remove();
-        mirror = null;
+        nextCanvas?.remove();
+        mirror = nextCanvas = null;
         deck = actions = position = nextShown = null;
         nextGeneration++;
         notesFrame = null;
@@ -461,16 +466,17 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
     /** Picture the slide the show goes to next — none past the last — at the
      *  size its box shows it. */
     function renderNext(): void {
-        if (!deck || !position) return;
+        if (!deck || !position || !nextCanvas) return;
         const at = position;
+        const canvas = nextCanvas;
         const slide = at.ended ? undefined : deck.shown.find((index) => index > at.slide);
         nextEnd.hidden = slide !== undefined;
-        nextCanvas.hidden = slide === undefined;
+        canvas.hidden = slide === undefined;
         if (slide === undefined) {
             nextShown = null;
             return;
         }
-        const { width } = fitCanvas(nextCanvas, nextBox, deck.slideSize);
+        const { width } = fitCanvas(canvas, nextBox, deck.slideSize);
         const scale = width / deck.slideSize.width;
         // Pictured again once a line dragged across it is let go.
         if (dragging && nextShown?.slide === slide) return;
@@ -481,8 +487,8 @@ export function createPresenterView(i18n: I18n, client: WorkerClient) {
             .renderPagePreview(deck.slidesPlane, slide, scale)
             .then((picture) => {
                 if (generation === nextGeneration) {
-                    const context = nextCanvas.getContext("2d");
-                    Object.assign(nextCanvas, { width: picture.width, height: picture.height });
+                    const context = canvas.getContext("2d");
+                    Object.assign(canvas, { width: picture.width, height: picture.height });
                     if (context) {
                         // On white paper: a PDF's page is clear wherever it
                         // paints nothing.

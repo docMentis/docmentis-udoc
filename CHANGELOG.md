@@ -6,6 +6,13 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Fixed
+
+- The presenter view shows the next slide every time it opens, where from the
+  second time on Chrome showed a broken image in its place.
+
 ## [0.8.13] - 2026-11-03
 
 Built on `@docmentis/udoc-wasm` 0.8.16.
