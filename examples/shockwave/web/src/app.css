@@ -1048,6 +1048,15 @@ input {
     box-shadow: var(--md-sys-elevation-1);
 }
 
+/* The hover layer over the whole card, its tray too, under the page shown. */
+.file-card:hover .thumbnail {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container)
+    );
+}
+
 .folder-tile {
     display: flex;
     align-items: center;
