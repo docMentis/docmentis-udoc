@@ -328,6 +328,7 @@ export function createSheetTabs(i18n: I18n, hooks: SheetTabsHooks) {
             for (let i = 0; i < slice.planeCount; i++) {
                 if (slice.planeVisibility[i] !== "visible") continue;
                 const btn = document.createElement("button");
+                btn.type = "button";
                 btn.className = "udoc-sheet-tab";
                 btn.setAttribute("role", "tab");
                 btn.dataset.plane = String(i);

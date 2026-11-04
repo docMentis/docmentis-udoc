@@ -401,6 +401,7 @@ export function createRibbon(
     const moreTabs = document.createElement("div");
     moreTabs.className = "udoc-dropdown";
     const moreTabsBtn = document.createElement("button");
+    moreTabsBtn.type = "button";
     moreTabsBtn.className = "udoc-ribbon__tab udoc-ribbon__tab--more";
     moreTabsBtn.innerHTML = ICON_MORE_VERT;
     moreTabsBtn.setAttribute("aria-haspopup", "menu");
@@ -580,6 +581,7 @@ export function createRibbon(
             tabStrip.style.display = tabs.length > 0 ? "" : "none";
             for (const tab of tabs) {
                 const btn = document.createElement("button");
+                btn.type = "button";
                 btn.className = "udoc-ribbon__tab";
                 btn.setAttribute("role", "tab");
                 btn.dataset.tab = tab.id;
@@ -639,6 +641,7 @@ export function createRibbon(
                 for (const opt of section.options) {
                     const name = labelOf(opt.label);
                     const item = document.createElement("button");
+                    item.type = "button";
                     item.className = "udoc-gallery__item";
                     item.setAttribute("role", "menuitem");
                     item.title = name;

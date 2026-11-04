@@ -297,6 +297,7 @@ function isActiveTheme(active: PaintSpec | null, slot: string, transforms: reado
  *  carry a focus ring. */
 function cell(hex: string, name: string, active: boolean, onClick: () => void): HTMLButtonElement {
     const btn = document.createElement("button");
+    btn.type = "button";
     btn.className = "udoc-paintpanel__cell";
     btn.classList.toggle("udoc-paintpanel__cell--selected", active);
     btn.style.setProperty("--swatch-color", hex);
@@ -327,6 +328,7 @@ function grid(columns: number): HTMLElement {
  *  the event so a row can stop propagation before acting / closing. */
 function row(icon: string, text: string, onClick: (e: MouseEvent) => void): HTMLButtonElement {
     const btn = document.createElement("button");
+    btn.type = "button";
     btn.className = "udoc-menu__item";
     btn.setAttribute("role", "menuitem");
     btn.innerHTML = `<span class="udoc-menu__item-icon">${icon}</span><span class="udoc-menu__item-label">${text}</span>`;
@@ -345,6 +347,7 @@ function flyoutRow(icon: string, text: string, fill: (panel: HTMLElement) => voi
     wrap.className = "udoc-toolbar__submenu-wrap";
 
     const parent = document.createElement("button");
+    parent.type = "button";
     parent.className = "udoc-toolbar__menu-item udoc-toolbar__menu-item--parent";
     parent.setAttribute("role", "menuitem");
     parent.setAttribute("aria-haspopup", "menu");
@@ -402,6 +405,7 @@ export function buildPaintPanel(panel: HTMLElement, cfg: PaintPanelConfig): void
 
     // "No Fill" / "No Line" — the explicit-nothing row.
     const noneRow = document.createElement("button");
+    noneRow.type = "button";
     noneRow.className = "udoc-menu__item udoc-paintpanel__none";
     noneRow.classList.toggle("udoc-paintpanel__none--selected", active?.kind === "none");
     noneRow.setAttribute("role", "menuitem");

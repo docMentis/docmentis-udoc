@@ -21,6 +21,22 @@ listed once, by package. Its major and minor version are those of the
   `www.canva.com` and `docs.google.com` as frames. Registering an extension
   document of either doc type replaces that one.
 
+#### Fixed
+
+- A viewer or an editor placed inside a `<form>` no longer submits it: its
+  buttons are `type="button"`, and Enter in one of its fields stays in that
+  field, where a click on Next Page or Zoom In, or Enter in a print range radio
+  or a page size list, submitted the form. Enter in the form's own fields now
+  presses the form's own submit button, where it pressed the viewer's first
+  button. The password and CSV delimiter dialogs still submit their own forms.
+- The print dialog's fields stay out of a `<form>` around the viewer or the
+  editor: its `FormData` no longer holds `udoc-print-range`, and a page number
+  out of range left in the dialog no longer stops the form submitting.
+- The "Skip to document" link stays out of sight until Tab focuses it, then shows
+  in the viewer's top-left corner, where it showed 100 pixels above a viewer in a
+  container that doesn't clip. Activating it moves focus to the document, where
+  focus stayed on the link.
+
 ## [0.8.12] - 2026-11-02
 
 Built on `@docmentis/udoc-wasm` 0.8.15.

@@ -136,7 +136,10 @@ export function createPrintModal(i18n: I18n) {
     closeBtn.innerHTML = ICON_CLEAR;
     header.append(heading, closeBtn);
 
-    const body = document.createElement("div");
+    // A form of its own, so that a form around the UI doesn't take these fields
+    // for its own: its data would carry the range chosen, and a page number out
+    // of range would stop it submitting.
+    const body = document.createElement("form");
     body.className = "udoc-print-modal__body";
 
     // --- pages section ---
@@ -309,6 +312,8 @@ export function createPrintModal(i18n: I18n) {
         onPrint(pages === undefined ? { quality } : { pages, quality });
     }
 
+    // Printing is the button's and the fields' Enter; the form only holds them.
+    on(body, "submit", (e) => e.preventDefault());
     on(printBtn, "click", print);
     on(cancelBtn, "click", () => close());
     on(closeBtn, "click", () => close());

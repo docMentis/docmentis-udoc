@@ -133,6 +133,7 @@ function wireComboInput(combo: ComboBox, commit: (raw: string) => void, mirror: 
     combo.input.addEventListener("keydown", (e) => {
         switch (e.key) {
             case "Enter":
+                e.preventDefault();
                 commit(combo.input.value);
                 combo.input.blur();
                 break;
@@ -242,6 +243,7 @@ export function fontFamilyControl(env: RibbonControlEnv, id: string, tools: Edit
                 const family = shown[i]!;
                 const name = family.name;
                 const item = document.createElement("button");
+                item.type = "button";
                 item.className =
                     i === dividerAt
                         ? "udoc-menu__item udoc-font-item udoc-font-item--section"
@@ -421,6 +423,7 @@ export function fontSizeControl(env: RibbonControlEnv, id: string, tools: EditTo
         dd.menu.innerHTML = "";
         for (const size of SIZE_PRESETS) {
             const item = document.createElement("button");
+            item.type = "button";
             item.className = "udoc-menu__item udoc-size-item";
             item.setAttribute("role", "option");
             const selected = String(size) === selectedSize();
@@ -513,6 +516,7 @@ export function listControl(
         split.menu.innerHTML = "";
         for (const style of listStyles(list)) {
             const item = document.createElement("button");
+            item.type = "button";
             item.className = "udoc-menu__item udoc-list-item";
             item.setAttribute("role", "menuitem");
             const label = i18n.t(style.label);

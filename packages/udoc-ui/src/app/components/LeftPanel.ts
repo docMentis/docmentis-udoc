@@ -57,6 +57,7 @@ export function createLeftPanel(i18n: I18n, outline: OutlinePanelCallbacks, thum
     const tabButtons = new Map<LeftPanelTab, HTMLButtonElement>();
     for (const tab of TABS) {
         const btn = document.createElement("button");
+        btn.type = "button";
         btn.className = "udoc-left-panel__tab";
         btn.id = `udoc-left-tab-${tab.id}`;
         btn.setAttribute("aria-label", i18n.t(tab.label));

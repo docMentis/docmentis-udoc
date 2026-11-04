@@ -3974,6 +3974,12 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
          *  "cut")` dispatches its synthetic clipboard event onto it (a click
          *  fires no native clipboard event of its own). */
         focusClipboardSink: () => textInput.focus(),
+        /** Give the document the keyboard, as a press on it does: the hidden
+         *  text input where it holds the keyboard now, else the host. */
+        focus: () => {
+            el.focus();
+            syncTextInput();
+        },
         /** Show the local caret, or hide it while a field outside the canvas
          *  types into the same text — a workbook's formula bar, whose own
          *  caret is the one shown. */

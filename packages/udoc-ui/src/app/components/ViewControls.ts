@@ -182,6 +182,7 @@ export function createViewControls(i18n: I18n) {
     zoomInput.setAttribute("aria-label", i18n.t("zoom.level"));
 
     const zoomChevron = document.createElement("button");
+    zoomChevron.type = "button";
     zoomChevron.className = "udoc-zoom-dropdown__chevron";
     zoomChevron.innerHTML = ICON_CHEVRON_DOWN;
     zoomChevron.title = i18n.t("zoom.options");
@@ -249,6 +250,7 @@ export function createViewControls(i18n: I18n) {
             }),
             on(pageInput, "keydown", (e: KeyboardEvent) => {
                 if (e.key !== "Enter") return;
+                e.preventDefault();
                 // The field holds a page number as a reader counts pages, from 1.
                 const value = parseInt(pageInput.value, 10);
                 const state = store.getState();
@@ -278,6 +280,7 @@ export function createViewControls(i18n: I18n) {
             on(zoomInBtn, "click", () => store.dispatch({ type: "ZOOM_IN" })),
             on(zoomInput, "keydown", (e: KeyboardEvent) => {
                 if (e.key !== "Enter") return;
+                e.preventDefault();
                 const value = parseZoomPercent(zoomInput.value);
                 const state = store.getState();
                 if (!isNaN(value) && value >= 10 && value <= 500) {
@@ -302,6 +305,7 @@ export function createViewControls(i18n: I18n) {
                 // A step outside the zoom bounds would only clamp to one.
                 if (step < slice.minZoom || step > slice.maxZoom) continue;
                 const item = document.createElement("button");
+                item.type = "button";
                 item.className = "udoc-zoom-dropdown__item";
                 item.setAttribute("role", "option");
                 const stepPercent = Math.round(step * 100);
@@ -331,6 +335,7 @@ export function createViewControls(i18n: I18n) {
                 modeSection.className = "udoc-zoom-dropdown__section";
                 for (const opt of FIT_OPTIONS) {
                     const item = document.createElement("button");
+                    item.type = "button";
                     item.className = "udoc-zoom-dropdown__item";
                     item.setAttribute("role", "option");
                     const isActive = sameFit(slice.fit, opt.fit);

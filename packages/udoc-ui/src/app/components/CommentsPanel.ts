@@ -129,6 +129,7 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
             count: document.createElement("span"),
         };
         group.el.className = "udoc-comments-panel__page";
+        group.header.type = "button";
         group.header.className = "udoc-comments-panel__page-header";
         group.count.className = "udoc-comments-panel__count";
         group.header.innerHTML = ICON_CHEVRON_DOWN;

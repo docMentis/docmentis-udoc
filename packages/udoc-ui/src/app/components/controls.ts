@@ -91,6 +91,7 @@ export interface TriggerContent {
 /** Build a button element from {@link TriggerContent}. */
 export function createButton(content: TriggerContent): HTMLButtonElement {
     const btn = document.createElement("button");
+    btn.type = "button";
     const labeled = content.text !== undefined;
     const classes = ["udoc-btn", labeled ? "udoc-btn--labeled" : "udoc-btn--icon"];
     if (content.field) classes.push("udoc-btn--field");
@@ -128,6 +129,7 @@ export function alignMenuToBounds(trigger: HTMLElement, panel: HTMLElement): voi
 /** Build a standard menu item: `[icon] label`, the label alone for no icon. */
 export function createMenuItem(opts: { icon?: string | undefined; text: string; role?: string }): HTMLButtonElement {
     const item = document.createElement("button");
+    item.type = "button";
     item.className = "udoc-menu__item";
     if (opts.role) item.setAttribute("role", opts.role);
     const icon = opts.icon ? `<span class="udoc-menu__item-icon">${opts.icon}</span>` : "";

@@ -83,7 +83,6 @@ export function createFormulaBar(i18n: I18n, hooks: FormulaBarHooks) {
 
     const button = (icon: string, label: string, press: () => void): HTMLButtonElement => {
         const b = createButton({ icon, label, className: "udoc-formula-bar__action" });
-        b.type = "button";
         // Keep the keyboard where the typing is: the press acts, it doesn't focus.
         b.addEventListener("mousedown", (e) => e.preventDefault());
         b.addEventListener("click", press);

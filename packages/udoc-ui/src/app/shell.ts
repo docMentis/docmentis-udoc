@@ -576,8 +576,9 @@ export function mountUIShell(
     skipLink.textContent = i18n.t("shell.skipToDocument");
     skipLink.addEventListener("click", (e) => {
         e.preventDefault();
-        const focusTarget = viewportSlot.querySelector<HTMLElement>('[tabindex="0"]') ?? viewportSlot;
-        focusTarget.focus();
+        canvas.focus();
+        // An extension document hides the canvas for its own content in the slot.
+        if (!canvas.el.contains(document.activeElement)) viewportSlot.focus();
     });
 
     bodySlot.append(leftPanelSlot, viewportSlot, rightPanelSlot, panelOverlay);
@@ -1677,6 +1678,18 @@ export function mountUIShell(
         }
     };
     layout.addEventListener("keydown", handleKeyDown);
+
+    // Enter in a field submits the form it's in, even from a field that does
+    // nothing with the key: a radio, a checkbox, a select. A form of the UI's
+    // own dialogs takes that; any other is the host's, which no field here is
+    // part of filling in.
+    const keepEnterFromHostForm = (e: KeyboardEvent) => {
+        if (e.key !== "Enter") return;
+        const field = e.target;
+        if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement)) return;
+        if (field.form && !layout.contains(field.form)) e.preventDefault();
+    };
+    layout.addEventListener("keydown", keepEnterFromHostForm);
 
     const handleOverlayClick = () => store.dispatch({ type: "CLOSE_PANEL" });
     panelOverlay.addEventListener("click", handleOverlayClick);
@@ -3690,6 +3703,7 @@ export function mountUIShell(
         const leaving = leaveCollaboration();
         cleanupSystemListener();
         layout.removeEventListener("keydown", handleKeyDown);
+        layout.removeEventListener("keydown", keepEnterFromHostForm);
         for (const type of ACTIVITY_INPUTS) layout.removeEventListener(type, noteInput, { capture: true });
         panelOverlay.removeEventListener("click", handleOverlayClick);
         unsubChrome();

@@ -1925,10 +1925,11 @@ export const uiStyles = css`
         border: 0;
     }
 
-    /* Skip navigation link */
+    /* Skip navigation link: in the root's corner, and clipped to nothing there
+       until it has focus, so it hides whatever is around the UI. */
     .udoc-ui-root .udoc-skip-link {
         position: absolute;
-        top: -100px;
+        top: 0;
         left: 0;
         z-index: 100;
         padding: 8px 16px;
@@ -1940,8 +1941,13 @@ export const uiStyles = css`
         box-shadow: var(--udoc-elevation-1);
     }
 
-    .udoc-ui-root .udoc-skip-link:focus {
-        top: 0;
+    .udoc-ui-root .udoc-skip-link:not(:focus) {
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
     }
 
     /* Keyboard focus indicators */

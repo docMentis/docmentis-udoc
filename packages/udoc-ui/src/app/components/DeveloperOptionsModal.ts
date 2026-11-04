@@ -54,6 +54,7 @@ export function createDeveloperOptionsModal() {
     heading.className = "udoc-dev-modal__heading";
     heading.textContent = "Developer";
     const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
     closeBtn.className = "udoc-dev-modal__close";
     closeBtn.setAttribute("aria-label", "Close");
     closeBtn.title = "Close";

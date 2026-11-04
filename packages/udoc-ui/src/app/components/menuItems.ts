@@ -73,6 +73,7 @@ export function buildMenuInto(panel: HTMLElement, items: readonly MenuItem<strin
             const wrap = document.createElement("div");
             wrap.className = "udoc-toolbar__submenu-wrap";
             const row = document.createElement("button");
+            row.type = "button";
             row.className = "udoc-toolbar__menu-item udoc-toolbar__menu-item--parent";
             row.setAttribute("role", "menuitem");
             row.setAttribute("aria-haspopup", "menu");
@@ -125,6 +126,7 @@ export function buildMenuInto(panel: HTMLElement, items: readonly MenuItem<strin
 
         // --- Action / toggle row. ---
         const btn = document.createElement("button");
+        btn.type = "button";
         btn.className = "udoc-toolbar__menu-item";
         btn.setAttribute("role", item.checked ? "menuitemcheckbox" : item.activeWhen ? "menuitemradio" : "menuitem");
         // A disabled button is inert, so the click can't fire for it.

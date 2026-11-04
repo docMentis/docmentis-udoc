@@ -55,6 +55,7 @@ export function createComboBox(
     if (content.inputMode) input.inputMode = content.inputMode;
 
     const caret = document.createElement("button");
+    caret.type = "button";
     caret.className = "udoc-combobox__caret";
     caret.innerHTML = ICON_CHEVRON_DOWN;
     // The input carries the field's keyboard focus; the caret is click-only so it

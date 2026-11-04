@@ -85,6 +85,7 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
     input.placeholder = i18n.t("search.placeholder");
     input.setAttribute("aria-label", i18n.t("search.label"));
     const clearBtn = document.createElement("button");
+    clearBtn.type = "button";
     clearBtn.className = "udoc-search-panel__clear";
     clearBtn.innerHTML = ICON_CLEAR;
     clearBtn.title = i18n.t("search.clear");
@@ -92,11 +93,13 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
     inputWrapper.append(inputIcon, input, clearBtn);
 
     const caseBtn = document.createElement("button");
+    caseBtn.type = "button";
     caseBtn.className = "udoc-search-panel__toggle";
     caseBtn.textContent = "Aa";
     caseBtn.title = i18n.t("search.matchCase");
     caseBtn.setAttribute("aria-label", i18n.t("search.matchCase"));
     const fuzzyBtn = document.createElement("button");
+    fuzzyBtn.type = "button";
     fuzzyBtn.className = "udoc-search-panel__toggle";
     fuzzyBtn.textContent = "~";
     fuzzyBtn.title = i18n.t("search.fuzzyMatch");
@@ -110,11 +113,13 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
     status.setAttribute("role", "status");
     status.setAttribute("aria-live", "polite");
     const prevBtn = document.createElement("button");
+    prevBtn.type = "button";
     prevBtn.className = "udoc-search-panel__nav-btn";
     prevBtn.innerHTML = ICON_CHEVRON_UP;
     prevBtn.title = i18n.t("search.previousMatchTooltip");
     prevBtn.setAttribute("aria-label", i18n.t("search.previousMatch"));
     const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
     nextBtn.className = "udoc-search-panel__nav-btn";
     nextBtn.innerHTML = ICON_CHEVRON_DOWN;
     nextBtn.title = i18n.t("search.nextMatchTooltip");

@@ -138,6 +138,7 @@ export function createCollaborationMenu(i18n: I18n) {
 
         const paused = slice.collaboration === "paused";
         const pause = document.createElement("button");
+        pause.type = "button";
         pause.className = "udoc-toolbar__menu-item";
         pause.setAttribute("role", "menuitem");
         pause.innerHTML =
@@ -182,6 +183,7 @@ function face(name: string | null, color: string | null): HTMLElement {
  */
 function toggle(icon: string, label: string, checked: boolean, flip: () => void): HTMLElement {
     const row = document.createElement("button");
+    row.type = "button";
     row.className = "udoc-toolbar__menu-item udoc-toolbar__menu-item--checkable";
     row.classList.toggle("udoc-toolbar__menu-item--checked", checked);
     row.setAttribute("role", "menuitemcheckbox");
