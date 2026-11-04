@@ -77,11 +77,12 @@
 }
 
 /* Something new: the tab's outline and the window's edge flash as one line,
-   until the panel unfolds. */
+   until the panel unfolds. Over the tab's border, which its right side has
+   none of: past it, folded, is past the window, which would scroll. */
 .narrator-flash::after {
     content: "";
     position: absolute;
-    inset: -1px;
+    inset: -1px 0 -1px -1px;
     border: 3px solid var(--dm-indigo);
     border-right: 0;
     border-radius: inherit;
