@@ -6,6 +6,22 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Fixed
+
+- A deck saved keeps its 3D models, where each was read as the picture
+  PowerPoint saves beside it, and PowerPoint opens the save. A page still shows
+  that picture.
+- A PNG or SVG of a worksheet's grid covers A1 to the far edge of what the sheet
+  holds, text spilling past its cells and its drawings included, where the PNG
+  was refused for its size and the SVG came to over 50 MB that Chrome drew
+  blank. A blank sheet exports A1 alone. A page in Page Layout view and a
+  chartsheet still export whole.
+- On a slide, the text after a bullet with no indent follows the bullet, and a
+  bullet on a first line indented past the margin stands at the margin, as
+  PowerPoint draws them, where the text started at the next tab stop.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -26,6 +42,28 @@ listed once, by package. Its major and minor version are those of the
   past a page's edge turns the page, and Left and Right turn it where the page
   fits across. A workbook's grid and a text caret keep their own keys, so only
   Page Up and Page Down scroll there.
+- A slide show draws a deck's 3D models from the models themselves, lit and
+  shadowed, where it showed the picture PowerPoint saves with each. A morph
+  between two views of one model turns it, where one picture faded into the
+  other, and an animation that turns a model's view turns it. A model in a
+  group, or one that won't draw, shows its picture.
+- A click in a slide show acts on what it lands on: a shape with a trigger plays
+  its effects, the show staying on its step, and a link on text or a shape goes
+  to the next, previous, first, last or last viewed slide, to a given slide, or
+  ends the show. A click on a link to a web page, a file or a program does
+  nothing, and anywhere else a click steps the show on, as before.
+- A slide show plays fourteen effects that change a shape's colour, Darken,
+  Lighten, Desaturate, Complementary and Color Reveal among them, each from the
+  shape's own colour. Change Line Color on a shape with no line of its own shows
+  the line its style gives.
+- A slide show plays the effects that restyle a shape's text, its lines breaking
+  afresh as the text changes: Change Font, Change Font Style, Change Font Size,
+  Bold Reveal, Bold Flash, Brush On Underline, Style Emphasis and Grow with
+  Color.
+- Flash Once and Transparency play in a slide show, and an animation that shears
+  a shape leans it along the slide, a turned shape too.
+- A Random Effects entrance plays one of twenty entrance effects, the same one
+  each time the show plays it, where PowerPoint picks another each time.
 
 #### Fixed
 
@@ -41,10 +79,32 @@ listed once, by package. Its major and minor version are those of the
   page and zoom fields showing their values, where it blanked them.
 - A viewer or an editor in a `display: flex` container fills it, where it
   collapsed to no width.
+- A viewer or an editor also fills a grid that centers its items, and a host's
+  border or padding on it stays inside the container, where it overflowed the
+  bottom.
 - The "Skip to document" link stays out of sight until Tab focuses it, then shows
   in the viewer's top-left corner, where it showed 100 pixels above a viewer in a
   container that doesn't clip. Activating it moves focus to the document, where
   focus stayed on the link.
+- A click that moves to the next slide by morph starts at once, the morph made
+  ahead once the slide has played all its steps, where the click paused while it
+  was made.
+- A morph starts a shape from where its slide's animations left it, where it
+  started from where the slide was saved, and stacks its shapes as PowerPoint
+  does: as the first slide has them until they are halfway, then as the second,
+  where the second's order held throughout.
+- The slide a show starts on plays whole, however long it takes to prepare.
+- Bounce, Flash Bulb and Vertical Grow play at PowerPoint's pace, and Bounce's
+  exit bounces from where its fall leaves it.
+- Whip, and any effect that plays a shape's text by word or letter over a
+  background its build animates, plays the background first, where the
+  background stood still and only the letters played.
+- A held effect stays at its end, where late in a show it could snap back to
+  where it began on its last frame.
+- A motion path whose numbers are written with an exponent moves its shape, where
+  the shape stood still.
+- A group of nothing but straight connectors appears as its entrance plays, where
+  it never appeared.
 
 ## [0.8.12] - 2026-11-02
 
