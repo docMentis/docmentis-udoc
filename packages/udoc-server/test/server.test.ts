@@ -358,16 +358,24 @@ async function errorOf(response: Response): Promise<[number, string]> {
     return [response.status, ((await response.json()) as { error: string }).error];
 }
 
-/** The files kept for document `id`, by their path in its directory. */
+/** The files kept for document `id`, by their path in its directory. One gone
+ *  between the listing and its read isn't kept: the server stages a file beside
+ *  where it goes, and renames it there. A staged file left behind still shows. */
 async function kept(directory: string, id: string): Promise<Record<string, string>> {
     const root = join(directory, id);
     const names = (await readdir(root, { recursive: true, withFileTypes: true }))
         .filter((entry) => entry.isFile())
         .map((entry) => relative(root, join(entry.parentPath, entry.name)))
         .sort();
-    return Object.fromEntries(
-        await Promise.all(names.map(async (name) => [name, text(await readFile(join(root, name)))])),
-    );
+    const read = async (name: string): Promise<Array<[string, string]>> => {
+        try {
+            return [[name, text(await readFile(join(root, name)))]];
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+            throw error;
+        }
+    };
+    return Object.fromEntries((await Promise.all(names.map(read))).flat());
 }
 
 async function until(condition: () => boolean | Promise<boolean>): Promise<void> {

@@ -39,6 +39,8 @@ listed once, by package. Its major and minor version are those of the
   `FormData` no longer holds `udoc-print-range`, a page number out of range left
   in the print dialog no longer stops it submitting, and resetting it leaves the
   page and zoom fields showing their values, where it blanked them.
+- A viewer or an editor in a `display: flex` container fills it, where it
+  collapsed to no width.
 - The "Skip to document" link stays out of sight until Tab focuses it, then shows
   in the viewer's top-left corner, where it showed 100 pixels above a viewer in a
   container that doesn't clip. Activating it moves focus to the document, where

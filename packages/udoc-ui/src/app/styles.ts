@@ -167,6 +167,10 @@ export const uiStyles = css`
         position: relative;
         display: flex;
         flex-direction: column;
+        /* A set width, as the containment below leaves it no width of its own:
+       a flex container's child would collapse to nothing. */
+        box-sizing: border-box;
+        width: 100%;
         height: 100%;
         container-type: inline-size;
         container-name: udoc-ui;
