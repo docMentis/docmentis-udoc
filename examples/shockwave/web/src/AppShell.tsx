@@ -131,7 +131,7 @@ export function AppShell() {
     );
 }
 
-/** A section in the navigation: its icon and its name, the name a tooltip in the bar. */
+/** A section in the navigation: its icon and its name; in the bar its icon alone, the name read and a tooltip. */
 function NavigationLink({
     to,
     label,
@@ -146,7 +146,7 @@ function NavigationLink({
     return (
         <NavLink to={to} end={to === "/"} className="nav-item" title={bar ? label : undefined}>
             <Icon />
-            <span className="nav-label">{label}</span>
+            <span className={bar ? "visually-hidden" : "nav-label"}>{label}</span>
         </NavLink>
     );
 }

@@ -210,23 +210,27 @@ input {
 
 /* Material 3 Expressive's navigation rail (Compose's NavigationRail*Tokens):
    expanded, 220 wide, its least, each section a 48-high item, its icon and
-   label-large label 8 apart, 16 in, in a full-shape pill as wide as they are,
-   the active one in the secondary container; collapsed, 96 wide, each
-   section its icon in a 56 by 32 pill, 4 over its label-medium label. Items
-   stand 4 apart. The menu button collapses and expands it, at its top. */
+   label-large label 8 apart, in a full-shape pill as wide as they are, the
+   active one in the secondary container; collapsed, each section its icon
+   alone, its label read and a tooltip, in a full-shape indicator 12 round
+   it, 48 across, a rail item's 56 less 8. Collapsed, it is 64 wide, below
+   the 80 Material's narrowest is: the indicator 8 from its sides. Items
+   stand 4 apart, 8 in from its sides, expanded or collapsed, and start
+   there; an expanded item's icon is 12 in, not its 16, so that each icon
+   stays where it is as it changes. The menu button collapses and expands
+   it, at its top. */
 .navigation {
     grid-row: 1 / -1;
     grid-column: 1;
     display: flex;
     flex-direction: column;
     width: 220px;
-    padding: 0 12px 12px;
+    padding: 0 8px 12px;
     transition: width 0.15s ease;
 }
 
 .shell-bar .navigation {
-    width: 96px;
-    padding: 0 0 12px;
+    width: 64px;
 }
 
 /* The menu button, level with the top app bar. */
@@ -235,12 +239,7 @@ input {
     align-items: center;
     flex-shrink: 0;
     height: 56px;
-    padding-left: 12px;
-}
-
-.shell-bar .navigation-top {
-    justify-content: center;
-    padding: 0;
+    padding-left: 8px;
 }
 
 .nav {
@@ -250,16 +249,12 @@ input {
     gap: 4px;
 }
 
-.shell-bar .nav {
-    align-items: center;
-}
-
 .nav-item {
     display: flex;
     align-items: center;
     gap: 8px;
     height: 48px;
-    padding: 0 16px;
+    padding: 0 16px 0 12px;
     border-radius: var(--md-sys-shape-corner-full);
     color: var(--md-sys-color-on-surface-variant);
     font: var(--md-sys-typescale-label-large);
@@ -296,26 +291,21 @@ input {
     );
 }
 
-/* The rail: the pill is the icon's, the label under it in label-medium; the
-   active label on-surface. */
+/* The rail: the indicator is the icon's. */
 .shell-bar .nav-item,
 .shell-bar .nav-item:hover,
 .shell-bar .nav-item:active,
 .shell-bar .nav-item.active {
-    flex-direction: column;
     justify-content: center;
-    gap: 4px;
-    width: 96px;
+    width: 48px;
     height: auto;
     padding: 0;
     background: none;
-    font: var(--md-sys-typescale-label-medium);
-    letter-spacing: var(--md-sys-typescale-label-medium-tracking);
 }
 
 .shell-bar .nav-item svg {
     box-sizing: content-box;
-    padding: 4px 16px;
+    padding: 12px;
     border-radius: var(--md-sys-shape-corner-full);
 }
 
@@ -323,26 +313,18 @@ input {
     background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
 }
 
-.shell-bar .nav-item.active {
-    color: var(--md-sys-color-on-surface);
-}
-
 .shell-bar .nav-item.active svg {
     background: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
 }
 
-/* Between the sections and the workspace's settings: a divider, inset. */
+/* Between the sections and the workspace's settings: a divider across the
+   items' column, collapsed or expanded, so that it starts where it did and
+   follows the navigation's edge as it changes. */
 .nav-divider {
     align-self: stretch;
-    margin: 4px 16px;
-    border-top: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.shell-bar .nav-divider {
-    align-self: center;
-    width: 56px;
     margin: 4px 0;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
 /* The navigation's foot: the product it runs on, Shockwave's own mark. */
@@ -351,17 +333,12 @@ input {
     align-items: center;
     gap: 12px;
     margin-top: auto;
-    padding: 12px 16px 0;
+    padding: 12px 12px 0;
     color: var(--md-sys-color-on-surface-variant);
     font: var(--md-sys-typescale-body-small);
     letter-spacing: var(--md-sys-typescale-body-small-tracking);
     white-space: nowrap;
     overflow: hidden;
-}
-
-.shell-bar .powered-by {
-    justify-content: center;
-    padding: 12px 0 0;
 }
 
 .shell-bar .powered-by .nav-label {

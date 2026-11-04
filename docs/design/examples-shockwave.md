@@ -127,7 +127,7 @@ navigation rail, and its top app bar across the rest: the tenant's brand, the se
 theme's button, the bell for notifications, and the user's avatar, which
 opens their menu. A menu button at the navigation's top collapses the rail
 from its expanded form, each section's icon and name side by side, to its
-icons over their names, and back. Content
+icons alone, their names tooltips, and back. Content
 moves through the sections one way:
 
 ```
