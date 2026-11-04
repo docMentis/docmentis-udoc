@@ -25,9 +25,9 @@ export type ColorRole =
     | "surface-container-low"
     | "surface-container"
     | "surface-container-high"
+    | "surface-container-highest"
     | "on-surface"
     | "on-surface-variant"
-    | "outline"
     | "outline-variant"
     | "scrim"
     | "shadow";
@@ -267,9 +267,9 @@ export function schemeOf(seed: string): Record<ColorRole, string> {
         "surface-container-low": neutral(96),
         "surface-container": neutral(94),
         "surface-container-high": neutral(92),
+        "surface-container-highest": neutral(90),
         "on-surface": neutral(10),
         "on-surface-variant": neutralVariant(30),
-        outline: neutralVariant(50),
         "outline-variant": neutralVariant(80),
         scrim: neutral(0),
         shadow: neutral(0),

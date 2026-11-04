@@ -25,9 +25,9 @@
     --md-sys-color-surface-container-low: #fef1ed;
     --md-sys-color-surface-container: #f9ebe8;
     --md-sys-color-surface-container-high: #f3e6e2;
+    --md-sys-color-surface-container-highest: #eddfdc;
     --md-sys-color-on-surface: #201a18;
     --md-sys-color-on-surface-variant: #53433f;
-    --md-sys-color-outline: #85736e;
     --md-sys-color-outline-variant: #d8c2bb;
     --md-sys-color-scrim: #000000;
     --md-sys-color-shadow: #000000;
@@ -147,8 +147,6 @@ input {
     flex-direction: column;
     width: 220px;
     padding: 0 12px 12px;
-    background: var(--md-sys-color-surface);
-    border-right: 1px solid var(--md-sys-color-outline-variant);
     transition: width 0.15s ease;
 }
 
@@ -254,15 +252,13 @@ input {
     border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
-/* The navigation's foot, under a divider across it: the product it runs on,
-   Shockwave's own mark. */
+/* The navigation's foot: the product it runs on, Shockwave's own mark. */
 .powered-by {
     display: flex;
     align-items: center;
     gap: 8px;
     margin: auto -12px 0;
     padding: 12px 0 0 20px;
-    border-top: 1px solid var(--md-sys-color-outline-variant);
     color: var(--md-sys-color-on-surface-variant);
     font-size: 12px;
     white-space: nowrap;
@@ -278,7 +274,10 @@ input {
 }
 
 /* The header: the tenant's brand at its left and the user's avatar at its
-   right, each in line with the page under it, and search in its middle. */
+   right, each in line with the page under it, and search in its middle. It,
+   the navigation and the page are one surface, the window's, the low
+   container, with no line between them: what's on it, the cards, stands out
+   in the lowest container, by tone, as Material separates surfaces. */
 .header {
     grid-row: 1;
     grid-column: 2;
@@ -287,8 +286,6 @@ input {
     align-items: center;
     gap: 16px;
     padding: 0 24px;
-    background: var(--md-sys-color-surface);
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .search {
@@ -309,7 +306,7 @@ input {
     width: 100%;
     height: 36px;
     padding: 0 12px 0 36px;
-    border: 1px solid transparent;
+    border: 0;
     border-radius: 8px;
     background: var(--md-sys-color-surface-container-high);
 }
@@ -321,8 +318,7 @@ input {
 
 .search input:focus {
     outline: none;
-    border-color: var(--md-sys-color-primary);
-    box-shadow: inset 0 0 0 1px var(--md-sys-color-primary);
+    box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
 }
 
 .content {
@@ -436,11 +432,10 @@ input {
     color: var(--md-sys-color-on-surface-variant);
 }
 
-/* Material's outlined card: the lowest container, outlined, flat. */
+/* A card: the lowest container on the window's, set apart by its tone. */
 .card {
     padding: 20px;
     background: var(--md-sys-color-surface-container-lowest);
-    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--ms-radius);
 }
 
@@ -489,10 +484,11 @@ input {
     font-weight: 500;
 }
 
-/* Buttons and fields. A button is Material's outlined button: no fill, its
-   label in the primary role; the primary one, the filled button; a danger,
-   the filled button in the error role. Disabled, each is on-surface: its
-   label at 38%, a filled one's container at 12%. */
+/* Buttons and fields. A button is Material's filled tonal button, in the
+   secondary container; the primary one, the filled button; a danger, the
+   filled button in the error role. Pointed at, each has its hover layer,
+   raised a level. Disabled, each is on-surface: its label at 38%, its
+   container at 12%. */
 .button {
     display: inline-flex;
     align-items: center;
@@ -500,21 +496,25 @@ input {
     gap: 6px;
     height: 36px;
     padding: 0 14px;
-    border: 1px solid var(--md-sys-color-outline);
+    border: 0;
     border-radius: 8px;
-    background: transparent;
-    color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
     font-weight: 500;
     cursor: pointer;
 }
 
 .button:not(:disabled):hover {
-    background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-hover), transparent);
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-secondary-container) var(--md-sys-state-hover),
+        var(--md-sys-color-secondary-container)
+    );
+    box-shadow: var(--md-sys-elevation-1);
     text-decoration: none;
 }
 
 .button.primary {
-    border-color: var(--md-sys-color-primary);
     background: var(--md-sys-color-primary);
     color: var(--md-sys-color-on-primary);
 }
@@ -529,15 +529,9 @@ input {
 }
 
 .button:disabled {
-    border-color: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
     color: color-mix(in srgb, var(--md-sys-color-on-surface) 38%, transparent);
     cursor: default;
-}
-
-.button.primary:disabled,
-.button.danger:disabled {
-    border-color: transparent;
-    background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
 }
 
 .field {
@@ -547,25 +541,29 @@ input {
     font-weight: 500;
 }
 
-/* Material's outlined text field: outlined in the outline role, which reads
-   at 3:1; pointed at, on-surface; focused, two pixels of the primary. */
+/* Material's filled text field: the highest container, and under it its
+   active indicator, on-surface-variant, which reads at 3:1; pointed at, its
+   hover layer; focused, the indicator two pixels of the primary. */
 .field input {
     height: 36px;
     padding: 0 10px;
-    border: 1px solid var(--md-sys-color-outline);
-    border-radius: 8px;
-    background: transparent;
+    border: 0;
+    border-radius: 4px 4px 0 0;
+    background: var(--md-sys-color-surface-container-highest);
+    box-shadow: inset 0 -1px 0 var(--md-sys-color-on-surface-variant);
 }
 
-.field input:hover,
-.name-filter input:hover {
-    border-color: var(--md-sys-color-on-surface);
+.field input:hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container-highest)
+    );
 }
 
 .field input:focus {
     outline: none;
-    border-color: var(--md-sys-color-primary);
-    box-shadow: inset 0 0 0 1px var(--md-sys-color-primary);
+    box-shadow: inset 0 -2px 0 var(--md-sys-color-primary);
 }
 
 /* Signing in. */
@@ -585,7 +583,6 @@ input {
     max-width: 380px;
     padding: 32px;
     background: var(--md-sys-color-surface-container-lowest);
-    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: 14px;
 }
 
@@ -596,7 +593,6 @@ input {
 }
 
 .button.danger {
-    border-color: var(--md-sys-color-error);
     background: var(--md-sys-color-error);
     color: var(--md-sys-color-on-error);
 }
@@ -694,7 +690,6 @@ input {
 .file-table td,
 .user-table td {
     padding: 8px 16px;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
     color: var(--md-sys-color-on-surface-variant);
     white-space: nowrap;
 }
@@ -705,11 +700,6 @@ input {
 
 .file-table tbody tr:hover {
     background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
-}
-
-.file-table tbody tr:last-child td,
-.user-table tbody tr:last-child td {
-    border-bottom: 0;
 }
 
 /* The name takes what the other columns leave, cut short when it's long. */
@@ -821,20 +811,29 @@ input {
     pointer-events: none;
 }
 
+/* The page's controls, the name's box, the chips and the view's choice, are
+   in the lowest container, as the cards under them, with no outline. */
 .name-filter input {
     width: 220px;
     height: 32px;
     padding: 0 8px 0 36px;
-    border: 1px solid var(--md-sys-color-outline);
+    border: 0;
     border-radius: 8px;
-    background: transparent;
+    background: var(--md-sys-color-surface-container-lowest);
     font-size: 13px;
+}
+
+.name-filter input:hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container-lowest)
+    );
 }
 
 .name-filter input:focus {
     outline: none;
-    border-color: var(--md-sys-color-primary);
-    box-shadow: inset 0 0 0 1px var(--md-sys-color-primary);
+    box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
 }
 
 /* A filter's chip, its menu down from it at its left. */
@@ -847,17 +846,17 @@ input {
     left: 0;
 }
 
-/* Material's filter chip: outlined in outline-variant, its label
-   on-surface-variant; set, filled with the secondary container. */
+/* Material's filter chip, its label on-surface-variant; set, filled with
+   the secondary container. */
 .chip {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     height: 32px;
     padding: 0 8px 0 12px;
-    border: 1px solid var(--md-sys-color-outline-variant);
+    border: 0;
     border-radius: 8px;
-    background: transparent;
+    background: var(--md-sys-color-surface-container-lowest);
     color: var(--md-sys-color-on-surface-variant);
     font-size: 13px;
     font-weight: 500;
@@ -865,7 +864,11 @@ input {
 }
 
 .chip:hover {
-    background: color-mix(in srgb, var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover), transparent);
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface-variant) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container-lowest)
+    );
 }
 
 .chip svg {
@@ -873,7 +876,6 @@ input {
 }
 
 .chip-set {
-    border-color: var(--md-sys-color-secondary-container);
     background: var(--md-sys-color-secondary-container);
     color: var(--md-sys-color-on-secondary-container);
 }
@@ -924,15 +926,15 @@ input {
     background: color-mix(in srgb, var(--md-sys-color-primary) var(--md-sys-state-hover), transparent);
 }
 
-/* Material's segmented buttons: a choice of a few, side by side, outlined,
-   the one made filled with the secondary container; as tall as a chip. */
+/* Material's segmented buttons: a choice of a few, side by side, the one
+   made filled with the secondary container; as tall as a chip. */
 .segmented {
     display: flex;
     flex-shrink: 0;
     gap: 2px;
-    padding: 2px;
-    border: 1px solid var(--md-sys-color-outline);
+    padding: 3px;
     border-radius: 8px;
+    background: var(--md-sys-color-surface-container-lowest);
 }
 
 .segmented button {
@@ -991,12 +993,11 @@ input {
     gap: 16px;
 }
 
-/* Tiles and cards, Material's outlined cards: pointed at, the hover layer,
+/* Tiles and cards, in the lowest container: pointed at, the hover layer,
    raised a level. */
 .folder-tile,
 .file-card {
     background: var(--md-sys-color-surface-container-lowest);
-    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--ms-radius);
     cursor: pointer;
 }
@@ -1044,8 +1045,7 @@ input {
     place-items: center;
     aspect-ratio: 4 / 3;
     background: var(--md-sys-color-surface-container);
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-    border-radius: calc(var(--ms-radius) - 1px) calc(var(--ms-radius) - 1px) 0 0;
+    border-radius: var(--ms-radius) var(--ms-radius) 0 0;
 }
 
 /* Centered at its own shape, 16px clear of the tray's edges. */
@@ -1219,7 +1219,6 @@ input {
     align-items: center;
     justify-content: space-between;
     padding: 12px 12px 12px 20px;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .dialog-header h2 {
@@ -1268,7 +1267,6 @@ input {
 .upload-preview {
     min-width: 0;
     min-height: 0;
-    border-right: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .upload-details {
@@ -1329,7 +1327,6 @@ input {
     min-width: 0;
     min-height: 0;
     background: var(--md-sys-color-surface-container-lowest);
-    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--ms-radius);
 }
 
@@ -1340,7 +1337,6 @@ input {
     gap: 12px;
     height: var(--document-bar);
     padding: 0 12px 0 20px;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .document-title {
@@ -1368,7 +1364,7 @@ input {
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    border-radius: 0 0 calc(var(--ms-radius) - 1px) calc(var(--ms-radius) - 1px);
+    border-radius: 0 0 var(--ms-radius) var(--ms-radius);
 }
 
 .document-tabs {
@@ -1478,16 +1474,15 @@ input {
     gap: 8px;
 }
 
-/* The logo as large as reads, on the page's surface, as the header holds it. */
+/* The logo as large as reads, on the window's surface, as the header holds it. */
 .logo-preview {
     display: grid;
     place-items: center;
     width: 72px;
     height: 72px;
     margin-right: 8px;
-    border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--ms-radius);
-    background: var(--md-sys-color-surface);
+    background: var(--md-sys-color-surface-container-low);
 }
 
 .logo-preview img,
@@ -1510,10 +1505,10 @@ input {
 .brand-color input[type="color"] {
     width: 36px;
     height: 36px;
-    padding: 2px;
-    border: 1px solid var(--md-sys-color-outline);
+    padding: 3px;
+    border: 0;
     border-radius: 8px;
-    background: transparent;
+    background: var(--md-sys-color-surface-container-highest);
     cursor: pointer;
 }
 
