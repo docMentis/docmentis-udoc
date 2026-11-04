@@ -1,4 +1,4 @@
-// The app's data, in SQLite: tenants and their logos, their users, the users'
+// The app's data, in SQLite: tenants and their brands, their users, the users'
 // sessions, and the library: its folders, its files and their thumbnails.
 import { DatabaseSync } from "node:sqlite";
 
@@ -85,6 +85,14 @@ const MIGRATIONS = [
         document_id TEXT PRIMARY KEY REFERENCES assets (document_id) ON DELETE CASCADE,
         png BLOB
     );
+    `,
+    // A tenant's brand: its color, `#rrggbb`, Larchmere's its forest green;
+    // and when its logo last changed, which its address names, so that a
+    // browser asks again for a new one.
+    `
+    ALTER TABLE tenants ADD COLUMN brand_color TEXT;
+    ALTER TABLE tenants ADD COLUMN logo_changed_at INTEGER NOT NULL DEFAULT 0;
+    UPDATE tenants SET brand_color = '#1f4e3d' WHERE name = 'Larchmere';
     `,
 ];
 

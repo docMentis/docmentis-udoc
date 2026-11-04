@@ -11,6 +11,9 @@ import { hashPassword } from "./auth.ts";
 
 const TENANT = "Larchmere";
 
+/** Its brand's color: forest green, its logo's. */
+const BRAND_COLOR = "#1f4e3d";
+
 /** The tenant's files. */
 const FILES = join(import.meta.dirname, "..", "seed", "larchmere");
 
@@ -21,11 +24,12 @@ export async function seed(db: DatabaseSync): Promise<void> {
     const hashes = await Promise.all(PERSONAS.map(() => hashPassword(DEMO_PASSWORD)));
     const tenantId = randomUUID();
     db.exec("BEGIN");
-    db.prepare("INSERT INTO tenants (id, name, logo, logo_type) VALUES (?, ?, ?, ?)").run(
+    db.prepare("INSERT INTO tenants (id, name, logo, logo_type, brand_color) VALUES (?, ?, ?, ?, ?)").run(
         tenantId,
         TENANT,
         logo,
         "image/svg+xml",
+        BRAND_COLOR,
     );
     const insert = db.prepare(
         "INSERT INTO users (id, tenant_id, email, password_hash, name, title, role) VALUES (?, ?, ?, ?, ?, ?, ?)",

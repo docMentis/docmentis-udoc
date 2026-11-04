@@ -1,11 +1,13 @@
-/* Shockwave's colors: Material 3's color roles, each at its tone in the
-   baseline light scheme, from the tonal palettes Shockwave's orange seeds
-   (#fe5000: hue 36, chroma 89, as Material's HCT measures them): the primary
-   at its hue and chroma, the secondary at chroma 16, the neutrals tinted
-   with its hue at chroma 4 and 8, the error at Material's red. Every color
-   here is a role, what's on a role is its on- role, and a state is a layer
-   of what's on a container over it. The orange itself is the mark's alone.
-   Neither the narrator's indigo, docMentis's, nor a tenant's colors. */
+/* The app's colors: Material 3's color roles, each at its tone in the
+   baseline light scheme, from the tonal palettes a seed makes (scheme.ts):
+   the primary at its hue and chroma, the secondary at chroma 16, the
+   neutrals tinted with its hue at chroma 4 and 8, the error at Material's
+   red. Here, the scheme Shockwave's orange seeds (#fe5000: hue 36, chroma
+   89, as Material's HCT measures them), before a tenant is known; signed in,
+   the app's shell sets the one its tenant's brand color seeds over it. Every
+   color is a role, what's on a role is its on- role, and a state is a layer
+   of what's on a container over it. The orange itself is Shockwave's mark's.
+   The narrator keeps docMentis's indigo. */
 :root {
     --md-sys-color-primary: #ae3200;
     --md-sys-color-on-primary: #ffffff;
@@ -672,12 +674,14 @@ input {
     padding: 0;
 }
 
-.file-table {
+.file-table,
+.user-table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.file-table th {
+.file-table th,
+.user-table th {
     padding: 10px 16px;
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
     color: var(--md-sys-color-on-surface-variant);
@@ -687,7 +691,8 @@ input {
     white-space: nowrap;
 }
 
-.file-table td {
+.file-table td,
+.user-table td {
     padding: 8px 16px;
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
     color: var(--md-sys-color-on-surface-variant);
@@ -702,7 +707,8 @@ input {
     background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
 }
 
-.file-table tbody tr:last-child td {
+.file-table tbody tr:last-child td,
+.user-table tbody tr:last-child td {
     border-bottom: 0;
 }
 
@@ -718,12 +724,16 @@ input {
 
 /* Inset from the card's edges as a card's content is. */
 .file-table th:first-child,
-.file-table td:first-child {
+.file-table td:first-child,
+.user-table th:first-child,
+.user-table td:first-child {
     padding-left: 20px;
 }
 
 .file-table th:last-child,
-.file-table td:last-child {
+.file-table td:last-child,
+.user-table th:last-child,
+.user-table td:last-child {
     padding-right: 20px;
 }
 
@@ -1409,4 +1419,113 @@ input {
     gap: 16px;
     padding: 20px;
     overflow: auto;
+}
+
+/* Settings: its pages as Material's primary tabs under its title, the one
+   open in the primary role; a page's sections as cards, a form's as wide as
+   it reads. */
+.settings-tabs {
+    display: flex;
+    gap: 4px;
+    margin-top: -8px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.settings-tabs a {
+    margin-bottom: -1px;
+    padding: 10px 12px 9px;
+    border-bottom: 3px solid transparent;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 500;
+}
+
+.settings-tabs a:hover {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
+    text-decoration: none;
+}
+
+.settings-tabs a.active {
+    border-bottom-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+}
+
+.settings-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 720px;
+}
+
+.settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.settings-section h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.settings-help {
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.logo-setting {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* The logo as large as reads, on the page's surface, as the header holds it. */
+.logo-preview {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    margin-right: 8px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--ms-radius);
+    background: var(--md-sys-color-surface);
+}
+
+.logo-preview img,
+.logo-preview .tenant-initial {
+    width: 48px;
+    height: 48px;
+}
+
+.logo-preview .tenant-initial {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.brand-color {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-color input[type="color"] {
+    width: 36px;
+    height: 36px;
+    padding: 2px;
+    border: 1px solid var(--md-sys-color-outline);
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.brand-hex input {
+    width: 120px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.user-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--md-sys-color-on-surface);
+    font-weight: 500;
 }

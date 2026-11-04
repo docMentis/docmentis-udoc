@@ -13,8 +13,13 @@ export function managesLibrary(role: Role): boolean {
     return role === "admin";
 }
 
-/** A tenant's user, as the API shows one. */
-export interface User {
+/** Whether a user in `role` keeps the workspace's settings: its brand, and who's in it. */
+export function managesWorkspace(role: Role): boolean {
+    return role === "admin";
+}
+
+/** A tenant's user, as a list of them shows one. */
+export interface Person {
     id: string;
     /** Their work email, which they sign in with. */
     email: string;
@@ -22,6 +27,10 @@ export interface User {
     /** Their job title. */
     title: string;
     role: Role;
+}
+
+/** A tenant's user, as the API shows the one signed in. */
+export interface User extends Person {
     tenant: Tenant;
 }
 
@@ -31,6 +40,8 @@ export interface Tenant {
     name: string;
     /** Where its logo is, a square icon, for an `<img>`; `null` when it has none. */
     logo: string | null;
+    /** Its brand's color, `#rrggbb`, which seeds the app's colors; `null` for Shockwave's own. */
+    brandColor: string | null;
 }
 
 /** A folder in a tenant's library. */

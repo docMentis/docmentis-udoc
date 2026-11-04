@@ -4,7 +4,7 @@
 // dialogs open over it, and leave the narrator in view and in reach.
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { Outlet, RouterProvider, createBrowserRouter } from "react-router";
+import { Navigate, Outlet, RouterProvider, createBrowserRouter } from "react-router";
 import "@fontsource-variable/inter";
 
 import { AppShell } from "./AppShell";
@@ -13,6 +13,7 @@ import { FilePage } from "./pages/FilePage";
 import { HomePage } from "./pages/HomePage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { NotFoundPage, PlaceholderPage } from "./pages/PlaceholderPage";
+import { BrandSettings, SettingsPage, UsersSettings } from "./pages/SettingsPage";
 import { SignInPage } from "./pages/SignInPage";
 import { RequireSession, SessionProvider } from "./session";
 import "./app.css";
@@ -75,9 +76,12 @@ const router = createBrowserRouter([
                     },
                     {
                         path: "settings",
-                        element: (
-                            <PlaceholderPage title="Settings" subtitle="The workspace's name, logo and members." />
-                        ),
+                        element: <SettingsPage />,
+                        children: [
+                            { index: true, element: <Navigate to="brand" replace /> },
+                            { path: "brand", element: <BrandSettings /> },
+                            { path: "users", element: <UsersSettings /> },
+                        ],
                     },
                     { path: "*", element: <NotFoundPage /> },
                 ],

@@ -1,12 +1,14 @@
-// The app around every signed-in page, in its tenant's brand: the navigation
-// down the window's left, the header across the rest, and the page under it.
+// The app around every signed-in page, in its tenant's brand: its colors
+// Material 3's scheme made from the tenant's brand color, over app.css's,
+// Shockwave's orange's, while the app shows; the navigation down the window's
+// left, the header across the rest, and the page under it.
 // The navigation has, under its menu button, the sections and, after a
 // divider, the workspace's settings; at its foot, under a divider, "Powered by
 // Shockwave". The menu button turns it from a panel of the sections' names to
 // a bar of their icons and back, which this browser remembers. The header has
 // the tenant's logo and name, search in its middle, and the user's avatar,
 // which opens their menu.
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { NavLink, Outlet } from "react-router";
 
@@ -23,6 +25,7 @@ import {
     SearchIcon,
     SettingsIcon,
 } from "./icons";
+import { schemeOf } from "./scheme";
 import { useSession, useUser } from "./session";
 import { Avatar, TenantBrand, useDismiss } from "./ui";
 
@@ -45,9 +48,26 @@ function savedBar(): boolean {
     }
 }
 
+/**
+ * The app's colors, the scheme `brandColor` seeds, set before the app shows
+ * and taken away as it goes, back to app.css's; app.css's alone for none.
+ */
+function useBrandColors(brandColor: string | null): void {
+    useLayoutEffect(() => {
+        if (!brandColor) return;
+        const root = document.documentElement.style;
+        const scheme = Object.entries(schemeOf(brandColor));
+        for (const [role, color] of scheme) root.setProperty(`--md-sys-color-${role}`, color);
+        return () => {
+            for (const [role] of scheme) root.removeProperty(`--md-sys-color-${role}`);
+        };
+    }, [brandColor]);
+}
+
 export function AppShell() {
     const user = useUser();
     const [bar, setBar] = useState(savedBar);
+    useBrandColors(user.tenant.brandColor);
 
     function toggle() {
         setBar(!bar);

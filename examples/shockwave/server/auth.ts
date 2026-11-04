@@ -12,7 +12,7 @@ const COOKIE = "shockwave_session";
 /** How long a session lasts, in seconds. */
 const SESSION_SECONDS = 7 * 24 * 60 * 60;
 
-/** A `users` row joined to its tenant's name, and whether the tenant has a logo. */
+/** A `users` row joined to its tenant's name and brand, and whether the tenant has a logo. */
 interface UserRow {
     id: string;
     email: string;
@@ -22,15 +22,20 @@ interface UserRow {
     tenant_id: string;
     tenant_name: string;
     tenant_has_logo: number;
+    tenant_logo_changed_at: number;
+    tenant_brand_color: string | null;
 }
 
 const USER_COLUMNS = `users.id, users.email, users.name, users.title, users.role,
-    users.tenant_id, tenants.name AS tenant_name, tenants.logo IS NOT NULL AS tenant_has_logo`;
+    users.tenant_id, tenants.name AS tenant_name, tenants.logo IS NOT NULL AS tenant_has_logo,
+    tenants.logo_changed_at AS tenant_logo_changed_at, tenants.brand_color AS tenant_brand_color`;
 
 function userOfRow(row: UserRow): User {
     const { id, email, name, title, role, tenant_id: tenantId } = row;
-    const logo = row.tenant_has_logo ? `/api/tenants/${tenantId}/logo` : null;
-    return { id, email, name, title, role, tenant: { id: tenantId, name: row.tenant_name, logo } };
+    // Its address names when it changed, so that a new one isn't an old one kept.
+    const logo = row.tenant_has_logo ? `/api/tenants/${tenantId}/logo?v=${row.tenant_logo_changed_at}` : null;
+    const tenant = { id: tenantId, name: row.tenant_name, logo, brandColor: row.tenant_brand_color };
+    return { id, email, name, title, role, tenant };
 }
 
 /** `password`, hashed to keep: `scrypt:<salt>:<hash>`, each base64url. */

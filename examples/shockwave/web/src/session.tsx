@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router";
 
-import type { User } from "../../shared/api.ts";
+import type { Tenant, User } from "../../shared/api.ts";
 import { api } from "./api";
 
 interface Session {
@@ -12,6 +12,8 @@ interface Session {
     user: User | null | undefined;
     signIn(email: string, password: string): Promise<void>;
     signOut(): Promise<void>;
+    /** Show the user's tenant as it is now, changed in the workspace's settings. */
+    setTenant(tenant: Tenant): void;
 }
 
 const SessionContext = createContext<Session | null>(null);
@@ -33,7 +35,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         await api.signOut();
         setUser(null);
     }, []);
-    const session = useMemo(() => ({ user, signIn, signOut }), [user, signIn, signOut]);
+    const setTenant = useCallback((tenant: Tenant) => setUser((before) => before && { ...before, tenant }), []);
+    const session = useMemo(() => ({ user, signIn, signOut, setTenant }), [user, signIn, signOut, setTenant]);
     return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;
 }
 

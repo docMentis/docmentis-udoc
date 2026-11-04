@@ -1,5 +1,5 @@
 // The backend's API, as the pages call it.
-import type { Asset, Failure, Folder, FolderListing, User } from "../../shared/api.ts";
+import type { Asset, Failure, Folder, FolderListing, Person, Tenant, User } from "../../shared/api.ts";
 
 /** A request the backend refused: its status, and its failure. */
 export class ApiError extends Error {
@@ -71,4 +71,21 @@ export const api = {
         return (await request<{ asset: Asset }>(`/api/assets/${id}`, withJson("PATCH", { name }))).asset;
     },
     deleteAsset: (id: string) => request<void>(`/api/assets/${id}`, { method: "DELETE" }),
+
+    /** Replace tenant `id`'s logo with `image`: a PNG, JPEG, WebP or SVG; an `ApiError` `415` for another. */
+    async uploadLogo(id: string, image: Blob): Promise<Tenant> {
+        const init = { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: image };
+        return (await request<{ tenant: Tenant }>(`/api/tenants/${id}/logo`, init)).tenant;
+    },
+    async removeLogo(id: string): Promise<Tenant> {
+        return (await request<{ tenant: Tenant }>(`/api/tenants/${id}/logo`, { method: "DELETE" })).tenant;
+    },
+    /** Set tenant `id`'s brand color, `#rrggbb`, or none for `null`. */
+    async setBrandColor(id: string, brandColor: string | null): Promise<Tenant> {
+        return (await request<{ tenant: Tenant }>(`/api/tenants/${id}`, withJson("PATCH", { brandColor }))).tenant;
+    },
+    /** Tenant `id`'s users, by name. */
+    async users(id: string): Promise<Person[]> {
+        return (await request<{ users: Person[] }>(`/api/tenants/${id}/users`)).users;
+    },
 };

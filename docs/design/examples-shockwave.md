@@ -88,15 +88,20 @@ documents says so.
 
 Its users see the app in its brand, as a tenant's do: its logo, a square icon,
 and its name lead the header, the logo kept with the tenant and served to its
-users alone (`/api/tenants/:id/logo`). Larchmere's is a larch cone, faceted
+users alone (`/api/tenants/:id/logo`). An admin replaces it in Settings, and
+sets the brand's color there, which seeds the app's colors: Material 3's
+light scheme, its tonal palettes made from the color in HCT, in the browser
+(`web/src/scheme.ts`). Larchmere's is a larch cone, faceted
 scales on a shield, with a rising arrow breaking out of it. Shockwave's own
 mark is left to the sign-in page, where no tenant is known yet, and the foot of
 the navigation, "Powered by Shockwave".
 
 Each of the three speaks in colors of its own, so that no one takes one for
-another: docMentis, the narrator, in its indigo; Shockwave, the app, in
-orange, `#fe5000`; and Larchmere, its logo and its documents, in green, forest
-`#1f4e3d` and sage `#b5dcc2`, the hue furthest from the other two.
+another: docMentis, the narrator, in its indigo; Shockwave in orange,
+`#fe5000`, its mark and, before a tenant is known, the sign-in page; and
+Larchmere in green, forest `#1f4e3d` and sage `#b5dcc2`, the hue furthest
+from the other two: its logo, its documents, and, its brand's color, the app
+its users see.
 
 ## The app
 
@@ -131,7 +136,8 @@ compliance approves   sales find                     and personalized      what 
   account.
 - **Learning**: where sales learn, and their managers prepare what they teach.
 - **Insights**: how content is used and read, from the Library to the buyer.
-- **Settings**: the workspace's, after a divider.
+- **Settings**: the workspace's, after a divider, an admin's, in two pages:
+  Brand, the tenant's logo and its brand's color, and Users, who's in it.
 
 Search finds what the user may see, by name, description and tag: the Library
 for those who keep it, collections and deal rooms for sales. A document's text
