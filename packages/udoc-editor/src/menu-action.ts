@@ -2,9 +2,10 @@
 // back to edit mode (`UIExtension.menuAction`).
 import type { TableSelectionEdit } from "@docmentis/udoc-wasm";
 import type { AlignEdge, EditAxis, MenuAction, TextParagraphAlign, ZOrder } from "@docmentis/udoc-ui/internal";
-import type { ClipboardOp, TableSelectScope } from "./context-menu.js";
+import type { ClipboardOp } from "./context-menu.js";
 import type { CropAspect } from "./crop-box.js";
 import { editState, updateEditState } from "./state.js";
+import type { TableSelectScope } from "./table.js";
 import type { ParagraphSpaceEdge } from "./text-format.js";
 import type { EditTools } from "./tools.js";
 
@@ -15,7 +16,7 @@ import type { EditTools } from "./tools.js";
  * / `flip` / `rotate` the Align and Rotate dropdowns; `alignToPage` the Align
  * dropdown's reference toggle (a UI flag, not a document edit). `clipboard` /
  * `delete` are the context menu's acts on the selection, and `selectTable` /
- * `tableEdit` its rows over a table. `cropAspect` is crop mode's Aspect Ratio
+ * `tableEdit` its rows over a table, as the Table tab's are. `cropAspect` is crop mode's Aspect Ratio
  * dropdown.
  *
  * The first five are the paragraph menus' rows. `indent` carries a *step*, not

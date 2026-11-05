@@ -1,57 +1,27 @@
 // Edit mode's canvas context menu rows: the clipboard and Delete over any
 // selection, and over a table the Select, Insert, Delete and Merge rows. The
 // shell opens the menu (`UIExtension.contextMenuItems`).
-import {
-    allowsEdit,
-    allowsTableEdit,
-    COPY_MENU_ITEM,
-    ICON_DELETE,
-    ICON_TOOL_POINTER,
-} from "@docmentis/udoc-ui/internal";
-import type { EnabledWhen, MenuItem, TableEditKind } from "@docmentis/udoc-ui/internal";
+import { allowsEdit, COPY_MENU_ITEM, ICON_DELETE, ICON_TOOL_POINTER } from "@docmentis/udoc-ui/internal";
+import type { EnabledWhen, MenuItem } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
-import {
-    ICON_CUT,
-    ICON_INSERT_COLUMN_LEFT,
-    ICON_INSERT_COLUMN_RIGHT,
-    ICON_INSERT_ROW_ABOVE,
-    ICON_INSERT_ROW_BELOW,
-    ICON_MERGE_CELLS,
-    ICON_PASTE,
-} from "./icons.js";
+import { ICON_CUT, ICON_INSERT_ROW_BELOW, ICON_MERGE_CELLS, ICON_PASTE } from "./icons.js";
 import { editAction } from "./menu-action.js";
+import {
+    ICON_DELETE_ROWS,
+    ICON_UNMERGE_CELLS,
+    TABLE_DELETE_MENU,
+    TABLE_INSERT_MENU,
+    TABLE_SELECT_MENU,
+    whenTableEdit,
+} from "./table.js";
 
 /** A clipboard operation of edit mode's on the current selection / caret — a
  *  copy is the shell's (`COPY_MENU_ITEM`). */
 export type ClipboardOp = "cut" | "paste";
 
-/** What a Select ▸ … row widens the current table selection to. Named for the
- *  verbs (`selectTableRows` / `selectTableColumns` / `selectTable`) rather than
- *  the row labels: the commands widen to *every* row or column the selection
- *  touches, which the singular menu wording (Office's) understates. */
-export type TableSelectScope = "rows" | "columns" | "table";
-
 /** Enabled whenever a document is open — the rows that act on the document at
  *  large rather than on the selection. */
 const whenReady: EnabledWhen = (c) => c.ready;
-
-/** A table structural edit on the selection's table — the context menu's
- *  Insert / Delete / Merge rows. Carries the sub-domain edit verbatim, so edit
- *  mode hands it straight to `executeOnSelection` under the `table` arm. */
-const whenTableEdit =
-    (kind: TableEditKind): EnabledWhen =>
-    (c) =>
-        allowsTableEdit(c.selection, kind);
-
-const TABLE_SELECT_MENU: readonly MenuItem<MessageKey>[] = [
-    { action: editAction({ kind: "selectTable", scope: "rows" }), label: "table.selectRow", enabledWhen: whenReady },
-    {
-        action: editAction({ kind: "selectTable", scope: "columns" }),
-        label: "table.selectColumn",
-        enabledWhen: whenReady,
-    },
-    { action: editAction({ kind: "selectTable", scope: "table" }), label: "table.selectTable", enabledWhen: whenReady },
-];
 
 /**
  * The canvas context menu in edit mode — what a right-click offers for the
@@ -95,47 +65,6 @@ export const CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
     },
 ];
 
-const TABLE_INSERT_MENU: readonly MenuItem<MessageKey>[] = [
-    {
-        action: editAction({ kind: "tableEdit", edit: { insertRows: { before: true, count: 1 } } }),
-        label: "table.rowAbove",
-        icon: ICON_INSERT_ROW_ABOVE,
-        enabledWhen: whenTableEdit("insertRows"),
-    },
-    {
-        action: editAction({ kind: "tableEdit", edit: { insertRows: { before: false, count: 1 } } }),
-        label: "table.rowBelow",
-        icon: ICON_INSERT_ROW_BELOW,
-        enabledWhen: whenTableEdit("insertRows"),
-    },
-    {
-        action: editAction({ kind: "tableEdit", edit: { insertColumns: { before: true, count: 1 } } }),
-        label: "table.columnLeft",
-        icon: ICON_INSERT_COLUMN_LEFT,
-        enabledWhen: whenTableEdit("insertColumns"),
-        separatorBefore: true,
-    },
-    {
-        action: editAction({ kind: "tableEdit", edit: { insertColumns: { before: false, count: 1 } } }),
-        label: "table.columnRight",
-        icon: ICON_INSERT_COLUMN_RIGHT,
-        enabledWhen: whenTableEdit("insertColumns"),
-    },
-];
-
-const TABLE_DELETE_MENU: readonly MenuItem<MessageKey>[] = [
-    {
-        action: editAction({ kind: "tableEdit", edit: "deleteRows" }),
-        label: "table.deleteRows",
-        enabledWhen: whenTableEdit("deleteRows"),
-    },
-    {
-        action: editAction({ kind: "tableEdit", edit: "deleteColumns" }),
-        label: "table.deleteColumns",
-        enabledWhen: whenTableEdit("deleteColumns"),
-    },
-];
-
 /**
  * The context menu as it reads over a **table** — the rows above plus the
  * Select fly-out that widens the pick to whole rows, whole columns, or the
@@ -160,7 +89,7 @@ export const TABLE_CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
         separatorBefore: true,
     },
     { submenu: TABLE_INSERT_MENU, label: "table.insert", icon: ICON_INSERT_ROW_BELOW, enabledWhen: whenReady },
-    { submenu: TABLE_DELETE_MENU, label: "table.delete", enabledWhen: whenReady },
+    { submenu: TABLE_DELETE_MENU, label: "table.delete", icon: ICON_DELETE_ROWS, enabledWhen: whenReady },
     // Merge / unmerge are one gesture each, not a family, so they sit flat
     // rather than behind a third fly-out — and each greys on its own gate: a
     // caret in one cell has no block to merge, an unmerged block none to split.
@@ -174,6 +103,7 @@ export const TABLE_CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
     {
         action: editAction({ kind: "tableEdit", edit: "unmergeCells" }),
         label: "table.unmergeCells",
+        icon: ICON_UNMERGE_CELLS,
         enabledWhen: whenTableEdit("unmergeCells"),
     },
 ];

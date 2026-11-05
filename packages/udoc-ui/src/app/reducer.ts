@@ -16,7 +16,8 @@ import {
     viewDpi,
     viewOfPlane,
 } from "./state.js";
-import { profileDisabledPanels, profileFor, selectionTab, tabsFor } from "./profiles.js";
+import { profileDisabledPanels, profileFor, tabsFor } from "./profiles.js";
+import { selectionTab } from "./selection-tab.js";
 import type { ModeEntitlement, TabSource } from "./profiles.js";
 import { visibleSpan } from "./components/Scrollbar.js";
 import { defaultScrollModeForDocType } from "../worker/protocol.js";
@@ -465,8 +466,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             // caret moved, an edit echoed — leaves the tab where it is, a tab
             // picked since or the ribbon folded.
             const tabs = tabsFor(tabsOf(state.docType, state.mode), state.features);
-            const tab = selectionTab(tabs, action.capabilities);
-            const opens = tab !== null && tab !== selectionTab(tabs, state.selectionCaps);
+            const tab = selectionTab(tabs, action.capabilities, state.activeTab);
+            const opens = tab !== null && tab !== selectionTab(tabs, state.selectionCaps, state.activeTab);
             return { ...state, selectionCaps: action.capabilities, activeTab: opens ? tab : state.activeTab };
         }
         case "SET_ACTIVE_CELL": {

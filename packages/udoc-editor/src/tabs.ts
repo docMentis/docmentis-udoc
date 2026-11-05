@@ -47,6 +47,15 @@ export type EditCommandId =
     | "objectRotate"
     | "objectGroup"
     | "objectUngroup"
+    | "tableSelect"
+    | "tableInsertRowAbove"
+    | "tableInsertRowBelow"
+    | "tableInsertColumnLeft"
+    | "tableInsertColumnRight"
+    | "tableDeleteRows"
+    | "tableDeleteColumns"
+    | "tableMerge"
+    | "tableUnmerge"
     | "ruler"
     | "createSlide"
     | "insertImage"
@@ -67,11 +76,15 @@ export type EditCommandId =
 type EditTab = ToolbarTab<MessageKey>;
 
 /** Whether `caps` is a selection in text: a caret or a range — in a shape's
- *  text too, which a selection reports with the shape's own edits — or a
- *  table's cells, a block of them as well, so a drag across cells keeps the
- *  tab a caret in one opened. */
+ *  text too, which a selection reports with the shape's own edits, and in a
+ *  table's cell, which reports the cell's text edits. */
 function inText(caps: SelectionCapabilities): boolean {
-    return allowsTextEdit(caps, "insertText") || allowsTableEdit(caps, "insertRows");
+    return allowsTextEdit(caps, "insertText");
+}
+
+/** Whether `caps` is in a table: a caret in a cell, or a block of cells. */
+function inTable(caps: SelectionCapabilities): boolean {
+    return allowsTableEdit(caps, "insertRows");
 }
 
 /** Whether `caps` holds picked shapes: a slide's, a word document's drawings,
@@ -167,6 +180,32 @@ const SHAPE_TAB: EditTab = {
 };
 
 /**
+ * The Table tab — the edits of the table the selection is in: the Select dropdown,
+ * the four inserts, the two deletes, then Merge and Unmerge. A block of cells
+ * opens it, a selection with no text of its own to format. A caret in a cell opens
+ * the Text tab ahead of it, as a caret in a shape's text does ahead of Shape, but
+ * leaves this tab open if it is: selecting a row, deleting it and clicking a cell
+ * goes from a block to a caret and back, all of it this tab's work.
+ */
+const TABLE_TAB: EditTab = {
+    id: "table",
+    label: "ribbon.table",
+    commands: [
+        "tableSelect",
+        "tableInsertRowAbove",
+        "tableInsertRowBelow",
+        "tableInsertColumnLeft",
+        "tableInsertColumnRight",
+        "tableDeleteRows",
+        "tableDeleteColumns",
+        "tableMerge",
+        "tableUnmerge",
+    ] satisfies EditCommandId[],
+    opensFor: inTable,
+    staysOpen: true,
+};
+
+/**
  * The Object tab — the portable (PDF) counterpart of {@link SHAPE_TAB}: its own
  * Fill / Line and arrangement, gated on the object edits, over the page's content
  * objects (paths, text, images) rather than DrawingML shapes. Picked objects
@@ -252,19 +291,22 @@ const PORTABLE_TABS: readonly EditTab[] = [
     editViewTab("portable"),
 ];
 
-/** The presentation strip: its own Insert, then Text (character formatting)
- *  and Shape (free-floating graphics), then Present, and its View last. */
+/** The presentation strip: its own Insert, then Text (character formatting),
+ *  Table and Shape (free-floating graphics), then Present, and its View last.
+ *  Table goes ahead of Shape as Text does: a block of cells also reports the
+ *  edits of the frame around them, and the first tab holding for it opens. */
 const PRESENTATION_TABS: readonly EditTab[] = [
     PRESENTATION_INSERT_TAB,
     PRESENTATION_TEXT_TAB,
+    TABLE_TAB,
     SHAPE_TAB,
     presentTab("presentation"),
     editViewTab("presentation"),
 ];
 
-/** The wordprocessing strip: Text, then Shape for the drawings in its flow,
- *  and its View last. */
-const WORDPROCESSING_TABS: readonly EditTab[] = [TEXT_TAB, SHAPE_TAB, editViewTab("wordprocessing")];
+/** The wordprocessing strip: Text and Table, then Shape for the drawings in its
+ *  flow, and its View last. */
+const WORDPROCESSING_TABS: readonly EditTab[] = [TEXT_TAB, TABLE_TAB, SHAPE_TAB, editViewTab("wordprocessing")];
 
 /** The image strip: its own Image and Insert, then the Text and Shape tabs of
  *  the shapes drawn over its pages — a deck's, as they are a slide's shapes —

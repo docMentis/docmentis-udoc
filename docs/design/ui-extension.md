@@ -79,7 +79,9 @@ selection it is for, and the reducer opens the first tab of the strip that
 holds for a selection as the selection becomes one — a caret in text the Text
 tab, a picked shape the Shape tab — and leaves the tab where it is while the
 selection stays that kind, so a caret moving never takes back a tab picked
-since. A `contextual` tab shows only the commands the selection can take, as
+since. A `staysOpen` tab keeps the ribbon over a selection it holds for, ahead
+of the tabs before it: the Table tab, where a caret in a cell would otherwise
+open Text. A `contextual` tab shows only the commands the selection can take, as
 an image's Image tab trades its page commands for crop mode's controls.
 
 ## Worker

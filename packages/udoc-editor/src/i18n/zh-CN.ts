@@ -61,6 +61,7 @@ export const zhCN: EditMessages = {
     "ribbon.insert": "插入",
     "ribbon.text": "文本",
     "ribbon.shape": "形状",
+    "ribbon.table": "表格",
     "ribbon.object": "对象",
 
     // Commands
@@ -198,6 +199,12 @@ export const zhCN: EditMessages = {
     "table.select": "选择",
     "table.insert": "插入",
     "table.delete": "删除",
+    "table.insertRowAbove": "在上方插入行",
+    "table.insertRowBelow": "在下方插入行",
+    "table.insertColumnLeft": "在左侧插入列",
+    "table.insertColumnRight": "在右侧插入列",
+    "table.deleteRowsButton": "删除行",
+    "table.deleteColumnsButton": "删除列",
     "table.mergeCells": "合并单元格",
     "table.unmergeCells": "取消合并单元格",
 

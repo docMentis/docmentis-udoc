@@ -113,6 +113,8 @@ export interface Messages extends UIMessages {
     "ribbon.text": string;
     /** Shape */
     "ribbon.shape": string;
+    /** Table */
+    "ribbon.table": string;
     /** Object */
     "ribbon.object": string;
 
@@ -363,6 +365,18 @@ export interface Messages extends UIMessages {
     "table.insert": string;
     /** Delete */
     "table.delete": string;
+    /** Insert Row Above */
+    "table.insertRowAbove": string;
+    /** Insert Row Below */
+    "table.insertRowBelow": string;
+    /** Insert Column Left */
+    "table.insertColumnLeft": string;
+    /** Insert Column Right */
+    "table.insertColumnRight": string;
+    /** Delete Rows */
+    "table.deleteRowsButton": string;
+    /** Delete Columns */
+    "table.deleteColumnsButton": string;
     /** Merge Cells */
     "table.mergeCells": string;
     /** Unmerge Cells */

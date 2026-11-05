@@ -61,6 +61,7 @@ export const es: EditMessages = {
     "ribbon.insert": "Insertar",
     "ribbon.text": "Texto",
     "ribbon.shape": "Forma",
+    "ribbon.table": "Tabla",
     "ribbon.object": "Objeto",
 
     // Commands
@@ -200,6 +201,12 @@ export const es: EditMessages = {
     "table.select": "Seleccionar",
     "table.insert": "Insertar",
     "table.delete": "Eliminar",
+    "table.insertRowAbove": "Insertar fila encima",
+    "table.insertRowBelow": "Insertar fila debajo",
+    "table.insertColumnLeft": "Insertar columna a la izquierda",
+    "table.insertColumnRight": "Insertar columna a la derecha",
+    "table.deleteRowsButton": "Eliminar filas",
+    "table.deleteColumnsButton": "Eliminar columnas",
     "table.mergeCells": "Combinar celdas",
     "table.unmergeCells": "Separar celdas",
 

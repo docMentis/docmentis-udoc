@@ -61,6 +61,7 @@ export const ja: EditMessages = {
     "ribbon.insert": "挿入",
     "ribbon.text": "テキスト",
     "ribbon.shape": "図形",
+    "ribbon.table": "表",
     "ribbon.object": "オブジェクト",
 
     // Commands
@@ -201,6 +202,12 @@ export const ja: EditMessages = {
     "table.select": "選択",
     "table.insert": "挿入",
     "table.delete": "削除",
+    "table.insertRowAbove": "上に行を挿入",
+    "table.insertRowBelow": "下に行を挿入",
+    "table.insertColumnLeft": "左に列を挿入",
+    "table.insertColumnRight": "右に列を挿入",
+    "table.deleteRowsButton": "行の削除",
+    "table.deleteColumnsButton": "列の削除",
     "table.mergeCells": "セルの結合",
     "table.unmergeCells": "セル結合の解除",
 

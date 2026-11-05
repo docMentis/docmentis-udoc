@@ -421,6 +421,13 @@ export interface ToolbarTab<K extends string = MessageKey> {
      * holds for wins, so a caret in a shape's text opens Text, ahead of Shape.
      */
     opensFor?: (selection: SelectionCapabilities) => boolean;
+    /**
+     * Whether a selection {@link opensFor} holds for leaves the tab open, where a
+     * tab ahead of it on the strip would otherwise open for that selection. The
+     * Table tab's: a caret in a cell keeps it, ahead of Text, so working through a
+     * table stays on it until the selection leaves the table.
+     */
+    staysOpen?: boolean;
     /** The feature the tab's commands need. A session not entitled to it does
      *  not see the tab. */
     feature?: Feature;

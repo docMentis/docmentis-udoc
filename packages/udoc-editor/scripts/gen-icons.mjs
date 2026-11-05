@@ -3,7 +3,9 @@
 //
 // Every icon edit mode's chrome shows beyond udoc-ui's is a Material Symbol
 // picked by name in ICONS below — the chrome draws none of its own, as
-// udoc-ui's `scripts/gen-icons.mjs` says of its own.
+// udoc-ui's `scripts/gen-icons.mjs` says of its own. The exceptions are the
+// table glyphs Material has no symbol for, in `src/table.ts`: Delete Rows,
+// Delete Columns and Unmerge, each redrawn from the symbol it is the opposite of.
 //
 //   npm run gen:icons
 //

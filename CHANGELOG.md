@@ -33,6 +33,16 @@ listed once, by package. Its major and minor version are those of the
   its colour in a print, a thumbnail, `renderPage` and a PNG export, where it
   read too dark.
 
+### udoc-editor
+
+#### Added
+
+- A slide deck and a word document have a Table tab, with the edits the context
+  menu offers over a table: Select row, column or table, Insert Row Above or
+  Below, Insert Column Left or Right, Delete Rows or Columns, and Merge and
+  Unmerge Cells. Selecting a block of cells opens it, and it stays open while
+  the selection stays in the table.
+
 ### udoc-node
 
 #### Added

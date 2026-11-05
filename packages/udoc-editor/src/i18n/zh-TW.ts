@@ -61,6 +61,7 @@ export const zhTW: EditMessages = {
     "ribbon.insert": "插入",
     "ribbon.text": "文字",
     "ribbon.shape": "圖案",
+    "ribbon.table": "表格",
     "ribbon.object": "物件",
 
     // Commands
@@ -198,6 +199,12 @@ export const zhTW: EditMessages = {
     "table.select": "選取",
     "table.insert": "插入",
     "table.delete": "刪除",
+    "table.insertRowAbove": "在上方插入列",
+    "table.insertRowBelow": "在下方插入列",
+    "table.insertColumnLeft": "在左方插入欄",
+    "table.insertColumnRight": "在右方插入欄",
+    "table.deleteRowsButton": "刪除列",
+    "table.deleteColumnsButton": "刪除欄",
     "table.mergeCells": "合併儲存格",
     "table.unmergeCells": "取消合併儲存格",
 

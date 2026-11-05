@@ -61,6 +61,7 @@ export const ru: EditMessages = {
     "ribbon.insert": "Вставка",
     "ribbon.text": "Текст",
     "ribbon.shape": "Фигура",
+    "ribbon.table": "Таблица",
     "ribbon.object": "Объект",
 
     // Commands
@@ -199,6 +200,12 @@ export const ru: EditMessages = {
     "table.select": "Выделить",
     "table.insert": "Вставить",
     "table.delete": "Удалить",
+    "table.insertRowAbove": "Вставить строку сверху",
+    "table.insertRowBelow": "Вставить строку снизу",
+    "table.insertColumnLeft": "Вставить столбец слева",
+    "table.insertColumnRight": "Вставить столбец справа",
+    "table.deleteRowsButton": "Удалить строки",
+    "table.deleteColumnsButton": "Удалить столбцы",
     "table.mergeCells": "Объединить ячейки",
     "table.unmergeCells": "Отменить объединение ячеек",
 

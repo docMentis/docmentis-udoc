@@ -61,6 +61,7 @@ export const ko: EditMessages = {
     "ribbon.insert": "삽입",
     "ribbon.text": "텍스트",
     "ribbon.shape": "도형",
+    "ribbon.table": "표",
     "ribbon.object": "개체",
 
     // Commands
@@ -198,6 +199,12 @@ export const ko: EditMessages = {
     "table.select": "선택",
     "table.insert": "삽입",
     "table.delete": "삭제",
+    "table.insertRowAbove": "위에 행 삽입",
+    "table.insertRowBelow": "아래에 행 삽입",
+    "table.insertColumnLeft": "왼쪽에 열 삽입",
+    "table.insertColumnRight": "오른쪽에 열 삽입",
+    "table.deleteRowsButton": "행 삭제",
+    "table.deleteColumnsButton": "열 삭제",
     "table.mergeCells": "셀 병합",
     "table.unmergeCells": "셀 병합 취소",
 

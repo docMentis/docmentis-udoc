@@ -61,6 +61,7 @@ export const ptBR: EditMessages = {
     "ribbon.insert": "Inserir",
     "ribbon.text": "Texto",
     "ribbon.shape": "Forma",
+    "ribbon.table": "Tabela",
     "ribbon.object": "Objeto",
 
     // Commands
@@ -198,6 +199,12 @@ export const ptBR: EditMessages = {
     "table.select": "Selecionar",
     "table.insert": "Inserir",
     "table.delete": "Excluir",
+    "table.insertRowAbove": "Inserir Linha Acima",
+    "table.insertRowBelow": "Inserir Linha Abaixo",
+    "table.insertColumnLeft": "Inserir Coluna à Esquerda",
+    "table.insertColumnRight": "Inserir Coluna à Direita",
+    "table.deleteRowsButton": "Excluir Linhas",
+    "table.deleteColumnsButton": "Excluir Colunas",
     "table.mergeCells": "Mesclar Células",
     "table.unmergeCells": "Desfazer Mesclagem de Células",
 

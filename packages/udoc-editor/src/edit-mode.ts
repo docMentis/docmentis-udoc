@@ -27,6 +27,7 @@ import { editState, INITIAL_EDIT_STATE, updateEditState } from "./state.js";
 import { createRuler, RULER_COMMAND, rulerShown, setShowRuler } from "./ruler.js";
 import { selectionRuler } from "./ruler-edits.js";
 import { editorStyles } from "./styles.js";
+import { tableCommands } from "./table.js";
 import { editTabs } from "./tabs.js";
 import { createEditTools } from "./tools.js";
 import type { EditTools } from "./tools.js";
@@ -229,6 +230,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
         commands: {
             ...formatCommands(mountedTools),
             ...arrangeCommands(() => tools?.arrange ?? null),
+            ...tableCommands(mountedTools),
             ruler: RULER_COMMAND,
             createSlide: newSlideCommand(() => void newSlide?.open()),
             ...insertCommands(() => {

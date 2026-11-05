@@ -61,6 +61,7 @@ export const ar: EditMessages = {
     "ribbon.insert": "إدراج",
     "ribbon.text": "نص",
     "ribbon.shape": "شكل",
+    "ribbon.table": "جدول",
     "ribbon.object": "كائن",
 
     // Commands
@@ -198,6 +199,12 @@ export const ar: EditMessages = {
     "table.select": "تحديد",
     "table.insert": "إدراج",
     "table.delete": "حذف",
+    "table.insertRowAbove": "إدراج صف إلى الأعلى",
+    "table.insertRowBelow": "إدراج صف إلى الأسفل",
+    "table.insertColumnLeft": "إدراج عمود إلى اليسار",
+    "table.insertColumnRight": "إدراج عمود إلى اليمين",
+    "table.deleteRowsButton": "حذف الصفوف",
+    "table.deleteColumnsButton": "حذف الأعمدة",
     "table.mergeCells": "دمج الخلايا",
     "table.unmergeCells": "إلغاء دمج الخلايا",
 

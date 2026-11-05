@@ -670,11 +670,12 @@ export type CommandRun<K extends string = MessageKey> =
 
 /** Which segmented group a ribbon command bunches into: consecutive commands of
  *  one kind butt together with no gap between them — the character toggles, the
- *  color dropdowns, the paragraph controls, the arrangement controls.
+ *  color dropdowns, the paragraph controls, the arrangement controls, a table's
+ *  inserts and merges.
  *  Consecutive `"segment"` toggles are the choices of one setting, one pressed
  *  at a time: they form a segment button (see `createSegmentButton`), which the
  *  ribbon never splits. */
-export type ClusterKind = "toggle" | "paint" | "paragraph" | "arrange" | "segment";
+export type ClusterKind = "toggle" | "paint" | "paragraph" | "arrange" | "table" | "segment";
 
 /** A ribbon control an extension builds for one of its commands (a `control` {@link CommandRun}). */
 export interface RibbonControl {
