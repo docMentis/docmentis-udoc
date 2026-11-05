@@ -62,6 +62,10 @@ the packages here call through — is documented with the engine, not here.
   join / patch / presence messages, a presence refreshed while joined and withdrawn
   on leaving, the close codes and which a client rejoins after, and why there is no
   REST fallback.
+- [Node Log Cut](node-log-cut.md) — designed, not built: dropping the history before
+  a checkpoint from a document's edit log, to bound what every open loads. A cut only
+  when an idle session closes, apart from checkpoints; what the store keeps and the
+  routes it adds; how an editor left open across a cut catches up; and its limits.
 
 ### Examples
 
