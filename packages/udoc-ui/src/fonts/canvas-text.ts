@@ -14,6 +14,11 @@
  * measures the character in the family **followed by that blank**: a character
  * the family has keeps its width, one it lacks lands on the blank and measures
  * nothing. A family the machine doesn't have at all covers nothing that way.
+ *
+ * Nor will it say whether it drew anything: a character nothing on the machine
+ * has draws as the browser's placeholder, which measures and inks like a glyph.
+ * So {@link CanvasText.fallbackCovers} measures the character in the family
+ * alone, against a code point no font has.
  */
 
 import type { CanvasText } from "@docmentis/udoc-wasm";
@@ -25,8 +30,11 @@ const BLANK_FAMILY = "udoc-canvas-text-blank";
  *  backstop, well past any glyph the engine asks for. */
 const MAX_RASTER = 4096;
 
-/** The size a combining mark is drawn at to see whether it inks. */
-const MARK_PROBE_PX = 64;
+/** The size a character is drawn at to look at its pixels. */
+const PROBE_PX = 64;
+
+/** An unassigned code point: what it draws is the browser's placeholder. */
+const NO_GLYPH = "͸";
 
 /** What a context's `font` is set to before every face, and reads back as
  *  when the face's own string did not parse. */
@@ -78,15 +86,21 @@ export async function createCanvasText(): Promise<CanvasText | null> {
         return measuring.measureText(text).width;
     };
 
+    /** The pixels of `text` in `font`, drawn small, or `null` if `font` isn't one. */
+    const pixels = (font: string, text: string): Uint8ClampedArray | null => {
+        drawing.canvas.width = PROBE_PX * 2;
+        drawing.canvas.height = PROBE_PX * 2;
+        if (!setFont(drawing, font)) return null;
+        const scale = PROBE_PX / pixelSizeOf(font);
+        drawing.setTransform(scale, 0, 0, scale, PROBE_PX / 2, PROBE_PX * 1.5);
+        drawing.fillText(text, 0, 0);
+        return drawing.getImageData(0, 0, drawing.canvas.width, drawing.canvas.height).data;
+    };
+
     /** Whether `text` leaves any ink in `font`, drawn small. */
     const inks = (font: string, text: string): boolean => {
-        drawing.canvas.width = MARK_PROBE_PX * 2;
-        drawing.canvas.height = MARK_PROBE_PX * 2;
-        if (!setFont(drawing, font)) return false;
-        const scale = MARK_PROBE_PX / pixelSizeOf(font);
-        drawing.setTransform(scale, 0, 0, scale, MARK_PROBE_PX / 2, MARK_PROBE_PX * 1.5);
-        drawing.fillText(text, 0, 0);
-        const data = drawing.getImageData(0, 0, drawing.canvas.width, drawing.canvas.height).data;
+        const data = pixels(font, text);
+        if (!data) return false;
         for (let i = 3; i < data.length; i += 4) if (data[i]) return true;
         return false;
     };
@@ -99,6 +113,20 @@ export async function createCanvasText(): Promise<CanvasText | null> {
             // if it inks, since the blank never does. Anything else measuring
             // nothing landed on the blank.
             return MARK.test(character) && inks(withBlank, character);
+        },
+
+        fallbackCovers(font, character) {
+            const width = measure(font, character);
+            if (width !== measure(font, NO_GLYPH)) {
+                // A width of its own is a real glyph. Measuring nothing, it is
+                // one only if it is a combining mark that inks.
+                return width > 0 || (MARK.test(character) && inks(font, character));
+            }
+            // A real glyph can be as wide as the placeholder: a Han character
+            // is, where the placeholder comes from a Han face.
+            const drawn = pixels(font, character);
+            const placeholder = pixels(font, NO_GLYPH);
+            return !!drawn && !!placeholder && drawn.some((alpha, i) => alpha !== placeholder[i]);
         },
 
         metrics(font) {

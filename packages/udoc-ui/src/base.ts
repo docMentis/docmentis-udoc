@@ -254,8 +254,11 @@ export interface UDocOptions {
     /** Use the fonts available to the user's browser. A family a document
      *  names that is neither registered ({@link fonts}) nor served online
      *  (Google Fonts) then renders in the copy installed on the end user's
-     *  machine, which is better quality than a substitute. It depends on the device, though: the same document may
-     *  render differently here than on a server or on another device.
+     *  machine, which is better quality than a substitute. A character no font
+     *  here covers then renders in whatever the browser falls back to, rather
+     *  than as a blank, while its font downloads and for good if none is found.
+     *  It depends on the device, though: the same document may render
+     *  differently here than on a server or on another device.
      *  Default `true`. */
     enableCanvasFonts?: boolean;
 
