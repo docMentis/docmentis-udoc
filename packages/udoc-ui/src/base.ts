@@ -1025,13 +1025,15 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * `"pdf"`, a presentation to `"pptx"`); {@link sourceFormat} is what
      * saving it back means. `strategy` is how much of the file it was opened
      * from, the original, the saved bytes keep: a `"delta"` or `"incremental"`
-     * save writes over it, which a document opened with {@link openRemote}
-     * doesn't hold; without it, the one keeping the most of it that `format`
-     * saves by (`"incremental"` for a PDF, `"rewrite"` for a CSV, a TSV, a
-     * PSV, a text file, a Markdown file, an HTML file or an image, else
-     * `"delta"`). Rejects for a format its doc type doesn't save to, a format
-     * that never saves by `strategy`, no original to write over, or a save that
-     * isn't built yet.
+     * save writes over it, which a document opened from a package or with
+     * {@link openRemote} doesn't hold; without it, the one keeping the most of
+     * it that `format` saves by (`"incremental"` for a PDF, `"rewrite"` for a
+     * CSV, a TSV, a PSV, a text file, a Markdown file, an HTML file or an
+     * image, else `"delta"`), and `"rewrite"` with nothing to keep: as another
+     * format than {@link sourceFormat}, or with no original held. Rejects for a
+     * format its doc type doesn't save to, a format that never saves by
+     * `strategy`, a `"delta"` or `"incremental"` save with no original to write
+     * over or as another format, or a save that isn't built yet.
      */
     saveToBytes(format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
         return this.shell.saveToBytes(format, strategy);
