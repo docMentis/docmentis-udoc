@@ -8,6 +8,8 @@ import { fetchCutLogs } from "../packages/udoc-ui/dist/app/collaboration.js";
 import { DOCUMENTS, png, run } from "./e2e-documents.mjs";
 import {
     check,
+    checkpointHolds,
+    checkpointVersions,
     converge,
     descriptionOf,
     differ,
@@ -94,6 +96,8 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
     const kept = join(store.directory, id);
     const ids = t.ids(await unzip(await readFile(join(kept, "checkpoints/v0.udoc"))));
 
+    const asUploaded = await modelOf((await remote(server.base, id)).saveToPackage());
+
     // Open before the first cut and kept open: `old` synced, `unsent` with an edit
     // it never sends, `blank` knowing nothing past the import, and two more with
     // an edit each that will race a live editor's.
@@ -156,7 +160,8 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
     d.send();
     check("an editor can undo its own edits on the cut log", undos > 0);
     await converge("the undo reaches the other editor", c.session, d.session);
-    await onServer("the undo reaches the server", server.base, id, await modelOf(c.session.saveToPackage()));
+    const atCheckpoint = await modelOf(c.session.saveToPackage());
+    await onServer("the undo reaches the server", server.base, id, atCheckpoint);
 
     // A checkpoint with editors connected: it changes nothing for them, and cuts nothing.
     const checkpoint = await fetch(`${server.base}/documents/${id}/checkpoints`, { method: "POST" });
@@ -243,6 +248,16 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
     await cutComes(kept, 2, "a second idle close cuts again");
     const reopened = differ(beforeSecond, await modelOf((await remote(server.base, id)).saveToPackage()));
     check("an editor opened on the second cut: the same model", reopened.length === 0, reopened.join(", "));
+
+    // Every checkpoint is still the document as it was, before and after each cut.
+    // Opens after the second cut may idle out and cut again, past these.
+    const versions = await checkpointVersions(server.base, id);
+    check("the checkpoints are listed", JSON.stringify(versions.slice(0, 4)) === "[0,1,2,3]", JSON.stringify(versions));
+    await checkpointHolds(server.base, id, 0, asUploaded);
+    await checkpointHolds(server.base, id, 1, firstModel);
+    await checkpointHolds(server.base, id, 2, atCheckpoint);
+    await checkpointHolds(server.base, id, 3, beforeSecond);
+
     if (await catchUp("the blank editor, behind two cuts", server.base, id, blank)) {
         const blankParts = differ(beforeSecond, await modelOf(blank.saveToPackage()));
         check("it holds the same model", blankParts.length === 0, blankParts.join(", "));

@@ -85,7 +85,7 @@ import { createScrollbar } from "./components/Scrollbar.js";
 import { createPerfHud } from "./components/PerfHud.js";
 import { fetchCutLogs, joinCollaboration, webSocketChannel } from "./collaboration.js";
 import type { Collaboration, CollaborationEvent, OpenChannel } from "./collaboration.js";
-import { remoteCheckpoint, remoteCopy } from "./remote.js";
+import { isCheckpointPackage, remoteCheckpoint, remoteCopy } from "./remote.js";
 import type { RemoteCheckpointResponse } from "./remote.js";
 import { PRINT_DPI, printImages, printPageOf, printPdf } from "./print.js";
 import type { PrintOptions, PrintPage } from "./print.js";
@@ -1860,11 +1860,14 @@ export function mountUIShell(
 
     /** The package resource the open document was opened from with `openRemote`, absolute; `undefined` for any other. */
     let remotePackage: string | undefined;
+    /** Whether the open document is one checkpoint's package, which can't be edited or joined. */
+    let openedCheckpoint = false;
     /** The name of the file the open document was opened from, as `openSource` was given it or found it; `undefined` for none. */
     let sourceFilename: string | undefined;
 
     function openRemote(url: string): Promise<void> {
-        return openDocument(() => client.openRemote(url), { packageUrl: new URL(url, location.href).href });
+        const packageUrl = new URL(url, location.href).href;
+        return openDocument(() => client.openRemote(url), { packageUrl, checkpoint: isCheckpointPackage(packageUrl) });
     }
 
     function openLocal(id: string): Promise<void> {
@@ -1884,13 +1887,14 @@ export function mountUIShell(
     /**
      * Open a document with `open`, and bring the UI up on it — from
      * `from.packageUrl`, a server's package resource, when it is opened
-     * remotely, and named `from.filename` when its file's name is known.
+     * remotely, and named `from.filename` when its file's name is known;
+     * read-only when `from.checkpoint` says that package is one checkpoint's.
      * `open` gives null when it was given up, the reader asked something and
      * another document opened, or this one closed, before they answered.
      */
     async function openDocument(
         open: (signal: AbortSignal) => Promise<DocumentLayout | { extension: ExtensionOpened } | null>,
-        from: { packageUrl?: string | undefined; filename?: string | undefined } = {},
+        from: { packageUrl?: string | undefined; filename?: string | undefined; checkpoint?: boolean } = {},
     ): Promise<void> {
         // What was opening gives way to this.
         openInFlight?.abort();
@@ -1900,6 +1904,7 @@ export function mountUIShell(
         passwordModal.dismiss(); // so was a password it asked for
         delimiterModal.dismiss(); // and a delimiter
         remotePackage = undefined; // and so was the server it came from
+        openedCheckpoint = from.checkpoint === true;
         sourceFilename = undefined; // and its file's name
         formWidgets = new Map(); // and so was its form
         formAlternateNames = new Map();
@@ -1932,7 +1937,9 @@ export function mountUIShell(
                 pageCount: layout.pageCount ?? null,
                 firstUncomposedPage: layout.firstUncomposedPage,
                 scrollSize: layout.scrollSize,
-                features: client.entitlements?.features ?? [],
+                // Every feature is an edit, which a checkpoint takes none of: the
+                // mode gives way to view, and the tools that edit aren't offered.
+                features: from.checkpoint ? [] : (client.entitlements?.features ?? []),
                 ...(layout.docType !== undefined ? { docType: layout.docType } : {}),
                 ...(layout.sourceFormat !== undefined ? { sourceFormat: layout.sourceFormat } : {}),
             });
@@ -2146,7 +2153,10 @@ export function mountUIShell(
         // selection-gated controls (Delete, Arrange). Every report counts — an
         // edit echo (localChanged:false) can change the selection or its z-order
         // (e.g. after a delete or reorder), so don't gate this.
-        store.dispatch({ type: "SET_SELECTION_CAPABILITIES", capabilities: state.capabilities });
+        store.dispatch({
+            type: "SET_SELECTION_CAPABILITIES",
+            capabilities: openedCheckpoint ? { ...state.capabilities, allowed: [] } : state.capabilities,
+        });
         // The whole pages it holds, for the thumbnails to tint — only when they
         // changed, so an object pick doesn't re-run the strip.
         const pages = state.local.pages ?? [];
@@ -2317,6 +2327,7 @@ export function mountUIShell(
     // ping-pong between peers).
     async function commit(run: () => Promise<DocumentLayout>): Promise<void> {
         if (store.getState().status !== "ready") return;
+        if (openedCheckpoint) throw new Error("the open document is a checkpoint, which can't be edited");
         const layout = await run();
         store.dispatch({
             type: "DOC_RELAYOUT",
@@ -3382,6 +3393,7 @@ export function mountUIShell(
     }
 
     async function requestRemoteCheckpoint(): Promise<RemoteCheckpointResponse> {
+        if (openedCheckpoint) throw new Error("requestRemoteCheckpoint: the open document is a checkpoint already");
         return remoteCheckpoint(remotePackageOf("requestRemoteCheckpoint"));
     }
 
@@ -3582,6 +3594,7 @@ export function mountUIShell(
         catchUp?: () => Promise<void>,
     ): void {
         if (store.getState().status !== "ready") throw new Error("joining a collaboration needs an open document");
+        if (openedCheckpoint) throw new Error("the open document is a checkpoint, which joins no collaboration");
         void leaveCollaboration();
         joinedTo = { openChannel, name, release: hold?.() ?? (() => {}), catchUp };
         connect(joinedTo);
@@ -3661,6 +3674,7 @@ export function mountUIShell(
         passwordModal.dismiss();
         delimiterModal.dismiss();
         remotePackage = undefined;
+        openedCheckpoint = false;
         sourceFilename = undefined;
         formWidgets = new Map();
         formAlternateNames = new Map();

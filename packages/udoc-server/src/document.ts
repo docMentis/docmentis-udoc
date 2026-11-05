@@ -29,6 +29,8 @@ export interface DocumentRoutesOptions {
     collaborations: Collaborations;
     /** The largest document accepted, in bytes. */
     maxUploadBytes: number;
+    /** Opens a session over one checkpoint, as it was, for what only a session can answer. */
+    openCheckpoint: (id: string, version: number) => Promise<UDocSession>;
 }
 
 /** The ids this server mints — `randomUUID`'s. Nothing else names a document. */
@@ -54,6 +56,7 @@ export function documentRoutes({
     sessions,
     collaborations,
     maxUploadBytes,
+    openCheckpoint,
 }: DocumentRoutesOptions): Route[] {
     /** The checkpoint each document is writing now, which its next one waits for, to take the version after. */
     const checkpointing = new Map<string, Promise<number>>();
@@ -69,6 +72,14 @@ export function documentRoutes({
         }),
         route("GET", "/documents/:id/file.:format", file, { params: { format: /\w+/ } }),
         route("POST", "/documents/:id/checkpoints", checkpoint),
+        route("GET", "/documents/:id/checkpoints", checkpointVersions),
+        route("GET", "/documents/:id/checkpoints/:version/package", checkpointResource, { params: { version: /\d+/ } }),
+        route("GET", "/documents/:id/checkpoints/:version/package/*route", checkpointResource, {
+            params: { version: /\d+/ },
+        }),
+        route("GET", "/documents/:id/checkpoints/:version/file.:format", checkpointFile, {
+            params: { version: /\d+/, format: /\w+/ },
+        }),
         route("GET", "/documents/:id/package", packageResource),
         route("GET", "/documents/:id/package/*route", packageResource),
         route("GET", "/documents/:id/collaboration", upgradeRequired, { upgrade: collaboration }),
@@ -178,18 +189,23 @@ export function documentRoutes({
      * a comma. Nothing of it is kept.
      */
     async function file({ params, query }: RouteRequest): Promise<Reply> {
-        const id = documentId(params);
-        const format = params.format!;
-        if (format !== "udoc" && !isFileFormat(format)) throw notFound();
-        const strategy = strategyOf(format, query.get("strategy"));
-        const delimiter = query.get("delimiter") ?? undefined;
-        if (format === "udoc" && delimiter !== undefined) {
-            throw new HttpFailure(400, "invalidRequest", "a udoc copy is a package, split by no delimiter");
+        const save = copyAsked(params, query);
+        return bytes(await sessions.use(documentId(params), save), "application/octet-stream");
+    }
+
+    /**
+     * A copy of one checkpoint, as {@link file} saves one of the document: saved
+     * in a session of its own, closed after, since the pool's is the document's,
+     * current one. It spends a permit like any open.
+     */
+    async function checkpointFile({ params, query }: RouteRequest): Promise<Reply> {
+        const save = copyAsked(params, query);
+        const session = await openCheckpoint(documentId(params), Number(params.version));
+        try {
+            return bytes(await save(session), "application/octet-stream");
+        } finally {
+            await session.close();
         }
-        const saved = await sessions.use(id, (session) =>
-            format === "udoc" ? session.saveToPackage() : session.saveToBytes(format, strategy, delimiter),
-        );
-        return bytes(saved, "application/octet-stream");
     }
 
     /**
@@ -219,6 +235,23 @@ export function documentRoutes({
         };
         next.then(forget, forget);
         return json(201, { version: await next });
+    }
+
+    /** The versions of the document's checkpoints, oldest first, `{ versions }`. A cut uses up a number, so they have gaps. */
+    async function checkpointVersions({ params }: RouteRequest): Promise<Reply> {
+        const id = documentId(params);
+        const versions = await store.getCheckpointVersions(id);
+        if (versions.length === 0) throw noDocument(id);
+        return json(200, { versions });
+    }
+
+    /**
+     * One checkpoint's package: its description, or one resource under it (see
+     * `package.ts`). What is kept of a version never changes, so unlike the
+     * package it waits for no log being cut.
+     */
+    function checkpointResource({ params, query }: RouteRequest): Promise<Reply> {
+        return readPackage(store, documentId(params), params.route ?? "", query, Number(params.version));
     }
 
     /**
@@ -320,6 +353,29 @@ async function unlock(session: UDocSession, password: string | undefined): Promi
 }
 
 /** The strategy a copy as `format` saves by: the one `value` names, else none, for the engine's; none for a udoc copy. */
+/** What saves the copy a request's route and query ask for, once it has a session; refuses a request that can't be one. */
+function copyAsked(params: Params, query: URLSearchParams): (session: UDocSession) => Promise<Uint8Array> {
+    const format = params.format!;
+    if (format !== "udoc" && !isFileFormat(format)) throw notFound();
+    const strategy = strategyOf(format, query.get("strategy"));
+    const delimiter = query.get("delimiter") ?? undefined;
+    if (format === "udoc" && delimiter !== undefined) {
+        throw new HttpFailure(400, "invalidRequest", "a udoc copy is a package, split by no delimiter");
+    }
+    return async (session) => {
+        if (format === "udoc") return session.saveToPackage();
+        try {
+            return await session.saveToBytes(format, strategy, delimiter);
+        } catch (error) {
+            // Asked for no strategy, the engine takes the one keeping the most of
+            // the original, which it can't always write over: a PDF that needs a
+            // password. A rewrite keeps nothing of it, and is still a copy.
+            if (strategy !== undefined || failureOf(error).code !== "unsupported") throw error;
+            return session.saveToBytes(format, "rewrite", delimiter);
+        }
+    };
+}
+
 function strategyOf(format: string, value: string | null): SaveStrategy | undefined {
     if (value === null) return undefined;
     if (format === "udoc") {

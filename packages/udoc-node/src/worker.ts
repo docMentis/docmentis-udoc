@@ -104,7 +104,9 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 if (request.type === "open") session.open(request.bytes, request.format, request.delimiter);
                 // The session keeps the fetch: a page composed later may need a
                 // part not fetched yet.
-                else session.openRemote(request.url, blockingFetch(request.fetches));
+                else if (request.withOriginal) {
+                    session.openRemoteWithOriginal(request.url, blockingFetch(request.fetches));
+                } else session.openRemote(request.url, blockingFetch(request.fetches));
                 return { id, ok: true, result: openedAs(session) };
             case "authenticate":
                 // Not a second open: the permit was spent on this document by

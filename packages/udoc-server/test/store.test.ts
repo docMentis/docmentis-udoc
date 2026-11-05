@@ -9,7 +9,8 @@
  * checkpoint is kept beside the earlier ones, once, read as the latest, and
  * forgets what it holds of the opaque parts, and a part only an earlier one
  * holds is read from the newest that does; a cut keeps its checkpoint, notes
- * it, and replaces the log, in that order; an id already kept is never
+ * it, and replaces the log, in that order; a checkpoint is read as of its own
+ * version, and one not kept reads as nothing; an id already kept is never
  * overwritten; an id never becomes a path outside the directory; and a write
  * that fails leaves nothing half-written behind.
  */
@@ -155,6 +156,79 @@ test("a cut keeps its checkpoint, notes it, and replaces the log, and a refused 
 
     await assert.rejects(store.putCut("b", 1, await packageZip(), bytesOf("log")), /no document "b"/);
     assert.deepEqual(await store.getCuts("b"), []);
+});
+
+test("what pairs a package with its original is read from the latest checkpoint, or the one asked", async (t) => {
+    const store = new DirectoryDocumentStore(await temporaryDirectory(t));
+    await store.put("a", { original: pdf.original, checkpoint: await packageZip() });
+    assert.equal(await store.getOriginalIdMap("a"), undefined, "this package holds none");
+    assert.equal(await store.getModifiedPartIds("a"), undefined);
+
+    for (const version of [1, 2]) {
+        await store.putCheckpoint(
+            "a",
+            version,
+            await packageZip({
+                ...checkpointEntries(version),
+                "original_id_map.json": `map v${version}`,
+                "modified_part_ids.json": `ids v${version}`,
+            }),
+        );
+    }
+    assert.equal(text(await store.getOriginalIdMap("a")), "map v2");
+    assert.equal(text(await store.getModifiedPartIds("a")), "ids v2");
+    assert.equal(text(await store.getOriginalIdMap("a", 1)), "map v1");
+    assert.equal(text(await store.getModifiedPartIds("a", 1)), "ids v1");
+    assert.equal(await store.getOriginalIdMap("a", 0), undefined);
+    assert.equal(await store.getOriginalIdMap("a", 7), undefined);
+    assert.equal(await store.getOriginalIdMap("b"), undefined);
+});
+
+test("a checkpoint is read as of its own version, and one not kept reads as nothing", async (t) => {
+    const store = new DirectoryDocumentStore(await temporaryDirectory(t));
+    assert.deepEqual(await store.getCheckpointVersions("a"), []);
+    await store.put("a", { original: pdf.original, checkpoint: await packageZip() });
+    await store.putCheckpoint("a", 1, await packageZip(checkpointEntries(1)));
+    // It leaves out a part v1 holds, as a checkpoint does one that shows no longer,
+    // and comes after a number a cut could have used up.
+    const { "parts/soft_mask_0-1a.json": _left, ...v3 } = checkpointEntries(3);
+    await store.putCheckpoint("a", 3, await packageZip(v3));
+    await store.putLog("a", bytesOf("log"));
+    assert.deepEqual(await store.getCheckpointVersions("a"), [0, 1, 3]);
+
+    // Its description is its own, with no frontier, since no log replays over it.
+    assert.deepEqual(await store.getDescription("a", 1), {
+        docType: "portable",
+        sourceFormat: "pdf",
+        baselineVersion: 1,
+    });
+    const latest = await store.getDescription("a");
+    assert.equal(latest?.baselineVersion, 3);
+    assert.ok(latest?.baselineFrontier);
+
+    // Its parts are its own, not the latest's.
+    assert.equal(inflated(await store.getPart("a", "pages", "0-1", 0)), "page");
+    assert.equal(inflated(await store.getPart("a", "pages", "0-1", 1)), "page v1");
+    assert.equal(inflated(await store.getPart("a", "pages", "0-1", 3)), "page v3");
+    assert.equal(inflated(await store.getPart("a", "pages", "0-1")), "page v3");
+    // What only an earlier one holds comes from it, and nothing from a later one.
+    assert.equal(inflated(await store.getPart("a", "soft-masks", "0-1a", 3)), "soft mask");
+    assert.equal(await store.getPart("a", "images", "0-2a", 0), undefined);
+    assert.equal(inflated(await store.getPart("a", "images", "0-2a", 1)), "image part");
+    assert.equal(await store.getBlob("a", "e7e7e7", 0), undefined);
+    assert.equal(inflated(await store.getBlob("a", "e7e7e7", 1)), "image pixels");
+
+    // An opaque part kept beside the checkpoints is found as it is for the latest.
+    await store.putOpaqueParts("a", await packageZip({ "parts/image_0-3.json": "brought by an edit" }));
+    assert.equal(inflated(await store.getPart("a", "images", "0-3", 1)), "brought by an edit");
+
+    // A version not kept has nothing, not even what is kept beside the others.
+    assert.equal(await store.getDescription("a", 2), undefined);
+    assert.equal(await store.getPart("a", "pages", "0-1", 2), undefined);
+    assert.equal(await store.getPart("a", "images", "0-3", 2), undefined);
+    assert.equal(await store.getBlob("a", IMAGE_BLOB, 2), undefined);
+    assert.equal(await store.getDescription("b", 0), undefined);
+    assert.equal(await store.getPart("b", "pages", "0-1", 0), undefined);
 });
 
 test("an opaque part and its blobs are kept by route beside the checkpoints, and nothing else is", async (t) => {

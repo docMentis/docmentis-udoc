@@ -140,11 +140,27 @@ function fetchSync(url) {
     return new Uint8Array(fetchBody, 0, flags[1]).slice();
 }
 
-/** An editor's session, opened on the document as a browser opens it. */
-export async function remote(base, id) {
+/** An editor's session, opened on the document as a browser opens it; on one checkpoint when `version` says so. */
+export async function remote(base, id, version) {
     const session = await newSession();
-    session.openRemote(`${base}/documents/${id}/package`, fetchSync);
+    const resource = version === undefined ? "package" : `checkpoints/${version}/package`;
+    session.openRemote(`${base}/documents/${id}/${resource}`, fetchSync);
     return session;
+}
+
+/** The versions of the document's checkpoints, as the server lists them. */
+export async function checkpointVersions(base, id) {
+    return (await (await fetch(`${base}/documents/${id}/checkpoints`)).json()).versions;
+}
+
+/** Check checkpoint `version`, opened on its own, is the document as it was: `model`. */
+export async function checkpointHolds(base, id, version, model) {
+    const parts = differ(model, await modelOf((await remote(base, id, version)).saveToPackage()));
+    check(
+        `checkpoint v${version} opened on its own: the document as it was then`,
+        parts.length === 0,
+        parts.join(", "),
+    );
 }
 
 /** An editor joined over the WebSocket: `join`, then patches and opaque parts each way. */

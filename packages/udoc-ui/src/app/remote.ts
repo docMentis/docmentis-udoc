@@ -15,6 +15,15 @@ export interface RemoteCheckpointResponse {
 }
 
 /**
+ * Whether `packageUrl` is one checkpoint's package,
+ * `…/documents/{id}/checkpoints/{version}/package`, not the document's: the
+ * document as it was at that version, for this client to read and never change.
+ */
+export function isCheckpointPackage(packageUrl: string): boolean {
+    return /\/checkpoints\/\d+\/package\/?$/.test(new URL(packageUrl).pathname);
+}
+
+/**
  * Ask the server keeping the document whose package is at `packageUrl` for a
  * copy of it, saved as `format` by `strategy`, else by the engine's for
  * `format`; resolves with its bytes.

@@ -140,10 +140,15 @@ class FakeSession {
         if (this.docType === "spreadsheet") throw new UDocError("unsupported", "its sheets have no print pages");
         return bytesOf("%PDF");
     }
+    /** Whether the engine can't write over the original, as a PDF that needs a password. */
+    originalLocked = false;
     async saveToBytes(format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
         this.saves.push(strategy);
         if (this.docType !== "portable" || format !== "pdf") {
             throw new UDocError("invalidRequest", `can't be saved as ${format}`);
+        }
+        if (this.originalLocked && strategy !== "rewrite") {
+            throw new UDocError("unsupported", "the original needs a password");
         }
         // Absent, it is the engine's for a PDF: incremental.
         if (strategy !== "rewrite") {
@@ -220,7 +225,13 @@ function permitRefused(): UDocError {
  * package.
  */
 class FakeUDoc {
-    readonly opened: { bytes: string; format: FileFormat | undefined; session: FakeSession }[] = [];
+    readonly opened: {
+        bytes: string;
+        format: FileFormat | undefined;
+        session: FakeSession;
+        fetch?: (url: string) => Promise<Uint8Array>;
+        options?: { withOriginal?: boolean } | undefined;
+    }[] = [];
     refusing = false;
     readonly #package: Uint8Array;
 
@@ -228,7 +239,11 @@ class FakeUDoc {
         this.#package = udocPackage;
     }
 
-    async openRemote(url: string, fetch: (url: string) => Promise<Uint8Array>): Promise<UDocSession> {
+    async openRemote(
+        url: string,
+        fetch: (url: string) => Promise<Uint8Array>,
+        options?: { withOriginal?: boolean },
+    ): Promise<UDocSession> {
         if (this.refusing) throw permitRefused();
         const description = JSON.parse(text(await fetch(url))) as {
             docType: UDocType;
@@ -237,7 +252,7 @@ class FakeUDoc {
         };
         const session = new FakeSession(description.docType, description.sourceFormat ?? "pdf", true, this.#package);
         if (description.baselineFrontier) await session.merge(inflateRawSync(await fetch(`${url}/crdt`)));
-        this.opened.push({ bytes: url, format: undefined, session });
+        this.opened.push({ bytes: url, format: undefined, session, fetch, options });
         return session as unknown as UDocSession;
     }
 
@@ -727,7 +742,7 @@ test("a checkpoint keeps the session as the next baseline, which the package ans
     assert.deepEqual(
         [
             await errorOf(await first.request("POST", "/documents/00000000-0000-4000-8000-000000000000/checkpoints")),
-            await errorOf(await first.request("GET", `/documents/${id}/checkpoints`)),
+            await errorOf(await first.request("PUT", `/documents/${id}/checkpoints`)),
         ],
         [
             [404, "notFound"],
@@ -740,6 +755,113 @@ test("a checkpoint keeps the session as the next baseline, which the package ans
     const second = await serve(t, directory);
     assert.equal((await second.request("POST", `/documents/${id}/checkpoints`)).status, 201);
     assert.deepEqual(second.udoc.opened[0]!.session.packageSaves, [4]);
+});
+
+test("one checkpoint is served as it was, with no log, and no session opened for it", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { udoc, request, upload } = await serve(t, directory);
+    const id = await upload();
+    await request("POST", `/documents/${id}/checkpoints`);
+    await request("POST", `/documents/${id}/checkpoints`);
+    assert.deepEqual(await (await request("GET", `/documents/${id}/checkpoints`)).json(), { versions: [0, 1, 2] });
+    const opened = udoc.opened.length;
+
+    const v1 = `/documents/${id}/checkpoints/1/package`;
+    assert.equal(
+        await (await request("GET", v1)).text(),
+        '{"docType":"portable","sourceFormat":"pdf","baselineVersion":1}',
+        "its own, with no frontier",
+    );
+    const inflatedBody = async (path: string) =>
+        text(inflateRawSync(new Uint8Array(await (await request("GET", path)).arrayBuffer())));
+    assert.equal(await inflatedBody(`${v1}/pages/0-1`), "page v1");
+    assert.equal(
+        await inflatedBody(`/documents/${id}/package/pages/0-1`),
+        "page v2",
+        "the document's stays the latest's",
+    );
+    assert.equal(await inflatedBody(`${v1}/blobs/e7e7e7`), "image pixels");
+
+    // A batch answers as of it too: its page, then the mark for what it doesn't have.
+    const batch = Buffer.from(await (await request("GET", `${v1}/batch?p=pages/0-1&p=pages/9-9`)).arrayBuffer());
+    const pageLength = batch.readUInt32BE(0);
+    assert.equal(text(inflateRawSync(batch.subarray(4, 4 + pageLength))), "page v1");
+    assert.equal(batch.readUInt32BE(4 + pageLength), 0xffff_ffff);
+
+    // No log under a checkpoint, and no checkpoint that isn't kept.
+    for (const path of [`${v1}/crdt`, `${v1}/cuts`, `/documents/${id}/checkpoints/7/package`, `${v1}/pages/9-9`]) {
+        assert.deepEqual(await errorOf(await request("GET", path)), [404, "notFound"], path);
+    }
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/checkpoints/7/package/pages/0-1`)), [
+        404,
+        "notFound",
+    ]);
+    assert.deepEqual(
+        await errorOf(await request("GET", "/documents/00000000-0000-4000-8000-000000000000/checkpoints")),
+        [404, "notFound"],
+    );
+    assert.deepEqual(await errorOf(await request("PUT", v1)), [405, "methodNotAllowed"]);
+    assert.equal(udoc.opened.length, opened);
+});
+
+test("a session over the store reads the original and what pairs with it, which no route serves", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { udoc, request, upload } = await serve(t, directory);
+    const id = await upload();
+    assert.equal((await request("GET", `/documents/${id}/file.pdf?strategy=rewrite`)).status, 200);
+    const opened = udoc.opened.at(-1)!;
+    assert.deepEqual(opened.options, { withOriginal: true });
+
+    const read = async (route: string) => text(await opened.fetch!(`${opened.bytes}/${route}`));
+    assert.equal(await read("original"), "pdf");
+    assert.equal(await read("original-id-map"), "", "this package holds none");
+    assert.equal(await read("modified-part-ids"), "");
+
+    for (const route of ["original", "original-id-map", "modified-part-ids"]) {
+        assert.equal((await request("GET", `/documents/${id}/package/${route}`)).status, 404, route);
+        assert.equal((await request("GET", `/documents/${id}/checkpoints/0/package/${route}`)).status, 404, route);
+    }
+});
+
+test("one checkpoint's copy is saved in a session of its own, closed after", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { udoc, request, upload } = await serve(t, directory);
+    const id = await upload();
+    await request("POST", `/documents/${id}/checkpoints`);
+    const pooled = udoc.opened.at(-1)!;
+
+    const copy = await request("GET", `/documents/${id}/checkpoints/1/file.pdf?strategy=rewrite`);
+    assert.equal(copy.status, 200);
+    assert.equal(text(new Uint8Array(await copy.arrayBuffer())), "%PDF");
+    const opened = udoc.opened.at(-1)!;
+    assert.notEqual(opened, pooled);
+    assert.ok(opened.bytes.endsWith(`/documents/${id}/checkpoints/1/package`), opened.bytes);
+    assert.deepEqual(opened.options, { withOriginal: true });
+    assert.deepEqual(opened.session.saves, ["rewrite"]);
+    assert.equal(opened.session.isClosed, true);
+    assert.equal(pooled.session.isClosed, false, "the document's session goes on");
+
+    const opens = udoc.opened.length;
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/checkpoints/7/file.pdf`)), [404, "notFound"]);
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/checkpoints/1/file.rtf`)), [404, "notFound"]);
+    assert.equal(udoc.opened.length, opens, "neither opened a session");
+});
+
+test("a copy naming no strategy rewrites where the engine can't write over the original, and one naming it doesn't", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { udoc, request, upload } = await serve(t, directory);
+    const id = await upload();
+    assert.equal((await request("GET", `/documents/${id}/file.pdf?strategy=rewrite`)).status, 200);
+    const { session } = udoc.opened.at(-1)!;
+    session.originalLocked = true;
+    session.saves.length = 0;
+
+    const copy = await request("GET", `/documents/${id}/file.pdf`);
+    assert.equal(text(new Uint8Array(await copy.arrayBuffer())), "%PDF");
+    assert.deepEqual(session.saves, [undefined, "rewrite"]);
+
+    assert.equal((await request("GET", `/documents/${id}/file.pdf?strategy=incremental`)).ok, false);
+    assert.deepEqual(session.saves, [undefined, "rewrite", "incremental"]);
 });
 
 test("the format hint reaches the import, and a name that isn't a format is refused", async (t) => {

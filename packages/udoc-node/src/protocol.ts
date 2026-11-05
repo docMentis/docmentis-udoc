@@ -68,7 +68,14 @@ export type FontFileAnswer = { id: number; ok: true; body: ArrayBuffer } | { id:
 /** A request to the worker. `id` pairs it with its {@link WorkerReply}. */
 export type WorkerRequest =
     | { id: number; type: "open"; bytes: Uint8Array; format?: FileFormat; delimiter?: string; fontFiles: MessagePort }
-    | { id: number; type: "openRemote"; url: string; fetches: FetchChannel; fontFiles: MessagePort }
+    | {
+          id: number;
+          type: "openRemote";
+          url: string;
+          withOriginal: boolean;
+          fetches: FetchChannel;
+          fontFiles: MessagePort;
+      }
     | { id: number; type: "authenticate"; password: string }
     | { id: number; type: "pageCount" }
     | { id: number; type: "saveToBytes"; format: FileFormat; strategy?: SaveStrategy; delimiter?: string }

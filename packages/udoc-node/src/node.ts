@@ -141,9 +141,20 @@ export class UDocNode {
      * Each URL is fetched with the global `fetch`, unless `fetch` answers it —
      * the whole body, as the route serves it — which is how udoc-server opens
      * a session over the store it keeps, with no request to itself.
+     *
+     * With `withOriginal`, the session is the one its host keeps the original
+     * for: `saveToBytes` can then write over that file by `"delta"` or
+     * `"incremental"`. `fetch` also answers `…/original-id-map` and
+     * `…/modified-part-ids`, each as the package's JSON, or empty for none, and
+     * `…/original`, as the file, which is asked for only when a save needs it.
+     * None of these is deflated, and no udoc-server route serves them.
      */
-    openRemote(url: string, fetch?: (url: string) => Promise<Uint8Array>): Promise<UDocSession> {
-        return UDocSession.openRemote(this.#init(), this.#fontCache, url, fetch);
+    openRemote(
+        url: string,
+        fetch?: (url: string) => Promise<Uint8Array>,
+        options?: { withOriginal?: boolean },
+    ): Promise<UDocSession> {
+        return UDocSession.openRemote(this.#init(), this.#fontCache, url, fetch, options?.withOriginal);
     }
 
     /** What a session's worker starts with. */

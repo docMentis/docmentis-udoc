@@ -1,5 +1,6 @@
-// The log cut with the real editor, its real worker and the real server, in
-// headless Chrome (scripts/e2e.mjs). The checks are scripts/e2e-browser-page.mjs,
+// The log cut, and opening one checkpoint read-only, with the real editor and
+// viewer, their real workers and the real server, in headless Chrome
+// (scripts/e2e.mjs). The checks are scripts/e2e-browser-page.mjs,
 // which Vite serves on the packages as `npm run build` left them, with the server
 // behind it so that the page reaches both from one origin.
 //
@@ -45,7 +46,7 @@ const vite = await createServer({
     // As the demo's config says: their import.meta.urls find the engine's files.
     optimizeDeps: {
         noDiscovery: true,
-        exclude: ["@docmentis/udoc-editor", "@docmentis/udoc-ui", "@docmentis/udoc-wasm"],
+        exclude: ["@docmentis/udoc-editor", "@docmentis/udoc-viewer", "@docmentis/udoc-ui", "@docmentis/udoc-wasm"],
     },
     server: {
         host: "127.0.0.1",

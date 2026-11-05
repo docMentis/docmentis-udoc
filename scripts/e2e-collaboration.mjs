@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { DOCUMENTS, png } from "./e2e-documents.mjs";
 import {
     check,
+    checkpointHolds,
+    checkpointVersions,
     converge,
     differ,
     finish,
@@ -36,6 +38,8 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
     const id = await upload(server.base, t);
     const kept = join(store.directory, id);
     const ids = t.ids(await unzip(await readFile(join(kept, "checkpoints/v0.udoc"))));
+
+    const asUploaded = await modelOf((await remote(server.base, id)).saveToPackage());
 
     // The first edits, with an editor that stays open across the checkpoint.
     const a = new Peer(server.base, id, await remote(server.base, id));
@@ -125,6 +129,14 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
     );
     const last = await modelOf(c.session.saveToPackage());
     await onServer("the server has the same model", server.base, id, last);
+
+    // Every checkpoint is still the document as it was, whatever has happened since.
+    const versions = await checkpointVersions(server.base, id);
+    check("the checkpoints are listed", JSON.stringify(versions) === "[0,1,2]", JSON.stringify(versions));
+    await checkpointHolds(server.base, id, 0, asUploaded);
+    await checkpointHolds(server.base, id, 1, firstModel);
+    await checkpointHolds(server.base, id, 2, undone);
+
     if (SOURCE[type]) {
         const reopened = await remote(server.base, id);
         let refused = "";

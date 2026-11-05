@@ -108,7 +108,16 @@ export function createUDocServer(options: UDocServerOptions): UDocServer {
     );
     const collaborations = new Collaborations(store, sessions, maxUploadBytes);
     /** Every route the server answers: each family's, in turn. */
-    const routes: Route[] = [...documentRoutes({ udoc, store, sessions, collaborations, maxUploadBytes })];
+    const routes: Route[] = [
+        ...documentRoutes({
+            udoc,
+            store,
+            sessions,
+            collaborations,
+            maxUploadBytes,
+            openCheckpoint: (id, version) => reopen(udoc, store, id, version),
+        }),
+    ];
     const upgradeRoutes = routes.filter((route) => route.upgrade !== undefined);
 
     return {
@@ -135,12 +144,24 @@ export function createUDocServer(options: UDocServerOptions): UDocServer {
  * Open document `id` again from what is kept of it in `store`: its package,
  * over the store — the latest checkpoint's parts and blobs read as the
  * document needs them, the way a browser streams it, and the edit log applied
- * by the open.
+ * by the open. With `version`, checkpoint `version` as it was, with no log. Either
+ * way the original is kept behind it, for a save that writes over it to read.
  */
-async function reopen(udoc: Pick<UDocNode, "openRemote">, store: DocumentStore, id: string): Promise<UDocSession> {
+async function reopen(
+    udoc: Pick<UDocNode, "openRemote">,
+    store: DocumentStore,
+    id: string,
+    version?: number,
+): Promise<UDocSession> {
     try {
-        if (!(await store.getDescription(id))) throw noDocument(id);
-        return await udoc.openRemote(`${KEPT_ORIGIN}/documents/${id}/package`, (url) => kept(store, id, url));
+        if (!(await store.getDescription(id, version))) {
+            throw version === undefined ? noDocument(id) : notFound(`document ${id} has no v${version}`);
+        }
+        return await udoc.openRemote(
+            `${KEPT_ORIGIN}${keptPackage(id, version)}`,
+            (url) => kept(store, id, url, version),
+            { withOriginal: true },
+        );
     } catch (error) {
         if (error instanceof HttpFailure) throw error;
         const failure = UDocError.from(error);
@@ -151,10 +172,28 @@ async function reopen(udoc: Pick<UDocNode, "openRemote">, store: DocumentStore, 
     }
 }
 
-/** What a session this server opened over document `id`'s store asks for at `url`, read from the store. */
-async function kept(store: DocumentStore, id: string, url: string): Promise<Uint8Array> {
-    const base = `/documents/${id}/package`;
+/** The path of document `id`'s package, or checkpoint `version`'s. */
+function keptPackage(id: string, version?: number): string {
+    return `/documents/${id}/${version === undefined ? "package" : `checkpoints/${version}/package`}`;
+}
+
+/**
+ * What a session this server opened over document `id`'s store asks for at `url`,
+ * read from the store. Beyond the package's routes, what only this session reads,
+ * to write over the original, as the engine's `with_original` loader asks for it:
+ * the original, and the two records that pair with it, empty for none.
+ */
+async function kept(store: DocumentStore, id: string, url: string, version?: number): Promise<Uint8Array> {
+    const base = keptPackage(id, version);
     const { pathname, searchParams } = new URL(url);
     if (pathname !== base && !pathname.startsWith(`${base}/`)) throw notFound();
-    return (await readPackage(store, id, pathname.slice(base.length), searchParams)).body;
+    const route = pathname.slice(base.length);
+    if (route === "/original") {
+        const original = await store.getOriginal(id);
+        if (!original) throw noDocument(id);
+        return original.bytes;
+    }
+    if (route === "/original-id-map") return (await store.getOriginalIdMap(id, version)) ?? new Uint8Array();
+    if (route === "/modified-part-ids") return (await store.getModifiedPartIds(id, version)) ?? new Uint8Array();
+    return (await readPackage(store, id, route, searchParams, version)).body;
 }

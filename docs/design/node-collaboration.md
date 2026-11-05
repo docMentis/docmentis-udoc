@@ -118,8 +118,8 @@ still holds a local collaboration service).
 - A connection heartbeat. A connection that drops without closing holds the session
   until TCP gives up on it: the presence refresh keeps a client present to the
   others, and the server reads no deadline from it.
-- Bounding the log. It is rewritten whole after each batch of merges, so a write grows
-  with the document's history, and a checkpoint trims none of it: `ShallowSnapshot`
-  trimming and `?version=` come later. A client's first patch carries the baseline it materialized, so a
+- Bounding the log's writes. It is rewritten whole after each batch of merges, so a write
+  grows with what it holds since its last [cut](node-log-cut.md), and a document never
+  idle is never cut. A client's first patch carries the baseline it materialized, so a
   document opened in a collaboration gains a log even before anyone edits it.
 - Authentication.

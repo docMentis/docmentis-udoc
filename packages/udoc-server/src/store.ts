@@ -65,7 +65,7 @@ export interface PackageDescription {
     sourceFormat?: FileFormat;
     /** The character a CSV source split its fields by; absent for any other source. */
     sourceDelimiter?: string;
-    /** The latest checkpoint's version. */
+    /** The version of the checkpoint it describes. */
     baselineVersion: number;
     /**
      * Where the edit log replays from — present exactly when there is one:
@@ -100,22 +100,31 @@ export interface DocumentStore {
      * checkpoint is kept as `id`, or `version` is kept already.
      */
     putCheckpoint(id: string, version: number, checkpoint: Uint8Array): Promise<void>;
-    /** Document `id`'s package description, from its latest checkpoint, or `undefined` when it has none. */
-    getDescription(id: string): Promise<PackageDescription | undefined>;
+    /** The versions of document `id`'s checkpoints, oldest first; none when it has none. */
+    getCheckpointVersions(id: string): Promise<number[]>;
+    /**
+     * Document `id`'s package description, from its latest checkpoint, or
+     * `undefined` when it has none. With `version`, from checkpoint `version`,
+     * or `undefined` when that isn't kept: with no `baselineFrontier`, since
+     * that checkpoint's parts are the document at that version, and no log
+     * replays over them.
+     */
+    getDescription(id: string, version?: number): Promise<PackageDescription | undefined>;
     /**
      * One part of document `id`, as its JSON deflated — raw DEFLATE (RFC
      * 1951) — by its route: `kinds`, its kind in kebab-case and plural, and
      * `partId`, its id's key. Its latest checkpoint's, or an opaque part an
      * edit brought, kept beside the checkpoints, or, held by neither, the
      * newest earlier checkpoint's. `undefined` when there is no such part, or
-     * no checkpoint.
+     * no checkpoint. With `version`, read the same way with checkpoint `version`
+     * as the latest, or `undefined` when that isn't kept.
      */
-    getPart(id: string, kinds: string, partId: string): Promise<Uint8Array | undefined>;
+    getPart(id: string, kinds: string, partId: string, version?: number): Promise<Uint8Array | undefined>;
     /**
      * One blob of document `id`, deflated, by its key — found as a part is —
      * or `undefined` when it has none.
      */
-    getBlob(id: string, key: string): Promise<Uint8Array | undefined>;
+    getBlob(id: string, key: string, version?: number): Promise<Uint8Array | undefined>;
     /**
      * Keep every part and blob of `parts` — a client's `opaque parts`,
      * a zip in a package's own layout — beside document `id`'s checkpoints, by
@@ -146,6 +155,18 @@ export interface DocumentStore {
     getCuts(id: string): Promise<number[]>;
     /** The edit log checkpoint `version` of document `id` holds, or `undefined` when it holds none, or isn't kept. */
     getCheckpointLog(id: string, version: number): Promise<Uint8Array | undefined>;
+    /**
+     * Where each id of document `id` sits in its original, as the JSON its latest
+     * checkpoint holds, or checkpoint `version`'s; `undefined` when it holds none.
+     * What a session reads to write over the original, which no route serves.
+     */
+    getOriginalIdMap(id: string, version?: number): Promise<Uint8Array | undefined>;
+    /**
+     * The parts of document `id` that differ from its original, as the JSON its
+     * latest checkpoint holds, or checkpoint `version`'s; `undefined` when it holds
+     * none. Read as {@link getOriginalIdMap} is.
+     */
+    getModifiedPartIds(id: string, version?: number): Promise<Uint8Array | undefined>;
     /** Forget document `id`; answers whether anything was kept. */
     delete(id: string): Promise<boolean>;
 }
@@ -164,6 +185,8 @@ const CHECKPOINTS_DIR = "checkpoints";
 const CHECKPOINT_FILE = /^v(\d+)\.udoc$/;
 const LOG_FILE = "crdt_delta.loro";
 const CUTS_FILE = "cuts.json";
+const ORIGINAL_ID_MAP_FILE = "original_id_map.json";
+const MODIFIED_PART_IDS_FILE = "modified_part_ids.json";
 
 /**
  * Where the opaque parts edits brought are kept, each deflated at
@@ -275,8 +298,15 @@ export class DirectoryDocumentStore implements DocumentStore {
         }
     }
 
-    async getDescription(id: string): Promise<PackageDescription | undefined> {
-        const metadata = await this.#readCheckpointEntry(id, "");
+    async getCheckpointVersions(id: string): Promise<number[]> {
+        return (await this.#checkpointFiles(id)).map(({ version }) => version).reverse();
+    }
+
+    async getDescription(id: string, version?: number): Promise<PackageDescription | undefined> {
+        const metadata =
+            version === undefined
+                ? await this.#readCheckpointEntry(id, "")
+                : await this.#readEntry(this.#checkpointPath(id, version), "");
         if (!metadata) return undefined;
         // The checkpoint's own envelope, written by the engine this server runs.
         // Every number is read whole, as a `bigint`, so a frontier's peers
@@ -292,7 +322,8 @@ export class DirectoryDocumentStore implements DocumentStore {
             baselineVersion: bigint;
             baselineFrontier?: Frontier;
         };
-        const frontier = baselineFrontier ?? ((await this.#hasLog(id)) ? [] : undefined);
+        const frontier =
+            version !== undefined ? undefined : (baselineFrontier ?? ((await this.#hasLog(id)) ? [] : undefined));
         return {
             docType: documentType,
             ...(sourceFormat !== undefined ? { sourceFormat } : {}),
@@ -302,24 +333,27 @@ export class DirectoryDocumentStore implements DocumentStore {
         };
     }
 
-    async getPart(id: string, kinds: string, partId: string): Promise<Uint8Array | undefined> {
-        return this.#readPart(id, `${kinds}/${partId}`, join(OPAQUE_PARTS_DIR, kinds, partId));
+    async getPart(id: string, kinds: string, partId: string, version?: number): Promise<Uint8Array | undefined> {
+        return this.#readPart(id, `${kinds}/${partId}`, join(OPAQUE_PARTS_DIR, kinds, partId), version);
     }
 
-    async getBlob(id: string, key: string): Promise<Uint8Array | undefined> {
-        return this.#readPart(id, `blobs/${key}`, join(BLOBS_DIR, key));
+    async getBlob(id: string, key: string, version?: number): Promise<Uint8Array | undefined> {
+        return this.#readPart(id, `blobs/${key}`, join(BLOBS_DIR, key), version);
     }
 
     /**
      * Document `id`'s part or blob at `route`, deflated: its latest
-     * checkpoint's; else the one kept beside the checkpoints at `kept`; else
-     * the newest earlier checkpoint's that has it. Once a checkpoint holds an
-     * opaque part, it is kept beside them no longer, and a later checkpoint
-     * holds it only if something showed it then — yet an undo can show it
-     * again.
+     * checkpoint's, or checkpoint `version`'s when that is given; else the one
+     * kept beside the checkpoints at `kept`; else the newest earlier
+     * checkpoint's that has it. Once a checkpoint holds an opaque part, it is
+     * kept beside them no longer, and a later checkpoint holds it only if
+     * something showed it then — yet an undo can show it again. What is kept
+     * beside them can't differ from a checkpoint's, since a route names its
+     * content, so reading it never shows a later version's.
      */
-    async #readPart(id: string, route: string, kept: string): Promise<Uint8Array | undefined> {
-        const [latest, ...earlier] = await this.#checkpoints(id);
+    async #readPart(id: string, route: string, kept: string, version?: number): Promise<Uint8Array | undefined> {
+        const [latest, ...earlier] = await this.#checkpoints(id, version);
+        if (latest === undefined && version !== undefined) return undefined;
         if (latest !== undefined) {
             const entry = await this.#readEntry(latest, route, true);
             if (entry) return entry;
@@ -383,8 +417,24 @@ export class DirectoryDocumentStore implements DocumentStore {
         }
     }
 
-    /** The paths of document `id`'s checkpoints, the latest first; none when it has none. */
-    async #checkpoints(id: string): Promise<string[]> {
+    /**
+     * The paths of document `id`'s checkpoints, the latest first; none when it
+     * has none. With `asOf`, those up to that version, none when it isn't kept.
+     */
+    async #checkpoints(id: string, asOf?: number): Promise<string[]> {
+        const files = await this.#checkpointFiles(id);
+        if (asOf === undefined) return files.map(({ path }) => path);
+        if (!files.some(({ version }) => version === asOf)) return [];
+        return files.filter(({ version }) => version <= asOf).map(({ path }) => path);
+    }
+
+    /** Where checkpoint `version` of document `id` is kept, if it is. */
+    #checkpointPath(id: string, version: number): string {
+        return join(this.#path(id), CHECKPOINTS_DIR, `v${version}.udoc`);
+    }
+
+    /** Document `id`'s checkpoints, the latest first; none when it has none. */
+    async #checkpointFiles(id: string): Promise<{ version: number; path: string }[]> {
         const directory = join(this.#path(id), CHECKPOINTS_DIR);
         let names: string[];
         try {
@@ -398,8 +448,7 @@ export class DirectoryDocumentStore implements DocumentStore {
                 const version = CHECKPOINT_FILE.exec(name)?.[1];
                 return version === undefined ? [] : [{ version: Number(version), path: join(directory, name) }];
             })
-            .sort((a, b) => b.version - a.version)
-            .map(({ path }) => path);
+            .sort((a, b) => b.version - a.version);
     }
 
     /**
@@ -475,7 +524,22 @@ export class DirectoryDocumentStore implements DocumentStore {
     }
 
     async getCheckpointLog(id: string, version: number): Promise<Uint8Array | undefined> {
-        return this.#readEntry(join(this.#path(id), CHECKPOINTS_DIR, `v${version}.udoc`), LOG_FILE);
+        return this.#readEntry(this.#checkpointPath(id, version), LOG_FILE);
+    }
+
+    async getOriginalIdMap(id: string, version?: number): Promise<Uint8Array | undefined> {
+        return this.#readRecord(id, ORIGINAL_ID_MAP_FILE, version);
+    }
+
+    async getModifiedPartIds(id: string, version?: number): Promise<Uint8Array | undefined> {
+        return this.#readRecord(id, MODIFIED_PART_IDS_FILE, version);
+    }
+
+    /** The entry `name` of document `id`'s latest checkpoint, or checkpoint `version`'s. */
+    async #readRecord(id: string, name: string, version?: number): Promise<Uint8Array | undefined> {
+        return version === undefined
+            ? this.#readCheckpointEntry(id, name)
+            : this.#readEntry(this.#checkpointPath(id, version), name);
     }
 
     /** Keep `bytes` as the file `name` of document `id`, in place of any kept. */
@@ -524,11 +588,12 @@ export class DirectoryDocumentStore implements DocumentStore {
 /**
  * The route a package entry is served at, relative to the package: `""` for
  * `metadata.json`, `<kinds>/<partId>` for a part, `blobs/<key>` for a blob,
- * `crdt_delta.loro` for the edit log, and `undefined` for anything not served.
+ * the entry's own name for the edit log and the two records a session pairs with
+ * the original, and `undefined` for anything not served.
  */
 function routeOf(entry: string): string | undefined {
     if (entry === "metadata.json") return "";
-    if (entry === LOG_FILE) return LOG_FILE;
+    if (entry === LOG_FILE || entry === ORIGINAL_ID_MAP_FILE || entry === MODIFIED_PART_IDS_FILE) return entry;
     const part = PART_ENTRY.exec(entry);
     if (part) return `${pluralKebab(part[1]!)}/${part[2]!}`;
     const blob = BLOB_ENTRY.exec(entry);

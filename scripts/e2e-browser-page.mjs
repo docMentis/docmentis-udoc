@@ -1,8 +1,9 @@
 // What scripts/e2e-browser.mjs runs in the browser: real editors, in their real
 // workers, against the real server, with the server's own cuts. Nothing here
 // reaches past the editor's public API.
-/* global location, window */
+/* global document, location, window */
 import { UDocEditor } from "@docmentis/udoc-editor";
+import { UDocViewer } from "@docmentis/udoc-viewer";
 
 const results = [];
 const check = (name, ok, detail = "") => results.push({ name, ok: !!ok, detail: String(detail) });
@@ -119,11 +120,96 @@ async function scenario(id, command) {
     );
     check("and renders", await rendersAPage(four));
     for (const ui of [one, two, three, four]) ui.destroy();
+    return { before: n, insert };
+}
+
+const rejects = (promise) =>
+    promise.then(
+        () => false,
+        () => true,
+    );
+
+/** What makes checkpoint v1, which held `count` pages or sheets, read-only in `ui`, whichever class made it. */
+async function readOnlyCheckpoint(label, ui, id, atV1, insert) {
+    await ui.openRemote(`/documents/${id}/checkpoints/1/package`);
+    check(`${label}: a checkpoint opens as the document was then`, count(ui) === atV1, count(ui));
+    check(`${label}: and renders`, await rendersAPage(ui));
+    check(`${label}: an edit rejects`, await rejects(ui.execute(insert())));
+    check(`${label}: its server gives a copy of it`, (await ui.requestRemoteCopy()).length > 100);
+    check(`${label}: but isn't asked to checkpoint it`, await rejects(ui.requestRemoteCheckpoint()));
+    let joined = true;
+    try {
+        ui.joinRemoteCollaboration(`${location.origin.replace(/^http/, "ws")}/documents/${id}/collaboration`, "Reader");
+    } catch {
+        joined = false;
+    }
+    check(`${label}: it joins no collaboration`, !joined);
+    check(`${label}: it saves what it holds`, (await ui.saveToBytes(ui.sourceFormat)).length > 100);
+    const downloaded = new Promise((resolve) => ui.on("document:downloaded", () => resolve(true)));
+    await ui.download("checkpoint");
+    check(`${label}: it downloads`, await Promise.race([downloaded, sleep(5000).then(() => false)]));
+    check(`${label}: and is as it was`, count(ui) === atV1, count(ui));
+}
+
+async function checkpoints(id, before, insert) {
+    const { versions } = await (await fetch(`/documents/${id}/checkpoints`)).json();
+    check("the checkpoints are listed", versions[0] === 0 && versions[1] === 1 && versions[2] === 2, versions);
+
+    const viewer = await UDocViewer.create(null);
+    await viewer.openRemote(`/documents/${id}/checkpoints/0/package`);
+    check("viewer: checkpoint v0 is the document as uploaded", count(viewer) === before, count(viewer));
+    await readOnlyCheckpoint("viewer", viewer, id, before + 1, insert);
+    viewer.destroy();
+
+    const editor = await UDocEditor.create(null);
+    await readOnlyCheckpoint("editor", editor, id, before + 1, insert);
+    check("editor: it stays in view mode", editor.mode === "view", editor.mode);
+    editor.setMode("edit");
+    check("editor: and can't leave it", editor.mode === "view", editor.mode);
+
+    // On the page, what edits isn't offered: the mode switch, and the tabs that need a feature.
+    const container = document.createElement("div");
+    container.style.cssText = "width: 1000px; height: 700px";
+    document.body.append(container);
+    const shown = await UDocEditor.create(container);
+    const offered = () => ({
+        modeSwitch: container.querySelector(".udoc-mode-switch")?.childElementCount ?? 0,
+        tabs: [...container.querySelectorAll(".udoc-ribbon__tab:not(.udoc-ribbon__tab--more)")].map((tab) =>
+            tab.textContent.trim(),
+        ),
+    });
+    await shown.openRemote(`/documents/${id}/package`);
+    const editable = offered();
+    // In view mode, as a checkpoint is: what is left to tell them apart is what a feature gives.
+    shown.setMode("view");
+    await until(() => offered().tabs.length > 0);
+    const viewed = offered();
+    await shown.openRemote(`/documents/${id}/checkpoints/1/package`);
+    await until(() => offered().tabs.length > 0);
+    const readOnly = offered();
+    check("editor on the page: the document offers the mode switch", editable.modeSwitch > 0, JSON.stringify(editable));
+    check("editor on the page: a checkpoint doesn't", readOnly.modeSwitch === 0, JSON.stringify(readOnly));
+    if (shown.docType === "portable") {
+        check("editor on the page: a PDF offers Annotate", viewed.tabs.includes("Annotate"), viewed.tabs);
+        check("editor on the page: a checkpoint of it doesn't", !readOnly.tabs.includes("Annotate"), readOnly.tabs);
+    }
+    shown.destroy();
+    container.remove();
+
+    // The document itself, opened after it, can be edited again.
+    await editor.openRemote(`/documents/${id}/package`);
+    editor.setMode("edit");
+    check("editor: the next document can be edited", editor.mode === "edit", editor.mode);
+    const current = count(editor);
+    await editor.execute(insert());
+    check("editor: and takes an edit", count(editor) === current + 1, count(editor));
+    editor.destroy();
 }
 
 window.runCut = async (id, command) => {
     try {
-        await scenario(id, command);
+        const { before, insert } = await scenario(id, command);
+        await checkpoints(id, before, insert);
     } catch (error) {
         check("the scenario ran to its end", false, error?.stack ?? error);
     }

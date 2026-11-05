@@ -690,6 +690,16 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * the first time the document needs it, so only the parts it reaches are
      * downloaded. The doc type and source format are then {@link docType} and
      * {@link sourceFormat}, and a failure rejects, as for {@link open}.
+     *
+     * `url` can instead be one checkpoint's package,
+     * `…/documents/{documentId}/checkpoints/{version}/package`, which opens the
+     * document as it was at that version, read-only: it stays in view mode, its
+     * editing tools aren't offered, an edit rejects, and it can't join a
+     * collaboration. {@link download} and {@link requestRemoteCopy} ask its server
+     * for a copy of that version, as for any document opened this way.
+     * `GET …/documents/{documentId}/checkpoints` lists the versions. In an editor,
+     * the next document to open stays in view mode too, until `setMode` says
+     * otherwise.
      */
     openRemote(url: string): Promise<void> {
         return this.shell.openRemote(url);
@@ -1215,7 +1225,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * ({@link openRemote}) to checkpoint it: save its document as a new
      * baseline. Resolves with that baseline's version. Nothing reopens: the
      * document stays open as it was. Rejects for a document not opened with
-     * {@link openRemote}, and with the server's message for what it refuses.
+     * {@link openRemote} or opened at one checkpoint, and with the server's
+     * message for what it refuses.
      */
     requestRemoteCheckpoint(): Promise<RemoteCheckpointResponse> {
         return this.shell.requestRemoteCheckpoint();

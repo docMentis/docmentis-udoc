@@ -8,6 +8,22 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- `openRemote` opens one checkpoint of a document a server keeps, given
+  `…/documents/{id}/checkpoints/{version}/package`: the document as it was at
+  that version, read-only. It stays in view mode, its editing tools aren't
+  offered, an edit rejects and it can't join a collaboration. It can still be
+  saved, downloaded, exported and printed.
+
+#### Fixed
+
+- `download` and `requestRemoteCopy` on a document opened with `openRemote` write
+  over its original, by the strategy keeping the most of it: a PDF appends its
+  edits as a new revision, and a DOCX, a PPTX or an XLSX writes its modified parts
+  over the original. They rewrote it, and `requestRemoteCopy("delta")` and
+  `requestRemoteCopy("incremental")` were refused.
+
 #### Changed
 
 - A UI joined to a server's collaboration that comes back after the document's
@@ -26,13 +42,26 @@ listed once, by package. Its major and minor version are those of the
   `GET /documents/:id/package/cuts` lists the versions cut at, and
   `GET /documents/:id/package/cuts/:version/crdt` serves the log each one holds.
 - A client behind a cut is closed with `4003`, and catches up from those routes.
+- `GET /documents/:id/checkpoints` lists a document's checkpoints, and
+  `GET /documents/:id/checkpoints/:version/package` serves one as it was, part by
+  part, with no session opened. `GET /documents/:id/checkpoints/:version/file.:format`
+  saves a copy of it.
 
 #### Changed
 
-- `DocumentStore` has three more methods for a host's own store to implement:
-  `putCut`, `getCuts` and `getCheckpointLog`.
+- `DocumentStore` has more methods for a host's own store to implement: `putCut`,
+  `getCuts`, `getCheckpointLog`, `getCheckpointVersions`, `getOriginalIdMap` and
+  `getModifiedPartIds`. Its `getDescription`, `getPart` and `getBlob` take a
+  checkpoint's `version`.
 - The edit log is kept as `crdt_delta.loro`, in a store and in a package, in place
   of `crdt.loro`. A log kept under the old name isn't read.
+
+#### Fixed
+
+- `GET /documents/:id/file.:format` writes over the original, as it says: naming
+  `delta` or `incremental` was refused, since the server's sessions never read the
+  original, and naming no strategy rewrote. Named no strategy it now keeps the most
+  of the original it can, and a PDF that needs a password still rewrites.
 
 ### udoc-node
 
@@ -40,6 +69,9 @@ listed once, by package. Its major and minor version are those of the
 
 - `UDocSession.cutLog`, `catchUp` and `baselineVersion` cut a document's edit log
   and bring a session left open across a cut back onto it.
+- `UDocNode.openRemote` takes `{ withOriginal: true }`, for a host that keeps the
+  document's original behind its `fetch`: the session can then save by `"delta"`
+  or `"incremental"`, reading the file only when a save needs it.
 
 ## [0.8.14] - 2026-11-04
 

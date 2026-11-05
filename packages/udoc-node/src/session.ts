@@ -128,6 +128,7 @@ export class UDocSession {
         fontCache: FontCache,
         url: string,
         fetch: (url: string) => Promise<Uint8Array> = fetchWhole,
+        withOriginal = false,
     ): Promise<UDocSession> {
         // Refused before a thread starts or a permit is spent: a Node host has
         // no page to resolve a relative URL against.
@@ -143,7 +144,14 @@ export class UDocSession {
         answerFontFiles(fontFiles.port1, fontCache);
         return UDocSession.#start(
             init,
-            (id) => ({ id, type: "openRemote", url, fetches: { port: port2, answered }, fontFiles: fontFiles.port2 }),
+            (id) => ({
+                id,
+                type: "openRemote",
+                url,
+                withOriginal,
+                fetches: { port: port2, answered },
+                fontFiles: fontFiles.port2,
+            }),
             [port2, fontFiles.port2],
         ).then((session) => {
             session.#remotePackage = url;
