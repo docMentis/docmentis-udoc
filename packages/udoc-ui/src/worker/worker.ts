@@ -2937,6 +2937,27 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, buffer, undefined, [buffer]);
                 break;
             }
+            case "catchUp": {
+                if (!session) throw new Error("engine worker: catchUp before open");
+                session.catchUp(
+                    msg.logs.map((log) => new Uint8Array(log)),
+                    msg.version,
+                );
+                const layout = layoutOf(session);
+                // As a merge does, and moving unsent edits empties the history.
+                emitSelection(false);
+                emitHistory();
+                emitPlanes(session);
+                scheduleFrame();
+                startComposeAhead(session);
+                reply(id, layout);
+                break;
+            }
+            case "baselineVersion": {
+                if (!session) throw new Error("engine worker: baselineVersion before open");
+                reply(id, session.baselineVersion());
+                break;
+            }
             case "mergeOpaqueParts": {
                 if (!session) throw new Error("engine worker: mergeOpaqueParts before open");
                 // Content, not an edit: no history entry. A picture whose image

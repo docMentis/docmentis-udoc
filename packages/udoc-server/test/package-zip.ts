@@ -39,7 +39,7 @@ export function checkpointEntries(version: number): Record<string, string> {
         "parts/page_0-1.json": `page v${version}`,
         "parts/image_0-2a.json": "image part",
         "blobs/e7e7e7.png": "image pixels",
-        "crdt.loro": "[]",
+        "crdt_delta.loro": "[]",
     };
 }
 

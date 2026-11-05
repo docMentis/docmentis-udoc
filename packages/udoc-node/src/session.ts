@@ -12,6 +12,7 @@ import type {
     Entitlements,
     ExportFormat,
     FileFormat,
+    LogCut,
     PageExportFormat,
     SaveStrategy,
     UDocType,
@@ -420,6 +421,35 @@ export class UDocSession {
      */
     snapshot(): Promise<Uint8Array> {
         return this.#call((id) => ({ id, type: "snapshot" }));
+    }
+
+    /**
+     * Cut this document's log at its latest version, and save checkpoint
+     * `version` there: `{ checkpoint, log }`, the package and the cut log, from
+     * one instant. Answers `undefined` when that saves less than `minSavedBytes`,
+     * with nothing saved. For a session about to close, with no peer connected:
+     * one marker edit stays in it either way.
+     */
+    cutLog(version: number, minSavedBytes: number): Promise<LogCut | undefined> {
+        return this.#call((id) => ({ id, type: "cutLog", version, minSavedBytes }));
+    }
+
+    /**
+     * Come back from behind the log's cut, and record `version` as the one caught
+     * up to. `logs` is the log of each cut this session is behind, oldest first,
+     * then the document's current one. With no unsent edits the undo stack stays;
+     * with some, they move onto the current log, and it goes.
+     */
+    catchUp(logs: Uint8Array[], version: number): Promise<void> {
+        return this.#call((id) => ({ id, type: "catchUp", logs, version }));
+    }
+
+    /**
+     * The version this document opened at or last caught up to, `undefined` when
+     * it wasn't opened from a package: what says which cuts it is behind.
+     */
+    baselineVersion(): Promise<number | undefined> {
+        return this.#call((id) => ({ id, type: "baselineVersion" }));
     }
 
     /**

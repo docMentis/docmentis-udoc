@@ -30,6 +30,8 @@ const PACKAGE_ROUTES: Route<PackageHandler>[] = [
     route("GET", "", description),
     route("GET", "crdt", log),
     route("GET", "batch", batch),
+    route("GET", "cuts", cuts),
+    route("GET", "cuts/:version/crdt", cutLog, { params: { version: /\d+/ } }),
     ...ENTRY_ROUTES,
 ];
 
@@ -70,6 +72,20 @@ async function log(store: DocumentStore, id: string): Promise<Reply> {
     const log = await store.getLog(id);
     if (!log) throw notFound(`document ${id} has no edit log`);
     // Kept whole, not in the package's zip, so deflated here.
+    return bytes(await deflate(log), OCTETS);
+}
+
+/** The versions of the checkpoints the edit log was cut at, `{ versions }`: what an editor behind a cut catches up through. */
+async function cuts(store: DocumentStore, id: string): Promise<Reply> {
+    if (!(await store.getDescription(id))) throw notFound(`document ${id} has no package`);
+    return json(200, { versions: await store.getCuts(id) });
+}
+
+/** The edit log checkpoint `version` holds, the log was cut at it: what led up to that cut. */
+async function cutLog(store: DocumentStore, id: string, { version }: Params): Promise<Reply> {
+    const cut = Number(version);
+    const log = (await store.getCuts(id)).includes(cut) ? await store.getCheckpointLog(id, cut) : undefined;
+    if (!log) throw notFound(`document ${id}'s log wasn't cut at version ${version}`);
     return bytes(await deflate(log), OCTETS);
 }
 

@@ -6,6 +6,41 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Changed
+
+- A UI joined to a server's collaboration that comes back after the document's
+  edit log was cut catches up and rejoins by itself. With no edits unsent it
+  keeps its undo stack. With edits unsent it sends them, and its undo stack
+  empties.
+
+### udoc-server
+
+#### Added
+
+- When a document's idle session closes and doing so would save enough, set by
+  `cutMinSavedBytes`, the server cuts its edit log: the log then holds the state
+  at a new checkpoint plus the edits after it, so later opens of the document
+  hold less memory. The cut's checkpoint takes the next version number.
+  `GET /documents/:id/package/cuts` lists the versions cut at, and
+  `GET /documents/:id/package/cuts/:version/crdt` serves the log each one holds.
+- A client behind a cut is closed with `4003`, and catches up from those routes.
+
+#### Changed
+
+- `DocumentStore` has three more methods for a host's own store to implement:
+  `putCut`, `getCuts` and `getCheckpointLog`.
+- The edit log is kept as `crdt_delta.loro`, in a store and in a package, in place
+  of `crdt.loro`. A log kept under the old name isn't read.
+
+### udoc-node
+
+#### Added
+
+- `UDocSession.cutLog`, `catchUp` and `baselineVersion` cut a document's edit log
+  and bring a session left open across a cut back onto it.
+
 ## [0.8.14] - 2026-11-04
 
 Built on `@docmentis/udoc-wasm` 0.8.17.

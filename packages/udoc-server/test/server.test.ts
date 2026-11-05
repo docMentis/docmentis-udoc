@@ -158,10 +158,30 @@ class FakeSession {
     async snapshot(): Promise<Uint8Array> {
         return bytesOf(JSON.stringify([...this.edits]));
     }
+    /** The saving a cut would make, which the options say is enough or not. */
+    logCutSaves = 0;
+    /** What a cut waits for, once it has started. */
+    cutHold: Promise<void> | undefined;
+    cutStarted = false;
+    async cutLog(
+        version: number,
+        minSavedBytes: number,
+    ): Promise<{ checkpoint: Uint8Array; log: Uint8Array } | undefined> {
+        this.cutStarted = true;
+        await this.cutHold;
+        if (this.logCutSaves < minSavedBytes) return undefined;
+        // The cut's marker, in the log kept beside the checkpoint before it.
+        this.edits.add(`cut ${version}`);
+        return {
+            checkpoint: await packageZip(checkpointEntries(version)),
+            log: bytesOf(JSON.stringify([`cut ${version}`])),
+        };
+    }
     async versionVector(): Promise<Uint8Array> {
         return this.snapshot();
     }
     async patchSince(peer: Uint8Array): Promise<Uint8Array> {
+        if (text(peer).includes("behind")) throw new UDocError("behindCut", "this peer is behind the log's cut");
         const held = editsOf(peer);
         return bytesOf(JSON.stringify([...this.edits].filter((edit) => !held.includes(edit))));
     }
@@ -613,8 +633,8 @@ test("past the cap the least recently used idle session closes, and never one in
     const b = await upload();
     assert.equal((await request("GET", `/documents/${a}/layout/pages/0.png`)).status, 200);
     assert.equal((await request("GET", `/documents/${b}/layout/pages/0.png`)).status, 200);
-    assert.equal(udoc.opened[2]!.session.isClosed, true, "a, idle and older, made room for b");
-    assert.equal(udoc.opened[3]!.session.isClosed, false);
+    await until(() => udoc.opened[2]!.session.isClosed);
+    assert.equal(udoc.opened[3]!.session.isClosed, false, "a, idle and older, made room for b");
 
     // b is in use while a is reopened: two open, one over the cap.
     const busy = udoc.opened[3]!.session;
@@ -624,8 +644,8 @@ test("past the cap the least recently used idle session closes, and never one in
     await until(() => busy.renders.length === 2);
 
     assert.equal((await request("GET", `/documents/${a}/layout/pages/1.png`)).status, 200);
-    assert.equal(udoc.opened[4]!.session.isClosed, true, "a, idle again, is the one that can go");
-    assert.equal(busy.isClosed, false, "b's request is still using it");
+    await until(() => udoc.opened[4]!.session.isClosed);
+    assert.equal(busy.isClosed, false, "a, idle again, is the one that can go: b's request is still using it");
 
     release();
     assert.equal((await waiting).status, 200);
@@ -830,7 +850,7 @@ test("a collaboration sends each edit on to the others, keeps it as the edit log
         [PATCH, "[]"],
     ]);
     alex.send(PATCH, '["alex 1"]');
-    await until(async () => (await kept(directory, id))["crdt.loro"] === '["alex 1"]');
+    await until(async () => (await kept(directory, id))["crdt_delta.loro"] === '["alex 1"]');
 
     // A joiner that holds nothing gets what is held: the server's version and
     // the edits it lacks. No presence: the server is no peer.
@@ -851,7 +871,7 @@ test("a collaboration sends each edit on to the others, keeps it as the edit log
 
     // The log is every edit, served beside the package, whose description now
     // says it has one to replay.
-    await until(async () => (await kept(directory, id))["crdt.loro"] === '["alex 1","robin 1"]');
+    await until(async () => (await kept(directory, id))["crdt_delta.loro"] === '["alex 1","robin 1"]');
     assert.equal(
         text(
             inflateRawSync(new Uint8Array(await (await request("GET", `/documents/${id}/package/crdt`)).arrayBuffer())),
@@ -916,12 +936,107 @@ test("a collaboration holds its session while anyone is connected, and its log o
     // A server that closes ends its collaborations, once their edits are kept.
     await first.close();
     assert.deepEqual(await alex.closed, { code: 1001, reason: "the server is closing" });
-    assert.equal((await kept(directory, id))["crdt.loro"], '["alex 1"]');
+    assert.equal((await kept(directory, id))["crdt_delta.loro"], '["alex 1"]');
 
     // Reopened, the document is its package with the log merged.
     const second = await serve(t, directory);
     assert.equal((await second.request("GET", `/documents/${id}/layout/page-count`)).status, 200);
     assert.deepEqual([...second.udoc.opened[0]!.session.edits], ["alex 1"]);
+});
+
+test("an idle session's log is cut when that saves enough, and what led up to it is served", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { udoc, base, request, upload } = await serve(t, directory, { sessionTimeoutMs: 20, cutMinSavedBytes: 100 });
+    const id = await upload();
+    const session = () => udoc.opened.at(-1)!.session;
+    const editing = async (edit: string) => {
+        const alex = await collaborator(t, base, id);
+        alex.send(JOIN, "[]");
+        alex.send(PATCH, JSON.stringify([edit]));
+        await until(async () => (await kept(directory, id))["crdt_delta.loro"]?.includes(edit) === true);
+        return alex;
+    };
+    assert.deepEqual(await (await request("GET", `/documents/${id}/package/cuts`)).json(), { versions: [] });
+
+    // Saving too little: no cut, and the session closes all the same.
+    const first = await editing("alex 1");
+    const small = session();
+    first.socket.close();
+    await until(() => small.isClosed);
+    assert.equal(small.cutStarted, true);
+    assert.deepEqual(
+        Object.keys(await kept(directory, id)).filter((name) => name.includes("v1") || name === "cuts.json"),
+        [],
+    );
+
+    // Saving enough: a checkpoint, noted, and the log cut there.
+    const second = await editing("alex 2");
+    const large = session();
+    assert.notEqual(large, small);
+    large.logCutSaves = 1000;
+    second.socket.close();
+    await until(() => large.isClosed);
+    const files = await kept(directory, id);
+    assert.equal(files["cuts.json"], "[1]");
+    assert.equal(files["crdt_delta.loro"], '["cut 1"]');
+    assert.ok(files["checkpoints/v1.udoc"]);
+
+    assert.deepEqual(await (await request("GET", `/documents/${id}/package/cuts`)).json(), { versions: [1] });
+    const led = await request("GET", `/documents/${id}/package/cuts/1/crdt`);
+    assert.equal(text(inflateRawSync(new Uint8Array(await led.arrayBuffer()))), "[]", "the checkpoint's own log");
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/package/cuts/2/crdt`)), [404, "notFound"]);
+
+    // A checkpoint takes the number after the cut's, and a reopen starts at the cut.
+    assert.deepEqual(await (await request("POST", `/documents/${id}/checkpoints`)).json(), { version: 2 });
+    assert.deepEqual([...session().edits], ["cut 1"]);
+});
+
+test("while a log is being cut, its document's requests wait, and get the cut log", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { udoc, base, request, upload } = await serve(t, directory, { sessionTimeoutMs: 20, cutMinSavedBytes: 100 });
+    const id = await upload();
+    const alex = await collaborator(t, base, id);
+    alex.send(JOIN, "[]");
+    alex.send(PATCH, '["alex 1"]');
+    await until(async () => (await kept(directory, id))["crdt_delta.loro"] === '["alex 1"]');
+    const session = udoc.opened.at(-1)!.session;
+    session.logCutSaves = 1000;
+    let release!: () => void;
+    session.cutHold = new Promise((resolve) => (release = resolve));
+    alex.socket.close();
+    await until(() => session.cutStarted);
+
+    let answered = false;
+    const reading = request("GET", `/documents/${id}/package/crdt`).then((response) => {
+        answered = true;
+        return response;
+    });
+    let admitted = false;
+    const arriving = collaborator(t, base, id).then((joining) => {
+        admitted = true;
+        return joining;
+    });
+    await sleep(50);
+    assert.equal(answered, false);
+    assert.equal(admitted, false);
+
+    release();
+    const log = await reading;
+    assert.equal(text(inflateRawSync(new Uint8Array(await log.arrayBuffer()))), '["cut 1"]');
+    const joining = await arriving;
+    joining.send(JOIN, "[]");
+    await until(() => joining.received.length === 2);
+    assert.deepEqual(joining.received[0], [JOIN, '["cut 1"]']);
+    assert.equal(session.isClosed, true);
+});
+
+test("a client behind the log's cut is closed to catch up", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { base, upload } = await serve(t, directory);
+    const id = await upload();
+    const behind = await collaborator(t, base, id);
+    behind.send(JOIN, '["behind"]');
+    assert.deepEqual(await behind.closed, { code: 4003, reason: "this peer is behind the log's cut" });
 });
 
 test("what a client shouldn't send ends that client alone, and nothing of it is sent on or kept", async (t) => {
@@ -952,7 +1067,7 @@ test("what a client shouldn't send ends that client alone, and nothing of it is 
 
     await sleep(20);
     assert.equal(alex.received.length, 2, "nothing was sent on");
-    assert.equal((await kept(directory, id))["crdt.loro"], undefined, "nothing was kept");
+    assert.equal((await kept(directory, id))["crdt_delta.loro"], undefined, "nothing was kept");
     assert.equal(alex.socket.readyState, WebSocket.OPEN);
 });
 

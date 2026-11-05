@@ -13,9 +13,10 @@ server only carries its bytes.
 In concept the log is the package's own `crdt` entity
 (Core Package — Baseline, log, and replay):
 opening a package applies it, and a plain save drops it. The server stores it apart,
-as `crdt.loro` beside the checkpoints, because the log is written on every edit and a
-checkpoint once. It holds every edit since the import, so it replays over any
-checkpoint's frontier, and a checkpoint leaves it as it is.
+as `crdt_delta.loro` beside the checkpoints, because the log is written on every edit and
+a checkpoint once. It holds every edit since the import, or since its last
+[cut](node-log-cut.md), so it replays over the frontier of any checkpoint since then, and a
+checkpoint leaves it as it is.
 
 - **Written** by the collaboration: after a merge, the session's whole editing state
   replaces the kept log, one write at a time — a merge landing during a write is
@@ -86,6 +87,7 @@ closed it — the server unreachable, a refusal — ends it.
 | 4000       | no such document — deleted, or never kept                                                                                  | no      |
 | 4001       | a license refusal                                                                                                          | no      |
 | 4002       | the document couldn't be opened                                                                                            | no      |
+| 4003       | the client is behind the log's [cut](node-log-cut.md), and catches up first                                                | yes     |
 
 There is no REST fallback. WebSocket over TLS passes nearly everywhere, and a fallback
 would have to keep the join, ordering and presence identical over polling — where no

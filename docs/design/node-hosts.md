@@ -109,8 +109,9 @@ written aside and renamed into place together — so a document is kept whole or
 all, and an id already kept is never overwritten. Each later checkpoint is
 `checkpoints/v<n>.udoc`, written aside and linked into place, so a version is kept
 once; the highest is the latest. Once the document is edited it also holds
-`crdt.loro`, replaced whole on each write, and `opaque-parts/<kinds>/<partId>` and
-`blobs/<key>`, each deflated. An id reaches the store only once the server has checked
+`crdt_delta.loro`, replaced whole on each write, and `opaque-parts/<kinds>/<partId>` and
+`blobs/<key>`, each deflated; and `cuts.json` once its log has been
+[cut](node-log-cut.md). An id reaches the store only once the server has checked
 it is one it could have minted, so no id is ever a path.
 
 **A session is a cache over it.** A request opens its document's session from the store
@@ -121,7 +122,8 @@ parts an edit added. The session an upload was imported in
 is closed once the document is kept: opened from the upload's bytes, it could load none. The session stays open while requests keep coming, and closes after the
 session timeout (`--session-timeout`, default 5 minutes) or — past the session pool's
 size (`--session-pool`, default 32) — least recently used first, but never while a
-request is using it. A session that closed, or whose engine died, is opened again by
+request is using it. Either close may cut the document's log first, which that document's
+requests wait for. A session that closed, or whose engine died, is opened again by
 the next request. So a document outlives the process, and once its requests finish
 the process holds no more sessions than the pool's size.
 

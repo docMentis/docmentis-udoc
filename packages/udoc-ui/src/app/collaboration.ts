@@ -21,6 +21,9 @@ export const OPAQUE_PARTS = 4;
  */
 const REJOIN_CODES: ReadonlySet<number> = new Set([1001, 1006, 1011]);
 
+/** The close saying the client is behind the document's log cut: it catches up, and joins again. */
+const CLOSE_BEHIND_CUT = 4003;
+
 /** The wait before the first rejoin, doubled for each one after up to {@link REJOIN_MAX_DELAY_MS}. */
 const REJOIN_DELAY_MS = 1000;
 const REJOIN_MAX_DELAY_MS = 30_000;
@@ -118,6 +121,29 @@ export function webSocketChannel(url: URL): OpenChannel {
     };
 }
 
+/**
+ * The logs an editor behind a cut of the document at udoc-server's collaboration
+ * `url` catches up through: the log of each cut after version `after`, oldest
+ * first, then the document's current one, and the last cut's version.
+ */
+export async function fetchCutLogs(url: URL, after: number): Promise<{ logs: Uint8Array[]; version: number }> {
+    const base = url.href.replace(/^ws/, "http").replace(/\/collaboration(?=$|\?)/, "/package");
+    const read = async (path: string): Promise<Response> => {
+        const response = await fetch(`${base}/${path}`);
+        if (!response.ok) throw new Error(`${path}: ${response.status}`);
+        return response;
+    };
+    // Sent as raw DEFLATE, as every package route but the description is.
+    const inflated = async (path: string): Promise<Uint8Array> => {
+        const body = (await read(path)).body!.pipeThrough(new DecompressionStream("deflate-raw"));
+        return new Uint8Array(await new Response(body).arrayBuffer());
+    };
+    const { versions } = (await (await read("cuts")).json()) as { versions: number[] };
+    const behind = versions.filter((version) => version > after);
+    const logs = await Promise.all([...behind.map((version) => inflated(`cuts/${version}/crdt`)), inflated("crdt")]);
+    return { logs, version: behind.at(-1) ?? after };
+}
+
 /** One connection to the collaboration: its channel, and the far side's version vector once it answers the join. */
 interface Connection {
     channel: Channel;
@@ -152,6 +178,8 @@ interface Connection {
  *   and the client connects again, waiting longer after each attempt that
  *   fails. Any other close — or any close before the first join is answered —
  *   has `failed` it.
+ * - **Behind a cut.** A close saying the document's log was cut past this client
+ *   has it `catchUp`, and connect again. Failing to has `failed` it.
  *
  * `onEvent` hears each of those.
  */
@@ -159,6 +187,7 @@ export function joinCollaboration(
     sync: CollaborationSync,
     openChannel: OpenChannel,
     onEvent: (event: CollaborationEvent) => void,
+    catchUp?: () => Promise<void>,
 ): Collaboration {
     let connection: Connection | undefined;
     /** Whether the far side has answered a join: only a collaboration once joined is rejoined. */
@@ -265,6 +294,19 @@ export function joinCollaboration(
     const closed = (current: Connection, code: number, reason: string, rejoin: boolean): void => {
         if (ended || connection !== current) return;
         connection = undefined;
+        if (code === CLOSE_BEHIND_CUT && catchUp) {
+            if (joined) onEvent({ type: "interrupted", code, reason });
+            catchUp().then(
+                () => {
+                    if (!ended) connect();
+                },
+                (err: unknown) => {
+                    failed("catching up")(err);
+                    end({ type: "failed", code, reason });
+                },
+            );
+            return;
+        }
         if (!joined || !rejoin) {
             end({ type: "failed", code, reason });
             return;

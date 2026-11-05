@@ -7,6 +7,7 @@ import type {
     ExportFormat,
     FileFormat,
     GoogleFontFamily,
+    LogCut,
     PageExportFormat,
     SaveStrategy,
     SessionConfig,
@@ -76,6 +77,9 @@ export type WorkerRequest =
     | { id: number; type: "exportPageToBytes"; index: number; format: PageExportFormat }
     | { id: number; type: "setWatermarks"; watermarks: Watermark[] }
     | { id: number; type: "snapshot" }
+    | { id: number; type: "cutLog"; version: number; minSavedBytes: number }
+    | { id: number; type: "catchUp"; logs: Uint8Array[]; version: number }
+    | { id: number; type: "baselineVersion" }
     | { id: number; type: "versionVector" }
     | { id: number; type: "patchSince"; peer: Uint8Array }
     | { id: number; type: "merge"; patch: Uint8Array }
@@ -108,6 +112,9 @@ export interface WorkerResult {
     exportPageToBytes: Uint8Array;
     setWatermarks: undefined;
     snapshot: Uint8Array;
+    cutLog: LogCut | undefined;
+    catchUp: undefined;
+    baselineVersion: number | undefined;
     versionVector: Uint8Array;
     patchSince: Uint8Array;
     merge: undefined;

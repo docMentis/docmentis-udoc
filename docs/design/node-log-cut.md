@@ -1,7 +1,6 @@
 # Node Log Cut
 
-**Status: designed, not built.** The engine's side is in the engine repo's Core
-Editor Log Cut.
+The engine's side is in the engine repo's Core Editor Log Cut.
 
 Every open of a kept document loads its edit log, and the log's history is what takes
 the memory. A deck with 22,050 edits reaches 106 MB after a fresh editor's first edit
@@ -32,8 +31,9 @@ use, or when it is evicted, but not at server shutdown. A collaboration holds it
 session busy, so no editor is connected by then. An editor whose connection dropped
 tries to rejoin at least every 30 seconds, well inside that wait.
 
-1. The cut takes the document's checkpoint turn, and new requests for that document
-   wait: its session, its `package` routes and its collaboration.
+1. New requests for that document wait, through `SessionPool.retired`: its session, its
+   `package` routes and its collaboration. A checkpoint can't run beside the cut: it reads
+   its version inside the session's use, and a session is closed only with none.
 2. `session.cutLog(version, minSavedBytes)` adds one marker edit and measures the
    saving. Below `cutMinSavedBytes`, it returns nothing and the session closes as
    usual, with nothing kept of the marker.

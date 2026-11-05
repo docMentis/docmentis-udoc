@@ -1869,6 +1869,21 @@ export interface MergeRequest {
 }
 
 /**
+ * Come back from behind the log's cut: `logs`, the log of each cut behind it,
+ * oldest first, then the document's current one. Replies {@link DocumentLayout}.
+ */
+export interface CatchUpRequest {
+    type: "catchUp";
+    logs: ArrayBuffer[];
+    version: number;
+}
+
+/** The version the document opened at or last caught up to. Replies `number | undefined`. */
+export interface BaselineVersionRequest {
+    type: "baselineVersion";
+}
+
+/**
  * The content of every opaque part — an inserted picture's image — the peer,
  * identified by its {@link VersionVectorRequest} bytes, lacks. Replies with the
  * bytes (an `ArrayBuffer`, empty when there is nothing to send) to send ahead
@@ -2123,6 +2138,8 @@ export type WorkerRequest =
     | VersionVectorRequest
     | PatchSinceRequest
     | MergeRequest
+    | CatchUpRequest
+    | BaselineVersionRequest
     | OpaquePartsSinceRequest
     | MergeOpaquePartsRequest;
 

@@ -15,8 +15,9 @@
 // Once the document is edited, it also has an edit log: every edit made, which
 // is a package's own `crdt` entity — opening applies it — but kept apart from
 // the checkpoints, because it is written on every edit and a checkpoint only
-// once. It holds every edit since the import, so it replays over any
-// checkpoint, and a checkpoint leaves it as it is.
+// once. It holds the state at its last cut and every edit since
+// (docs/design/node-log-cut.md), so it replays over any checkpoint since that
+// cut, and a checkpoint leaves it as it is.
 //
 // An edit that inserts a picture also brings the picture's image: an opaque
 // part, whose id the edit log carries but not its content
@@ -133,6 +134,18 @@ export interface DocumentStore {
      * or not at all. Refused when nothing is kept as `id`.
      */
     putLog(id: string, log: Uint8Array): Promise<void>;
+    /**
+     * Keep `checkpoint` as document `id`'s checkpoint `version`, note that its log
+     * was cut there, and keep `log`, the log cut there, in place of the one kept:
+     * in that order, so a failure part-way leaves a log that still replays over
+     * the latest checkpoint. The log kept has to hold that checkpoint's frontier
+     * already. Refused as {@link putCheckpoint} and {@link putLog} are.
+     */
+    putCut(id: string, version: number, checkpoint: Uint8Array, log: Uint8Array): Promise<void>;
+    /** The versions of the checkpoints document `id`'s log was cut at, oldest first; none when it never was. */
+    getCuts(id: string): Promise<number[]>;
+    /** The edit log checkpoint `version` of document `id` holds, or `undefined` when it holds none, or isn't kept. */
+    getCheckpointLog(id: string, version: number): Promise<Uint8Array | undefined>;
     /** Forget document `id`; answers whether anything was kept. */
     delete(id: string): Promise<boolean>;
 }
@@ -143,12 +156,14 @@ const FILE_SAFE_ID = /^[A-Za-z0-9_-]+$/;
 /**
  * A document's original is `original.<format>`; its checkpoints are
  * `checkpoints/v<version>.udoc`, the latest the highest; its edit log, once it
- * has one, is `crdt.loro`, the name a package's own entry for it has.
+ * has one, is `crdt_delta.loro`, the name a package's own entry for it has; the
+ * checkpoints it was cut at are listed in `cuts.json`.
  */
 const ORIGINAL = "original";
 const CHECKPOINTS_DIR = "checkpoints";
 const CHECKPOINT_FILE = /^v(\d+)\.udoc$/;
-const LOG_FILE = "crdt.loro";
+const LOG_FILE = "crdt_delta.loro";
+const CUTS_FILE = "cuts.json";
 
 /**
  * Where the opaque parts edits brought are kept, each deflated at
@@ -437,13 +452,41 @@ export class DirectoryDocumentStore implements DocumentStore {
     }
 
     async putLog(id: string, log: Uint8Array): Promise<void> {
-        const path = join(this.#path(id), LOG_FILE);
+        await this.#replace(id, LOG_FILE, log);
+    }
+
+    async putCut(id: string, version: number, checkpoint: Uint8Array, log: Uint8Array): Promise<void> {
+        await this.putCheckpoint(id, version, checkpoint);
+        await this.#replace(
+            id,
+            CUTS_FILE,
+            new TextEncoder().encode(JSON.stringify([...(await this.getCuts(id)), version])),
+        );
+        await this.putLog(id, log);
+    }
+
+    async getCuts(id: string): Promise<number[]> {
+        try {
+            return JSON.parse(await readFile(join(this.#path(id), CUTS_FILE), "utf8")) as number[];
+        } catch (error) {
+            if (isNotFound(error)) return [];
+            throw error;
+        }
+    }
+
+    async getCheckpointLog(id: string, version: number): Promise<Uint8Array | undefined> {
+        return this.#readEntry(join(this.#path(id), CHECKPOINTS_DIR, `v${version}.udoc`), LOG_FILE);
+    }
+
+    /** Keep `bytes` as the file `name` of document `id`, in place of any kept. */
+    async #replace(id: string, name: string, bytes: Uint8Array): Promise<void> {
+        const path = join(this.#path(id), name);
         // Written aside and renamed over the one kept, so a reader meets the old
-        // log or the new, never part of one. Neither creates the document's
+        // file or the new, never part of one. Neither creates the document's
         // directory, so a document forgotten meanwhile stays forgotten.
         const staged = `${path}.${randomUUID()}.partial`;
         try {
-            await writeFile(staged, log, { flag: "wx" });
+            await writeFile(staged, bytes, { flag: "wx" });
             await rename(staged, path);
         } catch (error) {
             await rm(staged, { force: true });
@@ -481,7 +524,7 @@ export class DirectoryDocumentStore implements DocumentStore {
 /**
  * The route a package entry is served at, relative to the package: `""` for
  * `metadata.json`, `<kinds>/<partId>` for a part, `blobs/<key>` for a blob,
- * `crdt.loro` for the edit log, and `undefined` for anything not served.
+ * `crdt_delta.loro` for the edit log, and `undefined` for anything not served.
  */
 function routeOf(entry: string): string | undefined {
     if (entry === "metadata.json") return "";

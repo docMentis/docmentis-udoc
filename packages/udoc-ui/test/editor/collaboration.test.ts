@@ -5,7 +5,8 @@
  * of the patch naming it, and a peer's is merged; that its presence is kept
  * fresh, its pointer crosses alone, and leaving withdraws its presence before
  * the socket closes; and which closes it rejoins after — announcing each
- * connection lost once, backing off between attempts — and which end it.
+ * connection lost once, backing off between attempts — and which end it; and
+ * that a client behind the log's cut catches up and joins again.
  */
 
 import assert from "node:assert/strict";
@@ -157,7 +158,7 @@ class FakeSync {
 globalThis.WebSocket = FakeSocket as unknown as typeof WebSocket;
 
 /** Join a fresh document. `sockets()` is every socket it has opened, the latest last. */
-function join() {
+function join(catchUp?: () => Promise<void>) {
     const first = FakeSocket.made.length;
     const sync = new FakeSync();
     const events: CollaborationEvent[] = [];
@@ -165,6 +166,7 @@ function join() {
         sync,
         webSocketChannel(new URL("https://udoc.example/documents/d/collaboration")),
         (event) => events.push(event),
+        catchUp,
     );
     const sockets = () => FakeSocket.made.slice(first);
     return { sync, events, collaboration, sockets, socket: () => sockets().at(-1)! };
@@ -328,6 +330,61 @@ test("a lost connection is rejoined, backing off, and any other close ends the c
         { type: "joined" },
         { type: "failed", code: 4000, reason: "the document was deleted" },
     ]);
+});
+
+test("behind the log's cut, it catches up and joins again, and failing to ends it", async (t) => {
+    t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+    let catchUps = 0;
+    const { sync, events, socket, sockets } = join(async () => {
+        catchUps++;
+    });
+    socket().open();
+    socket().receive(JOIN, "[]");
+    await settle();
+
+    socket().drop(4003, "behind");
+    assert.deepEqual(events.at(-1), { type: "interrupted", code: 4003, reason: "behind" });
+    assert.equal(sockets().length, 1, "not before it has caught up");
+    await settle();
+    assert.equal(catchUps, 1);
+    assert.equal(sockets().length, 2, "with no wait");
+    sync.edit("rebased");
+    socket().open();
+    await settle();
+    assert.deepEqual(socket().sent[0]?.[0], JOIN);
+    socket().receive(JOIN, "[]");
+    await settle();
+    assert.deepEqual(events.at(-1), { type: "joined" });
+    assert.ok(socket().sent.some(([kind, payload]) => kind === PATCH && payload.includes("rebased")));
+
+    // Never joined, it still catches up: it may have opened before the cut.
+    const unjoined = join(async () => {});
+    unjoined.socket().open();
+    unjoined.socket().drop(4003, "behind");
+    await settle();
+    assert.equal(unjoined.sockets().length, 2);
+    assert.deepEqual(unjoined.events, []);
+
+    // Failing to catch up ends it. With no way to, as over a local service, so does the close.
+    const originalError = console.error;
+    console.error = () => {};
+    t.after(() => {
+        console.error = originalError;
+    });
+    const failing = join(() => Promise.reject(new Error("no such cut")));
+    failing.socket().open();
+    failing.socket().receive(JOIN, "[]");
+    await settle();
+    failing.socket().drop(4003, "behind");
+    await settle();
+    assert.equal(failing.sockets().length, 1);
+    assert.deepEqual(failing.events.at(-1), { type: "failed", code: 4003, reason: "behind" });
+    const without = join();
+    without.socket().open();
+    without.socket().receive(JOIN, "[]");
+    await settle();
+    without.socket().drop(4003, "behind");
+    assert.deepEqual(without.events.at(-1), { type: "failed", code: 4003, reason: "behind" });
 });
 
 test("a collaboration never joined isn't rejoined, and one left stays left", async (t) => {

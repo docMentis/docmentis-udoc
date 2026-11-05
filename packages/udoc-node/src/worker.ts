@@ -170,6 +170,13 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
             }
             case "snapshot":
                 return { id, ok: true, result: opened().snapshot() };
+            case "cutLog":
+                return { id, ok: true, result: opened().cutLog(request.version, request.minSavedBytes) ?? undefined };
+            case "catchUp":
+                opened().catchUp(request.logs, request.version);
+                return { id, ok: true, result: undefined };
+            case "baselineVersion":
+                return { id, ok: true, result: opened().baselineVersion() };
             case "versionVector":
                 return { id, ok: true, result: opened().versionVector() };
             case "patchSince":

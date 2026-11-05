@@ -100,6 +100,7 @@ const STATUS: Record<UDocErrorCode, number> = {
     unsupported: 422,
     malformed: 422,
     passwordRequired: 422,
+    behindCut: 409,
     internal: 500,
     crashed: 500,
     io: 502,

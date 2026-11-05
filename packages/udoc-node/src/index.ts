@@ -19,6 +19,8 @@ export type {
     WatermarkTarget,
     WatermarkText,
 } from "@docmentis/udoc-wasm";
+// What `UDocSession.cutLog` answers.
+export type { LogCut } from "@docmentis/udoc-wasm";
 // What a session is entitled to, and the features a call can need.
 export type { Entitlements, Feature } from "@docmentis/udoc-wasm";
 export { isFileFormat } from "./format.js";

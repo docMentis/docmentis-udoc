@@ -1836,6 +1836,18 @@ export class WorkerClient {
      * Hold a peer's {@link opaquePartsSince} content. Resolves with the
      * document's layout — a picture whose image just arrived repaints.
      */
+    /** Come back from behind the log's cut: see the `catchUp` request. */
+    async catchUp(logs: Uint8Array[], version: number): Promise<DocumentLayout> {
+        // Transfer fresh copies of the buffers to avoid detaching the caller's.
+        const buffers = logs.map((log) => log.slice().buffer);
+        return (await this.#send({ type: "catchUp", logs: buffers, version }, buffers)) as DocumentLayout;
+    }
+
+    /** The version the document opened at or last caught up to. */
+    async baselineVersion(): Promise<number | undefined> {
+        return (await this.#send({ type: "baselineVersion" })) as number | undefined;
+    }
+
     async mergeOpaqueParts(data: Uint8Array): Promise<DocumentLayout> {
         // Transfer a fresh copy of the buffer to avoid detaching the caller's.
         const buffer = data.slice().buffer;

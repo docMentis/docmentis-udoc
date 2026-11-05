@@ -83,7 +83,7 @@ import { createPasswordModal } from "./components/PasswordModal.js";
 import { createPrintModal } from "./components/PrintModal.js";
 import { createScrollbar } from "./components/Scrollbar.js";
 import { createPerfHud } from "./components/PerfHud.js";
-import { joinCollaboration, webSocketChannel } from "./collaboration.js";
+import { fetchCutLogs, joinCollaboration, webSocketChannel } from "./collaboration.js";
 import type { Collaboration, CollaborationEvent, OpenChannel } from "./collaboration.js";
 import { remoteCheckpoint, remoteCopy } from "./remote.js";
 import type { RemoteCheckpointResponse } from "./remote.js";
@@ -3534,7 +3534,9 @@ export function mountUIShell(
     // a local collaboration service, kept while this one is paused. It belongs
     // to that document: opening another, closing it, or destroying the UI
     // leaves it.
-    let joinedTo: { openChannel: OpenChannel; name: string; release: () => void } | undefined;
+    let joinedTo:
+        | { openChannel: OpenChannel; name: string; release: () => void; catchUp: (() => Promise<void>) | undefined }
+        | undefined;
     // The connection to it while joined; none while paused.
     let collaboration: Collaboration | undefined;
     const collaborationListeners = new Set<(event: CollaborationEvent) => void>();
@@ -3544,7 +3546,20 @@ export function mountUIShell(
     }
 
     function joinRemoteCollaboration(url: string, name: string): void {
-        join(webSocketChannel(new URL(url, location.href)), name);
+        const target = new URL(url, location.href);
+        join(webSocketChannel(target), name, undefined, () => catchUpTo(target));
+    }
+
+    /** Come back from behind the log's cut of the document at udoc-server's collaboration `url`. */
+    async function catchUpTo(url: URL): Promise<void> {
+        const { logs, version } = await fetchCutLogs(url, (await client.baselineVersion()) ?? 0);
+        const layout = await client.catchUp(logs, version);
+        store.dispatch({
+            type: "DOC_RELAYOUT",
+            pageCount: layout.pageCount ?? null,
+            firstUncomposedPage: layout.firstUncomposedPage,
+            scrollSize: layout.scrollSize,
+        });
     }
 
     function joinLocalCollaboration(id: string, name: string): void {
@@ -3560,15 +3575,20 @@ export function mountUIShell(
      * Join the collaboration `openChannel` connects to, as `name`, leaving any
      * other first — holding what `hold` holds until this one leaves.
      */
-    function join(openChannel: OpenChannel, name: string, hold?: () => () => void): void {
+    function join(
+        openChannel: OpenChannel,
+        name: string,
+        hold?: () => () => void,
+        catchUp?: () => Promise<void>,
+    ): void {
         if (store.getState().status !== "ready") throw new Error("joining a collaboration needs an open document");
         void leaveCollaboration();
-        joinedTo = { openChannel, name, release: hold?.() ?? (() => {}) };
+        joinedTo = { openChannel, name, release: hold?.() ?? (() => {}), catchUp };
         connect(joinedTo);
     }
 
     /** Connect to the collaboration `to` — on joining it, and on resuming. */
-    function connect(to: { openChannel: OpenChannel; name: string }): void {
+    function connect(to: { openChannel: OpenChannel; name: string; catchUp: (() => Promise<void>) | undefined }): void {
         setUserInfo(to.name);
         const joined = joinCollaboration(
             {
@@ -3599,6 +3619,7 @@ export function mountUIShell(
                 }
                 for (const listener of collaborationListeners) listener(event);
             },
+            to.catchUp,
         );
         collaboration = joined;
         store.dispatch({ type: "SET_COLLABORATION", collaboration: "joined" });

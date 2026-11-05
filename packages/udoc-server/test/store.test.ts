@@ -8,7 +8,8 @@
  * deflated, and nothing but a route is kept of what a client sends; a
  * checkpoint is kept beside the earlier ones, once, read as the latest, and
  * forgets what it holds of the opaque parts, and a part only an earlier one
- * holds is read from the newest that does; an id already kept is never
+ * holds is read from the newest that does; a cut keeps its checkpoint, notes
+ * it, and replaces the log, in that order; an id already kept is never
  * overwritten; an id never becomes a path outside the directory; and a write
  * that fails leaves nothing half-written behind.
  */
@@ -119,12 +120,41 @@ test("an edit log is kept beside the checkpoints, replaced whole, and only for a
     await store.putLog("a", bytesOf("log 2"));
     assert.equal(text(await store.getLog("a")), "log 2");
     assert.deepEqual((await store.getDescription("a"))?.baselineFrontier, [], "replayed from the baseline");
-    assert.deepEqual((await readdir(join(directory, "a"))).sort(), ["checkpoints", "crdt.loro", "original.pdf"]);
+    assert.deepEqual((await readdir(join(directory, "a"))).sort(), ["checkpoints", "crdt_delta.loro", "original.pdf"]);
 
     await assert.rejects(store.putLog("b", bytesOf("log")), /no document "b" is kept/);
     assert.deepEqual(await readdir(directory), ["a"], "a log for nothing kept keeps nothing");
     await store.delete("a");
     assert.equal(await store.getLog("a"), undefined);
+});
+
+test("a cut keeps its checkpoint, notes it, and replaces the log, and a refused one changes nothing", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const store = new DirectoryDocumentStore(directory);
+    await store.put("a", { original: pdf.original, checkpoint: await packageZip() });
+    await store.putLog("a", bytesOf("whole"));
+    assert.deepEqual(await store.getCuts("a"), []);
+    assert.equal(await store.getCheckpointLog("a", 1), undefined);
+
+    await store.putCut("a", 1, await packageZip(checkpointEntries(1)), bytesOf("cut at 1"));
+    assert.deepEqual(await store.getCuts("a"), [1]);
+    assert.equal(text(await store.getLog("a")), "cut at 1");
+    assert.equal((await store.getDescription("a"))?.baselineVersion, 1);
+    assert.equal(text(await store.getCheckpointLog("a", 1)), "[]", "the log the checkpoint holds, not the document's");
+
+    await store.putCut("a", 2, await packageZip(checkpointEntries(2)), bytesOf("cut at 2"));
+    assert.deepEqual(await store.getCuts("a"), [1, 2]);
+    assert.equal(text(await store.getLog("a")), "cut at 2");
+
+    await assert.rejects(
+        store.putCut("a", 2, await packageZip(checkpointEntries(2)), bytesOf("again")),
+        /keeps checkpoint v2 already/,
+    );
+    assert.deepEqual(await store.getCuts("a"), [1, 2]);
+    assert.equal(text(await store.getLog("a")), "cut at 2");
+
+    await assert.rejects(store.putCut("b", 1, await packageZip(), bytesOf("log")), /no document "b"/);
+    assert.deepEqual(await store.getCuts("b"), []);
 });
 
 test("an opaque part and its blobs are kept by route beside the checkpoints, and nothing else is", async (t) => {

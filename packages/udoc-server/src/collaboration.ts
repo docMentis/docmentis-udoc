@@ -36,6 +36,8 @@ const CLOSE_SESSION_ENDED = 1011;
 const CLOSE_NO_DOCUMENT = 4000;
 const CLOSE_LICENSE_REFUSED = 4001;
 const CLOSE_CANNOT_OPEN = 4002;
+/** The client is behind the document's log cut: it catches up, and joins again. */
+const CLOSE_BEHIND_CUT = 4003;
 
 /** The collaboration on each document being edited now, and the clients arriving at them. */
 export class Collaborations {
@@ -361,14 +363,15 @@ function truncateReason(reason: string): string {
 
 /**
  * The close code and reason `error` calls for, picked by its code: a license
- * refusal, or no such document; then, for a document that couldn't be opened,
- * that; and once it is open, its session failing — `internal` or `crashed` —
- * or else a payload the engine couldn't merge.
+ * refusal, or no such document; a client behind the log's cut; then, for a
+ * document that couldn't be opened, that; and once it is open, its session failing
+ * — `internal` or `crashed` — or else a payload the engine couldn't merge.
  */
 function closeOf(error: unknown, opened: boolean): [code: number, reason: string] {
     const { code, message } = failureOf(error);
     if (LICENSE_CODES.has(code)) return [CLOSE_LICENSE_REFUSED, message];
     if (code === "notFound") return [CLOSE_NO_DOCUMENT, message];
+    if (code === "behindCut") return [CLOSE_BEHIND_CUT, message];
     if (!opened) return [CLOSE_CANNOT_OPEN, message];
     if (code === "internal" || code === "crashed") return [CLOSE_SESSION_ENDED, message];
     return [CLOSE_DID_NOT_MERGE, message];

@@ -33,6 +33,7 @@ import type { UDocNode, UDocSession } from "@docmentis/udoc-node";
 import { Collaborations } from "./collaboration.ts";
 import { documentRoutes, noDocument } from "./document.ts";
 import { HttpFailure, LICENSE_CODES, notFound } from "./http.ts";
+import { logCutter } from "./log-cut.ts";
 import { readPackage } from "./package.ts";
 import { answerRequest, answerUpgrade, has, targetOf } from "./route.ts";
 import type { Route } from "./route.ts";
@@ -54,6 +55,10 @@ export interface UDocServerOptions {
      *  requests finish. Past it, the least recently used idle ones close.
      *  Defaults to 32. */
     sessionPool?: number;
+    /** The smallest saving worth cutting a document's edit log for, in bytes,
+     *  when its idle session closes: the cut drops the history before a new
+     *  checkpoint, so later opens hold less. Defaults to 128 KiB. */
+    cutMinSavedBytes?: number;
     /** The path the routes sit beneath: `"/udoc"` serves `/udoc/documents/…`.
      *  Defaults to `""`, the root. */
     basePath?: string;
@@ -82,6 +87,7 @@ export interface UDocServer {
 const DEFAULT_MAX_UPLOAD_BYTES = 256 * 1024 * 1024;
 const DEFAULT_SESSION_TIMEOUT_MS = 5 * 60 * 1000;
 const DEFAULT_SESSION_POOL = 32;
+const DEFAULT_CUT_MIN_SAVED_BYTES = 128 * 1024;
 
 /**
  * The base a session this server opens over its store fetches its package
@@ -98,6 +104,7 @@ export function createUDocServer(options: UDocServerOptions): UDocServer {
         (id) => reopen(udoc, store, id),
         options.sessionTimeoutMs ?? DEFAULT_SESSION_TIMEOUT_MS,
         options.sessionPool ?? DEFAULT_SESSION_POOL,
+        logCutter(store, options.cutMinSavedBytes ?? DEFAULT_CUT_MIN_SAVED_BYTES),
     );
     const collaborations = new Collaborations(store, sessions, maxUploadBytes);
     /** Every route the server answers: each family's, in turn. */

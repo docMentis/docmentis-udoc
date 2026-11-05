@@ -202,14 +202,17 @@ export function documentRoutes({
         const id = documentId(params);
         const next = (checkpointing.get(id) ?? Promise.resolve(0))
             .catch(() => 0)
-            .then(async () => {
-                const description = await store.getDescription(id);
-                if (!description) throw noDocument(id);
-                const version = description.baselineVersion + 1;
-                const saved = await sessions.use(id, (session) => session.saveToPackage(version));
-                await store.putCheckpoint(id, version, saved);
-                return version;
-            });
+            .then(() =>
+                // Read in the session's use, which no log cut's checkpoint runs
+                // beside, since one runs only on a session with none.
+                sessions.use(id, async (session) => {
+                    const description = await store.getDescription(id);
+                    if (!description) throw noDocument(id);
+                    const version = description.baselineVersion + 1;
+                    await store.putCheckpoint(id, version, await session.saveToPackage(version));
+                    return version;
+                }),
+            );
         checkpointing.set(id, next);
         const forget = () => {
             if (checkpointing.get(id) === next) checkpointing.delete(id);
@@ -223,8 +226,11 @@ export function documentRoutes({
      * parts edits brought on top — its description, or one resource under it
      * (see `package.ts`).
      */
-    function packageResource({ params, query }: RouteRequest): Promise<Reply> {
-        return readPackage(store, documentId(params), params.route ?? "", query);
+    async function packageResource({ params, query }: RouteRequest): Promise<Reply> {
+        const id = documentId(params);
+        // A log being cut is answered once it is, whole.
+        await sessions.retired(id);
+        return readPackage(store, id, params.route ?? "", query);
     }
 
     /** A collaboration is a WebSocket: without the upgrade, `426`. */

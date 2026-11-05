@@ -427,6 +427,8 @@ export interface UDocEvents {
      * rejoins by itself, and edits made meanwhile are sent then. `code` and
      * `reason` are the connection's close — docs/design/node-collaboration.md
      * lists the server's; the reason is empty for a connection lost without one.
+     * Closed for being behind a cut of the document's edit log, it catches up
+     * before it rejoins; with edits unsent, that empties its undo stack.
      * A local collaboration is never interrupted.
      */
     "collaboration:interrupted": { code: number; reason: string };
