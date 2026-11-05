@@ -47,6 +47,11 @@ udoc-ui's generated engine version and the CDN URLs the docs write out.
   repo, builds it and opens it in headless Chrome; the Examples workflow runs
   it on a change to the browser packages or the examples, and nightly. A change to how the packages load (the engine, its
   fonts, the workers, a new bare import) runs it before it lands.
+- `scripts/e2e*` are the end-to-end suites: the real `udoc-server`, the real
+  engine, and editors joined over its WebSocket, in Node and in headless Chrome.
+  The packages' own tests run the server on a fake session, so a change to
+  collaboration, the edit log or a package's contents runs `npm run e2e` before
+  it lands; the E2E workflow runs it on a change to the packages.
 - `examples/shockwave` is the exception: a sales enablement app on the
   packages, with a Node backend, linked to this checkout's builds by `file:`
   dependencies and left out of `npm run examples`. It showcases the packages
@@ -110,6 +115,7 @@ npm run format:check
 npm run dev               # the demo, with the UI packages rebuilding
 npm run docs              # the docs site, its API reference from the built packages
 npm run examples          # each example, built and opened in a browser
+npm run e2e               # collaboration and log cuts, on the real server and engine
 npm run headless          # the viewer and the editor with no container, in a browser
 npm run shockwave         # shockwave, the sales enablement app, at localhost:5280
 npm run release -- patch  # cut a release, which CI publishes

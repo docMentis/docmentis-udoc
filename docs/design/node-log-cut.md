@@ -109,6 +109,12 @@ If a cut never runs, nothing else changes: the log isn't shallow, so page copies
 made as today, `patchSince` never refuses, `4003` is never sent and `cuts.json` doesn't
 exist. Only the log's file name differs.
 
+## Tests
+
+`npm run e2e` (`scripts/e2e.mjs`) runs a server's own cuts, catch-up and the rebase on the
+real server and engine, on all five doc types, and again with the real editor in headless
+Chrome. `udoc-server`'s own tests run the server's side on a fake session.
+
 ## Limits
 
 - **A document that is never idle is never cut.** New opens keep loading everything

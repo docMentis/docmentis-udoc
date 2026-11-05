@@ -1,0 +1,42 @@
+# Run the end-to-end suites (scripts/e2e.mjs): the real udoc-server, the real
+# engine, and real editors, in Node and in headless Chrome. They are what checks
+# an edit log, a checkpoint or a log cut against the engine, which the packages'
+# own tests, on a fake session, can't.
+#
+# On a change to what they test: the packages, the suites, or the lockfile. Like
+# CI, it runs on @docmentis/udoc-wasm from npm, so a change that needs an engine
+# not yet released fails here until it is, and `npm run update-engine` pins it.
+name: E2E
+
+on:
+    push:
+        branches: [main]
+        paths: &tested
+            - "packages/**"
+            - "scripts/e2e*"
+            - "scripts/packages.mjs"
+            - "package-lock.json"
+            - ".github/workflows/e2e.yml"
+    pull_request:
+        paths: *tested
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: e2e-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    e2e:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 22
+                  cache: npm
+            - run: npm ci
+            - run: npm run build
+            - run: npm run e2e
