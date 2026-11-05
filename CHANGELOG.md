@@ -6,6 +6,15 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Fixed
+
+- A deck or word document saved keeps its GIFs as they came, where each was
+  saved as a still PNG of its first frame.
+- A document with a long edit log opens in a fraction of the memory it took: a
+  `.udoc` package saved as a checkpoint, or a document a udoc server keeps.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -24,6 +33,10 @@ listed once, by package. Its major and minor version are those of the
   the View tab's Normal and Page Layout do, with a `sheetView` getter and a
   `sheetView:changed` event. It sets that sheet's view alone: each sheet opens
   in its own, as its file left it.
+- A slide show plays a slide's animated GIFs as PowerPoint does, a layout's or
+  master's too, where each showed its first frame alone: at the GIF's own frame
+  delays and loop count, holding its last frame, and from the start again when
+  the slide is shown afresh.
 
 #### Fixed
 
@@ -32,6 +45,14 @@ listed once, by package. Its major and minor version are those of the
 - What is translucent over a clear part of a PDF or word document's page keeps
   its colour in a print, a thumbnail, `renderPage` and a PNG export, where it
   read too dark.
+- A character no available font covers draws in whatever the browser falls back
+  to, where it rendered blank, while its font downloads and for good if none is
+  found. `enableCanvasFonts`, on by default, governs it, and it leaves out emoji
+  and the scripts that join, reorder or run right to left.
+- A slide show no longer stops at a slide with On Mouse Click unchecked and no
+  After time: Space, the right arrow, Enter and the toolbar's next button move
+  past it, where none could. A mouse click still doesn't advance it, and still
+  plays its on-click animations, triggers and links.
 
 ### udoc-editor
 
