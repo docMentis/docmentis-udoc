@@ -40,6 +40,7 @@ export const ja: EditMessages = {
     "pageSettings.points": "pt",
     "pageSettings.portrait": "縦",
     "pageSettings.landscape": "横",
+    "pageSettings.layout": "レイアウト",
     "pageSettings.rotation": "回転",
     "pageSettings.rotateLeft": "左へ回転",
     "pageSettings.rotatePageLeft": "ページを左へ回転",
@@ -59,6 +60,7 @@ export const ja: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "画像",
     "ribbon.insert": "挿入",
+    "ribbon.page": "ページ",
     "ribbon.text": "テキスト",
     "ribbon.shape": "図形",
     "ribbon.table": "表",
@@ -71,6 +73,7 @@ export const ja: EditMessages = {
     "command.insertShape": "図形",
     "command.cropPage": "トリミング",
     "command.resizePage": "画像サイズ",
+    "command.pageResize": "ページのサイズ変更",
     "command.paragraphStyle": "段落スタイル",
     "command.fontFamily": "フォント",
     "command.fontSize": "サイズ",

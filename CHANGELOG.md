@@ -32,8 +32,25 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-editor
 
+#### Added
+
+- A PDF's Page tab has a Text Box: dragged out, or dropped with a click, it puts
+  text on the page as the page's own content, in Helvetica, that wraps at the box's
+  width. Its placeholder comes selected, so the first key types over it.
+- A PDF's Page tab has an Image: it asks for a file and puts it on the current page
+  as the page's own content, centred, scaled down to fit and selected, reading
+  upright on a turned page, with any transparency the file has. `insertImage` does
+  the same on a PDF.
+
 #### Changed
 
+- A PDF's Page tab replaces its Insert tab. It offers Insert Page, Delete Page,
+  Rotate Left, Rotate Right and Resize Page, on the current page or those picked in
+  the thumbnails, then Text Box, Shapes and Image, as icons named by their tooltips.
+  Resize Page opens a dialog of the current page's size.
+- The controls beside and between a PDF's pages in edit mode are off by default:
+  `showPageControls: true` turns them on.
+- The page settings dialog closes on Apply Size, and labels its Units and Layout.
 - The ruler's margin edges, indent markers and tab stops respond to the pointer:
   one that can be dragged tints when the pointer is over it, and more strongly
   while pressed, along with any markers the drag moves with it.

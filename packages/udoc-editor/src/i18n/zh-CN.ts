@@ -40,6 +40,7 @@ export const zhCN: EditMessages = {
     "pageSettings.points": "磅",
     "pageSettings.portrait": "纵向",
     "pageSettings.landscape": "横向",
+    "pageSettings.layout": "布局",
     "pageSettings.rotation": "旋转",
     "pageSettings.rotateLeft": "向左旋转",
     "pageSettings.rotatePageLeft": "向左旋转页面",
@@ -59,6 +60,7 @@ export const zhCN: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "图像",
     "ribbon.insert": "插入",
+    "ribbon.page": "页面",
     "ribbon.text": "文本",
     "ribbon.shape": "形状",
     "ribbon.table": "表格",
@@ -71,6 +73,7 @@ export const zhCN: EditMessages = {
     "command.insertShape": "形状",
     "command.cropPage": "裁剪",
     "command.resizePage": "图像大小",
+    "command.pageResize": "调整页面大小",
     "command.paragraphStyle": "段落样式",
     "command.fontFamily": "字体",
     "command.fontSize": "字号",

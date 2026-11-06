@@ -40,6 +40,7 @@ export const ptBR: EditMessages = {
     "pageSettings.points": "pt",
     "pageSettings.portrait": "Retrato",
     "pageSettings.landscape": "Paisagem",
+    "pageSettings.layout": "Layout",
     "pageSettings.rotation": "Rotação",
     "pageSettings.rotateLeft": "Girar para a Esquerda",
     "pageSettings.rotatePageLeft": "Girar Página para a Esquerda",
@@ -59,6 +60,7 @@ export const ptBR: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "Imagem",
     "ribbon.insert": "Inserir",
+    "ribbon.page": "Página",
     "ribbon.text": "Texto",
     "ribbon.shape": "Forma",
     "ribbon.table": "Tabela",
@@ -71,6 +73,7 @@ export const ptBR: EditMessages = {
     "command.insertShape": "Formas",
     "command.cropPage": "Cortar",
     "command.resizePage": "Tamanho da imagem",
+    "command.pageResize": "Redimensionar página",
     "command.paragraphStyle": "Estilo de Parágrafo",
     "command.fontFamily": "Fonte",
     "command.fontSize": "Tamanho",

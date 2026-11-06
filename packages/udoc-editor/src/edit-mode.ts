@@ -19,6 +19,8 @@ import { runEditMenuAction } from "./menu-action.js";
 import type { EditMenuAction } from "./menu-action.js";
 import { mountNewSlide, newSlideCommand } from "./new-slide.js";
 import type { NewSlide } from "./new-slide.js";
+import { mountPageResize, pageCommands } from "./page-commands.js";
+import type { PageResize } from "./page-commands.js";
 import { mountPageControls, PAGE_CONTROLS_SPACING, pageControlsShown } from "./page-controls.js";
 import { selectionLine } from "./paint.js";
 import { ALL_MODES, EDIT_MODE } from "./mode.js";
@@ -203,12 +205,13 @@ export function editMode(options: UDocEditorOptions): EditMode {
     const allowedModes = options.allowedModes && options.allowedModes.length > 0 ? options.allowedModes : ALL_MODES;
     const requestedMode = options.initialMode ?? "edit";
     const initialMode = allowedModes.includes(requestedMode) ? requestedMode : allowedModes[0]!;
-    const showPageControls = options.showPageControls ?? true;
+    const showPageControls = options.showPageControls ?? false;
     // What the shell lends, and what edit mode builds on it, from the mount on.
     let host: EditHost | null = null;
     let tools: EditTools | null = null;
     let newSlide: NewSlide | null = null;
     let imageSize: ImageSize | null = null;
+    let pageResize: PageResize | null = null;
     const grips = createGrips(() => tools);
     const ruler = createRuler(() => host);
     const mountedTools = (): EditTools => {
@@ -236,6 +239,10 @@ export function editMode(options: UDocEditorOptions): EditMode {
             ...insertCommands(() => {
                 if (host) pickImage(host);
             }),
+            ...pageCommands(
+                () => host,
+                () => pageResize?.open(),
+            ),
             ...imageCommands(() => host, {
                 crop: () => void tools?.crop.start(),
                 resize: () => void imageSize?.open(),
@@ -273,7 +280,10 @@ export function editMode(options: UDocEditorOptions): EditMode {
             const unmountPageControls = showPageControls ? mountPageControls(mounted, i18n) : null;
             newSlide = mountNewSlide(mounted, i18n);
             imageSize = mountImageSize(mounted, i18n);
+            pageResize = mountPageResize(mounted, i18n);
             return () => {
+                pageResize?.destroy();
+                pageResize = null;
                 imageSize?.destroy();
                 imageSize = null;
                 newSlide?.destroy();

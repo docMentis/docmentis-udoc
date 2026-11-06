@@ -1,13 +1,13 @@
-// The shared per-page settings dialog, opened from a page's control rail (the
-// "more" button). A modal — backdrop + centered dialog — that lets the user
-// read and change one page's size (a named preset or a custom width × height in
-// inches / millimetres / points) and rotation. It replaces the old anchored
-// info popup; being a real dialog gives the size fields room and a clear
-// commit (Apply) instead of a hover-dismissed flyout.
+// The per-page settings dialog, opened from a page's control rail (the "more"
+// button) and, without its rotation, as a PDF's Page tab's Resize Page. A modal —
+// backdrop + centered dialog — that lets the user read and change one page's size
+// (a named preset or a custom width × height in inches / millimetres / points),
+// its layout (portrait or landscape) and its rotation. Apply commits the size and
+// closes it; a rotate takes effect at once.
 //
-// Storeless and imperative: mounted once by the shell and reused across pages.
-// `open(ctx)` seeds it with a page's current geometry and the callbacks that
-// turn an Apply / rotate into a page edit; it owns no document state of its own.
+// Storeless and imperative: mounted once and reused across pages. `open(ctx)`
+// seeds it with a page's current geometry and the callbacks that turn an Apply /
+// rotate into a page edit; it owns no document state of its own.
 
 import { ICON_CLEAR, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT, on } from "@docmentis/udoc-ui/internal";
 import type { I18n, MessageKey } from "../i18n/index.js";
@@ -63,8 +63,9 @@ export interface PageSettingsContext {
     height: number;
     /** Resize the page to `width` × `height` points (one undo step). */
     onResize: (width: number, height: number) => void;
-    /** Rotate the page one quarter turn (clockwise, or counter-clockwise). */
-    onRotate: (clockwise: boolean) => void;
+    /** Rotate the page one quarter turn (clockwise, or counter-clockwise).
+     *  Without it the dialog has no Rotation section: only the page's size. */
+    onRotate?: (clockwise: boolean) => void;
 }
 
 function fmtLen(pt: number, unit: Unit): string {
@@ -87,18 +88,49 @@ function matchPreset(width: number, height: number): Preset | null {
     );
 }
 
-function labeledField(labelText: string): { field: HTMLLabelElement; input: HTMLInputElement } {
-    const field = document.createElement("label");
-    field.className = "udoc-page-modal__field";
+/** The label above a control. */
+function fieldLabel(text: string): HTMLSpanElement {
     const label = document.createElement("span");
     label.className = "udoc-page-modal__field-label";
-    label.textContent = labelText;
+    label.textContent = text;
+    return label;
+}
+
+/** `control` under the label `labelText`, which names it. */
+function labeledField(labelText: string, control: HTMLElement): HTMLLabelElement {
+    const field = document.createElement("label");
+    field.className = "udoc-page-modal__field";
+    field.append(fieldLabel(labelText), control);
+    return field;
+}
+
+/** A row of `controls` under the label `labelText`, which names them. */
+function labeledRow(
+    labelText: string,
+    rowClass: string,
+    ...controls: HTMLElement[]
+): {
+    field: HTMLDivElement;
+    row: HTMLDivElement;
+} {
+    const row = document.createElement("div");
+    row.className = rowClass;
+    row.setAttribute("role", "group");
+    row.setAttribute("aria-label", labelText);
+    row.append(...controls);
+    const field = document.createElement("div");
+    field.className = "udoc-page-modal__field udoc-page-modal__row";
+    field.append(fieldLabel(labelText), row);
+    return { field, row };
+}
+
+function lengthInput(ariaLabel: string): HTMLInputElement {
     const input = document.createElement("input");
     input.type = "text";
     input.inputMode = "decimal";
     input.className = "udoc-page-modal__input";
-    field.append(label, input);
-    return { field, input };
+    input.setAttribute("aria-label", ariaLabel);
+    return input;
 }
 
 /**
@@ -135,10 +167,6 @@ export function createPageSettingsModal(i18n: I18n) {
     body.className = "udoc-page-modal__body";
 
     // --- size section ---
-    const sizeLabel = document.createElement("div");
-    sizeLabel.className = "udoc-page-modal__section-label";
-    sizeLabel.textContent = i18n.t("pageSettings.pageSize");
-
     const presetSelect = document.createElement("select");
     presetSelect.className = "udoc-page-modal__select udoc-page-modal__preset";
     presetSelect.setAttribute("aria-label", i18n.t("pageSettings.preset"));
@@ -155,24 +183,26 @@ export function createPageSettingsModal(i18n: I18n) {
 
     const dims = document.createElement("div");
     dims.className = "udoc-page-modal__dims";
-    const { field: wField, input: widthInput } = labeledField(i18n.t("pageSettings.width"));
-    const { field: hField, input: heightInput } = labeledField(i18n.t("pageSettings.height"));
-    widthInput.setAttribute("aria-label", i18n.t("pageSettings.pageWidth"));
-    heightInput.setAttribute("aria-label", i18n.t("pageSettings.pageHeight"));
+    const widthInput = lengthInput(i18n.t("pageSettings.pageWidth"));
+    const heightInput = lengthInput(i18n.t("pageSettings.pageHeight"));
 
     const unitSelect = document.createElement("select");
-    unitSelect.className = "udoc-page-modal__select udoc-page-modal__unit";
-    unitSelect.setAttribute("aria-label", i18n.t("pageSettings.units"));
+    unitSelect.className = "udoc-page-modal__select";
     for (const u of ["in", "mm", "pt"] as Unit[]) {
         const opt = document.createElement("option");
         opt.value = u;
         opt.textContent = i18n.t(UNIT_LABELS[u]);
         unitSelect.appendChild(opt);
     }
-    dims.append(wField, hField, unitSelect);
+    const unitField = labeledField(i18n.t("pageSettings.units"), unitSelect);
+    unitField.classList.add("udoc-page-modal__unit");
+    dims.append(
+        labeledField(i18n.t("pageSettings.width"), widthInput),
+        labeledField(i18n.t("pageSettings.height"), heightInput),
+        unitField,
+    );
 
-    const orient = document.createElement("div");
-    orient.className = "udoc-page-modal__orient";
+    // --- layout section ---
     const portraitBtn = document.createElement("button");
     portraitBtn.type = "button";
     portraitBtn.className = "udoc-page-modal__orient-btn";
@@ -181,14 +211,9 @@ export function createPageSettingsModal(i18n: I18n) {
     landscapeBtn.type = "button";
     landscapeBtn.className = "udoc-page-modal__orient-btn";
     landscapeBtn.textContent = i18n.t("pageSettings.landscape");
-    orient.append(portraitBtn, landscapeBtn);
+    const layout = labeledRow(i18n.t("pageSettings.layout"), "udoc-page-modal__orient", portraitBtn, landscapeBtn);
 
     // --- rotation section ---
-    const rotLabel = document.createElement("div");
-    rotLabel.className = "udoc-page-modal__section-label";
-    rotLabel.textContent = i18n.t("pageSettings.rotation");
-    const rotRow = document.createElement("div");
-    rotRow.className = "udoc-page-modal__rotate";
     const rotLeftBtn = document.createElement("button");
     rotLeftBtn.type = "button";
     rotLeftBtn.className = "udoc-page-modal__rotate-btn";
@@ -201,7 +226,7 @@ export function createPageSettingsModal(i18n: I18n) {
     rotRightBtn.title = i18n.t("pageSettings.rotateRight");
     rotRightBtn.setAttribute("aria-label", i18n.t("pageSettings.rotatePageRight"));
     rotRightBtn.innerHTML = ICON_ROTATE_RIGHT;
-    rotRow.append(rotLeftBtn, rotRightBtn);
+    const rotation = labeledRow(i18n.t("pageSettings.rotation"), "udoc-page-modal__rotate", rotLeftBtn, rotRightBtn);
 
     // --- footer ---
     const footer = document.createElement("div");
@@ -212,7 +237,7 @@ export function createPageSettingsModal(i18n: I18n) {
     applyBtn.textContent = i18n.t("pageSettings.applySize");
     footer.appendChild(applyBtn);
 
-    body.append(sizeLabel, presetSelect, dims, orient, rotLabel, rotRow);
+    body.append(labeledField(i18n.t("pageSettings.pageSize"), presetSelect), dims, layout.field, rotation.field);
     dialog.append(header, body, footer);
     el.append(backdrop, dialog);
 
@@ -226,6 +251,12 @@ export function createPageSettingsModal(i18n: I18n) {
     let isOpen = false;
     const unsubEvents: Array<() => void> = [];
 
+    /** Whether the fields are wider than tall, past what measuring a page's size
+     *  off the screen leaves on a square one. */
+    function isLandscape(): boolean {
+        return widthPt - heightPt > MATCH_TOLERANCE;
+    }
+
     /** Reflect the current points/unit into the inputs, preset, orientation. */
     function render(): void {
         widthInput.value = fmtLen(widthPt, unit);
@@ -233,7 +264,7 @@ export function createPageSettingsModal(i18n: I18n) {
         unitSelect.value = unit;
         const preset = matchPreset(widthPt, heightPt);
         presetSelect.value = preset ? preset.name : "Custom";
-        const landscape = widthPt > heightPt;
+        const landscape = isLandscape();
         portraitBtn.classList.toggle("udoc-page-modal__orient-btn--selected", !landscape);
         landscapeBtn.classList.toggle("udoc-page-modal__orient-btn--selected", landscape);
     }
@@ -252,7 +283,7 @@ export function createPageSettingsModal(i18n: I18n) {
         const preset = PRESETS.find((p) => p.name === presetSelect.value);
         if (preset) {
             // Keep the page's current orientation when swapping in a preset.
-            const landscape = widthPt > heightPt;
+            const landscape = isLandscape();
             widthPt = landscape ? preset.height : preset.width;
             heightPt = landscape ? preset.width : preset.height;
         }
@@ -266,18 +297,20 @@ export function createPageSettingsModal(i18n: I18n) {
 
     /** Force orientation by swapping the dimensions if needed. */
     function setOrientation(landscape: boolean): void {
-        const isLandscape = widthPt > heightPt;
-        if (isLandscape !== landscape) [widthPt, heightPt] = [heightPt, widthPt];
+        if (isLandscape() !== landscape) [widthPt, heightPt] = [heightPt, widthPt];
         render();
     }
     on(portraitBtn, "click", () => setOrientation(false));
     on(landscapeBtn, "click", () => setOrientation(true));
 
-    on(rotLeftBtn, "click", () => ctx?.onRotate(false));
-    on(rotRightBtn, "click", () => ctx?.onRotate(true));
+    on(rotLeftBtn, "click", () => ctx?.onRotate?.(false));
+    on(rotRightBtn, "click", () => ctx?.onRotate?.(true));
 
+    /** Resize the page, unless nothing changed: its size as opened was measured
+     *  off the screen, which writing back would nudge. */
     function apply(): void {
-        ctx?.onResize(widthPt, heightPt);
+        if (ctx && (widthPt !== ctx.width || heightPt !== ctx.height)) ctx.onResize(widthPt, heightPt);
+        close();
     }
     on(applyBtn, "click", apply);
     for (const input of [widthInput, heightInput]) {
@@ -299,6 +332,7 @@ export function createPageSettingsModal(i18n: I18n) {
         heightPt = context.height;
         heading.textContent = i18n.t("pageSettings.title", { page: context.index + 1 });
         dialog.setAttribute("aria-label", i18n.t("pageSettings.label", { page: context.index + 1 }));
+        rotation.field.style.display = context.onRotate ? "" : "none";
         render();
         isOpen = true;
         el.style.display = "";

@@ -26,7 +26,7 @@ export interface UDocEditorOptions extends UDocOptions {
     /** Show edit mode's per-page controls — the page-control rail
      *  (`udoc:page-actions`) and the insert-between-pages affordance
      *  (`udoc:page-insert`) — with the wider page spacing they sit in. Default
-     *  `true`; a host shipping its own page organizer sets `false`. */
+     *  `false`: a PDF's Page tab and thumbnails do the same work. */
     showPageControls?: boolean;
     /** Show the page ruler on paged documents. Default `true`;
      *  {@link UDocEditor.setShowRuler} changes it. */
@@ -107,13 +107,14 @@ export class UDocEditor extends UDocBase<UDocEditorEvents> {
     }
 
     /**
-     * Insert the image file `bytes` as a picture on the current slide, centred
-     * and scaled down to fit, then selected — what the Insert tab's Image does
-     * with the file it asks for. `contentType` is the file's MIME type
-     * (`image/png`, …); an empty one is read from the bytes' own signature. One
+     * Insert the image file `bytes` as a picture on the current slide or PDF
+     * page, centred and scaled down to fit, then selected — what the Image
+     * button of a deck's Insert tab or a PDF's Page tab does with the file it asks
+     * for. `contentType` is the file's MIME type (`image/png`, …); an empty one is
+     * read from the bytes' own signature, which a PDF always reads. One
      * committing edit (one undo step). The image never enters the CRDT: it
      * reaches a peer through {@link opaquePartsSince}. Rejects for a document
-     * that isn't a presentation, or bytes no codec reads.
+     * that's neither a presentation nor a PDF, or bytes no codec reads.
      */
     insertImage(bytes: Uint8Array, contentType: string): Promise<void> {
         return this.#editMode.insertImage(bytes, contentType);

@@ -40,6 +40,7 @@ export const ar: EditMessages = {
     "pageSettings.points": "نقطة",
     "pageSettings.portrait": "عمودي",
     "pageSettings.landscape": "أفقي",
+    "pageSettings.layout": "التخطيط",
     "pageSettings.rotation": "التدوير",
     "pageSettings.rotateLeft": "تدوير لليسار",
     "pageSettings.rotatePageLeft": "تدوير الصفحة لليسار",
@@ -59,6 +60,7 @@ export const ar: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "صورة",
     "ribbon.insert": "إدراج",
+    "ribbon.page": "صفحة",
     "ribbon.text": "نص",
     "ribbon.shape": "شكل",
     "ribbon.table": "جدول",
@@ -71,6 +73,7 @@ export const ar: EditMessages = {
     "command.insertShape": "أشكال",
     "command.cropPage": "قص",
     "command.resizePage": "حجم الصورة",
+    "command.pageResize": "تغيير حجم الصفحة",
     "command.paragraphStyle": "نمط الفقرة",
     "command.fontFamily": "الخط",
     "command.fontSize": "الحجم",

@@ -103,6 +103,8 @@ import {
  */
 export interface CommandContext {
     ready: boolean;
+    /** The open document's pages — a PDF's Delete Page greys on its last. */
+    pageCount: number;
     canUndo: boolean;
     canRedo: boolean;
     /** Whether the selection copies and the mode lets it ({@link copyAllowed}). */
@@ -163,6 +165,7 @@ export interface CommandContext {
 export function commandContext(state: UIState): CommandContext {
     return {
         ready: state.status === "ready",
+        pageCount: state.pageCount,
         // Typing into a cell isn't on the history, which waits for its save.
         canUndo: state.canUndo && state.activeCell?.entry == null,
         canRedo: state.canRedo && state.activeCell?.entry == null,

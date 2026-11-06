@@ -75,6 +75,8 @@ export interface Messages extends UIMessages {
     "pageSettings.portrait": string;
     /** Landscape */
     "pageSettings.landscape": string;
+    /** Layout */
+    "pageSettings.layout": string;
     /** Rotation */
     "pageSettings.rotation": string;
     /** Rotate Left */
@@ -109,6 +111,8 @@ export interface Messages extends UIMessages {
     "ribbon.image": string;
     /** Insert */
     "ribbon.insert": string;
+    /** Page */
+    "ribbon.page": string;
     /** Text */
     "ribbon.text": string;
     /** Shape */
@@ -131,6 +135,8 @@ export interface Messages extends UIMessages {
     "command.cropPage": string;
     /** Image Size */
     "command.resizePage": string;
+    /** Resize Page */
+    "command.pageResize": string;
     /** Paragraph Style */
     "command.paragraphStyle": string;
     /** Font */

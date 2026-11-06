@@ -40,6 +40,7 @@ export const ko: EditMessages = {
     "pageSettings.points": "pt",
     "pageSettings.portrait": "세로",
     "pageSettings.landscape": "가로",
+    "pageSettings.layout": "레이아웃",
     "pageSettings.rotation": "회전",
     "pageSettings.rotateLeft": "왼쪽으로 회전",
     "pageSettings.rotatePageLeft": "페이지 왼쪽으로 회전",
@@ -59,6 +60,7 @@ export const ko: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "이미지",
     "ribbon.insert": "삽입",
+    "ribbon.page": "페이지",
     "ribbon.text": "텍스트",
     "ribbon.shape": "도형",
     "ribbon.table": "표",
@@ -71,6 +73,7 @@ export const ko: EditMessages = {
     "command.insertShape": "도형",
     "command.cropPage": "자르기",
     "command.resizePage": "이미지 크기",
+    "command.pageResize": "페이지 크기 조정",
     "command.paragraphStyle": "단락 스타일",
     "command.fontFamily": "글꼴",
     "command.fontSize": "크기",

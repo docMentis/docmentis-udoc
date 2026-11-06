@@ -27,7 +27,7 @@ import {
     ICON_PAGE_ADD,
     ICON_ROTATE_RIGHT,
 } from "@docmentis/udoc-ui/internal";
-import type { OverlayItem, OverlaySource } from "@docmentis/udoc-ui";
+import type { OverlayItem, OverlaySource, PageView } from "@docmentis/udoc-ui";
 import { createI18n } from "../i18n/index.js";
 import type { I18n } from "../i18n/index.js";
 
@@ -41,6 +41,23 @@ export interface PageSizeInfo {
     width: number;
     height: number;
     rotation: number;
+}
+
+/**
+ * The size of the page `view` shows at `scale` CSS px per point. The view's
+ * geometry is the *displayed* size; a quarter-turn rotation swaps width and
+ * height on screen, so that is undone to recover the rotation-independent page
+ * rectangle.
+ */
+export function pageSizeInfo(view: PageView, scale: number): PageSizeInfo {
+    const widthPt = view.width / scale;
+    const heightPt = view.height / scale;
+    const turned = view.rotation % 2 === 1;
+    return {
+        width: turned ? heightPt : widthPt,
+        height: turned ? widthPt : heightPt,
+        rotation: view.rotation,
+    };
 }
 
 /** Gap between the rail's left edge and its page's right edge, CSS px. */
@@ -176,18 +193,8 @@ export function pageActions(callbacks: PageActionsCallbacks): OverlaySource {
                         del.onclick = () => callbacks.onDelete(index);
 
                         // Stash the page's intrinsic (media-box) size for the
-                        // settings dialog. The frame's geometry is the *displayed*
-                        // size (CSS px / scale = document points); a quarter-turn
-                        // rotation swaps width and height on screen, so undo that
-                        // to recover the rotation-independent page rectangle.
-                        const wPt = view.width / frame.scale;
-                        const hPt = view.height / frame.scale;
-                        const turned = view.rotation % 2 === 1;
-                        pillSize.set(el, {
-                            width: turned ? hPt : wPt,
-                            height: turned ? wPt : hPt,
-                            rotation: view.rotation,
-                        });
+                        // settings dialog.
+                        pillSize.set(el, pageSizeInfo(view, frame.scale));
                     },
                 };
             });

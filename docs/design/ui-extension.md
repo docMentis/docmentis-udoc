@@ -4,8 +4,8 @@ udoc-editor reaches the shell through one object, `UIExtension`
 (`extension.ts`), handed to `createAs`; udoc-viewer hands none, so what the
 shell does on its own is all a viewer does. Each member exists for a piece of
 edit mode: its mode and its tab strips, the page controls and the mode switch,
-the formatting marks, New Slide and the Insert tab, the Text, Shape and Object
-tabs' tools, the context menu and the clipboard, the ruler, shape placement,
+the formatting marks, New Slide and the Insert tab, a PDF's Page tab, the Text,
+Shape and Object tabs' tools, the context menu and the clipboard, the ruler, shape placement,
 and the rotation and geometry grips.
 
 ## What the shell lends
@@ -41,7 +41,7 @@ Where the extension decides in the shell's place, the shell asks it:
   with its margin edges, indent markers and tab stops, and a drag's guide line.
 - `placedShape` / `place` — a place tool of the extension's
   (`{ kind: "extension", tool }`) is dragged out as the shape `placedShape`
-  names and handed to `place` on release, as Insert ▸ Shapes is.
+  names and handed to `place` on release, as a PDF's Text Box and Shapes are.
 - `selectionChrome` — chrome of its own on the selection, beside the shell's
   resize handles: edit mode's rotation and geometry grips.
 - `pressCanvas` / `canvasCursor` — a select-pointer press offered ahead of the
@@ -66,8 +66,8 @@ shell's catalog and then in the extension's `commands`:
 - a `toggle` command mirrors a setting of the extension's and presses it, as
   Show Formatting Marks does;
 - an `action` command runs the extension's own code, as New Slide does;
-- an `armPicker` carries the options its picker offers, as Insert ▸ Shapes and
-  Annotate ▸ Stamp do;
+- an `armPicker` carries the options its picker offers, as a PDF's Page ▸ Shapes
+  and Annotate ▸ Stamp do;
 - a `control` command builds a ribbon control of the extension's — the font
   picker, the size field, the character toggles, the list split buttons, the
   color dropdowns — which the ribbon places, syncs on each render, closes and

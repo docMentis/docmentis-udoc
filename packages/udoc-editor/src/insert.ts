@@ -1,12 +1,14 @@
-// The Insert tab's commands: Shapes, placed by a pointer gesture the canvas
-// carries out — a PDF's four as page objects, the gallery's on a deck's slides
-// and over an image's pages — and Image on a slide deck, asked for and inserted
-// at once.
+// What goes on a page or a slide, placed by a pointer gesture the canvas carries
+// out: Shapes — a PDF's four as page objects, from its Page tab, the gallery's on
+// a deck's slides and over an image's pages, from their Insert tabs — and a PDF's
+// Text Box, a page object too; and Image on a slide deck or a PDF's page, asked
+// for and inserted at once.
 import {
     ICON_SUBTOOL_ARROW,
     ICON_SUBTOOL_ELLIPSE,
     ICON_SUBTOOL_LINE,
     ICON_SUBTOOL_RECTANGLE,
+    ICON_SUBTOOL_TEXTBOX,
     SHAPE_STROKE,
     SHAPE_STROKE_WIDTH,
     segmentsFor,
@@ -34,7 +36,23 @@ const FILL_ALPHA = 0.18;
  *  tools. */
 const PORTABLE_SHAPES: ReadonlySet<string> = new Set<ShapeKind>(["rectangle", "ellipse", "line", "arrow"]);
 
-/** Shapes offered by a PDF's Insert tab's shape picker (`insertShape`). */
+/** The tool a PDF's Text Box arms. */
+const TEXT_BOX_TOOL = "pageTextBox";
+
+/** The standard font a PDF's text box is set in, and its size in points. */
+const TEXT_BOX_FONT = "helvetica";
+const TEXT_BOX_SIZE = 12;
+
+/**
+ * What a PDF's text box holds until it is typed over, selected so the first key
+ * replaces it. The engine sets no caret in a text object with nothing in it, and
+ * one left untyped should still show, to be found and deleted. ASCII, which the
+ * standard font's encoding holds byte for byte; the same in every language, as
+ * the font has no glyphs for most others.
+ */
+const TEXT_BOX_PLACEHOLDER = "Text";
+
+/** Shapes offered by a PDF's Page tab's shape picker (`insertShape`). */
 const SHAPE_OPTIONS: readonly PickerOption<MessageKey>[] = (
     [
         ["rectangle", ICON_SUBTOOL_RECTANGLE, "shape.rectangle"],
@@ -92,24 +110,157 @@ function shapeObject(shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): unknown 
     return object;
 }
 
-/** The outline the Insert tab's place `tool` is sketched with while it is
- *  dragged out — a gallery shape's, or a PDF shape's own. */
+/** A quarter turn's cosine and sine, by quarter turns clockwise. */
+const QUARTER_TURNS: readonly (readonly [number, number])[] = [
+    [1, 0],
+    [0, 1],
+    [-1, 0],
+    [0, -1],
+];
+
+/**
+ * The model `GraphicsObject` for a new text box: one show op of
+ * {@link TEXT_BOX_PLACEHOLDER}, its first line's baseline a font size below `at`
+ * (page-local document points), its baseline running along `(cos, sin)`. Under
+ * its minted `id`, so the placeholder can be selected straight after the insert.
+ */
+function textBoxObject(id: string, font: string, at: ShapePoint, cos: number, sin: number): unknown {
+    return {
+        id,
+        transform: { scaleX: cos, skewY: sin, skewX: -sin, scaleY: cos, translateX: at.x, translateY: at.y },
+        clips: [],
+        optionalContent: [],
+        content: {
+            text: {
+                runs: [
+                    {
+                        regular: {
+                            textStyle: {
+                                font,
+                                fontSize: TEXT_BOX_SIZE,
+                                charSpacing: 0,
+                                wordSpacing: 0,
+                                horizontalScaling: 100,
+                                leading: 0,
+                                rise: 0,
+                                renderMode: "fill",
+                                knockout: true,
+                            },
+                            nonstrokingStyle: {
+                                brush: { solid: { components: [0], colorSpace: "deviceGray" } },
+                                alpha: 1,
+                                overprint: false,
+                            },
+                            strokingStyle: {
+                                brush: { solid: { components: [0], colorSpace: "deviceGray" } },
+                                alpha: 1,
+                                overprint: false,
+                                line: {
+                                    width: 1,
+                                    lineCap: "butt",
+                                    lineJoin: "miter",
+                                    miterLimit: 10,
+                                    dashArray: null,
+                                    dashOffset: 0,
+                                },
+                            },
+                            renderStyle: {
+                                blendMode: "normal",
+                                alphaIsShape: false,
+                                overprintMode: "default",
+                                renderingIntent: "relativeColorimetric",
+                            },
+                            softMask: null,
+                            chunks: [{ text: [...TEXT_BOX_PLACEHOLDER].map((char) => char.charCodeAt(0)) }],
+                            textMatrix: {
+                                scaleX: 1,
+                                skewY: 0,
+                                skewX: 0,
+                                scaleY: 1,
+                                translateX: 0,
+                                translateY: TEXT_BOX_SIZE,
+                            },
+                            markedContent: null,
+                        },
+                    },
+                ],
+            },
+        },
+    };
+}
+
+/** Each shell's text box font, and the open document it was minted for. */
+const textBoxFonts = new WeakMap<EditHost, { generation: number; id: string }>();
+
+/**
+ * The font list's id for {@link TEXT_BOX_FONT}, added under an id minted once per
+ * document — an undo step of its own the first time, and again after that step is
+ * undone. Its own, not a Helvetica the document holds: the engine composes text
+ * only in a font it has loaded, and that one may be on a page it hasn't. Null with
+ * no ids to mint.
+ */
+async function textBoxFont(host: EditHost): Promise<string | null> {
+    const generation = host.store.getState().docGeneration;
+    const known = textBoxFonts.get(host);
+    const id = known?.generation === generation ? known.id : await host.client.mintId();
+    if (id === null) return null;
+    textBoxFonts.set(host, { generation, id });
+    await host.commit(() => host.client.execute({ portable: { addStandardFont: { id, font: TEXT_BOX_FONT } } }));
+    return id;
+}
+
+/**
+ * Put a text box on page `page` — `pageId` — on top of the page, flowing in the
+ * box from `p0` to `p1`, with its placeholder selected to be typed over. A page
+ * shown turned has the text turned back, so it reads upright on screen, from the
+ * box's top left there. Its insert and its frame are two undo steps: the engine
+ * takes a frame only on a box already on the page.
+ */
+async function placeTextBox(
+    host: EditHost,
+    page: number,
+    pageId: string,
+    p0: ShapePoint,
+    p1: ShapePoint,
+): Promise<void> {
+    const [font, id] = await Promise.all([textBoxFont(host), host.client.mintId()]);
+    if (font === null || id === null) return;
+    const [cos, sin] = QUARTER_TURNS[(4 - (host.pageView(page)?.view.rotation ?? 0)) % 4]!;
+    // The box in the text's own axes, which a frame is given in: x along its
+    // baseline, y down its lines.
+    const xs = [p0, p1].map((p) => p.x * cos + p.y * sin);
+    const ys = [p0, p1].map((p) => p.y * cos - p.x * sin);
+    const frame = { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+    const at = { x: frame.x0 * cos - frame.y0 * sin, y: frame.x0 * sin + frame.y0 * cos };
+    const start = { object: id, run: 0, offset: 0 };
+    await host.commit(() =>
+        host.client.execute(EditCommand.insertObjects(pageId, [textBoxObject(id, font, at, cos, sin)])),
+    );
+    await host.commit(() => host.client.execute(EditCommand.resizeTextBox(pageId, start, frame)));
+    const end = { ...start, offset: TEXT_BOX_PLACEHOLDER.length };
+    host.client.setSelection({ portable: { objectText: { page: pageId, anchor: start, focus: end } } });
+}
+
+/** The outline a place `tool` is sketched with while it is dragged out — a
+ *  gallery shape's, a PDF shape's own, or a PDF text box's rectangle. */
 export function placedShape(tool: string): ShapeKind | null {
+    if (tool === TEXT_BOX_TOOL) return "rectangle";
     return galleryShape(tool)?.sketch ?? (PORTABLE_SHAPES.has(tool) ? (tool as ShapeKind) : null);
 }
 
-/** Place the Insert tab's `tool` on page `page`, spanning the page-local points
- *  `p0 → p1`, on top of the page: on a PDF, a shape as a page object — the
- *  engine mints its id and selects it — on a deck, a gallery shape on the
- *  slide, and on an image, one drawn over it. A no-op for a page with no id
- *  (no document, or none of these), or a tool not the document's. */
+/** Place `tool` on page `page`, spanning the page-local points `p0 → p1`, on
+ *  top of the page: on a PDF, a shape as a page object — the engine mints its
+ *  id and selects it — or a text box with the caret in it; on a deck, a gallery
+ *  shape on the slide, and on an image, one drawn over it. A no-op for a page
+ *  with no id (no document, or none of these), or a tool not the document's. */
 export async function place(host: EditHost, tool: string, page: number, p0: ShapePoint, p1: ShapePoint): Promise<void> {
     const state = host.store.getState();
     if (state.status !== "ready") return;
     if (state.docType === "portable") {
-        if (!PORTABLE_SHAPES.has(tool)) return;
+        if (tool !== TEXT_BOX_TOOL && !PORTABLE_SHAPES.has(tool)) return;
         const pageId = await host.client.portable.pageIdByIndex(page);
         if (pageId === undefined) return;
+        if (tool === TEXT_BOX_TOOL) return placeTextBox(host, page, pageId, p0, p1);
         const object = shapeObject(tool as ShapeKind, p0, p1);
         await host.commit(() => host.client.execute(EditCommand.insertObjects(pageId, [object])));
         return;
@@ -149,8 +300,8 @@ async function placeSlideShape(
     host.client.setSelection({ presentation: { shapes: { container, selection: { shapes: [id] } } } });
 }
 
-/** Insert the image file `bytes` as a picture on the current slide, centred
- *  and scaled down to fit, then selected — a committing edit, so the picture's
+/** Insert the image file `bytes` as a picture on the current slide or page,
+ *  centred and scaled down to fit, then selected — a committing edit, so the picture's
  *  selection rides back. */
 export function insertImage(host: EditHost, bytes: Uint8Array, contentType: string): Promise<void> {
     return host.commit(() => host.edit.insertImage(bytes, contentType));
@@ -174,8 +325,10 @@ export function pickImage(host: EditHost): void {
     input.click();
 }
 
-/** The Insert tab's commands, Image asking for its file with `pickImage` —
- *  live on a deck's slides, which it inserts onto: not on its notes pages. */
+/** The commands that put things on a page or a slide. Image asks for its file
+ *  with `pickImage` — live on a deck's slides, which it inserts onto: not on
+ *  its notes pages. A PDF's Text Box and Shapes place page objects, and its
+ *  Image puts one on the current page. */
 export function insertCommands(pickImage: () => void): Readonly<Record<string, CommandDef<MessageKey>>> {
     return {
         insertImage: {
@@ -187,12 +340,27 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             run: { kind: "action", press: pickImage },
             enabledWhen: (c) => c.ready && c.docType === "presentation" && c.presentationView === "normal",
         },
+        insertPageImage: {
+            id: "insertPageImage",
+            label: "command.insertImage",
+            icon: ICON_IMAGE,
+            group: "insert",
+            run: { kind: "action", press: pickImage },
+            enabledWhen: (c) => c.ready && c.docType === "portable",
+        },
+        insertTextBox: {
+            id: "insertTextBox",
+            label: "command.annotateTextBox",
+            icon: ICON_SUBTOOL_TEXTBOX,
+            group: "insert",
+            run: { kind: "arm", tool: { kind: "extension", tool: TEXT_BOX_TOOL } },
+            enabledWhen: (c) => c.ready && c.docType === "portable",
+        },
         insertShape: {
             id: "insertShape",
             label: "command.insertShape",
             icon: ICON_SHAPES,
             group: "insert",
-            labeled: true,
             run: { kind: "armPicker", options: SHAPE_OPTIONS },
             enabledWhen: (c) => c.ready && c.docType === "portable",
         },

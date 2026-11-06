@@ -3857,6 +3857,7 @@ export function mountUIShell(
         setOverlay: canvas.setOverlay,
         removeOverlay: canvas.removeOverlay,
         hoveredPage: canvas.hoveredPage,
+        pageView: canvas.pageView,
         selectionKeepOut: canvas.selectionKeepOut,
     });
 

@@ -28,7 +28,7 @@ export const PAGE_CONTROLS_SPACING: PageSpacing = {
 };
 
 /** A page-structure edit addressed by index: the page controls' verbs. */
-type PageStructureEdit =
+export type PageStructureEdit =
     | { kind: "insert"; index: number }
     | { kind: "delete"; index: number }
     | { kind: "reorder"; from: number; to: number }
@@ -72,6 +72,17 @@ function pageCommand(edit: PageStructureEdit, id: string): UDocCommand {
     }
 }
 
+/**
+ * Run `edit` on `host`'s document. Commands address a page by id: this reads
+ * the addressed page's id first, and skips the edit when that page is gone.
+ */
+export async function applyPageEdit(host: UIShellHost, edit: PageStructureEdit): Promise<void> {
+    const page = addressedPage(edit);
+    const id = page === null ? "" : await host.client.portable.pageIdByIndex(page);
+    if (id === undefined) return;
+    await host.commit(() => host.client.execute(pageCommand(edit, id)));
+}
+
 /** The doc types whose pages the page controls move, rotate, delete and
  *  insert: the paginated, page-reorderable ones — PDF today. */
 const PAGE_CONTROLLED: ReadonlySet<UDocType> = new Set<UDocType>(["portable"]);
@@ -98,14 +109,7 @@ export function mountPageControls(host: UIShellHost, i18n: I18n): () => void {
     const settings = createPageSettingsModal(i18n);
     settings.mount(host.root);
 
-    // Commands address a page by id: read the addressed page's id first, and
-    // skip the edit when that page is gone.
-    const pageEditAt = async (edit: PageStructureEdit): Promise<void> => {
-        const page = addressedPage(edit);
-        const id = page === null ? "" : await host.client.portable.pageIdByIndex(page);
-        if (id === undefined) return;
-        await host.commit(() => host.client.execute(pageCommand(edit, id)));
-    };
+    const pageEditAt = (edit: PageStructureEdit): Promise<void> => applyPageEdit(host, edit);
     const pageCount = () => host.store.getState().pageCount;
 
     function show(shown: boolean): void {

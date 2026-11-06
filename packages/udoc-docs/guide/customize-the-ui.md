@@ -50,8 +50,8 @@ The editor adds options for its modes:
 `initialMode` is the mode it opens in, `"edit"` by default. `allowedModes`
 limits the modes people can switch between, and the mode switch shows only
 when there's more than one, unless `showModeSwitch: false` hides it.
-`showPageControls: false` drops the controls edit
-mode shows beside and between pages, and `showRuler: false` the ruler.
+`showPageControls: true` adds controls beside and between a PDF's pages in edit
+mode, and `showRuler: false` drops the ruler.
 [`UDocEditorOptions`](/api/udoc-editor/interfaces/UDocEditorOptions) has them
 all.
 

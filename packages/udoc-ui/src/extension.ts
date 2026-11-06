@@ -12,7 +12,7 @@ import type { ShapeKind, ToolbarTab, UIState } from "./app/state.js";
 import type { ShapePoint } from "./app/shapes.js";
 import type { KeepOutRect, SelectionChrome } from "./app/components/SelectionLayer.js";
 import type { CanvasGesture, CanvasGestureHost } from "./app/components/Canvas.js";
-import type { ContentPadding, DocumentLayout, PageGap } from "./geometry.js";
+import type { ContentPadding, DocumentLayout, PageGap, PageView } from "./geometry.js";
 import type { WorkerClient } from "./worker/WorkerClient.js";
 
 /** The space around and between the pages: the content padding, screen-fixed (CSS px), and the gaps, page-fixed (document points). */
@@ -151,6 +151,12 @@ export interface UIShellHost {
     removeOverlay(id: string): boolean;
     /** The page the pointer is over, or null — for page chrome shown on hover. */
     hoveredPage(): number | null;
+    /**
+     * Page `index` as the last frame showed it, and the frame's CSS px per
+     * point, or null when it isn't on screen — for what measures a page outside
+     * an overlay.
+     */
+    pageView(index: number): { view: PageView; scale: number } | null;
     /**
      * The viewport rect a selection's handles cover, or null with nothing
      * selected — for page chrome that keeps clear of them.

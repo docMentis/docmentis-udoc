@@ -56,7 +56,7 @@ const OPTION_GROUPS: OptionGroup[] = [
                 id: "showPageControls",
                 label: "Page Controls",
                 hint: "Edit mode",
-                default: true,
+                default: false,
             },
         ],
     },

@@ -4007,6 +4007,12 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         setGuideColors,
         reserveGuides,
         hoveredPage: () => hoveredPage,
+        /** Page `index` as the last frame showed it, and the frame's scale, or
+         *  null when it isn't on screen. */
+        pageView: (index: number): { view: PageView; scale: number } | null => {
+            const view = lastViews.find((candidate) => candidate.index === index);
+            return view ? { view, scale: lastScale } : null;
+        },
         /** Page `page`'s page→viewport affine this frame (CSS px), or null when
          *  it isn't on screen — for an overlay anchored to a point on the page. */
         pageToViewport: (page: number) => selection.pageToViewport(page),

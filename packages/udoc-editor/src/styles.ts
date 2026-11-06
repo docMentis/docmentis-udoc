@@ -188,19 +188,6 @@ export const editorStyles = css`
         padding: 14px 16px 4px;
     }
 
-    .udoc-ui-root .udoc-page-modal__section-label {
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: var(--udoc-color-on-surface-variant);
-        margin-bottom: 8px;
-    }
-
-    .udoc-ui-root .udoc-page-modal__section-label:not(:first-child) {
-        margin-top: 18px;
-    }
-
     .udoc-ui-root .udoc-page-modal__select {
         width: 100%;
         height: 32px;
@@ -254,13 +241,20 @@ export const editorStyles = css`
 
     .udoc-ui-root .udoc-page-modal__unit {
         flex: 0 0 64px;
-        width: 64px;
+    }
+
+    /* A row of labelled controls after the first, the last clear of the footer. */
+    .udoc-ui-root .udoc-page-modal__row {
+        margin-top: 10px;
+    }
+
+    .udoc-ui-root .udoc-page-modal__row:last-child {
+        margin-bottom: 10px;
     }
 
     .udoc-ui-root .udoc-page-modal__orient {
         display: flex;
         gap: 8px;
-        margin-top: 10px;
     }
 
     .udoc-ui-root .udoc-page-modal__orient-btn {

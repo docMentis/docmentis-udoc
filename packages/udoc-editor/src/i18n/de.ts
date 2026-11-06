@@ -40,6 +40,7 @@ export const de: EditMessages = {
     "pageSettings.points": "Pt.",
     "pageSettings.portrait": "Hochformat",
     "pageSettings.landscape": "Querformat",
+    "pageSettings.layout": "Layout",
     "pageSettings.rotation": "Drehung",
     "pageSettings.rotateLeft": "Nach links drehen",
     "pageSettings.rotatePageLeft": "Seite nach links drehen",
@@ -59,6 +60,7 @@ export const de: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "Bild",
     "ribbon.insert": "Einfügen",
+    "ribbon.page": "Seite",
     "ribbon.text": "Text",
     "ribbon.shape": "Form",
     "ribbon.table": "Tabelle",
@@ -71,6 +73,7 @@ export const de: EditMessages = {
     "command.insertShape": "Formen",
     "command.cropPage": "Zuschneiden",
     "command.resizePage": "Bildgröße",
+    "command.pageResize": "Seitengröße ändern",
     "command.paragraphStyle": "Absatzformatvorlage",
     "command.fontFamily": "Schriftart",
     "command.fontSize": "Schriftgrad",

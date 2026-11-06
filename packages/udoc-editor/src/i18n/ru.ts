@@ -40,6 +40,7 @@ export const ru: EditMessages = {
     "pageSettings.points": "пт",
     "pageSettings.portrait": "Книжная",
     "pageSettings.landscape": "Альбомная",
+    "pageSettings.layout": "Макет",
     "pageSettings.rotation": "Поворот",
     "pageSettings.rotateLeft": "Повернуть влево",
     "pageSettings.rotatePageLeft": "Повернуть страницу влево",
@@ -59,6 +60,7 @@ export const ru: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "Изображение",
     "ribbon.insert": "Вставка",
+    "ribbon.page": "Страница",
     "ribbon.text": "Текст",
     "ribbon.shape": "Фигура",
     "ribbon.table": "Таблица",
@@ -71,6 +73,7 @@ export const ru: EditMessages = {
     "command.insertShape": "Фигуры",
     "command.cropPage": "Обрезать",
     "command.resizePage": "Размер изображения",
+    "command.pageResize": "Изменить размер страницы",
     "command.paragraphStyle": "Стиль абзаца",
     "command.fontFamily": "Шрифт",
     "command.fontSize": "Размер",

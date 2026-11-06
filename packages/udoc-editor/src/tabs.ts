@@ -60,8 +60,15 @@ export type EditCommandId =
     | "ruler"
     | "createSlide"
     | "insertImage"
+    | "insertPageImage"
     | "insertShape"
     | "insertGalleryShape"
+    | "insertTextBox"
+    | "pageCreate"
+    | "pageDelete"
+    | "pageRotateLeft"
+    | "pageRotateRight"
+    | "pageResize"
     | "rotatePageLeft"
     | "rotatePageRight"
     | "flipPageHorizontal"
@@ -258,8 +265,26 @@ const IMAGE_TAB: EditTab = {
     opensFor: imagePages,
 };
 
-/** The portable Insert tab: Shapes, dragged out as the page's own objects. */
-const PORTABLE_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertShape"] };
+/**
+ * The portable Page tab: the pages' edits — a blank page after the current one,
+ * and Delete, the two turns and Resize of the current page, or of those picked
+ * in the thumbnails — then what goes on a page as its own objects: a text box,
+ * shapes and an image. All icons, named by their tooltips.
+ */
+const PORTABLE_PAGE_TAB: EditTab = {
+    id: "page",
+    label: "ribbon.page",
+    commands: [
+        "pageCreate",
+        "pageDelete",
+        "pageRotateLeft",
+        "pageRotateRight",
+        "pageResize",
+        "insertTextBox",
+        "insertShape",
+        "insertPageImage",
+    ] satisfies EditCommandId[],
+};
 
 /** The image Insert tab: the gallery's Shapes, drawn over the page. */
 const IMAGE_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertGalleryShape"] };
@@ -282,10 +307,10 @@ function editViewTab(docType: UDocType): EditTab {
 /** The strip of a doc type with none of its own: no tabs. */
 const DEFAULT_TABS: readonly EditTab[] = [];
 
-/** The portable (PDF) strip: its own Insert, then Object (the page's content
+/** The portable (PDF) strip: its own Page, then Object (the page's content
  *  objects) and Annotate, but no Text tab, then Present, and its View last. */
 const PORTABLE_TABS: readonly EditTab[] = [
-    PORTABLE_INSERT_TAB,
+    PORTABLE_PAGE_TAB,
     OBJECT_TAB,
     PORTABLE_ANNOTATE_TAB,
     presentTab("portable"),

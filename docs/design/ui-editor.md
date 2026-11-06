@@ -208,7 +208,7 @@ popup (`udoc:comment-popup`) do. An id lives in one layer; setting it in the
 other moves it.
 
 Edit mode's built-ins, registered by udoc-editor's extension
-(`showPageControls: false` opts out):
+(`showPageControls: true` opts in; a PDF's Page tab does their work by default):
 
 - `udoc:page-controls` — a constant-size vertical rail beside each page's
   right edge, top-aligned with the page (in the screen-fixed side padding,

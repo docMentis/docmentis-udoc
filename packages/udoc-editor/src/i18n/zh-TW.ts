@@ -40,6 +40,7 @@ export const zhTW: EditMessages = {
     "pageSettings.points": "點",
     "pageSettings.portrait": "直向",
     "pageSettings.landscape": "橫向",
+    "pageSettings.layout": "版面配置",
     "pageSettings.rotation": "旋轉",
     "pageSettings.rotateLeft": "向左旋轉",
     "pageSettings.rotatePageLeft": "向左旋轉頁面",
@@ -59,6 +60,7 @@ export const zhTW: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "影像",
     "ribbon.insert": "插入",
+    "ribbon.page": "頁面",
     "ribbon.text": "文字",
     "ribbon.shape": "圖案",
     "ribbon.table": "表格",
@@ -71,6 +73,7 @@ export const zhTW: EditMessages = {
     "command.insertShape": "圖案",
     "command.cropPage": "裁剪",
     "command.resizePage": "影像大小",
+    "command.pageResize": "調整頁面大小",
     "command.paragraphStyle": "段落樣式",
     "command.fontFamily": "字型",
     "command.fontSize": "大小",
