@@ -104,8 +104,10 @@ test("a box takes a label: an empty paragraph, centred, in the outline's color",
     const [block] = box.textBody?.story.blocks ?? [];
     assert.ok(block && "paragraph" in block);
     assert.deepEqual(block.paragraph.spans, []);
-    assert.deepEqual(block.paragraph.properties, [{ align: "center" }]);
-    assert.deepEqual(block.paragraph.end, { mark: [{ size: 27 }, { fill: box.properties.line?.fill }] });
+    assert.deepEqual(block.paragraph.properties, { props: [{ align: "center" }] });
+    assert.deepEqual(block.paragraph.end, {
+        mark: { properties: { props: [{ size: 27 }, { fill: box.properties.line?.fill }] } },
+    });
 
     const line = shapeOf(markupShape("1-3", "1-4", gallery("line"), { x: 10, y: 20 }, { x: 110, y: 70 }, PAGE));
     assert.equal(line.textBody, null);

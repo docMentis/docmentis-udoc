@@ -102,7 +102,14 @@ const typeAt = (s, { story }, at, text) =>
                     replaceText: {
                         range: { start: at, end: at },
                         fragment: {
-                            blocks: [{ paragraph: { properties: [], spans: [{ regular: { properties: [], text } }] } }],
+                            blocks: [
+                                {
+                                    paragraph: {
+                                        properties: { props: [] },
+                                        spans: [{ regular: { properties: { props: [] }, text } }],
+                                    },
+                                },
+                            ],
                         },
                     },
                 },

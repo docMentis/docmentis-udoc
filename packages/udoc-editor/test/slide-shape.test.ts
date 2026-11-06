@@ -108,7 +108,7 @@ test("a shape holds an empty paragraph, centred both ways", () => {
     const [block] = shape.textBody?.story.blocks ?? [];
     assert.ok(block && "paragraph" in block);
     assert.deepEqual(block.paragraph.spans, []);
-    assert.deepEqual(block.paragraph.properties, [{ align: "center" }]);
+    assert.deepEqual(block.paragraph.properties, { props: [{ align: "center" }] });
 });
 
 test("an arc or a bracket is styled as a line is, and still holds text", () => {

@@ -115,11 +115,11 @@ export function rulerEdit(
     switch (control.kind) {
         case "indent": {
             const properties = indentProperties(control.indent, by, ruler);
-            return properties && { kind: "setParagraphProperties", properties };
+            return properties && { kind: "setParagraphProperties", properties: { props: properties } };
         }
         case "tab": {
             const stops = movedTabStops(control.index, by, docType, ruler);
-            return stops && { kind: "setParagraphProperties", properties: [{ tabStops: stops }] };
+            return stops && { kind: "setParagraphProperties", properties: { props: [{ tabStops: stops }] } };
         }
         case "margin":
             return marginEdit(control.edge, by, guide, docType, ruler);

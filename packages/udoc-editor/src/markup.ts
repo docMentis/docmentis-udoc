@@ -51,8 +51,8 @@ function labelBody(story: string, size: number): TextBody {
             blocks: [
                 {
                     paragraph: {
-                        properties: [{ align: "center" }],
-                        end: { mark: [{ size }, { fill: { solid: MARKUP_COLOR } }] },
+                        properties: { props: [{ align: "center" }] },
+                        end: { mark: { properties: { props: [{ size }, { fill: { solid: MARKUP_COLOR } }] } } },
                         spans: [],
                     },
                 },

@@ -19,9 +19,9 @@ import type {
     Rect as CornerRect,
     TextBodyProperties,
     Watermark,
-    TextCharacterProperty,
+    TextCharacterProperties,
     TextCharacterPropertyKey,
-    TextParagraphProperty,
+    TextParagraphProperties,
     TextParagraphPropertyKey,
     NonstrokingStyle,
     StrokingStyle,
@@ -1641,7 +1641,7 @@ export type SelectionEdit =
     // spans; the selection is kept, so toggles chain.
     /** Text: overlay character properties onto the text selection (a set-value
      *  edit). */
-    | { kind: "setCharacterProperties"; properties: TextCharacterProperty[] }
+    | { kind: "setCharacterProperties"; properties: TextCharacterProperties }
     /** Text: reset each of `keys` to inherited on the text selection — clear
      *  direct character formatting. */
     | { kind: "clearCharacterProperties"; keys: TextCharacterPropertyKey[] }
@@ -1651,7 +1651,7 @@ export type SelectionEdit =
     // character edits above they act on a bare caret too.
     /** Text: overlay paragraph properties onto every paragraph the text selection
      *  touches (a set-value edit). */
-    | { kind: "setParagraphProperties"; properties: TextParagraphProperty[] }
+    | { kind: "setParagraphProperties"; properties: TextParagraphProperties }
     /** Text: reset each of `keys` to inherited on those paragraphs — clear direct
      *  paragraph formatting back to the style value. */
     | { kind: "clearParagraphProperties"; keys: TextParagraphPropertyKey[] }

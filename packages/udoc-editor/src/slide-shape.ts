@@ -63,7 +63,7 @@ function arrowedLine(shape: GalleryShape): PaintLine | null {
 function emptyBody(story: string): TextBody {
     return {
         properties: { anchor: "center" },
-        story: { id: story, blocks: [{ paragraph: { properties: [{ align: "center" }], spans: [] } }] },
+        story: { id: story, blocks: [{ paragraph: { properties: { props: [{ align: "center" }] }, spans: [] } }] },
     };
 }
 

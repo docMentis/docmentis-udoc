@@ -48,42 +48,49 @@ test("each indent marker moves the indents Word's does", () => {
         rulerEdit({ control: { kind: "indent", indent }, by }, GUIDE, "wordprocessing", RULER);
     assert.deepEqual(indent("firstLine", 9), {
         kind: "setParagraphProperties",
-        properties: [{ indentFirstLine: 27 }],
+        properties: { props: [{ indentFirstLine: 27 }] },
     });
     // The hanging indent's lines move; the first line stays where it was.
     assert.deepEqual(indent("hanging", 9), {
         kind: "setParagraphProperties",
-        properties: [{ indentLeft: 9 }, { indentFirstLine: 9 }],
+        properties: { props: [{ indentLeft: 9 }, { indentFirstLine: 9 }] },
     });
-    assert.deepEqual(indent("left", 9), { kind: "setParagraphProperties", properties: [{ indentLeft: 9 }] });
+    assert.deepEqual(indent("left", 9), { kind: "setParagraphProperties", properties: { props: [{ indentLeft: 9 }] } });
     // The right indent is measured in from the right: moving it right lessens it.
-    assert.deepEqual(indent("right", 9), { kind: "setParagraphProperties", properties: [{ indentRight: -9 }] });
+    assert.deepEqual(indent("right", 9), {
+        kind: "setParagraphProperties",
+        properties: { props: [{ indentRight: -9 }] },
+    });
 });
 
 test("a moved Word tab stop is cleared where it stood; a slide's is not", () => {
     const tab = { kind: "tab", index: 0 } as const;
     assert.deepEqual(rulerEdit({ control: tab, by: -25 }, GUIDE, "wordprocessing", RULER), {
         kind: "setParagraphProperties",
-        properties: [
-            {
-                tabStops: [
-                    { position: 36, alignment: "clear", leader: "none" },
-                    { position: 400, alignment: "right", leader: "dot" },
-                    { position: 425, alignment: "clear", leader: "none" },
-                ],
-            },
-        ],
+        properties: {
+            props: [
+                {
+                    tabStops: [
+                        { position: 36, alignment: "clear", leader: "none" },
+                        { position: 400, alignment: "right", leader: "dot" },
+                        { position: 425, alignment: "clear", leader: "none" },
+                    ],
+                },
+            ],
+        },
     });
     assert.deepEqual(rulerEdit({ control: tab, by: -25 }, GUIDE, "presentation", RULER), {
         kind: "setParagraphProperties",
-        properties: [
-            {
-                tabStops: [
-                    { position: 36, alignment: "clear", leader: "none" },
-                    { position: 400, alignment: "right", leader: "dot" },
-                ],
-            },
-        ],
+        properties: {
+            props: [
+                {
+                    tabStops: [
+                        { position: 36, alignment: "clear", leader: "none" },
+                        { position: 400, alignment: "right", leader: "dot" },
+                    ],
+                },
+            ],
+        },
     });
 });
 

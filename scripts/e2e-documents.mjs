@@ -63,7 +63,7 @@ const RED = { components: [1, 0, 0], colorSpace: "deviceRgb" };
 const J = (e, n) => JSON.parse(e.get(n).toString());
 const named = (e, re) => [...e.keys()].filter((n) => re.test(n));
 const typed = (text) => ({
-    blocks: [{ paragraph: { properties: [], spans: [{ regular: { properties: [], text } }] } }],
+    blocks: [{ paragraph: { properties: { props: [] }, spans: [{ regular: { properties: { props: [] }, text } }] } }],
 });
 const insertText = (at, text) => ({ replaceText: { range: { start: at, end: at }, fragment: typed(text) } });
 const flags = {
@@ -178,7 +178,10 @@ const shape = (id, story, x) => ({
             shape3d: null,
         },
         style: null,
-        textBody: { properties: {}, story: { id: story, blocks: [{ paragraph: { properties: [], spans: [] } }] } },
+        textBody: {
+            properties: {},
+            story: { id: story, blocks: [{ paragraph: { properties: { props: [] }, spans: [] } }] },
+        },
         textTransform: null,
         diagramPoint: null,
     },
@@ -436,7 +439,7 @@ export const DOCUMENTS = {
                         command: {
                             setCharacterProperties: {
                                 range: { start: 90 + round * 100, end: 95 + round * 100 },
-                                properties: [{ italic: true }],
+                                properties: { props: [{ italic: true }] },
                             },
                         },
                     },

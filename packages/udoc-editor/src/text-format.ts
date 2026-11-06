@@ -309,7 +309,9 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
     /** Overlay set-value character `properties` on the text selection. */
     function setCharacterProperties(properties: TextCharacterProperty[]): Promise<void> {
         if (!textDocType()) return Promise.resolve();
-        return commit(() => client.executeOnSelection({ kind: "setCharacterProperties", properties }));
+        return commit(() =>
+            client.executeOnSelection({ kind: "setCharacterProperties", properties: { props: properties } }),
+        );
     }
 
     /** Toggle a character style (bold / italic / underline / strikethrough): set
@@ -365,7 +367,9 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
      *  a paragraph, so unlike {@link setCharacterProperties} this needs no range. */
     function setParagraphProperties(properties: TextParagraphProperty[]): Promise<void> {
         if (!textDocType()) return Promise.resolve();
-        return commit(() => client.executeOnSelection({ kind: "setParagraphProperties", properties }));
+        return commit(() =>
+            client.executeOnSelection({ kind: "setParagraphProperties", properties: { props: properties } }),
+        );
     }
 
     /** Step the touched paragraphs' indent by `delta` levels — the Align & Indent
