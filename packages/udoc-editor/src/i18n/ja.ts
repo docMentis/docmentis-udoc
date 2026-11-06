@@ -15,10 +15,11 @@ export const ja: EditMessages = {
     "pageControls.moveUpLabel": "{page}ページを上へ移動",
     "pageControls.moveDown": "ページを下へ移動",
     "pageControls.moveDownLabel": "{page}ページを下へ移動",
+    "pageControls.rotateLeft": "ページを左へ回転",
+    "pageControls.rotateLeftLabel": "{page}ページを左へ回転",
     "pageControls.rotate": "ページを右へ回転",
     "pageControls.rotateLabel": "{page}ページを右へ回転",
-    "pageControls.settings": "ページ設定",
-    "pageControls.settingsLabel": "{page}ページの設定",
+    "pageControls.resizeLabel": "{page}ページのサイズ変更",
     "pageControls.delete": "ページを削除",
     "pageControls.deleteLabel": "{page}ページを削除",
     "pageControls.insert": "ここにページを挿入",
@@ -27,7 +28,6 @@ export const ja: EditMessages = {
 
     // Page settings dialog
     "pageSettings.title": "{page}ページ",
-    "pageSettings.label": "{page}ページの設定",
     "pageSettings.pageSize": "ページサイズ",
     "pageSettings.preset": "ページサイズのプリセット",
     "pageSettings.width": "幅",

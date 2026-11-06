@@ -16,10 +16,11 @@ export const en: EditMessages = {
     "pageControls.moveUpLabel": "Move Page {page} Up",
     "pageControls.moveDown": "Move Page Down",
     "pageControls.moveDownLabel": "Move Page {page} Down",
+    "pageControls.rotateLeft": "Rotate Page Left",
+    "pageControls.rotateLeftLabel": "Rotate Page {page} Left",
     "pageControls.rotate": "Rotate Page Right",
     "pageControls.rotateLabel": "Rotate Page {page} Right",
-    "pageControls.settings": "Page Settings",
-    "pageControls.settingsLabel": "Page {page} Settings",
+    "pageControls.resizeLabel": "Resize Page {page}",
     "pageControls.delete": "Delete Page",
     "pageControls.deleteLabel": "Delete Page {page}",
     "pageControls.insert": "Insert Page Here",
@@ -28,7 +29,6 @@ export const en: EditMessages = {
 
     // Page settings dialog
     "pageSettings.title": "Page {page}",
-    "pageSettings.label": "Page {page} settings",
     "pageSettings.pageSize": "Page Size",
     "pageSettings.preset": "Page size preset",
     "pageSettings.width": "Width",

@@ -1,4 +1,4 @@
-// The per-page settings dialog, opened from a page's control rail (the "more"
+// The per-page settings dialog, opened from a page's control rail (its resize
 // button) and as a PDF's Page tab's Resize Page. A modal — backdrop + centered
 // dialog — that lets the user read and change one page's size (a named preset or
 // a custom width × height in inches / millimetres / points) and layout (portrait
@@ -297,7 +297,7 @@ export function createPageSettingsModal(i18n: I18n) {
         widthPt = context.width;
         heightPt = context.height;
         heading.textContent = i18n.t("pageSettings.title", { page: context.index + 1 });
-        dialog.setAttribute("aria-label", i18n.t("pageSettings.label", { page: context.index + 1 }));
+        dialog.setAttribute("aria-label", i18n.t("pageControls.resizeLabel", { page: context.index + 1 }));
         render();
         isOpen = true;
         el.style.display = "";

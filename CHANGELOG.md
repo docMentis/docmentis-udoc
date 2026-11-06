@@ -49,7 +49,8 @@ listed once, by package. Its major and minor version are those of the
   the thumbnails, then Text Box, Shapes and Image, as icons named by their tooltips.
   Resize Page opens a dialog of the current page's size.
 - The controls beside and between a PDF's pages in edit mode are off by default:
-  `showPageControls: true` turns them on.
+  `showPageControls: true` turns them on. Their rail rotates a page either way, and
+  its Page Settings button is now Resize Page.
 - The page settings dialog closes on Apply Size, labels its Units and Layout, and
   no longer rotates the page, which the Page tab does.
 - The ruler's margin edges, indent markers and tab stops respond to the pointer:

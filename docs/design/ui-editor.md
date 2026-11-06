@@ -213,8 +213,8 @@ Edit mode's built-ins, registered by udoc-editor's extension
 - `udoc:page-controls` — a constant-size vertical rail beside each page's
   right edge, top-aligned with the page (in the screen-fixed side padding,
   never covering content; proximity and alignment make ownership
-  unambiguous). It is a column of actions — move up / move down / rotate /
-  more / delete — and "more" opens a dialog of the page's size. Hidden when the page is shorter on screen than the rail.
+  unambiguous). It is a column of actions — move up / move down / rotate left /
+  rotate right / resize / delete — and resize opens a dialog of the page's size. Hidden when the page is shorter on screen than the rail.
 - `udoc:page-insert` — insert lives _between_ pages: an invisible strip
   filling each gap (plus above the first and below the last page) reveals a
   divider + "+" on hover. The strip above page N inserts before N — i.e.

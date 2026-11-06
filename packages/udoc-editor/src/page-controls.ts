@@ -1,5 +1,5 @@
 // Edit mode's page controls: the rail beside a page — move up, move down,
-// rotate, settings, delete — and the insert strip between pages, both page
+// rotate left and right, resize, delete — and the insert strip between pages, both page
 // overlays registered under `udoc:` ids, so a host can remove or replace either
 // like its own; with the roomier spacing they sit in, and the page settings
 // dialog the rail opens.
@@ -105,12 +105,29 @@ export function pageControlsShown(s: UIState): boolean {
 
 /** Mount the page controls into `host`, shown while {@link pageControlsShown}; returns the teardown. */
 export function mountPageControls(host: UIShellHost, i18n: I18n): () => void {
-    // Mounted once and reused for whichever page's "more" button is clicked.
+    // Mounted once and reused for whichever page's resize button is clicked.
     const settings = createPageSettingsModal(i18n);
     settings.mount(host.root);
 
     const pageEditAt = (edit: PageStructureEdit): Promise<void> => applyPageEdit(host, edit);
     const pageCount = () => host.store.getState().pageCount;
+
+    // Move the page at `index` one place, `by` -1 up or 1 down, the view going
+    // with it: the scroll shifts by what it moved past, its neighbour and a gap,
+    // so it stays where it shows and the rail's button under the pointer, to press
+    // again. A neighbour not measured yet leaves that unknown: the view goes to the
+    // page instead.
+    const movePage = async (index: number, by: -1 | 1): Promise<void> => {
+        const neighbour = index + by;
+        const { height } = await host.client.pageDisplaySize(0, neighbour);
+        await pageEditAt({ kind: "reorder", from: index, to: neighbour });
+        const { scrollX, scrollY } = host.store.getState();
+        host.store.dispatch(
+            height > 0
+                ? { type: "SCROLL_TO", x: scrollX, y: scrollY + by * (height + GAP_PT) }
+                : { type: "NAVIGATE_TO_PAGE", pageIndex: neighbour },
+        );
+    };
 
     function show(shown: boolean): void {
         if (!shown) {
@@ -138,8 +155,8 @@ export function mountPageControls(host: UIShellHost, i18n: I18n): () => void {
                 i18n,
                 pageCount,
                 hoveredPage: () => host.hoveredPage(),
-                onMoveUp: (index) => void pageEditAt({ kind: "reorder", from: index, to: index - 1 }),
-                onMoveDown: (index) => void pageEditAt({ kind: "reorder", from: index, to: index + 1 }),
+                onMoveUp: (index) => void movePage(index, -1),
+                onMoveDown: (index) => void movePage(index, 1),
                 onRotate: (index, clockwise) => void pageEditAt({ kind: "rotate", index, clockwise }),
                 onDelete: (index) => void pageEditAt({ kind: "delete", index }),
                 onOpenSettings: (index, size) =>

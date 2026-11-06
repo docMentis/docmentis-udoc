@@ -15,10 +15,11 @@ export const zhTW: EditMessages = {
     "pageControls.moveUpLabel": "將第 {page} 頁上移",
     "pageControls.moveDown": "下移頁面",
     "pageControls.moveDownLabel": "將第 {page} 頁下移",
+    "pageControls.rotateLeft": "向左旋轉頁面",
+    "pageControls.rotateLeftLabel": "將第 {page} 頁向左旋轉",
     "pageControls.rotate": "向右旋轉頁面",
     "pageControls.rotateLabel": "將第 {page} 頁向右旋轉",
-    "pageControls.settings": "頁面設定",
-    "pageControls.settingsLabel": "第 {page} 頁設定",
+    "pageControls.resizeLabel": "調整第 {page} 頁大小",
     "pageControls.delete": "刪除頁面",
     "pageControls.deleteLabel": "刪除第 {page} 頁",
     "pageControls.insert": "在此插入頁面",
@@ -27,7 +28,6 @@ export const zhTW: EditMessages = {
 
     // Page settings dialog
     "pageSettings.title": "第 {page} 頁",
-    "pageSettings.label": "第 {page} 頁設定",
     "pageSettings.pageSize": "頁面大小",
     "pageSettings.preset": "預設頁面大小",
     "pageSettings.width": "寬度",

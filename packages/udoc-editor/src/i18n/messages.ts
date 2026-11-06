@@ -27,14 +27,16 @@ export interface Messages extends UIMessages {
     "pageControls.moveDown": string;
     /** Move Page {page} Down */
     "pageControls.moveDownLabel": string;
+    /** Rotate Page Left */
+    "pageControls.rotateLeft": string;
+    /** Rotate Page {page} Left */
+    "pageControls.rotateLeftLabel": string;
     /** Rotate Page Right */
     "pageControls.rotate": string;
     /** Rotate Page {page} Right */
     "pageControls.rotateLabel": string;
-    /** Page Settings */
-    "pageControls.settings": string;
-    /** Page {page} Settings */
-    "pageControls.settingsLabel": string;
+    /** Resize Page {page} */
+    "pageControls.resizeLabel": string;
     /** Delete Page */
     "pageControls.delete": string;
     /** Delete Page {page} */
@@ -49,8 +51,6 @@ export interface Messages extends UIMessages {
     // Page settings dialog
     /** Page {page} */
     "pageSettings.title": string;
-    /** Page {page} settings */
-    "pageSettings.label": string;
     /** Page Size */
     "pageSettings.pageSize": string;
     /** Page size preset */

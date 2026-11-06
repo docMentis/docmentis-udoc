@@ -10,8 +10,8 @@
 //   *beside* a page's right edge, top-aligned with the page — so the shell
 //   pairs it with screen-fixed (px) content padding, which holds its on-screen
 //   width at every zoom. It is a vertical column of actions — move up / move
-//   down / rotate / more / delete — and "more" opens the shared page-settings
-//   modal dialog (its size) for the page.
+//   down / rotate left / rotate right / resize / delete — and resize opens the
+//   shared page-settings modal dialog (its size) for the page.
 // - Insert lives *between* pages, in the inter-page gap. The gap is page-fixed
 //   (document points), so its on-screen size tracks the zoom; the strip is
 //   sized from the gap in points × the frame's scale, so it fills the gap at
@@ -19,20 +19,14 @@
 //   "+" button. Inserting in the gap above page N is "before N" and "after
 //   N−1" at once, so there is no before/after question to ask.
 
-import {
-    ICON_CHEVRON_DOWN,
-    ICON_CHEVRON_UP,
-    ICON_DELETE,
-    ICON_MORE,
-    ICON_PAGE_ADD,
-    ICON_ROTATE_RIGHT,
-} from "@docmentis/udoc-ui/internal";
+import { ICON_DELETE, ICON_PAGE_ADD, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT } from "@docmentis/udoc-ui/internal";
 import type { OverlayItem, OverlaySource, PageView } from "@docmentis/udoc-ui";
 import { createI18n } from "../i18n/index.js";
 import type { I18n } from "../i18n/index.js";
+import { ICON_MOVE_DOWN, ICON_MOVE_UP, ICON_PAGE_RESIZE } from "../icons.js";
 
 /**
- * A page's current size and orientation, as the "more" button hands it to the
+ * A page's current size and orientation, as the resize button hands it to the
  * settings dialog. `width`/`height` are the page's media-box size in document
  * points (rotation-independent — the intrinsic page rectangle); `rotation` is
  * the display rotation in quarter turns clockwise (0–3).
@@ -67,7 +61,7 @@ const PILL_OFFSET = 7;
  *  page is shorter than this on screen — a control rail taller than its page
  *  reads as attached to nothing, and a lone insert by a too-small page is just
  *  as adrift. */
-const MIN_PAGE_HEIGHT = 130;
+const MIN_PAGE_HEIGHT = 150;
 
 /** Minimum hover/tap width of an insert strip, CSS px. */
 const MIN_INSERT_WIDTH = 48;
@@ -90,7 +84,7 @@ export interface PageActionsCallbacks {
     onRotate: (index: number, clockwise: boolean) => void;
     onDelete: (index: number) => void;
     /** Open the page-settings dialog for `index`, seeded with its current
-     *  size + rotation — the "more" button's action. */
+     *  size + rotation — the resize button's action. */
     onOpenSettings: (index: number, size: PageSizeInfo) => void;
 }
 
@@ -104,7 +98,7 @@ function button(className: string, icon: string): HTMLButtonElement {
 
 /**
  * The latest media-box size + rotation of each pill's page, refreshed every
- * frame in `update` and read by the "more" click handler (set once in `create`)
+ * frame in `update` and read by the resize click handler (set once in `create`)
  * — the click fires the page-settings dialog with the page's current size.
  * Keyed by the pooled pill element so it survives across frames.
  */
@@ -112,9 +106,9 @@ const pillSize = new WeakMap<HTMLElement, PageSizeInfo>();
 
 /**
  * The per-page control rail (`udoc:page-actions`): a vertical column — move
- * up, move down, rotate, more, delete — beside each visible page's right
- * edge, top-aligned with the page. "More" opens the shared page-settings
- * dialog (its size). Constant CSS size — pair with px page spacing,
+ * up, move down, rotate left, rotate right, resize, delete — beside each
+ * visible page's right edge, top-aligned with the page. Resize opens the shared
+ * page-settings dialog (its size). Constant CSS size — pair with px page spacing,
  * whose screen-fixed side padding gives the rail room at every zoom.
  */
 export function pageActions(callbacks: PageActionsCallbacks): OverlaySource {
@@ -135,19 +129,20 @@ export function pageActions(callbacks: PageActionsCallbacks): OverlaySource {
                         el.setAttribute("role", "group");
 
                         el.append(
-                            button("udoc-ui__page-actions-btn udoc-ui__page-actions-up", ICON_CHEVRON_UP),
-                            button("udoc-ui__page-actions-btn udoc-ui__page-actions-down", ICON_CHEVRON_DOWN),
-                            button("udoc-ui__page-actions-btn udoc-ui__page-actions-rotate", ICON_ROTATE_RIGHT),
-                            button("udoc-ui__page-actions-btn udoc-ui__page-actions-more", ICON_MORE),
+                            button("udoc-ui__page-actions-btn udoc-ui__page-actions-up", ICON_MOVE_UP),
+                            button("udoc-ui__page-actions-btn udoc-ui__page-actions-down", ICON_MOVE_DOWN),
+                            button("udoc-ui__page-actions-btn udoc-ui__page-actions-rotate-left", ICON_ROTATE_LEFT),
+                            button("udoc-ui__page-actions-btn udoc-ui__page-actions-rotate-right", ICON_ROTATE_RIGHT),
+                            button("udoc-ui__page-actions-btn udoc-ui__page-actions-resize", ICON_PAGE_RESIZE),
                             button("udoc-ui__page-actions-btn udoc-ui__page-actions-delete", ICON_DELETE),
                         );
 
-                        // "More" opens the shared settings dialog for this page,
+                        // Resize opens the shared settings dialog for this page,
                         // seeded with the size last stashed by `update`. The
                         // pill's index is encoded in its key, so the pooled
                         // element always speaks for the same page.
-                        const more = el.querySelector<HTMLButtonElement>(".udoc-ui__page-actions-more")!;
-                        more.addEventListener("click", () => {
+                        const resize = el.querySelector<HTMLButtonElement>(".udoc-ui__page-actions-resize")!;
+                        resize.addEventListener("click", () => {
                             const size = pillSize.get(el);
                             if (size) callbacks.onOpenSettings(view.index, size);
                         });
@@ -175,15 +170,19 @@ export function pageActions(callbacks: PageActionsCallbacks): OverlaySource {
                         down.setAttribute("aria-label", i18n.t("pageControls.moveDownLabel", { page }));
                         down.onclick = () => callbacks.onMoveDown(index);
 
-                        // The pill's rotate button turns the page clockwise.
-                        const rotate = el.querySelector<HTMLButtonElement>(".udoc-ui__page-actions-rotate")!;
-                        rotate.title = i18n.t("pageControls.rotate");
-                        rotate.setAttribute("aria-label", i18n.t("pageControls.rotateLabel", { page }));
-                        rotate.onclick = () => callbacks.onRotate(index, true);
+                        const rotateLeft = el.querySelector<HTMLButtonElement>(".udoc-ui__page-actions-rotate-left")!;
+                        rotateLeft.title = i18n.t("pageControls.rotateLeft");
+                        rotateLeft.setAttribute("aria-label", i18n.t("pageControls.rotateLeftLabel", { page }));
+                        rotateLeft.onclick = () => callbacks.onRotate(index, false);
 
-                        const more = el.querySelector<HTMLButtonElement>(".udoc-ui__page-actions-more")!;
-                        more.title = i18n.t("pageControls.settings");
-                        more.setAttribute("aria-label", i18n.t("pageControls.settingsLabel", { page }));
+                        const rotateRight = el.querySelector<HTMLButtonElement>(".udoc-ui__page-actions-rotate-right")!;
+                        rotateRight.title = i18n.t("pageControls.rotate");
+                        rotateRight.setAttribute("aria-label", i18n.t("pageControls.rotateLabel", { page }));
+                        rotateRight.onclick = () => callbacks.onRotate(index, true);
+
+                        const resize = el.querySelector<HTMLButtonElement>(".udoc-ui__page-actions-resize")!;
+                        resize.title = i18n.t("command.pageResize");
+                        resize.setAttribute("aria-label", i18n.t("pageControls.resizeLabel", { page }));
 
                         const del = el.querySelector<HTMLButtonElement>(".udoc-ui__page-actions-delete")!;
                         del.disabled = count <= 1;

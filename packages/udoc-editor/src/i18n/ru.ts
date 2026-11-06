@@ -15,10 +15,11 @@ export const ru: EditMessages = {
     "pageControls.moveUpLabel": "Переместить страницу {page} вверх",
     "pageControls.moveDown": "Переместить страницу вниз",
     "pageControls.moveDownLabel": "Переместить страницу {page} вниз",
+    "pageControls.rotateLeft": "Повернуть страницу влево",
+    "pageControls.rotateLeftLabel": "Повернуть страницу {page} влево",
     "pageControls.rotate": "Повернуть страницу вправо",
     "pageControls.rotateLabel": "Повернуть страницу {page} вправо",
-    "pageControls.settings": "Параметры страницы",
-    "pageControls.settingsLabel": "Параметры страницы {page}",
+    "pageControls.resizeLabel": "Изменить размер страницы {page}",
     "pageControls.delete": "Удалить страницу",
     "pageControls.deleteLabel": "Удалить страницу {page}",
     "pageControls.insert": "Вставить страницу здесь",
@@ -27,7 +28,6 @@ export const ru: EditMessages = {
 
     // Page settings dialog
     "pageSettings.title": "Страница {page}",
-    "pageSettings.label": "Параметры страницы {page}",
     "pageSettings.pageSize": "Размер страницы",
     "pageSettings.preset": "Стандартный размер страницы",
     "pageSettings.width": "Ширина",

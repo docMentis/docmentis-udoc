@@ -15,10 +15,11 @@ export const ptBR: EditMessages = {
     "pageControls.moveUpLabel": "Mover Página {page} para Cima",
     "pageControls.moveDown": "Mover Página para Baixo",
     "pageControls.moveDownLabel": "Mover Página {page} para Baixo",
+    "pageControls.rotateLeft": "Girar Página para a Esquerda",
+    "pageControls.rotateLeftLabel": "Girar Página {page} para a Esquerda",
     "pageControls.rotate": "Girar Página para a Direita",
     "pageControls.rotateLabel": "Girar Página {page} para a Direita",
-    "pageControls.settings": "Configurações da Página",
-    "pageControls.settingsLabel": "Configurações da Página {page}",
+    "pageControls.resizeLabel": "Redimensionar Página {page}",
     "pageControls.delete": "Excluir Página",
     "pageControls.deleteLabel": "Excluir Página {page}",
     "pageControls.insert": "Inserir Página Aqui",
@@ -27,7 +28,6 @@ export const ptBR: EditMessages = {
 
     // Page settings dialog
     "pageSettings.title": "Página {page}",
-    "pageSettings.label": "Configurações da página {page}",
     "pageSettings.pageSize": "Tamanho da Página",
     "pageSettings.preset": "Predefinição de tamanho da página",
     "pageSettings.width": "Largura",

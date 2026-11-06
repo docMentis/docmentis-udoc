@@ -15,10 +15,11 @@ export const ko: EditMessages = {
     "pageControls.moveUpLabel": "{page}페이지 위로 이동",
     "pageControls.moveDown": "페이지 아래로 이동",
     "pageControls.moveDownLabel": "{page}페이지 아래로 이동",
+    "pageControls.rotateLeft": "페이지 왼쪽으로 회전",
+    "pageControls.rotateLeftLabel": "{page}페이지 왼쪽으로 회전",
     "pageControls.rotate": "페이지 오른쪽으로 회전",
     "pageControls.rotateLabel": "{page}페이지 오른쪽으로 회전",
-    "pageControls.settings": "페이지 설정",
-    "pageControls.settingsLabel": "{page}페이지 설정",
+    "pageControls.resizeLabel": "{page}페이지 크기 조정",
     "pageControls.delete": "페이지 삭제",
     "pageControls.deleteLabel": "{page}페이지 삭제",
     "pageControls.insert": "여기에 페이지 삽입",
@@ -27,7 +28,6 @@ export const ko: EditMessages = {
 
     // Page settings dialog
     "pageSettings.title": "{page}페이지",
-    "pageSettings.label": "{page}페이지 설정",
     "pageSettings.pageSize": "페이지 크기",
     "pageSettings.preset": "페이지 크기 사전 설정",
     "pageSettings.width": "너비",

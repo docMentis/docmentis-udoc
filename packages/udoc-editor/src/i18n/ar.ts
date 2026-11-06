@@ -15,10 +15,11 @@ export const ar: EditMessages = {
     "pageControls.moveUpLabel": "نقل الصفحة {page} لأعلى",
     "pageControls.moveDown": "نقل الصفحة لأسفل",
     "pageControls.moveDownLabel": "نقل الصفحة {page} لأسفل",
+    "pageControls.rotateLeft": "تدوير الصفحة لليسار",
+    "pageControls.rotateLeftLabel": "تدوير الصفحة {page} لليسار",
     "pageControls.rotate": "تدوير الصفحة لليمين",
     "pageControls.rotateLabel": "تدوير الصفحة {page} لليمين",
-    "pageControls.settings": "إعدادات الصفحة",
-    "pageControls.settingsLabel": "إعدادات الصفحة {page}",
+    "pageControls.resizeLabel": "تغيير حجم الصفحة {page}",
     "pageControls.delete": "حذف الصفحة",
     "pageControls.deleteLabel": "حذف الصفحة {page}",
     "pageControls.insert": "إدراج صفحة هنا",
@@ -27,7 +28,6 @@ export const ar: EditMessages = {
 
     // Page settings dialog
     "pageSettings.title": "صفحة {page}",
-    "pageSettings.label": "إعدادات الصفحة {page}",
     "pageSettings.pageSize": "حجم الصفحة",
     "pageSettings.preset": "حجم صفحة محدد مسبقًا",
     "pageSettings.width": "العرض",

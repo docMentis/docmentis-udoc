@@ -13,7 +13,7 @@ import { pageSizeInfo } from "./components/PageControls.js";
 import { createPageSettingsModal } from "./components/PageSettingsModal.js";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
-import { ICON_ASPECT_RATIO } from "./icons.js";
+import { ICON_PAGE_RESIZE } from "./icons.js";
 import { applyPageEdit } from "./page-controls.js";
 
 /** Whether `caps` holds pages picked in the thumbnails. */
@@ -136,7 +136,7 @@ export function pageCommands(
         pageResize: {
             id: "pageResize",
             label: "command.pageResize",
-            icon: ICON_ASPECT_RATIO,
+            icon: ICON_PAGE_RESIZE,
             group: "page",
             run: { kind: "action", press: resize },
             enabledWhen: whenPortable,
