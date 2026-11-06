@@ -9,6 +9,7 @@
 // edges, the indent markers and the tab stops — over them (ruler-controls.ts),
 // sending the edit a drop on one means (ruler-edits.ts).
 import type { Guide, RulerAxis, UDocType } from "@docmentis/udoc-wasm";
+import { subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { Action, BandCanvas, BandStrip, CommandDef, GuideBand, Store, UIState } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
@@ -241,11 +242,18 @@ function drawRuler(
     );
 }
 
+/** The ruler band, and what keeps its controls on the selection. */
+export interface Ruler extends GuideBand {
+    /** Have the controls follow what the selection lets them move, as it changes
+     *  between frames, until the teardown this returns. */
+    mount(host: EditHost): () => void;
+}
+
 /** The ruler band, with controls of its own — one per editor, whose edits run
  *  through the `host` edit mode lends once it is mounted. Paints only a ruler
  *  projection; any other leaves the strips cleared to their band background
  *  until one lands. */
-export function createRuler(host: () => EditHost | null): GuideBand {
+export function createRuler(host: () => EditHost | null): Ruler {
     /** The projection the controls last stood on — what a drop is read off. */
     let placed: RulerGuide | null = null;
     /** Send the edit `drop` means to the open document, as one undo step; null
@@ -259,18 +267,35 @@ export function createRuler(host: () => EditHost | null): GuideBand {
         return lent.commit(() => lent.client.executeOnSelection(edit));
     };
     const controls = createRulerControls(THICKNESS, drop);
+    /** Whether a control takes a drag on `guide`, as the selection stands now. */
+    const movableOn = (guide: RulerGuide): ((control: RulerControl) => boolean) => {
+        const state = host()?.store.getState();
+        const docType = state?.docType;
+        return (control) =>
+            !!state &&
+            !!docType &&
+            rulerMovable(control, guide, docType, state.selectionCaps, editState(state).selectionRuler);
+    };
     return {
         thickness: THICKNESS,
         draw(guide, canvas) {
             if (guide.type !== "ruler") return;
             placed = guide;
-            const state = host()?.store.getState();
-            const docType = state?.docType;
-            const movable = (control: RulerControl): boolean =>
-                !!state &&
-                !!docType &&
-                rulerMovable(control, guide, docType, state.selectionCaps, editState(state).selectionRuler);
-            drawRuler(guide, canvas, controls, movable);
+            drawRuler(guide, canvas, controls, movableOn(guide));
+        },
+        mount({ store }) {
+            // A selection's report can land after the frame it paints, and no
+            // frame need follow it.
+            const follow = (): void => {
+                if (placed) controls.refuse(movableOn(placed));
+            };
+            const unsubs = [
+                subscribeSelector(store, (s) => s.selectionCaps, follow),
+                subscribeSelector(store, (s) => editState(s).selectionRuler, follow),
+            ];
+            return () => {
+                for (const unsub of unsubs) unsub();
+            };
         },
     };
 }

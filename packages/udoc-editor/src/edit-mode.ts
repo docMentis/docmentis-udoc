@@ -269,6 +269,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             paintOptionsModal.mount(mounted.root);
             const unmountDocumentState = mountDocumentState(mounted);
             const unmountEditingView = mountEditingView(mounted);
+            const unmountRuler = ruler.mount(mounted);
             const unmountPageControls = showPageControls ? mountPageControls(mounted, i18n) : null;
             newSlide = mountNewSlide(mounted, i18n);
             imageSize = mountImageSize(mounted, i18n);
@@ -278,6 +279,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
                 newSlide?.destroy();
                 newSlide = null;
                 unmountPageControls?.();
+                unmountRuler();
                 unmountEditingView();
                 unmountDocumentState();
                 tools?.clipboard.destroy();

@@ -95,6 +95,12 @@ export interface RulerControls {
         text: RulerText | null,
         movable: (control: RulerControl) => boolean,
     ): void;
+    /**
+     * Say again which controls stay put under a press, leaving each where it
+     * stands — a selection changes what `movable` answers between the frames
+     * that place them.
+     */
+    refuse(movable: (control: RulerControl) => boolean): void;
 }
 
 /** A control, and where the guide last placed it. */
@@ -166,6 +172,12 @@ function move(c: Control, at: number): void {
 function settle(c: Control): void {
     c.el.style.display = c.home === null ? "none" : "";
     if (c.home !== null) move(c, c.home);
+}
+
+/** Let `c` take a press, or where `movable` refuses it, leave the press to what
+ *  stands under it. */
+function refuseUnmovable(c: Control, movable: (control: RulerControl) => boolean): void {
+    c.el.classList.toggle("udoc-ui__ruler-control--fixed", !movable(c.name));
 }
 
 /** The ruler's controls for a ruler `thickness` CSS px deep, handing what a
@@ -363,7 +375,7 @@ export function createRulerControls(
                 c.points = ruler && points != null ? points : null;
                 c.home = ruler && points != null ? ruler.at(points) : null;
                 c.page = pages[c.orient];
-                c.el.classList.toggle("udoc-ui__ruler-control--fixed", !movable(c.name));
+                refuseUnmovable(c, movable);
                 if (!drag?.carried.some((k) => k.control === c) && !held.has(c)) settle(c);
             };
             // The edit a drop sent is done, and this frame is what it brought.
@@ -386,6 +398,11 @@ export function createRulerControls(
                 }
                 stand(t.control, horizontal, stop?.position);
             });
+        },
+        refuse(movable) {
+            const margins = [leftMargin, rightMargin, topMargin, bottomMargin];
+            const indents = [firstLine, hanging, leftIndent, rightIndent];
+            for (const c of [...margins, ...indents, ...tabs.map((t) => t.control)]) refuseUnmovable(c, movable);
         },
     };
 }
