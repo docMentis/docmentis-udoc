@@ -112,6 +112,11 @@ function annotations(caps: SelectionCapabilities): boolean {
     return allowsEdit(caps, "deleteAnnotations", "translateAnnotations", "resizeAnnotations", "reorderAnnotations");
 }
 
+/** Whether `caps` holds a PDF's pages, picked in the thumbnails, or nothing. */
+function pagesOrNothing(caps: SelectionCapabilities): boolean {
+    return caps.count === 0 || allowsEdit(caps, "rotatePages");
+}
+
 /** Whether `caps` holds an image's pages, picked in the thumbnails. */
 function imagePages(caps: SelectionCapabilities): boolean {
     return allowsEdit(caps, "rotatePages");
@@ -271,7 +276,8 @@ const IMAGE_TAB: EditTab = {
  * and Delete, the two turns and Resize of the current page, or of those picked
  * in the thumbnails — then what goes on a page as its own objects: a text box,
  * shapes and an image. All icons, named by their tooltips. A PDF's strip opens on
- * it, the tools a PDF is usually edited with.
+ * it, the tools a PDF is usually edited with, and pages picked or nothing selected
+ * open it.
  */
 const PORTABLE_PAGE_TAB: EditTab = {
     id: "page",
@@ -287,6 +293,7 @@ const PORTABLE_PAGE_TAB: EditTab = {
         "insertPageImage",
     ] satisfies EditCommandId[],
     opensOnEntry: true,
+    opensFor: pagesOrNothing,
 };
 
 /** The image Insert tab: the gallery's Shapes, drawn over the page. */

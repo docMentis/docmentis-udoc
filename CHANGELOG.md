@@ -48,7 +48,7 @@ listed once, by package. Its major and minor version are those of the
   Rotate Left, Rotate Right and Resize Page, on the current page or those picked in
   the thumbnails, then Text Box, Shapes and Image, as icons named by their tooltips.
   Resize Page opens a dialog of the current page's size. A PDF's ribbon opens on it
-  in edit mode.
+  in edit mode, and goes back to it when pages are picked or nothing is selected.
 - The controls beside and between a PDF's pages in edit mode are off by default:
   `showPageControls: true` turns them on. Their rail rotates a page either way, and
   its Page Settings button is now Resize Page.
