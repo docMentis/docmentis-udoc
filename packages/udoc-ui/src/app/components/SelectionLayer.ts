@@ -127,8 +127,8 @@ const BOX_CLIP_PAD = 16;
 /**
  * Restart the local caret's blink from its solid phase, so a keystroke or
  * caret move shows the caret at once rather than waiting out the blink cycle —
- * rewinding the running CSS animation to time zero, where the keyframes hold
- * opacity 1. Only the local caret blinks (peer carets stay solid), so only it
+ * rewinding the running CSS animation to time zero, where the keyframes show
+ * it. Only the local caret blinks (peer carets stay solid), so only it
  * is ever restarted.
  */
 function restartBlink(el: HTMLElement): void {

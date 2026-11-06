@@ -2847,22 +2847,28 @@ export const uiStyles = css`
         -webkit-backdrop-filter: grayscale(1) invert(1) contrast(10000%);
         backdrop-filter: grayscale(1) invert(1) contrast(10000%);
         /* Only the local caret blinks; the layer restarts it (from the solid phase)
-       on every caret move so a keystroke shows the caret at once. */
+       on every caret move so a keystroke shows the caret at once. It blinks by
+       visibility, not opacity: blinking by opacity with this backdrop filter, in
+       a host's rounded clip around the UI, made Chrome show old frames among new
+       ones for a few seconds after the selection changed. */
         animation: udoc-ui__caret-blink 1.06s steps(1, end) infinite;
     }
     /* Typing goes to a field outside the canvas that edits the same text — a
-   workbook's formula bar: its caret is the one shown. */
+   workbook's formula bar: its caret is the one shown. The blink is stopped too,
+   since an animated visibility overrides this one. */
     .udoc-ui-root .udoc-ui__canvas-host--caret-elsewhere .udoc-ui__selection-caret--local {
+        animation: none;
         visibility: hidden;
     }
+    /* Inherit, not visible, so that what hides the viewport still hides the caret. */
     @keyframes udoc-ui__caret-blink {
         0%,
         50% {
-            opacity: 1;
+            visibility: inherit;
         }
         50.01%,
         100% {
-            opacity: 0;
+            visibility: hidden;
         }
     }
     /* The hidden text field parked at the caret: a real textarea so keystrokes

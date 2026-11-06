@@ -143,6 +143,23 @@ form for a checkpoint. A checkpoint opens in the viewer, and copies through
 the file's thumbnail; a card's other pages show the working copy, which only
 those who read the library see. Those who don't get no card yet.
 
+## A rounded clip around the editor shows old frames among new ones
+
+**Needed.** The editor in a card with rounded corners, clipped to them.
+
+**Offered.** With `overflow: hidden` and a `border-radius` on an element around
+the editor, Chrome on a Mac showed old and new frames in turn for a few seconds
+after the selection changed, in step with the caret's blink: a click on other
+text showed the caret there, then the previous selection again, then the caret;
+the ruler's markers went back and forth with it. The page's elements and the
+engine's reports held the right values throughout, and the same steps showed
+nothing while Chrome's screencast was running. A square clip, or a caret that
+didn't blink, showed none of it. The caret blinked by opacity, with a backdrop
+filter.
+
+**Workaround.** None needed here: udoc-ui's caret now blinks by visibility, which
+this checkout's packages have and the next release will bring.
+
 ## A viewer in a form submits it
 
 **Needed.** The upload dialog's preview, a viewer on the file, beside the

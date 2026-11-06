@@ -6,6 +6,14 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Fixed
+
+- Clipping the UI to rounded corners no longer makes Chrome flicker after the
+  selection changes, where the caret and the previous selection showed in turn
+  for a few seconds, and the ruler's markers moved with them.
+
 ## [0.8.15] - 2026-11-05
 
 Built on `@docmentis/udoc-wasm` 0.8.18.
