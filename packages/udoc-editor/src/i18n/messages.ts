@@ -77,16 +77,6 @@ export interface Messages extends UIMessages {
     "pageSettings.landscape": string;
     /** Layout */
     "pageSettings.layout": string;
-    /** Rotation */
-    "pageSettings.rotation": string;
-    /** Rotate Left */
-    "pageSettings.rotateLeft": string;
-    /** Rotate Page Left */
-    "pageSettings.rotatePageLeft": string;
-    /** Rotate Right */
-    "pageSettings.rotateRight": string;
-    /** Rotate Page Right */
-    "pageSettings.rotatePageRight": string;
     /** Apply Size */
     "pageSettings.applySize": string;
 

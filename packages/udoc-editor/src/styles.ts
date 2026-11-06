@@ -278,34 +278,6 @@ export const editorStyles = css`
         background-color: var(--udoc-state-selected);
     }
 
-    .udoc-ui-root .udoc-page-modal__rotate {
-        display: flex;
-        gap: 8px;
-    }
-
-    .udoc-ui-root .udoc-page-modal__rotate-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 32px;
-        border: 1px solid var(--udoc-color-outline-variant);
-        border-radius: 6px;
-        background: transparent;
-        color: var(--udoc-color-on-surface-variant);
-        cursor: pointer;
-    }
-
-    .udoc-ui-root .udoc-page-modal__rotate-btn:hover {
-        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
-        color: var(--udoc-color-on-surface);
-    }
-
-    .udoc-ui-root .udoc-page-modal__rotate-btn svg {
-        width: var(--udoc-btn-glyph);
-        height: var(--udoc-btn-glyph);
-    }
-
     .udoc-ui-root .udoc-page-modal__footer {
         display: flex;
         justify-content: flex-end;

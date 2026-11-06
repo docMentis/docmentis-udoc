@@ -148,7 +148,6 @@ export function mountPageControls(host: UIShellHost, i18n: I18n): () => void {
                         width: size.width,
                         height: size.height,
                         onResize: (width, height) => void pageEditAt({ kind: "resize", index, width, height }),
-                        onRotate: (clockwise) => void pageEditAt({ kind: "rotate", index, clockwise }),
                     }),
             }),
         );

@@ -42,11 +42,6 @@ export const en: EditMessages = {
     "pageSettings.portrait": "Portrait",
     "pageSettings.landscape": "Landscape",
     "pageSettings.layout": "Layout",
-    "pageSettings.rotation": "Rotation",
-    "pageSettings.rotateLeft": "Rotate Left",
-    "pageSettings.rotatePageLeft": "Rotate Page Left",
-    "pageSettings.rotateRight": "Rotate Right",
-    "pageSettings.rotatePageRight": "Rotate Page Right",
     "pageSettings.applySize": "Apply Size",
 
     // Page sizes

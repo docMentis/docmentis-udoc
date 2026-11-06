@@ -41,11 +41,6 @@ export const ar: EditMessages = {
     "pageSettings.portrait": "عمودي",
     "pageSettings.landscape": "أفقي",
     "pageSettings.layout": "التخطيط",
-    "pageSettings.rotation": "التدوير",
-    "pageSettings.rotateLeft": "تدوير لليسار",
-    "pageSettings.rotatePageLeft": "تدوير الصفحة لليسار",
-    "pageSettings.rotateRight": "تدوير لليمين",
-    "pageSettings.rotatePageRight": "تدوير الصفحة لليمين",
     "pageSettings.applySize": "تطبيق الحجم",
 
     // Page sizes

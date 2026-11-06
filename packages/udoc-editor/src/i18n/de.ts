@@ -41,11 +41,6 @@ export const de: EditMessages = {
     "pageSettings.portrait": "Hochformat",
     "pageSettings.landscape": "Querformat",
     "pageSettings.layout": "Layout",
-    "pageSettings.rotation": "Drehung",
-    "pageSettings.rotateLeft": "Nach links drehen",
-    "pageSettings.rotatePageLeft": "Seite nach links drehen",
-    "pageSettings.rotateRight": "Nach rechts drehen",
-    "pageSettings.rotatePageRight": "Seite nach rechts drehen",
     "pageSettings.applySize": "Größe übernehmen",
 
     // Page sizes

@@ -41,11 +41,6 @@ export const zhTW: EditMessages = {
     "pageSettings.portrait": "直向",
     "pageSettings.landscape": "橫向",
     "pageSettings.layout": "版面配置",
-    "pageSettings.rotation": "旋轉",
-    "pageSettings.rotateLeft": "向左旋轉",
-    "pageSettings.rotatePageLeft": "向左旋轉頁面",
-    "pageSettings.rotateRight": "向右旋轉",
-    "pageSettings.rotatePageRight": "向右旋轉頁面",
     "pageSettings.applySize": "套用大小",
 
     // Page sizes

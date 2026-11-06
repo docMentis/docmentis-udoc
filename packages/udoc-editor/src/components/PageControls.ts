@@ -11,7 +11,7 @@
 //   pairs it with screen-fixed (px) content padding, which holds its on-screen
 //   width at every zoom. It is a vertical column of actions — move up / move
 //   down / rotate / more / delete — and "more" opens the shared page-settings
-//   modal dialog (size + rotation) for the page.
+//   modal dialog (its size) for the page.
 // - Insert lives *between* pages, in the inter-page gap. The gap is page-fixed
 //   (document points), so its on-screen size tracks the zoom; the strip is
 //   sized from the gap in points × the frame's scale, so it fills the gap at
@@ -114,7 +114,7 @@ const pillSize = new WeakMap<HTMLElement, PageSizeInfo>();
  * The per-page control rail (`udoc:page-actions`): a vertical column — move
  * up, move down, rotate, more, delete — beside each visible page's right
  * edge, top-aligned with the page. "More" opens the shared page-settings
- * dialog (size + rotation). Constant CSS size — pair with px page spacing,
+ * dialog (its size). Constant CSS size — pair with px page spacing,
  * whose screen-fixed side padding gives the rail room at every zoom.
  */
 export function pageActions(callbacks: PageActionsCallbacks): OverlaySource {
@@ -175,8 +175,7 @@ export function pageActions(callbacks: PageActionsCallbacks): OverlaySource {
                         down.setAttribute("aria-label", i18n.t("pageControls.moveDownLabel", { page }));
                         down.onclick = () => callbacks.onMoveDown(index);
 
-                        // The pill's rotate button turns the page clockwise; the
-                        // settings dialog offers both directions.
+                        // The pill's rotate button turns the page clockwise.
                         const rotate = el.querySelector<HTMLButtonElement>(".udoc-ui__page-actions-rotate")!;
                         rotate.title = i18n.t("pageControls.rotate");
                         rotate.setAttribute("aria-label", i18n.t("pageControls.rotateLabel", { page }));

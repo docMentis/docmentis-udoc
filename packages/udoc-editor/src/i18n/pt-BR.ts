@@ -41,11 +41,6 @@ export const ptBR: EditMessages = {
     "pageSettings.portrait": "Retrato",
     "pageSettings.landscape": "Paisagem",
     "pageSettings.layout": "Layout",
-    "pageSettings.rotation": "Rotação",
-    "pageSettings.rotateLeft": "Girar para a Esquerda",
-    "pageSettings.rotatePageLeft": "Girar Página para a Esquerda",
-    "pageSettings.rotateRight": "Girar para a Direita",
-    "pageSettings.rotatePageRight": "Girar Página para a Direita",
     "pageSettings.applySize": "Aplicar Tamanho",
 
     // Page sizes

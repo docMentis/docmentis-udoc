@@ -41,11 +41,6 @@ export const ru: EditMessages = {
     "pageSettings.portrait": "Книжная",
     "pageSettings.landscape": "Альбомная",
     "pageSettings.layout": "Макет",
-    "pageSettings.rotation": "Поворот",
-    "pageSettings.rotateLeft": "Повернуть влево",
-    "pageSettings.rotatePageLeft": "Повернуть страницу влево",
-    "pageSettings.rotateRight": "Повернуть вправо",
-    "pageSettings.rotatePageRight": "Повернуть страницу вправо",
     "pageSettings.applySize": "Применить размер",
 
     // Page sizes

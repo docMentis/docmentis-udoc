@@ -41,11 +41,6 @@ export const ko: EditMessages = {
     "pageSettings.portrait": "세로",
     "pageSettings.landscape": "가로",
     "pageSettings.layout": "레이아웃",
-    "pageSettings.rotation": "회전",
-    "pageSettings.rotateLeft": "왼쪽으로 회전",
-    "pageSettings.rotatePageLeft": "페이지 왼쪽으로 회전",
-    "pageSettings.rotateRight": "오른쪽으로 회전",
-    "pageSettings.rotatePageRight": "페이지 오른쪽으로 회전",
     "pageSettings.applySize": "크기 적용",
 
     // Page sizes

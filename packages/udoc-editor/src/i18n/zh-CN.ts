@@ -41,11 +41,6 @@ export const zhCN: EditMessages = {
     "pageSettings.portrait": "纵向",
     "pageSettings.landscape": "横向",
     "pageSettings.layout": "布局",
-    "pageSettings.rotation": "旋转",
-    "pageSettings.rotateLeft": "向左旋转",
-    "pageSettings.rotatePageLeft": "向左旋转页面",
-    "pageSettings.rotateRight": "向右旋转",
-    "pageSettings.rotatePageRight": "向右旋转页面",
     "pageSettings.applySize": "应用大小",
 
     // Page sizes

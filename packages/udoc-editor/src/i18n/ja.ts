@@ -41,11 +41,6 @@ export const ja: EditMessages = {
     "pageSettings.portrait": "縦",
     "pageSettings.landscape": "横",
     "pageSettings.layout": "レイアウト",
-    "pageSettings.rotation": "回転",
-    "pageSettings.rotateLeft": "左へ回転",
-    "pageSettings.rotatePageLeft": "ページを左へ回転",
-    "pageSettings.rotateRight": "右へ回転",
-    "pageSettings.rotatePageRight": "ページを右へ回転",
     "pageSettings.applySize": "サイズを適用",
 
     // Page sizes
