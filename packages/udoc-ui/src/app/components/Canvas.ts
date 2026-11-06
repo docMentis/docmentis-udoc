@@ -44,6 +44,7 @@ import type { BandKind, BandPalette, GuideBand } from "./GuideBands.js";
 import { ResizeCover } from "./ResizeCover.js";
 import { SCROLLBAR_THICKNESS_PX, visibleSpan } from "./Scrollbar.js";
 import { scrollKeyAction } from "../scroll-keys.js";
+import { WheelPaging } from "../wheel-paging.js";
 import { MAC } from "./controls.js";
 import { applyPoint, applyVector, invert, translate } from "./affine.js";
 import type { I18n } from "../i18n/index.js";
@@ -265,8 +266,6 @@ const PAGE_EDGE_EPSILON = 0.5;
 /** Treat a fit's zoom within this of its cap as held there. */
 const ZOOM_CAP_EPSILON = 1e-3;
 
-/** Quiet gap (ms) after which a single-page wheel flip re-arms (see `pageFlipArmed`). */
-const WHEEL_REST_MS = 120;
 /** CSS pixels an arrow key scrolls, and what a view's-height key keeps on screen to read on from. */
 const KEY_LINE_PX = 40;
 
@@ -1265,12 +1264,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     let hoverHit: UDocHit = "none";
     let hoverHitAt: { x: number; y: number } | null = null;
 
-    // Single-page wheel paging: a scroll that hits a page edge flips to the
-    // adjacent page. `pageFlipArmed` allows one flip per gesture — it re-arms
-    // only once the wheel has rested for `WHEEL_REST_MS`, so a trackpad's
-    // momentum tail can't skip several pages in a single flick.
-    let pageFlipArmed = true;
-    let lastWheelTs = 0;
+    const wheelPaging = new WheelPaging();
 
     /** Factor a marquee-zoom *click* (no rubber-band) steps the zoom by. */
     const ZOOM_CLICK_STEP = 1.5;
@@ -3842,38 +3836,30 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             // Document-space delta = CSS-px delta / (zoom × 96/72).
             const perPt = renderZoom(s) * cssPxPerPt(viewDpi(s));
             const dy = ev.deltaY / perPt;
-            if (maybeFlipPage(store, s, dy)) return;
+            if (wheelPages(store, s, ev, dy)) return;
             store.dispatch({ type: "SCROLL_BY", dx: ev.deltaX / perPt, dy });
         }
     }
 
     /**
-     * Single-page view paging: a vertical wheel scroll that pushes past the
-     * current page's edge flips to the adjacent page rather than dead-ending at
-     * the clamp. The engine's `go_to_page` re-clamps the carried scroll onto the
-     * new page's near edge, so going forward the next page enters at its top and
-     * going back the previous page enters at its bottom — a continuous reading
-     * feel. Only one flip fires per gesture (`pageFlipArmed`), so a trackpad's
-     * momentum tail can't skip pages. Returns true when it consumed the event,
-     * in which case the caller skips the normal scroll.
+     * Single-page view paging: whether paging takes a wheel event moving `dy` in
+     * the document, by turning the page or holding it still, so that it doesn't
+     * scroll ({@link WheelPaging}). The engine's `go_to_page` re-clamps the carried
+     * scroll onto the new page's near edge, so going forward the next page enters
+     * at its top and going back the previous page enters at its bottom.
      */
-    function maybeFlipPage(st: Store<UIState, Action>, s: UIState, dy: number): boolean {
-        if (s.scrollMode !== "spread" || dy === 0) return false;
-        const now = Date.now();
-        if (now - lastWheelTs > WHEEL_REST_MS) pageFlipArmed = true;
-        lastWheelTs = now;
-
-        const target = pageAcrossEdge(s, dy);
-        if (target === null) return false; // mid-spread, or no adjacent spread
-
-        // At the boundary with an adjacent page: consume the event either way.
-        // Scrolling at the edge can't move within the page anyway, so swallowing
-        // it while cooling down just avoids a no-op clamp.
-        if (pageFlipArmed) {
-            pageFlipArmed = false;
-            st.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: target });
-        }
-        return true;
+    function wheelPages(st: Store<UIState, Action>, s: UIState, ev: WheelEvent, dy: number): boolean {
+        if (s.scrollMode !== "spread") return false;
+        const target = pageStep(s, dy < 0 ? -1 : 1);
+        const move = wheelPaging.step({
+            time: ev.timeStamp,
+            dx: ev.deltaX,
+            dy: ev.deltaY,
+            room: roomToEdge(s, dy) * renderZoom(s) * cssPxPerPt(viewDpi(s)),
+            adjacent: target !== null,
+        });
+        if (move === "turn" && target !== null) st.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: target });
+        return move !== "scroll";
     }
 
     /** Whether the page shows whole along `axis`, in single-page view. */
@@ -3883,20 +3869,25 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         return z > 0 && size <= visibleSpan(s, axis) / (z * cssPxPerPt(viewDpi(s))) + PAGE_EDGE_EPSILON;
     }
 
-    /** The page a vertical move of `dy` from `s`, in single-page view, goes on to
-     *  past the page's edge; null mid-page, or with no page there. */
-    function pageAcrossEdge(s: UIState, dy: number): number | null {
-        const z = renderZoom(s);
+    /** The document points the page can still move by along `dy`, from `s` in
+     *  single-page view, before it reaches its edge. */
+    function roomToEdge(s: UIState, dy: number): number {
         // When the page is smaller than the viewport the engine centers it, so
         // the reported scroll offset is negative and never reaches `maxY`. Treat
         // a fully-visible page as sitting at both edges, so a move in either
         // direction flips rather than dead-ending against the centered clamp.
+        if (fitsView(s, "y")) return 0;
+        const z = renderZoom(s);
         const visibleDocHeight = z > 0 ? visibleSpan(s, "y") / (z * cssPxPerPt(viewDpi(s))) : 0;
         const maxY = Math.max(0, s.scrollSize.height - visibleDocHeight);
-        const fits = fitsView(s, "y");
-        const atBottom = fits || s.scrollY >= maxY - PAGE_EDGE_EPSILON;
-        const atTop = fits || s.scrollY <= PAGE_EDGE_EPSILON;
-        return dy > 0 && atBottom ? pageStep(s, 1) : dy < 0 && atTop ? pageStep(s, -1) : null;
+        const room = dy > 0 ? maxY - s.scrollY : s.scrollY;
+        return room <= PAGE_EDGE_EPSILON ? 0 : room;
+    }
+
+    /** The page a vertical move of `dy` from `s`, in single-page view, goes on to
+     *  past the page's edge; null mid-page, or with no page there. */
+    function pageAcrossEdge(s: UIState, dy: number): number | null {
+        return dy === 0 || roomToEdge(s, dy) > 0 ? null : pageStep(s, dy > 0 ? 1 : -1);
     }
 
     /**

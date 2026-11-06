@@ -24,6 +24,11 @@ listed once, by package. Its major and minor version are those of the
 - Clipping the UI to rounded corners no longer makes Chrome flicker after the
   selection changes, where the caret and the previous selection showed in turn
   for a few seconds, and the ruler's markers moved with them.
+- In single-page view, a trackpad swipe turns one page, and its momentum leaves
+  the new page where it landed. A swipe during the last one's momentum turns
+  another page, in either direction, a light touch or a sideways swipe turns none,
+  and a swipe through a page taller than the view stops at the page's end, for the
+  next swipe to turn it.
 
 ## [0.8.15] - 2026-11-05
 
