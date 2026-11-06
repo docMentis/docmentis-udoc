@@ -19,6 +19,7 @@ import { sessionRoutes } from "./routes/session.ts";
 import { tenantRoutes } from "./routes/tenants.ts";
 import { thumbnailRoutes } from "./routes/thumbnails.ts";
 import { versionRoutes } from "./routes/versions.ts";
+import { createAccess } from "./scope.ts";
 import { seed } from "./seed.ts";
 import { createUdoc } from "./udoc.ts";
 
@@ -31,6 +32,7 @@ mkdirSync(config.dataDir, { recursive: true });
 const db = openDatabase(join(config.dataDir, "shockwave.db"));
 await seed(db);
 const udoc = await createUdoc(db);
+const access = createAccess(db, udoc);
 
 const app = Fastify({
     logger: { level: "warn" },
@@ -44,14 +46,14 @@ const app = Fastify({
     },
 });
 app.setErrorHandler(answerFailure);
-sessionRoutes(app, db);
-tenantRoutes(app, db);
-libraryRoutes(app, db, udoc);
-versionRoutes(app, db, udoc);
-thumbnailRoutes(app, db);
-collectionRoutes(app, db);
-dealRoomRoutes(app, db, udoc);
-frontstageRoutes(app, db);
+sessionRoutes(app, access);
+tenantRoutes(app, access);
+libraryRoutes(app, access);
+versionRoutes(app, access);
+thumbnailRoutes(app, access);
+collectionRoutes(app, access);
+dealRoomRoutes(app, access);
+frontstageRoutes(app, access);
 if (config.webDir) {
     await app.register(fastifyStatic, { root: config.webDir });
     // Any other page is the frontend's to route.

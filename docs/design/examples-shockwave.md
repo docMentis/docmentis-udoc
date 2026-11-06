@@ -223,24 +223,50 @@ seeded users share the demo's password, which the README gives.
 ```
 web/  React, Vite, React Router       server/  Node, Fastify
   pages ───────── /api/* ───────────▶   app routes ──▶ node:sqlite   data/shockwave.db
-  udoc-viewer ─── /udoc/* ──────────▶   gate ──▶ udoc-server ──▶ store   data/udoc/
+  udoc-viewer ─── /udoc/* ──────────▶   gate ──▶ a tenant's udoc-server ──▶ its store   data/udoc/:tenantId/
   udoc-editor     HTTP and WebSocket                   └─ UDocNode (udoc-node)
 ```
 
-**udoc-server keeps the documents; SQLite keeps the app.** The backend builds
-udoc-server with `createUDocServer` over a `DirectoryDocumentStore`, mounted at
-`/udoc` (`basePath`) on its own HTTP server, and it keeps every document,
-renders its pages and serves it part by part and for collaboration. SQLite,
-Node's own `node:sqlite`, keeps what the app adds: tenants, users, sessions, and
+**udoc-server keeps the documents; SQLite keeps the app.** The backend builds a
+udoc-server for each tenant with `createUDocServer` over a `DirectoryDocumentStore`,
+mounted at `/udoc` (`basePath`) on its own HTTP server, and it keeps that tenant's
+documents, renders their pages and serves them part by part and for collaboration.
+SQLite, Node's own `node:sqlite`, keeps what the app adds: tenants, users, sessions, and
 an asset for each document, naming its tenant and its udoc document id, and each
 version's first page as a thumbnail, rendered by udoc-server once, as the
 version's uploaded or saved. The other pages a card in the Library flips to,
 udoc-server renders as they're asked for, and none is kept. No document is kept
 twice.
 
-**The gate.** udoc-server has no end-user authentication, and its ids are
-global. So every `/udoc/*` request and WebSocket upgrade passes the gate first,
-which wants a signed-in session and a document id the user's tenant has an
+**Tenants.** Shockwave is multi-tenant, and no tenant sees anything of another. They
+share one database, and each row says whose it is:
+
+- **The schema.** Every table but `tenants` has `tenant_id`. It starts every table's
+  key, but for `sessions`' token and `version_events`' row number, and it's part of
+  every foreign key, so no row can refer to another tenant's.
+- **The queries.** The routes and the gate hold no database. They hold a `TenantDb`
+  for the request's tenant (`server/db.ts`), which refuses a statement that doesn't
+  name `:tenant`, and binds it itself, so a query that forgets its tenant fails the
+  first time it runs. A route gets one from `Scope` (`server/scope.ts`), with that
+  tenant's documents.
+- **The documents.** Each tenant has its own folder, `data/udoc/:tenantId`, and its own
+  udoc-server, with its own sessions. A request goes to its tenant's, where another
+  tenant's document isn't there to find, whatever the gate lets through; and one
+  tenant's load doesn't close another's sessions.
+- **The way in.** A request says which tenant it's for by a user's email, a session's
+  token, or a frontstage's token, each unique across tenants, and those lookups, in
+  `server/auth.ts`, are all that read across them. So one email is one account, at one
+  tenant. Sign-in takes as long for an email no one has, so that it doesn't say which
+  do, at any tenant. An image a browser keeps it asks about each time, so that whoever
+  signs in next on that browser gets the refusal, not what's kept.
+
+An operation across tenants, when one comes, is something else: it holds the database
+itself, or a `TenantDb` for each tenant it names, in a module of its own. A route never
+reaches one by accident.
+
+**The gate.** udoc-server has no end-user authentication. So every `/udoc/*` request
+and WebSocket upgrade passes the gate first, which wants a signed-in session and a
+document id the user's tenant has an
 asset for, and lets a user only read it. Those who read the Library read all of
 it; anyone else reads only the checkpoint its file publishes, and nothing of the
 document around it. An upgrade, which joins the collaboration that edits a
@@ -356,11 +382,9 @@ one published, so a draft's first page never reaches them, and the gate opens th
 checkpoint alone. A card here shows that first page and doesn't flip, since udoc-server
 can't render a checkpoint's pages (`GAPS.md`).
 
-**A tenant's collections are its own.** Every route looks a collection or a file up by
-the user's tenant, so another tenant's answers `404`, as one that isn't there. And
-`collection_items` names its tenant, its foreign keys holding both its collection and
-its file to it, so the schema itself can't join two tenants. Within a tenant, everyone
-sees all its collections.
+**A tenant's collections are its own** ([above](#how-it-fits-together)): another
+tenant's answers `404`, as one that isn't there. Within a tenant, everyone sees all its
+collections.
 
 ## Deal Rooms
 

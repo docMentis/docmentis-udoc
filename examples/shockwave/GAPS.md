@@ -20,8 +20,9 @@ a package, its password, the form of its ids. And deleting from the store
 alone leaves the server's open session and collaboration on the document.
 
 **Workaround.** The backend asks its own `/udoc/documents` routes, over
-loopback, with a per-process token its gate admits (`server/udoc.ts`). It
-reads an upload's body once more and makes a second HTTP round trip.
+loopback, with a per-process token its gate admits and the tenant it's for
+(`server/udoc.ts`). It reads an upload's body once more and makes a second HTTP
+round trip.
 
 ## Importing a small document takes over half a second
 
@@ -59,8 +60,8 @@ later ones, while udoc-server kept it open, 5 to 25 ms.
 
 **Workaround.** The backend renders each version's first page once, as it's
 uploaded or saved; keeps it in its database; and serves it from
-`/api/thumbnails/:assetId/:number`, for a browser to keep for good
-(`server/routes/thumbnails.ts`). The other pages a card in the Library flips to
+`/api/thumbnails/:assetId/:number`, for a browser to keep, asking each time that it
+may still read it (`server/routes/thumbnails.ts`). The other pages a card in the Library flips to
 are asked of udoc-server, and rendered again after a reload.
 
 ## A page at an IPv6 address can't verify free usage

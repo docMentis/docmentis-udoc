@@ -1,12 +1,10 @@
 // The API's failures: a route throws a `Refusal`, and every failure, a route's,
 // udoc-server's or Fastify's own, answers its status and `{ error, message }`,
 // a `Failure`.
-import type { DatabaseSync } from "node:sqlite";
-
 import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 
-import type { Role, User } from "../shared/api.ts";
-import { userOf } from "./auth.ts";
+import type { Role } from "../shared/api.ts";
+import type { Access, Scope } from "./scope.ts";
 import { UdocFailure } from "./udoc.ts";
 
 /** The longest name a folder, a file, a collection or a deal room is given. */
@@ -27,18 +25,18 @@ export class Refusal extends Error {
     }
 }
 
-/** The user `request` is signed in as; a `401` for no one. */
-export function signedIn(db: DatabaseSync, request: FastifyRequest): User {
-    const user = userOf(db, request.raw);
-    if (!user) throw new Refusal(401, "signedOut", "no one is signed in");
-    return user;
+/** What `request`'s session reaches; a `401` for no one signed in. */
+export function signedIn(access: Access, request: FastifyRequest): Scope {
+    const scope = access.scopeOf(request.raw);
+    if (!scope) throw new Refusal(401, "signedOut", "no one is signed in");
+    return scope;
 }
 
-/** The user `request` is signed in as, whose role `may` do this; a `401` for no one, and a `403` for one who may not. */
-export function signedInAs(db: DatabaseSync, request: FastifyRequest, may: (role: Role) => boolean): User {
-    const user = signedIn(db, request);
-    if (!may(user.role)) throw new Refusal(403, "forbidden", "your role doesn't let you do this");
-    return user;
+/** What `request`'s session reaches, whose role `may` do this; a `401` for no one, and a `403` for one who may not. */
+export function signedInAs(access: Access, request: FastifyRequest, may: (role: Role) => boolean): Scope {
+    const scope = signedIn(access, request);
+    if (!may(scope.user.role)) throw new Refusal(403, "forbidden", "your role doesn't let you do this");
+    return scope;
 }
 
 /** `value`, a name, trimmed; a `400` for none, or one too long. */
@@ -80,10 +78,36 @@ export function idsOf(value: unknown): string[] {
 /** A color a request gives: `#rrggbb`. */
 export const COLOR = /^#[0-9a-f]{6}$/i;
 
-/** Answer with an image someone uploaded, perhaps an SVG: opened as a page, it runs no script. */
-export function sendImage(reply: FastifyReply, type: string, image: Uint8Array): FastifyReply {
+/**
+ * Answer with `bytes`, which never change while `tag` doesn't, for a browser to
+ * keep and ask about each time: `304` for what it has. So it's kept, and still only
+ * ever shown to one who may read it now: someone signed out, or who signs in after
+ * them on the same browser, gets the refusal and not what's kept.
+ */
+export function sendKept(
+    request: FastifyRequest,
+    reply: FastifyReply,
+    tag: string,
+    type: string,
+    bytes: Uint8Array,
+): FastifyReply {
+    const etag = `"${tag}"`;
+    reply.header("cache-control", "private, no-cache");
+    reply.header("etag", etag);
+    if (request.headers["if-none-match"] === etag) return reply.code(304).send();
+    return reply.type(type).send(Buffer.from(bytes));
+}
+
+/** Answer with an image someone uploaded, perhaps an SVG, as `sendKept` does: opened as a page, it runs no script. */
+export function sendImage(
+    request: FastifyRequest,
+    reply: FastifyReply,
+    tag: string,
+    type: string,
+    image: Uint8Array,
+): FastifyReply {
     reply.header("content-security-policy", "default-src 'none'; style-src 'unsafe-inline'");
-    return reply.type(type).send(Buffer.from(image));
+    return sendKept(request, reply, tag, type, image);
 }
 
 /** Fastify's error handler: each failure as a `Failure`. */

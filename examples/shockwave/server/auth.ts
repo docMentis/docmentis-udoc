@@ -1,6 +1,11 @@
 // Who is signed in. Signing in is a work email and a password, checked against
 // the scrypt hash `users` keeps; it starts a session, a random token in an
 // HTTP-only cookie, kept in `sessions` until it expires or its user signs out.
+//
+// This is where a request comes to say which tenant it's for: an email, a session's
+// token, or a frontstage's. So these alone read across tenants, each a lookup by
+// what's unique across them, and it's the tenant they find that everything after
+// reads through (db.ts).
 import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 import type { DatabaseSync } from "node:sqlite";
@@ -64,6 +69,12 @@ export async function hashPassword(password: string): Promise<string> {
     return `scrypt:${salt.toString("base64url")}:${hash.toString("base64url")}`;
 }
 
+/**
+ * A hash no password matches, compared for an email no one has, so that signing in
+ * takes as long either way: how long it takes mustn't say whose email has an account.
+ */
+const NO_ONE = `scrypt:${randomBytes(16).toString("base64url")}:${randomBytes(64).toString("base64url")}`;
+
 /** Whether `password` is the one `kept` is the hash of. */
 async function passwordMatches(password: string, kept: string): Promise<boolean> {
     const [scheme, salt, hash] = kept.split(":");
@@ -96,10 +107,12 @@ export async function signIn(
             WHERE users.email = ?`,
         )
         .get(email.trim().toLowerCase()) as (UserRow & { password_hash: string }) | undefined;
-    if (!row || !(await passwordMatches(password, row.password_hash))) return undefined;
+    const matches = await passwordMatches(password, row?.password_hash ?? NO_ONE);
+    if (!row || !matches) return undefined;
     const token = randomBytes(32).toString("base64url");
-    db.prepare("INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)").run(
+    db.prepare("INSERT INTO sessions (id, tenant_id, user_id, expires_at) VALUES (?, ?, ?, ?)").run(
         token,
+        row.tenant_id,
         row.id,
         Date.now() + SESSION_SECONDS * 1000,
     );
@@ -113,12 +126,20 @@ export function userOf(db: DatabaseSync, request: IncomingMessage): User | undef
     const row = db
         .prepare(
             `SELECT ${USER_COLUMNS} FROM sessions
-            JOIN users ON users.id = sessions.user_id
+            JOIN users ON users.tenant_id = sessions.tenant_id AND users.id = sessions.user_id
             JOIN tenants ON tenants.id = users.tenant_id
             WHERE sessions.id = ? AND sessions.expires_at > ?`,
         )
         .get(token, Date.now()) as UserRow | undefined;
     return row && userOfRow(row);
+}
+
+/** The tenant whose frontstage is at `token`, a link's; `undefined` for none. */
+export function tenantOfFrontstage(db: DatabaseSync, token: string): string | undefined {
+    const row = db.prepare("SELECT tenant_id FROM frontstages WHERE token = ?").get(token) as
+        | { tenant_id: string }
+        | undefined;
+    return row?.tenant_id;
 }
 
 /** Sign `request`'s session out: the `Set-Cookie` that clears it. */

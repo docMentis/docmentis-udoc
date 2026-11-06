@@ -8,8 +8,6 @@
 // it. No one reviews what they submitted themselves. A deal room's file has its
 // versions the same way, those who enter the room in place of those who keep the
 // library: what publishes one is putting its room on the frontstage.
-import type { DatabaseSync } from "node:sqlite";
-
 import type { FastifyInstance } from "fastify";
 
 import { managesLibrary, readsLibrary, reviewsLibrary } from "../../shared/api.ts";
@@ -27,10 +25,10 @@ import type {
 } from "../../shared/api.ts";
 import { ASSETS, ASSET_COLUMNS, anyFileOf, assetOf, assetOfRow } from "../assets.ts";
 import type { AssetRow } from "../assets.ts";
-import { inTransaction } from "../db.ts";
+import type { TenantDb } from "../db.ts";
 import { anySentToReview, entersDealRoom } from "../dealRooms.ts";
 import { Refusal, noteOf, signedIn } from "../http.ts";
-import type { Udoc } from "../udoc.ts";
+import type { Access } from "../scope.ts";
 import { keepThumbnail } from "./thumbnails.ts";
 
 /**
@@ -76,27 +74,29 @@ interface EventRow {
 }
 
 /** Whether `user` edits `file`: a library's, if they keep the library; a deal room's, if they enter the room. */
-function editsFile(db: DatabaseSync, user: User, file: Asset): boolean {
+function editsFile(db: TenantDb, user: User, file: Asset): boolean {
     return file.dealRoomId === null ? managesLibrary(user.role) : entersDealRoom(db, user, file.dealRoomId);
 }
 
 /** A file's versions, newest first. */
-export function versionsOf(db: DatabaseSync, assetId: string): Version[] {
+export function versionsOf(db: TenantDb, assetId: string): Version[] {
     const rows = db
         .prepare(
             `SELECT versions.number, versions.checkpoint, versions.status, versions.reviewer_id,
                 users.name AS reviewer_name
-            FROM versions LEFT JOIN users ON users.id = versions.reviewer_id
-            WHERE versions.asset_id = ? ORDER BY versions.number DESC`,
+            FROM versions LEFT JOIN users ON users.tenant_id = versions.tenant_id AND users.id = versions.reviewer_id
+            WHERE versions.tenant_id = :tenant AND versions.asset_id = ? ORDER BY versions.number DESC`,
         )
         .all(assetId) as unknown as VersionRow[];
     const events = db
         .prepare(
             `SELECT version_events.number, version_events.kind, version_events.user_id, users.name AS user_name,
                 version_events.to_user_id, target.name AS to_user_name, version_events.at, version_events.note
-            FROM version_events JOIN users ON users.id = version_events.user_id
-            LEFT JOIN users AS target ON target.id = version_events.to_user_id
-            WHERE version_events.asset_id = ? ORDER BY version_events.id`,
+            FROM version_events JOIN users ON users.tenant_id = version_events.tenant_id
+                AND users.id = version_events.user_id
+            LEFT JOIN users AS target ON target.tenant_id = version_events.tenant_id
+                AND target.id = version_events.to_user_id
+            WHERE version_events.tenant_id = :tenant AND version_events.asset_id = ? ORDER BY version_events.id`,
         )
         .all(assetId) as unknown as EventRow[];
     return rows.map(({ number, checkpoint, status, reviewer_id: reviewerId, reviewer_name: reviewerName }) => ({
@@ -118,7 +118,7 @@ export function versionsOf(db: DatabaseSync, assetId: string): Version[] {
 
 /** Record what `userId` did to version `number` of file `assetId`. */
 export function addEvent(
-    db: DatabaseSync,
+    db: TenantDb,
     {
         assetId,
         number,
@@ -138,34 +138,33 @@ export function addEvent(
     },
 ): void {
     db.prepare(
-        "INSERT INTO version_events (asset_id, number, kind, user_id, to_user_id, at, note) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        `INSERT INTO version_events (tenant_id, asset_id, number, kind, user_id, to_user_id, at, note)
+        VALUES (:tenant, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(assetId, number, kind, userId, toUserId, at, note);
 }
 
 /** Record a new version of file `assetId`, checkpoint `checkpoint`, a draft: its number. Run in a transaction. */
 function addVersion(
-    db: DatabaseSync,
+    db: TenantDb,
     assetId: string,
     checkpoint: number,
     userId: string,
     at: number,
     note: string | null,
 ): number {
-    const { latest } = db.prepare("SELECT MAX(number) AS latest FROM versions WHERE asset_id = ?").get(assetId) as {
-        latest: number | null;
-    };
+    const { latest } = db
+        .prepare("SELECT MAX(number) AS latest FROM versions WHERE tenant_id = :tenant AND asset_id = ?")
+        .get(assetId) as { latest: number | null };
     const number = (latest ?? 0) + 1;
-    db.prepare("INSERT INTO versions (asset_id, number, checkpoint, status) VALUES (?, ?, ?, 'draft')").run(
-        assetId,
-        number,
-        checkpoint,
-    );
+    db.prepare(
+        "INSERT INTO versions (tenant_id, asset_id, number, checkpoint, status) VALUES (:tenant, ?, ?, ?, 'draft')",
+    ).run(assetId, number, checkpoint);
     addEvent(db, { assetId, number, kind: "saved", userId, at, note });
     return number;
 }
 
 /** A new file's first version: its upload, the checkpoint importing it made. Run in a transaction. */
-export function addFirstVersion(db: DatabaseSync, assetId: string, userId: string, at: number): void {
+export function addFirstVersion(db: TenantDb, assetId: string, userId: string, at: number): void {
     addVersion(db, assetId, 0, userId, at, null);
 }
 
@@ -174,21 +173,24 @@ export function addFirstVersion(db: DatabaseSync, assetId: string, userId: strin
  * of a version the library published, so approved as that was, with `note` saying
  * which. Run in a transaction.
  */
-export function addCopiedVersion(db: DatabaseSync, assetId: string, userId: string, at: number, note: string): void {
+export function addCopiedVersion(db: TenantDb, assetId: string, userId: string, at: number, note: string): void {
     const number = addVersion(db, assetId, 0, userId, at, note);
-    db.prepare("UPDATE versions SET status = 'approved' WHERE asset_id = ? AND number = ?").run(assetId, number);
+    db.prepare("UPDATE versions SET status = 'approved' WHERE tenant_id = :tenant AND asset_id = ? AND number = ?").run(
+        assetId,
+        number,
+    );
 }
 
 const OWN_SUBMISSION = () => new Refusal(403, "ownSubmission", "no one reviews what they submitted themselves");
 
 /**
- * `value`, the id of someone at `user`'s tenant to send a version to, which
+ * `value`, the id of someone at the tenant to send a version to, which
  * `submitterId` submitted: a `400` for no one, or someone who doesn't review,
  * and a `403` for who submitted it.
  */
-function reviewerOf(db: DatabaseSync, user: User, value: unknown, submitterId: string): string {
+function reviewerOf(db: TenantDb, value: unknown, submitterId: string): string {
     if (typeof value !== "string") throw new Refusal(400, "badRequest", "a reviewer is needed");
-    const row = db.prepare("SELECT role FROM users WHERE id = ? AND tenant_id = ?").get(value, user.tenant.id) as
+    const row = db.prepare("SELECT role FROM users WHERE tenant_id = :tenant AND id = ?").get(value) as
         | { role: Role }
         | undefined;
     if (!row || !reviewsLibrary(row.role)) throw new Refusal(400, "notAReviewer", "that person doesn't review");
@@ -197,17 +199,17 @@ function reviewerOf(db: DatabaseSync, user: User, value: unknown, submitterId: s
 }
 
 /** Whether version `number` of file `assetId` has had an event of one of `kinds`. */
-function hasEvent(db: DatabaseSync, assetId: string, number: number, kinds: VersionEvent["kind"][]): boolean {
+function hasEvent(db: TenantDb, assetId: string, number: number, kinds: VersionEvent["kind"][]): boolean {
     const row = db
         .prepare(
-            `SELECT 1 FROM version_events WHERE asset_id = ? AND number = ?
+            `SELECT 1 FROM version_events WHERE tenant_id = :tenant AND asset_id = ? AND number = ?
             AND kind IN (${kinds.map(() => "?").join(", ")})`,
         )
         .get(assetId, number, ...kinds);
     return row !== undefined;
 }
 
-export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc): void {
+export function versionRoutes(app: FastifyInstance, access: Access): void {
     /**
      * `{ versions }`: what's waiting on the user, each version with its file,
      * for them alone, whatever their role. What was sent to them to review. And
@@ -218,29 +220,32 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
      * they submit from their deal rooms.
      */
     app.get("/api/library/attention", async (request): Promise<{ versions: WaitingVersion[] }> => {
-        const user = signedIn(db, request);
+        const { user, db } = signedIn(access, request);
         const rows = db
             .prepare(
                 `SELECT ${ASSET_COLUMNS}, waiting.number AS waiting_number, waiting.status AS waiting_status
-                FROM ${ASSETS} JOIN versions AS waiting ON waiting.asset_id = assets.id
+                FROM ${ASSETS} JOIN versions AS waiting ON waiting.tenant_id = assets.tenant_id
+                    AND waiting.asset_id = assets.id
                 WHERE assets.tenant_id = :tenant AND (
                     (waiting.status = 'submitted' AND waiting.reviewer_id = :me)
                     OR (
                         EXISTS (
                             SELECT 1 FROM version_events AS event
-                            WHERE event.asset_id = waiting.asset_id AND event.number = waiting.number
+                            WHERE event.tenant_id = waiting.tenant_id AND event.asset_id = waiting.asset_id
+                                AND event.number = waiting.number
                                 AND event.kind = 'submitted' AND event.user_id = :me
                         )
                         AND NOT EXISTS (
                             SELECT 1 FROM version_events AS event
-                            WHERE event.asset_id = waiting.asset_id AND event.number = waiting.number
+                            WHERE event.tenant_id = waiting.tenant_id AND event.asset_id = waiting.asset_id
+                                AND event.number = waiting.number
                                 AND event.kind IN ('dismissed', 'published')
                         )
                         AND (
                             (waiting.status = 'returned' AND NOT EXISTS (
                                 SELECT 1 FROM version_events AS event
-                                WHERE event.asset_id = waiting.asset_id AND event.number > waiting.number
-                                    AND event.kind = 'submitted'
+                                WHERE event.tenant_id = waiting.tenant_id AND event.asset_id = waiting.asset_id
+                                    AND event.number > waiting.number AND event.kind = 'submitted'
                             ))
                             OR (
                                 waiting.status = 'approved'
@@ -251,7 +256,7 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 )
                 ORDER BY assets.name COLLATE NOCASE, waiting.number DESC`,
             )
-            .all({ tenant: user.tenant.id, me: user.id }) as unknown as (AssetRow & {
+            .all({ me: user.id }) as unknown as (AssetRow & {
             waiting_number: number;
             waiting_status: VersionStatus;
         })[];
@@ -266,10 +271,10 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
     /** `{ reviewers }`: those at the user's tenant a version can be sent to, by name. */
     app.get("/api/library/reviewers", async (request): Promise<{ reviewers: Reviewer[] }> => {
-        const user = signedIn(db, request);
+        const { db } = signedIn(access, request);
         const rows = db
-            .prepare("SELECT id, name, title, role FROM users WHERE tenant_id = ? ORDER BY name COLLATE NOCASE")
-            .all(user.tenant.id) as unknown as (Reviewer & { role: Role })[];
+            .prepare("SELECT id, name, title, role FROM users WHERE tenant_id = :tenant ORDER BY name COLLATE NOCASE")
+            .all() as unknown as (Reviewer & { role: Role })[];
         return {
             reviewers: rows
                 .filter(({ role }) => reviewsLibrary(role))
@@ -278,12 +283,12 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
     });
 
     /**
-     * File `id` of the user's tenant, for a request about its versions: a `403`
+     * File `id` of the tenant's, for a request about its versions: a `403`
      * for a library's to one who doesn't read the library, and a `404` for a deal
      * room's to one with no business with it.
      */
-    function fileFor(user: User, id: string): Asset {
-        const file = anyFileOf(db, user, id);
+    function fileFor(db: TenantDb, user: User, id: string): Asset {
+        const file = anyFileOf(db, id);
         if (file.dealRoomId === null) {
             if (!readsLibrary(user.role)) throw new Refusal(403, "forbidden", "your role doesn't let you do this");
         } else if (!entersDealRoom(db, user, file.dealRoomId) && !anySentToReview(db, user, file.id))
@@ -293,8 +298,8 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
     /** `{ versions }`: a file's versions, newest first. */
     app.get<{ Params: { id: string } }>("/api/assets/:id/versions", async (request) => {
-        const user = signedIn(db, request);
-        const file = fileFor(user, request.params.id);
+        const { user, db } = signedIn(access, request);
+        const file = fileFor(db, user, request.params.id);
         const versions = versionsOf(db, file.id);
         if (editsFile(db, user, file) || file.dealRoomId === null) return { versions };
         // A reviewer who isn't on the room reads what was sent to them.
@@ -309,20 +314,20 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
     app.post<{ Params: { id: string }; Body: { note?: unknown } | undefined }>(
         "/api/assets/:id/versions",
         async (request, reply) => {
-            const user = signedIn(db, request);
-            const file = fileFor(user, request.params.id);
+            const { user, db, documents } = signedIn(access, request);
+            const file = fileFor(db, user, request.params.id);
             if (!editsFile(db, user, file)) throw new Refusal(403, "forbidden", "your role doesn't let you do this");
             const { id, documentId } = file;
             const note = noteOf(request.body?.note);
-            const checkpoint = await udoc.checkpoint(documentId);
-            const number = inTransaction(db, () => addVersion(db, id, checkpoint, user.id, Date.now(), note));
+            const checkpoint = await documents.checkpoint(documentId);
+            const number = db.transaction(() => addVersion(db, id, checkpoint, user.id, Date.now(), note));
             try {
-                await keepThumbnail(db, udoc, { assetId: id, documentId, number });
+                await keepThumbnail(db, documents, { assetId: id, documentId, number });
             } catch (error) {
                 // The version is kept all the same, with no thumbnail.
                 request.log.warn(error, "a thumbnail wasn't rendered");
             }
-            const answer: VersionedAsset = { asset: anyFileOf(db, user, id), versions: versionsOf(db, id) };
+            const answer: VersionedAsset = { asset: anyFileOf(db, id), versions: versionsOf(db, id) };
             return reply.code(201).send(answer);
         },
     );
@@ -338,8 +343,8 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
             Params: { id: string; number: string };
             Body: { note?: unknown; reviewerId?: unknown } | undefined;
         }>(`/api/assets/:id/versions/:number/${step}`, async (request): Promise<VersionedAsset> => {
-            const user = signedIn(db, request);
-            const asset = fileFor(user, request.params.id);
+            const { user, db } = signedIn(access, request);
+            const asset = fileFor(db, user, request.params.id);
             const edits = editsFile(db, user, asset);
             const reviews = reviewsLibrary(user.role);
             if (!(taker === "editor" ? edits : taker === "reviewer" ? reviews : edits || reviews))
@@ -352,20 +357,23 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 );
             const number = Number(request.params.number);
             const row = db
-                .prepare("SELECT status, reviewer_id FROM versions WHERE asset_id = ? AND number = ?")
+                .prepare(
+                    "SELECT status, reviewer_id FROM versions WHERE tenant_id = :tenant AND asset_id = ? AND number = ?",
+                )
                 .get(asset.id, number) as { status: VersionStatus; reviewer_id: string | null } | undefined;
             if (!row) throw new Refusal(404, "notFound", "no such version");
             if (!from.includes(row.status))
                 throw new Refusal(409, "wrongStatus", `only a version that's ${from.join(" or ")} can take this step`);
             const submitter = db
                 .prepare(
-                    `SELECT user_id FROM version_events WHERE asset_id = ? AND number = ? AND kind = 'submitted'
+                    `SELECT user_id FROM version_events
+                    WHERE tenant_id = :tenant AND asset_id = ? AND number = ? AND kind = 'submitted'
                     ORDER BY id DESC LIMIT 1`,
                 )
                 .get(asset.id, number) as { user_id: string } | undefined;
 
             let sentTo: string | null = null;
-            if (step === "submit") sentTo = reviewerOf(db, user, request.body?.reviewerId, user.id);
+            if (step === "submit") sentTo = reviewerOf(db, request.body?.reviewerId, user.id);
             if (step === "approve" || step === "return") {
                 if (submitter?.user_id === user.id) throw OWN_SUBMISSION();
                 if (row.reviewer_id !== user.id)
@@ -374,7 +382,7 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
             if (step === "reassign") {
                 if (!edits && row.reviewer_id !== user.id)
                     throw new Refusal(403, "notYourReview", "this version was sent to someone else to review");
-                sentTo = reviewerOf(db, user, request.body?.reviewerId, submitter?.user_id ?? "");
+                sentTo = reviewerOf(db, request.body?.reviewerId, submitter?.user_id ?? "");
                 if (sentTo === row.reviewer_id)
                     throw new Refusal(409, "wrongStatus", "this version was sent to them already");
             }
@@ -389,15 +397,15 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
             const note = noteOf(request.body?.note);
             if (needsNote && !note) throw new Refusal(400, "badRequest", "a note is needed");
-            inTransaction(db, () => {
-                db.prepare("UPDATE versions SET status = ?, reviewer_id = ? WHERE asset_id = ? AND number = ?").run(
-                    to ?? row.status,
-                    sentTo ?? row.reviewer_id,
-                    asset.id,
-                    number,
-                );
+            db.transaction(() => {
+                db.prepare(
+                    "UPDATE versions SET status = ?, reviewer_id = ? WHERE tenant_id = :tenant AND asset_id = ? AND number = ?",
+                ).run(to ?? row.status, sentTo ?? row.reviewer_id, asset.id, number);
                 if (step === "publish")
-                    db.prepare("UPDATE assets SET published_version = ? WHERE id = ?").run(number, asset.id);
+                    db.prepare("UPDATE assets SET published_version = ? WHERE tenant_id = :tenant AND id = ?").run(
+                        number,
+                        asset.id,
+                    );
                 addEvent(db, {
                     assetId: asset.id,
                     number,
@@ -408,7 +416,7 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                     note,
                 });
             });
-            return { asset: anyFileOf(db, user, asset.id), versions: versionsOf(db, asset.id) };
+            return { asset: anyFileOf(db, asset.id), versions: versionsOf(db, asset.id) };
         });
     }
 }

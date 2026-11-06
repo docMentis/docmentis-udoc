@@ -4,17 +4,17 @@
 // udoc-server's to keep: an upload is imported into it, its first page rendered
 // and kept as its thumbnail, and a file deleted is forgotten by it.
 import { randomUUID } from "node:crypto";
-import type { DatabaseSync } from "node:sqlite";
 
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import { managesLibrary, readsLibrary } from "../../shared/api.ts";
-import type { Asset, Folder, FolderListing, User } from "../../shared/api.ts";
+import type { Asset, Folder, FolderListing } from "../../shared/api.ts";
 import { ASSETS, ASSET_COLUMNS, IN_LIBRARY, assetOf, assetOfRow } from "../assets.ts";
 import type { AssetRow } from "../assets.ts";
-import { inTransaction, isUniqueFailure } from "../db.ts";
+import { isUniqueFailure } from "../db.ts";
+import type { TenantDb } from "../db.ts";
 import { Refusal, nameOf, signedInAs } from "../http.ts";
-import type { Udoc } from "../udoc.ts";
+import type { Access, Scope } from "../scope.ts";
 import { keepThumbnail, thumbnailPath } from "./thumbnails.ts";
 import { addFirstVersion } from "./versions.ts";
 
@@ -36,7 +36,34 @@ function folderOfRow({ id, name, parent_id: parentId }: FolderRow): Folder {
 
 const NAME_TAKEN = () => new Refusal(409, "nameTaken", "a folder there has that name already");
 
-export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc): void {
+/** Folder `id` of the tenant's; a `404` for none. */
+function folderOf(db: TenantDb, id: string): Folder {
+    const row = db.prepare("SELECT id, name, parent_id FROM folders WHERE tenant_id = :tenant AND id = ?").get(id) as
+        | FolderRow
+        | undefined;
+    if (!row) throw new Refusal(404, "notFound", "no such folder");
+    return folderOfRow(row);
+}
+
+/** The folders from the top down to folder `id`, it last; a `404` for none. */
+function pathTo(db: TenantDb, id: string | null): Folder[] {
+    if (id === null) return [];
+    const rows = db
+        .prepare(
+            `WITH RECURSIVE path (id, name, parent_id, depth) AS (
+                SELECT id, name, parent_id, 0 FROM folders WHERE tenant_id = :tenant AND id = ?
+                UNION ALL
+                SELECT folders.id, folders.name, folders.parent_id, path.depth + 1
+                FROM folders JOIN path ON folders.tenant_id = :tenant AND folders.id = path.parent_id
+            )
+            SELECT id, name, parent_id FROM path ORDER BY depth DESC`,
+        )
+        .all(id) as unknown as FolderRow[];
+    if (rows.length === 0) throw new Refusal(404, "notFound", "no such folder");
+    return rows.map(folderOfRow);
+}
+
+export function libraryRoutes(app: FastifyInstance, access: Access): void {
     // An upload is the file's bytes, as they are.
     app.addContentTypeParser(
         "application/octet-stream",
@@ -44,86 +71,55 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
         (_request, body, done) => done(null, body),
     );
 
-    /** The user signed in, who changes the library; a `403` for one who doesn't. */
-    const manager = (request: FastifyRequest): User => signedInAs(db, request, managesLibrary);
+    /** What's the user's signed in, who changes the library; a `403` for one who doesn't. */
+    const manager = (request: FastifyRequest): Scope => signedInAs(access, request, managesLibrary);
 
-    /** The user signed in, who reads the library; a `403` for one who doesn't. */
-    const reader = (request: FastifyRequest): User => signedInAs(db, request, readsLibrary);
-
-    /** Folder `id` of `user`'s tenant; a `404` for none. */
-    function folderOf(user: User, id: string): Folder {
-        const row = db
-            .prepare("SELECT id, name, parent_id FROM folders WHERE id = ? AND tenant_id = ?")
-            .get(id, user.tenant.id) as FolderRow | undefined;
-        if (!row) throw new Refusal(404, "notFound", "no such folder");
-        return folderOfRow(row);
-    }
-
-    /** The folders from the top down to folder `id`, it last; a `404` for none. */
-    function pathTo(user: User, id: string | null): Folder[] {
-        if (id === null) return [];
-        const rows = db
-            .prepare(
-                `WITH RECURSIVE path (id, name, parent_id, depth) AS (
-                    SELECT id, name, parent_id, 0 FROM folders WHERE id = ? AND tenant_id = ?
-                    UNION ALL
-                    SELECT folders.id, folders.name, folders.parent_id, path.depth + 1
-                    FROM folders JOIN path ON folders.id = path.parent_id
-                )
-                SELECT id, name, parent_id FROM path ORDER BY depth DESC`,
-            )
-            .all(id, user.tenant.id) as unknown as FolderRow[];
-        if (rows.length === 0) throw new Refusal(404, "notFound", "no such folder");
-        return rows.map(folderOfRow);
-    }
+    /** What's the user's signed in, who reads the library; a `403` for one who doesn't. */
+    const reader = (request: FastifyRequest): Scope => signedInAs(access, request, readsLibrary);
 
     /** `FolderListing`: what folder `?folder=` holds, or, with none, the library's top. */
     app.get<{ Querystring: { folder?: string } }>("/api/library", async (request): Promise<FolderListing> => {
-        const user = reader(request);
+        const { db } = reader(request);
         const folderId = request.query.folder || null;
-        const path = pathTo(user, folderId);
+        const path = pathTo(db, folderId);
         const folders = db
             .prepare(
-                `SELECT id, name, parent_id FROM folders WHERE tenant_id = ? AND parent_id IS ?
+                `SELECT id, name, parent_id FROM folders WHERE tenant_id = :tenant AND parent_id IS ?
                 ORDER BY name COLLATE NOCASE`,
             )
-            .all(user.tenant.id, folderId) as unknown as FolderRow[];
+            .all(folderId) as unknown as FolderRow[];
         const assets = db
             .prepare(
                 `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
-                WHERE assets.tenant_id = ? AND ${IN_LIBRARY} AND assets.folder_id IS ?
+                WHERE assets.tenant_id = :tenant AND ${IN_LIBRARY} AND assets.folder_id IS ?
                 ORDER BY assets.name COLLATE NOCASE`,
             )
-            .all(user.tenant.id, folderId) as unknown as AssetRow[];
+            .all(folderId) as unknown as AssetRow[];
         return { path, folders: folders.map(folderOfRow), assets: assets.map(assetOfRow) };
     });
 
     /** `{ assets }`: the files uploaded last, in any folder, newest first. */
     app.get("/api/library/recent", async (request): Promise<{ assets: Asset[] }> => {
-        const user = reader(request);
+        const { db } = reader(request);
         const assets = db
             .prepare(
                 `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
-                WHERE assets.tenant_id = ? AND ${IN_LIBRARY} ORDER BY assets.uploaded_at DESC LIMIT ?`,
+                WHERE assets.tenant_id = :tenant AND ${IN_LIBRARY} ORDER BY assets.uploaded_at DESC LIMIT ?`,
             )
-            .all(user.tenant.id, RECENT_FILES) as unknown as AssetRow[];
+            .all(RECENT_FILES) as unknown as AssetRow[];
         return { assets: assets.map(assetOfRow) };
     });
 
     /** Make a folder, `{ name, parentId }`, `parentId` `null` at the top: `201 { folder }`. */
     app.post<{ Body: { name?: unknown; parentId?: unknown } | undefined }>("/api/folders", async (request, reply) => {
-        const user = manager(request);
+        const { db } = manager(request);
         const name = nameOf(request.body?.name);
-        const parentId = typeof request.body?.parentId === "string" ? folderOf(user, request.body.parentId).id : null;
+        const parentId = typeof request.body?.parentId === "string" ? folderOf(db, request.body.parentId).id : null;
         const folder: Folder = { id: randomUUID(), name, parentId };
         try {
-            db.prepare("INSERT INTO folders (id, tenant_id, parent_id, name, created_at) VALUES (?, ?, ?, ?, ?)").run(
-                folder.id,
-                user.tenant.id,
-                parentId,
-                name,
-                Date.now(),
-            );
+            db.prepare(
+                "INSERT INTO folders (tenant_id, id, parent_id, name, created_at) VALUES (:tenant, ?, ?, ?, ?)",
+            ).run(folder.id, parentId, name, Date.now());
         } catch (error) {
             throw isUniqueFailure(error) ? NAME_TAKEN() : error;
         }
@@ -132,10 +128,10 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
     /** Rename a folder, `{ name }`: `{ folder }`. */
     app.patch<{ Params: { id: string }; Body: { name?: unknown } | undefined }>("/api/folders/:id", async (request) => {
-        const user = manager(request);
-        const folder = { ...folderOf(user, request.params.id), name: nameOf(request.body?.name) };
+        const { db } = manager(request);
+        const folder = { ...folderOf(db, request.params.id), name: nameOf(request.body?.name) };
         try {
-            db.prepare("UPDATE folders SET name = ? WHERE id = ?").run(folder.name, folder.id);
+            db.prepare("UPDATE folders SET name = ? WHERE tenant_id = :tenant AND id = ?").run(folder.name, folder.id);
         } catch (error) {
             throw isUniqueFailure(error) ? NAME_TAKEN() : error;
         }
@@ -144,13 +140,13 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
     /** Delete a folder with nothing in it: `204`, or `409` for one with folders or files. */
     app.delete<{ Params: { id: string } }>("/api/folders/:id", async (request, reply) => {
-        const user = manager(request);
-        const { id } = folderOf(user, request.params.id);
+        const { db } = manager(request);
+        const { id } = folderOf(db, request.params.id);
         const holds =
-            db.prepare("SELECT 1 FROM folders WHERE parent_id = ?").get(id) ??
-            db.prepare("SELECT 1 FROM assets WHERE folder_id = ?").get(id);
+            db.prepare("SELECT 1 FROM folders WHERE tenant_id = :tenant AND parent_id = ?").get(id) ??
+            db.prepare("SELECT 1 FROM assets WHERE tenant_id = :tenant AND folder_id = ?").get(id);
         if (holds) throw new Refusal(409, "folderNotEmpty", "only an empty folder is deleted");
-        db.prepare("DELETE FROM folders WHERE id = ?").run(id);
+        db.prepare("DELETE FROM folders WHERE tenant_id = :tenant AND id = ?").run(id);
         return reply.code(204).send();
     });
 
@@ -165,13 +161,13 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
         "/api/assets",
         { bodyLimit: MAX_UPLOAD_BYTES },
         async (request, reply) => {
-            const user = manager(request);
+            const { user, db, documents } = manager(request);
             const name = nameOf(request.query.name);
-            const folderId = request.query.folder ? folderOf(user, request.query.folder).id : null;
+            const folderId = request.query.folder ? folderOf(db, request.query.folder).id : null;
             const bytes = request.body;
             if (!(bytes instanceof Buffer) || bytes.length === 0)
                 throw new Refusal(400, "badRequest", "the body is the file's bytes, as application/octet-stream");
-            const document = await udoc.importDocument(bytes);
+            const document = await documents.importDocument(bytes);
             const asset: Asset = {
                 id: randomUUID(),
                 name,
@@ -187,13 +183,12 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 dealRoomId: null,
             };
             try {
-                inTransaction(db, () => {
+                db.transaction(() => {
                     db.prepare(
-                        `INSERT INTO assets (id, tenant_id, folder_id, name, format, size, document_id, uploaded_by,
-                        uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                        `INSERT INTO assets (tenant_id, id, folder_id, name, format, size, document_id, uploaded_by,
+                        uploaded_at) VALUES (:tenant, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     ).run(
                         asset.id,
-                        user.tenant.id,
                         folderId,
                         name,
                         asset.format,
@@ -206,11 +201,15 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 });
             } catch (error) {
                 // Its folder deleted meanwhile, say: no asset, so no document.
-                await udoc.deleteDocument(document.id);
+                await documents.deleteDocument(document.id);
                 throw error;
             }
             try {
-                const png = await keepThumbnail(db, udoc, { assetId: asset.id, documentId: document.id, number: 1 });
+                const png = await keepThumbnail(db, documents, {
+                    assetId: asset.id,
+                    documentId: document.id,
+                    number: 1,
+                });
                 if (png) asset.thumbnail = thumbnailPath(asset.id, 1);
             } catch (error) {
                 // The file is kept all the same, with no thumbnail.
@@ -222,25 +221,25 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
     /** `{ asset, path }`: a file, and the folders from the top down to the one it's in. */
     app.get<{ Params: { id: string } }>("/api/assets/:id", async (request) => {
-        const user = reader(request);
-        const asset = assetOf(db, user, request.params.id);
-        return { asset, path: pathTo(user, asset.folderId) };
+        const { db } = reader(request);
+        const asset = assetOf(db, request.params.id);
+        return { asset, path: pathTo(db, asset.folderId) };
     });
 
     /** Rename a file, `{ name }`: `{ asset }`. */
     app.patch<{ Params: { id: string }; Body: { name?: unknown } | undefined }>("/api/assets/:id", async (request) => {
-        const user = manager(request);
-        const asset = { ...assetOf(db, user, request.params.id), name: nameOf(request.body?.name) };
-        db.prepare("UPDATE assets SET name = ? WHERE id = ?").run(asset.name, asset.id);
+        const { db } = manager(request);
+        const asset = { ...assetOf(db, request.params.id), name: nameOf(request.body?.name) };
+        db.prepare("UPDATE assets SET name = ? WHERE tenant_id = :tenant AND id = ?").run(asset.name, asset.id);
         return { asset };
     });
 
     /** Delete a file, and the document udoc-server keeps for it: `204`. */
     app.delete<{ Params: { id: string } }>("/api/assets/:id", async (request, reply) => {
-        const user = manager(request);
-        const { id, documentId } = assetOf(db, user, request.params.id);
-        await udoc.deleteDocument(documentId);
-        db.prepare("DELETE FROM assets WHERE id = ?").run(id);
+        const { db, documents } = manager(request);
+        const { id, documentId } = assetOf(db, request.params.id);
+        await documents.deleteDocument(documentId);
+        db.prepare("DELETE FROM assets WHERE tenant_id = :tenant AND id = ?").run(id);
         return reply.code(204).send();
     });
 }
