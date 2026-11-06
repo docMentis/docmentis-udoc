@@ -9,6 +9,9 @@ import "@fontsource-variable/inter";
 
 import { AppShell } from "./AppShell";
 import { Narrator } from "./narrator/Narrator";
+import { CollectionFilePage } from "./pages/CollectionFilePage";
+import { CollectionPage } from "./pages/CollectionPage";
+import { CollectionsPage } from "./pages/CollectionsPage";
 import { FilePage } from "./pages/FilePage";
 import { HomePage } from "./pages/HomePage";
 import { LibraryPage } from "./pages/LibraryPage";
@@ -43,15 +46,9 @@ const router = createBrowserRouter([
                     { path: "library", element: <LibraryPage /> },
                     { path: "library/folders/:folderId", element: <LibraryPage /> },
                     { path: "library/files/:assetId", element: <FilePage /> },
-                    {
-                        path: "collections",
-                        element: (
-                            <PlaceholderPage
-                                title="Collections"
-                                subtitle="Content arranged for selling, and how to use it."
-                            />
-                        ),
-                    },
+                    { path: "collections", element: <CollectionsPage /> },
+                    { path: "collections/:collectionId", element: <CollectionPage /> },
+                    { path: "collections/:collectionId/files/:assetId", element: <CollectionFilePage /> },
                     {
                         path: "deal-rooms",
                         element: (

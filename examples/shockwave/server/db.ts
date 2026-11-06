@@ -1,6 +1,6 @@
 // The app's data, in SQLite: tenants and their brands, their users, the users'
-// sessions, and the library: its folders, its files, their versions and their
-// thumbnails.
+// sessions; the library: its folders, its files, their versions and their
+// thumbnails; and the collections its published files are arranged in.
 import { DatabaseSync } from "node:sqlite";
 
 /**
@@ -170,7 +170,77 @@ const MIGRATIONS = [
         WHERE versions.asset_id = version_events.asset_id AND versions.number = version_events.number
     ) WHERE kind = 'submitted';
     `,
+    // A manager, who arranges collections. SQLite changes a CHECK only by
+    // building the table anew; foreign keys are off as it's built, so what
+    // refers to a user, their sessions among it, stays as it is.
+    `
+    CREATE TABLE users_new (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL REFERENCES tenants (id),
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        name TEXT NOT NULL,
+        title TEXT NOT NULL,
+        role TEXT NOT NULL CHECK (role IN ('admin', 'reviewer', 'manager', 'member'))
+    );
+    INSERT INTO users_new SELECT id, tenant_id, email, password_hash, name, title, role FROM users;
+    DROP TABLE users;
+    ALTER TABLE users_new RENAME TO users;
+    `,
+    // A thumbnail for each version, its first page as it was saved, where each
+    // file had one: so a published version's isn't a later draft's. The one a
+    // file has is its latest version's, and an older version has none.
+    `
+    CREATE TABLE thumbnails_new (
+        asset_id TEXT NOT NULL,
+        number INTEGER NOT NULL,
+        png BLOB,
+        PRIMARY KEY (asset_id, number),
+        FOREIGN KEY (asset_id, number) REFERENCES versions (asset_id, number) ON DELETE CASCADE
+    );
+    INSERT INTO thumbnails_new (asset_id, number, png)
+        SELECT assets.id, (SELECT MAX(number) FROM versions WHERE versions.asset_id = assets.id), thumbnails.png
+        FROM thumbnails JOIN assets ON assets.document_id = thumbnails.document_id;
+    DROP TABLE thumbnails;
+    ALTER TABLE thumbnails_new RENAME TO thumbnails;
+    `,
+    // A tenant's collections, each named apart from its others, and each
+    // choosing its own files, a file in any number of them. An item names its
+    // tenant, and its keys hold both its collection and its file to it, so
+    // nothing can join one tenant's collection to another's file.
+    `
+    CREATE UNIQUE INDEX assets_of_tenant ON assets (id, tenant_id);
+    CREATE TABLE collections (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL REFERENCES tenants (id),
+        name TEXT NOT NULL,
+        description TEXT,
+        instructions TEXT,
+        updated_at INTEGER NOT NULL
+    );
+    CREATE UNIQUE INDEX collections_by_name ON collections (tenant_id, lower(name));
+    CREATE UNIQUE INDEX collections_of_tenant ON collections (id, tenant_id);
+    CREATE TABLE collection_items (
+        collection_id TEXT NOT NULL,
+        asset_id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        position INTEGER NOT NULL,
+        instructions TEXT,
+        PRIMARY KEY (collection_id, asset_id),
+        FOREIGN KEY (collection_id, tenant_id) REFERENCES collections (id, tenant_id) ON DELETE CASCADE,
+        FOREIGN KEY (asset_id, tenant_id) REFERENCES assets (id, tenant_id) ON DELETE CASCADE
+    );
+    CREATE INDEX collection_items_by_asset ON collection_items (asset_id);
+    `,
 ];
+
+/** SQLite's code for a `UNIQUE` constraint failing. */
+const SQLITE_CONSTRAINT_UNIQUE = 2067;
+
+/** Whether `error` is SQLite turning down a second row where a `UNIQUE` constraint allows one. */
+export function isUniqueFailure(error: unknown): boolean {
+    return (error as { errcode?: number }).errcode === SQLITE_CONSTRAINT_UNIQUE;
+}
 
 /** Run `change`: all of it, or, when it throws, none. */
 export function inTransaction<T>(db: DatabaseSync, change: () => T): T {
@@ -188,12 +258,19 @@ export function inTransaction<T>(db: DatabaseSync, change: () => T): T {
 /** Open the database in `file`, migrated to the latest schema. */
 export function openDatabase(file: string): DatabaseSync {
     const db = new DatabaseSync(file);
-    db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
+    db.exec("PRAGMA journal_mode = WAL;");
     const { user_version: applied } = db.prepare("PRAGMA user_version").get() as { user_version: number };
+    // Off while the schema changes, as SQLite has it for building a table anew:
+    // dropping one that others refer to would delete what refers to it, or
+    // refuse to. Each migration's checked before it's kept.
+    db.exec("PRAGMA foreign_keys = OFF");
     for (let version = applied; version < MIGRATIONS.length; version++) {
         db.exec("BEGIN");
         try {
             db.exec(MIGRATIONS[version]);
+            const broken = db.prepare("PRAGMA foreign_key_check").all();
+            if (broken.length > 0)
+                throw new Error(`migration ${version} broke foreign keys: ${JSON.stringify(broken)}`);
             db.exec(`PRAGMA user_version = ${version + 1}`);
             db.exec("COMMIT");
         } catch (error) {
@@ -201,5 +278,6 @@ export function openDatabase(file: string): DatabaseSync {
             throw error;
         }
     }
+    db.exec("PRAGMA foreign_keys = ON");
     return db;
 }

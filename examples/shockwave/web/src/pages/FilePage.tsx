@@ -16,24 +16,14 @@ import { DocumentEditor } from "../DocumentEditor";
 import type { EditingState } from "../DocumentEditor";
 import { DocumentViewer } from "../DocumentViewer";
 import { formatDate, formatDateTime, formatSize, typeLabel } from "../files";
-import { ChevronRightIcon, PanelRightIcon } from "../icons";
+import { ChevronRightIcon } from "../icons";
 import { DeleteDialog, NameDialog } from "../LibraryDialogs";
 import { announceMoment } from "../moments";
 import { useUser } from "../session";
+import { useSidePanel } from "../sidePanel";
 import { ActionsMenu, useDocumentTitle } from "../ui";
 import { VersionDialog, VersionList } from "../Versions";
 import { NotFoundPage } from "./PlaceholderPage";
-
-const PANEL_KEY = "shockwave.file.panel";
-
-/** Whether the side panel is open: unless this browser folded it. */
-function savedPanel(): boolean {
-    try {
-        return localStorage.getItem(PANEL_KEY) !== "folded";
-    } catch {
-        return true;
-    }
-}
 
 /** What a dialog is open for. */
 type Task = "rename" | "delete" | "save" | { step: VersionStep; version: Version };
@@ -93,7 +83,7 @@ export function FilePage() {
     } | null>();
     const [failed, setFailed] = useState(false);
     const [task, setTask] = useState<Task>();
-    const [panel, setPanel] = useState(savedPanel);
+    const { open: panel, show: showPanel, toggle: panelToggle } = useSidePanel();
     const [tab, setTab] = useState<"versions" | "details">("versions");
     const [editingState, setEditingState] = useState<EditingState>();
 
@@ -142,29 +132,6 @@ export function FilePage() {
     const mayReview = reviews && isReviewer && submitter !== user.id;
     const reassignable = reviewers.filter(({ id }) => id !== shown?.reviewer?.id && id !== submitter);
     const dealtWith = shown?.events.some((event) => event.kind === "dismissed" || event.kind === "published");
-
-    // Folding and unfolding the side panel, at its top right, open or folded.
-    const panelToggle = (
-        <button
-            type="button"
-            className="icon-button"
-            aria-label={panel ? "Fold the side panel" : "Unfold the side panel"}
-            aria-expanded={panel}
-            aria-controls="document-panel"
-            onClick={() => showPanel(!panel)}
-        >
-            <PanelRightIcon />
-        </button>
-    );
-
-    function showPanel(open: boolean) {
-        setPanel(open);
-        try {
-            localStorage.setItem(PANEL_KEY, open ? "open" : "folded");
-        } catch {
-            // Kept for this visit alone.
-        }
-    }
 
     /** The file as a change to its versions left it, with the side panel showing them. */
     function changed({ asset: changedAsset, versions: changedVersions }: VersionedAsset) {

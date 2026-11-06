@@ -3,10 +3,11 @@
 
 /**
  * What a user may do at their tenant: an admin keeps the library and the
- * workspace's settings, a reviewer approves what's submitted to the library,
- * and a member uses it.
+ * workspace's settings, a reviewer approves what's submitted to the library, a
+ * manager arranges collections of what's published, and a member sells with
+ * them.
  */
-export type Role = "admin" | "reviewer" | "member";
+export type Role = "admin" | "reviewer" | "manager" | "member";
 
 /**
  * Whether a user in `role` changes the library: makes its folders, uploads its
@@ -25,6 +26,11 @@ export function reviewsLibrary(role: Role): boolean {
 /** Whether a user in `role` reads the library: drafts and all. Anyone else reads only a file's published version. */
 export function readsLibrary(role: Role): boolean {
     return managesLibrary(role) || reviewsLibrary(role);
+}
+
+/** Whether a user in `role` arranges collections: makes them, chooses what's in them, and says how to use it. */
+export function arrangesCollections(role: Role): boolean {
+    return role === "manager";
 }
 
 /** Whether a user in `role` keeps the workspace's settings: its brand, and who's in it. */
@@ -198,6 +204,48 @@ export interface WaitingVersion {
 export interface VersionedAsset {
     asset: Asset;
     versions: Version[];
+}
+
+/**
+ * A file as those who sell with it see it: its published version, and nothing
+ * of the working copy or the other versions around it.
+ */
+export interface PublishedFile {
+    /** The file's id. */
+    id: string;
+    name: string;
+    /** What it was read as, udoc's name for its format: `pdf`, `pptx`, … */
+    format: string;
+    /** The document udoc-server keeps it as. */
+    documentId: string;
+    /** The number of the version published. */
+    version: number;
+    /** The checkpoint that version is, opened from `/udoc/documents/:documentId/checkpoints/:checkpoint/package`. */
+    checkpoint: number;
+    /** Where that version's first page is, for an `<img>`; `null` when it has none. */
+    thumbnail: string | null;
+    /** When that version was published, in milliseconds since the epoch. */
+    publishedAt: number;
+}
+
+/** A file in a collection, which shows whichever version the file publishes. */
+export interface CollectionItem {
+    file: PublishedFile;
+    /** How to use this file. */
+    instructions: string | null;
+}
+
+/** Published files a tenant's manager arranged for its sales team, in the order they chose. */
+export interface Collection {
+    id: string;
+    name: string;
+    /** What it's for. */
+    description: string | null;
+    /** How to use it. */
+    instructions: string | null;
+    /** When it last changed, in milliseconds since the epoch. */
+    updatedAt: number;
+    items: CollectionItem[];
 }
 
 /** What a folder holds, or the library's top. */

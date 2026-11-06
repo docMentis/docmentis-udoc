@@ -11,6 +11,7 @@ import Fastify from "fastify";
 import { config } from "./config.ts";
 import { openDatabase } from "./db.ts";
 import { answerFailure } from "./http.ts";
+import { collectionRoutes } from "./routes/collections.ts";
 import { libraryRoutes } from "./routes/library.ts";
 import { sessionRoutes } from "./routes/session.ts";
 import { tenantRoutes } from "./routes/tenants.ts";
@@ -45,7 +46,8 @@ sessionRoutes(app, db);
 tenantRoutes(app, db);
 libraryRoutes(app, db, udoc);
 versionRoutes(app, db, udoc);
-thumbnailRoutes(app, db, udoc);
+thumbnailRoutes(app, db);
+collectionRoutes(app, db);
 if (config.webDir) {
     await app.register(fastifyStatic, { root: config.webDir });
     // Any other page is the frontend's to route.

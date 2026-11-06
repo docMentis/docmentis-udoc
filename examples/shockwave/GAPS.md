@@ -57,11 +57,11 @@ with no `Cache-Control`, `ETag` or `Last-Modified`, so a browser asks again
 each time. The first answer for a document took 0.8 to 1.3 s, which opens it;
 later ones, while udoc-server kept it open, 5 to 25 ms.
 
-**Workaround.** The backend renders a file's first page once, on upload, or
-for a file uploaded before, when it's first asked for; keeps it in its
-database; and serves it from `/api/thumbnails/:documentId`, for a browser to
-keep for good (`server/routes/thumbnails.ts`). The other pages a card flips
-to are asked of udoc-server, and rendered again after a reload.
+**Workaround.** The backend renders each version's first page once, as it's
+uploaded or saved; keeps it in its database; and serves it from
+`/api/thumbnails/:assetId/:number`, for a browser to keep for good
+(`server/routes/thumbnails.ts`). The other pages a card in the Library flips to
+are asked of udoc-server, and rendered again after a reload.
 
 ## A page at an IPv6 address can't verify free usage
 
@@ -139,9 +139,10 @@ of the version published.
 form for a checkpoint. A checkpoint opens in the viewer, and copies through
 `file.:format`, but its pages can't be asked for as images.
 
-**Workaround.** Saving a version renders the first page as it is then, kept as
-the file's thumbnail; a card's other pages show the working copy, which only
-those who read the library see. Those who don't get no card yet.
+**Workaround.** Saving a version renders its first page as it is then, and keeps
+it as that version's thumbnail. A card in the Library flips through the working
+copy's other pages, which only those who read the Library see. A card in
+Collections shows its published version's first page alone, and doesn't flip.
 
 ## A rounded clip around the editor shows old frames among new ones
 

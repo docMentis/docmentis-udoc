@@ -12,8 +12,8 @@ import { managesLibrary, readsLibrary } from "../../shared/api.ts";
 import type { Asset, Folder, FolderListing, User } from "../../shared/api.ts";
 import { ASSETS, ASSET_COLUMNS, assetOf, assetOfRow } from "../assets.ts";
 import type { AssetRow } from "../assets.ts";
-import { inTransaction } from "../db.ts";
-import { Refusal, signedInAs } from "../http.ts";
+import { inTransaction, isUniqueFailure } from "../db.ts";
+import { Refusal, nameOf, signedInAs } from "../http.ts";
 import type { Udoc } from "../udoc.ts";
 import { keepThumbnail, thumbnailPath } from "./thumbnails.ts";
 import { addFirstVersion } from "./versions.ts";
@@ -24,12 +24,6 @@ const MAX_UPLOAD_BYTES = 256 * 1024 * 1024;
 /** How many of the files uploaded last Home shows. */
 const RECENT_FILES = 8;
 
-/** The longest name a folder or a file is given. */
-const MAX_NAME = 200;
-
-/** SQLite's code for a `UNIQUE` constraint failing. */
-const SQLITE_CONSTRAINT_UNIQUE = 2067;
-
 interface FolderRow {
     id: string;
     name: string;
@@ -38,19 +32,6 @@ interface FolderRow {
 
 function folderOfRow({ id, name, parent_id: parentId }: FolderRow): Folder {
     return { id, name, parentId };
-}
-
-/** `value`, a name for a folder or a file, trimmed; a `400` for none, or one too long. */
-function nameOf(value: unknown): string {
-    const name = typeof value === "string" ? value.trim() : "";
-    if (!name) throw new Refusal(400, "badRequest", "a name is needed");
-    if (name.length > MAX_NAME) throw new Refusal(400, "badRequest", `a name is at most ${MAX_NAME} characters`);
-    return name;
-}
-
-/** Whether `error` is SQLite turning down a second folder of the same name. */
-function nameTaken(error: unknown): boolean {
-    return (error as { errcode?: number }).errcode === SQLITE_CONSTRAINT_UNIQUE;
 }
 
 const NAME_TAKEN = () => new Refusal(409, "nameTaken", "a folder there has that name already");
@@ -143,7 +124,7 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 Date.now(),
             );
         } catch (error) {
-            throw nameTaken(error) ? NAME_TAKEN() : error;
+            throw isUniqueFailure(error) ? NAME_TAKEN() : error;
         }
         return reply.code(201).send({ folder });
     });
@@ -155,7 +136,7 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
         try {
             db.prepare("UPDATE folders SET name = ? WHERE id = ?").run(folder.name, folder.id);
         } catch (error) {
-            throw nameTaken(error) ? NAME_TAKEN() : error;
+            throw isUniqueFailure(error) ? NAME_TAKEN() : error;
         }
         return { folder };
     });
@@ -197,7 +178,7 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 format: document.format,
                 size: bytes.length,
                 documentId: document.id,
-                thumbnail: thumbnailPath(document.id, 1),
+                thumbnail: null,
                 uploadedBy: { id: user.id, name: user.name },
                 uploadedAt: Date.now(),
                 latestVersion: { number: 1, status: "draft" },
@@ -227,9 +208,10 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 throw error;
             }
             try {
-                if (!(await keepThumbnail(db, udoc, document.id))) asset.thumbnail = null;
+                const png = await keepThumbnail(db, udoc, { assetId: asset.id, documentId: document.id, number: 1 });
+                if (png) asset.thumbnail = thumbnailPath(asset.id, 1);
             } catch (error) {
-                // The file is kept all the same; its thumbnail is rendered when it's asked for.
+                // The file is kept all the same, with no thumbnail.
                 request.log.warn(error, "a thumbnail wasn't rendered");
             }
             return reply.code(201).send({ asset });

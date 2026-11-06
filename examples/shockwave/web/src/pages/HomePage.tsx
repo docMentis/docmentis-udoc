@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
-import { readsLibrary } from "../../../shared/api.ts";
-import type { Asset, Role, WaitingVersion } from "../../../shared/api.ts";
+import { arrangesCollections, readsLibrary } from "../../../shared/api.ts";
+import type { Asset, Collection, Role, WaitingVersion } from "../../../shared/api.ts";
 import { api } from "../api";
+import { CollectionCard } from "../CollectionViews";
 import { FileCard } from "../LibraryViews";
 import { useUser } from "../session";
 import { EmptyState, useDocumentTitle } from "../ui";
@@ -18,13 +19,18 @@ type Section = "attention" | "library" | "dealRooms" | "collections";
 const SECTIONS: Record<Role, Section[]> = {
     admin: ["attention", "library"],
     reviewer: ["attention", "library"],
+    manager: ["attention", "dealRooms", "collections"],
     member: ["attention", "dealRooms", "collections"],
 };
+
+/** How many collections Home shows: those changed last. */
+const RECENT_COLLECTIONS = 8;
 
 /** What needs each role, said while nothing does. */
 const ATTENTION: Record<Role, string> = {
     admin: "Versions returned to you, and approved ones to publish, show here.",
     reviewer: "Versions sent to you to review show here.",
+    manager: "Buyers opening what your team has shared show here.",
     member: "Buyers opening what you've shared show here.",
 };
 
@@ -65,13 +71,7 @@ export function HomePage() {
                                 </HomeSection>
                             );
                         case "collections":
-                            return (
-                                <HomeSection key={section} title="Your collections">
-                                    <Empty title="No collections yet">
-                                        The content your sales manager arranges for you to sell with shows here.
-                                    </Empty>
-                                </HomeSection>
-                            );
+                            return <YourCollections key={section} role={user.role} />;
                     }
                 })}
             </div>
@@ -145,6 +145,53 @@ function NewInLibrary() {
                 <div className="file-grid">
                     {assets.map((asset) => (
                         <FileCard key={asset.id} asset={asset} />
+                    ))}
+                </div>
+            )}
+        </HomeSection>
+    );
+}
+
+/** The collections changed last, as cards. */
+function YourCollections({ role }: { role: Role }) {
+    const [collections, setCollections] = useState<Collection[]>();
+    const [failed, setFailed] = useState(false);
+    useEffect(() => {
+        let gone = false;
+        api.collections().then(
+            (found) => gone || setCollections(found),
+            () => gone || setFailed(true),
+        );
+        return () => {
+            gone = true;
+        };
+    }, []);
+    const recent = collections?.toSorted((a, b) => b.updatedAt - a.updatedAt).slice(0, RECENT_COLLECTIONS);
+    return (
+        <HomeSection
+            title="Your collections"
+            link={
+                <Link className="button text" to="/collections">
+                    View collections
+                </Link>
+            }
+        >
+            {failed && (
+                <p className="error" role="alert">
+                    The collections didn't load. Try again.
+                </p>
+            )}
+            {recent?.length === 0 && (
+                <Empty title="No collections yet">
+                    {arrangesCollections(role)
+                        ? "The collections you arrange for your team to sell with show here."
+                        : "The content your sales manager arranges for you to sell with shows here."}
+                </Empty>
+            )}
+            {recent && recent.length > 0 && (
+                <div className="file-grid">
+                    {recent.map((collection) => (
+                        <CollectionCard key={collection.id} collection={collection} />
                     ))}
                 </div>
             )}

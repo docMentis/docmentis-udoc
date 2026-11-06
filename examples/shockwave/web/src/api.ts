@@ -1,10 +1,12 @@
 // The backend's API, as the pages call it.
 import type {
     Asset,
+    Collection,
     Failure,
     Folder,
     FolderListing,
     Person,
+    PublishedFile,
     Reviewer,
     Tenant,
     User,
@@ -14,6 +16,13 @@ import type {
     ViewerColors,
     WaitingVersion,
 } from "../../shared/api.ts";
+
+/** What a collection says of itself, as a person gives it: empty for a description or instructions it hasn't. */
+export interface CollectionFields {
+    name: string;
+    description: string;
+    instructions: string;
+}
 
 /** A request the backend refused: its status, and its failure. */
 export class ApiError extends Error {
@@ -110,6 +119,49 @@ export const api = {
             `/api/assets/${assetId}/versions/${number}/${step}`,
             withJson("POST", { note, reviewerId }),
         ),
+
+    /** The collections of the user's tenant, by name. */
+    async collections(): Promise<Collection[]> {
+        return (await request<{ collections: Collection[] }>("/api/collections")).collections;
+    },
+    /** Collection `id`, with its files; an `ApiError` `404` for none. */
+    async collection(id: string): Promise<Collection> {
+        return (await request<{ collection: Collection }>(`/api/collections/${id}`)).collection;
+    },
+    /** Make a collection; an `ApiError` `409` when the name's taken. */
+    async createCollection(fields: CollectionFields): Promise<Collection> {
+        return (await request<{ collection: Collection }>("/api/collections", withJson("POST", fields))).collection;
+    },
+    /** Change a collection; an `ApiError` `409` when the name's taken. */
+    async updateCollection(id: string, fields: CollectionFields): Promise<Collection> {
+        return (await request<{ collection: Collection }>(`/api/collections/${id}`, withJson("PATCH", fields)))
+            .collection;
+    },
+    deleteCollection: (id: string) => request<void>(`/api/collections/${id}`, { method: "DELETE" }),
+    /** What can go in a collection: the tenant's published files, by name. */
+    async publishedFiles(): Promise<PublishedFile[]> {
+        return (await request<{ files: PublishedFile[] }>("/api/published-files")).files;
+    },
+    /** Add files to a collection's end. */
+    async addToCollection(id: string, assetIds: string[]): Promise<Collection> {
+        const init = withJson("POST", { assetIds });
+        return (await request<{ collection: Collection }>(`/api/collections/${id}/items`, init)).collection;
+    },
+    /** Say how to use a file in a collection. */
+    async setFileInstructions(id: string, assetId: string, instructions: string): Promise<Collection> {
+        const init = withJson("PATCH", { instructions });
+        return (await request<{ collection: Collection }>(`/api/collections/${id}/items/${assetId}`, init)).collection;
+    },
+    /** Take a file out of a collection. */
+    async removeFromCollection(id: string, assetId: string): Promise<Collection> {
+        const init = { method: "DELETE" };
+        return (await request<{ collection: Collection }>(`/api/collections/${id}/items/${assetId}`, init)).collection;
+    },
+    /** Put a collection's files in order: all of them, first first; an `ApiError` `409` if they've changed. */
+    async orderCollection(id: string, assetIds: string[]): Promise<Collection> {
+        const init = withJson("PUT", { assetIds });
+        return (await request<{ collection: Collection }>(`/api/collections/${id}/order`, init)).collection;
+    },
 
     /** Replace tenant `id`'s logo with `image`: a PNG, JPEG, WebP or SVG; an `ApiError` `415` for another. */
     async uploadLogo(id: string, image: Blob): Promise<Tenant> {

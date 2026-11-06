@@ -23,7 +23,7 @@ const MAX_LOGO_BYTES = 1024 * 1024;
 /** A brand's color: `#rrggbb`. */
 const COLOR = /^#[0-9a-f]{6}$/i;
 
-const ROLES: Record<Role, string> = { admin: "Admin", reviewer: "Reviewer", member: "Member" };
+const ROLES: Record<Role, string> = { admin: "Admin", reviewer: "Reviewer", manager: "Manager", member: "Member" };
 
 export function SettingsPage() {
     const user = useUser();

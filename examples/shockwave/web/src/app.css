@@ -915,6 +915,7 @@ input {
 
 .detail > p {
     overflow-wrap: anywhere;
+    white-space: pre-wrap;
 }
 
 /* Signing in: an elevated card in the window's middle. */
@@ -1318,6 +1319,13 @@ input {
     opacity: 1;
 }
 
+/* A collection with no files yet: its section's icon, where a page would be. */
+.thumbnail > svg {
+    width: 40px;
+    height: 40px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
 .thumbnail .file-badge {
     width: 56px;
     height: 32px;
@@ -1444,6 +1452,40 @@ input {
     white-space: nowrap;
 }
 
+/* What a card adds under that: what a collection's for, or how to use a file
+   in one; body-small, cut short after three lines. Material's cards have no
+   such slot; this is its supporting text. */
+.file-card-note {
+    display: -webkit-box;
+    margin-top: 4px;
+    padding-right: 12px;
+    overflow: hidden;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+/* A collection's instructions, an elevated card under its title: title-medium
+   over body-medium, as they were written. */
+.collection-instructions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.collection-instructions h2 {
+    font: var(--md-sys-typescale-title-medium);
+    letter-spacing: var(--md-sys-typescale-title-medium-tracking);
+}
+
+.collection-instructions p {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
 /* Material's dialog: centered in the app over its scrim, which covers the app
    alone, at 32%; the dialog in the high container, extra-large shape, three
    levels up, 24 of padding; its headline headline-small, its supporting text
@@ -1499,6 +1541,106 @@ input {
     justify-content: flex-end;
     gap: 8px;
     padding-top: 8px;
+}
+
+/* Choosing files: the filter over Material's list, its items as tall as what
+   they say, as a file's versions are, each with its state layers, and each
+   item's checkbox Material's: 18, the 2-pixel shape and outline it gives one,
+   on-surface-variant, or filled with the primary and checked in on-primary. The
+   item is its state layer. The filter is on the dialog, in the high container
+   as a search bar is, so it takes the highest, a filled text field's, to show. */
+.pick-filter input {
+    width: 100%;
+    background: var(--md-sys-color-surface-container-highest);
+}
+
+.pick-filter input:hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container-highest)
+    );
+}
+
+.pick-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 320px;
+    margin: 0 -8px;
+    padding: 0;
+    overflow: auto;
+    list-style: none;
+}
+
+.pick-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px;
+    border-radius: var(--md-sys-shape-corner-medium);
+    cursor: pointer;
+}
+
+.pick-row:hover {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
+}
+
+.pick-row:active {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-pressed), transparent);
+}
+
+.pick-row-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.pick-row-name {
+    overflow: hidden;
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pick-row-meta {
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+}
+
+.checkbox {
+    display: grid;
+    flex-shrink: 0;
+    place-content: center;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 2px solid var(--md-sys-color-on-surface-variant);
+    border-radius: 2px;
+    appearance: none;
+    cursor: inherit;
+}
+
+.checkbox::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    background: var(--md-sys-color-on-primary);
+    clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 22%, 82% 8%, 38% 66%);
+    transform: scale(0);
+}
+
+.checkbox:checked {
+    border-color: var(--md-sys-color-primary);
+    background: var(--md-sys-color-primary);
+}
+
+.checkbox:checked::before {
+    transform: scale(1);
 }
 
 /* Uploading: the file in the viewer, and beside it what it's uploaded as. */
@@ -1783,6 +1925,15 @@ input {
 .document-tablist {
     display: flex;
     align-self: stretch;
+}
+
+/* Where there's one thing to show and no tabs: its name, title-small, as high
+   as they are. */
+.document-panel-title {
+    padding: 0 16px;
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
+    line-height: 40px;
 }
 
 .document-tab-panel {

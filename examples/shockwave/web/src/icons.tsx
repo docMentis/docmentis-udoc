@@ -189,6 +189,12 @@ export const UploadIcon = () => (
     </Icon>
 );
 
+export const PlusIcon = () => (
+    <Icon width="18" height="18">
+        <path d="M12 5v14M5 12h14" />
+    </Icon>
+);
+
 /** Three dots in a row: a menu of what's done to something. */
 export const MoreIcon = () => (
     <Icon width="18" height="18">

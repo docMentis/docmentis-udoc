@@ -9,7 +9,8 @@ is where we dogfood them: what their public API lacks goes in
 So far: signing in, the app's shell, and the library, its folders and files,
 each opened in the viewer from its own bytes before it's uploaded, and from
 udoc-server once it is; edited in the editor; and saved as versions, which are
-reviewed, approved and published.
+reviewed, approved and published; and the collections a sales manager arranges
+what's published in, for everyone at the tenant to read.
 
 ## Running it
 
@@ -50,11 +51,12 @@ the demo's password, `shockwave`:
 | -------------------------------- | ------------------------------------------ | -------- |
 | `maya.patel@larchmere.example`   | Maya Patel, Product Marketing Manager      | admin    |
 | `colin.okafor@larchmere.example` | Colin Okafor, Compliance Officer           | reviewer |
+| `sam.hughes@larchmere.example`   | Sam Hughes, Head of Institutional Sales    | manager  |
 | `ryan.brooks@larchmere.example`  | Ryan Brooks, Director, Institutional Sales | member   |
 | `paula.ortiz@larchmere.example`  | Paula Ortiz, Client Portfolio Manager      | member   |
 
-A database from before these users keeps the ones it was seeded with; clear it
-to get them.
+A database from before one of these users gets them the next time shockwave
+starts.
 
 ## How it's laid out
 

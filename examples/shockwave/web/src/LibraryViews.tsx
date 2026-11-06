@@ -153,7 +153,7 @@ export function FileCard({
     const path = waiting ? `${filePath(asset)}?version=${waiting.number}` : filePath(asset);
     return (
         <div className="file-card" onClick={() => navigate(path)}>
-            <Thumbnail asset={asset} />
+            <Thumbnail file={asset} />
             <div className="file-card-body">
                 <div className="file-card-title">
                     <Link className="file-name" to={path}>

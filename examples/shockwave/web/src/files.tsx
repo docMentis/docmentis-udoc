@@ -35,25 +35,29 @@ export function FileBadge({ format }: { format: string }) {
     );
 }
 
-/** Where page `index` of `asset` is: its first, kept by the backend; another, rendered by udoc-server as it's asked for. */
-function pageSource(asset: Asset, index: number): string {
-    if (index === 0 && asset.thumbnail) return asset.thumbnail;
-    const document = encodeURIComponent(asset.documentId);
+/** What a card needs of a file to show its pages. */
+type PagedFile = Pick<Asset, "format" | "thumbnail" | "documentId">;
+
+/** Where page `index` of `file` is: its first, kept by the backend; another, rendered by udoc-server as it's asked for. */
+function pageSource(file: PagedFile, index: number): string {
+    if (index === 0 && file.thumbnail) return file.thumbnail;
+    const document = encodeURIComponent(file.documentId);
     return `/udoc/documents/${document}/layout/pages/${index}.png?scale=${CARD_PAGE_SCALE}`;
 }
 
-/** How many thumbnails are in view: the first to show, and the last to go, are moments. */
+/** How many thumbnails that flip are in view: the first to show, and the last to go, are moments. */
 let inView = 0;
 
 /**
- * A file's pages, on its card: its first, kept by the backend, and with the
- * arrows over it, the others, which udoc-server renders as they're flipped to.
- * The page shown stays until the one flipped to has loaded; the next arrow
- * shows until udoc-server has no next page. A file with no first page, as a
- * workbook, whose first page is all of its first sheet (GAPS.md), shows a
- * large badge of its type.
+ * A file's pages, on its card: its first, kept by the backend, and unless
+ * `flips` is false, with the arrows over it, the others, which udoc-server
+ * renders as they're flipped to, as the document is now: a published version's
+ * card, which can't show that (GAPS.md), doesn't flip. The page shown stays
+ * until the one flipped to has loaded; the next arrow shows until udoc-server
+ * has no next page. A file with no first page, as a workbook, whose first page
+ * is all of its first sheet (GAPS.md), shows a large badge of its type.
  */
-export function Thumbnail({ asset }: { asset: Asset }) {
+export function Thumbnail({ file, flips = true }: { file: PagedFile; flips?: boolean }) {
     const [state, setState] = useState<"loading" | "shown" | "failed">("loading");
     // The page flipped to, and the one shown: another while it loads.
     const [page, setPage] = useState(0);
@@ -66,14 +70,14 @@ export function Thumbnail({ asset }: { asset: Asset }) {
 
     // In view from its first page loaded until it goes.
     useEffect(() => {
-        if (!showing) return;
+        if (!showing || !flips) return;
         if (inView++ === 0) {
-            announceMoment({ kind: "thumbnails:shown", where: "card", format: asset.format, ms: shownAfter.current });
+            announceMoment({ kind: "thumbnails:shown", where: "card", format: file.format, ms: shownAfter.current });
         }
         return () => {
             if (--inView === 0) announceMoment({ kind: "thumbnails:hidden", where: "card" });
         };
-    }, [showing, asset.format]);
+    }, [showing, flips, file.format]);
 
     function flip(event: MouseEvent, by: number) {
         // The card opens its file; its arrows only flip.
@@ -99,12 +103,12 @@ export function Thumbnail({ asset }: { asset: Asset }) {
 
     return (
         <div className="thumbnail" aria-busy={page !== shown}>
-            {state === "failed" || !asset.thumbnail ? (
-                <FileBadge format={asset.format} />
+            {state === "failed" || !file.thumbnail ? (
+                <FileBadge format={file.format} />
             ) : (
                 <>
                     <img
-                        src={pageSource(asset, page)}
+                        src={pageSource(file, page)}
                         alt=""
                         loading="lazy"
                         className={state === "shown" ? "thumbnail-shown" : undefined}
@@ -112,7 +116,7 @@ export function Thumbnail({ asset }: { asset: Asset }) {
                         onError={failed}
                     />
                     {page !== shown && <span className="page-loading" />}
-                    {state === "shown" && page > 0 && (
+                    {flips && state === "shown" && page > 0 && (
                         <button
                             type="button"
                             className="page-flip page-flip-back"
@@ -122,7 +126,7 @@ export function Thumbnail({ asset }: { asset: Asset }) {
                             <ChevronLeftIcon />
                         </button>
                     )}
-                    {state === "shown" && page < lastPage && (
+                    {flips && state === "shown" && page < lastPage && (
                         <button
                             type="button"
                             className="page-flip page-flip-next"

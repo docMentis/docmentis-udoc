@@ -25,12 +25,9 @@ import type {
 import { ASSETS, ASSET_COLUMNS, assetOf, assetOfRow } from "../assets.ts";
 import type { AssetRow } from "../assets.ts";
 import { inTransaction } from "../db.ts";
-import { Refusal, signedInAs } from "../http.ts";
+import { Refusal, noteOf, signedInAs } from "../http.ts";
 import type { Udoc } from "../udoc.ts";
 import { keepThumbnail } from "./thumbnails.ts";
-
-/** The longest note a version's event keeps. */
-const MAX_NOTE = 2000;
 
 /** What each step asks of a version and its user, and what it leaves: its status, or as it was with no `to`. */
 const STEPS: Record<
@@ -159,13 +156,6 @@ export function addFirstVersion(db: DatabaseSync, assetId: string, userId: strin
     addVersion(db, assetId, 0, userId, at, null);
 }
 
-/** `value`, a version's note, trimmed; `null` for none, and a `400` for one too long. */
-function noteOf(value: unknown): string | null {
-    const note = typeof value === "string" ? value.trim() : "";
-    if (note.length > MAX_NOTE) throw new Refusal(400, "badRequest", `a note is at most ${MAX_NOTE} characters`);
-    return note || null;
-}
-
 const OWN_SUBMISSION = () => new Refusal(403, "ownSubmission", "no one reviews what they submitted themselves");
 
 /**
@@ -271,7 +261,7 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
     /**
      * Save the file's document as it is now as a new version, `{ note }`: a
-     * checkpoint udoc-server takes, its first page kept as the file's
+     * checkpoint udoc-server takes, its first page kept as that version's
      * thumbnail. `201`, a `VersionedAsset`.
      */
     app.post<{ Params: { id: string }; Body: { note?: unknown } | undefined }>(
@@ -281,11 +271,11 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
             const { id, documentId } = assetOf(db, user, request.params.id);
             const note = noteOf(request.body?.note);
             const checkpoint = await udoc.checkpoint(documentId);
-            inTransaction(db, () => addVersion(db, id, checkpoint, user.id, Date.now(), note));
+            const number = inTransaction(db, () => addVersion(db, id, checkpoint, user.id, Date.now(), note));
             try {
-                await keepThumbnail(db, udoc, documentId);
+                await keepThumbnail(db, udoc, { assetId: id, documentId, number });
             } catch (error) {
-                // The version is kept all the same; the file shows the thumbnail it had.
+                // The version is kept all the same, with no thumbnail.
                 request.log.warn(error, "a thumbnail wasn't rendered");
             }
             const answer: VersionedAsset = { asset: assetOf(db, user, id), versions: versionsOf(db, id) };

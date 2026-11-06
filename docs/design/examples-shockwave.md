@@ -148,7 +148,8 @@ compliance approves   sales find                     and personalized      what 
 - **Collections**: how sales get content. A sales manager arranges published
   content into collections, picking it from what's published, and gives each
   collection a description and instructions, and each document in it its own.
-  Sales find their content here.
+  Sales find their content here, and everyone at the tenant can read it
+  ([below](#collections)).
 - **Deal Rooms**: where sales prepare content for a deal and share it. Content
   comes in from collections. A deal room's backstage is where sales prepare and
   personalize it; its frontstage is what the buyer sees, at a link, with no
@@ -159,7 +160,7 @@ compliance approves   sales find                     and personalized      what 
   Brand, the tenant's logo and its brand's color, and Users, who's in it.
 
 Search finds what the user may see, by name, description and tag: the Library
-for those who keep it, collections and deal rooms for sales. A document's text
+for those who keep it, collections for everyone, deal rooms for sales. A document's text
 waits on the engine (above).
 
 ## Who uses it
@@ -175,7 +176,8 @@ profile, as Seismic and Highspot keep the two apart:
 | member   | find content in Collections, prepare it and share it in Deal Rooms, and learn in Learning               |
 
 A user sees Home and the sections their role may use: neither a manager nor a
-member sees the Library. A buyer, a prospect institution or its investment
+member sees the Library. Everyone sees Collections, which only a manager
+arranges. A buyer, a prospect institution or its investment
 consultant, is no user: they open a deal room's frontstage at a link a seller
 shared with them, with no account.
 
@@ -229,10 +231,11 @@ udoc-server with `createUDocServer` over a `DirectoryDocumentStore`, mounted at
 `/udoc` (`basePath`) on its own HTTP server, and it keeps every document,
 renders its pages and serves it part by part and for collaboration. SQLite,
 Node's own `node:sqlite`, keeps what the app adds: tenants, users, sessions, and
-an asset for each document, naming its tenant and its udoc document id, and
-its first page as a thumbnail, rendered by udoc-server once, on upload. The
-other pages a file's card flips to, udoc-server renders as they're asked for,
-and none is kept. No document is kept twice.
+an asset for each document, naming its tenant and its udoc document id, and each
+version's first page as a thumbnail, rendered by udoc-server once, as the
+version's uploaded or saved. The other pages a card in the Library flips to,
+udoc-server renders as they're asked for, and none is kept. No document is kept
+twice.
 
 **The gate.** udoc-server has no end-user authentication, and its ids are
 global. So every `/udoc/*` request and WebSocket upgrade passes the gate first,
@@ -316,12 +319,44 @@ are and not by their role, each saying what for and opening that version:
 | approved  | who submitted it | it's published, or a later version is, or they dismiss it |
 
 A version published once isn't waiting to be again, so rolling back leaves nothing
-behind. Sales read a published version when Collections comes; the gate already lets
-them read that and no more.
+behind. Sales read a published version through [Collections](#collections); the gate
+lets them read that and no more.
 
 What this can't do yet is in `GAPS.md`: marking up anything but a PDF, taking a new
 upload as a version, and rendering a checkpoint's pages as images. Retiring a file,
 and a version's expiry, are still to come.
+
+## Collections
+
+A collection is published files a manager arranges for those who sell, with what it's
+for, how to use it, and how to use each file in it. A tenant has as many as it takes,
+each choosing its own files; a file can be in any number of them, with its own
+instructions and place in each.
+
+| Step               | Who      | What it does                                                                  |
+| ------------------ | -------- | ----------------------------------------------------------------------------- |
+| make, edit, delete | manager  | a collection's name, description and instructions; its files stay as they are |
+| add                | manager  | puts published files at its end, picked from all the tenant publishes         |
+| arrange            | manager  | says how to use a file, moves it earlier or later, or takes it out            |
+| read               | everyone | its files, each opening its published version in the viewer                   |
+
+**An item is a file, not a version.** It shows whichever version the file publishes:
+publishing another, or rolling back, reaches every collection holding the file at once,
+so none goes on offering a version compliance has replaced. Only a published file can
+be added, and deleting a file takes it out of every collection.
+
+**A collection shows the published version, and nothing around it.** The API answers a
+`PublishedFile`, with no working copy, other versions or uploader, whoever asks. For
+those who don't read the Library, a version's thumbnail is theirs only while it's the
+one published, so a draft's first page never reaches them, and the gate opens that
+checkpoint alone. A card here shows that first page and doesn't flip, since udoc-server
+can't render a checkpoint's pages (`GAPS.md`).
+
+**A tenant's collections are its own.** Every route looks a collection or a file up by
+the user's tenant, so another tenant's answers `404`, as one that isn't there. And
+`collection_items` names its tenant, its foreign keys holding both its collection and
+its file to it, so the schema itself can't join two tenants. Within a tenant, everyone
+sees all its collections.
 
 ## The narrator
 
@@ -341,7 +376,7 @@ two kinds of things:
   in your browser, so you see it before it's uploaded, not after." A
   highlight shows when what it tells about shows, and goes when it goes: the
   preview's, while the preview is open; the streaming's, while a file's page
-  shows it open; the thumbnails', while a thumbnail is in view; the viewer's
+  shows it open; the thumbnails', while a card that flips is in view; the viewer's
   colors', while the brand settings show them. It has
   the moment's figures where it has them (its format, how long it took to
   open), and sits in the panel's list, newest first.

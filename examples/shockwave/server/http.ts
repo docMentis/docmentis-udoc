@@ -9,6 +9,12 @@ import type { Role, User } from "../shared/api.ts";
 import { userOf } from "./auth.ts";
 import { UdocFailure } from "./udoc.ts";
 
+/** The longest name a folder, a file or a collection is given. */
+const MAX_NAME = 200;
+
+/** The longest note a version's event keeps, or a collection's description or instructions. */
+const MAX_NOTE = 2000;
+
 /** A request a route turns down: its status, its error's code, and why. */
 export class Refusal extends Error {
     readonly status: number;
@@ -33,6 +39,21 @@ export function signedInAs(db: DatabaseSync, request: FastifyRequest, may: (role
     const user = signedIn(db, request);
     if (!may(user.role)) throw new Refusal(403, "forbidden", "your role doesn't let you do this");
     return user;
+}
+
+/** `value`, a name, trimmed; a `400` for none, or one too long. */
+export function nameOf(value: unknown): string {
+    const name = typeof value === "string" ? value.trim() : "";
+    if (!name) throw new Refusal(400, "badRequest", "a name is needed");
+    if (name.length > MAX_NAME) throw new Refusal(400, "badRequest", `a name is at most ${MAX_NAME} characters`);
+    return name;
+}
+
+/** `value`, a note, trimmed; `null` for none, and a `400` for one too long. */
+export function noteOf(value: unknown): string | null {
+    const note = typeof value === "string" ? value.trim() : "";
+    if (note.length > MAX_NOTE) throw new Refusal(400, "badRequest", `a note is at most ${MAX_NOTE} characters`);
+    return note || null;
 }
 
 /** Fastify's error handler: each failure as a `Failure`. */
