@@ -61,7 +61,7 @@ const PILL_OFFSET = 7;
  *  page is shorter than this on screen — a control rail taller than its page
  *  reads as attached to nothing, and a lone insert by a too-small page is just
  *  as adrift. */
-const MIN_PAGE_HEIGHT = 150;
+const MIN_PAGE_HEIGHT = 185;
 
 /** Minimum hover/tap width of an insert strip, CSS px. */
 const MIN_INSERT_WIDTH = 48;

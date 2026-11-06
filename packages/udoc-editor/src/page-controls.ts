@@ -19,7 +19,7 @@ const GAP_PT = 24;
  * The spacing the page controls show with. The insert strip is sized from the
  * gap × the frame scale, so it fills the gap at every zoom. The paddings are
  * screen-fixed (CSS px), so the rail in the right padding stays a constant size
- * on screen — the side paddings are wide enough that the rail (offset + ~26px)
+ * on screen — the side paddings are wide enough that the rail (offset + ~30px)
  * clears the virtual scrollbar at fit-width.
  */
 export const PAGE_CONTROLS_SPACING: PageSpacing = {

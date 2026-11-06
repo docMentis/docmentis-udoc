@@ -31,14 +31,14 @@ export const editorStyles = css`
         flex-direction: column;
         align-items: center;
         gap: 1px;
-        padding: 3px 1px;
+        padding: 1px;
         font:
             600 11px/1 system-ui,
             sans-serif;
         color: var(--udoc-color-on-surface);
         background: var(--udoc-color-surface-container-high);
         border: 1px solid var(--udoc-color-outline-variant);
-        border-radius: 12px;
+        border-radius: 15px;
         user-select: none;
     }
     .udoc-ui-root .udoc-ui__page-actions--peek {
@@ -49,19 +49,19 @@ export const editorStyles = css`
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 22px;
-        height: 20px;
+        width: 26px;
+        height: 26px;
         padding: 0;
         border: none;
-        border-radius: 8px;
+        border-radius: 50%;
         background: transparent;
         color: var(--udoc-color-on-surface);
         cursor: pointer;
     }
     .udoc-ui-root .udoc-ui__page-actions-btn svg,
     .udoc-ui-root .udoc-ui__page-insert-btn svg {
-        width: 14px;
-        height: 14px;
+        width: 18px;
+        height: 18px;
     }
     .udoc-ui-root .udoc-ui__page-actions-btn:hover:not(:disabled) {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
