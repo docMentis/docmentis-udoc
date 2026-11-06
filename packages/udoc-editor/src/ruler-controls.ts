@@ -5,13 +5,13 @@
 // under them is pixels on the band's canvas, so each takes its own press and
 // keeps its drag across the frames that repaint the ruler. A drag slides a
 // control along its ruler within the page, on the nearest sixteenth of an inch
-// unless Alt is held, carrying what Word's carries with it, and a dashed line
-// across the content pane marks where the pressed one is, as Word's does. A
-// drop hands what moved, and how far, to the ruler (ruler-edits.ts), and the
-// controls hold where it left them until the edit it sends comes back. The
-// default tab stops go unmarked, as Google Docs leaves them: they fall on the
-// graduation's half inches, where a mark of their own would only double its
-// ticks.
+// unless Alt is held, carrying what Word's carries with it, all of it showing
+// pressed, and a dashed line across the content pane marks where the pressed
+// one is, as Word's does. A drop hands what moved, and how far, to the ruler
+// (ruler-edits.ts), and the controls hold where it left them until the edit it
+// sends comes back. The default tab stops go unmarked, as Google Docs leaves
+// them: they fall on the graduation's half inches, where a mark of their own
+// would only double its ticks.
 import type { RulerAxis, RulerTabAlign, RulerText } from "@docmentis/udoc-wasm";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -31,6 +31,8 @@ const SNAP = 72 / 16;
 /** How long the controls a drop left hold where it left them with no frame
  *  arriving after its edit, ms — they settle on the next frame otherwise. */
 const HOLD = 500;
+/** The class on everything a drag carries, which shows it pressed. */
+const DRAGGING = "udoc-ui__ruler-control--dragging";
 
 /** A tab stop's mark by its alignment, as Word's: a stem, and a foot running
  *  the way the text runs from the stop — right of a left stop, left of a right
@@ -315,7 +317,7 @@ export function createRulerControls(
                 max: c.page.end - c.home,
                 by: 0,
             };
-            c.el.classList.add("udoc-ui__ruler-control--dragging");
+            for (const { control } of carried) control.el.classList.add(DRAGGING);
             drawLine(c, c.home);
         });
         c.el.addEventListener("pointermove", (ev) => {
@@ -338,7 +340,7 @@ export function createRulerControls(
             if (drag?.pointerId !== ev.pointerId) return;
             const { carried, by } = drag;
             drag = null;
-            c.el.classList.remove("udoc-ui__ruler-control--dragging");
+            for (const { control } of carried) control.el.classList.remove(DRAGGING);
             drawLine(c, null);
             // A cancelled gesture drops nothing.
             const sent = by !== 0 && ev.type === "pointerup" ? drop({ control: c.name, by }) : null;

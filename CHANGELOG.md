@@ -30,6 +30,14 @@ listed once, by package. Its major and minor version are those of the
   and a swipe through a page taller than the view stops at the page's end, for the
   next swipe to turn it.
 
+### udoc-editor
+
+#### Changed
+
+- The ruler's margin edges, indent markers and tab stops respond to the pointer:
+  one that can be dragged tints when the pointer is over it, and more strongly
+  while pressed, along with any markers the drag moves with it.
+
 ## [0.8.15] - 2026-11-05
 
 Built on `@docmentis/udoc-wasm` 0.8.18.

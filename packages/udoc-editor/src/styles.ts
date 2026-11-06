@@ -921,16 +921,25 @@ export const editorStyles = css`
     /* The ruler's controls (ruler-controls.ts), in the layers over its strips:
    each margin's edge, and the indent markers and tab stops of the paragraph a
    caret is in. Each takes its own press, where the layer under them takes
-   none; placed along the ruler each frame by left (or top) in CSS px. */
+   none; placed along the ruler each frame by left (or top) in CSS px. Hovered
+   and pressed they tint in the ruler's figures' ink, by the state layers at
+   twice their strength: shapes this small don't show them at their own. */
     .udoc-ui-root .udoc-ui__ruler-control {
         position: absolute;
         pointer-events: auto;
         touch-action: none;
+        --udoc-ruler-hover: calc(var(--udoc-state-hover-opacity) * 2);
+        --udoc-ruler-pressed: calc(var(--udoc-state-pressed-opacity) * 2);
     }
     /* A margin's edge: a strip a few px wide to grab, over the line the band's
    canvas draws at rest — with the fills it bounds, so the two meet without a
-   seam. While dragged, the strip carries a line of its own down its middle,
-   in the same soft outline as the ticks. */
+   seam. Under the pointer the strip tints and shows a line of its own down its
+   middle, and pressed both deepen at once, fading back on release — the line
+   moving with a drag, where the canvas's waits for the drop. It never stands
+   over the markers, which take a press on their shapes. */
+    .udoc-ui-root .udoc-ui__ruler-edge {
+        transition: background-color 120ms ease;
+    }
     .udoc-ui-root .udoc-ui__ruler-edge--h {
         top: 0;
         bottom: 0;
@@ -946,11 +955,7 @@ export const editorStyles = css`
     .udoc-ui-root .udoc-ui__ruler-edge::after {
         content: "";
         position: absolute;
-        background: var(--udoc-color-outline-variant);
-        display: none;
-    }
-    .udoc-ui-root .udoc-ui__ruler-control--dragging::after {
-        display: block;
+        transition: background-color 120ms ease;
     }
     .udoc-ui-root .udoc-ui__ruler-edge--h::after {
         top: 0;
@@ -963,6 +968,24 @@ export const editorStyles = css`
         right: 0;
         top: 3px;
         height: 1px;
+    }
+    .udoc-ui-root .udoc-ui__ruler-edge:hover {
+        background-color: color-mix(in srgb, var(--udoc-color-on-surface-variant) var(--udoc-ruler-hover), transparent);
+    }
+    .udoc-ui-root .udoc-ui__ruler-edge:hover::after {
+        background-color: var(--udoc-color-outline);
+    }
+    .udoc-ui-root .udoc-ui__ruler-edge.udoc-ui__ruler-control--dragging {
+        background-color: color-mix(
+            in srgb,
+            var(--udoc-color-on-surface-variant) var(--udoc-ruler-pressed),
+            transparent
+        );
+        transition: none;
+    }
+    .udoc-ui-root .udoc-ui__ruler-edge.udoc-ui__ruler-control--dragging::after {
+        background-color: var(--udoc-color-on-surface-variant);
+        transition: none;
     }
     /* The dashed line a drag on a ruler control draws across the content pane
    at it, as Word's does — down from the horizontal ruler, across from the
@@ -985,6 +1008,12 @@ export const editorStyles = css`
         display: block;
         overflow: visible;
     }
+    /* The marker a pointer is on or a drag carries stands over those it meets,
+   or the left indent's box would draw across the hanging indent's base. */
+    .udoc-ui-root .udoc-ui__ruler-marker:hover,
+    .udoc-ui-root .udoc-ui__ruler-marker.udoc-ui__ruler-control--dragging {
+        z-index: 1;
+    }
     /* An indent marker: filled as the text area it stands on, outlined. Its box
    runs the ruler's depth, and takes a press only on the shape, so beside the
    hourglass's narrow waist one reaches the margin's edge under it. */
@@ -998,8 +1027,42 @@ export const editorStyles = css`
         stroke-width: 1px;
         stroke-linejoin: round;
         pointer-events: visiblePainted;
+        transition:
+            fill 120ms ease,
+            stroke 120ms ease;
     }
-    /* A tab stop's mark, in the ruler's figures' ink. */
+    /* Under the pointer it tints and its outline takes the figures' ink, and
+   pressed it tints deeper at once, fading back on release — over its own fill,
+   as it hides the ticks under it. Only color changes, so its strokes stay on
+   whole pixels. */
+    .udoc-ui-root .udoc-ui__ruler-marker--indent:hover path {
+        fill: color-mix(
+            in srgb,
+            var(--udoc-color-on-surface-variant) var(--udoc-ruler-hover),
+            var(--udoc-color-surface-container-highest)
+        );
+        stroke: var(--udoc-color-on-surface-variant);
+    }
+    .udoc-ui-root .udoc-ui__ruler-marker--indent.udoc-ui__ruler-control--dragging path {
+        fill: color-mix(
+            in srgb,
+            var(--udoc-color-on-surface-variant) var(--udoc-ruler-pressed),
+            var(--udoc-color-surface-container-highest)
+        );
+        stroke: var(--udoc-color-on-surface-variant);
+        transition: none;
+    }
+    /* A tab stop's mark, in the figures' ink, on a chip that shows only when
+   hovered or pressed: its strokes alone are too thin to tell a state by. The
+   chip takes no press, so hover covers just what a press takes. */
+    .udoc-ui-root .udoc-ui__ruler-marker--tab::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: 2px;
+        pointer-events: none;
+        transition: background-color 120ms ease;
+    }
     .udoc-ui-root .udoc-ui__ruler-marker--tab path {
         fill: none;
         stroke: var(--udoc-color-on-surface-variant);
@@ -1007,6 +1070,17 @@ export const editorStyles = css`
     }
     .udoc-ui-root .udoc-ui__ruler-marker--tab rect {
         fill: var(--udoc-color-on-surface-variant);
+    }
+    .udoc-ui-root .udoc-ui__ruler-marker--tab:hover::before {
+        background-color: color-mix(in srgb, var(--udoc-color-on-surface-variant) var(--udoc-ruler-hover), transparent);
+    }
+    .udoc-ui-root .udoc-ui__ruler-marker--tab.udoc-ui__ruler-control--dragging::before {
+        background-color: color-mix(
+            in srgb,
+            var(--udoc-color-on-surface-variant) var(--udoc-ruler-pressed),
+            transparent
+        );
+        transition: none;
     }
     /* A control the open document can't move now — the engine gates its edit
    off, or the selected paragraphs disagree on the tab stops it is one of: it
