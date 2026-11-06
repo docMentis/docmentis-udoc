@@ -6,6 +6,29 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Fixed
+
+- Justified text in a PDF set in a two-byte font, as mPDF writes it, stays in its
+  column, where its word gaps rendered too wide and the line ran past it.
+- `saveToBytes` naming no strategy rewrites when nothing of the original can be
+  kept, where it was refused: as another format than the source's, such as a DOCX
+  saved as a DOTX, or with no original held, such as a PPTX from a package.
+- A slide or sheet deleted from a deck or workbook leaves the file in a `"delta"`
+  save, with its relationships and what only it reached. A package leaves out
+  whatever was deleted, and an undo brings it back.
+- An image opened from a `.udoc` package and left unedited saves as the file it
+  came from: a JPEG, a PNG or an SVG comes back byte for byte, where a JPEG was
+  recompressed and an SVG refused.
+- A deck in a `.udoc` package can be saved back to a PPTX, where the save failed,
+  and a slide show opened from one plays by the deck's own settings, where it
+  played by the defaults. A chart in a word document's footnote or endnote keeps
+  its workbook in a package. A package written before this stays as it was,
+  without them.
+- Undoing a font added to a PDF leaves every editor in a collaboration agreeing
+  it's gone, where the editor that undid it and one opened later disagreed.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -16,6 +39,13 @@ listed once, by package. Its major and minor version are those of the
   offered, an edit rejects and it can't join a collaboration. It can still be
   saved, downloaded, exported and printed.
 
+#### Changed
+
+- A UI joined to a server's collaboration that comes back after the document's
+  edit log was cut catches up and rejoins by itself. With no edits unsent it
+  keeps its undo stack. With edits unsent it sends them, and its undo stack
+  empties.
+
 #### Fixed
 
 - `download` and `requestRemoteCopy` on a document opened with `openRemote` write
@@ -23,13 +53,6 @@ listed once, by package. Its major and minor version are those of the
   edits as a new revision, and a DOCX, a PPTX or an XLSX writes its modified parts
   over the original. They rewrote it, and `requestRemoteCopy("delta")` and
   `requestRemoteCopy("incremental")` were refused.
-
-#### Changed
-
-- A UI joined to a server's collaboration that comes back after the document's
-  edit log was cut catches up and rejoins by itself. With no edits unsent it
-  keeps its undo stack. With edits unsent it sends them, and its undo stack
-  empties.
 
 ### udoc-server
 
