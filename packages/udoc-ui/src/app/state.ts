@@ -440,6 +440,11 @@ export interface ToolbarTab<K extends string = MessageKey> {
      * table stays on it until the selection leaves the table.
      */
     staysOpen?: boolean;
+    /**
+     * Whether its strip opens on this tab, rather than folded, as a document opens
+     * in its mode or its mode is entered — a PDF's Page tab in edit mode.
+     */
+    opensOnEntry?: boolean;
     /** The feature the tab's commands need. A session not entitled to it does
      *  not see the tab. */
     feature?: Feature;

@@ -1,6 +1,7 @@
 // Edit mode's tab strips, by doc type. A tab names its commands by id — udoc-ui's
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
-// order. A strip opens folded, and a selection opens the tab it is for.
+// order. A strip opens folded, a PDF's on its Page tab, and a selection opens the
+// tab it is for.
 import type { UDocType } from "@docmentis/udoc-ui";
 import {
     allowsEdit,
@@ -269,7 +270,8 @@ const IMAGE_TAB: EditTab = {
  * The portable Page tab: the pages' edits — a blank page after the current one,
  * and Delete, the two turns and Resize of the current page, or of those picked
  * in the thumbnails — then what goes on a page as its own objects: a text box,
- * shapes and an image. All icons, named by their tooltips.
+ * shapes and an image. All icons, named by their tooltips. A PDF's strip opens on
+ * it, the tools a PDF is usually edited with.
  */
 const PORTABLE_PAGE_TAB: EditTab = {
     id: "page",
@@ -284,6 +286,7 @@ const PORTABLE_PAGE_TAB: EditTab = {
         "insertShape",
         "insertPageImage",
     ] satisfies EditCommandId[],
+    opensOnEntry: true,
 };
 
 /** The image Insert tab: the gallery's Shapes, drawn over the page. */

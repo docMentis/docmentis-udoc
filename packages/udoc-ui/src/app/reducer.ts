@@ -1,6 +1,6 @@
 import { cssPxPerPt } from "../geometry.js";
 import type { Action } from "./actions.js";
-import type { UIState, PanelTab } from "./state.js";
+import type { UIState, PanelTab, ToolbarTab } from "./state.js";
 import {
     LEFT_PANEL_TABS,
     NO_FIT,
@@ -81,6 +81,11 @@ function applyZoom(state: UIState, nextZoomRaw: number, anchorX?: number, anchor
             seq: state.zoomRequest.seq + 1,
         },
     };
+}
+
+/** The tab a strip of `tabs` opens on: the first that asks to, else none, folded. */
+function openingTab(tabs: readonly ToolbarTab<string>[]): string | null {
+    return tabs.find((tab) => tab.opensOnEntry)?.id ?? null;
 }
 
 /** The shell's reducer, whose modes show the tab strips `tabsOf` gives, a
@@ -168,9 +173,10 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 scrollbars: { x: false, y: false },
                 docGeneration: state.docGeneration + 1,
                 openedRevisionView: null,
-                // The new doc type's strip opens folded (its tab set may differ
-                // from the previous document's); a selection opens its tab.
-                activeTab: null,
+                // The new doc type's strip opens on the tab it asks to, else folded
+                // (its tab set may differ from the previous document's); a
+                // selection opens its tab.
+                activeTab: openingTab(tabsFor(tabsOf(action.docType ?? null, mode), action.features)),
                 // A fresh document has no history yet; the worker's open reply
                 // pushes the same via a history report, but reset here too so the
                 // buttons can't flash enabled between open and that report.
@@ -729,11 +735,11 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_MODE": {
             if (action.mode === state.mode || !entitled(action.mode, state.features)) return state;
-            // Each mode lands in select, its strip folded.
+            // Each mode lands in select, its strip on the tab it asks to, else folded.
             return {
                 ...state,
                 mode: action.mode,
-                activeTab: null,
+                activeTab: openingTab(tabsFor(tabsOf(state.docType, action.mode), state.features)),
                 pointerMode: { kind: "select" },
             };
         }

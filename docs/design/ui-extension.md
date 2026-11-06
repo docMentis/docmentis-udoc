@@ -74,7 +74,8 @@ shell's catalog and then in the extension's `commands`:
   destroys; `cluster` bunches it with its neighbours as the shell's toggles
   and color dropdowns bunch.
 
-A strip opens folded, its tabs alone showing. A tab's `opensFor` names the
+A strip opens folded, its tabs alone showing, unless a tab's `opensOnEntry` has it
+open on that tab, as a PDF's Page tab does. A tab's `opensFor` names the
 selection it is for, and the reducer opens the first tab of the strip that
 holds for a selection as the selection becomes one — a caret in text the Text
 tab, a picked shape the Shape tab — and leaves the tab where it is while the
