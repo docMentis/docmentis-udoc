@@ -34,7 +34,7 @@ const USER_COLUMNS = `users.id, users.email, users.name, users.title, users.role
     tenants.viewer_colors AS tenant_viewer_colors`;
 
 /** The viewer's colors kept as JSON; the viewer's own for none, or for what isn't one. */
-function viewerColorsOf(json: string | null): ViewerColors {
+export function viewerColorsOf(json: string | null): ViewerColors {
     try {
         const colors: unknown = json ? JSON.parse(json) : null;
         return isViewerColors(colors) ? colors : DEFAULT_VIEWER_COLORS;

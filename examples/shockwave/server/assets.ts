@@ -1,7 +1,8 @@
-// A file in the library, as the routes read one: its row, with its uploader,
-// its thumbnail and its latest version, and the `Asset` the API answers; and as
-// those who sell with it read one, its published version alone, and the
-// `PublishedFile` the API answers.
+// A file, as the routes read one: its row, with its uploader, its thumbnail and
+// its latest version, and the `Asset` the API answers; and as those who sell with
+// a library's file read one, its published version alone, and the `PublishedFile`
+// the API answers. A deal room's file is an asset too, kept out of the library by
+// its row in `deal_room_files`.
 import type { DatabaseSync } from "node:sqlite";
 
 import type { Asset, PublishedFile, User, VersionStatus } from "../shared/api.ts";
@@ -23,18 +24,27 @@ export interface AssetRow {
     latest_number: number;
     latest_status: VersionStatus;
     published_version: number | null;
+    deal_room_id: string | null;
 }
 
 export const ASSET_COLUMNS = `assets.id, assets.name, assets.folder_id, assets.format, assets.size,
     assets.document_id, assets.uploaded_by, users.name AS uploader_name, assets.uploaded_at,
     thumbnails.png IS NULL AS no_thumbnail,
-    latest.number AS latest_number, latest.status AS latest_status, assets.published_version`;
+    latest.number AS latest_number, latest.status AS latest_status, assets.published_version,
+    room_file.room_id AS deal_room_id`;
 
-/** The assets, with their uploaders, their latest versions and those versions' thumbnails. */
+/**
+ * The assets, with their uploaders, their latest versions and those versions'
+ * thumbnails; `room_file` is the row of one that's a deal room's.
+ */
 export const ASSETS = `assets JOIN users ON users.id = assets.uploaded_by
     JOIN versions AS latest ON latest.asset_id = assets.id
         AND latest.number = (SELECT MAX(number) FROM versions WHERE versions.asset_id = assets.id)
-    LEFT JOIN thumbnails ON thumbnails.asset_id = assets.id AND thumbnails.number = latest.number`;
+    LEFT JOIN thumbnails ON thumbnails.asset_id = assets.id AND thumbnails.number = latest.number
+    LEFT JOIN deal_room_files AS room_file ON room_file.asset_id = assets.id`;
+
+/** What keeps a query over `ASSETS` to the library's files. */
+export const IN_LIBRARY = "room_file.asset_id IS NULL";
 
 export function assetOfRow(row: AssetRow): Asset {
     return {
@@ -49,11 +59,19 @@ export function assetOfRow(row: AssetRow): Asset {
         uploadedAt: row.uploaded_at,
         latestVersion: { number: row.latest_number, status: row.latest_status },
         publishedVersion: row.published_version,
+        dealRoomId: row.deal_room_id,
     };
 }
 
-/** Asset `id` of `user`'s tenant; a `404` for none. */
+/** File `id` of the library of `user`'s tenant; a `404` for none. */
 export function assetOf(db: DatabaseSync, user: User, id: string): Asset {
+    const asset = anyFileOf(db, user, id);
+    if (asset.dealRoomId !== null) throw new Refusal(404, "notFound", "no such file");
+    return asset;
+}
+
+/** File `id` of `user`'s tenant, in the library or a deal room, whoever may see it; a `404` for none. */
+export function anyFileOf(db: DatabaseSync, user: User, id: string): Asset {
     const row = db
         .prepare(`SELECT ${ASSET_COLUMNS} FROM ${ASSETS} WHERE assets.id = ? AND assets.tenant_id = ?`)
         .get(id, user.tenant.id) as AssetRow | undefined;
@@ -80,9 +98,10 @@ export const PUBLISHED_FILE_COLUMNS = `assets.id, assets.name, assets.format, as
         WHERE event.asset_id = assets.id AND event.number = published.number AND event.kind = 'published'
     ) AS published_at`;
 
-/** The assets with a published version, with that version and its thumbnail. */
+/** The library's files with a published version, with that version and its thumbnail. */
 export const PUBLISHED_FILES = `assets JOIN versions AS published ON published.asset_id = assets.id
         AND published.number = assets.published_version
+        AND assets.id NOT IN (SELECT asset_id FROM deal_room_files)
     LEFT JOIN thumbnails ON thumbnails.asset_id = assets.id AND thumbnails.number = published.number`;
 
 export function publishedFileOfRow(row: PublishedFileRow): PublishedFile {

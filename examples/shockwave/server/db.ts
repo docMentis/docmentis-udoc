@@ -1,6 +1,7 @@
 // The app's data, in SQLite: tenants and their brands, their users, the users'
 // sessions; the library: its folders, its files, their versions and their
-// thumbnails; and the collections its published files are arranged in.
+// thumbnails; the collections its published files are arranged in; and the deal
+// rooms sales prepare them in, each with the frontstage its buyers read.
 import { DatabaseSync } from "node:sqlite";
 
 /**
@@ -231,6 +232,73 @@ const MIGRATIONS = [
         FOREIGN KEY (asset_id, tenant_id) REFERENCES assets (id, tenant_id) ON DELETE CASCADE
     );
     CREATE INDEX collection_items_by_asset ON collection_items (asset_id);
+    `,
+    // A tenant's deal rooms, backstage: each with who's on it, and its files, a
+    // file being an asset, with versions like any other's, that this table holds
+    // out of the library. A room's files are deleted with their documents before
+    // it is, so its key doesn't cascade: a room going alone would hand its files
+    // to the library. And what's on its frontstage, its link and a copy of what
+    // was put there, read apart from the backstage, so that nothing reaches a
+    // buyer before someone puts it on: which version of a file is on it is the
+    // asset's published_version. Keys hold what they join to one tenant.
+    `
+    CREATE UNIQUE INDEX users_of_tenant ON users (id, tenant_id);
+    CREATE TABLE deal_rooms (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL REFERENCES tenants (id),
+        title TEXT NOT NULL,
+        description TEXT,
+        banner_color TEXT,
+        banner_image BLOB,
+        banner_image_type TEXT,
+        banner_changed_at INTEGER NOT NULL DEFAULT 0,
+        updated_at INTEGER NOT NULL
+    );
+    CREATE UNIQUE INDEX deal_rooms_of_tenant ON deal_rooms (id, tenant_id);
+    CREATE INDEX deal_rooms_by_tenant ON deal_rooms (tenant_id, updated_at);
+    CREATE TABLE deal_room_people (
+        room_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        PRIMARY KEY (room_id, user_id),
+        FOREIGN KEY (room_id, tenant_id) REFERENCES deal_rooms (id, tenant_id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id, tenant_id) REFERENCES users (id, tenant_id) ON DELETE CASCADE
+    );
+    CREATE INDEX deal_room_people_by_user ON deal_room_people (user_id);
+    CREATE TABLE deal_room_files (
+        asset_id TEXT PRIMARY KEY,
+        room_id TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        position INTEGER NOT NULL,
+        description TEXT,
+        source_asset_id TEXT REFERENCES assets (id) ON DELETE SET NULL,
+        source_name TEXT NOT NULL,
+        source_version INTEGER NOT NULL,
+        FOREIGN KEY (room_id, tenant_id) REFERENCES deal_rooms (id, tenant_id),
+        FOREIGN KEY (asset_id, tenant_id) REFERENCES assets (id, tenant_id) ON DELETE CASCADE
+    );
+    CREATE INDEX deal_room_files_by_room ON deal_room_files (room_id, position);
+    CREATE UNIQUE INDEX deal_room_files_by_source ON deal_room_files (room_id, source_asset_id);
+    CREATE TABLE frontstages (
+        room_id TEXT PRIMARY KEY REFERENCES deal_rooms (id) ON DELETE CASCADE,
+        token TEXT NOT NULL UNIQUE,
+        title TEXT NOT NULL,
+        description TEXT,
+        banner_color TEXT,
+        banner_image BLOB,
+        banner_image_type TEXT,
+        staged_by TEXT NOT NULL REFERENCES users (id),
+        staged_at INTEGER NOT NULL
+    );
+    CREATE TABLE frontstage_files (
+        room_id TEXT NOT NULL REFERENCES frontstages (room_id) ON DELETE CASCADE,
+        asset_id TEXT NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        description TEXT,
+        position INTEGER NOT NULL,
+        PRIMARY KEY (room_id, asset_id)
+    );
+    CREATE INDEX frontstage_files_by_asset ON frontstage_files (asset_id);
     `,
 ];
 

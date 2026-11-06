@@ -9,8 +9,10 @@ is where we dogfood them: what their public API lacks goes in
 So far: signing in, the app's shell, and the library, its folders and files,
 each opened in the viewer from its own bytes before it's uploaded, and from
 udoc-server once it is; edited in the editor; and saved as versions, which are
-reviewed, approved and published; and the collections a sales manager arranges
-what's published in, for everyone at the tenant to read.
+reviewed, approved and published; the collections a sales manager arranges
+what's published in, for everyone at the tenant to read; and the deal rooms sales
+prepare it in together, backstage, each put on a frontstage that its buyers read at
+a link, with no account.
 
 ## Running it
 

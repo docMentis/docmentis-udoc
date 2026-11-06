@@ -1,11 +1,13 @@
-// udoc-server, which keeps the library's documents, behind the gate
+// udoc-server, which keeps the documents, behind the gate
 // (docs/design/examples-shockwave.md). Its routes sit under `/udoc` on the
 // backend's own HTTP server. udoc-server has no end-user authentication, and
 // its ids are global, so a request reaches it only past the gate: the
 // backend's own, with this process's token; a signed-in user's, reading a
 // document their tenant has an asset for, all of it if they read the library
-// and only its published version if not; or one who changes the library,
-// joining the collaboration that edits it.
+// and only its published version if not; one who changes the library, joining
+// the collaboration that edits it; those who enter a deal room, doing either with
+// its files, and a reviewer, reading the versions sent to them; and a buyer's, with
+// no account, reading a file a frontstage's link shows, at the version it shows.
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
@@ -19,6 +21,7 @@ import { managesLibrary, readsLibrary } from "../shared/api.ts";
 import type { Failure } from "../shared/api.ts";
 import { userOf } from "./auth.ts";
 import { config } from "./config.ts";
+import { entersDealRoom } from "./dealRooms.ts";
 
 /** The path udoc-server's routes sit beneath. */
 const BASE = "/udoc";
@@ -31,6 +34,18 @@ const DOCUMENT_PATH = new RegExp(`^${BASE}/documents/([^/]+)(?:/|$)`);
 
 /** One checkpoint's routes: `/udoc/documents/:id/checkpoints/:version`, and those under it. */
 const CHECKPOINT_PATH = new RegExp(`^${BASE}/documents/[^/]+/checkpoints/(\\d+)(?:/|$)`);
+
+/**
+ * Where a frontstage's file opens: `/udoc/frontstage/:token/files/:assetId/versions/:number/package`,
+ * and what's under it. The buyer's viewer asks for no more than a version's package
+ * names, and never learns what document holds it.
+ */
+const FRONTSTAGE_PATH = new RegExp(`^${BASE}/frontstage/([^/]+)/files/([^/]+)/versions/(\\d+)/package(/.*)?$`);
+
+/** Where the viewer opens version `number` of frontstage `token`'s file `assetId` from. */
+export function frontstagePackagePath(token: string, assetId: string, number: number): string {
+    return `${BASE}/frontstage/${encodeURIComponent(token)}/files/${encodeURIComponent(assetId)}/versions/${number}/package`;
+}
 
 /** udoc-server, refusing what it was asked: its status, and its failure. */
 export class UdocFailure extends Error {
@@ -53,6 +68,12 @@ export interface Udoc {
     importDocument(bytes: Uint8Array): Promise<{ id: string; format: string }>;
     /** Forget document `id`; one udoc-server doesn't keep is forgotten already. */
     deleteDocument(id: string): Promise<void>;
+    /**
+     * Keep a copy of checkpoint `checkpoint` of document `id`, read as `format`, as
+     * a new document of its own, with no history: the id udoc-server keeps it as, and
+     * how many bytes it is.
+     */
+    copyCheckpoint(id: string, checkpoint: number, format: string): Promise<{ id: string; size: number }>;
     /** Save document `id` as it is now as a new checkpoint: the checkpoint's number. */
     checkpoint(id: string): Promise<number>;
     /**
@@ -105,6 +126,50 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
         return row !== undefined;
     }
 
+    /** The deal room whose file document `id` is; `undefined` for one in the library. */
+    function roomOfDocument(id: string): { assetId: string; roomId: string } | undefined {
+        const row = db
+            .prepare(
+                `SELECT assets.id, room_file.room_id FROM assets
+                JOIN deal_room_files AS room_file ON room_file.asset_id = assets.id
+                WHERE assets.document_id = ?`,
+            )
+            .get(id) as { id: string; room_id: string } | undefined;
+        return row && { assetId: row.id, roomId: row.room_id };
+    }
+
+    /** Whether checkpoint `checkpoint` of file `assetId` is a version sent to `userId` to review. */
+    function checkpointSentToReview(assetId: string, checkpoint: number, userId: string): boolean {
+        const row = db
+            .prepare("SELECT 1 FROM versions WHERE asset_id = ? AND checkpoint = ? AND reviewer_id = ?")
+            .get(assetId, checkpoint, userId);
+        return row !== undefined;
+    }
+
+    /**
+     * What `request` asks of udoc-server, if it reads a file on a frontstage at the
+     * version the frontstage shows: its address there. Nothing else gets a buyer in.
+     */
+    function frontstageTarget(request: IncomingMessage): string | undefined {
+        if (request.method !== "GET" && request.method !== "HEAD") return undefined;
+        const { pathname, search } = new URL(request.url ?? "/", "http://localhost");
+        const match = FRONTSTAGE_PATH.exec(pathname);
+        if (!match) return undefined;
+        const [, token, assetId, number, rest = ""] = match;
+        const row = db
+            .prepare(
+                `SELECT assets.document_id, versions.checkpoint FROM frontstages
+                JOIN frontstage_files AS file ON file.room_id = frontstages.room_id
+                JOIN assets ON assets.id = file.asset_id
+                JOIN versions ON versions.asset_id = assets.id AND versions.number = assets.published_version
+                WHERE frontstages.token = ? AND file.asset_id = ? AND versions.number = ?`,
+            )
+            .get(token, assetId, Number(number)) as { document_id: string; checkpoint: number } | undefined;
+        if (!row) return undefined;
+        const document = encodeURIComponent(row.document_id);
+        return `${BASE}/documents/${document}/checkpoints/${row.checkpoint}/package${rest}${search}`;
+    }
+
     /** Why the gate turns `request` away, or `undefined` to let it through. */
     function refusal(request: IncomingMessage): [number, Failure] | undefined {
         if (fromBackend(request)) return undefined;
@@ -118,17 +183,27 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
         // Reading alone: the backend imports, checkpoints and deletes.
         if (request.method !== "GET" && request.method !== "HEAD")
             return [403, { error: "forbidden", message: "a document is read here, not changed" }];
+        const checkpoint = CHECKPOINT_PATH.exec(path)?.[1];
+        const room = roomOfDocument(id!);
+        if (room) {
+            // Those on a deal room read all of its file; a reviewer, the versions sent to them.
+            if (entersDealRoom(db, user, room.roomId)) return undefined;
+            return checkpoint !== undefined && checkpointSentToReview(room.assetId, Number(checkpoint), user.id)
+                ? undefined
+                : unknown;
+        }
         if (readsLibrary(user.role)) return undefined;
         // Anyone else reads the version published, and nothing of the document around it.
-        const checkpoint = CHECKPOINT_PATH.exec(path)?.[1];
         return checkpoint !== undefined && published(id!, Number(checkpoint)) ? undefined : unknown;
     }
 
     /** Whether `request`, a WebSocket upgrade, joins the collaboration of a document the user changes. */
     function mayEdit(request: IncomingMessage): boolean {
         const user = userOf(db, request);
-        if (!user || !managesLibrary(user.role)) return false;
-        return keptFor(DOCUMENT_PATH.exec(pathOf(request))?.[1], user.tenant.id);
+        const id = DOCUMENT_PATH.exec(pathOf(request))?.[1];
+        if (!user || !keptFor(id, user.tenant.id)) return false;
+        const room = roomOfDocument(id!);
+        return room ? entersDealRoom(db, user, room.roomId) : managesLibrary(user.role);
     }
 
     /** Ask udoc-server for `path`, as the backend: its answer, or a `UdocFailure`. */
@@ -146,7 +221,9 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
     return {
         handleRequest(request, response) {
             if (!isUdocPath(pathOf(request))) return false;
-            const refused = refusal(request);
+            const staged = frontstageTarget(request);
+            if (staged) request.url = staged;
+            const refused = staged ? undefined : refusal(request);
             if (refused) {
                 const [status, failure] = refused;
                 response.writeHead(status, { "content-type": "application/json" }).end(JSON.stringify(failure));
@@ -158,8 +235,8 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
             return true;
         },
 
-        // Collaboration, udoc-server's one upgrade, is how a document is
-        // edited, and only those who change the library edit one.
+        // Collaboration, udoc-server's one upgrade, is how a document is edited:
+        // a library's by those who change it, a deal room's by those who enter it.
         handleUpgrade(request, socket, head) {
             if (!isUdocPath(pathOf(request))) return false;
             if (!mayEdit(request)) socket.end("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
@@ -174,6 +251,25 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
             const { id } = (await (await ask("POST", "/documents", bytes)).json()) as { id: string };
             const description = await store.getDescription(id);
             return { id, format: description?.sourceFormat ?? "unknown" };
+        },
+
+        // udoc-server has no route that copies a document, and a udoc package isn't
+        // a document to import, so a copy is the checkpoint saved in its own format,
+        // and imported (GAPS.md). A format it can't save is one no edit changes, so
+        // what was uploaded is that checkpoint.
+        async copyCheckpoint(id, checkpoint, format) {
+            const document = encodeURIComponent(id);
+            const saved = await ask(
+                "GET",
+                `/documents/${document}/checkpoints/${checkpoint}/file.${encodeURIComponent(format)}`,
+            ).catch((error: unknown) => {
+                if (error instanceof UdocFailure && error.status === 404)
+                    return ask("GET", `/documents/${document}/original`);
+                throw error;
+            });
+            const bytes = new Uint8Array(await saved.arrayBuffer());
+            const { id: copy } = (await (await ask("POST", "/documents", bytes)).json()) as { id: string };
+            return { id: copy, size: bytes.length };
         },
 
         async deleteDocument(id) {

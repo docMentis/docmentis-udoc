@@ -5,13 +5,16 @@
 // version is saved as a draft, submitted to a reviewer, who alone then approves
 // or returns it; one returned stays so, and what changes goes in a new version.
 // Any approved version may be published, an older one taking the file back to
-// it. No one reviews what they submitted themselves.
+// it. No one reviews what they submitted themselves. A deal room's file has its
+// versions the same way, those who enter the room in place of those who keep the
+// library: what publishes one is putting its room on the frontstage.
 import type { DatabaseSync } from "node:sqlite";
 
 import type { FastifyInstance } from "fastify";
 
 import { managesLibrary, readsLibrary, reviewsLibrary } from "../../shared/api.ts";
 import type {
+    Asset,
     Reviewer,
     Role,
     User,
@@ -22,30 +25,35 @@ import type {
     VersionedAsset,
     WaitingVersion,
 } from "../../shared/api.ts";
-import { ASSETS, ASSET_COLUMNS, assetOf, assetOfRow } from "../assets.ts";
+import { ASSETS, ASSET_COLUMNS, anyFileOf, assetOf, assetOfRow } from "../assets.ts";
 import type { AssetRow } from "../assets.ts";
 import { inTransaction } from "../db.ts";
-import { Refusal, noteOf, signedInAs } from "../http.ts";
+import { anySentToReview, entersDealRoom } from "../dealRooms.ts";
+import { Refusal, noteOf, signedIn } from "../http.ts";
 import type { Udoc } from "../udoc.ts";
 import { keepThumbnail } from "./thumbnails.ts";
 
-/** What each step asks of a version and its user, and what it leaves: its status, or as it was with no `to`. */
+/**
+ * What each step asks of a version and its user: who takes it, of those who edit
+ * the file and those who review; and what it leaves: its status, or as it was with
+ * no `to`.
+ */
 const STEPS: Record<
     VersionStep,
     {
-        may: (role: Role) => boolean;
+        taker: "editor" | "reviewer" | "either";
         from: VersionStatus[];
         to?: VersionStatus;
         event: VersionEvent["kind"];
         needsNote?: boolean;
     }
 > = {
-    submit: { may: managesLibrary, from: ["draft"], to: "submitted", event: "submitted" },
-    approve: { may: reviewsLibrary, from: ["submitted"], to: "approved", event: "approved" },
-    return: { may: reviewsLibrary, from: ["submitted"], to: "returned", event: "returned", needsNote: true },
-    publish: { may: managesLibrary, from: ["approved"], event: "published" },
-    reassign: { may: readsLibrary, from: ["submitted"], event: "reassigned" },
-    dismiss: { may: managesLibrary, from: ["approved", "returned"], event: "dismissed" },
+    submit: { taker: "editor", from: ["draft"], to: "submitted", event: "submitted" },
+    approve: { taker: "reviewer", from: ["submitted"], to: "approved", event: "approved" },
+    return: { taker: "reviewer", from: ["submitted"], to: "returned", event: "returned", needsNote: true },
+    publish: { taker: "editor", from: ["approved"], event: "published" },
+    reassign: { taker: "either", from: ["submitted"], event: "reassigned" },
+    dismiss: { taker: "editor", from: ["approved", "returned"], event: "dismissed" },
 };
 
 interface VersionRow {
@@ -67,8 +75,13 @@ interface EventRow {
     note: string | null;
 }
 
+/** Whether `user` edits `file`: a library's, if they keep the library; a deal room's, if they enter the room. */
+function editsFile(db: DatabaseSync, user: User, file: Asset): boolean {
+    return file.dealRoomId === null ? managesLibrary(user.role) : entersDealRoom(db, user, file.dealRoomId);
+}
+
 /** A file's versions, newest first. */
-function versionsOf(db: DatabaseSync, assetId: string): Version[] {
+export function versionsOf(db: DatabaseSync, assetId: string): Version[] {
     const rows = db
         .prepare(
             `SELECT versions.number, versions.checkpoint, versions.status, versions.reviewer_id,
@@ -104,7 +117,7 @@ function versionsOf(db: DatabaseSync, assetId: string): Version[] {
 }
 
 /** Record what `userId` did to version `number` of file `assetId`. */
-function addEvent(
+export function addEvent(
     db: DatabaseSync,
     {
         assetId,
@@ -156,6 +169,16 @@ export function addFirstVersion(db: DatabaseSync, assetId: string, userId: strin
     addVersion(db, assetId, 0, userId, at, null);
 }
 
+/**
+ * A deal room's new file's first version: the checkpoint importing it made, a copy
+ * of a version the library published, so approved as that was, with `note` saying
+ * which. Run in a transaction.
+ */
+export function addCopiedVersion(db: DatabaseSync, assetId: string, userId: string, at: number, note: string): void {
+    const number = addVersion(db, assetId, 0, userId, at, note);
+    db.prepare("UPDATE versions SET status = 'approved' WHERE asset_id = ? AND number = ?").run(assetId, number);
+}
+
 const OWN_SUBMISSION = () => new Refusal(403, "ownSubmission", "no one reviews what they submitted themselves");
 
 /**
@@ -191,10 +214,11 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
      * what they submitted, until it's dealt with: returned, until a later version
      * is submitted; approved, until it's published, or a later one is. Dismissing
      * one takes it off, and a version published once isn't waiting to be again,
-     * so a rollback leaves nothing behind.
+     * so a rollback leaves nothing behind. Those who sell have the same, for what
+     * they submit from their deal rooms.
      */
     app.get("/api/library/attention", async (request): Promise<{ versions: WaitingVersion[] }> => {
-        const user = signedInAs(db, request, readsLibrary);
+        const user = signedIn(db, request);
         const rows = db
             .prepare(
                 `SELECT ${ASSET_COLUMNS}, waiting.number AS waiting_number, waiting.status AS waiting_status
@@ -242,7 +266,7 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
     /** `{ reviewers }`: those at the user's tenant a version can be sent to, by name. */
     app.get("/api/library/reviewers", async (request): Promise<{ reviewers: Reviewer[] }> => {
-        const user = signedInAs(db, request, readsLibrary);
+        const user = signedIn(db, request);
         const rows = db
             .prepare("SELECT id, name, title, role FROM users WHERE tenant_id = ? ORDER BY name COLLATE NOCASE")
             .all(user.tenant.id) as unknown as (Reviewer & { role: Role })[];
@@ -253,10 +277,28 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
         };
     });
 
+    /**
+     * File `id` of the user's tenant, for a request about its versions: a `403`
+     * for a library's to one who doesn't read the library, and a `404` for a deal
+     * room's to one with no business with it.
+     */
+    function fileFor(user: User, id: string): Asset {
+        const file = anyFileOf(db, user, id);
+        if (file.dealRoomId === null) {
+            if (!readsLibrary(user.role)) throw new Refusal(403, "forbidden", "your role doesn't let you do this");
+        } else if (!entersDealRoom(db, user, file.dealRoomId) && !anySentToReview(db, user, file.id))
+            throw new Refusal(404, "notFound", "no such file");
+        return file;
+    }
+
     /** `{ versions }`: a file's versions, newest first. */
     app.get<{ Params: { id: string } }>("/api/assets/:id/versions", async (request) => {
-        const user = signedInAs(db, request, readsLibrary);
-        return { versions: versionsOf(db, assetOf(db, user, request.params.id).id) };
+        const user = signedIn(db, request);
+        const file = fileFor(user, request.params.id);
+        const versions = versionsOf(db, file.id);
+        if (editsFile(db, user, file) || file.dealRoomId === null) return { versions };
+        // A reviewer who isn't on the room reads what was sent to them.
+        return { versions: versions.filter((version) => version.reviewer?.id === user.id) };
     });
 
     /**
@@ -267,8 +309,10 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
     app.post<{ Params: { id: string }; Body: { note?: unknown } | undefined }>(
         "/api/assets/:id/versions",
         async (request, reply) => {
-            const user = signedInAs(db, request, managesLibrary);
-            const { id, documentId } = assetOf(db, user, request.params.id);
+            const user = signedIn(db, request);
+            const file = fileFor(user, request.params.id);
+            if (!editsFile(db, user, file)) throw new Refusal(403, "forbidden", "your role doesn't let you do this");
+            const { id, documentId } = file;
             const note = noteOf(request.body?.note);
             const checkpoint = await udoc.checkpoint(documentId);
             const number = inTransaction(db, () => addVersion(db, id, checkpoint, user.id, Date.now(), note));
@@ -278,7 +322,7 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 // The version is kept all the same, with no thumbnail.
                 request.log.warn(error, "a thumbnail wasn't rendered");
             }
-            const answer: VersionedAsset = { asset: assetOf(db, user, id), versions: versionsOf(db, id) };
+            const answer: VersionedAsset = { asset: anyFileOf(db, user, id), versions: versionsOf(db, id) };
             return reply.code(201).send(answer);
         },
     );
@@ -289,13 +333,23 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
      * user the step isn't theirs to take; and a `409` for a version not where
      * it starts from, or that has taken it already.
      */
-    for (const [step, { may, from, to, event, needsNote }] of Object.entries(STEPS)) {
+    for (const [step, { taker, from, to, event, needsNote }] of Object.entries(STEPS)) {
         app.post<{
             Params: { id: string; number: string };
             Body: { note?: unknown; reviewerId?: unknown } | undefined;
         }>(`/api/assets/:id/versions/:number/${step}`, async (request): Promise<VersionedAsset> => {
-            const user = signedInAs(db, request, may);
-            const asset = assetOf(db, user, request.params.id);
+            const user = signedIn(db, request);
+            const asset = fileFor(user, request.params.id);
+            const edits = editsFile(db, user, asset);
+            const reviews = reviewsLibrary(user.role);
+            if (!(taker === "editor" ? edits : taker === "reviewer" ? reviews : edits || reviews))
+                throw new Refusal(403, "forbidden", "your role doesn't let you do this");
+            if (step === "publish" && asset.dealRoomId !== null)
+                throw new Refusal(
+                    409,
+                    "wrongStatus",
+                    "a deal room's file is published by putting it on the frontstage",
+                );
             const number = Number(request.params.number);
             const row = db
                 .prepare("SELECT status, reviewer_id FROM versions WHERE asset_id = ? AND number = ?")
@@ -318,7 +372,7 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                     throw new Refusal(403, "notYourReview", "this version was sent to someone else to review");
             }
             if (step === "reassign") {
-                if (!managesLibrary(user.role) && row.reviewer_id !== user.id)
+                if (!edits && row.reviewer_id !== user.id)
                     throw new Refusal(403, "notYourReview", "this version was sent to someone else to review");
                 sentTo = reviewerOf(db, user, request.body?.reviewerId, submitter?.user_id ?? "");
                 if (sentTo === row.reviewer_id)
@@ -326,7 +380,11 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
             }
             if (step === "publish" && asset.publishedVersion === number)
                 throw new Refusal(409, "wrongStatus", "this version is published already");
-            if (step === "dismiss" && hasEvent(db, asset.id, number, ["dismissed", "published"]))
+            // One no one submitted, as a deal room's first, copied as approved, isn't waiting either.
+            if (
+                step === "dismiss" &&
+                (submitter === undefined || hasEvent(db, asset.id, number, ["dismissed", "published"]))
+            )
                 throw new Refusal(409, "wrongStatus", "this version isn't waiting on anyone");
 
             const note = noteOf(request.body?.note);
@@ -350,7 +408,7 @@ export function versionRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                     note,
                 });
             });
-            return { asset: assetOf(db, user, asset.id), versions: versionsOf(db, asset.id) };
+            return { asset: anyFileOf(db, user, asset.id), versions: versionsOf(db, asset.id) };
         });
     }
 }

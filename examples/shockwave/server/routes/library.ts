@@ -10,7 +10,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import { managesLibrary, readsLibrary } from "../../shared/api.ts";
 import type { Asset, Folder, FolderListing, User } from "../../shared/api.ts";
-import { ASSETS, ASSET_COLUMNS, assetOf, assetOfRow } from "../assets.ts";
+import { ASSETS, ASSET_COLUMNS, IN_LIBRARY, assetOf, assetOfRow } from "../assets.ts";
 import type { AssetRow } from "../assets.ts";
 import { inTransaction, isUniqueFailure } from "../db.ts";
 import { Refusal, nameOf, signedInAs } from "../http.ts";
@@ -91,7 +91,8 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
         const assets = db
             .prepare(
                 `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
-                WHERE assets.tenant_id = ? AND assets.folder_id IS ? ORDER BY assets.name COLLATE NOCASE`,
+                WHERE assets.tenant_id = ? AND ${IN_LIBRARY} AND assets.folder_id IS ?
+                ORDER BY assets.name COLLATE NOCASE`,
             )
             .all(user.tenant.id, folderId) as unknown as AssetRow[];
         return { path, folders: folders.map(folderOfRow), assets: assets.map(assetOfRow) };
@@ -103,7 +104,7 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
         const assets = db
             .prepare(
                 `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
-                WHERE assets.tenant_id = ? ORDER BY assets.uploaded_at DESC LIMIT ?`,
+                WHERE assets.tenant_id = ? AND ${IN_LIBRARY} ORDER BY assets.uploaded_at DESC LIMIT ?`,
             )
             .all(user.tenant.id, RECENT_FILES) as unknown as AssetRow[];
         return { assets: assets.map(assetOfRow) };
@@ -183,6 +184,7 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 uploadedAt: Date.now(),
                 latestVersion: { number: 1, status: "draft" },
                 publishedVersion: null,
+                dealRoomId: null,
             };
             try {
                 inTransaction(db, () => {

@@ -168,15 +168,16 @@ waits on the engine (above).
 A user's role is what they may do in the app; their job is a title on their
 profile, as Seismic and Highspot keep the two apart:
 
-| Role     | May                                                                                                     |
-| -------- | ------------------------------------------------------------------------------------------------------- |
-| admin    | keep the Library (create, prepare, submit, publish what's approved, retire), see Insights, and Settings |
-| reviewer | review what's sent to them from the Library: approve it, or return it with a note                       |
-| manager  | arrange Collections, teach in Learning, see the team's deal rooms and Insights, and all a member may    |
-| member   | find content in Collections, prepare it and share it in Deal Rooms, and learn in Learning               |
+| Role     | May                                                                                                      |
+| -------- | -------------------------------------------------------------------------------------------------------- |
+| admin    | keep the Library (create, prepare, submit, publish what's approved, retire), see Insights, and Settings  |
+| reviewer | review what's sent to them from the Library or a deal room: approve it, or return it with a note         |
+| manager  | arrange Collections, teach in Learning, enter every deal room, see Insights, and all a member may        |
+| member   | find content in Collections, prepare it and share it in the Deal Rooms they're on, and learn in Learning |
 
 A user sees Home and the sections their role may use: neither a manager nor a
-member sees the Library. Everyone sees Collections, which only a manager
+member sees the Library, and neither an admin nor a reviewer sees Deal Rooms.
+Everyone sees Collections, which only a manager
 arranges. A buyer, a prospect institution or its investment
 consultant, is no user: they open a deal room's frontstage at a link a seller
 shared with them, with no account.
@@ -243,8 +244,11 @@ which wants a signed-in session and a document id the user's tenant has an
 asset for, and lets a user only read it. Those who read the Library read all of
 it; anyone else reads only the checkpoint its file publishes, and nothing of the
 document around it. An upgrade, which joins the collaboration that edits a
-document, passes only for those who change the Library. Later, a deal room's link
-admits a buyer to the read routes of what its frontstage shares. The browser
+document, passes only for those who change the Library. A deal room's file is
+another matter: those who enter the room read it and join its collaboration, and
+a reviewer reads the versions sent to them. A buyer has no session: a frontstage's
+link admits them to the package of each file it shows, at the version it shows
+([below](#deal-rooms)). The browser
 never imports, checkpoints or deletes a document in udoc-server: the backend does.
 
 **Importing.** An upload goes to `POST /api/assets`, and the backend imports it
@@ -358,13 +362,65 @@ the user's tenant, so another tenant's answers `404`, as one that isn't there. A
 its file to it, so the schema itself can't join two tenants. Within a tenant, everyone
 sees all its collections.
 
+## Deal Rooms
+
+A deal room has two faces. Backstage is where those who sell prepare content for one
+deal, together. Its frontstage is what the deal's buyers read, at a link, with no
+account. Nothing reaches a buyer until someone puts it there.
+
+| Step              | Who                 | What it does                                                                          |
+| ----------------- | ------------------- | ------------------------------------------------------------------------------------- |
+| make, set, delete | those who enter it  | a room's title, description, banner color and image, and who's on it                  |
+| add               | those who enter it  | copies files from the tenant's collections, each at the version the library publishes |
+| edit              | those who enter it  | a copy, together in the editor, through its versions                                  |
+| review            | the reviewer chosen | approves or returns a version saved after the copy was made                           |
+| put on frontstage | those who enter it  | shows what's chosen, makes the link, or updates what the link shows                   |
+| take off          | those who enter it  | the link stops working for good; putting the room back makes a new one                |
+| read              | anyone with a link  | the frontstage's banner and files, each opening read-only in the viewer               |
+
+A manager enters every room at their tenant; a member, those they're on, starting with
+those they make. An admin or a reviewer enters none.
+
+**A file is a copy, not a reference.** Personalizing means editing the document, so
+each file is a document of its own, an asset that `deal_room_files` holds out of the
+Library, with the version it came from recorded. It doesn't follow the file it came
+from: when the Library publishes another version, the room says so and the copy stays
+as it is. Deleting the Library's file leaves it. udoc-server can't copy a document, so
+the backend saves the checkpoint in its format and imports that (`GAPS.md`).
+
+**What a buyer reads has been approved.** A copy's first version is approved as the
+version it copied was. An edit is saved as a new version and reviewed as a Library
+file's is, by the reviewer it's sent to, who reads that version and nothing else of the
+room. A file goes on the frontstage at its latest approved version; a version still in
+review, or edits not saved as one, stay backstage.
+
+**The frontstage is a copy of its own.** Putting a room on copies its title,
+description and banner into `frontstages`, and each file's name, description and place
+into `frontstage_files`, and sets the version shown as the asset's `published_version`.
+Its routes (`/api/frontstage/:token`) read these alone, so nothing backstage can reach
+them. Changing a setting, approving a version or adding a file shows backstage as
+changes the frontstage doesn't have yet, until someone updates it. Updating keeps the
+link.
+
+**A buyer's link is all they have.** Its token is 256 random bits. The viewer opens a
+file at `/udoc/frontstage/:token/files/:assetId/versions/:number/package`, which the
+gate checks against what the frontstage shows and turns into that checkpoint's package,
+so a buyer never learns a document's id. No other udoc-server route is open to them.
+Their viewer has no download or print button, since a deck's source holds its notes and
+hidden slides, and no annotating, since what they marked would go nowhere. Recording what they read is still to come.
+
+The page is the room's banner, its image under its color, which fades up from the text
+so that it reads on any image, over one row to a file: the document and what it says
+side by side, turn about. Pressing one opens the document. Its first page doesn't flip,
+since udoc-server can't render a checkpoint's pages (`GAPS.md`).
+
 ## The narrator
 
 Shockwave looks like the product it is, and beside it a narrator speaks for
 docMentis. It's a panel docked at the window's right edge, styled apart from
 the app so that no one takes one for the other, collapsing to a badge in the
-corner, and gone with `?narrator=off` when the app is used as a product. It says
-two kinds of things:
+corner. It stays beside a deal room's frontstage too, with no one signed in: the
+buyer's experience is part of what's shown. It says two kinds of things:
 
 - **Steps**, what to do next, in chapters, a persona's workflow each: "Sign in
   as the marketer", then "Upload the new datasheet". A step points at its

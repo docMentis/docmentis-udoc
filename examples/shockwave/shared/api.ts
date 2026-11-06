@@ -33,6 +33,16 @@ export function arrangesCollections(role: Role): boolean {
     return role === "manager";
 }
 
+/** Whether a user in `role` sells: makes deal rooms, and works in those they can enter. */
+export function sellsDeals(role: Role): boolean {
+    return role === "manager" || role === "member";
+}
+
+/** Whether a user in `role` enters every deal room at their tenant, whether they're on it or not. */
+export function entersAllDealRooms(role: Role): boolean {
+    return role === "manager";
+}
+
 /** Whether a user in `role` keeps the workspace's settings: its brand, and who's in it. */
 export function managesWorkspace(role: Role): boolean {
     return role === "admin";
@@ -143,8 +153,10 @@ export interface Asset {
     uploadedAt: number;
     /** The version saved last. */
     latestVersion: { number: number; status: VersionStatus };
-    /** The number of the version published; `null` when none is. */
+    /** The number of the version published, or for a deal room's file, the one on its frontstage; `null` when none is. */
     publishedVersion: number | null;
+    /** The deal room it's a copy for; `null` for a file in the library. */
+    dealRoomId: string | null;
 }
 
 /**
@@ -246,6 +258,112 @@ export interface Collection {
     /** When it last changed, in milliseconds since the epoch. */
     updatedAt: number;
     items: CollectionItem[];
+}
+
+/** Someone at a tenant who sells, whom a deal room can have on it. */
+export interface Seller {
+    id: string;
+    name: string;
+    /** Their job title. */
+    title: string;
+}
+
+/** A deal room's banner, over its frontstage. */
+export interface DealRoomBanner {
+    /** Its color, `#rrggbb`; `null` for the tenant's primary. */
+    color: string | null;
+    /** Where its image is, for an `<img>`; `null` when it has none. */
+    image: string | null;
+}
+
+/** The file a deal room's file was copied from, as it stood then and as the library has it now. */
+export interface DealRoomFileSource {
+    /** The library's file, for adding it again; `null` once it's deleted. */
+    id: string | null;
+    name: string;
+    /** The version copied. */
+    version: number;
+    /** The version the library publishes now, where that isn't the one copied; otherwise `null`. */
+    publishedInstead: number | null;
+}
+
+/**
+ * A file in a deal room: its own copy of a published version, edited apart from
+ * the file it came from, with what buyers read beside it.
+ */
+export interface DealRoomFile {
+    asset: Asset;
+    /** What it says to buyers, beside the document on the frontstage. */
+    description: string | null;
+    source: DealRoomFileSource;
+    /** The latest approved version, which is what goes on the frontstage. */
+    approvedVersion: number;
+    /** Whether it's on the frontstage: at `asset.publishedVersion`. */
+    onFrontstage: boolean;
+}
+
+/** How a deal room's frontstage stands, for those backstage. */
+export interface FrontstageStatus {
+    /** What the link buyers open names: `/rooms/:token`. */
+    token: string;
+    /** When it was last put on, in milliseconds since the epoch. */
+    at: number;
+    by: { id: string; name: string };
+    /** Whether anything changed backstage since that buyers can't see yet. */
+    behind: boolean;
+}
+
+/** A deal room, backstage: what sales prepare for one deal. */
+export interface DealRoom {
+    id: string;
+    title: string;
+    description: string | null;
+    banner: DealRoomBanner;
+    /** When it last changed, in milliseconds since the epoch. */
+    updatedAt: number;
+    /** Who's on it, by name. */
+    people: Seller[];
+    /** Its files, in the order they show on the frontstage. */
+    files: DealRoomFile[];
+    /** Its frontstage; `null` when it's not on one. */
+    frontstage: FrontstageStatus | null;
+}
+
+/** What `GET /api/deal-rooms/:id/files/:assetId` answers: a file, in its room, with its versions. */
+export interface DealRoomFileDetail {
+    room: { id: string; title: string };
+    file: DealRoomFile;
+    /** Its versions, newest first: for a reviewer who isn't on the room, those sent to them. */
+    versions: Version[];
+}
+
+/** A file as a buyer sees it, on a deal room's frontstage: what was put there, and nothing around it. */
+export interface FrontstageFile {
+    id: string;
+    name: string;
+    description: string | null;
+    /** What it was read as, udoc's name for its format: `pdf`, `pptx`, … */
+    format: string;
+    /** Where its first page is, for an `<img>`; `null` when it has none. */
+    thumbnail: string | null;
+    /** Where the viewer opens it from. */
+    package: string;
+}
+
+/** A deal room as a buyer sees it, at its link, with no account: only what was last put on the frontstage. */
+export interface Frontstage {
+    /** The tenant it's from, in its brand. */
+    from: {
+        name: string;
+        /** Where its logo is, for an `<img>`; `null` when it has none. */
+        logo: string | null;
+        brandColor: string | null;
+        viewerColors: ViewerColors;
+    };
+    title: string;
+    description: string | null;
+    banner: DealRoomBanner;
+    files: FrontstageFile[];
 }
 
 /** What a folder holds, or the library's top. */

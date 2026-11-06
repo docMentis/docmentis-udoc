@@ -20,6 +20,11 @@ export const STATUS_LABELS: Record<FileStatusName, string> = {
     published: "Published",
 };
 
+/** What the version a file publishes is called: a deal room's is what's on its frontstage. */
+export function publishedLabelOf({ dealRoomId }: Pick<Asset, "dealRoomId">): string {
+    return dealRoomId === null ? STATUS_LABELS.published : "On frontstage";
+}
+
 /**
  * Where a file's versions stand: its latest, and the one published if that's
  * another, so that a file being revised shows both.
@@ -30,11 +35,11 @@ export function fileStatuses({ latestVersion, publishedVersion }: Asset): { stat
     return [latestVersion, ...(publishedVersion === null ? [] : [published])];
 }
 
-/** A status: "In review", or with a version's number, "In review · v3". */
-function StatusLabel({ status, number }: { status: FileStatusName; number?: number }) {
+/** A status: "In review", or with a version's number, "In review · v3"; `label`, for another word for it. */
+function StatusLabel({ status, number, label }: { status: FileStatusName; number?: number; label?: string }) {
     return (
         <span className={`status-label status-${status}`}>
-            {STATUS_LABELS[status]}
+            {label ?? STATUS_LABELS[status]}
             {number !== undefined && ` · v${number}`}
         </span>
     );
@@ -45,7 +50,12 @@ export function FileStatus({ asset }: { asset: Asset }) {
     return (
         <span className="status-labels">
             {fileStatuses(asset).map(({ status, number }) => (
-                <StatusLabel key={status} status={status} number={number} />
+                <StatusLabel
+                    key={status}
+                    status={status}
+                    number={number}
+                    label={status === "published" ? publishedLabelOf(asset) : undefined}
+                />
             ))}
         </span>
     );
@@ -59,11 +69,20 @@ const WAITING_LABELS: Record<VersionStatus, string> = {
     returned: "Returned",
 };
 
-export function WaitingStatus({ status, number }: { status: VersionStatus; number: number }) {
+export function WaitingStatus({
+    status,
+    number,
+    inDealRoom = false,
+}: {
+    status: VersionStatus;
+    number: number;
+    /** Whether it's a deal room's, which goes on the frontstage rather than being published. */
+    inDealRoom?: boolean;
+}) {
     return (
         <span className="status-labels">
             <span className={`status-label status-${status}`}>
-                {WAITING_LABELS[status]} · v{number}
+                {inDealRoom && status === "approved" ? "Ready for the frontstage" : WAITING_LABELS[status]} · v{number}
             </span>
         </span>
     );
@@ -88,12 +107,15 @@ const EVENTS: Record<VersionEvent["kind"], string> = {
 export function VersionList({
     versions,
     publishedVersion,
+    publishedLabel = STATUS_LABELS.published,
     shown,
     workingCopy,
     onShow,
 }: {
     versions: Version[];
     publishedVersion: number | null;
+    /** What the version published is called, and its being published. */
+    publishedLabel?: string;
     /** The version shown; `null` for the working copy. */
     shown: number | null;
     /** Whether to offer the working copy. */
@@ -129,7 +151,9 @@ export function VersionList({
                                 Version {version.number}
                                 <span className="status-labels">
                                     <StatusLabel status={version.status} />
-                                    {publishedVersion === version.number && <StatusLabel status="published" />}
+                                    {publishedVersion === version.number && (
+                                        <StatusLabel status="published" label={publishedLabel} />
+                                    )}
                                 </span>
                             </span>
                             <span className="version-row-meta">
@@ -147,7 +171,7 @@ export function VersionList({
                                 {since.map((event) => (
                                     <li key={`${event.kind}-${event.at}`}>
                                         <span>
-                                            {EVENTS[event.kind]}
+                                            {event.kind === "published" ? publishedLabel : EVENTS[event.kind]}
                                             {event.to && ` to ${event.to.name}`} by {event.by.name} ·{" "}
                                             {formatDateTime(event.at)}
                                         </span>

@@ -3,7 +3,10 @@
 // color scheme; the system's has none. index.html sets it before the page
 // shows, so that it opens in the theme chosen. Switched to the one the system
 // shows, it's the system's again, and follows it.
-import { useSyncExternalStore } from "react";
+import { useLayoutEffect, useSyncExternalStore } from "react";
+
+import { schemeOf } from "./scheme";
+import type { ColorRole } from "./scheme";
 
 export type Theme = "system" | "light" | "dark";
 
@@ -45,6 +48,25 @@ export function useTheme(): Theme {
         },
         () => current,
     );
+}
+
+/**
+ * The app's colors, the schemes `brandColor` seeds, each role its light color
+ * and its dark one, as app.css's are: set before the page shows and taken away
+ * as it goes, back to app.css's; app.css's alone for none.
+ */
+export function useBrandColors(brandColor: string | null): void {
+    useLayoutEffect(() => {
+        if (!brandColor) return;
+        const root = document.documentElement.style;
+        const [light, dark] = [schemeOf(brandColor, "light"), schemeOf(brandColor, "dark")];
+        const roles = Object.keys(light) as ColorRole[];
+        for (const role of roles)
+            root.setProperty(`--md-sys-color-${role}`, `light-dark(${light[role]}, ${dark[role]})`);
+        return () => {
+            for (const role of roles) root.removeProperty(`--md-sys-color-${role}`);
+        };
+    }, [brandColor]);
 }
 
 const systemDark = matchMedia("(prefers-color-scheme: dark)");

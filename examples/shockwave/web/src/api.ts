@@ -2,12 +2,16 @@
 import type {
     Asset,
     Collection,
+    DealRoom,
+    DealRoomFileDetail,
     Failure,
     Folder,
     FolderListing,
+    Frontstage,
     Person,
     PublishedFile,
     Reviewer,
+    Seller,
     Tenant,
     User,
     Version,
@@ -22,6 +26,13 @@ export interface CollectionFields {
     name: string;
     description: string;
     instructions: string;
+}
+
+/** What a deal room says of itself, as a person gives it: an empty description for none, `null` for the tenant's color. */
+export interface DealRoomFields {
+    title: string;
+    description: string;
+    bannerColor: string | null;
 }
 
 /** A request the backend refused: its status, and its failure. */
@@ -162,6 +173,73 @@ export const api = {
         const init = withJson("PUT", { assetIds });
         return (await request<{ collection: Collection }>(`/api/collections/${id}/order`, init)).collection;
     },
+
+    /** The deal rooms the user enters, changed last first. */
+    async dealRooms(): Promise<DealRoom[]> {
+        return (await request<{ rooms: DealRoom[] }>("/api/deal-rooms")).rooms;
+    },
+    /** Deal room `id`, backstage; an `ApiError` `404` for one the user doesn't enter. */
+    async dealRoom(id: string): Promise<DealRoom> {
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}`)).room;
+    },
+    /** Make a deal room, with the user on it. */
+    async createDealRoom(title: string, description: string): Promise<DealRoom> {
+        return (await request<{ room: DealRoom }>("/api/deal-rooms", withJson("POST", { title, description }))).room;
+    },
+    /** Change what a deal room says of itself; what's on its frontstage stays as it is. */
+    async updateDealRoom(id: string, fields: DealRoomFields): Promise<DealRoom> {
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}`, withJson("PATCH", fields))).room;
+    },
+    /** Delete a deal room, its files, and its frontstage. */
+    deleteDealRoom: (id: string) => request<void>(`/api/deal-rooms/${id}`, { method: "DELETE" }),
+    /** Replace a deal room's banner image with `image`: a PNG, JPEG, WebP or SVG; an `ApiError` `415` for another. */
+    async uploadDealRoomBanner(id: string, image: Blob): Promise<DealRoom> {
+        const init = { method: "PUT", headers: { "content-type": "application/octet-stream" }, body: image };
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/banner`, init)).room;
+    },
+    async removeDealRoomBanner(id: string): Promise<DealRoom> {
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/banner`, { method: "DELETE" })).room;
+    },
+    /** Those at the user's tenant who can be on a deal room, by name. */
+    async sellers(): Promise<Seller[]> {
+        return (await request<{ sellers: Seller[] }>("/api/deal-rooms/sellers")).sellers;
+    },
+    /** Say who's on a deal room: all of them. */
+    async setDealRoomPeople(id: string, userIds: string[]): Promise<DealRoom> {
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/people`, withJson("PUT", { userIds }))).room;
+    },
+    /** Add copies of files in collections, at the version the library publishes, to a deal room's end. */
+    async addToDealRoom(id: string, assetIds: string[]): Promise<DealRoom> {
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/files`, withJson("POST", { assetIds }))).room;
+    },
+    /** A deal room's file, with its versions; an `ApiError` `404` for one that isn't the user's to see. */
+    dealRoomFile: (id: string, assetId: string) =>
+        request<DealRoomFileDetail>(`/api/deal-rooms/${id}/files/${assetId}`),
+    /** Change what a deal room's file says. */
+    async updateDealRoomFile(id: string, assetId: string, name: string, description: string): Promise<DealRoom> {
+        const init = withJson("PATCH", { name, description });
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/files/${assetId}`, init)).room;
+    },
+    /** Take a file out of a deal room and off its frontstage, and delete it. */
+    async removeFromDealRoom(id: string, assetId: string): Promise<DealRoom> {
+        const init = { method: "DELETE" };
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/files/${assetId}`, init)).room;
+    },
+    /** Put a deal room's files in order: all of them, first first; an `ApiError` `409` if they've changed. */
+    async orderDealRoom(id: string, assetIds: string[]): Promise<DealRoom> {
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/order`, withJson("PUT", { assetIds }))).room;
+    },
+    /** Put a deal room on its frontstage as it stands, showing `assetIds`, or update what's there. */
+    async putOnFrontstage(id: string, assetIds: string[]): Promise<DealRoom> {
+        const init = withJson("PUT", { assetIds });
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/frontstage`, init)).room;
+    },
+    /** Take a deal room off its frontstage; its link stops working. */
+    async takeOffFrontstage(id: string): Promise<DealRoom> {
+        return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/frontstage`, { method: "DELETE" })).room;
+    },
+    /** The frontstage at `token`, as a buyer sees it; an `ApiError` `404` for none. */
+    frontstage: (token: string) => request<Frontstage>(`/api/frontstage/${encodeURIComponent(token)}`),
 
     /** Replace tenant `id`'s logo with `image`: a PNG, JPEG, WebP or SVG; an `ApiError` `415` for another. */
     async uploadLogo(id: string, image: Blob): Promise<Tenant> {

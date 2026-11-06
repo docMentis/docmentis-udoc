@@ -9,7 +9,7 @@
 // the tenant's logo and name, search in its middle, and at its right, the
 // theme's button, the bell, which opens the user's notifications, and the
 // user's avatar, which opens their menu: who they are, and signing out.
-import { useLayoutEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type { ComponentType } from "react";
 import { NavLink, Outlet } from "react-router";
 
@@ -29,11 +29,9 @@ import {
     SettingsIcon,
     SunIcon,
 } from "./icons";
-import { schemeOf } from "./scheme";
-import type { ColorRole } from "./scheme";
-import { useShownTheme } from "./theme";
+import { useBrandColors, useShownTheme } from "./theme";
 import { useSession, useUser } from "./session";
-import { readsLibrary } from "../../shared/api.ts";
+import { readsLibrary, sellsDeals } from "../../shared/api.ts";
 import type { Role } from "../../shared/api.ts";
 import { Avatar, EmptyState, TenantBrand, useDismiss } from "./ui";
 
@@ -42,7 +40,7 @@ const SECTIONS: { to: string; label: string; icon: ComponentType; may?: (role: R
     { to: "/", label: "Home", icon: HomeIcon },
     { to: "/library", label: "Library", icon: LibraryIcon, may: readsLibrary },
     { to: "/collections", label: "Collections", icon: CollectionsIcon },
-    { to: "/deal-rooms", label: "Deal Rooms", icon: DealRoomsIcon },
+    { to: "/deal-rooms", label: "Deal Rooms", icon: DealRoomsIcon, may: sellsDeals },
     { to: "/learning", label: "Learning", icon: LearningIcon },
     { to: "/insights", label: "Insights", icon: InsightsIcon },
 ];
@@ -55,25 +53,6 @@ function savedBar(): boolean {
     } catch {
         return false;
     }
-}
-
-/**
- * The app's colors, the schemes `brandColor` seeds, each role its light color
- * and its dark one, as app.css's are: set before the app shows and taken away
- * as it goes, back to app.css's; app.css's alone for none.
- */
-function useBrandColors(brandColor: string | null): void {
-    useLayoutEffect(() => {
-        if (!brandColor) return;
-        const root = document.documentElement.style;
-        const [light, dark] = [schemeOf(brandColor, "light"), schemeOf(brandColor, "dark")];
-        const roles = Object.keys(light) as ColorRole[];
-        for (const role of roles)
-            root.setProperty(`--md-sys-color-${role}`, `light-dark(${light[role]}, ${dark[role]})`);
-        return () => {
-            for (const role of roles) root.removeProperty(`--md-sys-color-${role}`);
-        };
-    }, [brandColor]);
 }
 
 export function AppShell() {

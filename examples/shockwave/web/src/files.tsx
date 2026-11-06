@@ -36,12 +36,12 @@ export function FileBadge({ format }: { format: string }) {
 }
 
 /** What a card needs of a file to show its pages. */
-type PagedFile = Pick<Asset, "format" | "thumbnail" | "documentId">;
+type PagedFile = Pick<Asset, "format" | "thumbnail"> & { documentId?: string };
 
 /** Where page `index` of `file` is: its first, kept by the backend; another, rendered by udoc-server as it's asked for. */
 function pageSource(file: PagedFile, index: number): string {
     if (index === 0 && file.thumbnail) return file.thumbnail;
-    const document = encodeURIComponent(file.documentId);
+    const document = encodeURIComponent(file.documentId ?? "");
     return `/udoc/documents/${document}/layout/pages/${index}.png?scale=${CARD_PAGE_SCALE}`;
 }
 

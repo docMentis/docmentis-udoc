@@ -64,6 +64,8 @@
     --md-sys-typescale-font: "Inter Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --md-sys-typescale-headline-small: 400 24px / 32px var(--md-sys-typescale-font);
     --md-sys-typescale-headline-small-tracking: 0;
+    --md-sys-typescale-display-small: 400 36px / 44px var(--md-sys-typescale-font);
+    --md-sys-typescale-display-small-tracking: 0;
     --md-sys-typescale-title-large: 400 22px / 28px var(--md-sys-typescale-font);
     --md-sys-typescale-title-large-tracking: 0;
     --md-sys-typescale-title-medium: 500 16px / 24px var(--md-sys-typescale-font);
@@ -2210,4 +2212,329 @@ input {
     overflow: hidden;
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--md-sys-shape-corner-medium);
+}
+
+/* A deal room's banner, over its frontstage and in its settings. Material has no
+   banner of this kind; this is the large shape, its text title-small, display-small
+   and body-large, and either the color its room chose, with whichever of white or
+   near-black reads on it, or the primary and on-primary. Over an image, the color
+   fades up from the text, so the text reads on any image. */
+.deal-banner {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: 240px;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-large);
+    background: var(--deal-banner, var(--md-sys-color-primary));
+    color: var(--on-deal-banner, var(--md-sys-color-on-primary));
+}
+
+.deal-banner-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    box-shadow: none;
+    object-fit: cover;
+}
+
+.thumbnail img.deal-banner-image {
+    max-width: none;
+    max-height: none;
+    border-radius: inherit;
+    opacity: 1;
+    box-shadow: none;
+}
+
+.deal-banner-text {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    padding: 32px;
+}
+
+.deal-banner-text-faded {
+    padding-top: 160px;
+    background: linear-gradient(
+        to top,
+        var(--deal-banner, var(--md-sys-color-primary)) 45%,
+        color-mix(in srgb, var(--deal-banner, var(--md-sys-color-primary)) 70%, transparent) 65%,
+        transparent
+    );
+}
+
+.deal-banner-from {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
+}
+
+.deal-banner-from img {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+}
+
+.deal-banner h1 {
+    font: var(--md-sys-typescale-display-small);
+    letter-spacing: var(--md-sys-typescale-display-small-tracking);
+    overflow-wrap: anywhere;
+}
+
+.deal-banner p {
+    max-width: 72ch;
+    font: var(--md-sys-typescale-body-large);
+    letter-spacing: var(--md-sys-typescale-body-large-tracking);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+/* A deal room's card: its banner's color or image for a tray. */
+.deal-room-tray {
+    overflow: hidden;
+    background: var(--deal-banner, var(--md-sys-color-primary));
+    color: var(--on-deal-banner, var(--md-sys-color-on-primary));
+}
+
+.file-card:hover .deal-room-tray {
+    background: var(--deal-banner, var(--md-sys-color-primary));
+}
+
+.deal-room-tray > svg {
+    color: inherit;
+}
+
+.deal-room-status {
+    margin-top: 8px;
+}
+
+/* How a room's frontstage stands: an elevated card, what it says beside its link,
+   in a row where they fit. Material has no component for it. */
+.frontstage-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+}
+
+.frontstage-bar-text {
+    display: flex;
+    flex: 1 1 320px;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.frontstage-bar h2,
+.deal-settings h2,
+.deal-files h2 {
+    font: var(--md-sys-typescale-title-medium);
+    letter-spacing: var(--md-sys-typescale-title-medium-tracking);
+}
+
+.frontstage-bar p {
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.frontstage-link {
+    display: flex;
+    flex: 1 1 420px;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.frontstage-link .field {
+    flex: 1;
+    min-width: 0;
+}
+
+.frontstage-link input {
+    text-overflow: ellipsis;
+}
+
+/* A room's settings: its fields beside the banner's preview, where they fit, so
+   that its documents are in view under them; or over it. */
+.deal-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.deal-settings-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+    gap: 16px 24px;
+    align-items: start;
+}
+
+.deal-settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.deal-settings-label {
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+}
+
+.deal-settings .dialog-actions {
+    padding-top: 0;
+}
+
+.deal-files {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* The files to add, under each collection's name: title-small, as Material's list
+   subheader. */
+.pick-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.pick-group + .pick-group {
+    margin-top: 8px;
+}
+
+.pick-heading {
+    padding: 4px 8px;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
+}
+
+.checkbox:disabled {
+    opacity: 0.38;
+}
+
+/* What a buyer opens: the app's surface, the window all its own, scrolling. */
+.frontstage {
+    height: 100%;
+    overflow: auto;
+    background: var(--md-sys-color-surface);
+}
+
+.frontstage-reading {
+    overflow: hidden;
+}
+
+.frontstage-unavailable {
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.frontstage-page {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* A frontstage's files, one to a row: an elevated card that acts, the document on
+   its tray and what it says side by side, turn about. Its text is title-large over
+   body-small, over body-large as it was written. On a screen too narrow for two
+   columns, the document's over the text. */
+.stage-files {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.stage-file {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--md-sys-shape-corner-large);
+    box-shadow: var(--md-sys-elevation-1);
+    cursor: pointer;
+}
+
+.stage-file:hover {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-hover),
+        var(--md-sys-color-surface-container-low)
+    );
+    box-shadow: var(--md-sys-elevation-2);
+}
+
+.stage-file:active {
+    background: color-mix(
+        in srgb,
+        var(--md-sys-color-on-surface) var(--md-sys-state-pressed),
+        var(--md-sys-color-surface-container-low)
+    );
+    box-shadow: var(--md-sys-elevation-1);
+}
+
+.stage-file .thumbnail {
+    border-radius: var(--md-sys-shape-corner-large) 0 0 var(--md-sys-shape-corner-large);
+}
+
+.stage-file:nth-child(even) .thumbnail {
+    order: 2;
+    border-radius: 0 var(--md-sys-shape-corner-large) var(--md-sys-shape-corner-large) 0;
+}
+
+.stage-file-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    padding: 24px 32px;
+}
+
+.stage-file-name {
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-title-large);
+    letter-spacing: var(--md-sys-typescale-title-large-tracking);
+    overflow-wrap: anywhere;
+}
+
+.stage-file-type {
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+}
+
+.stage-file-description {
+    margin-top: 8px;
+    font: var(--md-sys-typescale-body-large);
+    letter-spacing: var(--md-sys-typescale-body-large-tracking);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 720px) {
+    .stage-file {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .stage-file .thumbnail,
+    .stage-file:nth-child(even) .thumbnail {
+        order: 0;
+        border-radius: var(--md-sys-shape-corner-large) var(--md-sys-shape-corner-large) 0 0;
+    }
 }

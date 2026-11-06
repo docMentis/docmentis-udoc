@@ -25,7 +25,9 @@ interface ViewProps {
 }
 
 const folderPath = (folder: Folder) => `/library/folders/${folder.id}`;
-const filePath = (asset: Asset) => `/library/files/${asset.id}`;
+/** Where a file opens: in the library, or for a deal room's, its room. */
+const filePath = (asset: Asset) =>
+    asset.dealRoomId === null ? `/library/files/${asset.id}` : `/deal-rooms/${asset.dealRoomId}/files/${asset.id}`;
 
 /** A press on a menu, which opens it and not what it's in. */
 const keep = (event: MouseEvent) => event.stopPropagation();
@@ -153,7 +155,8 @@ export function FileCard({
     const path = waiting ? `${filePath(asset)}?version=${waiting.number}` : filePath(asset);
     return (
         <div className="file-card" onClick={() => navigate(path)}>
-            <Thumbnail file={asset} />
+            {/* A deal room's waiting on someone not on it: its working copy's pages aren't theirs. */}
+            <Thumbnail file={asset} flips={asset.dealRoomId === null} />
             <div className="file-card-body">
                 <div className="file-card-title">
                     <Link className="file-name" to={path}>
@@ -165,7 +168,11 @@ export function FileCard({
                 <p className="file-card-meta">
                     {asset.uploadedBy.name} · {formatDate(asset.uploadedAt)}
                 </p>
-                {waiting ? <WaitingStatus {...waiting} /> : <FileStatus asset={asset} />}
+                {waiting ? (
+                    <WaitingStatus {...waiting} inDealRoom={asset.dealRoomId !== null} />
+                ) : (
+                    <FileStatus asset={asset} />
+                )}
             </div>
         </div>
     );

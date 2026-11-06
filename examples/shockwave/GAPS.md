@@ -142,7 +142,25 @@ form for a checkpoint. A checkpoint opens in the viewer, and copies through
 **Workaround.** Saving a version renders its first page as it is then, and keeps
 it as that version's thumbnail. A card in the Library flips through the working
 copy's other pages, which only those who read the Library see. A card in
-Collections shows its published version's first page alone, and doesn't flip.
+Collections, or on a frontstage, shows its version's first page alone, and doesn't
+flip.
+
+## A document can't be copied
+
+**Needed.** A deal room's own copy of a version the library published, to edit apart
+from it, with the same pages.
+
+**Offered.** udoc-server has no route that copies a document or forks a checkpoint.
+`checkpoints/:version/file.udoc` answers a package, but `POST /documents` turns it down:
+"a udoc package is not a document to import".
+
+**Workaround.** The backend saves the checkpoint in its own format, through
+`checkpoints/:version/file.:format`, and imports that; for a format udoc-server can't
+save, it imports the original (`server/udoc.ts`). Each copy costs a save and an import,
+each a session that asks for a permit. Measured once, through the upload route, whose
+import also renders a first page: a 19 KB word document took 0.5 s to save and 1.5 s to
+import, and an 82 MB deck 0.7 s and 3.9 s. The copy has no history of its own, and the
+bytes kept aren't the upload's.
 
 ## A rounded clip around the editor shows old frames among new ones
 

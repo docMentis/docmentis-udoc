@@ -12,7 +12,11 @@ import { Narrator } from "./narrator/Narrator";
 import { CollectionFilePage } from "./pages/CollectionFilePage";
 import { CollectionPage } from "./pages/CollectionPage";
 import { CollectionsPage } from "./pages/CollectionsPage";
+import { DealRoomFilePage } from "./pages/DealRoomFilePage";
+import { DealRoomPage } from "./pages/DealRoomPage";
+import { DealRoomsPage } from "./pages/DealRoomsPage";
 import { FilePage } from "./pages/FilePage";
+import { FrontstageFilePage, FrontstagePage } from "./pages/FrontstagePage";
 import { HomePage } from "./pages/HomePage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { NotFoundPage, PlaceholderPage } from "./pages/PlaceholderPage";
@@ -35,6 +39,9 @@ const router = createBrowserRouter([
         ),
         children: [
             { path: "/sign-in", element: <SignInPage /> },
+            // What a buyer opens, at a link, with no account.
+            { path: "/rooms/:token", element: <FrontstagePage /> },
+            { path: "/rooms/:token/files/:fileId", element: <FrontstageFilePage /> },
             {
                 element: (
                     <RequireSession>
@@ -49,15 +56,9 @@ const router = createBrowserRouter([
                     { path: "collections", element: <CollectionsPage /> },
                     { path: "collections/:collectionId", element: <CollectionPage /> },
                     { path: "collections/:collectionId/files/:assetId", element: <CollectionFilePage /> },
-                    {
-                        path: "deal-rooms",
-                        element: (
-                            <PlaceholderPage
-                                title="Deal Rooms"
-                                subtitle="Content prepared for each deal, and shared with its buyers."
-                            />
-                        ),
-                    },
+                    { path: "deal-rooms", element: <DealRoomsPage /> },
+                    { path: "deal-rooms/:roomId", element: <DealRoomPage /> },
+                    { path: "deal-rooms/:roomId/files/:assetId", element: <DealRoomFilePage /> },
                     {
                         path: "learning",
                         element: <PlaceholderPage title="Learning" subtitle="What to learn, and what to teach." />,

@@ -5,12 +5,14 @@
 // not a checkpoint of it (GAPS.md), so one not rendered then never is: its file
 // shows its type's badge. Its address names its file and version, so a browser
 // keeps it for good. The other pages a card in the library flips to, the card
-// asks udoc-server for itself: none of them is kept.
+// asks udoc-server for itself: none of them is kept. A deal room's file is read as
+// its room is, and by a reviewer, the versions sent to them.
 import type { DatabaseSync } from "node:sqlite";
 
 import type { FastifyInstance } from "fastify";
 
 import { CARD_PAGE_SCALE, readsLibrary } from "../../shared/api.ts";
+import { entersDealRoom, sentToReview } from "../dealRooms.ts";
 import { Refusal, signedIn } from "../http.ts";
 import type { Udoc } from "../udoc.ts";
 
@@ -39,7 +41,8 @@ export function thumbnailRoutes(app: FastifyInstance, db: DatabaseSync): void {
     /**
      * A version's first page, a PNG, for a file of the user's tenant: any
      * version's for those who read the library, and for anyone else the one
-     * published, as the gate lets them read that and no more. `404` for none.
+     * published, as the gate lets them read that and no more; a deal room's, for
+     * those who enter it, or the reviewer it was sent to. `404` for none.
      */
     app.get<{ Params: { assetId: string; number: string } }>(
         "/api/thumbnails/:assetId/:number",
@@ -48,15 +51,20 @@ export function thumbnailRoutes(app: FastifyInstance, db: DatabaseSync): void {
             const number = Number(request.params.number);
             const row = db
                 .prepare(
-                    `SELECT thumbnails.png, assets.published_version
+                    `SELECT thumbnails.png, assets.published_version, room_file.room_id
                     FROM thumbnails JOIN assets ON assets.id = thumbnails.asset_id
+                    LEFT JOIN deal_room_files AS room_file ON room_file.asset_id = assets.id
                     WHERE thumbnails.asset_id = ? AND thumbnails.number = ? AND assets.tenant_id = ?`,
                 )
                 .get(request.params.assetId, number, user.tenant.id) as
-                | { png: Uint8Array | null; published_version: number | null }
+                | { png: Uint8Array | null; published_version: number | null; room_id: string | null }
                 | undefined;
-            if (!row?.png || (!readsLibrary(user.role) && row.published_version !== number))
-                throw new Refusal(404, "notFound", "no such thumbnail");
+            if (!row?.png) throw new Refusal(404, "notFound", "no such thumbnail");
+            const mayRead =
+                row.room_id === null
+                    ? readsLibrary(user.role) || row.published_version === number
+                    : entersDealRoom(db, user, row.room_id) || sentToReview(db, user, request.params.assetId, number);
+            if (!mayRead) throw new Refusal(404, "notFound", "no such thumbnail");
             reply.header("cache-control", "private, max-age=31536000, immutable");
             return reply.type("image/png").send(Buffer.from(row.png));
         },

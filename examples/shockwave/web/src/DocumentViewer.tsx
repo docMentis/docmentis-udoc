@@ -1,7 +1,8 @@
 // A viewer filling its element, on a document: a file from the user's own disk,
 // opened in the browser before it's uploaded; one udoc-server keeps, as it is
 // now or at one checkpoint, opened part by part through the gate with the
-// session's cookie; or a sample at a URL. Made as the react-vite example makes
+// session's cookie; one on a frontstage, opened through the gate at the address
+// a buyer's link gives; or a sample at a URL. Made as the react-vite example makes
 // one, StrictMode's second effect run included. It is in the app's theme, and
 // in the workspace's viewer colors (Settings, Brand; app.css), and follows both
 // as they change.
@@ -10,19 +11,21 @@ import type { RefObject } from "react";
 import { UDocViewer } from "@docmentis/udoc-viewer";
 
 import { DEFAULT_VIEWER_COLORS } from "../../shared/api.ts";
+import type { ViewerColors } from "../../shared/api.ts";
 import { useSession } from "./session";
 import { useTheme } from "./theme";
 import type { Theme } from "./theme";
 
 /**
  * What the viewer opens: a file's own bytes; the id of a document udoc-server
- * keeps, as it is now or, read-only, at checkpoint `version`; or a document at
- * a URL.
+ * keeps, as it is now or, read-only, at checkpoint `version`; a package at the
+ * path `packagePath`, read-only; or a document at a URL.
  */
 export type ViewerSource =
-    | { file: File; documentId?: never; version?: never; url?: never }
-    | { documentId: string; version?: number; file?: never; url?: never }
-    | { url: string; file?: never; documentId?: never; version?: never };
+    | { file: File; documentId?: never; version?: never; packagePath?: never; url?: never }
+    | { documentId: string; version?: number; file?: never; packagePath?: never; url?: never }
+    | { packagePath: string; file?: never; documentId?: never; version?: never; url?: never }
+    | { url: string; file?: never; documentId?: never; version?: never; packagePath?: never };
 
 /** What a viewer opened: its format, and how long it took from the viewer's making. */
 export interface Opened {
@@ -33,13 +36,15 @@ export interface Opened {
 /**
  * Keep `ui`, a viewer or an editor, in the app's theme and the workspace's
  * viewer colors, as both change: the theme to make it in, and the attributes
- * of the element it fills, by which app.css colors it.
+ * of the element it fills, by which app.css colors it: `given`, for one with no
+ * one signed in to say them.
  */
-export function useDocumentLook(ui: RefObject<{ setTheme(theme: Theme): void } | undefined>) {
+export function useDocumentLook(ui: RefObject<{ setTheme(theme: Theme): void } | undefined>, given?: ViewerColors) {
     const theme = useTheme();
     const themeRef = useRef(theme);
     themeRef.current = theme;
-    const colors = useSession().user?.tenant.viewerColors ?? DEFAULT_VIEWER_COLORS;
+    const session = useSession();
+    const colors = given ?? session.user?.tenant.viewerColors ?? DEFAULT_VIEWER_COLORS;
 
     useEffect(() => ui.current?.setTheme(theme), [ui, theme]);
 
@@ -67,32 +72,38 @@ export function useDocumentLook(ui: RefObject<{ setTheme(theme: Theme): void } |
 }
 
 /**
- * A viewer on `source`, with its top toolbar unless `showToolbar` is false;
- * `onOpened` hears when it's open, `onClosed` when it closes, opened, and
- * `onFailed` when it doesn't open, which the viewer shows itself.
+ * A viewer on `source`, with its top toolbar unless `showToolbar` is false,
+ * in `colors`, for one with no one signed in to say them; when `readsOnly`, for a
+ * buyer, with no download or print button, a deck's source holding its notes and
+ * hidden slides, and no annotating, which goes nowhere. `onOpened` hears when it's open, `onClosed` when it closes,
+ * opened, and `onFailed` when it doesn't open, which the viewer shows itself.
  */
 export function DocumentViewer({
     showToolbar = true,
+    colors,
+    readsOnly = false,
     onOpened,
     onClosed,
     onFailed,
     ...source
 }: ViewerSource & {
     showToolbar?: boolean;
+    colors?: ViewerColors;
+    readsOnly?: boolean;
     onOpened?: (opened: Opened) => void;
     onClosed?: () => void;
     onFailed?: () => void;
 }) {
     const ref = useRef<HTMLDivElement>(null);
     const viewerRef = useRef<UDocViewer>(undefined);
-    const { themeRef, attributes } = useDocumentLook(viewerRef);
+    const { themeRef, attributes } = useDocumentLook(viewerRef, colors);
     const opened = useRef(onOpened);
     opened.current = onOpened;
     const closed = useRef(onClosed);
     closed.current = onClosed;
     const failed = useRef(onFailed);
     failed.current = onFailed;
-    const { file, documentId, version, url } = source;
+    const { file, documentId, version, packagePath, url } = source;
     useEffect(() => {
         let viewer: UDocViewer | undefined;
         // An effect that is cleaned up before `create` resolves, as StrictMode's
@@ -100,7 +111,14 @@ export function DocumentViewer({
         let gone = false;
         let open = false;
         const started = performance.now();
-        UDocViewer.create(ref.current!, { showToolbar, theme: themeRef.current })
+        const allows = !readsOnly;
+        UDocViewer.create(ref.current!, {
+            showToolbar,
+            showDownloadButton: allows,
+            showPrintButton: allows,
+            enableAnnotation: allows,
+            theme: themeRef.current,
+        })
             .then(async (created) => {
                 if (gone) return created.destroy();
                 viewer = created;
@@ -108,10 +126,9 @@ export function DocumentViewer({
                 if (file) await viewer.open(file);
                 else if (url) await viewer.open(url);
                 else {
-                    const packagePath = version === undefined ? "package" : `checkpoints/${version}/package`;
-                    await viewer.openRemote(
-                        new URL(`/udoc/documents/${documentId}/${packagePath}`, location.href).href,
-                    );
+                    const kept = version === undefined ? "package" : `checkpoints/${version}/package`;
+                    const path = packagePath ?? `/udoc/documents/${documentId}/${kept}`;
+                    await viewer.openRemote(new URL(path, location.href).href);
                 }
                 if (gone) return;
                 open = true;
@@ -128,7 +145,7 @@ export function DocumentViewer({
             viewer?.destroy();
             if (open) closed.current?.();
         };
-    }, [file, documentId, version, url, showToolbar, themeRef]);
+    }, [file, documentId, version, packagePath, url, showToolbar, readsOnly, themeRef]);
 
     return <div ref={ref} className="viewer" {...attributes} />;
 }

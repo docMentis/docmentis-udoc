@@ -15,7 +15,7 @@ import type { Collection, PublishedFile, User } from "../../shared/api.ts";
 import { PUBLISHED_FILES, PUBLISHED_FILE_COLUMNS, publishedFileOfRow } from "../assets.ts";
 import type { PublishedFileRow } from "../assets.ts";
 import { inTransaction, isUniqueFailure } from "../db.ts";
-import { Refusal, nameOf, noteOf, signedIn, signedInAs } from "../http.ts";
+import { Refusal, idsOf, nameOf, noteOf, signedIn, signedInAs } from "../http.ts";
 
 interface CollectionRow {
     id: string;
@@ -37,13 +37,6 @@ interface CollectionBody {
 const NAME_TAKEN = () => new Refusal(409, "nameTaken", "a collection has that name already");
 
 const NO_SUCH_FILE = () => new Refusal(404, "notFound", "no such file in this collection");
-
-/** `value`, a request's list of files' ids; a `400` for anything else. */
-function idsOf(value: unknown): string[] {
-    if (!Array.isArray(value) || !value.every((id) => typeof id === "string"))
-        throw new Refusal(400, "badRequest", "a list of files is needed");
-    return value as string[];
-}
 
 export function collectionRoutes(app: FastifyInstance, db: DatabaseSync): void {
     /** The user signed in, who arranges collections; a `403` for one who doesn't. */
@@ -161,7 +154,7 @@ export function collectionRoutes(app: FastifyInstance, db: DatabaseSync): void {
             const { id } = collectionOf(user, request.params.id);
             const assetIds = idsOf(request.body?.assetIds);
             const published = db.prepare(
-                "SELECT 1 FROM assets WHERE id = ? AND tenant_id = ? AND published_version IS NOT NULL",
+                `SELECT 1 FROM ${PUBLISHED_FILES} WHERE assets.id = ? AND assets.tenant_id = ?`,
             );
             for (const assetId of assetIds)
                 if (!published.get(assetId, user.tenant.id))

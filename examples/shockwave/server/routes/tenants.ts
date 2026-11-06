@@ -9,27 +9,10 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { isViewerColors, managesWorkspace } from "../../shared/api.ts";
 import type { Person, Tenant, User } from "../../shared/api.ts";
 import { userOf } from "../auth.ts";
-import { Refusal, signedIn } from "../http.ts";
+import { COLOR, Refusal, imageTypeOf, sendImage, signedIn } from "../http.ts";
 
 /** The largest logo, in bytes. */
 const MAX_LOGO_BYTES = 1024 * 1024;
-
-/** A brand's color: `#rrggbb`. */
-const COLOR = /^#[0-9a-f]{6}$/i;
-
-/**
- * The image `bytes` are, by what they start with rather than what the
- * browser says: a PNG, a JPEG, a WebP or an SVG; `undefined` for another.
- */
-function imageTypeOf(bytes: Buffer): string | undefined {
-    if (bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "image/png";
-    if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
-    if (bytes.toString("latin1", 0, 4) === "RIFF" && bytes.toString("latin1", 8, 12) === "WEBP") return "image/webp";
-    const head = bytes.toString("utf8", 0, 1024).trimStart();
-    if (/^(<\?xml[^>]*>\s*)?(<!--[\s\S]*?-->\s*)*(<!DOCTYPE svg[^>]*>\s*)?<svg[\s>]/i.test(head))
-        return "image/svg+xml";
-    return undefined;
-}
 
 export function tenantRoutes(app: FastifyInstance, db: DatabaseSync): void {
     /** The user signed in, of tenant `id`; a `404` for another tenant's. */
@@ -62,9 +45,7 @@ export function tenantRoutes(app: FastifyInstance, db: DatabaseSync): void {
                       .get(user.tenant.id) as { logo: Uint8Array; logo_type: string } | undefined)
                 : undefined;
         if (!logo) return reply.code(404).send({ error: "notFound", message: "no such logo" });
-        // A tenant's image, perhaps an SVG: opened as a page, it runs no script.
-        reply.header("content-security-policy", "default-src 'none'; style-src 'unsafe-inline'");
-        return reply.type(logo.logo_type).send(Buffer.from(logo.logo));
+        return sendImage(reply, logo.logo_type, logo.logo);
     });
 
     /** Replace the logo with the body, a PNG, JPEG, WebP or SVG of at most 1 MB: `{ tenant }`. */

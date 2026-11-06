@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
-import { arrangesCollections, readsLibrary } from "../../../shared/api.ts";
-import type { Asset, Collection, Role, WaitingVersion } from "../../../shared/api.ts";
+import { arrangesCollections } from "../../../shared/api.ts";
+import type { Asset, Collection, DealRoom, Role, WaitingVersion } from "../../../shared/api.ts";
 import { api } from "../api";
 import { CollectionCard } from "../CollectionViews";
+import { DealRoomCard } from "../DealRoomViews";
 import { FileCard } from "../LibraryViews";
 import { useUser } from "../session";
 import { EmptyState, useDocumentTitle } from "../ui";
@@ -26,12 +27,15 @@ const SECTIONS: Record<Role, Section[]> = {
 /** How many collections Home shows: those changed last. */
 const RECENT_COLLECTIONS = 8;
 
+/** How many deal rooms Home shows: those changed last. */
+const RECENT_DEAL_ROOMS = 8;
+
 /** What needs each role, said while nothing does. */
 const ATTENTION: Record<Role, string> = {
     admin: "Versions returned to you, and approved ones to publish, show here.",
     reviewer: "Versions sent to you to review show here.",
-    manager: "Buyers opening what your team has shared show here.",
-    member: "Buyers opening what you've shared show here.",
+    manager: "Versions returned to you, and approved ones ready for the frontstage, show here.",
+    member: "Versions returned to you, and approved ones ready for the frontstage, show here.",
 };
 
 /** "Good afternoon, Maya", by the hour where the user is. */
@@ -53,23 +57,11 @@ export function HomePage() {
                 {SECTIONS[user.role].map((section) => {
                     switch (section) {
                         case "attention":
-                            return readsLibrary(user.role) ? (
-                                <FilesWaiting key={section} role={user.role} />
-                            ) : (
-                                <HomeSection key={section} title="Needs your attention">
-                                    <Empty title="You're all caught up">{ATTENTION[user.role]}</Empty>
-                                </HomeSection>
-                            );
+                            return <FilesWaiting key={section} role={user.role} />;
                         case "library":
                             return <NewInLibrary key={section} />;
                         case "dealRooms":
-                            return (
-                                <HomeSection key={section} title="Your deal rooms">
-                                    <Empty title="No deal rooms yet">
-                                        The content you prepare for each deal, and share with its buyers, shows here.
-                                    </Empty>
-                                </HomeSection>
-                            );
+                            return <YourDealRooms key={section} />;
                         case "collections":
                             return <YourCollections key={section} role={user.role} />;
                     }
@@ -145,6 +137,50 @@ function NewInLibrary() {
                 <div className="file-grid">
                     {assets.map((asset) => (
                         <FileCard key={asset.id} asset={asset} />
+                    ))}
+                </div>
+            )}
+        </HomeSection>
+    );
+}
+
+/** The deal rooms the user enters, changed last, as cards. */
+function YourDealRooms() {
+    const [rooms, setRooms] = useState<DealRoom[]>();
+    const [failed, setFailed] = useState(false);
+    useEffect(() => {
+        let gone = false;
+        api.dealRooms().then(
+            (found) => gone || setRooms(found),
+            () => gone || setFailed(true),
+        );
+        return () => {
+            gone = true;
+        };
+    }, []);
+    return (
+        <HomeSection
+            title="Your deal rooms"
+            link={
+                <Link className="button text" to="/deal-rooms">
+                    View deal rooms
+                </Link>
+            }
+        >
+            {failed && (
+                <p className="error" role="alert">
+                    The deal rooms didn't load. Try again.
+                </p>
+            )}
+            {rooms?.length === 0 && (
+                <Empty title="No deal rooms yet">
+                    The content you prepare for each deal, and share with its buyers, shows here.
+                </Empty>
+            )}
+            {rooms && rooms.length > 0 && (
+                <div className="file-grid">
+                    {rooms.slice(0, RECENT_DEAL_ROOMS).map((room) => (
+                        <DealRoomCard key={room.id} room={room} />
                     ))}
                 </div>
             )}
