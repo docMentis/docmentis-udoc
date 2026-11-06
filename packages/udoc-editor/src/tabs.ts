@@ -1,7 +1,7 @@
 // Edit mode's tab strips, by doc type. A tab names its commands by id — udoc-ui's
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
-// order. A strip opens folded, a PDF's on its Page tab, and a selection opens the
-// tab it is for.
+// order. A strip opens folded, a PDF's on its Page tab and a word document's on its
+// Text tab, and a selection opens the tab it is for.
 import type { UDocType } from "@docmentis/udoc-ui";
 import {
     allowsEdit,
@@ -161,6 +161,10 @@ const TEXT_TAB: EditTab = {
     ] satisfies EditCommandId[],
     opensFor: inText,
 };
+
+/** The wordprocessing Text tab — {@link TEXT_TAB}, which its strip opens on: a word
+ *  document is edited as text. */
+const WORDPROCESSING_TEXT_TAB: EditTab = { ...TEXT_TAB, opensOnEntry: true };
 
 /** The presentation Text tab — {@link TEXT_TAB} without the controls a deck has
  *  no use for: the style picker (a slide's paragraphs inherit by outline level,
@@ -343,7 +347,7 @@ const PRESENTATION_TABS: readonly EditTab[] = [
 /** The wordprocessing strip: Text and Table, then Shape for the drawings in its
  *  flow, and its View last. */
 const WORDPROCESSING_TABS: readonly EditTab[] = [
-    TEXT_TAB,
+    WORDPROCESSING_TEXT_TAB,
     TABLE_TAB,
     SHAPE_TAB,
     REVIEW_TAB,

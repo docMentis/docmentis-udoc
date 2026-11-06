@@ -75,7 +75,7 @@ shell's catalog and then in the extension's `commands`:
   and color dropdowns bunch.
 
 A strip opens folded, its tabs alone showing, unless a tab's `opensOnEntry` has it
-open on that tab, as a PDF's Page tab does. A tab's `opensFor` names the
+open on that tab, as a PDF's Page tab and a word document's Text tab do. A tab's `opensFor` names the
 selection it is for, and the reducer opens the first tab of the strip that
 holds for a selection as the selection becomes one — a caret in text the Text
 tab, a picked shape the Shape tab — and leaves the tab where it is while the
