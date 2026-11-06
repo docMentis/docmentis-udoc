@@ -116,6 +116,7 @@ export interface Messages {
     /** Present — the tab that plays a deck or a PDF over the screen */
     "ribbon.slideShow": string;
     /** View */
+    "ribbon.review": string;
     "ribbon.view": string;
 
     // Ribbon
@@ -204,6 +205,14 @@ export interface Messages {
     "pageLayout.coverRight": string;
     /** Cover on the Left */
     "pageLayout.coverLeft": string;
+    "command.revisionView": string;
+    "revisionView.allMarkup": string;
+    "revisionView.simpleMarkup": string;
+    "revisionView.noMarkup": string;
+    "revisionView.original": string;
+    "command.showMarkup": string;
+    "showMarkup.insertionsAndDeletions": string;
+    "showMarkup.formatting": string;
     /** Rotate View Left */
     "command.rotateViewLeft": string;
     /** Rotate View Right */

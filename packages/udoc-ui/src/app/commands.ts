@@ -1,8 +1,8 @@
 import type { HistoryOp, SelectionEdit } from "../worker/protocol.js";
-import type { SheetLayoutMode, StampIcon, UDocType } from "@docmentis/udoc-wasm";
+import type { RevisionView, RevisionViewMode, SheetLayoutMode, StampIcon, UDocType } from "@docmentis/udoc-wasm";
 import { allowsEdit } from "../geometry.js";
 import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
-import { copyAllowed, PAGELESS_PLANE, sheetLayoutModeOf } from "./state.js";
+import { copyAllowed, PAGELESS_PLANE, revisionViewOf, sheetLayoutModeOf } from "./state.js";
 import type {
     AnnotationTool,
     CommandId,
@@ -63,6 +63,8 @@ import {
     ICON_NORMAL_VIEW,
     ICON_PAGES_VIEW,
     ICON_PAGELESS_VIEW,
+    ICON_REVISION_VIEW,
+    ICON_SHOW_MARKUP,
     ICON_SHEET_NORMAL_VIEW,
     ICON_SUBTOOL_HIGHLIGHT,
     ICON_FILL,
@@ -139,6 +141,9 @@ export interface CommandContext {
     /** Whether a word document shows pageless, with no pages to scroll, pair
      *  up, turn or space — the View tab's page controls grey. */
     pageless: boolean;
+    /** What a word document's tracked changes show — the Review tab's menus mark
+     *  it. `null` with none open. */
+    revisionView: RevisionView | null;
     /** The sheet layout mode the current sheet of a workbook shows — what its
      *  View tab's Normal and Page Layout read pressed by — or null for a
      *  chartsheet, which shows neither, and any other doc type. */
@@ -184,6 +189,7 @@ export function commandContext(state: UIState): CommandContext {
         presentationView: state.presentationView,
         layoutMode: state.layoutMode,
         pageless: state.docType === "wordprocessing" && state.currentPlane === PAGELESS_PLANE,
+        revisionView: revisionViewOf(state),
         sheetLayoutMode: sheetLayoutModeOf(state),
         cellEntry: state.activeCell?.entry != null,
         hasLayers: state.hasLayers,
@@ -228,6 +234,8 @@ const whenSheetViews: EnabledWhen = (c) => c.ready && c.sheetLayoutMode !== null
  * `setSheetTabColor` colours its tab `#rrggbb` or takes its colour away,
  * `hideSheet` hides it, and `unhideSheet` shows the hidden sheet on `plane`.
  * `setLayoutMode` groups the pages into spreads as `mode` does.
+ * `setRevisionViewMode` shows a word document's tracked changes in `mode`, and
+ * `toggleRevisionFilter` turns one kind of them on or off.
  * `extension` carries an extension's own intent, which the shell hands back
  * to it (`UIExtension.menuAction`).
  */
@@ -248,6 +256,8 @@ export type MenuAction =
     | { kind: "hideSheet" }
     | { kind: "unhideSheet"; plane: number }
     | { kind: "setLayoutMode"; mode: LayoutMode }
+    | { kind: "setRevisionViewMode"; mode: RevisionViewMode }
+    | { kind: "toggleRevisionFilter"; filter: RevisionFilter }
     | { kind: "extension"; action: unknown };
 
 /** One entry in a command's dropdown menu (see the `menu` {@link CommandRun}).
@@ -544,6 +554,43 @@ const PAGE_LAYOUT_MENU: readonly MenuItem[] = PAGE_LAYOUTS.map(([mode, label, ic
     icon,
     enabledWhen: whenPaged,
     activeWhen: (c) => c.layoutMode === mode,
+}));
+
+/** The kinds of change the Review tab's Show Markup turns on or off. */
+export type RevisionFilter = "insertionsAndDeletions" | "formatting";
+
+/** Enabled once the open word document's view is known. */
+const whenRevisionView: EnabledWhen = (c) => c.ready && c.revisionView !== null;
+
+/** The versions of a tracked document the Review tab offers. */
+const REVISION_VIEW_MODES: readonly (readonly [RevisionViewMode, MessageKey])[] = [
+    ["allMarkup", "revisionView.allMarkup"],
+    ["simpleMarkup", "revisionView.simpleMarkup"],
+    ["noMarkup", "revisionView.noMarkup"],
+    ["original", "revisionView.original"],
+];
+
+/** The Review tab's versions: one exclusive set, the current one marked. */
+const REVISION_VIEW_MENU: readonly MenuItem[] = REVISION_VIEW_MODES.map(([mode, label]) => ({
+    action: { kind: "setRevisionViewMode", mode },
+    label,
+    enabledWhen: whenRevisionView,
+    activeWhen: (c) => c.revisionView?.mode === mode,
+}));
+
+/** The Review tab's Show Markup: a switch per kind of change, which leave the
+ *  panel open as Word's do, since one press is rarely all that's wanted. */
+const SHOW_MARKUP_MENU: readonly MenuItem[] = (
+    [
+        ["insertionsAndDeletions", "showMarkup.insertionsAndDeletions"],
+        ["formatting", "showMarkup.formatting"],
+    ] as const
+).map(([filter, label]) => ({
+    action: { kind: "toggleRevisionFilter", filter },
+    label,
+    enabledWhen: whenRevisionView,
+    checked: (c) => c.revisionView?.[filter] ?? false,
+    keepsOpen: true,
 }));
 
 /** The turn every page is shown at, a quarter turn `by` further clockwise. */
@@ -1048,6 +1095,35 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             press: (store) => store.dispatch({ type: "SET_CURRENT_PLANE", plane: PAGELESS_PLANE }),
         },
         enabledWhen: whenReady,
+    },
+
+    // Review tab — which version of a tracked document shows, its button wearing
+    // the one current, and which of its changes are shown as such.
+    revisionView: {
+        id: "revisionView",
+        label: "command.revisionView",
+        icon: ICON_REVISION_VIEW,
+        group: "revisions",
+        labeled: true,
+        run: {
+            kind: "menu",
+            menu: REVISION_VIEW_MENU,
+            current: (state) => {
+                const shown = revisionViewOf(state)?.mode;
+                const [, label] = REVISION_VIEW_MODES.find(([mode]) => mode === shown) ?? REVISION_VIEW_MODES[0]!;
+                return { icon: ICON_REVISION_VIEW, label };
+            },
+        },
+        enabledWhen: whenRevisionView,
+    },
+    showMarkup: {
+        id: "showMarkup",
+        label: "command.showMarkup",
+        icon: ICON_SHOW_MARKUP,
+        group: "revisions",
+        labeled: true,
+        run: { kind: "menu", menu: SHOW_MARKUP_MENU },
+        enabledWhen: whenRevisionView,
     },
 
     // View tab — a workbook's views of its current sheet, one segment button

@@ -64,6 +64,7 @@ export const ptBR: Messages = {
     // Ribbon tabs
     "ribbon.annotate": "Anotar",
     "ribbon.slideShow": "Apresentar",
+    "ribbon.review": "Revisão",
     "ribbon.view": "Exibir",
 
     // Ribbon
@@ -109,6 +110,14 @@ export const ptBR: Messages = {
     "pageLayout.twoPages": "Duas Páginas",
     "pageLayout.coverRight": "Capa à Direita",
     "pageLayout.coverLeft": "Capa à Esquerda",
+    "command.revisionView": "Exibir para Revisão",
+    "revisionView.allMarkup": "Todas as Marcações",
+    "revisionView.simpleMarkup": "Marcação Simples",
+    "revisionView.noMarkup": "Sem Marcação",
+    "revisionView.original": "Original",
+    "command.showMarkup": "Mostrar Marcações",
+    "showMarkup.insertionsAndDeletions": "Inserções e Exclusões",
+    "showMarkup.formatting": "Formatação",
     "command.rotateViewLeft": "Girar Exibição para a Esquerda",
     "command.rotateViewRight": "Girar Exibição para a Direita",
     "command.pageGap": "Espaço",

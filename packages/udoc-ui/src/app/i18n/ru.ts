@@ -64,6 +64,7 @@ export const ru: Messages = {
     // Ribbon tabs
     "ribbon.annotate": "Аннотации",
     "ribbon.slideShow": "Показ",
+    "ribbon.review": "Рецензирование",
     "ribbon.view": "Вид",
 
     // Ribbon
@@ -109,6 +110,14 @@ export const ru: Messages = {
     "pageLayout.twoPages": "Две страницы",
     "pageLayout.coverRight": "Обложка справа",
     "pageLayout.coverLeft": "Обложка слева",
+    "command.revisionView": "Отобразить для проверки",
+    "revisionView.allMarkup": "Все исправления",
+    "revisionView.simpleMarkup": "Исправления",
+    "revisionView.noMarkup": "Без исправлений",
+    "revisionView.original": "Исходный документ",
+    "command.showMarkup": "Показать исправления",
+    "showMarkup.insertionsAndDeletions": "Вставки и удаления",
+    "showMarkup.formatting": "Форматирование",
     "command.rotateViewLeft": "Повернуть вид влево",
     "command.rotateViewRight": "Повернуть вид вправо",
     "command.pageGap": "Интервал",

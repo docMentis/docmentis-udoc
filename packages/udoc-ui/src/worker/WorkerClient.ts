@@ -57,6 +57,7 @@ import type {
     SearchContinuation,
     SearchMatchLocation,
     SearchOptions,
+    RevisionView,
     SheetLayoutMode,
     SlideMasterSummary,
     SlideShowInput,
@@ -1555,7 +1556,26 @@ export class WorkerClient {
         goToBookmark: (name: string, alignment: ScrollAlignment): void => {
             this.#post({ type: "goToBookmark", name, alignment, seq: ++this.#viewportSeq });
         },
+
+        /** What the open document's tracked changes show: the view chosen, else
+         *  the one it opened on. A pure read. */
+        revisionView: (): Promise<RevisionView> => this.#send({ type: "revisionView" }) as Promise<RevisionView>,
     };
+
+    /**
+     * Show `view` of a word document's tracked changes, on the one open and every
+     * one opened after: a view setting, never an edit. Resolves with the layout
+     * known before the frame composes again, or `null` with no word document open.
+     * The pages' thumbnails show the view too, so they redraw
+     * ({@link invalidateThumbnails}).
+     */
+    setRevisionView(view: RevisionView): Promise<DocumentLayout | null> {
+        const layout = this.#send({ type: "setRevisionView", view }) as Promise<DocumentLayout | null>;
+        // After the post, as `#send` does for an edit, so a thumbnail the
+        // strip re-requests queues behind the switch.
+        this.invalidateThumbnails();
+        return layout;
+    }
 
     /**
      * Set the selection to a doc-type-tagged {@link UDocSelection} — the agnostic,

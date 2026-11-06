@@ -64,6 +64,7 @@ export const es: Messages = {
     // Ribbon tabs
     "ribbon.annotate": "Anotar",
     "ribbon.slideShow": "Presentar",
+    "ribbon.review": "Revisar",
     "ribbon.view": "Vista",
 
     // Ribbon
@@ -109,6 +110,14 @@ export const es: Messages = {
     "pageLayout.twoPages": "Dos páginas",
     "pageLayout.coverRight": "Portada a la derecha",
     "pageLayout.coverLeft": "Portada a la izquierda",
+    "command.revisionView": "Mostrar para revisión",
+    "revisionView.allMarkup": "Todas las marcas",
+    "revisionView.simpleMarkup": "Marcado simple",
+    "revisionView.noMarkup": "Sin marcas",
+    "revisionView.original": "Original",
+    "command.showMarkup": "Mostrar marcas",
+    "showMarkup.insertionsAndDeletions": "Inserciones y eliminaciones",
+    "showMarkup.formatting": "Formato",
     "command.rotateViewLeft": "Girar vista a la izquierda",
     "command.rotateViewRight": "Girar vista a la derecha",
     "command.pageGap": "Espacio",

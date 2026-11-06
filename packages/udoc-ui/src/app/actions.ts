@@ -2,6 +2,7 @@ import type {
     Feature,
     FileFormat,
     PresentationPlaneKind,
+    RevisionView,
     SearchMatch,
     SheetLayoutMode,
     SheetState,
@@ -248,6 +249,10 @@ export type Action =
     | { type: "SET_FORMULA_BAR_VISIBLE"; visible: boolean }
     | { type: "SET_SHOW_FORMATTING_MARKS"; visible: boolean }
     | { type: "SET_HAS_LAYERS"; hasLayers: boolean }
+    // What a word document's tracked changes show: the view chosen, and the one
+    // the open document opened on
+    | { type: "SET_REVISION_VIEW"; view: RevisionView }
+    | { type: "SET_OPENED_REVISION_VIEW"; view: RevisionView }
     | { type: "ENABLE_PANEL_TRANSITIONS" }
     // Theme & fullscreen
     | { type: "SET_THEME"; theme: ThemeMode }

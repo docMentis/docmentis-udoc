@@ -64,6 +64,7 @@ export const ar: Messages = {
     // Ribbon tabs
     "ribbon.annotate": "تعليق توضيحي",
     "ribbon.slideShow": "تقديم",
+    "ribbon.review": "مراجعة",
     "ribbon.view": "عرض",
 
     // Ribbon
@@ -109,6 +110,14 @@ export const ar: Messages = {
     "pageLayout.twoPages": "صفحتان",
     "pageLayout.coverRight": "غلاف يمين",
     "pageLayout.coverLeft": "غلاف يسار",
+    "command.revisionView": "عرض للمراجعة",
+    "revisionView.allMarkup": "كل العلامات",
+    "revisionView.simpleMarkup": "علامات بسيطة",
+    "revisionView.noMarkup": "بلا علامات",
+    "revisionView.original": "النسخة الأصلية",
+    "command.showMarkup": "إظهار العلامات",
+    "showMarkup.insertionsAndDeletions": "عمليات الإدراج والحذف",
+    "showMarkup.formatting": "التنسيق",
     "command.rotateViewLeft": "تدوير العرض إلى اليسار",
     "command.rotateViewRight": "تدوير العرض إلى اليمين",
     "command.pageGap": "المسافة",

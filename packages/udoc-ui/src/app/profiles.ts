@@ -96,10 +96,18 @@ export function viewTab(docType: UDocType, edit?: { guides: readonly string[] })
 /** The id of every doc type's {@link viewTab}. */
 export const VIEW_TAB_ID = "view";
 
+/** A word document's Review tab: which version of its tracked changes shows, and
+ *  which of them are shown as such. Never an edit, so a viewer's too. */
+export const REVIEW_TAB: ToolbarTab = {
+    id: "review",
+    label: "ribbon.review",
+    commands: ["revisionView", "showMarkup"],
+};
+
 /** The ids of the tabs whose commands are never edits — every doc type's
- *  {@link viewTab} and {@link presentTab} — so a strip with none other has
- *  nothing to undo. */
-export const VIEWING_TAB_IDS: ReadonlySet<string> = new Set([VIEW_TAB_ID, PRESENT_TAB_ID]);
+ *  {@link viewTab} and {@link presentTab}, and {@link REVIEW_TAB} — so a strip
+ *  with none other has nothing to undo. */
+export const VIEWING_TAB_IDS: ReadonlySet<string> = new Set([VIEW_TAB_ID, PRESENT_TAB_ID, REVIEW_TAB.id]);
 
 /**
  * The chrome one document type gets. Selected by `docType` (see
@@ -366,7 +374,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
  * from the flow, they don't reorder).
  */
 export const WORDPROCESSING_PROFILE: DocProfile = {
-    viewTabs: [viewTab("wordprocessing")],
+    viewTabs: [REVIEW_TAB, viewTab("wordprocessing")],
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],

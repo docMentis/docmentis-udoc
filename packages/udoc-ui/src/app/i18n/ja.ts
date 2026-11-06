@@ -64,6 +64,7 @@ export const ja: Messages = {
     // Ribbon tabs
     "ribbon.annotate": "注釈",
     "ribbon.slideShow": "発表",
+    "ribbon.review": "校閲",
     "ribbon.view": "表示",
 
     // Ribbon
@@ -109,6 +110,14 @@ export const ja: Messages = {
     "pageLayout.twoPages": "見開きページ",
     "pageLayout.coverRight": "表紙を右に表示",
     "pageLayout.coverLeft": "表紙を左に表示",
+    "command.revisionView": "変更内容の表示",
+    "revisionView.allMarkup": "すべての変更履歴/コメント",
+    "revisionView.simpleMarkup": "シンプルな変更履歴/コメント",
+    "revisionView.noMarkup": "変更履歴/コメントなし",
+    "revisionView.original": "初版",
+    "command.showMarkup": "変更履歴とコメントの表示",
+    "showMarkup.insertionsAndDeletions": "挿入と削除",
+    "showMarkup.formatting": "書式設定",
     "command.rotateViewLeft": "表示を左に回転",
     "command.rotateViewRight": "表示を右に回転",
     "command.pageGap": "間隔",

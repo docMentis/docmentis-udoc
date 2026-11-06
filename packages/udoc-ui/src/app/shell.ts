@@ -25,6 +25,7 @@ import type {
     CellEntryMode,
     GridCellSelectionMove,
     ScrollAlignment,
+    RevisionView,
     SheetLayoutMode,
     SlideMasterSummary,
     TextHyperlink,
@@ -99,6 +100,7 @@ import {
     planeOfView,
     planeOfWordprocessingView,
     renderZoom,
+    revisionViewOf,
     sheetLayoutModeOfView,
     showsPageless,
     showsPaper,
@@ -396,6 +398,9 @@ export interface UIShell {
     setPageRotation: (rotation: 0 | 90 | 180 | 270) => void;
     /** Show or hide a word document's formatting marks. */
     setShowFormattingMarks: (visible: boolean) => void;
+    /** Show `view` of a word document's tracked changes, on the one open and
+     *  every one opened after. */
+    setRevisionView: (view: RevisionView) => void;
     /** Set the gaps between pages; `null` restores the built-in gaps. */
     setPageGap: (gap: PageGap | null) => void;
     /** Fit the open document by `fit`, and open every later one by it; `null` restores each doc type's default. */
@@ -467,6 +472,7 @@ export interface UIShellOptions {
     showNotesPanel?: boolean;
     presentationView?: PresentationView;
     wordprocessingView?: WordprocessingView;
+    revisionView?: RevisionView;
     showFormulaBar?: boolean;
     showLoadingOverlay?: boolean;
     zoomSteps?: readonly number[];
@@ -650,6 +656,7 @@ export function mountUIShell(
         notesOpen: shellOptions.showNotesPanel ?? initialState.notesOpen,
         presentationView: shellOptions.presentationView ?? initialState.presentationView,
         wordprocessingView: shellOptions.wordprocessingView ?? initialState.wordprocessingView,
+        revisionView: shellOptions.revisionView ?? initialState.revisionView,
         formulaBarVisible: shellOptions.showFormulaBar ?? initialState.formulaBarVisible,
         disabledPanels: hostDisabledPanels,
         hostDisabledPanels,
@@ -1346,6 +1353,17 @@ export function mountUIShell(
     const marksShown = (s: UIState): boolean => s.showFormattingMarks && s.docType === "wordprocessing";
     const unsubFormattingMarks = subscribeSelector(store, marksShown, (on) => client.setFormattingMarks(on));
     client.setFormattingMarks(marksShown(store.getState()));
+    // What a word document's tracked changes show, as the Review tab or the host
+    // chose: the worker keeps it for every later document, so it goes now too.
+    const unsubRevisionView = subscribeSelector(
+        store,
+        (s) => s.revisionView,
+        (view) => {
+            if (view) void showRevisionView(view);
+        },
+    );
+    const chosenRevisionView = store.getState().revisionView;
+    if (chosenRevisionView) void client.setRevisionView(chosenRevisionView);
     // The fit every document opens with: the worker fits by it at open, before
     // the first frame, and the open below adopts the same into the state.
     const unsubDefaultFit = subscribeSelector(
@@ -1973,6 +1991,8 @@ export function mountUIShell(
             if (layout.docType === "portable") void openOutlineIfAsked();
             // Whether it has layers, which the View tab's Layers shows for.
             if (layout.docType === "portable") void readLayers();
+            // What its tracked changes show, which the Review tab marks.
+            if (layout.docType === "wordprocessing") void readRevisionView();
             // Which widgets a press fills a form field in through — async, off
             // the critical path.
             if (layout.docType === "portable") void refreshFormWidgets();
@@ -2130,6 +2150,13 @@ export function mountUIShell(
         const properties = await client.portable.optionalContentProperties();
         if (store.getState().docGeneration !== generation) return;
         store.dispatch({ type: "SET_HAS_LAYERS", hasLayers: (properties?.defaultConfig.order ?? []).length > 0 });
+    }
+
+    async function readRevisionView(): Promise<void> {
+        const generation = store.getState().docGeneration;
+        const view = await client.wordprocessing.revisionView();
+        if (store.getState().docGeneration !== generation) return;
+        store.dispatch({ type: "SET_OPENED_REVISION_VIEW", view });
     }
 
     const editListeners = new Set<() => void>();
@@ -2445,6 +2472,20 @@ export function mountUIShell(
         const layout = await client.setSheetLayoutMode(plane, mode);
         // What has painted of the sheet so far shows its other mode.
         paintedPlane = -1;
+        store.dispatch({
+            type: "DOC_RELAYOUT",
+            pageCount: layout.pageCount ?? null,
+            firstUncomposedPage: layout.firstUncomposedPage,
+            scrollSize: layout.scrollSize,
+        });
+    }
+
+    // Show `view` of a word document's tracked changes, and adopt the layout the
+    // worker replies with, as a view hides or brings back whole pages. A view
+    // change, not a document edit.
+    async function showRevisionView(view: RevisionView): Promise<void> {
+        const layout = await client.setRevisionView(view);
+        if (layout === null) return;
         store.dispatch({
             type: "DOC_RELAYOUT",
             pageCount: layout.pageCount ?? null,
@@ -3696,6 +3737,17 @@ export function mountUIShell(
             case "setLayoutMode":
                 store.dispatch({ type: "SET_LAYOUT_MODE", mode: action.mode });
                 break;
+            case "setRevisionViewMode":
+            case "toggleRevisionFilter": {
+                const view = revisionViewOf(store.getState());
+                if (!view) break;
+                const change =
+                    action.kind === "setRevisionViewMode"
+                        ? { mode: action.mode }
+                        : { [action.filter]: !view[action.filter] };
+                store.dispatch({ type: "SET_REVISION_VIEW", view: { ...view, ...change } });
+                break;
+            }
             case "annotationStyle":
                 void restyleAnnotations(action.change);
                 break;
@@ -3862,6 +3914,7 @@ export function mountUIShell(
         unsubLayoutMode();
         unsubPageRotation();
         unsubFormattingMarks();
+        unsubRevisionView();
         unsubDefaultFit();
         unsubDpi();
         unsubPlane();
@@ -3991,6 +4044,7 @@ export function mountUIShell(
         setLayoutMode: (mode) => store.dispatch({ type: "SET_LAYOUT_MODE", mode }),
         setPageRotation: (rotation) => store.dispatch({ type: "SET_PAGE_ROTATION", rotation }),
         setShowFormattingMarks: (visible) => store.dispatch({ type: "SET_SHOW_FORMATTING_MARKS", visible }),
+        setRevisionView: (view) => store.dispatch({ type: "SET_REVISION_VIEW", view }),
         setPageGap: (gap) => store.dispatch({ type: "SET_PAGE_GAP", gap }),
         setFit: (fit) => {
             store.dispatch({ type: "SET_DEFAULT_FIT", fit });

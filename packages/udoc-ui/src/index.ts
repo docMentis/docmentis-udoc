@@ -58,6 +58,10 @@ export type {
 // formats it and its pages export to, `exportToBytes` and `exportPageToBytes`.
 export type { ExportFormat, FileFormat, PageExportFormat, SaveStrategy, UDocType } from "@docmentis/udoc-wasm";
 
+// What a word document's tracked changes show (generated from the Rust serde):
+// `UDocBase.revisionView` and `setRevisionView`.
+export type { RevisionBalloons, RevisionView, RevisionViewMode } from "@docmentis/udoc-wasm";
+
 // A watermark, for `UDocBase.setWatermarks` (generated from the Rust serde).
 export type {
     Watermark,

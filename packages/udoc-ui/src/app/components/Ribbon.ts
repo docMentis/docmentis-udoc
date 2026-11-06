@@ -1,5 +1,5 @@
 import { createMenuController, subscribeSelector } from "../../framework/index.js";
-import type { AnnotationLineEnding, Feature, UDocType } from "@docmentis/udoc-wasm";
+import type { AnnotationLineEnding, Feature, RevisionView, UDocType } from "@docmentis/udoc-wasm";
 import type { Store } from "../../framework/index.js";
 import type { HistoryOp } from "../../worker/protocol.js";
 import type { Action } from "../actions.js";
@@ -180,6 +180,8 @@ interface RibbonSlice {
     showPageGap: boolean;
     activePanel: PanelTab | null;
     showFormattingMarks: boolean;
+    revisionView: RevisionView | null;
+    openedRevisionView: RevisionView | null;
     formulaBarVisible: boolean;
     hasLayers: boolean;
     /** What a deck's Preview shows — Stop while a preview plays — and is
@@ -218,6 +220,8 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.showPageGap === b.showPageGap &&
         a.activePanel === b.activePanel &&
         a.showFormattingMarks === b.showFormattingMarks &&
+        a.revisionView === b.revisionView &&
+        a.openedRevisionView === b.openedRevisionView &&
         a.formulaBarVisible === b.formulaBarVisible &&
         a.hasLayers === b.hasLayers &&
         a.slidePreviewing === b.slidePreviewing &&
@@ -247,6 +251,8 @@ function selectSlice(s: UIState): RibbonSlice {
         showPageGap: s.showPageGap,
         activePanel: s.activePanel,
         showFormattingMarks: s.showFormattingMarks,
+        revisionView: s.revisionView,
+        openedRevisionView: s.openedRevisionView,
         formulaBarVisible: s.formulaBarVisible,
         hasLayers: s.hasLayers,
         slidePreviewing: s.slidePreviewing,

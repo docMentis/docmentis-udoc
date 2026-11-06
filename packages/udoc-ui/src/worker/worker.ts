@@ -62,6 +62,7 @@ import type {
     PresentationPlaneKind,
     GoogleFontFamily,
     PageImage,
+    RevisionView,
     SheetLayoutMode,
     SheetState,
     SlideMasterSummary,
@@ -257,6 +258,9 @@ let defaultZoom = 1;
 // The scroll mode every document opens in in place of its doc type's default —
 // the host's, from `setDefaultScrollMode`. `null` keeps the doc type's.
 let defaultScrollMode: ScrollMode | null = null;
+// What a word document's tracked changes show, the host's or the Review tab's,
+// from `setRevisionView`. `null` leaves each document to what it asks for.
+let chosenRevisionView: RevisionView | null = null;
 
 // Set if `render_frame` ever throws: the wasm session is then poisoned (an
 // export that unwound on a JS throw leaked its `WasmRefCell` borrow, so every
@@ -2147,6 +2151,30 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, layout);
                 break;
             }
+            case "setRevisionView": {
+                chosenRevisionView = msg.view;
+                if (!showsRevisions(session)) {
+                    reply(id, null);
+                    break;
+                }
+                // What was composed composes again, by the frame: the layout
+                // replied is the one known before it, and the selection is
+                // projected onto what the frame shows.
+                session.wordprocessing.setRevisionView(msg.view);
+                const layout = layoutOf(session);
+                emitSelection(false);
+                selectionAfterPaint = true;
+                scheduleFrame();
+                // Then the rest, as a view hides or brings back whole pages.
+                startComposeAhead(session);
+                reply(id, layout);
+                break;
+            }
+            case "revisionView": {
+                if (!session) throw new Error("engine worker: revisionView before open");
+                reply(id, session.wordprocessing.revisionView());
+                break;
+            }
             case "renderThumbnail": {
                 if (!session) throw new Error("engine worker: renderThumbnail before open");
                 // A one-off preview, now — a slide layout's, a page to print.
@@ -3004,6 +3032,11 @@ function layoutOf(s: WasmSession, v: number = VIEWER): DocumentLayout {
     };
 }
 
+/** Whether `s` holds an open word document, whose tracked changes a view shows. */
+function showsRevisions(s: WasmSession | null): s is WasmSession {
+    return s !== null && s.docType() === "wordprocessing" && !s.needsPassword();
+}
+
 /**
  * The layout the document `s` just opened has, carrying what the host reads
  * off an open, after setting the document up as a fresh one starts. A document
@@ -3011,6 +3044,7 @@ function layoutOf(s: WasmSession, v: number = VIEWER): DocumentLayout {
  * once `authenticate` unlocks it.
  */
 function openedLayout(s: WasmSession): DocumentLayout {
+    if (chosenRevisionView !== null && showsRevisions(s)) s.wordprocessing.setRevisionView(chosenRevisionView);
     const layout = layoutOf(s);
     // The doc type drives the host's default fit, and the source format is
     // what saving back means; read both off the freshly-opened session and

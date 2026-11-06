@@ -64,6 +64,7 @@ export const ko: Messages = {
     // Ribbon tabs
     "ribbon.annotate": "주석",
     "ribbon.slideShow": "발표",
+    "ribbon.review": "검토",
     "ribbon.view": "보기",
 
     // Ribbon
@@ -109,6 +110,14 @@ export const ko: Messages = {
     "pageLayout.twoPages": "두 페이지",
     "pageLayout.coverRight": "표지 오른쪽",
     "pageLayout.coverLeft": "표지 왼쪽",
+    "command.revisionView": "검토할 내용 표시",
+    "revisionView.allMarkup": "모든 변경 내용",
+    "revisionView.simpleMarkup": "간단한 변경 내용",
+    "revisionView.noMarkup": "변경 내용 없음",
+    "revisionView.original": "원본",
+    "command.showMarkup": "변경 내용 표시",
+    "showMarkup.insertionsAndDeletions": "삽입 및 삭제",
+    "showMarkup.formatting": "서식",
     "command.rotateViewLeft": "보기 왼쪽으로 회전",
     "command.rotateViewRight": "보기 오른쪽으로 회전",
     "command.pageGap": "간격",

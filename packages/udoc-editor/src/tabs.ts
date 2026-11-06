@@ -8,6 +8,7 @@ import {
     allowsTextEdit,
     ANNOTATE_TAB,
     presentTab,
+    REVIEW_TAB,
     viewTab,
 } from "@docmentis/udoc-ui/internal";
 import type { CommandId, SelectionCapabilities, ToolbarTab } from "@docmentis/udoc-ui/internal";
@@ -306,7 +307,13 @@ const PRESENTATION_TABS: readonly EditTab[] = [
 
 /** The wordprocessing strip: Text and Table, then Shape for the drawings in its
  *  flow, and its View last. */
-const WORDPROCESSING_TABS: readonly EditTab[] = [TEXT_TAB, TABLE_TAB, SHAPE_TAB, editViewTab("wordprocessing")];
+const WORDPROCESSING_TABS: readonly EditTab[] = [
+    TEXT_TAB,
+    TABLE_TAB,
+    SHAPE_TAB,
+    REVIEW_TAB,
+    editViewTab("wordprocessing"),
+];
 
 /** The image strip: its own Image and Insert, then the Text and Shape tabs of
  *  the shapes drawn over its pages — a deck's, as they are a slide's shapes —

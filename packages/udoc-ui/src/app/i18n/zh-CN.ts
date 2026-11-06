@@ -64,6 +64,7 @@ export const zhCN: Messages = {
     // Ribbon tabs
     "ribbon.annotate": "注释",
     "ribbon.slideShow": "演示",
+    "ribbon.review": "审阅",
     "ribbon.view": "视图",
 
     // Ribbon
@@ -109,6 +110,14 @@ export const zhCN: Messages = {
     "pageLayout.twoPages": "双页",
     "pageLayout.coverRight": "封面居右",
     "pageLayout.coverLeft": "封面居左",
+    "command.revisionView": "显示以供审阅",
+    "revisionView.allMarkup": "所有标记",
+    "revisionView.simpleMarkup": "简单标记",
+    "revisionView.noMarkup": "无标记",
+    "revisionView.original": "原始版本",
+    "command.showMarkup": "显示标记",
+    "showMarkup.insertionsAndDeletions": "插入和删除",
+    "showMarkup.formatting": "格式设置",
     "command.rotateViewLeft": "向左旋转视图",
     "command.rotateViewRight": "向右旋转视图",
     "command.pageGap": "间距",

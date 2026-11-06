@@ -42,6 +42,7 @@ import type {
     SearchContinuation,
     SearchMatchLocation,
     SearchOptions,
+    RevisionView,
     SheetLayoutMode,
     SlideShowInput,
     UrlFont,
@@ -725,6 +726,22 @@ export interface SetSheetLayoutModeRequest {
     type: "setSheetLayoutMode";
     plane: number;
     mode: SheetLayoutMode;
+}
+
+/**
+ * Show `view` of a word document's tracked changes: a view setting, never an
+ * edit. Kept for every word document opened after, as Word keeps its own. Replies
+ * with the layout known before the frame composes again, as `goToPlane` does, or
+ * `null` with no word document open to show it on.
+ */
+export interface SetRevisionViewRequest {
+    type: "setRevisionView";
+    view: RevisionView;
+}
+
+/** What the open word document's tracked changes show. Replies with it. */
+export interface RevisionViewRequest {
+    type: "revisionView";
 }
 
 /** Release the open document (but keep the worker alive for the next open). */
@@ -2030,6 +2047,8 @@ export type WorkerRequest =
     | GoToRectRequest
     | GoToDestinationRequest
     | GoToBookmarkRequest
+    | SetRevisionViewRequest
+    | RevisionViewRequest
     | ZoomAtPointRequest
     | ZoomToRectRequest
     | SetScrollModeRequest

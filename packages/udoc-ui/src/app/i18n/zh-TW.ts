@@ -64,6 +64,7 @@ export const zhTW: Messages = {
     // Ribbon tabs
     "ribbon.annotate": "註解",
     "ribbon.slideShow": "簡報",
+    "ribbon.review": "校閱",
     "ribbon.view": "檢視",
 
     // Ribbon
@@ -109,6 +110,14 @@ export const zhTW: Messages = {
     "pageLayout.twoPages": "雙頁",
     "pageLayout.coverRight": "封面居右",
     "pageLayout.coverLeft": "封面居左",
+    "command.revisionView": "顯示以供檢閱",
+    "revisionView.allMarkup": "所有標記",
+    "revisionView.simpleMarkup": "簡易標記",
+    "revisionView.noMarkup": "無標記",
+    "revisionView.original": "原稿",
+    "command.showMarkup": "顯示標記",
+    "showMarkup.insertionsAndDeletions": "插入和刪除",
+    "showMarkup.formatting": "格式設定",
     "command.rotateViewLeft": "向左旋轉檢視",
     "command.rotateViewRight": "向右旋轉檢視",
     "command.pageGap": "間距",

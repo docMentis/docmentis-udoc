@@ -8,6 +8,17 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- A word document's tracked changes show as Word draws them, with a Review tab to
+  choose what shows: All Markup marks each insertion and deletion in its author's
+  colour, with a change bar beside its line, Simple Markup keeps only the bar, No
+  Markup shows the final text and Original the text before the changes. Show
+  Markup turns insertions and deletions, and formatting, on or off. The
+  `revisionView` option, `setRevisionView`, the `revisionView` getter and
+  `"revisionView:changed"` do the same for a host. A document opens on what it
+  was saved to show, which is All Markup unless it was saved with markup off.
+
 #### Fixed
 
 - Clipping the UI to rounded corners no longer makes Chrome flicker after the

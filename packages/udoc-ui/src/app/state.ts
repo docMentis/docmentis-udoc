@@ -9,6 +9,7 @@ import type {
     Feature,
     FileFormat,
     PresentationPlaneKind,
+    RevisionView,
     SearchMatch,
     SheetLayoutMode,
     SheetState,
@@ -212,6 +213,15 @@ export function planeOfWordprocessingView(
     return plane < state.planeCount ? plane : -1;
 }
 
+/** What a word document's tracked changes show in `state`: the view chosen, else
+ *  the one the open document opened on, else none. */
+export function revisionViewOf(state: {
+    revisionView: RevisionView | null;
+    openedRevisionView: RevisionView | null;
+}): RevisionView | null {
+    return state.revisionView ?? state.openedRevisionView;
+}
+
 /** How a word document shows in `state`: the view chosen, else the one the
  *  open document opened in, else its pages. */
 export function wordprocessingViewOf(state: {
@@ -382,6 +392,8 @@ export type CommandId =
     | "notes"
     | "pagesView"
     | "pagelessView"
+    | "revisionView"
+    | "showMarkup"
     | "sheetNormalView"
     | "sheetPageLayoutView"
     | "singleScroll"
@@ -933,6 +945,13 @@ export interface UIState {
      *  {@link planeOfWordprocessingView} names, and a move to its other plane
      *  follows back. `null` until then: each opens in the view it asks for. */
     wordprocessingView: WordprocessingView | null;
+    /** What a word document's tracked changes show, once a view is chosen — the
+     *  Review tab's, the host's `revisionView`. Kept across documents, as Word
+     *  keeps its own. `null` until then: each opens on the view it asks for. */
+    revisionView: RevisionView | null;
+    /** The view the open word document opened on, or `null` with none open. Read
+     *  after the document opens. */
+    openedRevisionView: RevisionView | null;
     /** Whether a deck's notes pane is open under its slides, or closed to its
      *  edge — the View tab's Notes, the host's `showNotesPanel`, the splitter
      *  dragged to the edge. Kept for every doc type; only a deck has notes to
@@ -1138,6 +1157,8 @@ export const initialState: UIState = {
 
     presentationView: "normal",
     wordprocessingView: null,
+    revisionView: null,
+    openedRevisionView: null,
     notesOpen: false,
     notesHeight: null,
     formulaBarVisible: true,
