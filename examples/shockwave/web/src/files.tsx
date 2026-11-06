@@ -169,6 +169,16 @@ export function formatDateTime(time: number): string {
     return DATE_TIME.format(time);
 }
 
+/** How long, as people read it: "45 s", "3 min 20 s", "1 h 5 min". */
+export function formatDuration(ms: number): string {
+    const seconds = Math.round(ms / 1000);
+    if (seconds < 60) return `${seconds} s`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return seconds % 60 === 0 ? `${minutes} min` : `${minutes} min ${seconds % 60} s`;
+    const hours = Math.floor(minutes / 60);
+    return minutes % 60 === 0 ? `${hours} h` : `${hours} h ${minutes % 60} min`;
+}
+
 /** A file's name without its extension: what an upload is named by default. */
 export function baseName(fileName: string): string {
     const dot = fileName.lastIndexOf(".");

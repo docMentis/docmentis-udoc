@@ -154,7 +154,7 @@ function sessionCookie(token: string, maxAge: number): string {
 }
 
 /** The value of cookie `name` in `request`'s `Cookie` header. */
-function cookieOf(request: IncomingMessage, name: string): string | undefined {
+export function cookieOf(request: IncomingMessage, name: string): string | undefined {
     for (const pair of request.headers.cookie?.split(";") ?? []) {
         const at = pair.indexOf("=");
         if (at >= 0 && pair.slice(0, at).trim() === name) return pair.slice(at + 1).trim();

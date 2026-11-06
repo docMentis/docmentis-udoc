@@ -260,6 +260,12 @@ share one database, and each row says whose it is:
   do, at any tenant. An image a browser keeps it asks about each time, so that whoever
   signs in next on that browser gets the refusal, not what's kept.
 
+`npm run test:isolation` holds this to it: the real backend, with a second tenant, each
+attacked through every route and the gate, and by holding rows with the very ids the
+other's have, so that a statement that forgets its tenant answers with the wrong row or
+changes the wrong one. It fails for a route, a foreign key or a table it doesn't
+attack, so something new has to say how it's attacked.
+
 An operation across tenants, when one comes, is something else: it holds the database
 itself, or a `TenantDb` for each tenant it names, in a module of its own. A route never
 reaches one by accident.
@@ -430,13 +436,31 @@ link.
 file at `/udoc/frontstage/:token/files/:assetId/versions/:number/package`, which the
 gate checks against what the frontstage shows and turns into that checkpoint's package,
 so a buyer never learns a document's id. No other udoc-server route is open to them.
-Their viewer has no download or print button, since a deck's source holds its notes and
-hidden slides, and no annotating, since what they marked would go nowhere. Recording what they read is still to come.
+Their viewer has no download or print button, so that the source stays here, and no
+annotating, since what they marked would go nowhere. A deck's speaker notes and hidden
+slides still reach them (`GAPS.md`), so it's on whoever prepares a file to clear them.
 
 The page is the room's banner, its image under its color, which fades up from the text
 so that it reads on any image, over one row to a file: the document and what it says
 side by side, turn about. Pressing one opens the document. Its first page doesn't flip,
 since udoc-server can't render a checkpoint's pages (`GAPS.md`).
+
+**What buyers read is recorded, anonymously, and both of their pages say so.** A browser
+that comes gets a cookie for that link alone, naming a visitor with nothing of who it is,
+so that it can't be followed from one frontstage to another. It reports coming, opening a
+file, and how long each page stays on screen: only while the page is in view and something's
+been done with it in the last minute. Time in a slide show isn't counted, since the viewer
+doesn't say which slide it's on (`GAPS.md`). This is the one thing anyone can write with no
+account, so a report has to be about a file that frontstage shows, small, and one of 120 a
+minute from an address at that link, which leaves other links alone. Those signed in at the
+tenant aren't counted.
+
+It's kept as running totals, by visitor, file, version and page, so it grows with visitors
+and pages and not with time. Backstage, a room shows how many came, each file's visitors,
+opens, time and last opening, and the time on each page of the version shown. Home tells
+those on a room of visitors since they last looked at it; a manager who isn't on it sees them
+by opening it. Taking a room off its frontstage keeps all this; removing a file or deleting a
+room deletes what's of it.
 
 ## The narrator
 

@@ -10,6 +10,7 @@
         "build": "vite build",
         "start": "node --disable-warning=ExperimentalWarning server/main.ts --serve-web",
         "clear": "node --disable-warning=ExperimentalWarning scripts/clear.mjs",
+        "test:isolation": "node --disable-warning=ExperimentalWarning scripts/test-isolation.mjs",
         "typecheck": "tsc -p . && tsc -p web"
     },
     "engines": {

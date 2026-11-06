@@ -350,6 +350,60 @@ export interface FrontstageFile {
     package: string;
 }
 
+/** What a buyer's browser reports of a frontstage: its page seen, a file opened, or how long pages of one were read. */
+export type FrontstageReport =
+    | { kind: "visited" }
+    | { kind: "opened"; fileId: string }
+    | {
+          kind: "read";
+          fileId: string;
+          /** Each page read since the last report: 0-based, and for how long, in milliseconds. */
+          pages: { page: number; ms: number }[];
+      };
+
+/** How one page of a file was read, by all its visitors. */
+export interface PageReading {
+    /** Which, 0-based: a workbook's sheet, or anything else's page. */
+    page: number;
+    ms: number;
+    visitors: number;
+}
+
+/** How buyers read one file of a deal room. */
+export interface DealRoomFileActivity {
+    assetId: string;
+    /** The browsers that opened it. */
+    visitors: number;
+    /** How many times it was opened. */
+    opens: number;
+    /** How long it was read, in milliseconds, at any version. */
+    ms: number;
+    /** When it was last opened, in milliseconds since the epoch; `null` for never. */
+    lastOpenedAt: number | null;
+    /** The version `pages` are of: the one on the frontstage, or else the last read; `null` when none was. */
+    version: number | null;
+    pages: PageReading[];
+}
+
+/** How buyers read a deal room's frontstage. */
+export interface DealRoomActivity {
+    /** The browsers that came, anonymous, each counted once. */
+    visitors: number;
+    /** When one last did, in milliseconds since the epoch; `null` for never. */
+    lastVisitAt: number | null;
+    /** Each file on the frontstage, or read while it was, in the room's order. */
+    files: DealRoomFileActivity[];
+}
+
+/** A deal room the user is on, with visitors they haven't looked at yet. */
+export interface DealRoomNews {
+    room: DealRoom;
+    /** The browsers that came since the user last looked. */
+    visitors: number;
+    /** When one last did, in milliseconds since the epoch. */
+    at: number;
+}
+
 /** A deal room as a buyer sees it, at its link, with no account: only what was last put on the frontstage. */
 export interface Frontstage {
     /** The tenant it's from, in its brand. */

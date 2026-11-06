@@ -1,14 +1,16 @@
 // A deal room, backstage: how its frontstage stands, with its link; its settings,
 // what it says of itself and how its banner looks, beside a preview of the banner as
-// they change; and its files, in a table or a grid, which this browser remembers.
-// Nothing here reaches a buyer until someone puts it on the frontstage.
+// they change; its files, in a table or a grid, which this browser remembers; and
+// how buyers read its frontstage. Nothing here reaches a buyer until someone puts it
+// on the frontstage.
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import { sellsDeals } from "../../../shared/api.ts";
-import type { DealRoom, DealRoomFile } from "../../../shared/api.ts";
+import type { DealRoom, DealRoomActivity, DealRoomFile } from "../../../shared/api.ts";
 import { ApiError, api } from "../api";
+import { BuyerActivity } from "../DealRoomActivity";
 import { AddDealFilesDialog, ConfirmDialog, DealFileDialog, FrontstageDialog, PeopleDialog } from "../DealRoomDialogs";
 import { DealBanner, DealFileCard, DealFileTable } from "../DealRoomViews";
 import { formatDateTime } from "../files";
@@ -47,6 +49,7 @@ export function DealRoomPage() {
     const [failure, setFailure] = useState<string>();
     const [task, setTask] = useState<Task>();
     const [view, setView] = useState(savedView);
+    const [activity, setActivity] = useState<DealRoomActivity>();
 
     useEffect(() => {
         if (!sells) return;
@@ -63,6 +66,26 @@ export function DealRoomPage() {
             gone = true;
         };
     }, [roomId, sells]);
+
+    // What buyers did, which having shown it, the user has seen.
+    const stagedAt = room?.frontstage?.at;
+    useEffect(() => {
+        if (!sells) return;
+        let gone = false;
+        api.dealRoomActivity(roomId!).then(
+            (found) => {
+                if (gone) return;
+                setActivity(found);
+                void api.markDealRoomActivitySeen(roomId!);
+            },
+            () => {
+                // The room's own failure says so; this is only what's beside it.
+            },
+        );
+        return () => {
+            gone = true;
+        };
+    }, [roomId, sells, stagedAt]);
 
     useDocumentTitle(room?.title ?? "Deal Rooms");
     if (room === null || !sells) return <NotFoundPage />;
@@ -215,6 +238,9 @@ export function DealRoomPage() {
                             </div>
                         ))}
                 </section>
+            )}
+            {room && activity && (room.frontstage || activity.visitors > 0) && (
+                <BuyerActivity room={room} activity={activity} />
             )}
             {room && task === "add" && (
                 <AddDealFilesDialog room={room} onClose={() => setTask(undefined)} onAdded={changed} />

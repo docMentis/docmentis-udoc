@@ -2538,3 +2538,136 @@ input {
         border-radius: var(--md-sys-shape-corner-large) var(--md-sys-shape-corner-large) 0 0;
     }
 }
+
+/* What a frontstage says it records: body-small, on-surface-variant, at its foot. */
+.frontstage-notice {
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+}
+
+/* A file in buyer activity, whose row opens how long its pages were read. */
+.activity-toggle {
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+}
+
+.activity-toggle > svg:first-child {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.file-table tbody tr.page-readings-row,
+.file-table tbody tr.page-readings-row:hover,
+.file-table tbody tr.page-readings-row:active {
+    background: var(--md-sys-color-surface-container);
+    cursor: default;
+}
+
+.page-readings-row td {
+    height: auto;
+    padding: 16px;
+    white-space: normal;
+}
+
+.page-readings-none {
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+/* How long each page was read: a table, its time a bar and a value. One hue, the
+   primary, 8 thick, and square at its baseline with its data end rounded 4. Material
+   has no chart. The text keeps to the text roles. */
+.page-readings {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.page-readings caption {
+    padding-bottom: 8px;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
+    text-align: left;
+}
+
+.page-readings th {
+    padding: 4px 16px 4px 0;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+    text-align: left;
+}
+
+.page-readings td {
+    height: 24px;
+    padding: 0 16px 0 0;
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+    white-space: nowrap;
+}
+
+.page-readings .numeric {
+    width: 1%;
+    padding-right: 0;
+    text-align: right;
+}
+
+.page-readings td:first-child,
+.page-readings th:first-child {
+    width: 1%;
+}
+
+.page-readings td:nth-child(2) {
+    width: 100%;
+}
+
+/* The bar's length is its time against the longest's, in a track of its own, so
+   that its value, beside it, never squeezes it out of proportion. */
+.page-reading-time {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-reading-track {
+    flex: 1;
+    min-width: 0;
+}
+
+.page-reading-bar {
+    display: block;
+    min-width: 2px;
+    height: 8px;
+    border-radius: 0 4px 4px 0;
+    background: var(--md-sys-color-primary);
+}
+
+.page-reading-value {
+    flex-shrink: 0;
+    width: 80px;
+    color: var(--md-sys-color-on-surface);
+}
+
+/* A table in a table's row is its own: it takes none of the outer rows' state. */
+.file-table .page-readings tr,
+.file-table .page-readings tr:hover,
+.file-table .page-readings tr:active {
+    background: none;
+    cursor: default;
+}
+
+.file-table .page-readings th {
+    height: auto;
+    padding: 4px 16px 4px 0;
+    border: 0;
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+}
+
+.file-table .page-readings .numeric {
+    padding-right: 0;
+}

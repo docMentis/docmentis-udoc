@@ -3,7 +3,9 @@ import type {
     Asset,
     Collection,
     DealRoom,
+    DealRoomActivity,
     DealRoomFileDetail,
+    DealRoomNews,
     Failure,
     Folder,
     FolderListing,
@@ -237,6 +239,14 @@ export const api = {
     /** Take a deal room off its frontstage; its link stops working. */
     async takeOffFrontstage(id: string): Promise<DealRoom> {
         return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/frontstage`, { method: "DELETE" })).room;
+    },
+    /** How buyers read a deal room's frontstage. */
+    dealRoomActivity: (id: string) => request<DealRoomActivity>(`/api/deal-rooms/${id}/activity`),
+    /** Note that the user has looked at what buyers did in a deal room. */
+    markDealRoomActivitySeen: (id: string) => request<void>(`/api/deal-rooms/${id}/activity/seen`, { method: "POST" }),
+    /** The deal rooms the user is on, with visitors since they last looked, those who came last first. */
+    async dealRoomNews(): Promise<DealRoomNews[]> {
+        return (await request<{ rooms: DealRoomNews[] }>("/api/deal-rooms/news")).rooms;
     },
     /** The frontstage at `token`, as a buyer sees it; an `ApiError` `404` for none. */
     frontstage: (token: string) => request<Frontstage>(`/api/frontstage/${encodeURIComponent(token)}`),

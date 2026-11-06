@@ -163,6 +163,32 @@ import also renders a first page: a 19 KB word document took 0.5 s to save and 1
 import, and an 82 MB deck 0.7 s and 3.9 s. The copy has no history of its own, and the
 bytes kept aren't the upload's.
 
+## A buyer can read a deck's notes and hidden slides
+
+**Needed.** A deck shown to a buyer as its slides, so that what a seller wrote for
+themselves in its speaker notes, and slides they hid, stay theirs.
+
+**Offered.** A viewer shows a package as it is. A deck's notes show in the View tab's
+Notes and at the notes panel's edge, which a reader drags open, and a hidden slide
+shows among the others, in a deck of three with one hidden, as the second of three.
+No option leaves either out: `showToolbar: false` would take the tab away, not the
+panel's edge. And the package the browser reads holds them, whatever the viewer shows.
+
+**Workaround.** None. A file goes on a frontstage with whatever its deck holds, so it's
+on whoever prepares it to clear them first. What's needed is a copy of a version with
+them left out.
+
+## A slide show doesn't say which slide it's on
+
+**Needed.** How long a buyer spends on each slide, in a slide show as out of one.
+
+**Offered.** `slideShow:changed` says when a show starts and ends. `currentPage:changed`
+doesn't fire during one, and fires once as it ends, for the page it ended on, so a
+show through six slides reads as time on its first.
+
+**Workaround.** Time in a slide show isn't counted on any page: it would be counted on
+the wrong one.
+
 ## A rounded clip around the editor shows old frames among new ones
 
 **Needed.** The editor in a card with rounded corners, clipped to them.

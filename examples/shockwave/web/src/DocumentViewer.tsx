@@ -74,9 +74,12 @@ export function useDocumentLook(ui: RefObject<{ setTheme(theme: Theme): void } |
 /**
  * A viewer on `source`, with its top toolbar unless `showToolbar` is false,
  * in `colors`, for one with no one signed in to say them; when `readsOnly`, for a
- * buyer, with no download or print button, a deck's source holding its notes and
- * hidden slides, and no annotating, which goes nowhere. `onOpened` hears when it's open, `onClosed` when it closes,
- * opened, and `onFailed` when it doesn't open, which the viewer shows itself.
+ * buyer, with no download or print button, so that the source stays here, and no
+ * annotating, which goes nowhere; a deck's notes and hidden slides still show
+ * (GAPS.md). `onOpened` hears when it's open, `onClosed` when it closes,
+ * opened, `onFailed` when it doesn't open, which the viewer shows itself, `onPage`
+ * when it turns to another page, or a workbook's sheet, 0-based, and `onSlideShow`
+ * when a slide show starts or ends.
  */
 export function DocumentViewer({
     showToolbar = true,
@@ -85,6 +88,8 @@ export function DocumentViewer({
     onOpened,
     onClosed,
     onFailed,
+    onPage,
+    onSlideShow,
     ...source
 }: ViewerSource & {
     showToolbar?: boolean;
@@ -93,6 +98,8 @@ export function DocumentViewer({
     onOpened?: (opened: Opened) => void;
     onClosed?: () => void;
     onFailed?: () => void;
+    onPage?: (page: number) => void;
+    onSlideShow?: (playing: boolean) => void;
 }) {
     const ref = useRef<HTMLDivElement>(null);
     const viewerRef = useRef<UDocViewer>(undefined);
@@ -103,6 +110,10 @@ export function DocumentViewer({
     closed.current = onClosed;
     const failed = useRef(onFailed);
     failed.current = onFailed;
+    const turned = useRef(onPage);
+    turned.current = onPage;
+    const presenting = useRef(onSlideShow);
+    presenting.current = onSlideShow;
     const { file, documentId, version, packagePath, url } = source;
     useEffect(() => {
         let viewer: UDocViewer | undefined;
@@ -123,6 +134,9 @@ export function DocumentViewer({
                 if (gone) return created.destroy();
                 viewer = created;
                 viewerRef.current = created;
+                created.on("currentPage:changed", ({ page }) => turned.current?.(page));
+                created.on("currentSheet:changed", ({ sheet }) => sheet >= 0 && turned.current?.(sheet));
+                created.on("slideShow:changed", ({ playing }) => presenting.current?.(playing));
                 if (file) await viewer.open(file);
                 else if (url) await viewer.open(url);
                 else {

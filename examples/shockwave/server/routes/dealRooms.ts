@@ -11,7 +11,17 @@ import { randomBytes, randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
 import { entersAllDealRooms, sellsDeals } from "../../shared/api.ts";
-import type { DealRoom, DealRoomFile, DealRoomFileDetail, PublishedFile, Role, Seller } from "../../shared/api.ts";
+import type {
+    DealRoom,
+    DealRoomActivity,
+    DealRoomFile,
+    DealRoomFileDetail,
+    DealRoomNews,
+    PageReading,
+    PublishedFile,
+    Role,
+    Seller,
+} from "../../shared/api.ts";
 import {
     ASSETS,
     ASSET_COLUMNS,
@@ -194,6 +204,28 @@ export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
         };
     });
 
+    /**
+     * `{ rooms }`: the rooms the user is on, with visitors since they last looked, as
+     * a `DealRoomNews`, those who came last first. A manager who enters a room without
+     * being on it sees what's there by opening it, and isn't told.
+     */
+    app.get("/api/deal-rooms/news", async (request): Promise<{ rooms: DealRoomNews[] }> => {
+        const scope = seller(request);
+        const rows = scope.db
+            .prepare(
+                `SELECT visitor.room_id, COUNT(*) AS visitors, MAX(visitor.last_at) AS at
+                FROM frontstage_visitors AS visitor
+                JOIN deal_room_people AS person ON person.tenant_id = visitor.tenant_id
+                    AND person.room_id = visitor.room_id AND person.user_id = :me
+                WHERE visitor.tenant_id = :tenant AND visitor.last_at > person.activity_seen_at
+                GROUP BY visitor.room_id ORDER BY at DESC`,
+            )
+            .all({ me: scope.user.id }) as unknown as { room_id: string; visitors: number; at: number }[];
+        return {
+            rooms: rows.map(({ room_id: roomId, visitors, at }) => ({ room: roomFor(scope, roomId), visitors, at })),
+        };
+    });
+
     /** Make a room, `{ title, description }`, with the user on it: `201 { room }`. */
     app.post<{ Body: { title?: unknown; description?: unknown } | undefined }>(
         "/api/deal-rooms",
@@ -257,6 +289,67 @@ export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
             for (const { asset } of files) remove.run(asset.id);
             db.prepare("DELETE FROM deal_rooms WHERE tenant_id = :tenant AND id = ?").run(id);
         });
+        return reply.code(204).send();
+    });
+
+    /** A `DealRoomActivity`: how buyers read the room's frontstage. */
+    app.get<{ Params: { id: string } }>("/api/deal-rooms/:id/activity", async (request): Promise<DealRoomActivity> => {
+        const scope = seller(request);
+        const { db } = scope;
+        const { id, files } = roomFor(scope, request.params.id);
+        const visits = db
+            .prepare(
+                `SELECT COUNT(*) AS visitors, MAX(last_at) AS last_at FROM frontstage_visitors
+                WHERE tenant_id = :tenant AND room_id = ?`,
+            )
+            .get(id) as { visitors: number; last_at: number | null };
+        const opens = db.prepare(
+            `SELECT COUNT(*) AS visitors, SUM(opens) AS opens, MAX(last_at) AS last_at FROM frontstage_file_opens
+            WHERE tenant_id = :tenant AND asset_id = ?`,
+        );
+        const total = db.prepare(
+            "SELECT SUM(ms) AS ms, MAX(version) AS version FROM frontstage_page_reads WHERE tenant_id = :tenant AND asset_id = ?",
+        );
+        const pages = db.prepare(
+            `SELECT page, SUM(ms) AS ms, COUNT(*) AS visitors FROM frontstage_page_reads
+            WHERE tenant_id = :tenant AND asset_id = ? AND version = ? GROUP BY page ORDER BY page`,
+        );
+        return {
+            visitors: visits.visitors,
+            lastVisitAt: visits.last_at,
+            files: files.flatMap(({ asset, onFrontstage }) => {
+                const opened = opens.get(asset.id) as {
+                    visitors: number;
+                    opens: number | null;
+                    last_at: number | null;
+                };
+                const read = total.get(asset.id) as { ms: number | null; version: number | null };
+                if (!onFrontstage && opened.visitors === 0) return [];
+                const version = asset.publishedVersion ?? read.version;
+                return [
+                    {
+                        assetId: asset.id,
+                        visitors: opened.visitors,
+                        opens: opened.opens ?? 0,
+                        ms: read.ms ?? 0,
+                        lastOpenedAt: opened.last_at,
+                        version,
+                        pages: version === null ? [] : (pages.all(asset.id, version) as unknown as PageReading[]),
+                    },
+                ];
+            }),
+        };
+    });
+
+    /** Note that the user, if they're on the room, has looked at what buyers did: `204`. */
+    app.post<{ Params: { id: string } }>("/api/deal-rooms/:id/activity/seen", async (request, reply) => {
+        const scope = seller(request);
+        const { id } = roomFor(scope, request.params.id);
+        scope.db
+            .prepare(
+                "UPDATE deal_room_people SET activity_seen_at = ? WHERE tenant_id = :tenant AND room_id = ? AND user_id = ?",
+            )
+            .run(Date.now(), id, scope.user.id);
         return reply.code(204).send();
     });
 
@@ -331,9 +424,16 @@ export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
             if (!entersAllDealRooms(user.role) && !userIds.includes(user.id))
                 throw new Refusal(400, "badRequest", "you can't take yourself off a room");
             db.transaction(() => {
-                db.prepare("DELETE FROM deal_room_people WHERE tenant_id = :tenant AND room_id = ?").run(id);
+                // One who stays on keeps when they last looked at what buyers did.
+                const onIt = db
+                    .prepare("SELECT user_id FROM deal_room_people WHERE tenant_id = :tenant AND room_id = ?")
+                    .all(id) as unknown as { user_id: string }[];
+                const remove = db.prepare(
+                    "DELETE FROM deal_room_people WHERE tenant_id = :tenant AND room_id = ? AND user_id = ?",
+                );
+                for (const { user_id: userId } of onIt) if (!userIds.includes(userId)) remove.run(id, userId);
                 const add = db.prepare(
-                    "INSERT INTO deal_room_people (tenant_id, room_id, user_id) VALUES (:tenant, ?, ?)",
+                    "INSERT OR IGNORE INTO deal_room_people (tenant_id, room_id, user_id) VALUES (:tenant, ?, ?)",
                 );
                 for (const userId of userIds) add.run(id, userId);
                 touch(db, id);

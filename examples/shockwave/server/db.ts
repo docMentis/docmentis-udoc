@@ -220,6 +220,51 @@ const MIGRATIONS = [
     );
     CREATE INDEX frontstage_files_by_asset ON frontstage_files (tenant_id, asset_id);
     `,
+    // What buyers read of a frontstage. A visitor is a browser, named by a cookie for
+    // one link alone, with nothing of who it is. What it reads is kept as running
+    // totals, so this grows with visitors and pages and not with time. All of it is
+    // the room's, so it outlives the room's link, and goes with the room or the file.
+    // Those on a room say when they last looked at this, for what's new to them.
+    `
+    ALTER TABLE deal_room_people ADD COLUMN activity_seen_at INTEGER NOT NULL DEFAULT 0;
+    CREATE TABLE frontstage_visitors (
+        tenant_id TEXT NOT NULL,
+        room_id TEXT NOT NULL,
+        id TEXT NOT NULL,
+        first_at INTEGER NOT NULL,
+        last_at INTEGER NOT NULL,
+        PRIMARY KEY (tenant_id, room_id, id),
+        FOREIGN KEY (tenant_id, room_id) REFERENCES deal_rooms (tenant_id, id) ON DELETE CASCADE
+    );
+    CREATE INDEX frontstage_visitors_by_last ON frontstage_visitors (tenant_id, room_id, last_at);
+    CREATE TABLE frontstage_file_opens (
+        tenant_id TEXT NOT NULL,
+        room_id TEXT NOT NULL,
+        visitor_id TEXT NOT NULL,
+        asset_id TEXT NOT NULL,
+        opens INTEGER NOT NULL,
+        last_at INTEGER NOT NULL,
+        PRIMARY KEY (tenant_id, asset_id, visitor_id),
+        FOREIGN KEY (tenant_id, room_id, visitor_id) REFERENCES frontstage_visitors (tenant_id, room_id, id)
+            ON DELETE CASCADE,
+        FOREIGN KEY (tenant_id, asset_id) REFERENCES assets (tenant_id, id) ON DELETE CASCADE
+    );
+    CREATE INDEX frontstage_file_opens_by_visitor ON frontstage_file_opens (tenant_id, room_id, visitor_id);
+    CREATE TABLE frontstage_page_reads (
+        tenant_id TEXT NOT NULL,
+        room_id TEXT NOT NULL,
+        visitor_id TEXT NOT NULL,
+        asset_id TEXT NOT NULL,
+        version INTEGER NOT NULL,
+        page INTEGER NOT NULL,
+        ms INTEGER NOT NULL,
+        PRIMARY KEY (tenant_id, asset_id, version, page, visitor_id),
+        FOREIGN KEY (tenant_id, room_id, visitor_id) REFERENCES frontstage_visitors (tenant_id, room_id, id)
+            ON DELETE CASCADE,
+        FOREIGN KEY (tenant_id, asset_id) REFERENCES assets (tenant_id, id) ON DELETE CASCADE
+    );
+    CREATE INDEX frontstage_page_reads_by_visitor ON frontstage_page_reads (tenant_id, room_id, visitor_id);
+    `,
 ];
 
 /** SQLite's code for a `UNIQUE` constraint failing. */

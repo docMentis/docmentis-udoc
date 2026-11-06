@@ -67,8 +67,12 @@ export function DealBanner({
     );
 }
 
-/** A deal room as a card: its banner for a tray, its title, how many files it holds, and whether it's on its frontstage. */
-export function DealRoomCard({ room }: { room: DealRoom }) {
+/**
+ * A deal room as a card: its banner for a tray, its title, how many files it holds,
+ * and whether it's on its frontstage; or, with `news`, how many came since the user
+ * last looked.
+ */
+export function DealRoomCard({ room, news }: { room: DealRoom; news?: { visitors: number } }) {
     const navigate = useNavigate();
     const path = dealRoomPath(room.id);
     const files = room.files.length === 1 ? "1 file" : `${room.files.length} files`;
@@ -90,12 +94,20 @@ export function DealRoomCard({ room }: { room: DealRoom }) {
                 <p className="file-card-meta">
                     {files} · Updated {formatDate(room.updatedAt)}
                 </p>
-                {room.frontstage && (
+                {news ? (
                     <span className="status-labels deal-room-status">
-                        <span className="status-label status-published">
-                            {publishedLabelOf({ dealRoomId: room.id })}
+                        <span className="status-label status-submitted">
+                            {news.visitors === 1 ? "1 visitor" : `${news.visitors} visitors`} since you looked
                         </span>
                     </span>
+                ) : (
+                    room.frontstage && (
+                        <span className="status-labels deal-room-status">
+                            <span className="status-label status-published">
+                                {publishedLabelOf({ dealRoomId: room.id })}
+                            </span>
+                        </span>
+                    )
                 )}
             </div>
         </div>

@@ -5,8 +5,8 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
-import { arrangesCollections } from "../../../shared/api.ts";
-import type { Asset, Collection, DealRoom, Role, WaitingVersion } from "../../../shared/api.ts";
+import { arrangesCollections, sellsDeals } from "../../../shared/api.ts";
+import type { Asset, Collection, DealRoom, DealRoomNews, Role, WaitingVersion } from "../../../shared/api.ts";
 import { api } from "../api";
 import { CollectionCard } from "../CollectionViews";
 import { DealRoomCard } from "../DealRoomViews";
@@ -34,8 +34,9 @@ const RECENT_DEAL_ROOMS = 8;
 const ATTENTION: Record<Role, string> = {
     admin: "Versions returned to you, and approved ones to publish, show here.",
     reviewer: "Versions sent to you to review show here.",
-    manager: "Versions returned to you, and approved ones ready for the frontstage, show here.",
-    member: "Versions returned to you, and approved ones ready for the frontstage, show here.",
+    manager:
+        "Versions returned to you, approved ones ready for the frontstage, and visitors to your deal rooms show here.",
+    member: "Versions returned to you, approved ones ready for the frontstage, and visitors to your deal rooms show here.",
 };
 
 /** "Good afternoon, Maya", by the hour where the user is. */
@@ -71,20 +72,24 @@ export function HomePage() {
     );
 }
 
-/** The versions waiting on the user, as the library's cards, each saying what for. */
+/**
+ * The versions waiting on the user, as the library's cards, each saying what for;
+ * and for those who sell, the deal rooms they're on with visitors they haven't looked
+ * at, as the rooms' cards.
+ */
 function FilesWaiting({ role }: { role: Role }) {
-    const [versions, setVersions] = useState<WaitingVersion[]>();
+    const [waiting, setWaiting] = useState<{ versions: WaitingVersion[]; rooms: DealRoomNews[] }>();
     const [failed, setFailed] = useState(false);
     useEffect(() => {
         let gone = false;
-        api.waitingVersions().then(
-            (found) => gone || setVersions(found),
+        Promise.all([api.waitingVersions(), sellsDeals(role) ? api.dealRoomNews() : []]).then(
+            ([versions, rooms]) => gone || setWaiting({ versions, rooms }),
             () => gone || setFailed(true),
         );
         return () => {
             gone = true;
         };
-    }, []);
+    }, [role]);
     return (
         <HomeSection title="Needs your attention">
             {failed && (
@@ -92,10 +97,15 @@ function FilesWaiting({ role }: { role: Role }) {
                     What needs your attention didn't load. Try again.
                 </p>
             )}
-            {versions?.length === 0 && <Empty title="You're all caught up">{ATTENTION[role]}</Empty>}
-            {versions && versions.length > 0 && (
+            {waiting?.versions.length === 0 && waiting.rooms.length === 0 && (
+                <Empty title="You're all caught up">{ATTENTION[role]}</Empty>
+            )}
+            {waiting && waiting.versions.length + waiting.rooms.length > 0 && (
                 <div className="file-grid">
-                    {versions.map(({ asset, number, status }) => (
+                    {waiting.rooms.map(({ room, visitors }) => (
+                        <DealRoomCard key={room.id} room={room} news={{ visitors }} />
+                    ))}
+                    {waiting.versions.map(({ asset, number, status }) => (
                         <FileCard key={`${asset.id}-${number}`} asset={asset} waiting={{ number, status }} />
                     ))}
                 </div>

@@ -1,14 +1,17 @@
 // A deal room's frontstage, what a buyer opens at the link a seller shared, with no
 // account, in the brand of the tenant it's from. Its banner, over its files, one to
 // a row, the document and what it says side by side, turn about; a press on one
-// opens the document, read-only, in the viewer.
-import { useEffect, useState } from "react";
+// opens the document, read-only, in the viewer. What's opened, and how long each page
+// stays on screen, is reported for those who shared it, as both pages say.
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
 import type { Frontstage } from "../../../shared/api.ts";
 import { ApiError, api } from "../api";
 import { DealBanner } from "../DealRoomViews";
 import { DocumentViewer } from "../DocumentViewer";
+import { reportVisit, startReading } from "../frontstageActivity";
+import type { Reading } from "../frontstageActivity";
 import { Thumbnail, typeLabel } from "../files";
 import { ChevronRightIcon } from "../icons";
 import { announceMoment } from "../moments";
@@ -46,6 +49,16 @@ function useFrontstageTitle(title: string | undefined, from: string | undefined)
     }, [title, from]);
 }
 
+/** What the page says it records. */
+function ActivityNotice() {
+    return (
+        <p className="frontstage-notice">
+            So that those who shared this can see how it's read, this page records which documents are opened and how
+            long each page stays on screen, against a cookie in this browser. It doesn't record who you are.
+        </p>
+    );
+}
+
 /** What shows for a link with no frontstage, or one that didn't load. */
 function Unavailable({ failed }: { failed: boolean }) {
     return (
@@ -66,6 +79,10 @@ export function FrontstagePage() {
     const navigate = useNavigate();
     const { stage, failed } = useFrontstage(token!);
     useFrontstageTitle(stage?.title, stage?.from.name);
+    const shown = stage !== undefined && stage !== null;
+    useEffect(() => {
+        if (shown) reportVisit(token!);
+    }, [shown, token]);
 
     if (stage === null || failed) return <Unavailable failed={failed} />;
     if (!stage) return null;
@@ -96,6 +113,7 @@ export function FrontstagePage() {
                         );
                     })}
                 </ul>
+                <ActivityNotice />
             </div>
         </main>
     );
@@ -106,6 +124,14 @@ export function FrontstageFilePage() {
     const { stage, failed } = useFrontstage(token!);
     const file = stage?.files.find(({ id }) => id === fileId);
     useFrontstageTitle(file?.name ?? stage?.title, stage?.from.name);
+    const reading = useRef<Reading>(undefined);
+    useEffect(
+        () => () => {
+            reading.current?.stop();
+            reading.current = undefined;
+        },
+        [],
+    );
 
     if (stage === null || failed || (stage && !file)) return <Unavailable failed={failed} />;
     if (!stage || !file) return null;
@@ -118,6 +144,7 @@ export function FrontstageFilePage() {
                     <ChevronRightIcon />
                     <span>{file.name}</span>
                 </nav>
+                <ActivityNotice />
                 <div className="file-columns">
                     <section className="document-card">
                         <header className="document-title-bar">
@@ -131,10 +158,17 @@ export function FrontstageFilePage() {
                                 packagePath={file.package}
                                 colors={stage.from.viewerColors}
                                 readsOnly
-                                onOpened={({ format, ms }) =>
-                                    announceMoment({ kind: "document:opened", where: "file", format, ms })
-                                }
-                                onClosed={() => announceMoment({ kind: "document:closed", where: "file" })}
+                                onOpened={({ format, ms }) => {
+                                    reading.current ??= startReading(token!, file.id);
+                                    announceMoment({ kind: "document:opened", where: "file", format, ms });
+                                }}
+                                onClosed={() => {
+                                    reading.current?.stop();
+                                    reading.current = undefined;
+                                    announceMoment({ kind: "document:closed", where: "file" });
+                                }}
+                                onPage={(page) => reading.current?.turnTo(page)}
+                                onSlideShow={(playing) => reading.current?.presenting(playing)}
                             />
                         </div>
                     </section>

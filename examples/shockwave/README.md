@@ -12,7 +12,7 @@ udoc-server once it is; edited in the editor; and saved as versions, which are
 reviewed, approved and published; the collections a sales manager arranges
 what's published in, for everyone at the tenant to read; and the deal rooms sales
 prepare it in together, backstage, each put on a frontstage that its buyers read at
-a link, with no account.
+a link, with no account, and what they read, anonymously, for those who shared it.
 
 ## Running it
 
@@ -68,3 +68,8 @@ starts.
 | `web/`    | The frontend: React, and React Router            |
 | `shared/` | The API's types, which both import               |
 | `seed/`   | The seed's files: Larchmere's logo               |
+
+`npm run test:isolation`, from the repo's root or here, attacks each tenant with
+another: the real backend, on data of its own, with no browser. Run it after a change
+to the data or the routes. It fails for a route, a foreign key or a table it doesn't
+attack, and says what to add.
