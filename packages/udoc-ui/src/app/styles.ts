@@ -2785,12 +2785,19 @@ export const uiStyles = css`
         stroke: var(--udoc-canvas-selection);
         stroke-width: 1.5px;
     }
+    /* The box you are typing in, dashed as Word's and PowerPoint's are: a caret or
+   a range in a text box or a shape's text, where a solid box is a shape picked. */
+    .udoc-ui-root .udoc-ui__selection-box--text {
+        stroke-dasharray: 5 4;
+    }
     /* A remote collaborator's selection: the peer's stable color (set inline per
-   box), drawn dashed and a touch more transparent than your own so a peer's box
+   box), drawn dotted and a touch more transparent than your own so a peer's box
    reads as clearly theirs and sits visually behind the local selection. The
    modifier class is also the hook for a host to restyle peers separately. */
     .udoc-ui-root .udoc-ui__selection-box--peer {
-        stroke-dasharray: 4 3;
+        stroke-width: 2px;
+        stroke-dasharray: 0 4;
+        stroke-linecap: round;
         stroke-opacity: 0.7;
     }
     /* A spreadsheet grid cell-range block: a translucent fill under a solid border —
@@ -2803,11 +2810,13 @@ export const uiStyles = css`
         stroke-width: 1.5px;
     }
     /* A remote collaborator's cell selection: same fill + border shape, tinted by
-   the peer's stable color (set inline per box), drawn dashed and more
+   the peer's stable color (set inline per box), drawn dotted and more
    transparent than your own (fill alpha set inline; see PEER_CELL_FILL_ALPHA).
    The modifier class is also the hook for a host to restyle peers separately. */
     .udoc-ui-root .udoc-ui__selection-cell--peer {
-        stroke-dasharray: 4 3;
+        stroke-width: 2px;
+        stroke-dasharray: 0 4;
+        stroke-linecap: round;
         stroke-opacity: 0.7;
     }
     /* A text highlight quad: a translucent fill over the selected run(s), no
@@ -2971,6 +2980,13 @@ export const uiStyles = css`
         border: 1.5px solid var(--udoc-canvas-selection);
         border-radius: 1px;
         will-change: transform;
+    }
+    /* A PDF's text box resizes by its width alone, so it has two bars on its sides
+   in place of the eight squares. Keep in sync with BAR_WIDTH and BAR_HEIGHT. */
+    .udoc-ui-root .udoc-ui__selection-handle--bar {
+        width: 6px;
+        height: 14px;
+        border-radius: 3px;
     }
 
     /* The media players (udoc:media): the browser's own player of each slide

@@ -49,6 +49,11 @@ listed once, by package. Its major and minor version are those of the
   the thumbnails, then Text Box, Shapes and Image, as icons named by their tooltips.
   Resize Page opens a dialog of the current page's size. A PDF's ribbon opens on it
   in edit mode, and goes back to it when pages are picked or nothing is selected.
+- A box you're typing in looks different from a shape you've picked: its outline is
+  dashed. A PDF's text box also shows only two side handles, as resizing it rewraps
+  its text and changes only its width.
+- A collaborator's selection is outlined in dots, so it can't be mistaken for your own
+  dashed box.
 - The controls beside and between a PDF's pages in edit mode are off by default:
   `showPageControls: true` turns them on. Their rail rotates a page either way, and
   its Page Settings button is now Resize Page.

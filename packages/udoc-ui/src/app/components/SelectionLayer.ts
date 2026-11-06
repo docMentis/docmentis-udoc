@@ -16,7 +16,7 @@
 // warp bends is followed; both ride scroll/zoom with zero extra worker
 // traffic.
 
-import { EMPTY_SELECTION_CAPABILITIES, allowsEdit } from "../../geometry.js";
+import { EMPTY_SELECTION_CAPABILITIES, allowsEdit, allowsTextEdit } from "../../geometry.js";
 import type {
     PageView,
     PeerPointer,
@@ -108,8 +108,16 @@ export interface SelectionExtent {
 /** Render/hit-test order (corners then edge midpoints). */
 const HANDLE_ORDER: ResizeHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 
+/** What a PDF's text box resizes by: its width alone, as its height follows its
+ *  lines. */
+const TEXT_BOX_HANDLES: ResizeHandle[] = ["e", "w"];
+
 /** Handle side length (CSS px) — keep in sync with the stylesheet. */
 const HANDLE_SIZE = 8;
+/** A text box's handle's width and height, a bar along its side (CSS px) — keep
+ *  in sync with the stylesheet. */
+const BAR_WIDTH = 6;
+const BAR_HEIGHT = 14;
 /** Half the hit target (CSS px): a little larger than the visual square. */
 const HANDLE_HIT = 7;
 /** How far an annotation's selection box stands off its rect on screen (CSS
@@ -271,7 +279,7 @@ export function peerColor(peer: string): string {
 /** A peer's translucent fill alpha per role, held below the local fill for the
  *  same role so a collaborator's block reads fainter than your own selection: a
  *  text highlight at 0.2 (local 0.3), a spreadsheet cell block at 0.1 (local
- *  0.15). Peers are set further apart by a dashed, lower-opacity stroke — see the
+ *  0.15). Peers are set further apart by a dotted, lower-opacity stroke — see the
  *  `--peer` classes in the stylesheet. */
 const PEER_TEXT_FILL_ALPHA = 0.2;
 const PEER_CELL_FILL_ALPHA = 0.1;
@@ -526,6 +534,17 @@ export class SelectionLayer {
         return allowsEdit(this.#state.capabilities, ...kinds);
     }
 
+    /** Whether the selection is in a PDF's text box: a caret or a range in it,
+     *  which a resize rewraps rather than stretches. */
+    #inTextBox(): boolean {
+        return this.allows("resizeTextBox");
+    }
+
+    /** The handles the selection resizes by. */
+    #resizeHandles(): readonly ResizeHandle[] {
+        return this.#inTextBox() ? TEXT_BOX_HANDLES : HANDLE_ORDER;
+    }
+
     /**
      * The grabbed resize handle (its compass name) and the placement of the
      * object it sits on, if `(x, y)` (viewport CSS px, canvas-relative) falls on
@@ -554,7 +573,7 @@ export class SelectionLayer {
             const place = itemPlacement(item);
             const lv = this.#localToViewport(place.transform, view);
             const box = this.#boxPlacement(item, place, lv);
-            for (const handle of HANDLE_ORDER) {
+            for (const handle of this.#resizeHandles()) {
                 const lp = handleLocalPoint(handle, box);
                 const c = applyPoint(lv, lp.x, lp.y);
                 const distance = Math.max(Math.abs(x - c.x), Math.abs(y - c.y));
@@ -708,7 +727,7 @@ export class SelectionLayer {
             // The resize handles (box corners + edge midpoints): with the
             // extension's chrome below, the outermost grabbable chrome,
             // projected to this frame.
-            for (const handle of HANDLE_ORDER) {
+            for (const handle of this.#resizeHandles()) {
                 const lp = handleLocalPoint(handle, box);
                 const c = applyPoint(lv, lp.x, lp.y);
                 left = Math.min(left, c.x);
@@ -805,11 +824,14 @@ export class SelectionLayer {
         // The padded viewport every box polygon is clipped to (see clipToRect):
         // a whole-column / whole-sheet cell block reaches the grid's last row, so
         // its unclipped polygon is tens of millions of px tall and the browser
-        // draws its dashed peer stroke solid. Read the canvas size once here,
+        // draws its dotted peer stroke solid. Read the canvas size once here,
         // before the loop writes any points, so it costs one layout read a frame.
         const clipW = this.#chrome.clientWidth;
         const clipH = this.#chrome.clientHeight;
         const clipping = clipW > 0 && clipH > 0;
+
+        // In text — a PDF's text box, or a shape's — the box you are typing in.
+        const inText = this.#inTextBox() || allowsTextEdit(this.#state.capabilities, "insertText");
 
         let used = 0;
         for (const spec of specs) {
@@ -821,7 +843,7 @@ export class SelectionLayer {
                 this.#svg.appendChild(poly);
                 this.#polys.push(poly);
             }
-            poly.setAttribute("class", boxClass(spec));
+            poly.setAttribute("class", boxClass(spec, inText));
             // Peer boxes carry the peer's stable color inline, on the SVG
             // properties their role paints with — a text highlight fills, an
             // object box strokes, a cell block does both. A local box clears both
@@ -1074,7 +1096,8 @@ export class SelectionLayer {
     }
 
     /**
-     * Place the eight resize handles and the rotation grip + stem on **each**
+     * Place the resize handles — eight squares, or a text box's two bars — and the
+     * rotation grip + stem on **each**
      * selected box — the handles only when the selection resizes, the grip
      * only when it rotates — or remove all chrome when nothing's
      * selectable (empty / multi-page selection, or view mode). Resizing any
@@ -1093,7 +1116,9 @@ export class SelectionLayer {
             this.#extraChrome?.render(this.#chromeFrame(true), this.#chrome, this.#svg);
             return;
         }
-        const half = HANDLE_SIZE / 2;
+        const bars = this.#inTextBox();
+        const halfWidth = (bars ? BAR_WIDTH : HANDLE_SIZE) / 2;
+        const halfHeight = (bars ? BAR_HEIGHT : HANDLE_SIZE) / 2;
         let usedHandles = 0;
         const resizes = this.allows("scaleEachObject", "resizeAnnotations", "scaleEachShape");
         for (const item of this.#objectItems()) {
@@ -1108,11 +1133,12 @@ export class SelectionLayer {
             // horizontal edges — the closest a single square can come.)
             const xAxis = applyVector(lv, 1, 0);
             const angle = Math.atan2(xAxis.y, xAxis.x);
-            for (const handle of resizes ? HANDLE_ORDER : []) {
+            for (const handle of resizes ? this.#resizeHandles() : []) {
                 const el = this.#ensureHandle(usedHandles++);
+                el.classList.toggle("udoc-ui__selection-handle--bar", bars);
                 const lp = handleLocalPoint(handle, box);
                 const c = applyPoint(lv, lp.x, lp.y);
-                el.style.transform = `translate(${c.x - half}px, ${c.y - half}px) rotate(${angle}rad)`;
+                el.style.transform = `translate(${c.x - halfWidth}px, ${c.y - halfHeight}px) rotate(${angle}rad)`;
             }
         }
         this.#trimChrome(usedHandles);
@@ -1332,14 +1358,15 @@ function rotateDelta(angle: number, cx: number, cy: number): Affine {
  *  handles), or a text highlight (filled). `--peer` is the host's restyle hook
  *  for a collaborator's box; the peer's color is applied inline (see `render`),
  *  so the class only picks the fill/stroke shape. */
-function boxClass(spec: BoxSpec): string {
+function boxClass(spec: BoxSpec, inText: boolean): string {
     switch (spec.role) {
         case "text":
             return "udoc-ui__selection-text";
         case "cell":
             return spec.peer ? "udoc-ui__selection-cell udoc-ui__selection-cell--peer" : "udoc-ui__selection-cell";
         default:
-            return spec.peer ? "udoc-ui__selection-box udoc-ui__selection-box--peer" : "udoc-ui__selection-box";
+            if (spec.peer) return "udoc-ui__selection-box udoc-ui__selection-box--peer";
+            return inText ? "udoc-ui__selection-box udoc-ui__selection-box--text" : "udoc-ui__selection-box";
     }
 }
 
@@ -1459,7 +1486,7 @@ type ClipPt = { x: number; y: number };
  * when fully inside. Bounds a selection box's projected corners to a padded
  * viewport before it becomes an SVG polygon: a whole-column / whole-sheet cell
  * block runs to the grid's last row (~1M rows), so its unclipped polygon is tens
- * of millions of px tall — big enough that the browser renders the dashed stroke
+ * of millions of px tall — big enough that the browser renders the dotted stroke
  * solid and misfills it. The padding ({@link BOX_CLIP_PAD}) sits off the visible
  * canvas, so the cut edges hide under the SVG viewport clip rather than drawing a
  * border along the screen edge.
