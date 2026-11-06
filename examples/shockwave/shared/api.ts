@@ -17,7 +17,7 @@ export function managesLibrary(role: Role): boolean {
     return role === "admin";
 }
 
-/** Whether a user in `role` approves or returns a version submitted for review. */
+/** Whether a user in `role` can be sent a version to review, and approve or return one sent to them. */
 export function reviewsLibrary(role: Role): boolean {
     return role === "reviewer";
 }
@@ -149,12 +149,22 @@ export interface Asset {
 export type VersionStatus = "draft" | "submitted" | "approved" | "returned";
 
 /** What's done to a version: `POST /api/assets/:id/versions/:number/:step`. */
-export type VersionStep = "submit" | "approve" | "return" | "publish";
+export type VersionStep = "submit" | "approve" | "return" | "publish" | "reassign" | "dismiss";
+
+/** Someone a version can be sent to for review. */
+export interface Reviewer {
+    id: string;
+    name: string;
+    /** Their job title. */
+    title: string;
+}
 
 /** Something that happened to a version. */
 export interface VersionEvent {
-    kind: "saved" | "submitted" | "approved" | "returned" | "published";
+    kind: "saved" | "submitted" | "approved" | "returned" | "published" | "reassigned" | "dismissed";
     by: { id: string; name: string };
+    /** Who it was sent to, for one submitted or reassigned; otherwise `null`. */
+    to: { id: string; name: string } | null;
     /** When, in milliseconds since the epoch. */
     at: number;
     note: string | null;
@@ -170,8 +180,18 @@ export interface Version {
     /** The checkpoint it is, opened from `/udoc/documents/:documentId/checkpoints/:checkpoint/package`. */
     checkpoint: number;
     status: VersionStatus;
+    /** Who reviews it, or reviewed it; `null` before it's submitted. */
+    reviewer: { id: string; name: string } | null;
     /** What happened to it, oldest first; the first, its being saved. */
     events: VersionEvent[];
+}
+
+/** A version waiting on the user, with its file: `status` says what for. */
+export interface WaitingVersion {
+    asset: Asset;
+    number: number;
+    /** `submitted`, to review; `returned`, to act on; `approved`, to publish. */
+    status: VersionStatus;
 }
 
 /** What a change to a file's versions answers: the file as it now is, and its versions, newest first. */

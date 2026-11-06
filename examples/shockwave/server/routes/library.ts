@@ -8,7 +8,7 @@ import type { DatabaseSync } from "node:sqlite";
 
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
-import { managesLibrary, readsLibrary, reviewsLibrary } from "../../shared/api.ts";
+import { managesLibrary, readsLibrary } from "../../shared/api.ts";
 import type { Asset, Folder, FolderListing, User } from "../../shared/api.ts";
 import { ASSETS, ASSET_COLUMNS, assetOf, assetOfRow } from "../assets.ts";
 import type { AssetRow } from "../assets.ts";
@@ -125,26 +125,6 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 WHERE assets.tenant_id = ? ORDER BY assets.uploaded_at DESC LIMIT ?`,
             )
             .all(user.tenant.id, RECENT_FILES) as unknown as AssetRow[];
-        return { assets: assets.map(assetOfRow) };
-    });
-
-    /**
-     * `{ assets }`: the files waiting on the user. For one who reviews, those
-     * with a version submitted; for one who changes the library, those whose
-     * latest version was returned, or approved and not published yet.
-     */
-    app.get("/api/library/attention", async (request): Promise<{ assets: Asset[] }> => {
-        const user = reader(request);
-        const waiting = reviewsLibrary(user.role)
-            ? "EXISTS (SELECT 1 FROM versions WHERE versions.asset_id = assets.id AND versions.status = 'submitted')"
-            : `latest.status = 'returned'
-                OR (latest.status = 'approved' AND assets.published_version IS NOT latest.number)`;
-        const assets = db
-            .prepare(
-                `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
-                WHERE assets.tenant_id = ? AND (${waiting}) ORDER BY assets.name COLLATE NOCASE`,
-            )
-            .all(user.tenant.id) as unknown as AssetRow[];
         return { assets: assets.map(assetOfRow) };
     });
 

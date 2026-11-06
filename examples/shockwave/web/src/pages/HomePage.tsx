@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 
 import { readsLibrary } from "../../../shared/api.ts";
-import type { Asset, Role } from "../../../shared/api.ts";
+import type { Asset, Role, WaitingVersion } from "../../../shared/api.ts";
 import { api } from "../api";
 import { FileCard } from "../LibraryViews";
 import { useUser } from "../session";
@@ -23,8 +23,8 @@ const SECTIONS: Record<Role, Section[]> = {
 
 /** What needs each role, said while nothing does. */
 const ATTENTION: Record<Role, string> = {
-    admin: "Files compliance returns to you, and approved ones to publish, show here.",
-    reviewer: "Files submitted for your review show here.",
+    admin: "Versions returned to you, and approved ones to publish, show here.",
+    reviewer: "Versions sent to you to review show here.",
     member: "Buyers opening what you've shared show here.",
 };
 
@@ -79,14 +79,14 @@ export function HomePage() {
     );
 }
 
-/** The files waiting on the user, as the library's cards. */
+/** The versions waiting on the user, as the library's cards, each saying what for. */
 function FilesWaiting({ role }: { role: Role }) {
-    const [assets, setAssets] = useState<Asset[]>();
+    const [versions, setVersions] = useState<WaitingVersion[]>();
     const [failed, setFailed] = useState(false);
     useEffect(() => {
         let gone = false;
-        api.attentionAssets().then(
-            (found) => gone || setAssets(found),
+        api.waitingVersions().then(
+            (found) => gone || setVersions(found),
             () => gone || setFailed(true),
         );
         return () => {
@@ -100,11 +100,11 @@ function FilesWaiting({ role }: { role: Role }) {
                     What needs your attention didn't load. Try again.
                 </p>
             )}
-            {assets?.length === 0 && <Empty title="You're all caught up">{ATTENTION[role]}</Empty>}
-            {assets && assets.length > 0 && (
+            {versions?.length === 0 && <Empty title="You're all caught up">{ATTENTION[role]}</Empty>}
+            {versions && versions.length > 0 && (
                 <div className="file-grid">
-                    {assets.map((asset) => (
-                        <FileCard key={asset.id} asset={asset} />
+                    {versions.map(({ asset, number, status }) => (
+                        <FileCard key={`${asset.id}-${number}`} asset={asset} waiting={{ number, status }} />
                     ))}
                 </div>
             )}

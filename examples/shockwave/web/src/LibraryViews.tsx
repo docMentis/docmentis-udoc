@@ -5,10 +5,10 @@
 import type { MouseEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 
-import type { Asset, Folder } from "../../shared/api.ts";
+import type { Asset, Folder, VersionStatus } from "../../shared/api.ts";
 import { FileBadge, Thumbnail, formatDate, formatSize, typeLabel } from "./files";
 import { FolderIcon } from "./icons";
-import { FileStatus } from "./Versions";
+import { FileStatus, WaitingStatus } from "./Versions";
 
 /** A folder or a file, as its menu acts on it. */
 export interface Item {
@@ -135,15 +135,28 @@ export function FileGrid({ folders, assets, menu }: ViewProps) {
     );
 }
 
-/** A file as a card: its pages, its name, who uploaded it and when, and where its versions stand. */
-export function FileCard({ asset, menu }: { asset: Asset; menu?: ViewProps["menu"] }) {
+/**
+ * A file as a card: its pages, its name, who uploaded it and when, and where its
+ * versions stand; or, for a version `waiting` on the user, what it's waiting for,
+ * and opening that version.
+ */
+export function FileCard({
+    asset,
+    menu,
+    waiting,
+}: {
+    asset: Asset;
+    menu?: ViewProps["menu"];
+    waiting?: { number: number; status: VersionStatus };
+}) {
     const navigate = useNavigate();
+    const path = waiting ? `${filePath(asset)}?version=${waiting.number}` : filePath(asset);
     return (
-        <div className="file-card" onClick={() => navigate(filePath(asset))}>
+        <div className="file-card" onClick={() => navigate(path)}>
             <Thumbnail asset={asset} />
             <div className="file-card-body">
                 <div className="file-card-title">
-                    <Link className="file-name" to={filePath(asset)}>
+                    <Link className="file-name" to={path}>
                         <FileBadge format={asset.format} />
                         <span>{asset.name}</span>
                     </Link>
@@ -152,7 +165,7 @@ export function FileCard({ asset, menu }: { asset: Asset; menu?: ViewProps["menu
                 <p className="file-card-meta">
                     {asset.uploadedBy.name} · {formatDate(asset.uploadedAt)}
                 </p>
-                <FileStatus asset={asset} />
+                {waiting ? <WaitingStatus {...waiting} /> : <FileStatus asset={asset} />}
             </div>
         </div>
     );

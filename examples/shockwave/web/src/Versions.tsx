@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
-import type { Asset, Version, VersionEvent, VersionStatus } from "../../shared/api.ts";
+import type { Asset, Reviewer, Version, VersionEvent, VersionStatus } from "../../shared/api.ts";
 import { ApiError } from "./api";
 import { formatDateTime } from "./files";
 import { Dialog } from "./ui";
@@ -51,6 +51,24 @@ export function FileStatus({ asset }: { asset: Asset }) {
     );
 }
 
+/** What a version waiting on someone is waiting for, as a label: "To review · v3". */
+const WAITING_LABELS: Record<VersionStatus, string> = {
+    draft: "Draft",
+    submitted: "To review",
+    approved: "Ready to publish",
+    returned: "Returned",
+};
+
+export function WaitingStatus({ status, number }: { status: VersionStatus; number: number }) {
+    return (
+        <span className="status-labels">
+            <span className={`status-label status-${status}`}>
+                {WAITING_LABELS[status]} · v{number}
+            </span>
+        </span>
+    );
+}
+
 /** What each event says happened. */
 const EVENTS: Record<VersionEvent["kind"], string> = {
     saved: "Saved",
@@ -58,6 +76,8 @@ const EVENTS: Record<VersionEvent["kind"], string> = {
     approved: "Approved",
     returned: "Returned",
     published: "Published",
+    reassigned: "Reassigned",
+    dismissed: "Dismissed",
 };
 
 /**
@@ -116,13 +136,20 @@ export function VersionList({
                                 {saved.by.name} · {formatDateTime(saved.at)}
                             </span>
                             {saved.note && <span className="version-row-note">{saved.note}</span>}
+                            {version.status === "submitted" && (
+                                <span className="version-row-meta">
+                                    Waiting on {version.reviewer?.name ?? "someone to review it"}
+                                </span>
+                            )}
                         </button>
                         {shown === version.number && since.length > 0 && (
                             <ol className="version-history">
                                 {since.map((event) => (
                                     <li key={`${event.kind}-${event.at}`}>
                                         <span>
-                                            {EVENTS[event.kind]} by {event.by.name} · {formatDateTime(event.at)}
+                                            {EVENTS[event.kind]}
+                                            {event.to && ` to ${event.to.name}`} by {event.by.name} ·{" "}
+                                            {formatDateTime(event.at)}
                                         </span>
                                         {event.note && <p>{event.note}</p>}
                                     </li>
@@ -136,13 +163,18 @@ export function VersionList({
     );
 }
 
-/** Taking a step with a version: what it does, a note on it, needed or not, and the button that takes it. */
+/**
+ * Taking a step with a version: what it does, who it's sent to where `reviewers`
+ * says it's sent to someone, a note on it, needed or not, and the button that
+ * takes it. With no one to send it to, it says so, and the button stays off.
+ */
 export function VersionDialog({
     title,
     text,
     action,
     placeholder,
     needsNote = false,
+    reviewers,
     onClose,
     onSubmit,
 }: {
@@ -151,10 +183,13 @@ export function VersionDialog({
     action: string;
     placeholder: string;
     needsNote?: boolean;
+    /** Those it can be sent to, for a step that sends it to someone. */
+    reviewers?: Reviewer[];
     onClose: () => void;
-    onSubmit: (note: string) => Promise<void>;
+    onSubmit: (note: string, reviewerId?: string) => Promise<void>;
 }) {
     const [note, setNote] = useState("");
+    const [reviewerId, setReviewerId] = useState(reviewers?.[0]?.id);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string>();
 
@@ -163,10 +198,10 @@ export function VersionDialog({
         setBusy(true);
         setError(undefined);
         try {
-            await onSubmit(note.trim());
+            await onSubmit(note.trim(), reviewerId);
         } catch (failure) {
             setError(
-                failure instanceof ApiError && failure.status === 409
+                failure instanceof ApiError && (failure.status === 409 || failure.status === 403)
                     ? "This version has moved on since it was opened. Reload the page to see where it stands."
                     : "That didn't go through. Try again.",
             );
@@ -178,6 +213,23 @@ export function VersionDialog({
         <Dialog title={title} onClose={onClose}>
             <form className="dialog-body" onSubmit={(event) => void submit(event)}>
                 {text && <p>{text}</p>}
+                {reviewers?.length === 0 && (
+                    <p className="error" role="alert">
+                        There's no one else here to send it to.
+                    </p>
+                )}
+                {reviewers && reviewers.length > 0 && (
+                    <label className="field">
+                        <span className="visually-hidden">Reviewer</span>
+                        <select value={reviewerId} onChange={(event) => setReviewerId(event.target.value)}>
+                            {reviewers.map(({ id, name, title: job }) => (
+                                <option key={id} value={id}>
+                                    {name}, {job}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                )}
                 <label className="field">
                     <span className="visually-hidden">Note</span>
                     <textarea
@@ -199,7 +251,11 @@ export function VersionDialog({
                     <button type="button" className="button text" onClick={onClose}>
                         Cancel
                     </button>
-                    <button type="submit" className="button primary" disabled={busy || (needsNote && !note.trim())}>
+                    <button
+                        type="submit"
+                        className="button primary"
+                        disabled={busy || (needsNote && !note.trim()) || reviewers?.length === 0}
+                    >
                         {action}
                     </button>
                 </div>

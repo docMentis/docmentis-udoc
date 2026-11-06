@@ -3,14 +3,14 @@
 // shown, with a menu to rename or delete it for those who manage the library,
 // over what's shown from udoc-server: the working copy, in the viewer or being
 // edited, or a version, read-only, as the address says. Those who don't edit it
-// see the version waiting for review, or the latest. Beside the card, a card of
+// see the version sent to them to review, or the latest. Beside the card, a card of
 // the app's own on the file, its tabs each what a feature knows of it, folded to
 // a strip with the button that unfolds it.
 import { Fragment, useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 
 import { managesLibrary, readsLibrary, reviewsLibrary } from "../../../shared/api.ts";
-import type { Asset, Folder, Version, VersionStep, VersionedAsset } from "../../../shared/api.ts";
+import type { Asset, Folder, Reviewer, Version, VersionStep, VersionedAsset } from "../../../shared/api.ts";
 import { ApiError, api } from "../api";
 import { DocumentEditor } from "../DocumentEditor";
 import type { EditingState } from "../DocumentEditor";
@@ -44,7 +44,7 @@ const STEPS: Record<VersionStep, { verb: string; action: string; placeholder: st
         verb: "Submit",
         action: "Submit",
         placeholder: "A note for the reviewer (optional)",
-        text: "Sends this version for review. Editing can go on: what changes after this goes in a later version.",
+        text: "Sends this version to the reviewer you choose, who alone can approve or return it. Editing can go on: what changes after this goes in a later version.",
     },
     approve: {
         verb: "Approve",
@@ -63,6 +63,18 @@ const STEPS: Record<VersionStep, { verb: string; action: string; placeholder: st
         action: "Publish",
         placeholder: "A note (optional)",
     },
+    reassign: {
+        verb: "Reassign",
+        action: "Reassign",
+        placeholder: "A note (optional)",
+        text: "Sends this version to another reviewer, who alone can then approve or return it.",
+    },
+    dismiss: {
+        verb: "Dismiss",
+        action: "Dismiss",
+        placeholder: "Why (optional)",
+        text: "Takes this version off what's waiting on you. It stays as it is, and its history keeps this.",
+    },
 };
 
 export function FilePage() {
@@ -73,7 +85,12 @@ export function FilePage() {
     const reviews = reviewsLibrary(user.role);
     const reads = readsLibrary(user.role);
     const [params, setParams] = useSearchParams();
-    const [found, setFound] = useState<{ asset: Asset; path: Folder[]; versions: Version[] } | null>();
+    const [found, setFound] = useState<{
+        asset: Asset;
+        path: Folder[];
+        versions: Version[];
+        reviewers: Reviewer[];
+    } | null>();
     const [failed, setFailed] = useState(false);
     const [task, setTask] = useState<Task>();
     const [panel, setPanel] = useState(savedPanel);
@@ -83,8 +100,8 @@ export function FilePage() {
     useEffect(() => {
         if (!reads) return;
         let gone = false;
-        Promise.all([api.asset(assetId!), api.versions(assetId!)]).then(
-            ([{ asset, path }, versions]) => gone || setFound({ asset, path, versions }),
+        Promise.all([api.asset(assetId!), api.versions(assetId!), api.reviewers()]).then(
+            ([{ asset, path }, versions, reviewers]) => gone || setFound({ asset, path, versions, reviewers }),
             (error: unknown) => {
                 if (gone) return;
                 if (error instanceof ApiError && error.status === 404) setFound(null);
@@ -107,16 +124,24 @@ export function FilePage() {
             </div>
         );
     if (!found) return null;
-    const { asset, path, versions } = found;
+    const { asset, path, versions, reviewers } = found;
     const parent = path.at(-1);
 
     // What's shown: the version the address names; or the working copy, for
-    // those who edit it; or, for anyone else, what's waiting to be read.
+    // those who edit it; or, for anyone else, what's waiting on them.
     const named = versions.find((version) => String(version.number) === params.get("version"));
-    const waiting = versions.find((version) => version.status === "submitted") ?? versions[0];
-    const shown = named ?? (manages ? undefined : waiting);
+    const sentToMe = versions.find((version) => version.status === "submitted" && version.reviewer?.id === user.id);
+    const shown = named ?? (manages ? undefined : (sentToMe ?? versions[0]));
     const editing = manages && !shown && params.has("edit");
     const isPublished = shown !== undefined && asset.publishedVersion === shown.number;
+
+    // Who may do what with it, as the backend also rules: the one it was sent
+    // to reviews it, and no one reviews what they submitted themselves.
+    const submitter = shown?.events.find((event) => event.kind === "submitted")?.by.id;
+    const isReviewer = shown?.reviewer?.id === user.id;
+    const mayReview = reviews && isReviewer && submitter !== user.id;
+    const reassignable = reviewers.filter(({ id }) => id !== shown?.reviewer?.id && id !== submitter);
+    const dealtWith = shown?.events.some((event) => event.kind === "dismissed" || event.kind === "published");
 
     // Folding and unfolding the side panel, at its top right, open or folded.
     const panelToggle = (
@@ -143,7 +168,7 @@ export function FilePage() {
 
     /** The file as a change to its versions left it, with the side panel showing them. */
     function changed({ asset: changedAsset, versions: changedVersions }: VersionedAsset) {
-        setFound({ asset: changedAsset, path, versions: changedVersions });
+        setFound({ asset: changedAsset, path, versions: changedVersions, reviewers });
         setTask(undefined);
         setTab("versions");
         showPanel(true);
@@ -212,7 +237,16 @@ export function FilePage() {
                                     Submit for review
                                 </button>
                             )}
-                            {reviews && shown?.status === "submitted" && (
+                            {(manages || isReviewer) && shown?.status === "submitted" && reassignable.length > 0 && (
+                                <button
+                                    type="button"
+                                    className="button"
+                                    onClick={() => setTask({ step: "reassign", version: shown })}
+                                >
+                                    Reassign
+                                </button>
+                            )}
+                            {mayReview && shown?.status === "submitted" && (
                                 <>
                                     <button
                                         type="button"
@@ -230,6 +264,19 @@ export function FilePage() {
                                     </button>
                                 </>
                             )}
+                            {manages &&
+                                shown &&
+                                shown.status !== "draft" &&
+                                shown.status !== "submitted" &&
+                                !dealtWith && (
+                                    <button
+                                        type="button"
+                                        className="button"
+                                        onClick={() => setTask({ step: "dismiss", version: shown })}
+                                    >
+                                        Dismiss
+                                    </button>
+                                )}
                             {manages && shown?.status === "approved" && !isPublished && (
                                 <button
                                     type="button"
@@ -352,7 +399,7 @@ export function FilePage() {
                     onClose={() => setTask(undefined)}
                     onSubmit={async (name) => {
                         const renamed = await api.renameAsset(asset.id, name);
-                        setFound({ asset: renamed, path, versions });
+                        setFound({ asset: renamed, path, versions, reviewers });
                         setTask(undefined);
                     }}
                 />
@@ -387,9 +434,16 @@ export function FilePage() {
                     action={STEPS[task.step].action}
                     placeholder={STEPS[task.step].placeholder}
                     needsNote={task.step === "return"}
+                    reviewers={
+                        task.step === "submit"
+                            ? reviewers.filter(({ id }) => id !== user.id)
+                            : task.step === "reassign"
+                              ? reassignable
+                              : undefined
+                    }
                     onClose={() => setTask(undefined)}
-                    onSubmit={async (note) =>
-                        changed(await api.takeVersionStep(asset.id, task.version.number, task.step, note))
+                    onSubmit={async (note, reviewerId) =>
+                        changed(await api.takeVersionStep(asset.id, task.version.number, task.step, note, reviewerId))
                     }
                 />
             )}

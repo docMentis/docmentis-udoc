@@ -128,6 +128,48 @@ const MIGRATIONS = [
     INSERT INTO version_events (asset_id, number, kind, user_id, at)
         SELECT id, 1, 'saved', uploaded_by, uploaded_at FROM assets;
     `,
+    // A version's reviewer, who alone approves or returns it; and two more
+    // events, a change of reviewer and a version dismissed, each naming who
+    // it was sent to where it was sent to someone. SQLite changes a CHECK only
+    // by building the table anew. A version decided already was reviewed by
+    // whoever decided it; one still waiting goes to the tenant's first reviewer,
+    // and is reassigned from there.
+    `
+    ALTER TABLE versions ADD COLUMN reviewer_id TEXT REFERENCES users (id);
+    CREATE TABLE version_events_new (
+        id INTEGER PRIMARY KEY,
+        asset_id TEXT NOT NULL,
+        number INTEGER NOT NULL,
+        kind TEXT NOT NULL CHECK (
+            kind IN ('saved', 'submitted', 'approved', 'returned', 'published', 'reassigned', 'dismissed')
+        ),
+        user_id TEXT NOT NULL REFERENCES users (id),
+        to_user_id TEXT REFERENCES users (id),
+        at INTEGER NOT NULL,
+        note TEXT,
+        FOREIGN KEY (asset_id, number) REFERENCES versions (asset_id, number) ON DELETE CASCADE
+    );
+    INSERT INTO version_events_new (id, asset_id, number, kind, user_id, at, note)
+        SELECT id, asset_id, number, kind, user_id, at, note FROM version_events;
+    DROP TABLE version_events;
+    ALTER TABLE version_events_new RENAME TO version_events;
+    CREATE INDEX version_events_by_version ON version_events (asset_id, number);
+    UPDATE versions SET reviewer_id = (
+        SELECT user_id FROM version_events AS event
+        WHERE event.asset_id = versions.asset_id AND event.number = versions.number
+            AND event.kind IN ('approved', 'returned')
+        ORDER BY event.id DESC LIMIT 1
+    ) WHERE status IN ('approved', 'returned');
+    UPDATE versions SET reviewer_id = (
+        SELECT users.id FROM users JOIN assets ON assets.tenant_id = users.tenant_id
+        WHERE assets.id = versions.asset_id AND users.role = 'reviewer'
+        ORDER BY users.name LIMIT 1
+    ) WHERE status = 'submitted';
+    UPDATE version_events SET to_user_id = (
+        SELECT reviewer_id FROM versions
+        WHERE versions.asset_id = version_events.asset_id AND versions.number = version_events.number
+    ) WHERE kind = 'submitted';
+    `,
 ];
 
 /** Run `change`: all of it, or, when it throws, none. */

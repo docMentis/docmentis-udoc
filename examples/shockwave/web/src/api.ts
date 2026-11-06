@@ -5,12 +5,14 @@ import type {
     Folder,
     FolderListing,
     Person,
+    Reviewer,
     Tenant,
     User,
     Version,
     VersionStep,
     VersionedAsset,
     ViewerColors,
+    WaitingVersion,
 } from "../../shared/api.ts";
 
 /** A request the backend refused: its status, and its failure. */
@@ -61,9 +63,13 @@ export const api = {
     async recentAssets(): Promise<Asset[]> {
         return (await request<{ assets: Asset[] }>("/api/library/recent")).assets;
     },
-    /** The files waiting on the user: to review, or returned or approved, to act on. */
-    async attentionAssets(): Promise<Asset[]> {
-        return (await request<{ assets: Asset[] }>("/api/library/attention")).assets;
+    /** The versions waiting on the user: to review, or returned or approved, to act on. */
+    async waitingVersions(): Promise<WaitingVersion[]> {
+        return (await request<{ versions: WaitingVersion[] }>("/api/library/attention")).versions;
+    },
+    /** Those a version can be sent to for review, by name. */
+    async reviewers(): Promise<Reviewer[]> {
+        return (await request<{ reviewers: Reviewer[] }>("/api/library/reviewers")).reviewers;
     },
     /** Make folder `name` in `parentId`, or at the top for `null`; an `ApiError` `409` when the name's taken there. */
     async createFolder(name: string, parentId: string | null): Promise<Folder> {
@@ -94,9 +100,16 @@ export const api = {
     /** Save a file's document as it is now as a new version, with `note`. */
     saveVersion: (assetId: string, note: string) =>
         request<VersionedAsset>(`/api/assets/${assetId}/versions`, withJson("POST", { note })),
-    /** Take `step` with version `number` of a file, with `note`; an `ApiError` `409` for a version not ready for it. */
-    takeVersionStep: (assetId: string, number: number, step: VersionStep, note: string) =>
-        request<VersionedAsset>(`/api/assets/${assetId}/versions/${number}/${step}`, withJson("POST", { note })),
+    /**
+     * Take `step` with version `number` of a file, with `note`, and for a step
+     * that sends it to someone, `reviewerId`; an `ApiError` `409` for a version
+     * not ready for it, and `403` for one not the user's to take it with.
+     */
+    takeVersionStep: (assetId: string, number: number, step: VersionStep, note: string, reviewerId?: string) =>
+        request<VersionedAsset>(
+            `/api/assets/${assetId}/versions/${number}/${step}`,
+            withJson("POST", { note, reviewerId }),
+        ),
 
     /** Replace tenant `id`'s logo with `image`: a PNG, JPEG, WebP or SVG; an `ApiError` `415` for another. */
     async uploadLogo(id: string, image: Blob): Promise<Tenant> {

@@ -170,7 +170,7 @@ profile, as Seismic and Highspot keep the two apart:
 | Role     | May                                                                                                     |
 | -------- | ------------------------------------------------------------------------------------------------------- |
 | admin    | keep the Library (create, prepare, submit, publish what's approved, retire), see Insights, and Settings |
-| reviewer | review what's submitted to the Library: approve it, or return it with a note                            |
+| reviewer | review what's sent to them from the Library: approve it, or return it with a note                       |
 | manager  | arrange Collections, teach in Learning, see the team's deal rooms and Insights, and all a member may    |
 | member   | find content in Collections, prepare it and share it in Deal Rooms, and learn in Learning               |
 
@@ -282,26 +282,42 @@ save ──▶ draft ──submit──▶ submitted ──approve──▶ appr
                                └──────return──▶ returned
 ```
 
-| Step    | Who      | What it does                                                                                                          |
-| ------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
-| save    | admin    | a new checkpoint, a draft version, with a note on what changed                                                        |
-| submit  | admin    | sends a draft for review                                                                                              |
-| approve | reviewer | approves what was submitted, as it stands                                                                             |
-| return  | reviewer | sends it back with a note. It stays returned: what changes goes in a new version                                      |
-| publish | admin    | makes an approved version the file's published one, in place of any before, so an older one takes the file back to it |
+| Step     | Who                                 | What it does                                                                                                            |
+| -------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| save     | admin                               | a new checkpoint, a draft version, with a note on what changed                                                          |
+| submit   | admin                               | sends a draft to the reviewer they choose                                                                               |
+| reassign | admin, or the reviewer it's sent to | sends it to another reviewer                                                                                            |
+| approve  | the reviewer it's sent to           | approves what was submitted, as it stands                                                                               |
+| return   | the reviewer it's sent to           | sends it back with a note. It stays returned: what changes goes in a new version                                        |
+| publish  | admin                               | makes an approved version the file's published one, in place of any before, so an older one takes the file back to it   |
+| dismiss  | admin                               | takes an approved or returned version off what's waiting; it stays as it is, and an approved one can still be published |
+
+A version goes to one reviewer, who alone decides it, so it's on record who was
+responsible. No one reviews what they submitted themselves: roles keep the two apart
+today, and the backend rules it out whatever a role comes to allow.
 
 Publishing is apart from a version's status, a pointer on the file
 (`assets.published_version`): an approved version stays approved once another
-replaces it, and can be published again. Who did what, when and with what note is
-kept as it happened (`version_events`), each version's history.
+replaces it, and can be published again. Who did what, when, to whom and with what
+note is kept as it happened (`version_events`), each version's history.
 
-A file's page opens the working copy for those who edit it, and for a reviewer, the
-version waiting on them, or else the latest; its Versions tab opens any other,
+A file's page opens the working copy for those who edit it, and for anyone else, the
+version sent to them to review, or else the latest; its Versions tab opens any other,
 read-only, as a checkpoint is. The Library shows where each file's versions stand,
-its latest and any other that's published, and filters by it. Home's "Needs your
-attention" lists what's waiting on the user: what's submitted, for a reviewer; what's
-returned or approved and not published yet, for an admin. Sales read a published
-version when Collections comes; the gate already lets them read that and no more.
+its latest and any other that's published, and filters by it.
+
+Home's "Needs your attention" lists the versions waiting on the user, by who they
+are and not by their role, each saying what for and opening that version:
+
+| Waiting   | On               | Until                                                     |
+| --------- | ---------------- | --------------------------------------------------------- |
+| to review | the reviewer     | it's approved, returned or reassigned                     |
+| returned  | who submitted it | they submit a later version, or dismiss it                |
+| approved  | who submitted it | it's published, or a later version is, or they dismiss it |
+
+A version published once isn't waiting to be again, so rolling back leaves nothing
+behind. Sales read a published version when Collections comes; the gate already lets
+them read that and no more.
 
 What this can't do yet is in `GAPS.md`: marking up anything but a PDF, taking a new
 upload as a version, and rendering a checkpoint's pages as images. Retiring a file,
