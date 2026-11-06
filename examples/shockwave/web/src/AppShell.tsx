@@ -33,11 +33,14 @@ import { schemeOf } from "./scheme";
 import type { ColorRole } from "./scheme";
 import { useShownTheme } from "./theme";
 import { useSession, useUser } from "./session";
+import { readsLibrary } from "../../shared/api.ts";
+import type { Role } from "../../shared/api.ts";
 import { Avatar, EmptyState, TenantBrand, useDismiss } from "./ui";
 
-const SECTIONS: { to: string; label: string; icon: ComponentType }[] = [
+/** The sections, each with the roles that use it, where not all do. */
+const SECTIONS: { to: string; label: string; icon: ComponentType; may?: (role: Role) => boolean }[] = [
     { to: "/", label: "Home", icon: HomeIcon },
-    { to: "/library", label: "Library", icon: LibraryIcon },
+    { to: "/library", label: "Library", icon: LibraryIcon, may: readsLibrary },
     { to: "/collections", label: "Collections", icon: CollectionsIcon },
     { to: "/deal-rooms", label: "Deal Rooms", icon: DealRoomsIcon },
     { to: "/learning", label: "Learning", icon: LearningIcon },
@@ -101,7 +104,7 @@ export function AppShell() {
                     </button>
                 </div>
                 <nav className="nav">
-                    {SECTIONS.map(({ to, label, icon }) => (
+                    {SECTIONS.filter(({ may }) => may?.(user.role) ?? true).map(({ to, label, icon }) => (
                         <NavigationLink key={to} to={to} label={label} icon={icon} bar={bar} />
                     ))}
                     <div className="nav-divider" role="separator" />

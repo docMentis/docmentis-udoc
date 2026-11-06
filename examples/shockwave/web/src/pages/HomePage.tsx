@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 
+import { readsLibrary } from "../../../shared/api.ts";
 import type { Asset, Role } from "../../../shared/api.ts";
 import { api } from "../api";
 import { FileCard } from "../LibraryViews";
@@ -46,7 +47,9 @@ export function HomePage() {
                 {SECTIONS[user.role].map((section) => {
                     switch (section) {
                         case "attention":
-                            return (
+                            return readsLibrary(user.role) ? (
+                                <FilesWaiting key={section} role={user.role} />
+                            ) : (
                                 <HomeSection key={section} title="Needs your attention">
                                     <Empty title="You're all caught up">{ATTENTION[user.role]}</Empty>
                                 </HomeSection>
@@ -73,6 +76,39 @@ export function HomePage() {
                 })}
             </div>
         </div>
+    );
+}
+
+/** The files waiting on the user, as the library's cards. */
+function FilesWaiting({ role }: { role: Role }) {
+    const [assets, setAssets] = useState<Asset[]>();
+    const [failed, setFailed] = useState(false);
+    useEffect(() => {
+        let gone = false;
+        api.attentionAssets().then(
+            (found) => gone || setAssets(found),
+            () => gone || setFailed(true),
+        );
+        return () => {
+            gone = true;
+        };
+    }, []);
+    return (
+        <HomeSection title="Needs your attention">
+            {failed && (
+                <p className="error" role="alert">
+                    What needs your attention didn't load. Try again.
+                </p>
+            )}
+            {assets?.length === 0 && <Empty title="You're all caught up">{ATTENTION[role]}</Empty>}
+            {assets && assets.length > 0 && (
+                <div className="file-grid">
+                    {assets.map((asset) => (
+                        <FileCard key={asset.id} asset={asset} />
+                    ))}
+                </div>
+            )}
+        </HomeSection>
     );
 }
 

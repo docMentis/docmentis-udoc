@@ -4,7 +4,8 @@
 // tonal palettes built in it, after material-color-utilities (its older
 // solver). The palettes are CorePalette's: the primary at the seed's hue and
 // its chroma or 48, whichever is more; the secondary at chroma 16; the
-// neutrals at 4 and 8; the error at Material's red. Each role is at its tone
+// tertiary 60 degrees on from it, at chroma 24; the neutrals at 4 and 8; the
+// error at Material's red. Each role is at its tone
 // in the baseline schemes. app.css holds the schemes Shockwave's orange
 // seeds, the default.
 
@@ -17,6 +18,8 @@ export type ColorRole =
     | "secondary"
     | "secondary-container"
     | "on-secondary-container"
+    | "tertiary-container"
+    | "on-tertiary-container"
     | "error"
     | "on-error"
     | "error-container"
@@ -245,7 +248,11 @@ function rgbOfHex(hex: string): Rgb {
 /** Each role's tone in Material's baseline schemes, light and dark, and the palette it's in. */
 const TONES: Record<
     ColorRole,
-    [palette: "primary" | "secondary" | "neutral" | "neutralVariant" | "error", light: number, dark: number]
+    [
+        palette: "primary" | "secondary" | "tertiary" | "neutral" | "neutralVariant" | "error",
+        light: number,
+        dark: number,
+    ]
 > = {
     primary: ["primary", 40, 80],
     "on-primary": ["primary", 100, 20],
@@ -254,6 +261,8 @@ const TONES: Record<
     secondary: ["secondary", 40, 80],
     "secondary-container": ["secondary", 90, 30],
     "on-secondary-container": ["secondary", 10, 90],
+    "tertiary-container": ["tertiary", 90, 30],
+    "on-tertiary-container": ["tertiary", 10, 90],
     error: ["error", 40, 80],
     "on-error": ["error", 100, 20],
     "error-container": ["error", 90, 30],
@@ -277,6 +286,7 @@ export function schemeOf(seed: string, mode: "light" | "dark" = "light"): Record
     const palettes = {
         primary: [hue, Math.max(48, chroma)],
         secondary: [hue, 16],
+        tertiary: [hue + 60, 24],
         neutral: [hue, 4],
         neutralVariant: [hue, 8],
         error: [25, 84],

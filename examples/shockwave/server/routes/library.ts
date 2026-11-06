@@ -1,18 +1,22 @@
 // The library: `/api/library`, what a folder holds, and `/api/folders` and
-// `/api/assets`, its folders and its files. Everyone at a tenant reads its
-// library, and an admin changes it. A file's document is udoc-server's to
-// keep: an upload is imported into it, its first page rendered and kept as
-// its thumbnail, and a file deleted is forgotten by it.
+// `/api/assets`, its folders and its files. Those who keep or review a
+// tenant's library read it, and an admin changes it. A file's document is
+// udoc-server's to keep: an upload is imported into it, its first page rendered
+// and kept as its thumbnail, and a file deleted is forgotten by it.
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 
 import type { FastifyInstance, FastifyRequest } from "fastify";
 
-import { managesLibrary } from "../../shared/api.ts";
+import { managesLibrary, readsLibrary, reviewsLibrary } from "../../shared/api.ts";
 import type { Asset, Folder, FolderListing, User } from "../../shared/api.ts";
-import { Refusal, signedIn } from "../http.ts";
+import { ASSETS, ASSET_COLUMNS, assetOf, assetOfRow } from "../assets.ts";
+import type { AssetRow } from "../assets.ts";
+import { inTransaction } from "../db.ts";
+import { Refusal, signedInAs } from "../http.ts";
 import type { Udoc } from "../udoc.ts";
 import { keepThumbnail, thumbnailPath } from "./thumbnails.ts";
+import { addFirstVersion } from "./versions.ts";
 
 /** The largest upload: udoc-server's own limit. */
 const MAX_UPLOAD_BYTES = 256 * 1024 * 1024;
@@ -32,44 +36,8 @@ interface FolderRow {
     parent_id: string | null;
 }
 
-interface AssetRow {
-    id: string;
-    name: string;
-    folder_id: string | null;
-    format: string;
-    size: number;
-    document_id: string;
-    uploaded_by: string;
-    uploader_name: string;
-    uploaded_at: number;
-    /** 1 for a document kept as having no thumbnail; one not rendered yet is rendered when asked for. */
-    no_thumbnail: number;
-}
-
-const ASSET_COLUMNS = `assets.id, assets.name, assets.folder_id, assets.format, assets.size,
-    assets.document_id, assets.uploaded_by, users.name AS uploader_name, assets.uploaded_at,
-    thumbnails.document_id IS NOT NULL AND thumbnails.png IS NULL AS no_thumbnail`;
-
-/** The assets, with their uploaders and their thumbnails. */
-const ASSETS = `assets JOIN users ON users.id = assets.uploaded_by
-    LEFT JOIN thumbnails ON thumbnails.document_id = assets.document_id`;
-
 function folderOfRow({ id, name, parent_id: parentId }: FolderRow): Folder {
     return { id, name, parentId };
-}
-
-function assetOfRow(row: AssetRow): Asset {
-    return {
-        id: row.id,
-        name: row.name,
-        folderId: row.folder_id,
-        format: row.format,
-        size: row.size,
-        documentId: row.document_id,
-        thumbnail: row.no_thumbnail ? null : thumbnailPath(row.document_id),
-        uploadedBy: { id: row.uploaded_by, name: row.uploader_name },
-        uploadedAt: row.uploaded_at,
-    };
 }
 
 /** `value`, a name for a folder or a file, trimmed; a `400` for none, or one too long. */
@@ -96,11 +64,10 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
     );
 
     /** The user signed in, who changes the library; a `403` for one who doesn't. */
-    function manager(request: FastifyRequest): User {
-        const user = signedIn(db, request);
-        if (!managesLibrary(user.role)) throw new Refusal(403, "forbidden", "only an admin changes the library");
-        return user;
-    }
+    const manager = (request: FastifyRequest): User => signedInAs(db, request, managesLibrary);
+
+    /** The user signed in, who reads the library; a `403` for one who doesn't. */
+    const reader = (request: FastifyRequest): User => signedInAs(db, request, readsLibrary);
 
     /** Folder `id` of `user`'s tenant; a `404` for none. */
     function folderOf(user: User, id: string): Folder {
@@ -129,21 +96,9 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
         return rows.map(folderOfRow);
     }
 
-    /** Asset `id` of `user`'s tenant; a `404` for none. */
-    function assetOf(user: User, id: string): Asset {
-        const row = db
-            .prepare(
-                `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
-                WHERE assets.id = ? AND assets.tenant_id = ?`,
-            )
-            .get(id, user.tenant.id) as AssetRow | undefined;
-        if (!row) throw new Refusal(404, "notFound", "no such file");
-        return assetOfRow(row);
-    }
-
     /** `FolderListing`: what folder `?folder=` holds, or, with none, the library's top. */
     app.get<{ Querystring: { folder?: string } }>("/api/library", async (request): Promise<FolderListing> => {
-        const user = signedIn(db, request);
+        const user = reader(request);
         const folderId = request.query.folder || null;
         const path = pathTo(user, folderId);
         const folders = db
@@ -163,13 +118,33 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
     /** `{ assets }`: the files uploaded last, in any folder, newest first. */
     app.get("/api/library/recent", async (request): Promise<{ assets: Asset[] }> => {
-        const user = signedIn(db, request);
+        const user = reader(request);
         const assets = db
             .prepare(
                 `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
                 WHERE assets.tenant_id = ? ORDER BY assets.uploaded_at DESC LIMIT ?`,
             )
             .all(user.tenant.id, RECENT_FILES) as unknown as AssetRow[];
+        return { assets: assets.map(assetOfRow) };
+    });
+
+    /**
+     * `{ assets }`: the files waiting on the user. For one who reviews, those
+     * with a version submitted; for one who changes the library, those whose
+     * latest version was returned, or approved and not published yet.
+     */
+    app.get("/api/library/attention", async (request): Promise<{ assets: Asset[] }> => {
+        const user = reader(request);
+        const waiting = reviewsLibrary(user.role)
+            ? "EXISTS (SELECT 1 FROM versions WHERE versions.asset_id = assets.id AND versions.status = 'submitted')"
+            : `latest.status = 'returned'
+                OR (latest.status = 'approved' AND assets.published_version IS NOT latest.number)`;
+        const assets = db
+            .prepare(
+                `SELECT ${ASSET_COLUMNS} FROM ${ASSETS}
+                WHERE assets.tenant_id = ? AND (${waiting}) ORDER BY assets.name COLLATE NOCASE`,
+            )
+            .all(user.tenant.id) as unknown as AssetRow[];
         return { assets: assets.map(assetOfRow) };
     });
 
@@ -242,25 +217,30 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
                 format: document.format,
                 size: bytes.length,
                 documentId: document.id,
-                thumbnail: thumbnailPath(document.id),
+                thumbnail: thumbnailPath(document.id, 1),
                 uploadedBy: { id: user.id, name: user.name },
                 uploadedAt: Date.now(),
+                latestVersion: { number: 1, status: "draft" },
+                publishedVersion: null,
             };
             try {
-                db.prepare(
-                    `INSERT INTO assets (id, tenant_id, folder_id, name, format, size, document_id, uploaded_by,
-                    uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                ).run(
-                    asset.id,
-                    user.tenant.id,
-                    folderId,
-                    name,
-                    asset.format,
-                    asset.size,
-                    asset.documentId,
-                    user.id,
-                    asset.uploadedAt,
-                );
+                inTransaction(db, () => {
+                    db.prepare(
+                        `INSERT INTO assets (id, tenant_id, folder_id, name, format, size, document_id, uploaded_by,
+                        uploaded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    ).run(
+                        asset.id,
+                        user.tenant.id,
+                        folderId,
+                        name,
+                        asset.format,
+                        asset.size,
+                        asset.documentId,
+                        user.id,
+                        asset.uploadedAt,
+                    );
+                    addFirstVersion(db, asset.id, user.id, asset.uploadedAt);
+                });
             } catch (error) {
                 // Its folder deleted meanwhile, say: no asset, so no document.
                 await udoc.deleteDocument(document.id);
@@ -278,15 +258,15 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
 
     /** `{ asset, path }`: a file, and the folders from the top down to the one it's in. */
     app.get<{ Params: { id: string } }>("/api/assets/:id", async (request) => {
-        const user = signedIn(db, request);
-        const asset = assetOf(user, request.params.id);
+        const user = reader(request);
+        const asset = assetOf(db, user, request.params.id);
         return { asset, path: pathTo(user, asset.folderId) };
     });
 
     /** Rename a file, `{ name }`: `{ asset }`. */
     app.patch<{ Params: { id: string }; Body: { name?: unknown } | undefined }>("/api/assets/:id", async (request) => {
         const user = manager(request);
-        const asset = { ...assetOf(user, request.params.id), name: nameOf(request.body?.name) };
+        const asset = { ...assetOf(db, user, request.params.id), name: nameOf(request.body?.name) };
         db.prepare("UPDATE assets SET name = ? WHERE id = ?").run(asset.name, asset.id);
         return { asset };
     });
@@ -294,7 +274,7 @@ export function libraryRoutes(app: FastifyInstance, db: DatabaseSync, udoc: Udoc
     /** Delete a file, and the document udoc-server keeps for it: `204`. */
     app.delete<{ Params: { id: string } }>("/api/assets/:id", async (request, reply) => {
         const user = manager(request);
-        const { id, documentId } = assetOf(user, request.params.id);
+        const { id, documentId } = assetOf(db, user, request.params.id);
         await udoc.deleteDocument(documentId);
         db.prepare("DELETE FROM assets WHERE id = ?").run(id);
         return reply.code(204).send();

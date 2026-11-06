@@ -8,7 +8,8 @@ is where we dogfood them: what their public API lacks goes in
 [`docs/design/examples-shockwave.md`](../../docs/design/examples-shockwave.md).
 So far: signing in, the app's shell, and the library, its folders and files,
 each opened in the viewer from its own bytes before it's uploaded, and from
-udoc-server once it is.
+udoc-server once it is; edited in the editor; and saved as versions, which are
+reviewed, approved and published.
 
 ## Running it
 

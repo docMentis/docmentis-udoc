@@ -2,8 +2,10 @@
 // (docs/design/examples-shockwave.md). Its routes sit under `/udoc` on the
 // backend's own HTTP server. udoc-server has no end-user authentication, and
 // its ids are global, so a request reaches it only past the gate: the
-// backend's own, with this process's token, or a signed-in user's, reading a
-// document their tenant has an asset for.
+// backend's own, with this process's token; a signed-in user's, reading a
+// document their tenant has an asset for, all of it if they read the library
+// and only its published version if not; or one who changes the library,
+// joining the collaboration that edits it.
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
@@ -13,6 +15,7 @@ import type { Duplex } from "node:stream";
 import { UDocNode } from "@docmentis/udoc-node";
 import { DirectoryDocumentStore, createUDocServer } from "@docmentis/udoc-server";
 
+import { managesLibrary, readsLibrary } from "../shared/api.ts";
 import type { Failure } from "../shared/api.ts";
 import { userOf } from "./auth.ts";
 import { config } from "./config.ts";
@@ -25,6 +28,9 @@ const TOKEN_HEADER = "x-shockwave-token";
 
 /** A document's routes: `/udoc/documents/:id`, and those under it. */
 const DOCUMENT_PATH = new RegExp(`^${BASE}/documents/([^/]+)(?:/|$)`);
+
+/** One checkpoint's routes: `/udoc/documents/:id/checkpoints/:version`, and those under it. */
+const CHECKPOINT_PATH = new RegExp(`^${BASE}/documents/[^/]+/checkpoints/(\\d+)(?:/|$)`);
 
 /** udoc-server, refusing what it was asked: its status, and its failure. */
 export class UdocFailure extends Error {
@@ -41,12 +47,14 @@ export class UdocFailure extends Error {
 export interface Udoc {
     /** Answer `request`, past the gate, if it's for udoc-server, and return true; false if it isn't. */
     handleRequest(request: IncomingMessage, response: ServerResponse): boolean;
-    /** Refuse a WebSocket upgrade for udoc-server, and return true; false if it isn't one. */
-    handleUpgrade(request: IncomingMessage, socket: Duplex): boolean;
+    /** Answer a WebSocket upgrade, past the gate, if it's for udoc-server, and return true; false if it isn't. */
+    handleUpgrade(request: IncomingMessage, socket: Duplex, head: Buffer): boolean;
     /** Import `bytes`, an upload: the id udoc-server keeps it as, and the format it was read as. */
     importDocument(bytes: Uint8Array): Promise<{ id: string; format: string }>;
     /** Forget document `id`; one udoc-server doesn't keep is forgotten already. */
     deleteDocument(id: string): Promise<void>;
+    /** Save document `id` as it is now as a new checkpoint: the checkpoint's number. */
+    checkpoint(id: string): Promise<number>;
     /**
      * Document `id`'s first page as a PNG, `scale` pixels to a point; `null`
      * for one udoc-server turns down, as a workbook's, all of its first sheet
@@ -77,21 +85,50 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
         return sent.length === expected.length && timingSafeEqual(sent, expected);
     }
 
+    /** Whether document `id` is one tenant `tenantId` has an asset for. */
+    function keptFor(id: string | undefined, tenantId: string): boolean {
+        if (id === undefined) return false;
+        return (
+            db.prepare("SELECT 1 FROM assets WHERE document_id = ? AND tenant_id = ?").get(id, tenantId) !== undefined
+        );
+    }
+
+    /** Whether checkpoint `checkpoint` of document `id` is its file's published version. */
+    function published(id: string, checkpoint: number): boolean {
+        const row = db
+            .prepare(
+                `SELECT 1 FROM assets JOIN versions ON versions.asset_id = assets.id
+                    AND versions.number = assets.published_version
+                WHERE assets.document_id = ? AND versions.checkpoint = ?`,
+            )
+            .get(id, checkpoint);
+        return row !== undefined;
+    }
+
     /** Why the gate turns `request` away, or `undefined` to let it through. */
     function refusal(request: IncomingMessage): [number, Failure] | undefined {
         if (fromBackend(request)) return undefined;
         const user = userOf(db, request);
         if (!user) return [401, { error: "signedOut", message: "no one is signed in" }];
-        const id = DOCUMENT_PATH.exec(pathOf(request))?.[1];
-        const owned =
-            id !== undefined &&
-            db.prepare("SELECT 1 FROM assets WHERE document_id = ? AND tenant_id = ?").get(id, user.tenant.id);
+        const path = pathOf(request);
+        const id = DOCUMENT_PATH.exec(path)?.[1];
         // Another tenant's document is as unknown as one that isn't kept.
-        if (!owned) return [404, { error: "notFound", message: "no such document" }];
-        // Reading alone: the backend imports and deletes.
+        const unknown: [number, Failure] = [404, { error: "notFound", message: "no such document" }];
+        if (!keptFor(id, user.tenant.id)) return unknown;
+        // Reading alone: the backend imports, checkpoints and deletes.
         if (request.method !== "GET" && request.method !== "HEAD")
             return [403, { error: "forbidden", message: "a document is read here, not changed" }];
-        return undefined;
+        if (readsLibrary(user.role)) return undefined;
+        // Anyone else reads the version published, and nothing of the document around it.
+        const checkpoint = CHECKPOINT_PATH.exec(path)?.[1];
+        return checkpoint !== undefined && published(id!, Number(checkpoint)) ? undefined : unknown;
+    }
+
+    /** Whether `request`, a WebSocket upgrade, joins the collaboration of a document the user changes. */
+    function mayEdit(request: IncomingMessage): boolean {
+        const user = userOf(db, request);
+        if (!user || !managesLibrary(user.role)) return false;
+        return keptFor(DOCUMENT_PATH.exec(pathOf(request))?.[1], user.tenant.id);
     }
 
     /** Ask udoc-server for `path`, as the backend: its answer, or a `UdocFailure`. */
@@ -121,11 +158,13 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
             return true;
         },
 
-        // Collaboration, udoc-server's one upgrade, is for editing, which
-        // comes with the editor; until then the gate lets none through.
-        handleUpgrade(request, socket) {
+        // Collaboration, udoc-server's one upgrade, is how a document is
+        // edited, and only those who change the library edit one.
+        handleUpgrade(request, socket, head) {
             if (!isUdocPath(pathOf(request))) return false;
-            socket.end("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
+            if (!mayEdit(request)) socket.end("HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n");
+            else if (!server.handleUpgrade(request, socket, head))
+                socket.end("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n");
             return true;
         },
 
@@ -143,6 +182,11 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
             } catch (error) {
                 if (!(error instanceof UdocFailure && error.status === 404)) throw error;
             }
+        },
+
+        async checkpoint(id) {
+            const response = await ask("POST", `/documents/${encodeURIComponent(id)}/checkpoints`);
+            return ((await response.json()) as { version: number }).version;
         },
 
         async renderFirstPage(id, scale) {

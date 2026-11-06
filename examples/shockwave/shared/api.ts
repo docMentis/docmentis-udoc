@@ -8,9 +8,23 @@
  */
 export type Role = "admin" | "reviewer" | "member";
 
-/** Whether a user in `role` changes the library: makes its folders, uploads its files, renames and deletes them. */
+/**
+ * Whether a user in `role` changes the library: makes its folders, uploads its
+ * files, edits, renames and deletes them, saves their versions, submits them
+ * for review and publishes those approved.
+ */
 export function managesLibrary(role: Role): boolean {
     return role === "admin";
+}
+
+/** Whether a user in `role` approves or returns a version submitted for review. */
+export function reviewsLibrary(role: Role): boolean {
+    return role === "reviewer";
+}
+
+/** Whether a user in `role` reads the library: drafts and all. Anyone else reads only a file's published version. */
+export function readsLibrary(role: Role): boolean {
+    return managesLibrary(role) || reviewsLibrary(role);
 }
 
 /** Whether a user in `role` keeps the workspace's settings: its brand, and who's in it. */
@@ -121,6 +135,49 @@ export interface Asset {
     uploadedBy: { id: string; name: string };
     /** When it was uploaded, in milliseconds since the epoch. */
     uploadedAt: number;
+    /** The version saved last. */
+    latestVersion: { number: number; status: VersionStatus };
+    /** The number of the version published; `null` when none is. */
+    publishedVersion: number | null;
+}
+
+/**
+ * Where a version stands in review: saved, submitted, then approved or
+ * returned. Publishing is apart from it: an approved version stays approved
+ * whether or not it's the one its file publishes.
+ */
+export type VersionStatus = "draft" | "submitted" | "approved" | "returned";
+
+/** What's done to a version: `POST /api/assets/:id/versions/:number/:step`. */
+export type VersionStep = "submit" | "approve" | "return" | "publish";
+
+/** Something that happened to a version. */
+export interface VersionEvent {
+    kind: "saved" | "submitted" | "approved" | "returned" | "published";
+    by: { id: string; name: string };
+    /** When, in milliseconds since the epoch. */
+    at: number;
+    note: string | null;
+}
+
+/**
+ * A version of a file: a checkpoint of its document, which never changes,
+ * whatever happens to the document after it.
+ */
+export interface Version {
+    /** 1, 2, 3 for its file, in the order they were saved. */
+    number: number;
+    /** The checkpoint it is, opened from `/udoc/documents/:documentId/checkpoints/:checkpoint/package`. */
+    checkpoint: number;
+    status: VersionStatus;
+    /** What happened to it, oldest first; the first, its being saved. */
+    events: VersionEvent[];
+}
+
+/** What a change to a file's versions answers: the file as it now is, and its versions, newest first. */
+export interface VersionedAsset {
+    asset: Asset;
+    versions: Version[];
 }
 
 /** What a folder holds, or the library's top. */

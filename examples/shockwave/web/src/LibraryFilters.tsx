@@ -1,5 +1,5 @@
 // The library's filters: what a folder's list is narrowed to, by what's
-// typed of a name, and by its files' type, who uploaded them and when, kept
+// typed of a name, and by its files' status, type, who uploaded them and when, kept
 // in the page's address so that a link or Back keeps them. The name is typed
 // in a box; each of the others is a chip, naming the filter and what it's set
 // to, with a menu of what it may be set to: the types and the people in the
@@ -10,11 +10,15 @@ import type { Asset, Folder } from "../../shared/api.ts";
 import { typeLabel } from "./files";
 import { CheckIcon, ChevronDownIcon, SearchIcon } from "./icons";
 import { useDismiss } from "./ui";
+import { STATUS_LABELS, fileStatuses } from "./Versions";
+import type { FileStatusName } from "./Versions";
 
 /** What a folder's list is narrowed to; `null`, not at all by that. */
 export interface Filters {
     /** What's typed of a name, found anywhere in it, whatever its case. */
     name: string | null;
+    /** Where a file's versions stand, as `fileStatuses` says. */
+    status: string | null;
     /** A type, as people name it ("PowerPoint"), or "Folder". */
     type: string | null;
     /** Who uploaded a file: their id. */
@@ -36,6 +40,7 @@ const DAY = 24 * 60 * 60 * 1000;
 export function filtersOf(params: URLSearchParams): Filters {
     return {
         name: params.get("name"),
+        status: params.get("status"),
         type: params.get("type"),
         uploader: params.get("uploader"),
         uploaded: params.get("uploaded"),
@@ -68,12 +73,12 @@ function since(uploaded: string, now: Date): number {
 }
 
 /** No filter set. */
-export const NO_FILTERS: Filters = { name: null, type: null, uploader: null, uploaded: null };
+export const NO_FILTERS: Filters = { name: null, status: null, type: null, uploader: null, uploaded: null };
 
 /**
  * What of a folder's `folders` and `assets` `filters` keeps. A folder has no
- * uploader and no upload, so it's kept only with neither filter set, and with
- * the type, only with Folder.
+ * status, no uploader and no upload, so it's kept only with none of those
+ * filters set, and with the type, only with Folder.
  */
 export function applyFilters(
     folders: Folder[],
@@ -81,7 +86,10 @@ export function applyFilters(
     filters: Filters,
 ): { folders: Folder[]; assets: Asset[] } {
     const keepsFolders =
-        (filters.type === null || filters.type === "Folder") && filters.uploader === null && filters.uploaded === null;
+        (filters.type === null || filters.type === "Folder") &&
+        filters.status === null &&
+        filters.uploader === null &&
+        filters.uploaded === null;
     const from = filters.uploaded === null ? -Infinity : since(filters.uploaded, new Date());
     const typed = filters.name?.trim().toLocaleLowerCase() ?? "";
     const named = (name: string) => name.toLocaleLowerCase().includes(typed);
@@ -90,6 +98,7 @@ export function applyFilters(
         assets: assets.filter(
             (asset) =>
                 named(asset.name) &&
+                (filters.status === null || fileStatuses(asset).some(({ status }) => status === filters.status)) &&
                 (filters.type === null || typeLabel(asset.format) === filters.type) &&
                 (filters.uploader === null || asset.uploadedBy.id === filters.uploader) &&
                 asset.uploadedAt >= from,
@@ -112,6 +121,9 @@ export function FilterBar({
     filters: Filters;
     onChange: (filters: Filters) => void;
 }) {
+    const statuses = new Set<FileStatusName>(
+        assets.flatMap((asset) => fileStatuses(asset).map(({ status }) => status)),
+    );
     const types = [...new Set(assets.map((asset) => typeLabel(asset.format)))].sort();
     const uploaders = [...new Map(assets.map(({ uploadedBy }) => [uploadedBy.id, uploadedBy.name]))].sort(
         ([, a], [, b]) => a.localeCompare(b),
@@ -128,6 +140,15 @@ export function FilterBar({
                     onChange={(event) => onChange({ ...filters, name: event.target.value || null })}
                 />
             </label>
+            <FilterChip
+                name="Status"
+                any="Any status"
+                value={filters.status}
+                options={(Object.keys(STATUS_LABELS) as FileStatusName[])
+                    .filter((status) => statuses.has(status))
+                    .map((status) => ({ value: status, label: STATUS_LABELS[status] }))}
+                onPick={(status) => onChange({ ...filters, status })}
+            />
             <FilterChip
                 name="Type"
                 any="Any type"

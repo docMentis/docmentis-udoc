@@ -1,5 +1,17 @@
 // The backend's API, as the pages call it.
-import type { Asset, Failure, Folder, FolderListing, Person, Tenant, User, ViewerColors } from "../../shared/api.ts";
+import type {
+    Asset,
+    Failure,
+    Folder,
+    FolderListing,
+    Person,
+    Tenant,
+    User,
+    Version,
+    VersionStep,
+    VersionedAsset,
+    ViewerColors,
+} from "../../shared/api.ts";
 
 /** A request the backend refused: its status, and its failure. */
 export class ApiError extends Error {
@@ -49,6 +61,10 @@ export const api = {
     async recentAssets(): Promise<Asset[]> {
         return (await request<{ assets: Asset[] }>("/api/library/recent")).assets;
     },
+    /** The files waiting on the user: to review, or returned or approved, to act on. */
+    async attentionAssets(): Promise<Asset[]> {
+        return (await request<{ assets: Asset[] }>("/api/library/attention")).assets;
+    },
     /** Make folder `name` in `parentId`, or at the top for `null`; an `ApiError` `409` when the name's taken there. */
     async createFolder(name: string, parentId: string | null): Promise<Folder> {
         return (await request<{ folder: Folder }>("/api/folders", withJson("POST", { name, parentId }))).folder;
@@ -71,6 +87,16 @@ export const api = {
         return (await request<{ asset: Asset }>(`/api/assets/${id}`, withJson("PATCH", { name }))).asset;
     },
     deleteAsset: (id: string) => request<void>(`/api/assets/${id}`, { method: "DELETE" }),
+    /** A file's versions, newest first. */
+    async versions(assetId: string): Promise<Version[]> {
+        return (await request<{ versions: Version[] }>(`/api/assets/${assetId}/versions`)).versions;
+    },
+    /** Save a file's document as it is now as a new version, with `note`. */
+    saveVersion: (assetId: string, note: string) =>
+        request<VersionedAsset>(`/api/assets/${assetId}/versions`, withJson("POST", { note })),
+    /** Take `step` with version `number` of a file, with `note`; an `ApiError` `409` for a version not ready for it. */
+    takeVersionStep: (assetId: string, number: number, step: VersionStep, note: string) =>
+        request<VersionedAsset>(`/api/assets/${assetId}/versions/${number}/${step}`, withJson("POST", { note })),
 
     /** Replace tenant `id`'s logo with `image`: a PNG, JPEG, WebP or SVG; an `ApiError` `415` for another. */
     async uploadLogo(id: string, image: Blob): Promise<Tenant> {

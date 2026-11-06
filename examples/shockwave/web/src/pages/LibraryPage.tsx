@@ -1,12 +1,13 @@
 // The library: a folder's folders and files, or the top's, under the path to
 // it, in a table or a grid, which this browser remembers, narrowed by the
-// filters over it. Everyone reads it; an admin makes folders, uploads files,
-// picking one or dropping it on the list, and renames and deletes them.
+// filters over it. Those who keep or review it read it; an admin makes folders,
+// uploads files, picking one or dropping it on the list, and renames and deletes
+// them. To anyone else, it isn't there.
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 
-import { managesLibrary } from "../../../shared/api.ts";
+import { managesLibrary, readsLibrary } from "../../../shared/api.ts";
 import type { FolderListing } from "../../../shared/api.ts";
 import { ApiError, api } from "../api";
 import { ChevronRightIcon, FolderPlusIcon, GridIcon, ListIcon, UploadIcon } from "../icons";
@@ -43,6 +44,7 @@ export function LibraryPage() {
     const { folderId } = useParams();
     const user = useUser();
     const manages = managesLibrary(user.role);
+    const reads = readsLibrary(user.role);
     const [params, setParams] = useSearchParams();
     // The name typed is the page's own, which each key sets at once, and the
     // address catches up with it, in a transition: a name read from the
@@ -64,6 +66,7 @@ export function LibraryPage() {
     const picker = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
+        if (!reads) return;
         let gone = false;
         api.library(folderId).then(
             (found) => {
@@ -79,11 +82,11 @@ export function LibraryPage() {
         return () => {
             gone = true;
         };
-    }, [folderId, loads]);
+    }, [folderId, loads, reads]);
 
     const current = listing?.path.at(-1);
     useDocumentTitle(current?.name ?? "Library");
-    if (failure === "notFound") return <NotFoundPage />;
+    if (failure === "notFound" || !reads) return <NotFoundPage />;
 
     /** Done with a dialog: closed, and the list loaded again. */
     function done() {

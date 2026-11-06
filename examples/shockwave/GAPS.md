@@ -94,6 +94,55 @@ viewer's theme to one that looks the same, the system's or the one the
 system shows, and its own again, a microtask apart, so that it hands the
 engine the background again.
 
+## Nothing says a client's edits have reached the server
+
+**Needed.** A version that holds every edit made before it was saved.
+
+**Offered.** The editor sends an edit as it's made, over its collaboration
+socket, with nothing to wait on: no call or event says the server has merged
+it, and `requestRemoteCheckpoint` doesn't wait for it either. A checkpoint taken
+just after an edit may be taken before that edit lands.
+
+**Workaround.** Saving a version goes through a dialog, which takes longer than
+an edit takes to arrive, and is refused while the editor isn't joined. On a slow
+enough connection, an edit made just before saving could still land in the next
+version.
+
+## Comments and annotations are a PDF's alone
+
+**Needed.** A reviewer marking up what they're reviewing, whatever its format:
+most of what's reviewed here is decks and word documents.
+
+**Offered.** The Annotate tab, the comments panel and `addPageAnnotation` work
+on a PDF. A deck or a word document has none of them.
+
+**Workaround.** A reviewer returns a version with a written note, for every
+format. Marking one up waits on this.
+
+## A new upload can't become a version of a document
+
+**Needed.** A revised file, edited in PowerPoint on someone's own computer,
+uploaded as the next version of the file it revises.
+
+**Offered.** `POST /documents` always keeps an upload as a new document, with a
+new id. A checkpoint is only ever of the session's own edits, so no route adds
+an upload to a document's line of checkpoints.
+
+**Workaround.** None yet: a file is revised in the editor.
+
+## A checkpoint's pages have no images
+
+**Needed.** A thumbnail of each version, and a card that flips through the pages
+of the version published.
+
+**Offered.** `layout/pages/:index` renders the document as it is now, and has no
+form for a checkpoint. A checkpoint opens in the viewer, and copies through
+`file.:format`, but its pages can't be asked for as images.
+
+**Workaround.** Saving a version renders the first page as it is then, kept as
+the file's thumbnail; a card's other pages show the working copy, which only
+those who read the library see. Those who don't get no card yet.
+
 ## A viewer in a form submits it
 
 **Needed.** The upload dialog's preview, a viewer on the file, beside the

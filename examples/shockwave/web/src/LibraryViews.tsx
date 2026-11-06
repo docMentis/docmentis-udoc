@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router";
 import type { Asset, Folder } from "../../shared/api.ts";
 import { FileBadge, Thumbnail, formatDate, formatSize, typeLabel } from "./files";
 import { FolderIcon } from "./icons";
+import { FileStatus } from "./Versions";
 
 /** A folder or a file, as its menu acts on it. */
 export interface Item {
@@ -36,6 +37,7 @@ export function FileTable({ folders, assets, menu }: ViewProps) {
             <thead>
                 <tr>
                     <th>Name</th>
+                    <th>Status</th>
                     <th>Type</th>
                     <th>Uploaded by</th>
                     <th>Uploaded</th>
@@ -56,6 +58,7 @@ export function FileTable({ folders, assets, menu }: ViewProps) {
                                 <span>{folder.name}</span>
                             </Link>
                         </td>
+                        <td />
                         <td>Folder</td>
                         <td />
                         <td />
@@ -74,6 +77,9 @@ export function FileTable({ folders, assets, menu }: ViewProps) {
                                 <FileBadge format={asset.format} />
                                 <span>{asset.name}</span>
                             </Link>
+                        </td>
+                        <td>
+                            <FileStatus asset={asset} />
                         </td>
                         <td>{typeLabel(asset.format)}</td>
                         <td>{asset.uploadedBy.name}</td>
@@ -129,7 +135,7 @@ export function FileGrid({ folders, assets, menu }: ViewProps) {
     );
 }
 
-/** A file as a card: its pages, its name, who uploaded it and when. */
+/** A file as a card: its pages, its name, who uploaded it and when, and where its versions stand. */
 export function FileCard({ asset, menu }: { asset: Asset; menu?: ViewProps["menu"] }) {
     const navigate = useNavigate();
     return (
@@ -146,6 +152,7 @@ export function FileCard({ asset, menu }: { asset: Asset; menu?: ViewProps["menu
                 <p className="file-card-meta">
                     {asset.uploadedBy.name} · {formatDate(asset.uploadedAt)}
                 </p>
+                <FileStatus asset={asset} />
             </div>
         </div>
     );

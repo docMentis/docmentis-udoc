@@ -142,9 +142,9 @@ compliance approves   sales find                     and personalized      what 
   and their collections. A section whose feature isn't built yet says what it
   will hold.
 - **Library**: content before it's sold with. Marketing creates and prepares
-  it, and compliance reviews it, through a workflow in which only approved
-  content is published. Sales never see it. Outside vendors and partners who
-  work on its content come later.
+  it, and compliance reviews it, through [versions](#versions) of which only
+  approved ones are published. Sales never see it. Outside vendors and partners
+  who work on its content come later.
 - **Collections**: how sales get content. A sales manager arranges published
   content into collections, picking it from what's published, and gives each
   collection a description and instructions, and each document in it its own.
@@ -170,7 +170,7 @@ profile, as Seismic and Highspot keep the two apart:
 | Role     | May                                                                                                     |
 | -------- | ------------------------------------------------------------------------------------------------------- |
 | admin    | keep the Library (create, prepare, submit, publish what's approved, retire), see Insights, and Settings |
-| reviewer | review what's submitted to the Library: approve it, or mark it up and return it                         |
+| reviewer | review what's submitted to the Library: approve it, or return it with a note                            |
 | manager  | arrange Collections, teach in Learning, see the team's deal rooms and Insights, and all a member may    |
 | member   | find content in Collections, prepare it and share it in Deal Rooms, and learn in Learning               |
 
@@ -186,7 +186,7 @@ show:
 | Persona      | Title                         | Role     | Shows                                                                            |
 | ------------ | ----------------------------- | -------- | -------------------------------------------------------------------------------- |
 | Maya Patel   | Product Marketing Manager     | admin    | a file viewed before it's uploaded; importing; thumbnails                        |
-| Colin Okafor | Compliance Officer            | reviewer | a submission marked up in the editor, approved or returned                       |
+| Colin Okafor | Compliance Officer            | reviewer | a version read as it was submitted, approved or returned                         |
 | Sam Hughes   | Head of Institutional Sales   | manager  | published content arranged in collections; a lesson's deck and video             |
 | Ryan Brooks  | Director, Institutional Sales | member   | a collection's deck personalized in a deal room's backstage, shared, presented   |
 | Paula Ortiz  | Client Portfolio Manager      | member   | an RFP response co-edited with Ryan in a deal room; the presenter view at finals |
@@ -237,10 +237,12 @@ and none is kept. No document is kept twice.
 **The gate.** udoc-server has no end-user authentication, and its ids are
 global. So every `/udoc/*` request and WebSocket upgrade passes the gate first,
 which wants a signed-in session and a document id the user's tenant has an
-asset for, and lets a user only read it; later, a deal room's link admits a
-buyer to the read routes of what its frontstage shares. The browser never imports or deletes a
-document in udoc-server: the backend does. Until the editor, no upgrade
-passes.
+asset for, and lets a user only read it. Those who read the Library read all of
+it; anyone else reads only the checkpoint its file publishes, and nothing of the
+document around it. An upgrade, which joins the collaboration that edits a
+document, passes only for those who change the Library. Later, a deal room's link
+admits a buyer to the read routes of what its frontstage shares. The browser
+never imports, checkpoints or deletes a document in udoc-server: the backend does.
 
 **Importing.** An upload goes to `POST /api/assets`, and the backend imports it
 and records the asset under the id udoc-server answers. udoc-server is driven
@@ -254,10 +256,56 @@ document with `openRemote`, its URL `/udoc/documents/:id/package`, fetching its
 parts through the gate with the session's cookie. The React components wrapping
 them follow the `react-vite` example, StrictMode's second effect run included.
 
+**Editing.** An admin edits a file's working copy, the document as it is now, in
+the editor, joined to udoc-server's collaboration through the gate, on the same
+page and in the same card the viewer fills.
+
 **Licensing.** The browser packages and `UDocNode` each take a permit for each
 session. The backend builds its `UDocNode` with `UDOC_LICENSE` and
 `UDOC_DOMAIN` from the environment when they're set, as udoc-server's own
 command does.
+
+## Versions
+
+A version is a checkpoint of the file's document, which udoc-server keeps as it
+was, whatever happens to the document after. udoc has no second idea of a version:
+the app's `versions` table names the checkpoints that matter, and numbers them 1,
+2, 3 for people, since udoc-server's own numbers have gaps. An upload is version 1,
+the checkpoint importing it made. `Save version` asks udoc-server for another.
+
+Because a version never moves, nothing is locked. The working copy goes on being
+edited while a version is reviewed, and what's approved and published is exactly
+what was read.
+
+```
+save ──▶ draft ──submit──▶ submitted ──approve──▶ approved ──publish──▶ the file's published version
+                               └──────return──▶ returned
+```
+
+| Step    | Who      | What it does                                                                                                          |
+| ------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| save    | admin    | a new checkpoint, a draft version, with a note on what changed                                                        |
+| submit  | admin    | sends a draft for review                                                                                              |
+| approve | reviewer | approves what was submitted, as it stands                                                                             |
+| return  | reviewer | sends it back with a note. It stays returned: what changes goes in a new version                                      |
+| publish | admin    | makes an approved version the file's published one, in place of any before, so an older one takes the file back to it |
+
+Publishing is apart from a version's status, a pointer on the file
+(`assets.published_version`): an approved version stays approved once another
+replaces it, and can be published again. Who did what, when and with what note is
+kept as it happened (`version_events`), each version's history.
+
+A file's page opens the working copy for those who edit it, and for a reviewer, the
+version waiting on them, or else the latest; its Versions tab opens any other,
+read-only, as a checkpoint is. The Library shows where each file's versions stand,
+its latest and any other that's published, and filters by it. Home's "Needs your
+attention" lists what's waiting on the user: what's submitted, for a reviewer; what's
+returned or approved and not published yet, for an admin. Sales read a published
+version when Collections comes; the gate already lets them read that and no more.
+
+What this can't do yet is in `GAPS.md`: marking up anything but a PDF, taking a new
+upload as a version, and rendering a checkpoint's pages as images. Retiring a file,
+and a version's expiry, are still to come.
 
 ## The narrator
 

@@ -15,6 +15,7 @@ import { libraryRoutes } from "./routes/library.ts";
 import { sessionRoutes } from "./routes/session.ts";
 import { tenantRoutes } from "./routes/tenants.ts";
 import { thumbnailRoutes } from "./routes/thumbnails.ts";
+import { versionRoutes } from "./routes/versions.ts";
 import { seed } from "./seed.ts";
 import { createUdoc } from "./udoc.ts";
 
@@ -35,7 +36,7 @@ const app = Fastify({
         const server = createServer((request, response) => {
             if (!udoc.handleRequest(request, response)) handler(request, response);
         });
-        server.on("upgrade", (request, socket) => udoc.handleUpgrade(request, socket) || socket.destroy());
+        server.on("upgrade", (request, socket, head) => udoc.handleUpgrade(request, socket, head) || socket.destroy());
         return server;
     },
 });
@@ -43,6 +44,7 @@ app.setErrorHandler(answerFailure);
 sessionRoutes(app, db);
 tenantRoutes(app, db);
 libraryRoutes(app, db, udoc);
+versionRoutes(app, db, udoc);
 thumbnailRoutes(app, db, udoc);
 if (config.webDir) {
     await app.register(fastifyStatic, { root: config.webDir });

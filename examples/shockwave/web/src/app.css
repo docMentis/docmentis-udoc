@@ -33,6 +33,8 @@
     --md-sys-color-secondary: light-dark(#77574c, #e7beb1);
     --md-sys-color-secondary-container: light-dark(#ffdbcf, #5d4036);
     --md-sys-color-on-secondary-container: light-dark(#2c150e, #ffdbcf);
+    --md-sys-color-tertiary-container: light-dark(#f4e2a7, #51461a);
+    --md-sys-color-on-tertiary-container: light-dark(#231b00, #f4e2a7);
     --md-sys-color-error: light-dark(#ba1a1a, #ffb4a9);
     --md-sys-color-on-error: light-dark(#ffffff, #680003);
     --md-sys-color-error-container: light-dark(#ffdad4, #930006);
@@ -852,7 +854,8 @@ input {
     display: block;
 }
 
-.field input {
+.field input,
+.field textarea {
     width: 100%;
     height: 32px;
     padding: 4px 16px;
@@ -866,11 +869,19 @@ input {
     letter-spacing: var(--md-sys-typescale-body-large-tracking);
 }
 
-.field input::placeholder {
+.field textarea {
+    display: block;
+    height: auto;
+    resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
     color: var(--md-sys-color-on-surface-variant);
 }
 
-.field input:hover {
+.field input:hover,
+.field textarea:hover {
     background: color-mix(
         in srgb,
         var(--md-sys-color-on-surface) var(--md-sys-state-hover),
@@ -879,7 +890,8 @@ input {
     box-shadow: inset 0 -1px 0 var(--md-sys-color-on-surface);
 }
 
-.field input:focus {
+.field input:focus,
+.field textarea:focus {
     outline: none;
     box-shadow: inset 0 -2px 0 var(--md-sys-color-primary);
 }
@@ -1606,6 +1618,145 @@ input {
     min-height: 0;
     overflow: hidden;
     border-radius: 0 0 var(--md-sys-shape-corner-medium) var(--md-sys-shape-corner-medium);
+}
+
+/* What the title bar offers for what's shown: Material's buttons, side by side. */
+.document-actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 8px;
+}
+
+/* A status: where a version stands, or a file's versions. Material has no
+   component for it: this is label-small on a container role, each status its
+   own, 20 high, with the small shape. */
+.status-labels {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.status-label {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: var(--md-sys-shape-corner-small);
+    font: var(--md-sys-typescale-label-small);
+    letter-spacing: var(--md-sys-typescale-label-small-tracking);
+    white-space: nowrap;
+}
+
+.status-draft {
+    background: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.status-submitted {
+    background: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+}
+
+.status-approved {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+.status-returned {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+}
+
+.status-published {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+}
+
+.file-table .status-labels {
+    flex-wrap: nowrap;
+}
+
+/* A file's versions: Material's list, its items as tall as what they say, the
+   one shown on the secondary container, each with its state layers. Under the
+   one shown, what happened to it, oldest first. */
+.version-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: -8px;
+    padding: 0;
+    list-style: none;
+}
+
+.version-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    padding: 8px;
+    border: 0;
+    border-radius: var(--md-sys-shape-corner-medium);
+    background: none;
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-body-medium);
+    letter-spacing: var(--md-sys-typescale-body-medium-tracking);
+    text-align: left;
+    cursor: pointer;
+}
+
+.version-row:hover {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-hover), transparent);
+}
+
+.version-row:active {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) var(--md-sys-state-pressed), transparent);
+}
+
+.version-row[aria-current="true"] {
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-on-secondary-container);
+}
+
+/* The one shown is on the secondary container, Approved's own. */
+.version-row[aria-current="true"] .status-approved {
+    background: var(--md-sys-color-surface);
+}
+
+.version-row-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    font: var(--md-sys-typescale-title-small);
+    letter-spacing: var(--md-sys-typescale-title-small-tracking);
+}
+
+.version-row-meta {
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+}
+
+.version-row-note,
+.version-history p {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.version-history {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 8px;
+    list-style: none;
+}
+
+.version-history span {
+    display: block;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
 }
 
 /* The side card's header: its primary tabs over their divider, and the

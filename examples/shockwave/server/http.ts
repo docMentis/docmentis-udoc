@@ -5,7 +5,7 @@ import type { DatabaseSync } from "node:sqlite";
 
 import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 
-import type { User } from "../shared/api.ts";
+import type { Role, User } from "../shared/api.ts";
 import { userOf } from "./auth.ts";
 import { UdocFailure } from "./udoc.ts";
 
@@ -25,6 +25,13 @@ export class Refusal extends Error {
 export function signedIn(db: DatabaseSync, request: FastifyRequest): User {
     const user = userOf(db, request.raw);
     if (!user) throw new Refusal(401, "signedOut", "no one is signed in");
+    return user;
+}
+
+/** The user `request` is signed in as, whose role `may` do this; a `401` for no one, and a `403` for one who may not. */
+export function signedInAs(db: DatabaseSync, request: FastifyRequest, may: (role: Role) => boolean): User {
+    const user = signedIn(db, request);
+    if (!may(user.role)) throw new Refusal(403, "forbidden", "your role doesn't let you do this");
     return user;
 }
 

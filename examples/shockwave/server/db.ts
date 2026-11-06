@@ -1,5 +1,6 @@
 // The app's data, in SQLite: tenants and their brands, their users, the users'
-// sessions, and the library: its folders, its files and their thumbnails.
+// sessions, and the library: its folders, its files, their versions and their
+// thumbnails.
 import { DatabaseSync } from "node:sqlite";
 
 /**
@@ -99,7 +100,48 @@ const MIGRATIONS = [
     `
     ALTER TABLE tenants ADD COLUMN viewer_colors TEXT;
     `,
+    // A file's versions, each a checkpoint of its document, numbered 1, 2, 3
+    // for people: udoc-server's own numbers have gaps. What happened to each
+    // is kept as it happened, and which one is published on the file. No file
+    // has been edited so far, so each is one version, its upload, checkpoint 0.
+    `
+    CREATE TABLE versions (
+        asset_id TEXT NOT NULL REFERENCES assets (id) ON DELETE CASCADE,
+        number INTEGER NOT NULL,
+        checkpoint INTEGER NOT NULL,
+        status TEXT NOT NULL CHECK (status IN ('draft', 'submitted', 'approved', 'returned')),
+        PRIMARY KEY (asset_id, number)
+    );
+    CREATE TABLE version_events (
+        id INTEGER PRIMARY KEY,
+        asset_id TEXT NOT NULL,
+        number INTEGER NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('saved', 'submitted', 'approved', 'returned', 'published')),
+        user_id TEXT NOT NULL REFERENCES users (id),
+        at INTEGER NOT NULL,
+        note TEXT,
+        FOREIGN KEY (asset_id, number) REFERENCES versions (asset_id, number) ON DELETE CASCADE
+    );
+    CREATE INDEX version_events_by_version ON version_events (asset_id, number);
+    ALTER TABLE assets ADD COLUMN published_version INTEGER;
+    INSERT INTO versions (asset_id, number, checkpoint, status) SELECT id, 1, 0, 'draft' FROM assets;
+    INSERT INTO version_events (asset_id, number, kind, user_id, at)
+        SELECT id, 1, 'saved', uploaded_by, uploaded_at FROM assets;
+    `,
 ];
+
+/** Run `change`: all of it, or, when it throws, none. */
+export function inTransaction<T>(db: DatabaseSync, change: () => T): T {
+    db.exec("BEGIN");
+    try {
+        const result = change();
+        db.exec("COMMIT");
+        return result;
+    } catch (error) {
+        db.exec("ROLLBACK");
+        throw error;
+    }
+}
 
 /** Open the database in `file`, migrated to the latest schema. */
 export function openDatabase(file: string): DatabaseSync {
