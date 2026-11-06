@@ -1,13 +1,17 @@
 // What a drop on the ruler means to the open document — the selection edit it
 // sends. The engine projects the ruler and takes the edit; what a ruler control
 // is, and what moving one means, is the editor's, read off the guide that
-// placed the control and the selection's properties: the indents, the tab
-// stops and the text insets the drop moves from. A ruler point is taken for a
-// model point, which holds everywhere but for text in a scaled group.
+// placed the control and the selection's properties. An indent marker's drop
+// sets where it lands, on a ruler whose zero is the start of the column the
+// markers stand in, the same on every paragraph selected, whatever they held; a
+// tab stop's and a margin's move from the selection's tab stops and text insets.
+// A ruler point is taken for a model point, which holds everywhere but for text
+// in a scaled group.
 import type {
     Consensus,
     Guide,
     Rect,
+    RulerText,
     TextBodyProperties,
     TextParagraphProperty,
     TextTabStop,
@@ -20,13 +24,10 @@ import type { RulerControl, RulerDrop, RulerEdge, RulerIndent } from "./ruler-co
 /** The ruler arm of the engine's guide projection. */
 type RulerGuide = Extract<Guide, { type: "ruler" }>;
 
-/** What a ruler drop moves from: the selection's resolved indents and tab
- *  stops, and the text insets of the shape it is in, each `null` where the
+/** What a tab stop's or a margin's drop moves from: the selection's resolved
+ *  tab stops, and the text insets of the shape it is in, each `null` where the
  *  selection holds none or its paragraphs or shapes disagree. */
 export interface SelectionRuler {
-    readonly indentLeft: number | null;
-    readonly indentRight: number | null;
-    readonly indentFirstLine: number | null;
     readonly tabStops: readonly TextTabStop[] | null;
     readonly insetLeft: number | null;
     readonly insetTop: number | null;
@@ -36,9 +37,6 @@ export interface SelectionRuler {
 
 /** A selection a ruler drop moves nothing from. */
 export const EMPTY_SELECTION_RULER: SelectionRuler = {
-    indentLeft: null,
-    indentRight: null,
-    indentFirstLine: null,
     tabStops: null,
     insetLeft: null,
     insetTop: null,
@@ -64,9 +62,6 @@ export function selectionRuler(properties: UDocSelectionProperties | null): Sele
     if (!common) return EMPTY_SELECTION_RULER;
     const { text, shape } = common;
     return {
-        indentLeft: agreed(text.indentLeft),
-        indentRight: agreed(text.indentRight),
-        indentFirstLine: agreed(text.indentFirstLine),
         tabStops: agreed(text.tabStops),
         insetLeft: agreed(shape.insetLeft),
         insetTop: agreed(shape.insetTop),
@@ -114,7 +109,7 @@ export function rulerEdit(
     const { control, by } = drop;
     switch (control.kind) {
         case "indent": {
-            const properties = indentProperties(control.indent, by, ruler);
+            const properties = guide.text && indentProperties(control.indent, by, guide.text);
             return properties && { kind: "setParagraphProperties", properties: { props: properties } };
         }
         case "tab": {
@@ -126,22 +121,21 @@ export function rulerEdit(
     }
 }
 
-/** The indents a drag of `indent` by `by` sets, as Word's ruler moves them:
- *  the first line alone; the hanging indent's lines with the first line
- *  staying put; the left indent's box both; the right indent from the right. */
-function indentProperties(indent: RulerIndent, by: number, ruler: SelectionRuler): TextParagraphProperty[] | null {
-    const { indentLeft, indentRight, indentFirstLine } = ruler;
+/** The indents a drag of `indent` by `by` sets, read off where `text` stands
+ *  its markers, as Word's ruler moves them: the first line alone; the hanging
+ *  indent's lines with the first line staying put; the left indent's box both;
+ *  the right indent from the right. */
+function indentProperties(indent: RulerIndent, by: number, text: RulerText): TextParagraphProperty[] {
+    const { firstLine, left, right, column } = text;
     switch (indent) {
         case "firstLine":
-            return indentFirstLine === null ? null : [{ indentFirstLine: indentFirstLine + by }];
+            return [{ indentFirstLine: firstLine - left + by }];
         case "hanging":
-            return indentLeft === null || indentFirstLine === null
-                ? null
-                : [{ indentLeft: indentLeft + by }, { indentFirstLine: indentFirstLine - by }];
+            return [{ indentLeft: left + by }, { indentFirstLine: firstLine - left - by }];
         case "left":
-            return indentLeft === null ? null : [{ indentLeft: indentLeft + by }];
+            return [{ indentLeft: left + by }];
         case "right":
-            return indentRight === null ? null : [{ indentRight: indentRight - by }];
+            return [{ indentRight: column.end - right - by }];
     }
 }
 

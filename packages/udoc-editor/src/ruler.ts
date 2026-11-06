@@ -3,12 +3,12 @@
 // reading pose, which needs no measurement chrome. The engine projects, each
 // painted frame, where each ruler's origin falls and what it measures from it
 // in points: the page, and while a caret edits text, that text's margins and
-// its indents and tab stops. This graduates the rulers at the frame's zoom and
-// draws them into the bands udoc-ui reserves, over the span the selection
+// columns and its indents and tab stops. This graduates the rulers at the
+// frame's zoom and draws them into the bands udoc-ui reserves, over the span the selection
 // covers on each axis, and stands the controls a drag takes — the margins'
 // edges, the indent markers and the tab stops — over them (ruler-controls.ts),
 // sending the edit a drop on one means (ruler-edits.ts).
-import type { Guide, RulerAxis, UDocType } from "@docmentis/udoc-wasm";
+import type { Guide, RulerAxis, RulerText, UDocType } from "@docmentis/udoc-wasm";
 import { subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { Action, BandCanvas, BandStrip, CommandDef, GuideBand, Store, UIState } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
@@ -97,13 +97,14 @@ function tick(
 
 /**
  * Draw one ruler into its strip, `length` CSS px long and `thickness` deep: the
- * selection's span and the margins of the text a caret edits behind it, then
- * its graduation over the page.
+ * selection's span and the margins and `columns` of the text a caret edits
+ * behind it, then its graduation over the page.
  */
 function drawAxis(
     canvas: BandCanvas,
     ctx: CanvasRenderingContext2D,
     axis: RulerAxis,
+    columns: readonly RulerText["column"][],
     length: number,
     thickness: number,
     orient: "h" | "v",
@@ -145,6 +146,15 @@ function drawAxis(
         // it bounds, the strip a drag takes it by over it (ruler-controls.ts).
         tick(ctx, colors.grid, at(margins.start), thickness, thickness, orient);
         tick(ctx, colors.grid, at(margins.end), thickness, thickness, orient);
+        // A gutter reads as margin between the columns either side of it, as
+        // Word's ruler shows them.
+        columns.forEach((column, index) => {
+            const next = columns[index + 1];
+            if (!next) return;
+            span(at(column.end), at(next.start), colors.margin);
+            tick(ctx, colors.grid, at(column.end), thickness, thickness, orient);
+            tick(ctx, colors.grid, at(next.start), thickness, thickness, orient);
+        });
     }
     // Graduate the page in inches, as finely as the zoom leaves room for, the
     // figures counting outward from the origin — only where the strip shows.
@@ -222,7 +232,7 @@ function drawRuler(
     const { colors } = canvas;
     const top = canvas.prepare("top");
     if (top) {
-        drawAxis(canvas, top.ctx, guide.horizontal, top.w, top.h, "h");
+        drawAxis(canvas, top.ctx, guide.horizontal, guide.text?.columns ?? [], top.w, top.h, "h");
         // The ruler's inner (content-facing) edge line — a baseline the ticks
         // hang from, framing the ruler off the page below (mirrors the header
         // band's bottom border). The same soft `grid` as the ticks.
@@ -230,7 +240,7 @@ function drawRuler(
     }
     const left = canvas.prepare("left");
     if (left) {
-        drawAxis(canvas, left.ctx, guide.vertical, left.h, left.w, "v");
+        drawAxis(canvas, left.ctx, guide.vertical, [], left.h, left.w, "v");
         stroke(left.ctx, colors.grid, left.w - 0.5, 0, left.w - 0.5, left.h);
     }
     drawCorner(canvas);

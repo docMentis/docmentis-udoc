@@ -85,9 +85,10 @@ export interface EditState {
     selectionPaint: SelectionPaint;
 
     /**
-     * What a drop on the ruler moves from — the selection's resolved indents
-     * and tab stops, and its shape's text insets. Pushed from the worker's
-     * selection reports, projected from the engine's selection properties.
+     * What a drop on the ruler's tab stops and margins moves from — the
+     * selection's resolved tab stops, and its shape's text insets. Pushed from
+     * the worker's selection reports, projected from the engine's selection
+     * properties.
      */
     selectionRuler: SelectionRuler;
 
