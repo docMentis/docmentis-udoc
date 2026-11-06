@@ -115,9 +115,10 @@ export interface DocumentStore {
      * 1951) — by its route: `kinds`, its kind in kebab-case and plural, and
      * `partId`, its id's key. Its latest checkpoint's, or an opaque part an
      * edit brought, kept beside the checkpoints, or, held by neither, the
-     * newest earlier checkpoint's. `undefined` when there is no such part, or
-     * no checkpoint. With `version`, read the same way with checkpoint `version`
-     * as the latest, or `undefined` when that isn't kept.
+     * newest earlier checkpoint's. `undefined` when there is no such part, no
+     * checkpoint, or the latest checkpoint records it as removed. With `version`,
+     * read the same way with checkpoint `version` as the latest, or `undefined`
+     * when that isn't kept.
      */
     getPart(id: string, kinds: string, partId: string, version?: number): Promise<Uint8Array | undefined>;
     /**
@@ -167,6 +168,13 @@ export interface DocumentStore {
      * none. Read as {@link getOriginalIdMap} is.
      */
     getModifiedPartIds(id: string, version?: number): Promise<Uint8Array | undefined>;
+    /**
+     * The parts of document `id` its model had removed, as the JSON its latest
+     * checkpoint holds, or checkpoint `version`'s; `undefined` when it holds none.
+     * Read as {@link getOriginalIdMap} is. {@link getPart} answers `undefined` for
+     * each, whatever an earlier checkpoint holds.
+     */
+    getRemovedPartIds(id: string, version?: number): Promise<Uint8Array | undefined>;
     /** Forget document `id`; answers whether anything was kept. */
     delete(id: string): Promise<boolean>;
 }
@@ -187,6 +195,7 @@ const LOG_FILE = "crdt_delta.loro";
 const CUTS_FILE = "cuts.json";
 const ORIGINAL_ID_MAP_FILE = "original_id_map.json";
 const MODIFIED_PART_IDS_FILE = "modified_part_ids.json";
+const REMOVED_PART_IDS_FILE = "removed_part_ids.json";
 
 /**
  * Where the opaque parts edits brought are kept, each deflated at
@@ -334,30 +343,48 @@ export class DirectoryDocumentStore implements DocumentStore {
     }
 
     async getPart(id: string, kinds: string, partId: string, version?: number): Promise<Uint8Array | undefined> {
-        return this.#readPart(id, `${kinds}/${partId}`, join(OPAQUE_PARTS_DIR, kinds, partId), version);
+        const removed = () => this.#isRemoved(id, kinds, partId, version);
+        return this.#readPart(id, `${kinds}/${partId}`, join(OPAQUE_PARTS_DIR, kinds, partId), version, removed);
     }
 
     async getBlob(id: string, key: string, version?: number): Promise<Uint8Array | undefined> {
         return this.#readPart(id, `blobs/${key}`, join(BLOBS_DIR, key), version);
     }
 
+    /** Whether the checkpoint read as the latest records this part as removed. */
+    async #isRemoved(id: string, kinds: string, partId: string, version?: number): Promise<boolean> {
+        const record = await this.getRemovedPartIds(id, version);
+        if (!record) return false;
+        const removed = JSON.parse(new TextDecoder().decode(record)) as Record<string, string[]>;
+        return Object.entries(removed).some(
+            ([kind, ids]) => pluralKebab(snakeCase(kind)) === kinds && ids.includes(partId),
+        );
+    }
+
     /**
      * Document `id`'s part or blob at `route`, deflated: its latest
-     * checkpoint's, or checkpoint `version`'s when that is given; else the one
-     * kept beside the checkpoints at `kept`; else the newest earlier
-     * checkpoint's that has it. Once a checkpoint holds an opaque part, it is
-     * kept beside them no longer, and a later checkpoint holds it only if
-     * something showed it then — yet an undo can show it again. What is kept
-     * beside them can't differ from a checkpoint's, since a route names its
+     * checkpoint's, or checkpoint `version`'s when that is given; unless `removed`
+     * says that one has removed it, the one kept beside the checkpoints at `kept`;
+     * else the newest earlier checkpoint's that has it. Once a checkpoint holds an
+     * opaque part, it is kept beside them no longer, and a later checkpoint holds
+     * it only if something showed it then — yet an undo can show it again. What is
+     * kept beside them can't differ from a checkpoint's, since a route names its
      * content, so reading it never shows a later version's.
      */
-    async #readPart(id: string, route: string, kept: string, version?: number): Promise<Uint8Array | undefined> {
+    async #readPart(
+        id: string,
+        route: string,
+        kept: string,
+        version?: number,
+        removed?: () => Promise<boolean>,
+    ): Promise<Uint8Array | undefined> {
         const [latest, ...earlier] = await this.#checkpoints(id, version);
         if (latest === undefined && version !== undefined) return undefined;
         if (latest !== undefined) {
             const entry = await this.#readEntry(latest, route, true);
             if (entry) return entry;
         }
+        if (await removed?.()) return undefined;
         const keptBeside = await this.#readKept(id, kept);
         if (keptBeside) return keptBeside;
         for (const checkpoint of earlier) {
@@ -535,6 +562,10 @@ export class DirectoryDocumentStore implements DocumentStore {
         return this.#readRecord(id, MODIFIED_PART_IDS_FILE, version);
     }
 
+    async getRemovedPartIds(id: string, version?: number): Promise<Uint8Array | undefined> {
+        return this.#readRecord(id, REMOVED_PART_IDS_FILE, version);
+    }
+
     /** The entry `name` of document `id`'s latest checkpoint, or checkpoint `version`'s. */
     async #readRecord(id: string, name: string, version?: number): Promise<Uint8Array | undefined> {
         return version === undefined
@@ -588,12 +619,19 @@ export class DirectoryDocumentStore implements DocumentStore {
 /**
  * The route a package entry is served at, relative to the package: `""` for
  * `metadata.json`, `<kinds>/<partId>` for a part, `blobs/<key>` for a blob,
- * the entry's own name for the edit log and the two records a session pairs with
+ * the entry's own name for the edit log and the three records a session pairs with
  * the original, and `undefined` for anything not served.
  */
 function routeOf(entry: string): string | undefined {
     if (entry === "metadata.json") return "";
-    if (entry === LOG_FILE || entry === ORIGINAL_ID_MAP_FILE || entry === MODIFIED_PART_IDS_FILE) return entry;
+    if (
+        entry === LOG_FILE ||
+        entry === ORIGINAL_ID_MAP_FILE ||
+        entry === MODIFIED_PART_IDS_FILE ||
+        entry === REMOVED_PART_IDS_FILE
+    ) {
+        return entry;
+    }
     const part = PART_ENTRY.exec(entry);
     if (part) return `${pluralKebab(part[1]!)}/${part[2]!}`;
     const blob = BLOB_ENTRY.exec(entry);
@@ -622,6 +660,17 @@ async function deflatedEntry(zip: ZipFile, entry: Entry): Promise<Uint8Array> {
         return buffer(await zip.openReadStreamPromise(entry, { decodeFileData: false }));
     }
     return deflate(await buffer(await zip.openReadStreamPromise(entry)));
+}
+
+/**
+ * A kind's entry name from the kind as the engine stores it, `PageContents` to
+ * `page_contents`: the rule the engine applies to name a package's entries.
+ */
+function snakeCase(kind: string): string {
+    return kind
+        .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+        .replace(/([A-Z])([A-Z][a-z])/g, "$1_$2")
+        .toLowerCase();
 }
 
 /**

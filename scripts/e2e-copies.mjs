@@ -54,6 +54,7 @@ const FORMATS = {
     portable: {
         format: "pdf",
         strategy: "incremental",
+        removed: ({ pages }) => ["pages", pages.at(-1)],
         remove: (s, { pages }) =>
             run(s, "deletePages", { portable: { editPage: { command: { deletePages: { ids: pages.slice(-1) } } } } }),
         edits: [(s) => insertPage(s), (s) => insertPage(s)],
@@ -62,6 +63,7 @@ const FORMATS = {
     presentation: {
         format: "pptx",
         strategy: "delta",
+        removed: ({ slides }) => ["slides", slides.at(-1)],
         remove: (s, { slides }) =>
             run(s, "deleteSlides", {
                 presentation: { editSlide: { command: { deleteSlides: { ids: slides.slice(-1) } } } },
@@ -78,6 +80,7 @@ const FORMATS = {
     spreadsheet: {
         format: "xlsx",
         strategy: "delta",
+        removed: ({ sheet }) => ["sheets", sheet],
         remove: (s, { sheet }) =>
             run(s, "deleteSheets", { spreadsheet: { editWorkbook: { command: { deleteSheets: { ids: [sheet] } } } } }),
         edits: [(s) => insertSheet(s, "First"), (s) => insertSheet(s, "Second")],
@@ -238,22 +241,58 @@ for (const [type, f] of Object.entries(FORMATS)) {
     await both("over the log's cut", "", 2);
     await both("of the cut's checkpoint", "checkpoints/2/", 2);
 
-    // A part removed stays removed, in the session that removed it and one over its
-    // checkpoint, where the package no longer has it and only its modified status says so.
+    // A part removed is gone: from a copy, in the session that removed it and one
+    // over its checkpoint, and from that checkpoint, whose record says so while an
+    // earlier one still holds it. An undo brings it back.
     if (f.remove) {
+        const [route, removed] = f.removed(ids);
+        const v0 = await unzip(await readFile(join(kept, "checkpoints/v0.udoc")));
+        const entry = f.format === "pdf" ? undefined : J(v0, "original_id_map.json")[removed]?.replace(/^\//, "");
+        const inTheFile = async (label, expected) => {
+            if (entry === undefined) return;
+            const { bytes } = await copyOf(server.base, `${id}/file.${f.format}`, `?strategy=${f.strategy}`);
+            const entries = await unzip(bytes);
+            check(`${label}: ${entry} ${expected ? "is" : "isn't"} in the file`, entries.has(entry) === expected);
+            const file = entry.split("/").at(-1);
+            const relating = named(entries, /\.rels$/).filter((name) => entries.get(name).includes(file));
+            check(
+                `${label}: ${expected ? "a" : "no"} relationship names it`,
+                relating.length > 0 === expected,
+                relating,
+            );
+        };
+        const edit = async (label, write) => {
+            write();
+            editor.send();
+            await onServer(label, server.base, id, await modelOf(editor.session.saveToPackage()));
+        };
         editor = new Peer(server.base, id, await remote(server.base, id));
         await editor.joined;
-        f.remove(editor.session, ids);
-        editor.send();
-        await onServer("the server takes a removal", server.base, id, await modelOf(editor.session.saveToPackage()));
+        const remove = () => f.remove(editor.session, ids);
+        await edit("the server takes a removal", remove);
         await both("with a part removed, live", "", 1);
+        await inTheFile("with a part removed, live", false);
+        await edit("the server takes its undo", () => editor.session.undo());
+        await both("with the removal undone", "", 2);
+        await inTheFile("with the removal undone", true);
+        await edit("the server takes the removal again", remove);
         const removedAt = await fetch(`${server.base}/documents/${id}/checkpoints`, { method: "POST" });
         check("a checkpoint of it", removedAt.status === 201);
+        const { version } = await removedAt.json();
         await editor.close();
         await sleep(100);
         await server.close();
         server = await serve(store.directory);
         await both("with a part removed, over its checkpoint", "", 1);
+        await inTheFile("with a part removed, over its checkpoint", false);
+        const checkpoint = await unzip(await readFile(join(kept, `checkpoints/v${version}.udoc`)));
+        const record = Object.values(J(checkpoint, "removed_part_ids.json")).flat();
+        check("its checkpoint records it", record.includes(removed), record);
+        check("its checkpoint holds no part of it", named(checkpoint, new RegExp(`_${removed}\\.json$`)).length === 0);
+        const served = (path) => fetch(`${server.base}/documents/${id}/${path}/${route}/${removed}`);
+        check("the package answers 404 for it", (await served("package")).status === 404);
+        check("that checkpoint answers 404 for it", (await served(`checkpoints/${version}/package`)).status === 404);
+        check("v0 still serves it", (await served("checkpoints/0/package")).ok);
     }
 
     await server.close();

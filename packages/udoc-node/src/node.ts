@@ -144,9 +144,10 @@ export class UDocNode {
      *
      * With `withOriginal`, the session is the one its host keeps the original
      * for: `saveToBytes` can then write over that file by `"delta"` or
-     * `"incremental"`. `fetch` also answers `…/original-id-map` and
-     * `…/modified-part-ids`, each as the package's JSON, or empty for none, and
-     * `…/original`, as the file, which is asked for only when a save needs it.
+     * `"incremental"`. `fetch` also answers `…/original-id-map`,
+     * `…/modified-part-ids` and `…/removed-part-ids`, each as the package's JSON,
+     * or empty for none, and `…/original`, as the file, which is asked for only
+     * when a save needs it.
      * None of these is deflated, and no udoc-server route serves them.
      */
     openRemote(

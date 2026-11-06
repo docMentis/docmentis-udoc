@@ -181,7 +181,7 @@ function keptPackage(id: string, version?: number): string {
  * What a session this server opened over document `id`'s store asks for at `url`,
  * read from the store. Beyond the package's routes, what only this session reads,
  * to write over the original, as the engine's `with_original` loader asks for it:
- * the original, and the two records that pair with it, empty for none.
+ * the original, and the three records that pair with it, empty for none.
  */
 async function kept(store: DocumentStore, id: string, url: string, version?: number): Promise<Uint8Array> {
     const base = keptPackage(id, version);
@@ -195,5 +195,6 @@ async function kept(store: DocumentStore, id: string, url: string, version?: num
     }
     if (route === "/original-id-map") return (await store.getOriginalIdMap(id, version)) ?? new Uint8Array();
     if (route === "/modified-part-ids") return (await store.getModifiedPartIds(id, version)) ?? new Uint8Array();
+    if (route === "/removed-part-ids") return (await store.getRemovedPartIds(id, version)) ?? new Uint8Array();
     return (await readPackage(store, id, route, searchParams, version)).body;
 }

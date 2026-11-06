@@ -50,9 +50,9 @@ listed once, by package. Its major and minor version are those of the
 #### Changed
 
 - `DocumentStore` has more methods for a host's own store to implement: `putCut`,
-  `getCuts`, `getCheckpointLog`, `getCheckpointVersions`, `getOriginalIdMap` and
-  `getModifiedPartIds`. Its `getDescription`, `getPart` and `getBlob` take a
-  checkpoint's `version`.
+  `getCuts`, `getCheckpointLog`, `getCheckpointVersions`, `getOriginalIdMap`,
+  `getModifiedPartIds` and `getRemovedPartIds`. Its `getDescription`, `getPart` and
+  `getBlob` take a checkpoint's `version`.
 - The edit log is kept as `crdt_delta.loro`, in a store and in a package, in place
   of `crdt.loro`. A log kept under the old name isn't read.
 
@@ -62,6 +62,11 @@ listed once, by package. Its major and minor version are those of the
   `delta` or `incremental` was refused, since the server's sessions never read the
   original, and naming no strategy rewrote. Named no strategy it now keeps the most
   of the original it can, and a PDF that needs a password still rewrites.
+- A slide, page or sheet deleted from a document is left out of later checkpoints
+  and of a `delta` copy, with what only it reached, and `…/package` answers `404`
+  for it. A checkpoint from before the delete still has it, and an undo brings it
+  back. An `incremental` copy of a PDF keeps its original bytes, so a deleted page's
+  content stays in that file.
 
 ### udoc-node
 

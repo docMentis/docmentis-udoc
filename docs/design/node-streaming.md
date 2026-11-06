@@ -88,6 +88,13 @@ A remote open is an open: one session, one permit, one document
 Both sides apply the naming rule, each in its own language: it is the API's contract,
 written here, not a detail either side owns.
 
+## Removed parts
+
+The engine's Core Part Removal has the rule: when a command removes a part, it is gone from the
+current document. A checkpoint records what its model removed, as `removed_part_ids.json`. A part removed as of the
+version asked for is `404`, before the fallback is tried. The fallback stays for every other part,
+and a checkpoint from before the removal still serves it.
+
 ## Versions
 
 A route without a version answers from the latest checkpoint, the baseline a client

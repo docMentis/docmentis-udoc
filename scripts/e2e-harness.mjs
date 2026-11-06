@@ -278,6 +278,7 @@ export async function modelOf(pkg) {
             name === "metadata.json" ||
             name.endsWith(".loro") ||
             name === "modified_part_ids.json" ||
+            name === "removed_part_ids.json" ||
             name === "original_id_map.json";
         if (history) continue;
         const text = name.endsWith(".json")

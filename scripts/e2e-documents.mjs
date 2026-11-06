@@ -198,9 +198,8 @@ const P = (c) => ({ portable: c });
  */
 export const DOCUMENTS = {
     portable: {
-        // Not as far back as the added font: undoing one leaves the editor that undid it and one opened later
-        // disagreeing about the font's part. That bug has nothing to do with what these suites check.
-        undoSteps: 2,
+        // Back past the added font: the editor that undid it and one opened later both hold it removed.
+        undoSteps: 3,
         bothEditsHold(e, { usable }, round) {
             const page = J(e, `parts/page_${usable[2 + round]}.json`);
             const list = J(e, `parts/page_annotation_list_${page.annotations}.json`);

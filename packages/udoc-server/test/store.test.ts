@@ -184,6 +184,37 @@ test("what pairs a package with its original is read from the latest checkpoint,
     assert.equal(await store.getOriginalIdMap("b"), undefined);
 });
 
+test("a part a checkpoint records as removed reads as nothing, while the one before it still holds it", async (t) => {
+    const store = new DirectoryDocumentStore(await temporaryDirectory(t));
+    const route = ["notes-slides", "1-2"] as const;
+    await store.put("a", { original: pdf.original, checkpoint: await packageZip() });
+    const part = { "parts/notes_slide_1-2.json": "held" };
+    await store.putCheckpoint("a", 1, await packageZip({ ...checkpointEntries(1), ...part }));
+    await store.putCheckpoint("a", 2, await packageZip(checkpointEntries(2)));
+    assert.equal(inflated(await store.getPart("a", ...route)), "held", "an earlier checkpoint answers");
+
+    await store.putCheckpoint(
+        "a",
+        3,
+        await packageZip({
+            ...checkpointEntries(3),
+            "removed_part_ids.json": JSON.stringify({ NotesSlide: ["1-2"] }),
+        }),
+    );
+    assert.equal(await store.getPart("a", ...route), undefined, "removed as of the latest");
+    assert.equal(await store.getPart("a", ...route, 3), undefined, "removed as of that version");
+    assert.equal(inflated(await store.getPart("a", ...route, 2)), "held", "not yet removed as of that one");
+    assert.equal(text(await store.getRemovedPartIds("a")), JSON.stringify({ NotesSlide: ["1-2"] }));
+    assert.equal(await store.getRemovedPartIds("a", 2), undefined);
+
+    await store.putCheckpoint("a", 4, await packageZip(checkpointEntries(4)));
+    assert.equal(
+        inflated(await store.getPart("a", ...route)),
+        "held",
+        "the record is the latest's own: an undo cleared it",
+    );
+});
+
 test("a checkpoint is read as of its own version, and one not kept reads as nothing", async (t) => {
     const store = new DirectoryDocumentStore(await temporaryDirectory(t));
     assert.deepEqual(await store.getCheckpointVersions("a"), []);
