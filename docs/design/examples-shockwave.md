@@ -260,7 +260,7 @@ share one database, and each row says whose it is:
   do, at any tenant. An image a browser keeps it asks about each time, so that whoever
   signs in next on that browser gets the refusal, not what's kept.
 
-`npm run test:isolation` holds this to it: the real backend, with a second tenant, each
+Its `npm run test:isolation` holds this to it: the real backend, with a second tenant, each
 attacked through every route and the gate, and by holding rows with the very ids the
 other's have, so that a statement that forgets its tenant answers with the wrong row or
 changes the wrong one. It fails for a route, a foreign key or a table it doesn't

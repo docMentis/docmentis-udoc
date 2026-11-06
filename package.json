@@ -22,7 +22,6 @@
         "headless": "node scripts/headless.mjs",
         "shockwave": "node scripts/shockwave.mjs",
         "shockwave:clear": "npm run clear --prefix examples/shockwave",
-        "test:isolation": "npm run test:isolation --prefix examples/shockwave",
         "typecheck": "npm run typecheck --workspaces --if-present",
         "test": "npm run test --workspaces --if-present",
         "lint": "eslint .",

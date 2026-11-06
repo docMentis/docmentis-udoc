@@ -69,7 +69,6 @@ starts.
 | `shared/` | The API's types, which both import               |
 | `seed/`   | The seed's files: Larchmere's logo               |
 
-`npm run test:isolation`, from the repo's root or here, attacks each tenant with
-another: the real backend, on data of its own, with no browser. Run it after a change
-to the data or the routes. It fails for a route, a foreign key or a table it doesn't
-attack, and says what to add.
+`npm run test:isolation`, here, attacks each tenant with another: the real backend,
+on data of its own, with no browser. Run it after a change to the data or the routes.
+It fails for a route, a foreign key or a table it doesn't attack, and says what to add.
