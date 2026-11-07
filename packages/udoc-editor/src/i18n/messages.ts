@@ -121,6 +121,10 @@ export interface Messages extends UIMessages {
     "command.insertImage": string;
     /** Shapes */
     "command.insertShape": string;
+    /** Change Shape */
+    "command.changeShape": string;
+    /** Change Layout */
+    "command.changeLayout": string;
     /** Crop */
     "command.cropPage": string;
     /** Image Size */
@@ -168,7 +172,7 @@ export interface Messages extends UIMessages {
     /** Line */
     "command.objectStrokeColor": string;
 
-    // New Slide dialog
+    // The layout picker, New Slide's and Change Layout's
     /** New slide layout */
     "newSlide.label": string;
     /** Slide layouts */

@@ -66,6 +66,8 @@ export const de: EditMessages = {
     "command.createSlide": "Neue Folie",
     "command.insertImage": "Bild",
     "command.insertShape": "Formen",
+    "command.changeShape": "Form ändern",
+    "command.changeLayout": "Layout ändern",
     "command.cropPage": "Zuschneiden",
     "command.resizePage": "Bildgröße",
     "command.pageResize": "Seitengröße ändern",

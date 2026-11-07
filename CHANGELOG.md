@@ -50,6 +50,13 @@ listed once, by package. Its major and minor version are those of the
   as the page's own content, centred, scaled down to fit and selected, reading
   upright on a turned page, with any transparency the file has. `insertImage` does
   the same on a PDF.
+- The Shape tab has Change Shape: it gives the selected shapes and pictures, and
+  those in a selected group, another outline from the shape gallery, keeping their
+  text, fill and line.
+- A deck's Insert tab has Change Layout: it puts the current slide, or the slides
+  or sections selected in the thumbnails, on the slide layout picked from New
+  Slide's thumbnails, with the layout in use marked. Placeholders move to the new
+  layout's slots and keep their content.
 
 #### Changed
 
@@ -72,6 +79,12 @@ listed once, by package. Its major and minor version are those of the
 - The ruler's margin edges, indent markers and tab stops respond to the pointer:
   one that can be dragged tints when the pointer is over it, and more strongly
   while pressed, along with any markers the drag moves with it.
+
+#### Fixed
+
+- Keys pressed in New Slide's layout picker stay in it: Delete or Backspace no longer
+  deletes what is selected behind it, and Escape closes only the picker, leaving the
+  side panel open. Undo works from the keyboard straight after a pick.
 
 ## [0.8.15] - 2026-11-05
 

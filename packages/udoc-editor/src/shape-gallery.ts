@@ -1,7 +1,8 @@
 // The Insert tab's shape gallery on a deck's slides and over an image's pages:
 // every preset shape the engine draws, grouped as PowerPoint's gallery groups
 // them, with the arrowed lines it offers beside its connectors. A PDF keeps its
-// four page-object shapes (see `insert.ts`).
+// four page-object shapes (see `insert.ts`). The Shape tab's Change Shape offers
+// it too, without the lines.
 import type { ShapePresetGeometryType } from "@docmentis/udoc-wasm";
 import type { PickerSection, ShapeKind } from "@docmentis/udoc-ui/internal";
 import { en } from "./i18n/en.js";
@@ -334,3 +335,9 @@ export const SHAPE_GALLERY: readonly PickerSection<MessageKey>[] = Object.entrie
         } satisfies PickerSection<MessageKey>["options"][number];
     }),
 }));
+
+/** The gallery as the Shape tab's Change Shape shows it: all but the lines, as
+ *  PowerPoint's does — a connector is drawn from end to end, not across a box. */
+export const CHANGE_SHAPE_GALLERY: readonly PickerSection<MessageKey>[] = SHAPE_GALLERY.filter(
+    (section) => section.label !== "shapeGroup.lines",
+);

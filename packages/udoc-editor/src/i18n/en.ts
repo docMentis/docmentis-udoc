@@ -67,6 +67,8 @@ export const en: EditMessages = {
     "command.createSlide": "New Slide",
     "command.insertImage": "Image",
     "command.insertShape": "Shapes",
+    "command.changeShape": "Change Shape",
+    "command.changeLayout": "Change Layout",
     "command.cropPage": "Crop",
     "command.resizePage": "Image Size",
     "command.pageResize": "Resize Page",

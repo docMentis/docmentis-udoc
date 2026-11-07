@@ -17,8 +17,6 @@ import type { ImageSize } from "./image.js";
 import { insertCommands, insertImage, pickImage, place, placedShape } from "./insert.js";
 import { runEditMenuAction } from "./menu-action.js";
 import type { EditMenuAction } from "./menu-action.js";
-import { mountNewSlide, newSlideCommand } from "./new-slide.js";
-import type { NewSlide } from "./new-slide.js";
 import { mountPageResize, pageCommands } from "./page-commands.js";
 import type { PageResize } from "./page-commands.js";
 import { mountPageControls, PAGE_CONTROLS_SPACING, pageControlsShown } from "./page-controls.js";
@@ -28,6 +26,8 @@ import type { EditorMode } from "./mode.js";
 import { editState, INITIAL_EDIT_STATE, updateEditState } from "./state.js";
 import { createRuler, RULER_COMMAND, rulerShown, setShowRuler } from "./ruler.js";
 import { selectionRuler } from "./ruler-edits.js";
+import { changeLayoutCommand, mountSlideLayouts, newSlideCommand } from "./slide-layouts.js";
+import type { SlideLayouts } from "./slide-layouts.js";
 import { editorStyles } from "./styles.js";
 import { tableCommands } from "./table.js";
 import { editTabs } from "./tabs.js";
@@ -209,7 +209,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
     // What the shell lends, and what edit mode builds on it, from the mount on.
     let host: EditHost | null = null;
     let tools: EditTools | null = null;
-    let newSlide: NewSlide | null = null;
+    let slideLayouts: SlideLayouts | null = null;
     let imageSize: ImageSize | null = null;
     let pageResize: PageResize | null = null;
     const grips = createGrips(() => tools);
@@ -235,7 +235,8 @@ export function editMode(options: UDocEditorOptions): EditMode {
             ...arrangeCommands(() => tools?.arrange ?? null),
             ...tableCommands(mountedTools),
             ruler: RULER_COMMAND,
-            createSlide: newSlideCommand(() => void newSlide?.open()),
+            createSlide: newSlideCommand(() => void slideLayouts?.newSlide()),
+            changeLayout: changeLayoutCommand(() => void slideLayouts?.changeLayout()),
             ...insertCommands(() => {
                 if (host) pickImage(host);
             }),
@@ -278,7 +279,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             const unmountEditingView = mountEditingView(mounted);
             const unmountRuler = ruler.mount(mounted);
             const unmountPageControls = showPageControls ? mountPageControls(mounted, i18n) : null;
-            newSlide = mountNewSlide(mounted, i18n);
+            slideLayouts = mountSlideLayouts(mounted, i18n);
             imageSize = mountImageSize(mounted, i18n);
             pageResize = mountPageResize(mounted, i18n);
             return () => {
@@ -286,8 +287,8 @@ export function editMode(options: UDocEditorOptions): EditMode {
                 pageResize = null;
                 imageSize?.destroy();
                 imageSize = null;
-                newSlide?.destroy();
-                newSlide = null;
+                slideLayouts?.destroy();
+                slideLayouts = null;
                 unmountPageControls?.();
                 unmountRuler();
                 unmountEditingView();

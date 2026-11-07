@@ -66,6 +66,8 @@ export const fr: EditMessages = {
     "command.createSlide": "Nouvelle diapositive",
     "command.insertImage": "Image",
     "command.insertShape": "Formes",
+    "command.changeShape": "Modifier la forme",
+    "command.changeLayout": "Modifier la disposition",
     "command.cropPage": "Rogner",
     "command.resizePage": "Taille de l'image",
     "command.pageResize": "Redimensionner la page",

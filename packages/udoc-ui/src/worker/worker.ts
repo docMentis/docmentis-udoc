@@ -3387,6 +3387,7 @@ const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     setShapeFill: "shape",
     setShapeLine: "shape",
     setShapeTextBodyProperties: "shape",
+    setShapeGeometry: "shape",
     adjustShapeHandle: "shape",
     adjustTextWarpHandle: "shape",
     pasteShapes: "shape",
@@ -3417,6 +3418,7 @@ const SLIDE_KINDS: Record<SlideSelectionEditType, "slide"> = {
     duplicateSlides: "slide",
     reorderSlides: "slide",
     setSlidesShow: "slide",
+    setSlidesLayout: "slide",
     insertSlideSection: "slide",
 };
 

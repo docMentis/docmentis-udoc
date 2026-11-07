@@ -48,8 +48,12 @@ const ICONS = {
     ICON_RULER: "straighten",
 
     // Insert tab
+    ICON_CHANGE_LAYOUT: "view_quilt",
     ICON_IMAGE: "image",
     ICON_SHAPES: "shapes",
+
+    // Shape tab
+    ICON_CHANGE_SHAPE: "category",
 
     // An image's Home tab
     ICON_CROP: "crop",

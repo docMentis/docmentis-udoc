@@ -453,7 +453,7 @@ export const editorStyles = css`
         pointer-events: none;
     }
 
-    /* --- New-Slide layout picker (NewSlideModal) --- */
+    /* --- Slide layout picker (SlideLayoutModal) --- */
 
     .udoc-ui-root .udoc-slide-picker {
         position: absolute;
@@ -541,6 +541,11 @@ export const editorStyles = css`
     .udoc-ui-root .udoc-slide-picker__cell:hover {
         border-color: var(--udoc-color-primary);
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+
+    .udoc-ui-root .udoc-slide-picker__cell--current {
+        border-color: var(--udoc-color-primary);
+        background-color: var(--udoc-state-selected);
     }
 
     .udoc-ui-root .udoc-slide-picker__cell:focus-visible {

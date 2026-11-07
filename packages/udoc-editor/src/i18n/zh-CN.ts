@@ -66,6 +66,8 @@ export const zhCN: EditMessages = {
     "command.createSlide": "新建幻灯片",
     "command.insertImage": "图片",
     "command.insertShape": "形状",
+    "command.changeShape": "更改形状",
+    "command.changeLayout": "更改版式",
     "command.cropPage": "裁剪",
     "command.resizePage": "图像大小",
     "command.pageResize": "调整页面大小",

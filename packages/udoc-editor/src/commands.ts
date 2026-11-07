@@ -1,6 +1,7 @@
 // The Text, Shape and Object tabs' commands: character and paragraph formatting
-// over the text selection, and the Fill / Line controls over a drawing's shapes
-// or a PDF's page objects (their arrangement commands are `arrange.ts`'s).
+// over the text selection, Change Shape over a drawing's shapes, and the Fill /
+// Line controls over those or a PDF's page objects (their arrangement commands
+// are `arrange.ts`'s).
 import { allowsEdit, ICON_FILL, ICON_STROKE, ICON_TEXT_HIGHLIGHT } from "@docmentis/udoc-ui/internal";
 import type { CommandDef } from "@docmentis/udoc-ui/internal";
 import {
@@ -13,6 +14,7 @@ import {
 import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_BOLD,
+    ICON_CHANGE_SHAPE,
     ICON_FONT_SIZE,
     ICON_FONTS,
     ICON_ITALIC,
@@ -29,6 +31,7 @@ import {
     ICON_WIDTH_SCALE,
 } from "./icons.js";
 import { paintControl } from "./paint.js";
+import { CHANGE_SHAPE_GALLERY, galleryShape } from "./shape-gallery.js";
 import {
     LINE_SPACING_MENU,
     PARAGRAPH_ALIGN_MENU,
@@ -203,10 +206,36 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
             enabledWhen: whenParagraphFormat,
         },
 
-        // Shape tab — the Fill / Line dropdowns. The color bar reflects the
-        // selection's color; the caret opens the picker. Enabled when the
-        // selection accepts the paint edit — a drawing shape's `setShapeFill` /
-        // `setShapeLine`.
+        // Shape tab — first Change Shape, the outline the rest paint and arrange:
+        // a cell gives the selection that preset, with its adjust values at their
+        // defaults, as PowerPoint and Word do. Enabled where the selection holds a
+        // shape or a picture to change, which a connector alone doesn't.
+        changeShape: {
+            id: "changeShape",
+            label: "command.changeShape",
+            icon: ICON_CHANGE_SHAPE,
+            group: "shapeGeometry",
+            run: {
+                kind: "gallery",
+                sections: CHANGE_SHAPE_GALLERY,
+                press: ({ tool }) => {
+                    const shape = galleryShape(tool);
+                    if (!shape) return;
+                    const { host } = tools();
+                    void host.commit(() =>
+                        host.client.executeOnSelection({
+                            kind: "setShapeGeometry",
+                            geometry: { preset: { preset: shape.preset, adjustValues: [] } },
+                        }),
+                    );
+                },
+            },
+            enabledWhen: (c) => allowsEdit(c.selection, "setShapeGeometry"),
+        },
+
+        // Then the Fill / Line dropdowns. The color bar reflects the selection's
+        // color; the caret opens the picker. Enabled when the selection accepts
+        // the paint edit — a drawing shape's `setShapeFill` / `setShapeLine`.
         shapeFillColor: {
             id: "shapeFillColor",
             label: "command.shapeFillColor",

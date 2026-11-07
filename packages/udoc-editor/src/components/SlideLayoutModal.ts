@@ -1,12 +1,13 @@
-// The New-Slide layout picker — a modal grid of slide-layout thumbnails, opened
-// from the presentation Insert tab's "New Slide" button. Picking a layout inserts
-// a new slide built on it (its content placeholders seeded); the thumbnail *is*
-// the layout's identity, since layouts carry no name/type in the model.
+// The slide layout picker — a modal grid of slide-layout thumbnails, opened from
+// the presentation Insert tab's "New Slide" and "Change Layout" buttons. Picking a
+// layout inserts a new slide built on it (its content placeholders seeded), or
+// puts the slides changed on it; the thumbnail *is* the layout's identity, since
+// layouts carry no name/type in the model.
 //
 // Storeless and imperative, like the other modals (PageSettingsModal): mounted
-// once by the shell and reused. `open(ctx)` seeds it with the layout roster, the
-// preview renderer, and the pick callback that turns a click into a createSlide
-// command; it owns no document state of its own.
+// once by the shell and reused. `open(ctx)` seeds it with what it is for, the
+// layout roster, the preview renderer, and the pick callback that turns a click
+// into a command; it owns no document state of its own.
 //
 // Layout previews render off a non-current plane (each slide master's own layout
 // plane) via the plane-aware paged render path, so opening the picker never
@@ -28,7 +29,7 @@ const DEFAULT_SLIDE_SIZE: Size = { width: 960, height: 540 };
  *  preview renders — the slide masters' plane, and its page there (after its
  *  slide master's, `1 + its index` on). */
 export interface LayoutOption {
-    /** The slide-layout id (hex key) — passed to `createSlide(index, layout)`. */
+    /** The slide-layout id (hex key) — what a slide is created or put on. */
     layout: string;
     /** The slide masters' plane the preview renders on. */
     plane: number;
@@ -39,11 +40,15 @@ export interface LayoutOption {
     name: string | null;
 }
 
-/** What `open` needs: where the slide lands, the layouts to choose from, how to
+/** What `open` needs: what the picker is for, the layouts to choose from, how to
  *  render a preview, and what a pick does. */
-export interface NewSlideContext {
-    /** 0-based index the new slide is inserted at. */
-    insertIndex: number;
+export interface SlideLayoutContext {
+    /** The heading it shows: the command that opened it. */
+    heading: string;
+    /** The name a screen reader gives the dialog. */
+    label: string;
+    /** The slide layout to mark as the one in use, or null for none. */
+    current: string | null;
     /** The layouts to offer, in roster order. */
     options: LayoutOption[];
     /** The deck's slide size in points, which every slide layout shares — the
@@ -53,15 +58,15 @@ export interface NewSlideContext {
     /** Render a one-shot preview of a page on a plane, at `scale` output px per
      *  point — resolves with a bitmap the caller owns. */
     renderPreview: (plane: number, page: number, scale: number) => Promise<ImageBitmap>;
-    /** Create a new slide on `layout` at `insertIndex` and close. */
+    /** Act on `layout`, picked; the picker has closed. */
     onPick: (layout: string) => void;
 }
 
 /**
- * Build the New-Slide picker modal. The returned handle is mounted once by the
+ * Build the layout picker modal. The returned handle is mounted once by the
  * shell; `open` re-seeds it with the current layout roster each time.
  */
-export function createNewSlideModal(i18n: I18n) {
+export function createSlideLayoutModal(i18n: I18n) {
     const el = document.createElement("div");
     el.className = "udoc-slide-picker";
     el.style.display = "none";
@@ -73,13 +78,11 @@ export function createNewSlideModal(i18n: I18n) {
     dialog.className = "udoc-slide-picker__dialog";
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
-    dialog.setAttribute("aria-label", i18n.t("newSlide.label"));
 
     const header = document.createElement("div");
     header.className = "udoc-slide-picker__header";
     const heading = document.createElement("h2");
     heading.className = "udoc-slide-picker__heading";
-    heading.textContent = i18n.t("command.createSlide");
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
     closeBtn.className = "udoc-slide-picker__close";
@@ -97,7 +100,8 @@ export function createNewSlideModal(i18n: I18n) {
     el.append(backdrop, dialog);
 
     let isOpen = false;
-    let ctx: NewSlideContext | null = null;
+    let returnFocus: HTMLElement | null = null;
+    let ctx: SlideLayoutContext | null = null;
     // Bumped on every open/close so a preview that resolves after the picker
     // moved on is discarded (its bitmap closed) instead of drawn stale.
     let epoch = 0;
@@ -119,6 +123,9 @@ export function createNewSlideModal(i18n: I18n) {
         const name = option.name ?? i18n.t("newSlide.layout", { index: index + 1 });
         cell.title = name;
         cell.setAttribute("aria-label", name);
+        const current = option.layout === ctx?.current;
+        cell.setAttribute("aria-selected", String(current));
+        cell.classList.toggle("udoc-slide-picker__cell--current", current);
         const canvas = document.createElement("canvas");
         canvas.className = "udoc-slide-picker__canvas";
         canvas.width = Math.round(slideSize.width * PREVIEW_SCALE);
@@ -147,10 +154,13 @@ export function createNewSlideModal(i18n: I18n) {
         return cell;
     }
 
-    function open(context: NewSlideContext): void {
+    function open(context: SlideLayoutContext): void {
+        returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         ctx = context;
         epoch++;
         const myEpoch = epoch;
+        heading.textContent = context.heading;
+        dialog.setAttribute("aria-label", context.label);
         grid.replaceChildren();
         const slideSize = context.slideSize ?? DEFAULT_SLIDE_SIZE;
         context.options.forEach((option, index) => {
@@ -158,7 +168,8 @@ export function createNewSlideModal(i18n: I18n) {
         });
         isOpen = true;
         el.style.display = "";
-        (grid.querySelector(".udoc-slide-picker__cell") as HTMLElement | null)?.focus();
+        const current = grid.querySelector<HTMLElement>(".udoc-slide-picker__cell--current");
+        (current ?? grid.querySelector<HTMLElement>(".udoc-slide-picker__cell"))?.focus();
     }
 
     function close(): void {
@@ -168,6 +179,10 @@ export function createNewSlideModal(i18n: I18n) {
         epoch++;
         grid.replaceChildren();
         el.style.display = "none";
+        // Back inside the shell, whose keys — Undo, right after a pick — are
+        // heard only from there.
+        if (returnFocus?.isConnected) returnFocus.focus();
+        returnFocus = null;
     }
 
     on(closeBtn, "click", () => close());
@@ -175,14 +190,16 @@ export function createNewSlideModal(i18n: I18n) {
 
     function mount(parent: HTMLElement): void {
         parent.appendChild(el);
+        // Ahead of the shell, which holds this modal: while it's open a key is
+        // its own, and Escape closes it alone, Backspace deleting nothing behind
+        // it. Tab and Enter are default actions, which go on regardless.
         const onKeydown = (e: KeyboardEvent) => {
-            if (isOpen && e.key === "Escape") {
-                e.stopPropagation();
-                close();
-            }
+            if (!isOpen) return;
+            e.stopPropagation();
+            if (e.key === "Escape") close();
         };
-        document.addEventListener("keydown", onKeydown);
-        unsubEvents.push(() => document.removeEventListener("keydown", onKeydown));
+        document.addEventListener("keydown", onKeydown, true);
+        unsubEvents.push(() => document.removeEventListener("keydown", onKeydown, true));
     }
 
     function destroy(): void {
@@ -193,4 +210,4 @@ export function createNewSlideModal(i18n: I18n) {
     return { el, mount, open, close, destroy };
 }
 
-export type NewSlideModal = ReturnType<typeof createNewSlideModal>;
+export type SlideLayoutModal = ReturnType<typeof createSlideLayoutModal>;

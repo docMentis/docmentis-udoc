@@ -66,6 +66,8 @@ export const ko: EditMessages = {
     "command.createSlide": "새 슬라이드",
     "command.insertImage": "그림",
     "command.insertShape": "도형",
+    "command.changeShape": "도형 변경",
+    "command.changeLayout": "레이아웃 변경",
     "command.cropPage": "자르기",
     "command.resizePage": "이미지 크기",
     "command.pageResize": "페이지 크기 조정",

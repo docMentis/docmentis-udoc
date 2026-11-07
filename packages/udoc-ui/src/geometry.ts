@@ -371,6 +371,7 @@ export type SelectionEditKind =
     | "setShapeFill"
     | "setShapeLine"
     | "setShapeTextBodyProperties"
+    | "setShapeGeometry"
     | "resizeTextBox"
     | "setSectionPageMargins";
 

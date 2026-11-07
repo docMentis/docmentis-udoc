@@ -66,6 +66,8 @@ export const ru: EditMessages = {
     "command.createSlide": "Создать слайд",
     "command.insertImage": "Изображение",
     "command.insertShape": "Фигуры",
+    "command.changeShape": "Изменить фигуру",
+    "command.changeLayout": "Изменить макет",
     "command.cropPage": "Обрезать",
     "command.resizePage": "Размер изображения",
     "command.pageResize": "Изменить размер страницы",

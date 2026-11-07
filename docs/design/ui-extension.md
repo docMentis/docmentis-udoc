@@ -68,6 +68,8 @@ shell's catalog and then in the extension's `commands`:
 - an `action` command runs the extension's own code, as New Slide does;
 - an `armPicker` carries the options its picker offers, as a PDF's Page ▸ Shapes
   and Annotate ▸ Stamp do;
+- a `gallery` carries a panel of icon cells, each pressing with its tool and
+  arming nothing, as Change Shape does;
 - a `control` command builds a ribbon control of the extension's — the font
   picker, the size field, the character toggles, the list split buttons, the
   color dropdowns — which the ribbon places, syncs on each render, closes and

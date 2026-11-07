@@ -44,6 +44,7 @@ export type EditCommandId =
     | "lineSpacing"
     | "bulletList"
     | "numberList"
+    | "changeShape"
     | "shapeFillColor"
     | "shapeStrokeColor"
     | "shapeOrder"
@@ -69,6 +70,7 @@ export type EditCommandId =
     | "tableUnmerge"
     | "ruler"
     | "createSlide"
+    | "changeLayout"
     | "insertImage"
     | "insertPageImage"
     | "insertShape"
@@ -186,17 +188,18 @@ const PRESENTATION_TEXT_TAB: EditTab = {
 };
 
 /**
- * The Shape tab — appearance + arrangement for graphics objects. Fill / Line
- * split buttons (color per channel), then a button group of the arrangement
- * dropdowns — Order (z-order), Align (align / distribute to the selection or the
- * page) and Rotate (quarter-turn rotations + flips) — and one of Group and
- * Ungroup. Picked shapes open it.
+ * The Shape tab — outline + appearance + arrangement for graphics objects. Change
+ * Shape's gallery, then Fill / Line split buttons (color per channel), then a
+ * button group of the arrangement dropdowns — Order (z-order), Align (align /
+ * distribute to the selection or the page) and Rotate (quarter-turn rotations +
+ * flips) — and one of Group and Ungroup. Picked shapes open it.
  */
 const SHAPE_TAB: EditTab = {
     id: "shape",
     label: "ribbon.shape",
     icon: ICON_TAB_SHAPE,
     commands: [
+        "changeShape",
         "shapeFillColor",
         "shapeStrokeColor",
         "shapeOrder",
@@ -323,13 +326,14 @@ const IMAGE_INSERT_TAB: EditTab = {
     commands: ["insertGalleryShape"],
 };
 
-/** The presentation Insert tab: New Slide, after the current slide; Image, a
- *  picture on it; and the gallery's Shapes, dragged out on it. */
+/** The presentation Insert tab: New Slide, after the current slide, and Change
+ *  Layout, which picks from the same layouts; Image, a picture on the slide; and
+ *  the gallery's Shapes, dragged out on it. */
 const PRESENTATION_INSERT_TAB: EditTab = {
     id: "insert",
     label: "ribbon.insert",
     icon: ICON_TAB_INSERT,
-    commands: ["createSlide", "insertImage", "insertGalleryShape"],
+    commands: ["createSlide", "changeLayout", "insertImage", "insertGalleryShape"],
 };
 
 /** `docType`'s View tab, as edit mode has it: with the views edit mode alone

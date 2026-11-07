@@ -27,10 +27,10 @@ import type {
     MenuAction,
     CommandContext,
     CommandDef,
+    CommandRun,
     MenuItem,
     PaintChannel,
     PickerOption,
-    PickerSection,
     RibbonControl,
 } from "../commands.js";
 import { setupRovingTabindex } from "../a11y.js";
@@ -645,13 +645,17 @@ export function createRibbon(
         };
 
         // Fill a dropdown tool's menu with its gallery: each section's heading
-        // over a grid of its options' icons, named by their tooltips, the armed
-        // one marked. A cell arms its tool.
-        const fillGallery = (dd: DropdownButton, sections: readonly PickerSection<string>[]): void => {
+        // over a grid of its options' icons, named by their tooltips. A cell of
+        // an `armGallery` arms its tool, the armed one marked; one of a `gallery`
+        // presses with it.
+        const fillGallery = (
+            dd: DropdownButton,
+            run: Extract<CommandRun<string>, { kind: "armGallery" | "gallery" }>,
+        ): void => {
             const pointer = store.getState().pointerMode;
             const panel = document.createElement("div");
             panel.className = "udoc-gallery";
-            for (const section of sections) {
+            for (const section of run.sections) {
                 const heading = document.createElement("div");
                 heading.className = "udoc-gallery__label";
                 heading.textContent = labelOf(section.label);
@@ -670,11 +674,15 @@ export function createRibbon(
                     item.innerHTML = opt.icon ?? "";
                     item.classList.toggle(
                         "udoc-gallery__item--selected",
-                        pointer.kind === "place" && samePlaceTool(opt.tool, pointer.tool),
+                        run.kind === "armGallery" && pointer.kind === "place" && samePlaceTool(opt.tool, pointer.tool),
                     );
                     item.addEventListener("click", (e) => {
                         e.stopPropagation();
-                        store.dispatch({ type: "ARM_PLACE", tool: opt.tool, sticky: false });
+                        if (run.kind === "armGallery") {
+                            store.dispatch({ type: "ARM_PLACE", tool: opt.tool, sticky: false });
+                        } else {
+                            run.press(opt.tool);
+                        }
                         dd.controller.close();
                     });
                     grid.appendChild(item);
@@ -798,11 +806,11 @@ export function createRibbon(
                 dropdowns.push(dd);
                 return dd.el;
             }
-            if (def.run.kind === "armGallery") {
-                const sections = def.run.sections;
+            if (def.run.kind === "armGallery" || def.run.kind === "gallery") {
+                const run = def.run;
                 const dd = createDropdownButton(
                     { icon: def.icon, label, ...(def.labeled && { text: label }) },
-                    { menuLabel: label, menuRole: "menu", onOpen: () => fillGallery(dd, sections) },
+                    { menuLabel: label, menuRole: "menu", onOpen: () => fillGallery(dd, run) },
                 );
                 dd.trigger.dataset.command = def.id;
                 dropdowns.push(dd);

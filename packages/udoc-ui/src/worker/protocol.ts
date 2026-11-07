@@ -17,6 +17,7 @@ import type {
     PaintFill,
     PaintLine,
     Rect as CornerRect,
+    ShapeGeometry,
     TextBodyProperties,
     Watermark,
     TextCharacterProperties,
@@ -1560,6 +1561,9 @@ export type SelectionEdit =
      *  of the shape whose text the caret is in — its insets (a ruler's margin
      *  edges), anchor, autofit. */
     | { kind: "setShapeTextBodyProperties"; properties: TextBodyProperties }
+    /** Shapes: give the selected shapes and pictures, those in a selected group
+     *  too, the outline `geometry` — Change Shape. Anything else stays as it is. */
+    | { kind: "setShapeGeometry"; geometry: ShapeGeometry }
     /** Word: set the page margins of the section the caret is in, in points —
      *  the edges given, the rest and the header and footer offsets as they
      *  stand (a ruler's margin edges). */
