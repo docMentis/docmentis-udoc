@@ -6,6 +6,35 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Changed
+
+- A word document's tracked changes are drawn into its pages, unless it was saved
+  with markup off: a render, a PDF export and a print show each insertion and
+  deletion in its author's colour, with a change bar beside its line.
+
+#### Fixed
+
+- Text inserted as a tracked change in a word document shows on its page, where it
+  was missing, and a save keeps the document's tracked changes, where it lost them.
+  A Markdown or HTML save writes the final text.
+- Text held in custom XML or a smart tag in a word document shows on its page and
+  lasts through an edit and a save, where it was missing and the save lost it.
+- A tab on a hanging line lands on the indent, and a tab after a right, centred or
+  decimal one looks for its stop from where that text ended, in a word document, a
+  deck and a workbook's text box. A form's rows line up, where a value sat at the
+  margin and a second leader ran off the page.
+- A word document's lines hold to the height of their words, so a form whose tabs
+  are in a taller font than its words keeps to Word's length, where it ran long.
+- Line spacing under single tightens a word document's lines as Word does, where it
+  had no effect and what followed sat too low.
+- A picture taller than its line in a word document stops at the line's top, as in
+  Word, where it covered the text above.
+- A word document's links keep their link style below a table of contents that runs
+  on from its section's page, and after an edit above them that opens or closes a
+  field, where they showed without it.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -18,15 +47,27 @@ listed once, by package. Its major and minor version are those of the
   `revisionView` option, `setRevisionView`, the `revisionView` getter and
   `"revisionView:changed"` do the same for a host. A document opens on what it
   was saved to show, which is All Markup unless it was saved with markup off.
+- A view chosen on the Review tab stays for the word documents opened after it. The
+  `translations` keys are `ribbon.review`, `command.revisionView`,
+  `command.showMarkup`, `revisionView.*` and `showMarkup.*`.
+- On a word document, Find and Copy follow the Review tab's view: Find matches what
+  shows, across what's hidden, and the text Copy takes is what shows.
 - A word document has an Outline panel, listing its headings as Word's Navigation
   pane does, with their numbers. Clicking one goes to it, and the list follows the
   document's edits.
+- A word document's Formatting Marks also show hidden text, under a dotted rule in
+  its colour, a page or column break, as a labelled dotted rule, and the end of a
+  section, as a double rule naming how the next one begins. Hidden text stays out of
+  an export.
 
 #### Changed
 
 - The ribbon's tabs show as icons, each with its name in a tooltip, which leaves
   the toolbar more room. `"text"`, through the `ribbonTabStyle` option or
   `setRibbonTabStyle`, shows them by name.
+- `TextCharacterProperties` and `TextParagraphProperties`, in the commands `execute`
+  takes, are objects, `{ props, propertiesChange? }`, in place of arrays, and a
+  paragraph's mark is a `TextParagraphMark` holding its properties.
 
 #### Fixed
 
@@ -38,6 +79,8 @@ listed once, by package. Its major and minor version are those of the
   another page, in either direction, a light touch or a sideways swipe turns none,
   and a swipe through a page taller than the view stops at the page's end, for the
   next swipe to turn it.
+- A color picker's thumbs stay inside their sliders at either end, on the hue and
+  opacity strips and the color square, and still reach the full range.
 
 ### udoc-editor
 
@@ -71,6 +114,11 @@ listed once, by package. Its major and minor version are those of the
   the first key types over it.
 - An image has a Text Box, on its Image tab, that does the same over the page, in
   docMentis's indigo.
+- Editing a word document under a view that hides tracked text stays off what's
+  hidden: the caret steps over it, Backspace and Delete take what shows, and typing
+  lands before it. Text typed inside a tracked change comes out as plain text.
+- A paste into a word document keeps the tracked changes it copied, where such a
+  paste failed.
 
 #### Changed
 
@@ -81,7 +129,6 @@ listed once, by package. Its major and minor version are those of the
 - An image's Insert tab is gone: its Image tab offers Text Box and Shapes after its
   own tools, as icons named by their tooltips. An image's ribbon opens on it in edit
   mode, and goes back to it when pages are picked or nothing is selected.
-
 - A PDF's Page tab replaces its Insert tab. It offers Insert Page, Delete Page,
   Rotate Left, Rotate Right and Resize Page, on the current page or those picked in
   the thumbnails, then Text Box, Shapes and Image, as icons named by their tooltips.
@@ -104,14 +151,28 @@ listed once, by package. Its major and minor version are those of the
 - The controls beside and between a PDF's pages in edit mode are off by default:
   `showPageControls: true` turns them on. Their rail rotates a page either way, and
   its Page Settings button is now Resize Page.
+- The page rail's Move Up and Move Down keep the moved page in view, with the button
+  still under the pointer, and its icons are larger, in round buttons on a rounded
+  bar.
 - The page settings dialog closes on Apply Size, labels its Units and Layout, and
   no longer rotates the page, which the Page tab does.
 - The ruler's margin edges, indent markers and tab stops respond to the pointer:
   one that can be dragged tints when the pointer is over it, and more strongly
   while pressed, along with any markers the drag moves with it.
+- The ruler measures from the column the caret is in, as Word and PowerPoint do, and
+  shows each column as text, with the gutters between them as margin. An indent
+  marker dropped over paragraphs whose indents disagree sets that indent on all of
+  them.
 - A shape being dragged out shows half transparent in the outline and colors it will
   land with, on a deck, on an image and on a PDF's page, in place of a plain
   rectangle or ellipse.
+- The `translations` keys `ribbon.insert`, `pageControls.settings`,
+  `pageControls.settingsLabel`, `pageSettings.label`, `pageSettings.rotation`,
+  `pageSettings.rotateLeft`, `pageSettings.rotateRight`,
+  `pageSettings.rotatePageLeft` and `pageSettings.rotatePageRight` are gone.
+  `ribbon.page`, `ribbon.slide`, `command.changeLayout`, `command.changeShape`,
+  `command.pageResize`, `pageControls.resizeLabel`, `pageControls.rotateLeft`,
+  `pageControls.rotateLeftLabel` and `pageSettings.layout` are new.
 
 #### Fixed
 
@@ -123,6 +184,19 @@ listed once, by package. Its major and minor version are those of the
 - Keys pressed in New Slide's layout picker stay in it: Delete or Backspace no longer
   deletes what is selected behind it, and Escape closes only the picker, leaving the
   side panel open. Undo works from the keyboard straight after a pick.
+- Indent markers take a press as soon as the caret lands in a paragraph after a
+  selection whose indents disagreed, where they refused it until the next repaint
+  and the press fell through to the margin's edge.
+- Text running past its column, by a negative indent or a line that doesn't wrap,
+  repaints whole as it's edited, in a word document and a deck, where it was cut at
+  the column's edge with old pixels left beyond it.
+
+### udoc-node
+
+#### Changed
+
+- `UDocSession.cutLog` and `catchUp` reject on a session not entitled to
+  collaboration. `baselineVersion` doesn't.
 
 ## [0.8.15] - 2026-11-05
 
