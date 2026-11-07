@@ -18,7 +18,11 @@ import { createImageSizeModal } from "./components/ImageSizeModal.js";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { ICON_CROP, ICON_FLIP, ICON_IMAGE_SIZE } from "./icons.js";
+import { DOCMENTIS_FILL, DOCMENTIS_LINE, DOCMENTIS_ON_FILL } from "./docmentis-theme.js";
 import { markupShape, markupTextBox } from "./markup.js";
+import type { MarkupPaint } from "./markup.js";
+import { drawingColorOf, specifiedPaint } from "./paint.js";
+import type { PaintMemory } from "./paint.js";
 import { PREVIEW_NODE_ID, PREVIEW_STORY_ID } from "./shape-gallery.js";
 import type { GalleryShape } from "./shape-gallery.js";
 import { editStateOf } from "./state.js";
@@ -253,10 +257,26 @@ async function drawOverPage(
     host.client.setSelection({ image: { shapes: { page: info.id, selection: selection(id, story) } } });
 }
 
+/**
+ * What `shape` is drawn over an image in: what was last specified for it, else
+ * docMentis's colors at full opacity. A box's label is dark on its pale fill, and
+ * in the line's color on an outline with no fill.
+ */
+function markupPaint(memory: PaintMemory, shape: GalleryShape): MarkupPaint {
+    const fill = drawingColorOf(DOCMENTIS_FILL);
+    const line = drawingColorOf(DOCMENTIS_LINE);
+    return {
+        fill: specifiedPaint(memory, "fill", false, fill) ?? { solid: fill },
+        line: specifiedPaint(memory, "stroke", false, line) ?? { solid: line },
+        text: shape.outline ? line : drawingColorOf(DOCMENTIS_ON_FILL),
+    };
+}
+
 /** Draw `shape` over page `page` from `p0` to `p1` — the page's own points — and
  *  select it. */
 export function placeMarkup(
     host: EditHost,
+    memory: PaintMemory,
     shape: GalleryShape,
     page: number,
     p0: ShapePoint,
@@ -265,7 +285,7 @@ export function placeMarkup(
     return drawOverPage(
         host,
         page,
-        (id, story, size) => markupShape(id, story, shape, p0, p1, size),
+        (id, story, size) => markupShape(id, story, shape, p0, p1, size, markupPaint(memory, shape)),
         (id) => ({ shapes: [id] }),
     );
 }
@@ -274,6 +294,7 @@ export function placeMarkup(
  *  drag previews it. */
 export async function markupPreview(
     host: EditHost,
+    memory: PaintMemory,
     shape: GalleryShape,
     page: number,
     p0: ShapePoint,
@@ -281,7 +302,9 @@ export async function markupPreview(
 ): Promise<ShapePreview | null> {
     const info = await host.client.image.pageInfoByIndex(page);
     if (!info) return null;
-    return host.edit.shapePreview(page, markupShape(PREVIEW_NODE_ID, PREVIEW_STORY_ID, shape, p0, p1, info.size));
+    const paint = markupPaint(memory, shape);
+    const node = markupShape(PREVIEW_NODE_ID, PREVIEW_STORY_ID, shape, p0, p1, info.size, paint);
+    return host.edit.shapePreview(page, node);
 }
 
 /** Draw a text box holding `text` over page `page` from `p0` to `p1` — the page's
@@ -296,7 +319,7 @@ export function placeMarkupTextBox(
     return drawOverPage(
         host,
         page,
-        (id, story, size) => markupTextBox(id, story, text, p0, p1, size),
+        (id, story, size) => markupTextBox(id, story, text, p0, p1, size, drawingColorOf(DOCMENTIS_LINE)),
         (id, story) => ({ shapeText: [id, { range: { story, anchor: 0, focus: text.length } }] }),
     );
 }

@@ -2,19 +2,21 @@
 // out: Shapes — a PDF's four as page objects, from its Page tab, the gallery's on
 // a deck's slides, from its Slide tab, and over an image's pages, from its Image
 // tab — and Text Box on those and a PDF's page, a page object there; and Image on a
-// slide deck or a PDF's page, asked for and inserted at once.
+// slide deck or a PDF's page, asked for and inserted at once. A shape paints with
+// what was last specified (`PaintMemory`), else its document's default: a deck's
+// theme, or docMentis's colors on a PDF or an image.
 import {
     ICON_SUBTOOL_ARROW,
     ICON_SUBTOOL_ELLIPSE,
     ICON_SUBTOOL_LINE,
     ICON_SUBTOOL_RECTANGLE,
     ICON_SUBTOOL_TEXTBOX,
-    SHAPE_STROKE,
     SHAPE_STROKE_WIDTH,
     segmentsFor,
 } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, PickerOption, ShapeKind, ShapePoint } from "@docmentis/udoc-ui/internal";
-import type { DeviceColor, ShapePreview } from "@docmentis/udoc-wasm";
+import type { ShapePreview } from "@docmentis/udoc-wasm";
+import { DOCMENTIS_FILL, DOCMENTIS_LINE } from "./docmentis-theme.js";
 import type { EditHost } from "./edit-client.js";
 import { EditCommand } from "./edit-command.js";
 import type { MessageKey } from "./i18n/index.js";
@@ -22,16 +24,14 @@ import { ICON_IMAGE, ICON_SHAPES } from "./icons.js";
 import { markupPreview, placeMarkup, placeMarkupTextBox } from "./image.js";
 import { galleryShape, PREVIEW_NODE_ID, PREVIEW_STORY_ID, SHAPE_GALLERY } from "./shape-gallery.js";
 import type { GalleryShape } from "./shape-gallery.js";
-import { slideShape, slideTextBox } from "./slide-shape.js";
+import { specifiedPaint, specifiedPortablePaint } from "./paint.js";
+import type { PaintMemory } from "./paint.js";
+import { slideShape, slideShapeColors, slideTextBox } from "./slide-shape.js";
+import type { SlideShapePaint } from "./slide-shape.js";
 import { editStateOf } from "./state.js";
 
 /** A large insert index that clamps to "on top" in the engine. */
 const APPEND_INDEX = 0x7fff_ffff;
-
-/** A placed shape's fill — translucent blue (filled shapes only). */
-const FILL: DeviceColor = { components: [0.26, 0.55, 0.96], colorSpace: "srgb" };
-/** A placed shape's fill opacity. */
-const FILL_ALPHA = 0.18;
 
 /** The shapes a PDF's Page tab places, as the shell carries their place tools. */
 const PORTABLE_SHAPES: ReadonlySet<string> = new Set<ShapeKind>(["rectangle", "ellipse", "line", "arrow"]);
@@ -69,11 +69,14 @@ const SHAPE_OPTIONS: readonly PickerOption<MessageKey>[] = (
  * `objects`. The object carries **no `id`** — the `InsertObjects` command mints
  * one on insert, so the host never allocates ids. Rectangle and ellipse use the
  * box of the two points; line and arrow run `p0 → p1`, so the direction is
- * preserved. Filled shapes (rectangle / ellipse) get the translucent fill +
- * solid stroke; open shapes (line / arrow) are stroke only.
+ * preserved. Filled shapes (rectangle / ellipse) get a fill and a stroke; open
+ * shapes (line / arrow) are stroke only. Each paints with what was last specified
+ * for it, else docMentis's colors at full opacity.
  */
-function shapeObject(shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): unknown {
+function shapeObject(memory: PaintMemory, shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): unknown {
     const filled = shape === "rectangle" || shape === "ellipse";
+    const fill = specifiedPortablePaint(memory, "fill", DOCMENTIS_FILL);
+    const stroke = specifiedPortablePaint(memory, "stroke", DOCMENTIS_LINE);
     const object = {
         transform: { scaleX: 1, skewY: 0, skewX: 0, scaleY: 1, translateX: 0, translateY: 0 },
         clips: [],
@@ -82,10 +85,10 @@ function shapeObject(shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): unknown 
             path: {
                 path: { segments: segmentsFor(shape, p0, p1) },
                 windingRule: "nonZero",
-                nonstrokingStyle: { brush: { solid: FILL }, alpha: FILL_ALPHA, overprint: false },
+                nonstrokingStyle: { brush: { solid: fill.color }, alpha: fill.alpha, overprint: false },
                 strokingStyle: {
-                    brush: { solid: SHAPE_STROKE },
-                    alpha: 1.0,
+                    brush: { solid: stroke.color },
+                    alpha: stroke.alpha,
                     overprint: false,
                     line: {
                         width: SHAPE_STROKE_WIDTH,
@@ -112,15 +115,17 @@ function shapeObject(shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): unknown 
 }
 
 /** What {@link shapeObject} draws from `p0` to `p1`, as the sketch layer shows it. */
-function shapeObjectPreview(shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): ShapePreview {
+function shapeObjectPreview(memory: PaintMemory, shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): ShapePreview {
     const filled = shape === "rectangle" || shape === "ellipse";
+    const fill = specifiedPortablePaint(memory, "fill", DOCMENTIS_FILL);
+    const stroke = specifiedPortablePaint(memory, "stroke", DOCMENTIS_LINE);
     return {
         paths: [
             {
                 segments: segmentsFor(shape, p0, p1),
-                fill: filled ? { color: FILL, opacity: FILL_ALPHA } : null,
+                fill: filled ? { color: fill.color, opacity: fill.alpha } : null,
                 stroke: {
-                    paint: { color: { components: SHAPE_STROKE.components, colorSpace: "srgb" }, opacity: 1 },
+                    paint: { color: stroke.color, opacity: stroke.alpha },
                     style: {
                         width: SHAPE_STROKE_WIDTH,
                         lineCap: "butt",
@@ -283,6 +288,7 @@ export function placedShape(tool: string): ShapeKind | null {
  */
 export function placePreview(
     host: EditHost,
+    memory: PaintMemory,
     tool: string,
     page: number,
     p0: ShapePoint,
@@ -291,13 +297,26 @@ export function placePreview(
     const state = host.store.getState();
     if (state.status !== "ready" || tool === TEXT_BOX_TOOL) return null;
     if (state.docType === "portable") {
-        return PORTABLE_SHAPES.has(tool) ? Promise.resolve(shapeObjectPreview(tool as ShapeKind, p0, p1)) : null;
+        return PORTABLE_SHAPES.has(tool)
+            ? Promise.resolve(shapeObjectPreview(memory, tool as ShapeKind, p0, p1))
+            : null;
     }
     const shape = galleryShape(tool);
     if (!shape) return null;
-    if (state.docType === "image") return markupPreview(host, shape, page, p0, p1);
+    if (state.docType === "image") return markupPreview(host, memory, shape, page, p0, p1);
     if (state.docType !== "presentation") return null;
-    return host.edit.shapePreview(page, slideShape(PREVIEW_NODE_ID, PREVIEW_STORY_ID, shape, p0, p1));
+    const node = slideShape(PREVIEW_NODE_ID, PREVIEW_STORY_ID, shape, p0, p1, slidePaint(memory, shape));
+    return host.edit.shapePreview(page, node);
+}
+
+/** What was last specified for a new `shape` on a slide, over its style: a scheme
+ *  color stays one, as a deck has a theme to resolve it. */
+function slidePaint(memory: PaintMemory, shape: GalleryShape): SlideShapePaint {
+    const colors = slideShapeColors(shape);
+    return {
+        fill: specifiedPaint(memory, "fill", true, colors.fill),
+        line: specifiedPaint(memory, "stroke", true, colors.line),
+    };
 }
 
 /** Place `tool` on page `page`, spanning the page-local points `p0 → p1`, on
@@ -306,7 +325,14 @@ export function placePreview(
  *  shape or a text box on the slide, and on an image, either drawn over it. A no-op
  *  for a page with no id (no document, or none of these), or a tool not the
  *  document's. */
-export async function place(host: EditHost, tool: string, page: number, p0: ShapePoint, p1: ShapePoint): Promise<void> {
+export async function place(
+    host: EditHost,
+    memory: PaintMemory,
+    tool: string,
+    page: number,
+    p0: ShapePoint,
+    p1: ShapePoint,
+): Promise<void> {
     const state = host.store.getState();
     if (state.status !== "ready") return;
     if (state.docType === "portable") {
@@ -314,7 +340,7 @@ export async function place(host: EditHost, tool: string, page: number, p0: Shap
         const pageId = await host.client.portable.pageIdByIndex(page);
         if (pageId === undefined) return;
         if (tool === TEXT_BOX_TOOL) return placeTextBox(host, page, pageId, p0, p1);
-        const object = shapeObject(tool as ShapeKind, p0, p1);
+        const object = shapeObject(memory, tool as ShapeKind, p0, p1);
         await host.commit(() => host.client.execute(EditCommand.insertObjects(pageId, [object])));
         return;
     }
@@ -325,8 +351,8 @@ export async function place(host: EditHost, tool: string, page: number, p0: Shap
     }
     const shape = galleryShape(tool);
     if (!shape) return;
-    if (state.docType === "image") return placeMarkup(host, shape, page, p0, p1);
-    if (state.docType === "presentation") return placeSlideShape(host, shape, page, p0, p1);
+    if (state.docType === "image") return placeMarkup(host, memory, shape, page, p0, p1);
+    if (state.docType === "presentation") return placeSlideShape(host, memory, shape, page, p0, p1);
 }
 
 /**
@@ -336,6 +362,7 @@ export async function place(host: EditHost, tool: string, page: number, p0: Shap
  */
 async function placeSlideShape(
     host: EditHost,
+    memory: PaintMemory,
     shape: GalleryShape,
     page: number,
     p0: ShapePoint,
@@ -344,7 +371,7 @@ async function placeSlideShape(
     const [slide, id, story] = await Promise.all([host.edit.slideId(page), host.client.mintId(), host.client.mintId()]);
     if (!slide || !id || !story) return;
     const container = { slide };
-    const node = slideShape(id, story, shape, p0, p1);
+    const node = slideShape(id, story, shape, p0, p1, slidePaint(memory, shape));
     await host.commit(() =>
         host.client.execute({
             presentation: {

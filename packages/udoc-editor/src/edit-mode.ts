@@ -264,11 +264,13 @@ export function editMode(options: UDocEditorOptions): EditMode {
         contextMenuItems: (state, inTable) => (editing(state) ? (inTable ? TABLE_CONTEXT_MENU : CONTEXT_MENU) : null),
         guideBand: (state) => (rulerShown(state) ? ruler : null),
         placedShape,
-        placePreview: (tool, page, p0, p1) => (host ? placePreview(host, tool, page, p0, p1) : null),
+        placePreview: (tool, page, p0, p1) =>
+            host && tools ? placePreview(host, tools.paintMemory, tool, page, p0, p1) : null,
         selectionChrome: grips.chrome,
         pressCanvas: (x, y, _ev, canvas) => grips.press(x, y, canvas),
         canvasCursor: (x, y) => grips.cursor(x, y),
-        place: (tool, page, p0, p1) => (host ? place(host, tool, page, p0, p1) : Promise.resolve()),
+        place: (tool, page, p0, p1) =>
+            host && tools ? place(host, tools.paintMemory, tool, page, p0, p1) : Promise.resolve(),
         mount(lent) {
             // What the shell lends, with edit mode's own client over the worker.
             const mounted: EditHost = { ...lent, edit: new EditClient(lent.client) };

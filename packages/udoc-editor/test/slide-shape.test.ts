@@ -7,10 +7,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { Shape, ShapeConnector, ShapeNode } from "@docmentis/udoc-wasm";
+import type { PaintFill, Shape, ShapeConnector, ShapeNode } from "@docmentis/udoc-wasm";
 
 import type { GalleryShape } from "../src/shape-gallery.ts";
-import { slideShape } from "../src/slide-shape.ts";
+import { slideShape, slideShapeColors } from "../src/slide-shape.ts";
 
 /** The gallery's shapes these place, as it describes them. */
 const GALLERY: Readonly<Record<string, GalleryShape>> = {
@@ -139,4 +139,42 @@ test("an arrowed line carries its heads alone, the rest from its style", () => {
     );
     assert.deepEqual(both.properties.geometry, { preset: { preset: "curvedConnector3", adjustValues: [] } });
     assert.deepEqual(both.properties.line?.headEnd, both.properties.line?.tailEnd);
+});
+
+const RED: PaintFill = { solid: { base: { sRgb: { r: 255, g: 0, b: 0 } }, transforms: [{ alpha: 0.5 }] } };
+const BLUE: PaintFill = { solid: { base: { sRgb: { r: 0, g: 0, b: 255 } }, transforms: [] } };
+
+test("a shape states what was specified for it over its style", () => {
+    const a = { x: 10, y: 20 };
+    const b = { x: 110, y: 70 };
+    const shape = shapeOf(slideShape("1-1", "1-2", gallery("rect"), a, b, { fill: RED, line: BLUE }));
+    assert.deepEqual(shape.properties.fill, RED);
+    assert.deepEqual(shape.properties.line?.fill, BLUE);
+    assert.equal(shape.properties.line?.width, null, "the style's width still comes through");
+    assert.equal(shape.style?.lineRef.index, 2);
+});
+
+test("a side with nothing specified stays the style's", () => {
+    const a = { x: 10, y: 20 };
+    const b = { x: 110, y: 70 };
+    const shape = shapeOf(slideShape("1-1", "1-2", gallery("rect"), a, b, { fill: RED, line: null }));
+    assert.deepEqual(shape.properties.fill, RED);
+    assert.equal(shape.properties.line, null);
+});
+
+test("a line takes the line specified, keeps its arrowheads, and no fill", () => {
+    const a = { x: 10, y: 20 };
+    const b = { x: 110, y: 70 };
+    const arrow = connectorOf(slideShape("1-1", "1-2", gallery("lineArrow"), a, b, { fill: RED, line: BLUE }));
+    assert.equal(arrow.properties.fill, null);
+    assert.deepEqual(arrow.properties.line?.fill, BLUE);
+    assert.ok(arrow.properties.line?.tailEnd);
+});
+
+test("an opacity with no color takes the color the style would paint", () => {
+    assert.deepEqual(slideShapeColors(gallery("rect")), {
+        fill: { base: { scheme: "accent1" }, transforms: [] },
+        line: { base: { scheme: "accent1" }, transforms: [{ shade: 0.15 }] },
+    });
+    assert.deepEqual(slideShapeColors(gallery("line")).line, { base: { scheme: "accent1" }, transforms: [] });
 });

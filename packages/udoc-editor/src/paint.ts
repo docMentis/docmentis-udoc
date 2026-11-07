@@ -3,6 +3,7 @@
 // the Shape, Object and Text tabs.
 import type {
     Brush,
+    DeviceColor,
     NonstrokingStyle,
     PaintColor,
     PaintColorTransform,
@@ -39,8 +40,9 @@ import type {
     ThemeSwatch,
     UIShellHost,
 } from "@docmentis/udoc-ui/internal";
+import { DOCMENTIS_LINE } from "./docmentis-theme.js";
 import { changedDrawingLine, changedPortableLine, lineDashOfDrawing, lineDashOfPortable } from "./line-edit.js";
-import { fillOpacity, fillWithOpacity } from "./opacity.js";
+import { fillOpacity, fillWithOpacity, specifiedFill } from "./opacity.js";
 import { editState } from "./state.js";
 import type { EditTools } from "./tools.js";
 
@@ -319,7 +321,10 @@ export function objectOpacityControl(
                 buildOpacityPanel(dd.menu, {
                     i18n: tools.i18n,
                     opacity: selectionOpacity(editState(env.store.getState()).selectionProperties, "fill"),
-                    onSet: (opacity) => void tools.paint.setSelectionOpacity("fill", opacity),
+                    onSet: (opacity) => {
+                        tools.paintMemory.lastOpacity.fill = opacity;
+                        void tools.paint.setSelectionOpacity("fill", opacity);
+                    },
                     close: () => dd.controller.close(),
                 }),
         },
@@ -329,26 +334,72 @@ export function objectOpacityControl(
 }
 
 /**
- * The last picks — edit mode's write-side memory: the color per channel, and the
- * weight / dash, that a side with no line takes when the Line panel turns it on.
- * Not shown on the triggers or the panel's marks, which mirror the *selection*.
+ * What was last specified — edit mode's write-side memory, for as long as the
+ * editor is open, across the documents it opens. A new shape takes a side's color
+ * and opacity from it, over the document's default ({@link specifiedPaint}), and a
+ * side with no line takes its color, weight and dash when the Line panel turns it
+ * on. A No Fill or a No Line isn't a color, and leaves it be. Not shown on the
+ * triggers or the panel's marks, which mirror the *selection*.
  */
 export interface PaintMemory {
-    readonly lastPaint: Record<PaintChannel, PaintSpec>;
+    /** The color last picked per channel, or null with none picked yet. */
+    readonly lastPaint: Record<PaintChannel, PaintSpec | null>;
+    /** The opacity last set per side, or null with none set yet. */
+    readonly lastOpacity: Record<OpacityChannel, number | null>;
     readonly lastStroke: StrokeStyle;
 }
 
-/** A {@link PaintMemory} at its defaults. */
+/** A {@link PaintMemory} with nothing specified yet. */
 export function createPaintMemory(): PaintMemory {
     return {
-        lastPaint: {
-            fill: { kind: "solid", hex: "#4472c4" },
-            stroke: { kind: "solid", hex: "#000000" },
-            text: { kind: "solid", hex: "#000000" },
-            highlight: { kind: "solid", hex: "#ffff00" },
-        },
+        lastPaint: { fill: null, stroke: null, text: null, highlight: null },
+        lastOpacity: { fill: null, stroke: null },
         lastStroke: { weight: 1, dash: "solid" },
     };
+}
+
+/** The color last specified for `channel` as a drawing color. A theme color on a
+ *  document with no theme, not `themed`, is the color it showed as. */
+function specifiedColor(memory: PaintMemory, channel: OpacityChannel, themed: boolean): PaintColor | null {
+    const last = memory.lastPaint[channel];
+    if (!last || last.kind === "none") return null;
+    return paintToDrawingColor(last.kind === "theme" && !themed ? { kind: "solid", hex: last.hex } : last);
+}
+
+/**
+ * What a new drawing shape paints `channel` with, from what was last specified: its
+ * color at its opacity, an opacity alone taking `defaultColor`. Null with neither
+ * specified, for the document's default.
+ */
+export function specifiedPaint(
+    memory: PaintMemory,
+    channel: OpacityChannel,
+    themed: boolean,
+    defaultColor: PaintColor,
+): PaintFill | null {
+    return specifiedFill(specifiedColor(memory, channel, themed), memory.lastOpacity[channel], defaultColor);
+}
+
+/** What a new PDF object paints `channel` with: the color last specified, else
+ *  `defaultHex`, at the opacity last set, else opaque. */
+export function specifiedPortablePaint(
+    memory: PaintMemory,
+    channel: OpacityChannel,
+    defaultHex: string,
+): { color: DeviceColor; alpha: number } {
+    const last = memory.lastPaint[channel];
+    const hex = last && last.kind !== "none" ? last.hex : defaultHex;
+    const [r, g, b] = hexToRgbBytes(hex);
+    return {
+        color: { colorSpace: "srgb", components: [r / 255, g / 255, b / 255] },
+        alpha: memory.lastOpacity[channel] ?? 1,
+    };
+}
+
+/** `hex` as a drawing color. */
+export function drawingColorOf(hex: string): PaintColor {
+    const [r, g, b] = hexToRgbBytes(hex);
+    return { base: { sRgb: { r, g, b } }, transforms: [] };
 }
 
 /**
@@ -368,12 +419,15 @@ export function paintControl(
     const selectionPaint = () => editState(env.store.getState()).selectionPaint;
 
     // Change the selection's line by what the panel set, the rest carried.
-    const applyStroke = (change: StrokeChange): void =>
+    const applyStroke = (change: StrokeChange): void => {
+        const { docType } = env.store.getState();
+        const themed = docType !== null && THEMED.has(docType);
         void tools.paint.strokeSelection(change, {
-            paint: memory.lastPaint.stroke,
+            paint: memory.lastPaint.stroke ?? { kind: "solid", hex: themed ? "#000000" : DOCMENTIS_LINE },
             weight: memory.lastStroke.weight,
             dash: memory.lastStroke.dash,
         });
+    };
 
     // Apply a picked paint, at the opacity the custom picker gave it, else at
     // the one the channel has.
@@ -391,6 +445,9 @@ export function paintControl(
         if (paint.kind !== "none") {
             memory.lastPaint[channel] = paint;
             env.pushRecent(channel, paint.hex);
+        }
+        if (opacity !== undefined && (channel === "fill" || channel === "stroke")) {
+            memory.lastOpacity[channel] = opacity;
         }
         applyPaint(paint, opacity);
     };
@@ -442,6 +499,7 @@ export function paintControl(
             ...(opacityChannel && opacity !== null
                 ? {
                       onOpacity: (value: number) => {
+                          memory.lastOpacity[opacityChannel] = value;
                           void tools.paint.setSelectionOpacity(opacityChannel, value);
                           close();
                       },

@@ -69,8 +69,8 @@ listed once, by package. Its major and minor version are those of the
 - A deck has a Text Box, on its Slide tab: dragged out, or dropped with a click, it
   puts a text box on the slide that wraps at its width. Its text comes selected, so
   the first key types over it.
-- An image has a Text Box, on its Image tab, that does the same over the page, in the
-  red of the shapes drawn there.
+- An image has a Text Box, on its Image tab, that does the same over the page, in
+  docMentis's indigo.
 
 #### Changed
 
@@ -87,6 +87,11 @@ listed once, by package. Its major and minor version are those of the
   the thumbnails, then Text Box, Shapes and Image, as icons named by their tooltips.
   Resize Page opens a dialog of the current page's size. A PDF's ribbon opens on it
   in edit mode, and goes back to it when pages are picked or nothing is selected.
+- A new shape takes the fill color, line color and opacity last set in the Fill and
+  Line panels and the Opacity button, for as long as the editor is open. Until then a
+  deck's shape takes its theme, and a PDF's or an image's a pale indigo fill and an
+  indigo line at full opacity, in place of a translucent blue fill on a PDF and a red
+  outline on an image.
 - The Annotate tab's Opacity takes any value, with a slider and a percentage field
   below its presets.
 - The Object and Annotate tabs order their paint buttons Line, Fill, Opacity.

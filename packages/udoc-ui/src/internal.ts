@@ -76,7 +76,7 @@ export type { AlignEdge, EditAxis, SelectionEdit, ZOrder } from "./worker/protoc
 export { ANNOTATE_TAB, arrangementFor, presentTab, profileFor, REVIEW_TAB, viewTab } from "./app/profiles.js";
 export { VIEW_MODE } from "./app/state.js";
 export type { CommandId, ShapeKind, ToolbarTab } from "./app/state.js";
-export { segmentsFor, STROKE as SHAPE_STROKE, STROKE_WIDTH as SHAPE_STROKE_WIDTH } from "./app/shapes.js";
+export { segmentsFor, STROKE_WIDTH as SHAPE_STROKE_WIDTH } from "./app/shapes.js";
 export type { ShapePoint } from "./app/shapes.js";
 export { commandContext, COPY_MENU_ITEM } from "./app/commands.js";
 export { buildMenuInto } from "./app/components/menuItems.js";

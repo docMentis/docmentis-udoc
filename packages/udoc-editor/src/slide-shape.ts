@@ -1,8 +1,10 @@
 // The shapes the Slide tab places on a deck's slides: a gallery shape across the
-// drag, styled from the deck's theme as PowerPoint styles a shape it inserts, and
-// a text box. Pure — `insert.ts` places what this builds.
+// drag, styled from the deck's theme as PowerPoint styles a shape it inserts, over
+// what was last specified for it, and a text box. Pure — `insert.ts` places what
+// this builds.
 import type {
     PaintColor,
+    PaintFill,
     PaintLine,
     PaintLineEnd,
     PaintSchemeColor,
@@ -42,19 +44,34 @@ const LINE_STYLE: ShapeStyle = {
 /** An arrowhead, sized by the line it ends. */
 const ARROWHEAD: PaintLineEnd = { kind: "triangle", width: null, length: null };
 
-/** A line's own outline: its arrowheads alone, the rest from its style. */
-function arrowedLine(shape: GalleryShape): PaintLine | null {
-    if (!shape.arrows) return null;
+/** The fill and line a new shape states over its style — what was last specified
+ *  for it. Null for either takes it from the style. */
+export interface SlideShapePaint {
+    readonly fill: PaintFill | null;
+    readonly line: PaintFill | null;
+}
+
+/** What `shape`'s style paints it with on its own: the colors an opacity specified
+ *  with no color of its own is taken over. */
+export function slideShapeColors(shape: GalleryShape): { fill: PaintColor; line: PaintColor } {
+    const { fillRef, lineRef } = shape.line || shape.outline ? LINE_STYLE : SHAPE_STYLE;
+    return { fill: fillRef.color ?? scheme("accent1"), line: lineRef.color ?? scheme("accent1") };
+}
+
+/** A line's own outline: its arrowheads and the paint specified for it, the rest
+ *  from its style. Null with neither. */
+function ownLine(shape: GalleryShape, fill: PaintFill | null): PaintLine | null {
+    if (!shape.arrows && !fill) return null;
     return {
         width: null,
         cap: null,
         compound: null,
         align: null,
-        fill: null,
+        fill,
         dash: null,
         join: null,
         headEnd: shape.arrows === "both" ? ARROWHEAD : null,
-        tailEnd: ARROWHEAD,
+        tailEnd: shape.arrows ? ARROWHEAD : null,
     };
 }
 
@@ -121,9 +138,17 @@ export function slideTextBox(id: string, story: string, text: string, p0: ShapeP
  * `p1`, by flipping the box its preset runs corner to corner across, with its
  * arrowheads at `p1` — and at `p0` too for a double arrow. Anything else spans
  * the box of the two points, unflipped, with an empty text body to type into.
- * Fill, outline and text color come from the theme, through its style.
+ * Fill, outline and text color come from the theme, through its style, under the
+ * `paint` it states; a line and an open outline take no fill.
  */
-export function slideShape(id: string, story: string, shape: GalleryShape, p0: ShapePoint, p1: ShapePoint): ShapeNode {
+export function slideShape(
+    id: string,
+    story: string,
+    shape: GalleryShape,
+    p0: ShapePoint,
+    p1: ShapePoint,
+    paint: SlideShapePaint = { fill: null, line: null },
+): ShapeNode {
     const nonVisual: ShapeNonVisualProperties = {
         name: shape.name,
         description: null,
@@ -140,8 +165,8 @@ export function slideShape(id: string, story: string, shape: GalleryShape, p0: S
             flipV: shape.line && p1.y < p0.y,
         },
         geometry: { preset: { preset: shape.preset, adjustValues: [] } },
-        fill: null,
-        line: arrowedLine(shape),
+        fill: shape.line || shape.outline ? null : paint.fill,
+        line: ownLine(shape, paint.line),
         effects: null,
         scene3d: null,
         shape3d: null,

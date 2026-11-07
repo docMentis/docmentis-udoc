@@ -8,7 +8,7 @@ import { test } from "node:test";
 
 import type { PaintColor, PaintFill } from "@docmentis/udoc-wasm";
 
-import { colorOpacity, fillOpacity, fillWithOpacity, withOpacity } from "../src/opacity.ts";
+import { colorOpacity, fillOpacity, fillWithOpacity, specifiedFill, withOpacity } from "../src/opacity.ts";
 
 const accent: PaintColor = { base: { scheme: "accent1" }, transforms: [{ shade: 0.15 }] };
 
@@ -57,4 +57,26 @@ test("a fill with no one color is left as it is", () => {
     assert.equal(fillWithOpacity("none", 0.5), "none");
     const gradient = { gradient: {} } as unknown as PaintFill;
     assert.equal(fillWithOpacity(gradient, 0.5), gradient);
+});
+
+const red: PaintColor = { base: { sRgb: { r: 255, g: 0, b: 0 } }, transforms: [] };
+
+test("nothing specified is the document's default", () => {
+    assert.equal(specifiedFill(null, null, accent), null);
+});
+
+test("a color specified paints as it is, opaque", () => {
+    assert.deepEqual(specifiedFill(red, null, accent), { solid: red });
+});
+
+test("a color and an opacity specified paint together", () => {
+    assert.deepEqual(specifiedFill(red, 0.5, accent), {
+        solid: { base: { sRgb: { r: 255, g: 0, b: 0 } }, transforms: [{ alpha: 0.5 }] },
+    });
+});
+
+test("an opacity alone takes the default color", () => {
+    assert.deepEqual(specifiedFill(null, 0.25, accent), {
+        solid: { base: { scheme: "accent1" }, transforms: [{ shade: 0.15 }, { alpha: 0.25 }] },
+    });
 });

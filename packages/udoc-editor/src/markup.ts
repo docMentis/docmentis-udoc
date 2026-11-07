@@ -1,14 +1,18 @@
-// The shapes the Image tab draws over an image's pages: a markup's outline, in
-// red and unfilled so the image shows through, at a weight that reads at the page's
-// size, a box's room for a label, and a text box. Pure — `image.ts` places what
-// this builds.
-import type { PaintColor, PaintLine, PaintLineEnd, ShapeNode, TextBody } from "@docmentis/udoc-wasm";
+// The shapes the Image tab draws over an image's pages: a shape in the paint it's
+// given, with an outline at a weight that reads at the page's size and a box's room
+// for a label, and a text box. Pure — `image.ts` places what this builds.
+import type { PaintColor, PaintFill, PaintLine, PaintLineEnd, ShapeNode, TextBody } from "@docmentis/udoc-wasm";
 import type { ShapePoint } from "@docmentis/udoc-ui/internal";
 import type { GalleryShape } from "./shape-gallery.js";
 
-/** The color shapes are drawn over an image in — a markup red. An image has
- *  no theme, so it is an sRGB color, never a scheme one. */
-const MARKUP_COLOR: PaintColor = { base: { sRgb: { r: 0xe5, g: 0x39, b: 0x35 } }, transforms: [] };
+/** What a shape is drawn over an image in. An image has no theme, so these are
+ *  never scheme colors. */
+export interface MarkupPaint {
+    readonly fill: PaintFill;
+    readonly line: PaintFill;
+    /** A box's label's. */
+    readonly text: PaintColor;
+}
 
 /** The page size, in points, one point of line weight is drawn per — so a
  *  shape's outline reads at the page's size, a photo's as a screenshot's. */
@@ -47,9 +51,9 @@ export function markupTextSize(width: number, height: number): number {
 const ARROWHEAD: PaintLineEnd = { kind: "triangle", width: "medium", length: "medium" };
 
 /** A box's text body, empty: one paragraph centred in it, which the text typed
- *  into it takes the markup color and `size` points from — what a press in the
- *  box lands a caret in, as in a slide's shape. Its story is `story`. */
-function labelBody(story: string, size: number): TextBody {
+ *  into it takes `color` and `size` points from — what a press in the box lands a
+ *  caret in, as in a slide's shape. Its story is `story`. */
+function labelBody(story: string, size: number, color: PaintColor): TextBody {
     return {
         properties: { anchor: "center" },
         story: {
@@ -58,7 +62,7 @@ function labelBody(story: string, size: number): TextBody {
                 {
                     paragraph: {
                         properties: { props: [{ align: "center" }] },
-                        end: { mark: { properties: { props: [{ size }, { fill: { solid: MARKUP_COLOR } }] } } },
+                        end: { mark: { properties: { props: [{ size }, { fill: { solid: color } }] } } },
                         spans: [],
                     },
                 },
@@ -70,8 +74,8 @@ function labelBody(story: string, size: number): TextBody {
 /**
  * A text box across the box of `p0` and `p1` (the page's points) over a page
  * `page` points in size, its id `id`: a rectangle with no fill or outline, holding
- * `text` in the story `story`, wrapped at its width, in the markup color and at the
- * size of a label. It spans at least {@link TEXT_BOX_MIN_WIDTH} ×
+ * `text` in the story `story`, wrapped at its width, in `color` and at the size of
+ * a label. It spans at least {@link TEXT_BOX_MIN_WIDTH} ×
  * {@link TEXT_BOX_MIN_HEIGHT} of that size, moved back onto the page where that
  * takes it past the edge.
  */
@@ -82,9 +86,10 @@ export function markupTextBox(
     p0: ShapePoint,
     p1: ShapePoint,
     page: { width: number; height: number },
+    color: PaintColor,
 ): ShapeNode {
     const size = markupTextSize(page.width, page.height);
-    const properties = { props: [{ size }, { fill: { solid: MARKUP_COLOR } }] };
+    const properties = { props: [{ size }, { fill: { solid: color } }] };
     const width = Math.max(Math.abs(p1.x - p0.x), size * TEXT_BOX_MIN_WIDTH);
     const height = Math.max(Math.abs(p1.y - p0.y), size * TEXT_BOX_MIN_HEIGHT);
     return {
@@ -134,9 +139,9 @@ export function markupTextBox(
 /**
  * The drawing shape `shape` spanning `p0 → p1` (the page's points) over a
  * page `page` points in size, its id `id` and a box's text story `story` —
- * outlined in {@link MARKUP_COLOR} and unfilled, so the image shows through;
- * an arrowed line's head at `p1`, and at `p0` too for a double arrow; any
- * shape but a line a box, with an empty label to type into. A line runs from
+ * in `paint`, a line and an open outline taking no fill; an arrowed line's head at
+ * `p1`, and at `p0` too for a double arrow; any shape but a line a box, with an
+ * empty label to type into. A line runs from
  * `p0` to `p1` by flipping the box its preset runs corner to corner across; a
  * box is never flipped, as a flip turns its label upside down.
  */
@@ -147,6 +152,7 @@ export function markupShape(
     p0: ShapePoint,
     p1: ShapePoint,
     page: { width: number; height: number },
+    paint: MarkupPaint,
 ): ShapeNode {
     const box = !shape.line;
     const line: PaintLine = {
@@ -154,7 +160,7 @@ export function markupShape(
         cap: "round",
         compound: null,
         align: null,
-        fill: { solid: MARKUP_COLOR },
+        fill: paint.line,
         dash: null,
         join: "round",
         headEnd: shape.arrows === "both" ? ARROWHEAD : null,
@@ -173,14 +179,14 @@ export function markupShape(
                     flipV: !box && p1.y < p0.y,
                 },
                 geometry: { preset: { preset: shape.preset, adjustValues: [] } },
-                fill: "none",
+                fill: box && !shape.outline ? paint.fill : "none",
                 line,
                 effects: null,
                 scene3d: null,
                 shape3d: null,
             },
             style: null,
-            textBody: box ? labelBody(story, markupTextSize(page.width, page.height)) : null,
+            textBody: box ? labelBody(story, markupTextSize(page.width, page.height), paint.text) : null,
             textTransform: null,
             diagramPoint: null,
         },

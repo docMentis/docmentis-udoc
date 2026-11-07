@@ -39,3 +39,17 @@ export function fillOpacity(fill: PaintFill): number | null {
 export function fillWithOpacity(fill: PaintFill, opacity: number): PaintFill {
     return typeof fill === "object" && "solid" in fill ? { solid: withOpacity(fill.solid, opacity) } : fill;
 }
+
+/**
+ * What a new shape paints a side with, from what was last specified for it: its
+ * `color` at its `opacity`, an opacity alone taking `defaultColor`. Null with
+ * neither specified, for the document's own default.
+ */
+export function specifiedFill(
+    color: PaintColor | null,
+    opacity: number | null,
+    defaultColor: PaintColor,
+): PaintFill | null {
+    if (!color && opacity === null) return null;
+    return { solid: withOpacity(color ?? defaultColor, opacity ?? colorOpacity(color ?? defaultColor)) };
+}
