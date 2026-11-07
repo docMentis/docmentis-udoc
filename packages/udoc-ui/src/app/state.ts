@@ -51,6 +51,12 @@ export type ThemeMode = "light" | "dark" | "system";
  */
 export type ViewControlsPlacement = "top-toolbar" | "floating" | "status-bar";
 
+/**
+ * How the ribbon's tabs show: `"text"`, each under its name; or `"icon"`, each
+ * as a glyph with its name in the tooltip, which takes less of the toolbar.
+ */
+export type RibbonTabStyle = "text" | "icon";
+
 // -----------------------------------------------------------------------------
 // Zoom
 // -----------------------------------------------------------------------------
@@ -415,6 +421,9 @@ export interface ToolbarTab<K extends string = MessageKey> {
     id: string;
     /** Its label: a key of the shell's messages — udoc-ui's, or an extension's. */
     label: K;
+    /** The SVG markup it shows in place of its label under the `"icon"`
+     *  {@link RibbonTabStyle}. */
+    icon: string;
     /** Its commands, by id: the shell's {@link CommandId}s, or an extension's. */
     commands: readonly string[];
     /**
@@ -918,6 +927,9 @@ export interface UIState {
     /** Where the view-state controls (page nav + zoom + view mode) are docked. */
     viewControlsPlacement: ViewControlsPlacement;
 
+    /** How the ribbon's tabs show: by name, or by {@link ToolbarTab.icon}. */
+    ribbonTabStyle: RibbonTabStyle;
+
     // --- Side panels -----------------------------------------------------
     /** The currently open panel tab, or null when no panel is open. */
     activePanel: PanelTab | null;
@@ -1150,6 +1162,7 @@ export const initialState: UIState = {
     // it and it self-suppresses in view mode.
     extension: null,
     viewControlsPlacement: "floating",
+    ribbonTabStyle: "icon",
 
     activePanel: null,
     leftPanelWidth: null,

@@ -19,6 +19,12 @@ listed once, by package. Its major and minor version are those of the
   `"revisionView:changed"` do the same for a host. A document opens on what it
   was saved to show, which is All Markup unless it was saved with markup off.
 
+#### Changed
+
+- The ribbon's tabs show as icons, each with its name in a tooltip, which leaves
+  the toolbar more room. `"text"`, through the `ribbonTabStyle` option or
+  `setRibbonTabStyle`, shows them by name.
+
 #### Fixed
 
 - Clipping the UI to rounded corners no longer makes Chrome flicker after the

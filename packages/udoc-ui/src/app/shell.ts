@@ -116,6 +116,7 @@ import type {
     MarkupTool,
     PanelTab,
     PresentationView,
+    RibbonTabStyle,
     SheetView,
     ThemeMode,
     ViewControlsPlacement,
@@ -435,6 +436,8 @@ export interface UIShell {
     setSheetView: (view: SheetView) => Promise<void>;
     /** Dock the view-state controls in the top toolbar, the floating bar, or the status bar. */
     setViewControlsPlacement: (placement: ViewControlsPlacement) => void;
+    /** Show the ribbon's tabs by name or by icon. */
+    setRibbonTabStyle: (style: RibbonTabStyle) => void;
     /** Close the current document. */
     close: () => void;
     destroy: () => void;
@@ -461,6 +464,7 @@ export interface UIShellOptions {
     enablePointerSharing?: boolean;
     showPeerPointers?: boolean;
     viewControlsPlacement?: ViewControlsPlacement;
+    ribbonTabStyle?: RibbonTabStyle;
     scrollMode?: ScrollMode;
     layoutMode?: LayoutMode;
     pageRotation?: 0 | 90 | 180 | 270;
@@ -669,6 +673,7 @@ export function mountUIShell(
         pointerSharing: shellOptions.enablePointerSharing ?? initialState.pointerSharing,
         peerPointersVisible: shellOptions.showPeerPointers ?? initialState.peerPointersVisible,
         viewControlsPlacement: shellOptions.viewControlsPlacement ?? initialState.viewControlsPlacement,
+        ribbonTabStyle: shellOptions.ribbonTabStyle ?? initialState.ribbonTabStyle,
         scrollMode: shellOptions.scrollMode ?? initialState.scrollMode,
         defaultScrollMode: shellOptions.scrollMode ?? initialState.defaultScrollMode,
         layoutMode: shellOptions.layoutMode ?? initialState.layoutMode,
@@ -4069,6 +4074,7 @@ export function mountUIShell(
         setWordprocessingView,
         setSheetView,
         setViewControlsPlacement: (placement) => store.dispatch({ type: "SET_VIEW_CONTROLS_PLACEMENT", placement }),
+        setRibbonTabStyle: (style) => store.dispatch({ type: "SET_RIBBON_TAB_STYLE", style }),
         close,
         destroy,
     };

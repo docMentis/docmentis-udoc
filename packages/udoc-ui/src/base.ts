@@ -10,6 +10,7 @@ import { pageStep, renderZoom, revisionViewOf, sheetViewOf, viewDpi, wordprocess
 import type {
     PanelTab,
     PresentationView,
+    RibbonTabStyle,
     SheetView,
     ThemeMode,
     UIState,
@@ -164,6 +165,11 @@ export interface UDocOptions {
     /** Where the view controls (page nav + zoom) dock. Default
      *  `"floating"`; {@link UDocBase.setViewControlsPlacement} changes it. */
     viewControlsPlacement?: ViewControlsPlacement;
+    /** How the ribbon's tabs show: `"icon"`, each as a glyph with its name in
+     *  the tooltip, which leaves the toolbar more room; or `"text"`, each under
+     *  its name. Default `"icon"`; {@link UDocBase.setRibbonTabStyle} changes
+     *  it. */
+    ribbonTabStyle?: RibbonTabStyle;
     /** How every document opens scrolling: `"spread"`, one spread at a time,
      *  or `"continuous"`. Default each doc type's own — one slide at a time for
      *  a presentation, continuous for the rest; {@link UDocBase.setScrollMode}
@@ -1922,6 +1928,15 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      */
     setViewControlsPlacement(placement: ViewControlsPlacement): void {
         this.shell.setViewControlsPlacement(placement);
+    }
+
+    /**
+     * Show the ribbon's tabs as glyphs with their names in the tooltips
+     * (`"icon"`, the default) or by name (`"text"`). The initial value is set at
+     * construction via `ribbonTabStyle`.
+     */
+    setRibbonTabStyle(style: RibbonTabStyle): void {
+        this.shell.setRibbonTabStyle(style);
     }
 
     /**

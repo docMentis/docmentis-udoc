@@ -13,6 +13,7 @@
  * or not-yet-profiled doc type falls back to {@link FALLBACK_PROFILE}. Adding a
  * doc type is one entry here — the rest of the UI doesn't change.
  */
+import { ICON_TAB_ANNOTATE, ICON_TAB_PRESENT, ICON_TAB_REVIEW, ICON_TAB_VIEW } from "./icons.js";
 import { ANNOTATE_COMMANDS, LEFT_PANEL_TABS, RIGHT_PANEL_TABS } from "./state.js";
 import type { CommandId, UIState, LayoutMode, LeftPanelTab, PanelTab, RightPanelTab, ToolbarTab } from "./state.js";
 import type { Feature, UDocType } from "@docmentis/udoc-wasm";
@@ -25,6 +26,7 @@ import type { Feature, UDocType } from "@docmentis/udoc-wasm";
 export const ANNOTATE_TAB: ToolbarTab = {
     id: "annotate",
     label: "ribbon.annotate",
+    icon: ICON_TAB_ANNOTATE,
     commands: ANNOTATE_COMMANDS,
     feature: "annotation",
 };
@@ -54,6 +56,7 @@ export function presentTab(docType: UDocType): ToolbarTab {
     return {
         id: PRESENT_TAB_ID,
         label: "ribbon.slideShow",
+        icon: ICON_TAB_PRESENT,
         commands: ["slideShowFromBeginning", "slideShowFromCurrent", "presenterView", "setUpSlideShow", ...preview],
     };
 }
@@ -90,7 +93,12 @@ const EDIT_VIEWS: ReadonlySet<string> = new Set<CommandId>(["slideMasterView"]);
 export function viewTab(docType: UDocType, edit?: { guides: readonly string[] }): ToolbarTab {
     const { pages, shows } = VIEW_COMMANDS[docType];
     const shown = edit ? pages : pages.filter((id) => !EDIT_VIEWS.has(id));
-    return { id: VIEW_TAB_ID, label: "ribbon.view", commands: [...shown, ...(edit?.guides ?? []), ...shows] };
+    return {
+        id: VIEW_TAB_ID,
+        label: "ribbon.view",
+        icon: ICON_TAB_VIEW,
+        commands: [...shown, ...(edit?.guides ?? []), ...shows],
+    };
 }
 
 /** The id of every doc type's {@link viewTab}. */
@@ -101,6 +109,7 @@ export const VIEW_TAB_ID = "view";
 export const REVIEW_TAB: ToolbarTab = {
     id: "review",
     label: "ribbon.review",
+    icon: ICON_TAB_REVIEW,
     commands: ["revisionView", "showMarkup"],
 };
 

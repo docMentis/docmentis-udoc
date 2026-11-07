@@ -174,8 +174,8 @@ async function checkpoints(id, before, insert) {
     const shown = await UDocEditor.create(container);
     const offered = () => ({
         modeSwitch: container.querySelector(".udoc-mode-switch")?.childElementCount ?? 0,
-        tabs: [...container.querySelectorAll(".udoc-ribbon__tab:not(.udoc-ribbon__tab--more)")].map((tab) =>
-            tab.textContent.trim(),
+        tabs: [...container.querySelectorAll(".udoc-ribbon__tab:not(.udoc-ribbon__tab--more)")].map(
+            (tab) => tab.dataset.tab,
         ),
     });
     await shown.openRemote(`/documents/${id}/package`);
@@ -190,8 +190,8 @@ async function checkpoints(id, before, insert) {
     check("editor on the page: the document offers the mode switch", editable.modeSwitch > 0, JSON.stringify(editable));
     check("editor on the page: a checkpoint doesn't", readOnly.modeSwitch === 0, JSON.stringify(readOnly));
     if (shown.docType === "portable") {
-        check("editor on the page: a PDF offers Annotate", viewed.tabs.includes("Annotate"), viewed.tabs);
-        check("editor on the page: a checkpoint of it doesn't", !readOnly.tabs.includes("Annotate"), readOnly.tabs);
+        check("editor on the page: a PDF offers Annotate", viewed.tabs.includes("annotate"), viewed.tabs);
+        check("editor on the page: a checkpoint of it doesn't", !readOnly.tabs.includes("annotate"), readOnly.tabs);
     }
     shown.destroy();
     container.remove();

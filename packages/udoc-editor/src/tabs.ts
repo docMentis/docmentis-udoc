@@ -14,6 +14,15 @@ import {
 } from "@docmentis/udoc-ui/internal";
 import type { CommandId, SelectionCapabilities, ToolbarTab } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
+import {
+    ICON_TAB_IMAGE,
+    ICON_TAB_INSERT,
+    ICON_TAB_OBJECT,
+    ICON_TAB_PAGE,
+    ICON_TAB_SHAPE,
+    ICON_TAB_TABLE,
+    ICON_TAB_TEXT,
+} from "./icons.js";
 import { RULED } from "./ruler.js";
 
 /** A command edit mode's tabs name: udoc-ui's, or the editor's own. */
@@ -141,6 +150,7 @@ function imagePages(caps: SelectionCapabilities): boolean {
 const TEXT_TAB: EditTab = {
     id: "text",
     label: "ribbon.text",
+    icon: ICON_TAB_TEXT,
     commands: [
         "paragraphStyle",
         "fontFamily",
@@ -185,6 +195,7 @@ const PRESENTATION_TEXT_TAB: EditTab = {
 const SHAPE_TAB: EditTab = {
     id: "shape",
     label: "ribbon.shape",
+    icon: ICON_TAB_SHAPE,
     commands: [
         "shapeFillColor",
         "shapeStrokeColor",
@@ -208,6 +219,7 @@ const SHAPE_TAB: EditTab = {
 const TABLE_TAB: EditTab = {
     id: "table",
     label: "ribbon.table",
+    icon: ICON_TAB_TABLE,
     commands: [
         "tableSelect",
         "tableInsertRowAbove",
@@ -232,6 +244,7 @@ const TABLE_TAB: EditTab = {
 const OBJECT_TAB: EditTab = {
     id: "object",
     label: "ribbon.object",
+    icon: ICON_TAB_OBJECT,
     commands: [
         "objectFillColor",
         "objectStrokeColor",
@@ -259,6 +272,7 @@ const PORTABLE_ANNOTATE_TAB: EditTab = { ...ANNOTATE_TAB, opensFor: annotations 
 const IMAGE_TAB: EditTab = {
     id: "image",
     label: "ribbon.image",
+    icon: ICON_TAB_IMAGE,
     commands: [
         "rotatePageLeft",
         "rotatePageRight",
@@ -286,6 +300,7 @@ const IMAGE_TAB: EditTab = {
 const PORTABLE_PAGE_TAB: EditTab = {
     id: "page",
     label: "ribbon.page",
+    icon: ICON_TAB_PAGE,
     commands: [
         "pageCreate",
         "pageDelete",
@@ -301,13 +316,19 @@ const PORTABLE_PAGE_TAB: EditTab = {
 };
 
 /** The image Insert tab: the gallery's Shapes, drawn over the page. */
-const IMAGE_INSERT_TAB: EditTab = { id: "insert", label: "ribbon.insert", commands: ["insertGalleryShape"] };
+const IMAGE_INSERT_TAB: EditTab = {
+    id: "insert",
+    label: "ribbon.insert",
+    icon: ICON_TAB_INSERT,
+    commands: ["insertGalleryShape"],
+};
 
 /** The presentation Insert tab: New Slide, after the current slide; Image, a
  *  picture on it; and the gallery's Shapes, dragged out on it. */
 const PRESENTATION_INSERT_TAB: EditTab = {
     id: "insert",
     label: "ribbon.insert",
+    icon: ICON_TAB_INSERT,
     commands: ["createSlide", "insertImage", "insertGalleryShape"],
 };
 

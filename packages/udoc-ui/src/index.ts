@@ -116,3 +116,6 @@ export type { OverlayFrame, OverlayItem, OverlayOptions, OverlaySource } from ".
 
 // Where the view controls dock — `UDocBase.setViewControlsPlacement`.
 export type { ViewControlsPlacement } from "./app/state.js";
+
+// How the ribbon's tabs show — `UDocBase.setRibbonTabStyle`.
+export type { RibbonTabStyle } from "./app/state.js";

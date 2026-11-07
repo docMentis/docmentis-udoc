@@ -5,7 +5,7 @@ import { Sidebar } from "./shell/Sidebar.js";
 import { OptionsModal, type OptionGroup } from "./shell/OptionsModal.js";
 import { Stage } from "./stage/Stage.js";
 import { UDocEditor } from "@docmentis/udoc-editor";
-import type { UDocEditorOptions, ViewControlsPlacement } from "@docmentis/udoc-editor";
+import type { RibbonTabStyle, UDocEditorOptions, ViewControlsPlacement } from "@docmentis/udoc-editor";
 import { FILE_ACCEPT, DEFAULT_SAMPLE, findSample, sampleFile, type SampleDoc } from "./samples.js";
 import { getTheme, toggleTheme } from "./theme.js";
 import { MODES, type Mode } from "./types.js";
@@ -35,6 +35,16 @@ const OPTION_GROUPS: OptionGroup[] = [
                     { value: "floating", label: "Floating Toolbar" },
                     { value: "top-toolbar", label: "Top Toolbar" },
                     { value: "status-bar", label: "Bottom Toolbar" },
+                ],
+            },
+            {
+                kind: "select",
+                id: "ribbonTabStyle",
+                label: "Ribbon Tabs",
+                default: "icon",
+                options: [
+                    { value: "icon", label: "Icons" },
+                    { value: "text", label: "Text" },
                 ],
             },
             {
@@ -183,6 +193,10 @@ function setOption(id: string, value: boolean | string): Promise<void> {
             return stage.setOptions({ viewControlsPlacement: placement }, (ed) =>
                 ed.setViewControlsPlacement(placement),
             );
+        }
+        case "ribbonTabStyle": {
+            const style = value as RibbonTabStyle;
+            return stage.setOptions({ ribbonTabStyle: style }, (ed) => ed.setRibbonTabStyle(style));
         }
         case "showRuler": {
             const visible = value as boolean;

@@ -30,6 +30,12 @@ const OPSZ = 20;
 
 /** Exported constant -> Material Symbol name. */
 const ICONS = {
+    // Ribbon tabs — on the strip, in its icon style
+    ICON_TAB_ANNOTATE: "edit_note",
+    ICON_TAB_PRESENT: "slideshow",
+    ICON_TAB_REVIEW: "rate_review",
+    ICON_TAB_VIEW: "visibility",
+
     // Chrome
     ICON_CLEAR: "close",
     ICON_CHECK: "check",

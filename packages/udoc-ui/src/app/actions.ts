@@ -27,6 +27,7 @@ import type {
     ThemeMode,
     WordprocessingView,
     LayoutMode,
+    RibbonTabStyle,
     ScrollMode,
     ViewControlsPlacement,
 } from "./state.js";
@@ -204,6 +205,8 @@ export type Action =
     | { type: "SET_EXTENSION_STATE"; extension: unknown }
     // Where the view-state controls are docked
     | { type: "SET_VIEW_CONTROLS_PLACEMENT"; placement: ViewControlsPlacement }
+    // How the ribbon's tabs show
+    | { type: "SET_RIBBON_TAB_STYLE"; style: RibbonTabStyle }
     // Side panels
     | { type: "TOGGLE_PANEL"; panel: PanelTab }
     // Open `panel` — unless it, or its side, is hidden

@@ -21,6 +21,7 @@ const holds =
 const tab = (id: string, rest: Partial<ToolbarTab<string>> = {}): ToolbarTab<string> => ({
     id,
     label: id,
+    icon: "",
     commands: [],
     ...rest,
 });

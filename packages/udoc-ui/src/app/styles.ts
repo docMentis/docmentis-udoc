@@ -3758,6 +3758,8 @@ export const uiStyles = css`
        outside of their 1px ring), the strip's and the open tab's alike, so an
        open end tab's outline lies on the strip's. */
         --udoc-tab-radius: 8px;
+        /* What a closed tab holds its label off its sides by. */
+        --udoc-tab-padding: 12px;
         display: inline-flex;
         align-self: flex-end;
         align-items: flex-start;
@@ -3767,6 +3769,10 @@ export const uiStyles = css`
         border-bottom: none;
         border-radius: var(--udoc-tab-radius) var(--udoc-tab-radius) 0 0;
         position: relative;
+    }
+    /* A strip of icon tabs: each a glyph, held closer than a label is. */
+    .udoc-ui-root .udoc-ribbon__tabs--icon {
+        --udoc-tab-padding: 6px;
     }
     /* A closed tab: from 7.5px — the strip's top, its border and its 3px top
    padding — down to 3px above the toolbar's line, the same gap below as above,
@@ -3778,7 +3784,7 @@ export const uiStyles = css`
         align-items: center;
         height: 28.5px;
         margin: 0 4px;
-        padding: 0 12px;
+        padding: 0 var(--udoc-tab-padding);
         border: 1px solid transparent;
         border-radius: 8px;
         background: transparent;
@@ -3787,6 +3793,10 @@ export const uiStyles = css`
         cursor: pointer;
         white-space: nowrap;
         user-select: none;
+    }
+    .udoc-ui-root .udoc-ribbon__tab > svg {
+        width: var(--udoc-btn-glyph);
+        height: var(--udoc-btn-glyph);
     }
     .udoc-ui-root .udoc-ribbon__tab:first-child {
         margin-left: 3px;
@@ -3801,10 +3811,6 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-ribbon__tab.udoc-ribbon__tab--more {
         margin: 0 3px 0 4px;
         padding: 0 4px;
-    }
-    .udoc-ui-root .udoc-ribbon__tab--more > svg {
-        width: var(--udoc-btn-glyph);
-        height: var(--udoc-btn-glyph);
     }
     .udoc-ui-root .udoc-ribbon__tab:not(.udoc-ribbon__tab--selected):hover {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
@@ -3825,7 +3831,7 @@ export const uiStyles = css`
         font-weight: 500;
         height: 36.5px;
         margin: -4px 0 0;
-        padding: 0 16px 1px;
+        padding: 0 calc(var(--udoc-tab-padding) + 4px) 1px;
         position: relative;
         z-index: 1;
     }

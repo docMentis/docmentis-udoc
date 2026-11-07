@@ -665,6 +665,10 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             if (action.placement === state.viewControlsPlacement) return state;
             return { ...state, viewControlsPlacement: action.placement };
 
+        case "SET_RIBBON_TAB_STYLE":
+            if (action.style === state.ribbonTabStyle) return state;
+            return { ...state, ribbonTabStyle: action.style };
+
         case "TOGGLE_PANEL": {
             if (state.disabledPanels.has(action.panel)) return state;
             const next = state.activePanel === action.panel ? null : action.panel;

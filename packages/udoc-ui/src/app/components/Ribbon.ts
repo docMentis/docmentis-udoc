@@ -12,6 +12,7 @@ import type {
     PlaceTool,
     PointerMode,
     PresentationView,
+    RibbonTabStyle,
     ScrollMode,
     ToolbarTab,
 } from "../state.js";
@@ -164,6 +165,7 @@ interface RibbonSlice {
     mode: string;
     features: readonly Feature[];
     activeTab: string | null;
+    ribbonTabStyle: RibbonTabStyle;
     disabledCommands: ReadonlySet<string>;
     pointerMode: PointerMode;
     ready: boolean;
@@ -203,6 +205,7 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.mode === b.mode &&
         a.features === b.features &&
         a.activeTab === b.activeTab &&
+        a.ribbonTabStyle === b.ribbonTabStyle &&
         a.disabledCommands === b.disabledCommands &&
         a.pointerMode === b.pointerMode &&
         a.ready === b.ready &&
@@ -236,6 +239,7 @@ function selectSlice(s: UIState): RibbonSlice {
         mode: s.mode,
         features: s.features,
         activeTab: s.activeTab,
+        ribbonTabStyle: s.ribbonTabStyle,
         disabledCommands: s.disabledCommands,
         pointerMode: s.pointerMode,
         ready: s.status === "ready",
@@ -422,7 +426,11 @@ export function createRibbon(
             moreTabsMenu.innerHTML = "";
             for (const tab of tabButtons) {
                 if (tab.parentElement === tabStrip) continue;
-                const item = createMenuItem({ text: tab.textContent ?? "" });
+                // An icon tab's row leads with its glyph and spells out its name.
+                const item = createMenuItem({
+                    icon: tab.firstElementChild?.outerHTML,
+                    text: tab.getAttribute("aria-label") ?? tab.textContent ?? "",
+                });
                 item.addEventListener("click", () => {
                     tabsMenu.close();
                     tab.click();
@@ -469,7 +477,7 @@ export function createRibbon(
     const recentPaint: Record<PaintChannel, string[]> = { fill: [], stroke: [], text: [], highlight: [] };
     // Signature of the currently-built tools (mode + tab + disabled set).
     let builtToolsKey = "";
-    // Signature of the currently-built tab strip (docType + mode + active tab).
+    // Signature of the currently-built tab strip (docType + mode + active tab + style).
     let builtTabsKey = "";
     // The panel the Annotate tab's Color dropdown opens, once mounted.
     let annotationColorPanel: ((menu: HTMLElement, close: () => void) => void) | null = null;
@@ -585,13 +593,20 @@ export function createRibbon(
             tabButtons.length = 0;
             const tabs = tabsIn(slice);
             tabStrip.style.display = tabs.length > 0 ? "" : "none";
+            const asIcons = slice.ribbonTabStyle === "icon";
+            tabStrip.classList.toggle("udoc-ribbon__tabs--icon", asIcons);
             for (const tab of tabs) {
                 const btn = document.createElement("button");
                 btn.type = "button";
                 btn.className = "udoc-ribbon__tab";
                 btn.setAttribute("role", "tab");
                 btn.dataset.tab = tab.id;
-                btn.textContent = labelOf(tab.label);
+                if (asIcons) {
+                    btn.innerHTML = tab.icon;
+                    nameButton(btn, labelOf(tab.label));
+                } else {
+                    btn.textContent = labelOf(tab.label);
+                }
                 const active = tab.id === slice.activeTab;
                 btn.classList.toggle("udoc-ribbon__tab--selected", active);
                 btn.setAttribute("aria-selected", String(active));
@@ -887,10 +902,10 @@ export function createRibbon(
             // decision below shares — a contextual tab uses it to pick which
             // commands to show, the per-render pass to grey the rest.
             const ctx = commandContext(store.getState());
-            // Tab strip: rebuilt on doc-type / mode / active-tab change,
+            // Tab strip: rebuilt on doc-type / mode / active-tab / tab-style change,
             // independent of the tool surface (which stays visible for any active
             // tab — even one with no commands — and hides only while folded).
-            const tabsKey = `${slice.docType}:${slice.mode}:${slice.activeTab}`;
+            const tabsKey = `${slice.docType}:${slice.mode}:${slice.activeTab}:${slice.ribbonTabStyle}`;
             if (tabsKey !== builtTabsKey) {
                 builtTabsKey = tabsKey;
                 buildTabs(slice);
