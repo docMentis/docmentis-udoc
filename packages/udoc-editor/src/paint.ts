@@ -3,13 +3,13 @@
 // the Shape, Object and Text tabs.
 import type {
     Brush,
-    LineStyle,
+    NonstrokingStyle,
     PaintColor,
     PaintColorTransform,
     PaintFill,
     PaintLine,
-    PaintLineDash,
     PaintSchemeColor,
+    StrokingStyle,
     UDocSelectionProperties,
     UDocType,
 } from "@docmentis/udoc-wasm";
@@ -32,11 +32,14 @@ import type {
     PaintTransform,
     RibbonControl,
     RibbonControlEnv,
+    SelectionEdit,
     StrokeStyle,
     ThemePalette,
     ThemeSwatch,
     UIShellHost,
 } from "@docmentis/udoc-ui/internal";
+import { changedDrawingLine, changedPortableLine, lineDashOfDrawing, lineDashOfPortable } from "./line-edit.js";
+import { fillOpacity, fillWithOpacity } from "./opacity.js";
 import { editState } from "./state.js";
 import type { EditTools } from "./tools.js";
 
@@ -94,23 +97,6 @@ function schemeSlot(slot: string): PaintSchemeColor {
     return SCHEME_TOKEN[slot] ?? "text1";
 }
 
-/** A composed stroke as a `DrawingML` `Line`: its paint plus weight (points) and
- *  a preset dash, over the rest of `current` — the line it replaces, whose
- *  arrowheads, caps and joins it keeps. */
-function paintToDrawingLine(stroke: StrokeSpec, current: PaintLine | null): PaintLine {
-    return {
-        width: stroke.weight,
-        cap: current?.cap ?? null,
-        compound: current?.compound ?? null,
-        align: current?.align ?? null,
-        fill: paintToDrawingFill(stroke.paint),
-        dash: dashToDrawing(stroke.dash),
-        join: current?.join ?? null,
-        headEnd: current?.headEnd ?? null,
-        tailEnd: current?.tailEnd ?? null,
-    };
-}
-
 /** The line the selected shapes agree on — a deck's, a word document's, or
  *  those drawn over an image — or null where they don't, or none is
  *  selected. */
@@ -119,17 +105,74 @@ export function selectionLine(properties: UDocSelectionProperties | null): Paint
     return line !== undefined && typeof line === "object" ? line.value : null;
 }
 
-function dashToDrawing(dash: LineDash): PaintLineDash {
-    switch (dash) {
-        case "solid":
-            return { preset: "solid" };
-        case "dash":
-            return { preset: "dash" };
-        case "dot":
-            return { preset: "dot" };
-        case "dashDot":
-            return { preset: "dashDot" };
+/** The Fill and Line panels' channels, which take an opacity. */
+type OpacityChannel = "fill" | "stroke";
+
+/** The fill-side style the selected PDF objects agree on, or null where they
+ *  don't, have none, or it's a PDF path's turned off. */
+function portableNonstroking(properties: UDocSelectionProperties | null): NonstrokingStyle | null {
+    if (!properties || !("portable" in properties)) return null;
+    const style = properties.portable.object.nonstrokingStyle;
+    return typeof style === "object" ? style.value : null;
+}
+
+/** {@link portableNonstroking} for the outline. */
+function portableStroking(properties: UDocSelectionProperties | null): StrokingStyle | null {
+    if (!properties || !("portable" in properties)) return null;
+    const style = properties.portable.object.strokingStyle;
+    return typeof style === "object" ? style.value : null;
+}
+
+/**
+ * The opacity the selection's `channel` paints with, where it agrees on one: a PDF
+ * object's style's — a path's, an image's, a shading's, a text object's runs' — or
+ * a drawing shape's solid fill's or line's. Null where the selection differs, has
+ * no such side, or paints it with no one color — no fill, no line, a gradient, a
+ * pattern, a picture — as there's nothing to carry it.
+ */
+export function selectionOpacity(properties: UDocSelectionProperties | null, channel: OpacityChannel): number | null {
+    if (properties && "portable" in properties) {
+        const { nonstrokingStyle, strokingStyle } = properties.portable.object;
+        const style = channel === "fill" ? nonstrokingStyle : strokingStyle;
+        return typeof style === "object" ? (style.value?.alpha ?? null) : null;
     }
+    const shape = drawingProperties(properties)?.shape;
+    if (!shape) return null;
+    if (channel === "fill") return typeof shape.fill === "object" ? fillOpacity(shape.fill.value) : null;
+    const line = typeof shape.line === "object" ? shape.line.value : null;
+    return line?.fill ? fillOpacity(line.fill) : null;
+}
+
+/** The edit setting the selection's `channel` to `opacity`, carrying back the
+ *  rest of its paint — or null where {@link selectionOpacity} has none to set. */
+function opacityEdit(
+    properties: UDocSelectionProperties | null,
+    channel: OpacityChannel,
+    opacity: number,
+): SelectionEdit | null {
+    if (selectionOpacity(properties, channel) === null) return null;
+    if (properties && "portable" in properties) {
+        if (channel === "fill") {
+            const current = portableNonstroking(properties);
+            if (!current) return null;
+            return {
+                kind: "object",
+                edit: { kind: "setNonstrokingStyle", style: { ...current, alpha: opacity } },
+            };
+        }
+        const current = portableStroking(properties);
+        if (!current) return null;
+        return { kind: "object", edit: { kind: "setStrokingStyle", style: { ...current, alpha: opacity } } };
+    }
+    const shape = drawingProperties(properties)?.shape;
+    if (!shape) return null;
+    if (channel === "fill") {
+        if (typeof shape.fill !== "object") return null;
+        return { kind: "setShapeFill", fill: fillWithOpacity(shape.fill.value, opacity) };
+    }
+    const line = typeof shape.line === "object" ? shape.line.value : null;
+    if (!line?.fill) return null;
+    return { kind: "setShapeLine", line: { ...line, fill: fillWithOpacity(line.fill, opacity) } };
 }
 
 function paintToBrush(paint: PaintSpec): Brush | null {
@@ -138,38 +181,41 @@ function paintToBrush(paint: PaintSpec): Brush | null {
     return { solid: { colorSpace: "deviceRgb", components: [r / 255, g / 255, b / 255] } };
 }
 
-/** A PDF stroking line: the weight (points) and a dash array derived from the
- *  preset, scaled by the width so it reads consistently at any weight. */
-function portableStrokeLine(weight: number, dash: LineDash): LineStyle {
-    const line: LineStyle = {
-        width: weight,
-        lineCap: dash === "dot" || dash === "dashDot" ? "round" : "butt",
-        lineJoin: "miter",
-        miterLimit: 10,
-        dashArray: null,
-        dashOffset: 0,
-    };
-    const w = weight || 1;
-    const array =
-        dash === "dash"
-            ? [3 * w, 3 * w]
-            : dash === "dot"
-              ? [w, 2 * w]
-              : dash === "dashDot"
-                ? [3 * w, 2 * w, w, 2 * w]
-                : null;
-    if (array) line.dashArray = array;
-    return line;
-}
-
-/** A composed stroke the Line picker applies: its color plus the weight and
- *  dash from the Weight / Dashes fly-outs. The shell lowers it to the doc type's
- *  outline model (`DrawingML` `Line` / PDF stroking style). */
+/** What the Line panel last set: a side with no line takes it, as the line a
+ *  weight, a dash or a color turns on. */
 export interface StrokeSpec {
     paint: PaintSpec;
     /** Stroke weight in points. */
     weight: number;
     dash: LineDash;
+}
+
+/** A change to the selection's line, each part what the Line panel set: the color
+ *  with the opacity the custom picker gave it, the weight or the dash. */
+export interface StrokeChange {
+    paint?: PaintSpec;
+    opacity?: number | undefined;
+    weight?: number;
+    dash?: LineDash;
+}
+
+/**
+ * The weight and dash the selection's line has, for the Line panel to mark: a
+ * drawing shape's, or a PDF path's. Each null where the selection differs, it
+ * has no line, or the dash isn't one the panel offers.
+ */
+function selectionStroke(properties: UDocSelectionProperties | null): {
+    weight: number | null;
+    dash: LineDash | null;
+} {
+    if (properties && "portable" in properties) {
+        const style = portableStroking(properties);
+        if (!style) return { weight: null, dash: null };
+        return { weight: style.line.width, dash: lineDashOfPortable(style.line) };
+    }
+    const line = selectionLine(properties);
+    if (!line) return { weight: null, dash: null };
+    return { weight: line.width ?? null, dash: lineDashOfDrawing(line.dash) };
 }
 
 /** The Fill / Line edits of the selection, on the shell `host` lends. */
@@ -180,43 +226,60 @@ export function createPaintEdits(host: UIShellHost) {
     // payload is the open doc type's own model style, built here (the host builds
     // model JSON, like `insertObject`), then sent through the same `executeOnSelection`
     // seam; the doc-type binder replaces a drawing shape's fill / line or a PDF
-    // path's non-stroking / stroking style. "No Fill" on a PDF path (not
-    // expressible as a device style) is skipped.
-    function fillSelection(paint: PaintSpec): Promise<void> {
-        if (profileFor(store.getState().docType).drawingShapes) {
-            return commit(() => client.executeOnSelection({ kind: "setShapeFill", fill: paintToDrawingFill(paint) }));
+    // object's non-stroking / stroking style, "No Fill" a null one, which turns a
+    // path's fill off.
+    function fillSelection(paint: PaintSpec, opacity?: number): Promise<void> {
+        const state = store.getState();
+        const properties = editState(state).selectionProperties;
+        const alpha = opacity ?? selectionOpacity(properties, "fill") ?? 1;
+        if (profileFor(state.docType).drawingShapes) {
+            const fill = fillWithOpacity(paintToDrawingFill(paint), alpha);
+            return commit(() => client.executeOnSelection({ kind: "setShapeFill", fill }));
         }
         const brush = paintToBrush(paint);
-        if (!brush) return Promise.resolve();
+        const overprint = portableNonstroking(properties)?.overprint ?? false;
+        const style = brush && { brush, alpha, overprint };
         return commit(() =>
-            client.executeOnSelection({
-                kind: "object",
-                edit: { kind: "setNonstrokingStyle", style: { brush, alpha: 1, overprint: false } },
-            }),
+            client.executeOnSelection({ kind: "object", edit: { kind: "setNonstrokingStyle", style } }),
         );
     }
 
-    // The whole composed stroke (color + weight + dash), since the engine sets the
-    // outline as one value — over the line the shapes have, so an arrow keeps
-    // its head.
-    function strokeSelection(stroke: StrokeSpec): Promise<void> {
+    // A change to the line — its color, its weight or its dash — over the line the
+    // selection has, carrying the rest, since the engine sets the outline as one
+    // value: a new weight keeps the line's color, and an arrow keeps its head.
+    // `fallback` is for what it hasn't: a side with no line, or lines that differ.
+    function strokeSelection(change: StrokeChange, fallback: StrokeSpec): Promise<void> {
         const state = store.getState();
+        const { selectionLine: current, selectionProperties: properties } = editState(state);
+        const alpha = change.opacity ?? selectionOpacity(properties, "stroke") ?? 1;
+        const { weight, dash, paint } = change;
         if (profileFor(state.docType).drawingShapes) {
-            const line = paintToDrawingLine(stroke, editState(state).selectionLine);
+            const fillOf = (spec: PaintSpec): PaintFill => fillWithOpacity(paintToDrawingFill(spec), alpha);
+            const line = changedDrawingLine(
+                current,
+                { weight, dash, fill: paint && fillOf(paint) },
+                { fill: fillOf(fallback.paint), weight: fallback.weight, dash: fallback.dash },
+            );
             return commit(() => client.executeOnSelection({ kind: "setShapeLine", line }));
         }
-        const brush = paintToBrush(stroke.paint);
-        if (!brush) return Promise.resolve();
-        const line = portableStrokeLine(stroke.weight, stroke.dash);
+        const style = portableStroking(properties);
+        const brush = paint ? paintToBrush(paint) : (style?.brush ?? paintToBrush(fallback.paint));
+        const line = changedPortableLine(style?.line ?? null, { weight, dash }, fallback);
+        const overprint = style?.overprint ?? false;
+        // "No Line" is a null style, which turns a path's outline off.
+        const next = brush && { brush, alpha, overprint, line };
         return commit(() =>
-            client.executeOnSelection({
-                kind: "object",
-                edit: { kind: "setStrokingStyle", style: { brush, alpha: 1, overprint: false, line } },
-            }),
+            client.executeOnSelection({ kind: "object", edit: { kind: "setStrokingStyle", style: next } }),
         );
     }
 
-    return { fillSelection, strokeSelection };
+    // The opacity alone: the rest of the paint is carried back as it stands.
+    function setSelectionOpacity(channel: OpacityChannel, opacity: number): Promise<void> {
+        const edit = opacityEdit(editState(store.getState()).selectionProperties, channel, opacity);
+        return edit ? commit(() => client.executeOnSelection(edit)) : Promise.resolve();
+    }
+
+    return { fillSelection, strokeSelection, setSelectionOpacity };
 }
 
 /** The Fill / Line edits {@link createPaintEdits} makes. */
@@ -238,10 +301,9 @@ function mapThemeColors(palette: ThemePalette | null): readonly ThemeSwatch[] {
 }
 
 /**
- * The last picks — edit mode's write-side memory: the color per channel that the
- * composed stroke re-sends when only its weight / dash change (the engine sets
- * the outline as one thing), and the weight / dash the Line panel marks. Not
- * shown on the triggers, which mirror the *selection*.
+ * The last picks — edit mode's write-side memory: the color per channel, and the
+ * weight / dash, that a side with no line takes when the Line panel turns it on.
+ * Not shown on the triggers or the panel's marks, which mirror the *selection*.
  */
 export interface PaintMemory {
     readonly lastPaint: Record<PaintChannel, PaintSpec>;
@@ -277,32 +339,32 @@ export function paintControl(
     const { channel } = command;
     const selectionPaint = () => editState(env.store.getState()).selectionPaint;
 
-    // Apply the current stroke (color + weight + dash) to the selection — the
-    // whole composed value, since the engine sets the outline as one thing;
-    // the color rides from the last pick.
-    const applyStroke = (): void =>
-        void tools.paint.strokeSelection({
+    // Change the selection's line by what the panel set, the rest carried.
+    const applyStroke = (change: StrokeChange): void =>
+        void tools.paint.strokeSelection(change, {
             paint: memory.lastPaint.stroke,
             weight: memory.lastStroke.weight,
             dash: memory.lastStroke.dash,
         });
 
-    // Apply a picked paint: fill / text / highlight send the color; stroke
-    // sends the composed stroke (its last-used weight / dash ride along).
-    const applyPaint = (paint: PaintSpec): void => {
-        if (channel === "fill") void tools.paint.fillSelection(paint);
+    // Apply a picked paint, at the opacity the custom picker gave it, else at
+    // the one the channel has.
+    const applyPaint = (paint: PaintSpec, opacity?: number): void => {
+        if (channel === "fill") void tools.paint.fillSelection(paint, opacity);
         else if (channel === "text") void tools.text.textFillSelection(paint);
         else if (channel === "highlight") void tools.text.textHighlightSelection(paint);
-        else applyStroke();
+        else applyStroke({ paint, opacity });
     };
 
-    // Commit a picked paint: remember it (for the composed stroke re-send and
+    // Commit a picked paint: remember a color (what a side with no line takes, and
     // the recent row) and apply it. The trigger swatch isn't touched here — it
     // mirrors the selection, so it updates when the resulting report lands.
-    const commitPaint = (paint: PaintSpec): void => {
-        memory.lastPaint[channel] = paint;
-        if (paint.kind !== "none") env.pushRecent(channel, paint.hex);
-        applyPaint(paint);
+    const commitPaint = (paint: PaintSpec, opacity?: number): void => {
+        if (paint.kind !== "none") {
+            memory.lastPaint[channel] = paint;
+            env.pushRecent(channel, paint.hex);
+        }
+        applyPaint(paint, opacity);
     };
 
     // The color panel — doc-type aware (Office shows the theme block, PDF
@@ -310,6 +372,9 @@ export function paintControl(
     // current state. `close` is the dropdown's.
     const panelConfig = (close: () => void): PaintPanelConfig => {
         const state = env.store.getState();
+        const properties = editState(state).selectionProperties;
+        const opacityChannel = channel === "fill" || channel === "stroke" ? channel : null;
+        const opacity = opacityChannel ? selectionOpacity(properties, opacityChannel) : null;
         return {
             i18n,
             variant: channel,
@@ -325,21 +390,32 @@ export function paintControl(
             // "active"): a solid color or explicit no-fill; nothing for mixed /
             // unknown.
             active: displayToActivePaint(selectionPaint()[channel]),
-            stroke: channel === "stroke" ? memory.lastStroke : null,
-            onPick: (paint) => {
-                commitPaint(paint);
+            stroke: channel === "stroke" ? selectionStroke(properties) : null,
+            onPick: (paint, pickedOpacity) => {
+                commitPaint(paint, pickedOpacity);
                 close();
             },
             onWeight: (pt) => {
                 memory.lastStroke.weight = pt;
-                applyStroke();
+                applyStroke({ weight: pt });
                 close();
             },
             onDash: (dash) => {
                 memory.lastStroke.dash = dash;
-                applyStroke();
+                applyStroke({ dash });
                 close();
             },
+            // The custom picker's slider, on a side that takes an opacity; the
+            // fly-out, where the selection paints it with one color to carry it.
+            ...(opacityChannel ? { opacity } : {}),
+            ...(opacityChannel && opacity !== null
+                ? {
+                      onOpacity: (value: number) => {
+                          void tools.paint.setSelectionOpacity(opacityChannel, value);
+                          close();
+                      },
+                  }
+                : {}),
             // No `onMoreOptions`: the More Options row waits for the advanced
             // dialog to hold the richer fill / line surface.
         };

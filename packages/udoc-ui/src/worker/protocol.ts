@@ -1583,10 +1583,12 @@ export type SelectionEdit =
      *  drag (an arch's sweep, a wave's height). Reshapes one warp, so it needs a
      *  single-shape selection. */
     | { kind: "adjustTextWarpHandle"; index: number; to: { x: number; y: number } }
-    /** PDF: set the paths' non-stroking (fill-side) style. */
-    | { kind: "setNonstrokingStyle"; style: NonstrokingStyle }
-    /** PDF: set the paths' stroking (outline) style. */
-    | { kind: "setStrokingStyle"; style: StrokingStyle }
+    /** PDF: set the objects' non-stroking (fill-side) style — a path's, an image's,
+     *  a shading's or a text object's runs' — or with null turn a path's fill off. */
+    | { kind: "setNonstrokingStyle"; style: NonstrokingStyle | null }
+    /** PDF: set the objects' stroking (outline) style — a path's or a text object's
+     *  runs' — or with null turn a path's outline off. */
+    | { kind: "setStrokingStyle"; style: StrokingStyle | null }
     /** Text: insert text at the text caret / range — typing, an IME commit, a
      *  paste. Newlines split paragraphs (Enter is `text: "\n"`); the caret lands
      *  after the insertion. Wrapped per doc type by the worker (a slide shape's

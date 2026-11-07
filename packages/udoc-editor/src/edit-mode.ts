@@ -161,6 +161,7 @@ function mountDocumentState(host: EditHost): () => void {
                 selectionPaint: selectionPaint(state.properties),
                 selectionRuler: selectionRuler(state.properties),
                 selectionLine: selectionLine(state.properties),
+                selectionProperties: state.properties,
             }),
         ),
     ];

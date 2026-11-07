@@ -20,7 +20,7 @@ import { annotationFormat } from "./annotations.js";
 import { profileFor } from "./profiles.js";
 import type { AnnotationFormat, AnnotationStyleChange } from "./annotations.js";
 import type { Message, MessageKey } from "./i18n/index.js";
-import { STANDARD_COLORS } from "./components/PaintPanel.js";
+import { PAINT_OPACITIES, STANDARD_COLORS } from "./components/PaintPanel.js";
 import {
     ICON_COPY,
     ICON_DELETE,
@@ -526,12 +526,9 @@ export function sheetTabMenu(state: UIState): readonly MenuItem[] {
  *  own callback. */
 export type PaintChannel = "fill" | "stroke" | "text" | "highlight";
 
-/** The opacities the Annotate tab's Opacity menu offers. */
-const ANNOTATION_OPACITIES: readonly number[] = [1, 0.75, 0.5, 0.25];
-
 /** The Opacity dropdown: one exclusive set, the value the annotations (or the
  *  armed tool) hold marked. */
-const ANNOTATION_OPACITY_MENU: readonly MenuItem[] = ANNOTATION_OPACITIES.map((opacity) => ({
+const ANNOTATION_OPACITY_MENU: readonly MenuItem[] = PAINT_OPACITIES.map((opacity) => ({
     action: { kind: "annotationStyle", change: { kind: "opacity", opacity } },
     label: ["format.percent", { percent: Math.round(opacity * 100) }],
     enabledWhen: (c) => c.annotation?.opacity !== undefined,

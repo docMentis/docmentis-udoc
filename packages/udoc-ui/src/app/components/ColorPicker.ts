@@ -1,9 +1,10 @@
 /**
  * The custom colour picker — what a paint panel's "More Colors…" shows in
  * place of its swatches, for a colour none of them is: a saturation /
- * brightness square over a hue strip, the `#rrggbb` they make (typed as well
- * as dragged), and the screen's eyedropper where the browser has one. Nothing
- * is applied until OK; Cancel goes back to the swatches.
+ * brightness square over a hue strip, an opacity strip and its percentage on a
+ * paint that takes one, the `#rrggbb` they make (typed as well as dragged), the
+ * screen's eyedropper where the browser has one, and the colours picked lately.
+ * Nothing is applied until OK; Cancel goes back to the swatches.
  *
  * A pure content builder like the panel it sits in: it returns the element,
  * and the panel's dropdown keeps the open / close lifecycle (Escape and an
@@ -17,8 +18,15 @@ export interface ColorPickerConfig {
     i18n: I18n;
     /** The colour it opens on, `#rrggbb`. */
     initial: string;
-    /** OK: apply `hex`, a lowercase `#rrggbb`. */
-    onApply: (hex: string) => void;
+    /** The opacity it opens on, `0` to `1`: the strip and its percentage show when
+     *  it is given. */
+    opacity?: number;
+    /** The colours picked lately, most recent first: a click loads one into the
+     *  picker, as typing it would. */
+    recent?: readonly string[];
+    /** OK: apply `hex`, a lowercase `#rrggbb`, at `opacity` where the picker has
+     *  one — what it opened on, exactly, unless it was changed. */
+    onApply: (hex: string, opacity?: number) => void;
     /** Cancel: back to where it was opened from. */
     onCancel: () => void;
 }
@@ -30,6 +38,16 @@ function eyeDropper(): EyeDropperConstructor | undefined {
 }
 
 const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
+
+/** How many colours a row of the recent grid holds: the most it keeps. */
+const RECENT_COLUMNS = 10;
+
+/** `hex` at `opacity`, as a CSS `#rrggbbaa`. */
+function withAlphaHex(hex: string, opacity: number): string {
+    return `${hex}${Math.round(opacity * 255)
+        .toString(16)
+        .padStart(2, "0")}`;
+}
 
 /**
  * A drag that ends off the panel ends in a click on whatever holds both of its
@@ -153,7 +171,75 @@ export function buildColorPicker(cfg: ColorPickerConfig): HTMLElement {
         fields.appendChild(pick);
     }
 
-    const apply = (): void => cfg.onApply(hsvToHex(hsv));
+    // The opacity strip and its percentage, on a paint that takes one. Its value
+    // is what it opened on until moved, so an OK doesn't round it.
+    let opacity = cfg.opacity;
+    let opacityStrip: HTMLElement | null = null;
+    let opacityThumb: HTMLElement | null = null;
+    let opacityField: HTMLInputElement | null = null;
+    const opacityRow = document.createElement("div");
+    if (opacity !== undefined) {
+        opacityRow.className = "udoc-colorpicker__opacity-row";
+        const name = i18n.t("command.annotationOpacity");
+        const strip = document.createElement("div");
+        strip.className = "udoc-colorpicker__opacity";
+        strip.tabIndex = 0;
+        strip.setAttribute("role", "slider");
+        strip.setAttribute("aria-label", name);
+        strip.setAttribute("aria-valuemin", "0");
+        strip.setAttribute("aria-valuemax", "100");
+        opacityThumb = document.createElement("div");
+        opacityThumb.className = "udoc-colorpicker__thumb";
+        strip.appendChild(opacityThumb);
+        const percent = document.createElement("label");
+        percent.className = "udoc-colorpicker__percent";
+        const field = document.createElement("input");
+        field.type = "text";
+        field.inputMode = "numeric";
+        field.maxLength = 3;
+        field.autocomplete = "off";
+        field.setAttribute("aria-label", name);
+        field.title = name;
+        const sign = document.createElement("span");
+        // The language's own percent sign, from its way of writing a percentage.
+        sign.textContent = i18n.t("format.percent", { percent: "" }).trim();
+        sign.setAttribute("aria-hidden", "true");
+        percent.append(field, sign);
+        opacityRow.append(strip, percent);
+        opacityStrip = strip;
+        opacityField = field;
+    }
+
+    // The colours picked lately, each a press away from the picker, not applied.
+    const recentCells: Array<[string, HTMLButtonElement]> = [];
+    const recentBlock = document.createElement("div");
+    if (cfg.recent?.length) {
+        recentBlock.className = "udoc-colorpicker__recent";
+        const heading = document.createElement("div");
+        heading.className = "udoc-paintpanel__label";
+        heading.textContent = i18n.t("paint.recentColors");
+        const grid = document.createElement("div");
+        grid.className = "udoc-paintpanel__grid";
+        grid.style.gridTemplateColumns = `repeat(${RECENT_COLUMNS}, 1fr)`;
+        for (const hex of cfg.recent) {
+            const cell = document.createElement("button");
+            cell.type = "button";
+            cell.className = "udoc-paintpanel__cell";
+            cell.style.setProperty("--swatch-color", hex);
+            cell.title = hex;
+            cell.setAttribute("aria-label", hex);
+            cell.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const parsed = parseHex(hex);
+                if (parsed) setHex(parsed);
+            });
+            grid.appendChild(cell);
+            recentCells.push([hex.toLowerCase(), cell]);
+        }
+        recentBlock.append(heading, grid);
+    }
+
+    const apply = (): void => cfg.onApply(hsvToHex(hsv), opacity);
     const actions = document.createElement("div");
     actions.className = "udoc-colorpicker__actions";
     actions.append(
@@ -161,12 +247,32 @@ export function buildColorPicker(cfg: ColorPickerConfig): HTMLElement {
         button("udoc-colorpicker__ok", i18n.t("common.ok"), apply),
     );
 
-    el.append(square, hue, fields, actions);
+    el.append(square, hue);
+    if (opacityStrip) el.appendChild(opacityRow);
+    el.appendChild(fields);
+    if (recentCells.length > 0) el.appendChild(recentBlock);
+    el.appendChild(actions);
 
-    // Draw `hsv` into every part; the hex field too unless it is what's being
-    // typed in, which a reformat would fight.
-    const render = (typing = false): void => {
+    // Draw `hsv` into every part; a field too unless it is what's being typed in,
+    // which a reformat would fight.
+    const render = (typing = false, typingOpacity = false): void => {
         const hex = hsvToHex(hsv);
+        const shown = opacity ?? 1;
+        if (opacityStrip && opacityThumb && opacityField) {
+            const percent = Math.round(shown * 100);
+            opacityStrip.style.setProperty("--swatch-color", hex);
+            opacityThumb.style.left = `${shown * 100}%`;
+            opacityThumb.style.setProperty("--swatch-color", withAlphaHex(hex, shown));
+            opacityStrip.setAttribute("aria-valuenow", String(percent));
+            opacityStrip.setAttribute("aria-valuetext", i18n.t("format.percent", { percent }));
+            if (!typingOpacity) {
+                opacityField.value = String(percent);
+                opacityField.removeAttribute("aria-invalid");
+            }
+        }
+        for (const [cellHex, cell] of recentCells) {
+            cell.classList.toggle("udoc-paintpanel__cell--selected", cellHex === hex);
+        }
         const pure = hsvToHex({ h: hsv.h, s: 1, v: 1 });
         square.style.setProperty("--hue-color", pure);
         squareThumb.style.left = `${hsv.s * 100}%`;
@@ -174,7 +280,7 @@ export function buildColorPicker(cfg: ColorPickerConfig): HTMLElement {
         squareThumb.style.setProperty("--swatch-color", hex);
         hueThumb.style.left = `${(hsv.h / 360) * 100}%`;
         hueThumb.style.setProperty("--swatch-color", pure);
-        preview.style.setProperty("--swatch-color", hex);
+        preview.style.setProperty("--swatch-color", withAlphaHex(hex, shown));
         const saturation = Math.round(hsv.s * 100);
         const brightness = Math.round(hsv.v * 100);
         square.setAttribute("aria-valuenow", String(saturation));
@@ -232,6 +338,39 @@ export function buildColorPicker(cfg: ColorPickerConfig): HTMLElement {
         hsv = { ...hsv, h };
         render();
     });
+
+    if (opacityStrip && opacityField) {
+        const field = opacityField;
+        dragOn(opacityStrip, (x) => {
+            opacity = x;
+            render();
+        });
+        opacityStrip.addEventListener("keydown", (e) => {
+            const step = (e.shiftKey ? 10 : 1) / 100;
+            const d = { ArrowLeft: -step, ArrowDown: -step, ArrowRight: step, ArrowUp: step }[e.key];
+            let next: number;
+            if (e.key === "Home") next = 0;
+            else if (e.key === "End") next = 1;
+            else if (d !== undefined) next = clamp01((opacity ?? 1) + d);
+            else return;
+            e.preventDefault();
+            opacity = next;
+            render();
+        });
+        field.addEventListener("input", () => {
+            const typed = field.value.trim();
+            const percent = /^\d+$/.test(typed) ? Number(typed) : NaN;
+            if (percent >= 0 && percent <= 100) {
+                opacity = percent / 100;
+                field.removeAttribute("aria-invalid");
+                render(false, true);
+            } else {
+                field.setAttribute("aria-invalid", "true");
+            }
+        });
+        // Leaving the field shows the opacity it holds, written out in full.
+        field.addEventListener("change", () => render());
+    }
 
     input.addEventListener("input", () => {
         const hex = parseHex(input.value);

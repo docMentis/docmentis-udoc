@@ -59,6 +59,11 @@ listed once, by package. Its major and minor version are those of the
   new layout's slots and keep their content.
 - A deck has Delete Slide, on its Slide tab: it deletes the current slide, or the
   slides selected in the thumbnails.
+- The Fill and Line panels have an Opacity, for a shape's solid fill or line, and on
+  a PDF for a path, an image, a shading or a text object. It sets the opacity alone,
+  and picking another color keeps it.
+- The custom color picker behind More Colors has an opacity slider and a percentage
+  field on a fill or a line, and lists the colors picked lately.
 - A deck has a Text Box, on its Slide tab: dragged out, or dropped with a click, it
   puts a text box on the slide that wraps at its width. Its text comes selected, so
   the first key types over it.
@@ -100,6 +105,10 @@ listed once, by package. Its major and minor version are those of the
 
 #### Fixed
 
+- No Fill and No Line work on a PDF's paths, and their swatches show them.
+- Changing a line's weight or dash no longer changes its color, and picking a color
+  no longer changes its weight or dash. The Line panel marks the weight and dash the
+  line has.
 - Keys pressed in New Slide's layout picker stay in it: Delete or Backspace no longer
   deletes what is selected behind it, and Escape closes only the picker, leaving the
   side panel open. Undo works from the keyboard straight after a pick.

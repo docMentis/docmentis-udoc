@@ -1,6 +1,11 @@
 // Edit mode's own state, kept in the shell's store as `UIState.extension`, so it
 // changes and is read as the rest of the state is.
-import type { FontFamilySummary, PaintLine, ParagraphStyleSummary } from "@docmentis/udoc-wasm";
+import type {
+    FontFamilySummary,
+    PaintLine,
+    ParagraphStyleSummary,
+    UDocSelectionProperties,
+} from "@docmentis/udoc-wasm";
 import { EMPTY_SELECTION_PAINT, EMPTY_SELECTION_TEXT_FORMAT } from "@docmentis/udoc-ui/internal";
 import type {
     Action,
@@ -100,6 +105,13 @@ export interface EditState {
     selectionLine: PaintLine | null;
 
     /**
+     * The engine's properties of the selection — what the Fill and Line panels'
+     * Opacity reads and carries back, keeping everything but the opacity. Null
+     * with nothing reported.
+     */
+    selectionProperties: UDocSelectionProperties | null;
+
+    /**
      * Whether the current page of an image takes what the Image tab
      * draws: false for an animated or a vector page, and for any other doc
      * type. Re-read as the current page and the document change.
@@ -139,6 +151,7 @@ export const INITIAL_EDIT_STATE: EditState = {
     selectionPaint: EMPTY_SELECTION_PAINT,
     selectionRuler: EMPTY_SELECTION_RULER,
     selectionLine: null,
+    selectionProperties: null,
     pageTakesMarkup: false,
     cropping: null,
     allowedModes: ALL_MODES,

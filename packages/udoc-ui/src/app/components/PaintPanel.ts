@@ -30,6 +30,7 @@ import {
     ICON_STROKE,
     ICON_NO_FILL,
     ICON_STROKE_WIDTH,
+    ICON_OPACITY,
     ICON_LINE_STYLE,
     ICON_CHEVRON_RIGHT,
     ICON_ARROW_OPEN,
@@ -140,6 +141,10 @@ const PAINT_WORDS: Record<PaintChannel, { none: MessageKey; more: MessageKey }> 
 
 /** The weight presets (points) offered by the stroke Weight fly-out. */
 export const LINE_WEIGHTS: readonly number[] = [0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4.5, 6];
+
+/** The opacities a paint is offered at: the Fill and Line panels' Opacity fly-out,
+ *  and the Annotate tab's Opacity menu. */
+export const PAINT_OPACITIES: readonly number[] = [1, 0.75, 0.5, 0.25];
 
 /** The dash presets offered by the stroke Dashes fly-out, with a line preview. */
 const DASH_OPTIONS: ReadonlyArray<{ dash: LineDash; label: MessageKey; icon: string }> = [
@@ -253,8 +258,9 @@ export interface PaintPanelConfig {
     /** The explicit-nothing row's label, when not the variant's own ("No Fill",
      *  "No Line", "No Color"). */
     noneLabel?: string;
-    /** Apply a chosen paint (a swatch, or "No Fill" / "No Line"). */
-    onPick: (paint: PaintSpec) => void;
+    /** Apply a chosen paint (a swatch, or "No Fill" / "No Line"), with the opacity
+     *  the custom picker gave it, on a paint that takes one. */
+    onPick: (paint: PaintSpec, opacity?: number) => void;
     /** Apply a stroke weight (points) / dash — stroke only; the Weight / Dashes
      *  fly-outs show when both are given. */
     onWeight?: (points: number) => void;
@@ -265,6 +271,13 @@ export interface PaintPanelConfig {
     /** Apply an ending to one end of the line — the Start / End fly-outs show,
      *  beside Weight / Dashes, when it is given. */
     onEnding?: (end: "start" | "end", ending: AnnotationLineEnding) => void;
+    /** The opacity the paint has, `0` to `1`, which the Opacity fly-out marks and
+     *  the custom picker's slider opens on — null for none to read (opaque in the
+     *  picker), absent for a paint that takes none, whose picker has no slider. */
+    opacity?: number | null;
+    /** Apply an opacity to the paint as it stands — the Opacity fly-out shows when
+     *  it is given. */
+    onOpacity?: (opacity: number) => void;
     /** Open the advanced fill / line surface as a modal dialog — the non-colour
      *  fills and a custom colour for Fill, compound / cap / arrow options for
      *  Stroke ("More Fill/Line Options…"). The row shows when it is given. */
@@ -541,6 +554,34 @@ export function buildPaintPanel(panel: HTMLElement, cfg: PaintPanelConfig): void
         }
     }
 
+    // Opacity: the fill's on its own, below the swatches; the line's among its
+    // fly-outs.
+    const onOpacity = cfg.onOpacity;
+    if (onOpacity) {
+        if (variant !== "stroke") panel.appendChild(divider());
+        panel.appendChild(
+            flyoutRow(ICON_OPACITY, i18n.t("command.annotationOpacity"), (sub) => {
+                // The current opacity is listed, in order, even when it isn't a
+                // preset — a document can carry any.
+                const current = cfg.opacity ?? null;
+                const opacities =
+                    current === null || PAINT_OPACITIES.includes(current)
+                        ? PAINT_OPACITIES
+                        : [...PAINT_OPACITIES, current].sort((a, b) => b - a);
+                for (const opacity of opacities) {
+                    const preview = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" fill-opacity="${opacity}"/></svg>`;
+                    const text = i18n.t("format.percent", { percent: Math.round(opacity * 100) });
+                    const item = row(preview, text, (e) => {
+                        e.stopPropagation();
+                        onOpacity(opacity);
+                    });
+                    item.classList.toggle("udoc-menu__item--selected", current === opacity);
+                    sub.appendChild(item);
+                }
+            }),
+        );
+    }
+
     // Escape hatch to the richer surface (custom colour + gradient / pattern /
     // picture for fill; compound / cap / arrows for stroke) that doesn't fit a
     // dropdown — opens a modal dialog.
@@ -569,7 +610,9 @@ function showColorPicker(panel: HTMLElement, cfg: PaintPanelConfig): void {
     const picker = buildColorPicker({
         i18n: cfg.i18n,
         initial: (current !== undefined && parseHex(current)) || "#000000",
-        onApply: (hex) => cfg.onPick({ kind: "solid", hex }),
+        ...(cfg.opacity !== undefined ? { opacity: cfg.opacity ?? 1 } : {}),
+        recent,
+        onApply: (hex, opacity) => cfg.onPick({ kind: "solid", hex }, opacity),
         onCancel: () => {
             buildPaintPanel(panel, cfg);
             panel.querySelector<HTMLElement>(".udoc-paintpanel__more-colors")?.focus();

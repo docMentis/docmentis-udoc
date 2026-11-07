@@ -798,8 +798,8 @@ export function selectionPaint(properties: UDocSelectionProperties | null): Sele
     if (properties && "portable" in properties) {
         const p = properties.portable.object;
         return {
-            fill: consensusPaint(p.nonstrokingStyle, (s) => portableBrushDisplay(s.brush)),
-            stroke: consensusPaint(p.strokingStyle, (s) => portableBrushDisplay(s.brush)),
+            fill: consensusPaint(p.nonstrokingStyle, (s) => (s ? portableBrushDisplay(s.brush) : { kind: "none" })),
+            stroke: consensusPaint(p.strokingStyle, (s) => (s ? portableBrushDisplay(s.brush) : { kind: "none" })),
             text: { kind: "unknown" },
             highlight: { kind: "unknown" },
         };

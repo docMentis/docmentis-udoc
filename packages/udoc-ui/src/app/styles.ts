@@ -1372,7 +1372,67 @@ export const uiStyles = css`
         cursor: pointer;
         touch-action: none;
     }
-    .udoc-ui-root :is(.udoc-colorpicker__square, .udoc-colorpicker__hue):focus-visible {
+    /* The opacity strip: the colour fading out over the checks that show through,
+   beside the percentage it reads as. */
+    .udoc-ui-root .udoc-colorpicker__opacity-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .udoc-ui-root .udoc-colorpicker__opacity {
+        position: relative;
+        flex: 1;
+        min-width: 0;
+        height: 12px;
+        border-radius: 6px;
+        background:
+            linear-gradient(to right, transparent, var(--swatch-color, #000)),
+            repeating-conic-gradient(#c4c4c4 0% 25%, #fff 0% 50%) 0 0 / 8px 8px;
+        cursor: pointer;
+        touch-action: none;
+    }
+    .udoc-ui-root .udoc-colorpicker__percent {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        width: 60px;
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid var(--udoc-color-outline);
+        border-radius: 6px;
+        color: var(--udoc-color-on-surface);
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+        box-sizing: border-box;
+    }
+    .udoc-ui-root .udoc-colorpicker__percent:focus-within {
+        border-color: var(--udoc-color-primary);
+    }
+    .udoc-ui-root .udoc-colorpicker__percent:has(input[aria-invalid="true"]) {
+        border-color: var(--udoc-color-error);
+    }
+    .udoc-ui-root .udoc-colorpicker__percent input {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+        padding: 0;
+        border: none;
+        outline: none;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: right;
+    }
+    /* The colours picked lately; the panel's own label and cells, in the picker's
+   gutters. */
+    .udoc-ui-root .udoc-colorpicker__recent .udoc-paintpanel__label {
+        padding-inline: 0;
+    }
+    .udoc-ui-root .udoc-colorpicker__recent .udoc-paintpanel__grid {
+        padding-inline: 0;
+    }
+    .udoc-ui-root :is(.udoc-colorpicker__square, .udoc-colorpicker__hue, .udoc-colorpicker__opacity):focus-visible {
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: 2px;
     }
@@ -1403,7 +1463,9 @@ export const uiStyles = css`
         height: 28px;
         border: 1px solid rgba(0, 0, 0, 0.18);
         border-radius: 4px;
-        background: var(--swatch-color, transparent);
+        background:
+            linear-gradient(var(--swatch-color, transparent), var(--swatch-color, transparent)),
+            repeating-conic-gradient(#c4c4c4 0% 25%, #fff 0% 50%) 0 0 / 8px 8px;
         box-sizing: border-box;
     }
     .udoc-ui-root .udoc-colorpicker__hex {

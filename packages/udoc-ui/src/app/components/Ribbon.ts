@@ -139,6 +139,8 @@ function paintTransforms(transforms: PaintColorTransform[]): PaintTransform[] | 
     for (const t of transforms) {
         if (typeof t === "object" && "tint" in t) picked.push({ kind: "tint", value: t.tint });
         else if (typeof t === "object" && "shade" in t) picked.push({ kind: "shade", value: t.shade });
+        // Its opacity isn't which color it is.
+        else if (typeof t === "object" && ("alpha" in t || "alphaOff" in t || "alphaMod" in t)) continue;
         else return null;
     }
     return picked;
