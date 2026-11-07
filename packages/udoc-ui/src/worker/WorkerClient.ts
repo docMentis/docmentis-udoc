@@ -63,6 +63,7 @@ import type {
     SlideShowInput,
     UrlFont,
     Watermark,
+    WordprocessingOutline,
 } from "@docmentis/udoc-wasm";
 import { UDocError } from "@docmentis/udoc-wasm/error";
 import type {
@@ -1555,6 +1556,24 @@ export class WorkerClient {
          */
         goToBookmark: (name: string, alignment: ScrollAlignment): void => {
             this.#post({ type: "goToBookmark", name, alignment, seq: ++this.#viewportSeq });
+        },
+
+        /**
+         * The document's headings as a tree, as they stand now — what the
+         * outline panel draws. An edit can move what each item's `paragraph`
+         * names, so read it again after one. A pure read.
+         */
+        outline: (): Promise<WordprocessingOutline> =>
+            this.#send({ type: "wordprocessingOutline" }) as Promise<WordprocessingOutline>,
+
+        /**
+         * Follow an outline item: the worker lays the document out as far as
+         * paragraph `paragraph` of its reading order and lands the view on its
+         * start, its point by `alignment`. The resulting scroll streams back as
+         * {@link goToPage}'s does. Latest-wins, fire-and-forget.
+         */
+        goToParagraph: (paragraph: number, alignment: ScrollAlignment): void => {
+            this.#post({ type: "goToParagraph", paragraph, alignment, seq: ++this.#viewportSeq });
         },
 
         /** What the open document's tracked changes show: the view chosen, else

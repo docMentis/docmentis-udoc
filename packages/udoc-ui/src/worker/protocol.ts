@@ -354,6 +354,21 @@ export interface GoToBookmarkRequest {
 }
 
 /**
+ * Follow a word document's outline item: the worker lays the document out as
+ * far as paragraph `paragraph` of its reading order and lands the view on its
+ * start, its point by `alignment` — or leaves the view where it is if the
+ * paragraph is no longer there. The resulting scroll rides back in the next
+ * {@link PageViewsReport}. Carries a `seq` as {@link GoToPageRequest} does.
+ * Latest-wins, fire-and-forget.
+ */
+export interface GoToParagraphRequest {
+    type: "goToParagraph";
+    paragraph: number;
+    alignment: ScrollAlignment;
+    seq: number;
+}
+
+/**
  * Zoom to an explicit magnification keeping the content point under (`x`, `y`)
  * — a viewport point in device px — pinned on screen. The engine owns the
  * resulting scroll (exact at any step, unlike a host-computed scroll), so this
@@ -1055,6 +1070,15 @@ export interface SearchMatchSelectionRequest {
  */
 export interface OutlineRequest {
     type: "outline";
+}
+
+/**
+ * Read a word document's outline — its headings as they stand now. Replies with
+ * the `WordprocessingOutline`; one with no items when the document has none (or
+ * no word document is open).
+ */
+export interface WordprocessingOutlineRequest {
+    type: "wordprocessingOutline";
 }
 
 /**
@@ -2047,6 +2071,7 @@ export type WorkerRequest =
     | GoToRectRequest
     | GoToDestinationRequest
     | GoToBookmarkRequest
+    | GoToParagraphRequest
     | SetRevisionViewRequest
     | RevisionViewRequest
     | ZoomAtPointRequest
@@ -2108,6 +2133,7 @@ export type WorkerRequest =
     | PageIdsRequest
     | PageModeRequest
     | OutlineRequest
+    | WordprocessingOutlineRequest
     | SearchRequest
     | SearchMatchSelectionRequest
     | FontInfoListRequest

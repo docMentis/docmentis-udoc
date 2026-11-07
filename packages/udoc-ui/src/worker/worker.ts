@@ -1916,6 +1916,16 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 scheduleFrame();
                 break;
             }
+            case "goToParagraph": {
+                viewers[VIEWER]!.viewportSeq = msg.seq;
+                if (session) {
+                    session.wordprocessing.goToParagraph(VIEWER, msg.paragraph, msg.alignment);
+                    // Adopt the resulting scroll, as `goToRect` does.
+                    adoptScroll(session, VIEWER);
+                }
+                scheduleFrame();
+                break;
+            }
             case "zoomAtPoint": {
                 viewers[VIEWER]!.viewportSeq = msg.seq;
                 if (session) {
@@ -2173,6 +2183,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "revisionView": {
                 if (!session) throw new Error("engine worker: revisionView before open");
                 reply(id, session.wordprocessing.revisionView());
+                break;
+            }
+            case "wordprocessingOutline": {
+                // One with no items with no open / non-word doc.
+                reply(
+                    id,
+                    safeRead(() => session?.wordprocessing.outline(), { items: [] }),
+                );
                 break;
             }
             case "renderThumbnail": {

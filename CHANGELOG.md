@@ -18,6 +18,9 @@ listed once, by package. Its major and minor version are those of the
   `revisionView` option, `setRevisionView`, the `revisionView` getter and
   `"revisionView:changed"` do the same for a host. A document opens on what it
   was saved to show, which is All Markup unless it was saved with markup off.
+- A word document has an Outline panel, listing its headings as Word's Navigation
+  pane does, with their numbers. Clicking one goes to it, and the list follows the
+  document's edits.
 
 #### Changed
 

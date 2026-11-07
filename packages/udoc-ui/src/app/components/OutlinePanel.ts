@@ -1,10 +1,11 @@
-import type { Outline, OutlineItem } from "@docmentis/udoc-wasm";
+import type { Outline, OutlineItem, WordprocessingOutline, WordprocessingOutlineItem } from "@docmentis/udoc-wasm";
 import { subscribeSelector } from "../../framework/index.js";
 import type { Store } from "../../framework/index.js";
 import type { WorkerClient } from "../../worker/WorkerClient.js";
 import type { Action } from "../actions.js";
 import { follow } from "../destinations.js";
 import { ICON_CHEVRON_RIGHT } from "../icons.js";
+import { revisionViewOf } from "../state.js";
 import type { UIState } from "../state.js";
 import type { I18n } from "../i18n/index.js";
 
@@ -13,19 +14,31 @@ export interface OutlinePanelCallbacks {
     openUrl: (url: string) => void;
 }
 
+/** One row of the tree: a PDF's bookmark, or a word document's heading. */
+type PanelItem = OutlineItem | WordprocessingOutlineItem;
+
+/** How long a word document's edits settle before its outline is read again: a
+ *  read walks every paragraph, and typing is an edit per keystroke. */
+const REREAD_AFTER_MS = 300;
+
 /**
- * The left panel's Outline tab: a PDF's document outline — its bookmarks — as a
- * tree. A port of the udoc-viewer's outline panel: items expand and collapse,
- * the tree answers the arrow / Home / End / Enter keys, and each item opens as
- * the file says it does (`/Count`); beyond it, each title shows in the file's
- * colour (`/C`) and style (`/F`).
+ * The left panel's Outline tab: a PDF's document outline — its bookmarks — or a
+ * word document's headings, as a tree. A port of the udoc-viewer's outline
+ * panel: items expand and collapse, and the tree answers the arrow / Home / End
+ * / Enter keys.
  *
- * The outline is read once per document, the first time the tab opens (the
- * read loads it). Activating an item follows its destination — or its `GoTo`
- * action's — through the engine, which lands the view; when the landing set
- * the zoom, the zoom mode turns custom, as a marquee zoom's does. A `URI`
- * action's URI goes to the shell, which opens it as it opens a link's; any
- * other action does nothing yet.
+ * A PDF's outline is read once per document, the first time the tab opens (the
+ * read loads it). Each item opens as the file says it does (`/Count`), and its
+ * title shows in the file's colour (`/C`) and style (`/F`). Activating one
+ * follows its destination — or its `GoTo` action's — through the engine, which
+ * lands the view; when the landing set the zoom, the zoom mode turns custom, as
+ * a marquee zoom's does. A `URI` action's URI goes to the shell, which opens it
+ * as it opens a link's; any other action does nothing yet.
+ *
+ * A word document's outline is derived from its paragraphs, so it is read again
+ * once a change to the document settles, or to what its tracked changes show,
+ * which its titles follow. Each item opens expanded, and activating one lands
+ * the view on its paragraph.
  */
 export function createOutlinePanel(i18n: I18n, callbacks: OutlinePanelCallbacks) {
     const el = document.createElement("div");
@@ -35,10 +48,16 @@ export function createOutlinePanel(i18n: I18n, callbacks: OutlinePanelCallbacks)
     let client: WorkerClient | null = null;
     /** The document the tree on show was read from — a newer one re-reads. */
     let generation = -1;
+    /** The latest read — one it overtook shows nothing. */
+    let latestRead = 0;
+    /** The outline on show, as JSON — a read that finds the same builds nothing,
+     *  so the tree keeps its focus through an edit that moves no heading. */
+    let shown: string | null = null;
+    let rereadTimer: ReturnType<typeof setTimeout> | null = null;
     /** Items the reader has collapsed or expanded, by path — what a first state
      *  (`open`) no longer decides. */
     const toggled = new Map<string, boolean>();
-    let unsub: (() => void) | null = null;
+    let unsubs: (() => void)[] = [];
 
     function showMessage(text: string): void {
         el.replaceChildren();
@@ -53,23 +72,47 @@ export function createOutlinePanel(i18n: I18n, callbacks: OutlinePanelCallbacks)
         if (!client || docGeneration === generation) return;
         generation = docGeneration;
         toggled.clear();
+        shown = null;
         showMessage(i18n.t("outline.loading"));
-        let outline: Outline;
+        await read(docGeneration);
+    }
+
+    /** Read the outline and show it, unless a later read or document overtook it. */
+    async function read(docGeneration: number): Promise<void> {
+        if (!client || !store) return;
+        const seq = ++latestRead;
+        let outline: Outline | WordprocessingOutline;
         try {
-            outline = await client.portable.outline();
+            outline = await (store.getState().docType === "wordprocessing"
+                ? client.wordprocessing.outline()
+                : client.portable.outline());
         } catch (err) {
             // A worker torn down under the read took the panel with it.
-            if (generation !== docGeneration || !client) return;
+            if (seq !== latestRead || generation !== docGeneration || !client) return;
             console.error("outline read failed:", err);
+            shown = null;
             showMessage(i18n.t("outline.readFailed"));
             return;
         }
         // Another document opened (or the panel closed) while this read ran.
-        if (generation !== docGeneration || !client) return;
+        if (seq !== latestRead || generation !== docGeneration || !client) return;
         build(outline);
     }
 
-    function build(outline: Outline): void {
+    /** Read a word document's outline again once its changes settle. */
+    function scheduleReread(): void {
+        if (store?.getState().docType !== "wordprocessing") return;
+        if (rereadTimer !== null) clearTimeout(rereadTimer);
+        rereadTimer = setTimeout(() => {
+            rereadTimer = null;
+            void read(generation);
+        }, REREAD_AFTER_MS);
+    }
+
+    function build(outline: Outline | WordprocessingOutline): void {
+        const json = JSON.stringify(outline);
+        if (json === shown) return;
+        shown = json;
         if (outline.items.length === 0) {
             showMessage(i18n.t("outline.empty"));
             return;
@@ -77,15 +120,15 @@ export function createOutlinePanel(i18n: I18n, callbacks: OutlinePanelCallbacks)
         el.replaceChildren();
         el.setAttribute("role", "tree");
         el.setAttribute("aria-label", i18n.t("leftPanel.outline"));
-        outline.items.forEach((item, index) => el.appendChild(itemElement(item, String(index), 0)));
+        outline.items.forEach((item: PanelItem, index: number) => el.appendChild(itemElement(item, String(index), 0)));
         el.querySelector<HTMLElement>(".udoc-outline-item__header")?.setAttribute("tabindex", "0");
     }
 
-    function isExpanded(item: OutlineItem, path: string): boolean {
-        return toggled.get(path) ?? item.open;
+    function isExpanded(item: PanelItem, path: string): boolean {
+        return toggled.get(path) ?? ("open" in item ? item.open : true);
     }
 
-    function itemElement(item: OutlineItem, path: string, depth: number): HTMLElement {
+    function itemElement(item: PanelItem, path: string, depth: number): HTMLElement {
         const container = document.createElement("div");
         container.className = "udoc-outline-item";
         container.dataset.path = path;
@@ -121,14 +164,16 @@ export function createOutlinePanel(i18n: I18n, callbacks: OutlinePanelCallbacks)
         title.textContent = item.title;
         // The panel cuts a long title off; the tooltip reads it whole.
         title.title = item.title;
-        const color = titleColor(item);
-        if (color) title.style.color = color;
-        if (item.italic) title.style.fontStyle = "italic";
-        if (item.bold) title.style.fontWeight = "700";
+        if (!("paragraph" in item)) {
+            const color = titleColor(item);
+            if (color) title.style.color = color;
+            if (item.italic) title.style.fontStyle = "italic";
+            if (item.bold) title.style.fontWeight = "700";
+        }
         header.appendChild(title);
         container.appendChild(header);
 
-        if (item.destination || item.action) {
+        if ("paragraph" in item || item.destination || item.action) {
             header.classList.add("udoc-outline-item__header--clickable");
             header.addEventListener("click", () => activate(item));
         }
@@ -143,7 +188,7 @@ export function createOutlinePanel(i18n: I18n, callbacks: OutlinePanelCallbacks)
             const children = document.createElement("div");
             children.className = "udoc-outline-item__children";
             children.setAttribute("role", "group");
-            item.children.forEach((child, index) =>
+            item.children.forEach((child: PanelItem, index: number) =>
                 children.appendChild(itemElement(child, `${path}/${index}`, depth + 1)),
             );
             container.appendChild(children);
@@ -166,16 +211,21 @@ export function createOutlinePanel(i18n: I18n, callbacks: OutlinePanelCallbacks)
         container.setAttribute("aria-expanded", String(expanded));
     }
 
-    /** Follow an item: its destination, else its action's. */
-    function activate(item: OutlineItem): void {
+    /** Follow an item: a heading to its paragraph, a bookmark by its destination,
+     *  else its action's. */
+    function activate(item: PanelItem): void {
         if (!client || !store) return;
+        if ("paragraph" in item) {
+            client.wordprocessing.goToParagraph(item.paragraph, store.getState().navigationScrollAlignment);
+            return;
+        }
         follow(client, store, item, callbacks.openUrl).catch((err: unknown) => {
             // A worker torn down under the call took the panel with it.
             if (client) console.error("following an outline item failed:", err);
         });
     }
 
-    function onTreeKey(e: KeyboardEvent, container: HTMLElement, item: OutlineItem, path: string): boolean {
+    function onTreeKey(e: KeyboardEvent, container: HTMLElement, item: PanelItem, path: string): boolean {
         const hasChildren = item.children.length > 0;
         const expanded = hasChildren && isExpanded(item, path);
         switch (e.key) {
@@ -270,16 +320,22 @@ export function createOutlinePanel(i18n: I18n, callbacks: OutlinePanelCallbacks)
         store = s;
         client = c;
         void load(s.getState().docGeneration);
-        unsub = subscribeSelector(
-            s,
-            (st) => st.docGeneration,
-            (docGeneration) => void load(docGeneration),
-        );
+        unsubs = [
+            subscribeSelector(
+                s,
+                (st) => st.docGeneration,
+                (docGeneration) => void load(docGeneration),
+            ),
+            subscribeSelector(s, revisionViewOf, scheduleReread),
+            c.onDocumentChanged(scheduleReread),
+        ];
     }
 
     function destroy(): void {
-        if (unsub) unsub();
-        unsub = null;
+        for (const unsub of unsubs) unsub();
+        unsubs = [];
+        if (rereadTimer !== null) clearTimeout(rereadTimer);
+        rereadTimer = null;
         store = null;
         client = null;
         el.remove();

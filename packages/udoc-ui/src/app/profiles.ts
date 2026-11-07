@@ -137,11 +137,12 @@ export interface DocProfile {
     /**
      * The left-panel navigator tabs this doc type offers, in render order — a
      * subset of {@link LEFT_PANEL_TABS}. A PDF exposes the full strip
-     * (thumbnails, outline, layers, attachments); a deck, a word document and an
-     * image only the thumbnails, the rest reading PDF parts they don't have; a
-     * spreadsheet offers none — its navigation is the bottom sheet-tab bar (see
-     * {@link sheetTabs}) and the page/PDF-shaped navigators don't map to a grid —
-     * so its left panel and the toolbar's side panel button drop out entirely.
+     * (thumbnails, outline, layers, attachments); a word document the thumbnails
+     * and the outline of its headings; a deck and an image only the thumbnails,
+     * the rest reading PDF parts they don't have; a spreadsheet offers none — its
+     * navigation is the bottom sheet-tab bar (see {@link sheetTabs}) and the
+     * page/PDF-shaped navigators don't map to a grid — so its left panel and the
+     * toolbar's side panel button drop out entirely.
      * Any tab outside this list is treated as disabled (hidden from the UI).
      */
     leftPanels: readonly LeftPanelTab[];
@@ -385,8 +386,8 @@ export const SPREADSHEET_PROFILE: DocProfile = {
 export const WORDPROCESSING_PROFILE: DocProfile = {
     viewTabs: [REVIEW_TAB, viewTab("wordprocessing")],
     sheetTabs: false,
-    // The outline, layers and attachments read PDF parts.
-    leftPanels: ["thumbnail"],
+    // The layers and attachments read PDF parts.
+    leftPanels: ["thumbnail", "outline"],
     rightPanels: ["search"],
     textEditing: true,
     pagedViewControls: true,
