@@ -94,6 +94,9 @@ listed once, by package. Its major and minor version are those of the
 - The ruler's margin edges, indent markers and tab stops respond to the pointer:
   one that can be dragged tints when the pointer is over it, and more strongly
   while pressed, along with any markers the drag moves with it.
+- A shape being dragged out shows half transparent in the outline and colors it will
+  land with, on a deck, on an image and on a PDF's page, in place of a plain
+  rectangle or ellipse.
 
 #### Fixed
 

@@ -1,6 +1,6 @@
 // What a package built on udoc-ui adds to the shell, handed to `createAs`. A
 // package that hands none gets the shell as it is.
-import type { Feature, UDocType } from "@docmentis/udoc-wasm";
+import type { Feature, ShapePreview, UDocType } from "@docmentis/udoc-wasm";
 import type { Store } from "./framework/index.js";
 import type { Action } from "./app/actions.js";
 import type { ClipboardCopy } from "./app/clipboard.js";
@@ -73,10 +73,20 @@ export interface UIExtension {
      */
     guideBand(state: UIState): GuideBand | null;
     /**
-     * The shape the extension's place `tool` drags out — the outline the canvas
-     * sketches while it does — or null for a tool the canvas places by no drag.
+     * The shape the extension's place `tool` drags out — what a click drops, and
+     * the outline the canvas sketches while it does unless {@link placePreview}
+     * draws it — or null for a tool the canvas places by no drag.
      */
     placedShape(tool: string): ShapeKind | null;
+    /**
+     * What dragging the extension's place `tool` across the page-local document
+     * points `p0 → p1` on page `page` (0-based) would draw, which the canvas shows
+     * half transparent while the drag lasts; or null, at once, for a tool it
+     * doesn't draw, which the canvas sketches as {@link placedShape}. Called
+     * latest-wins as the pointer moves, one in flight, and writes nothing. It may
+     * resolve to null, for nothing to show at that point.
+     */
+    placePreview(tool: string, page: number, p0: ShapePoint, p1: ShapePoint): Promise<ShapePreview | null> | null;
     /**
      * Place the extension's `tool` on page `page` (0-based), spanning the
      * page-local document points `p0 → p1` — its drag's two ends, or for a bare

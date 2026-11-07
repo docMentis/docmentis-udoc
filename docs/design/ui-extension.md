@@ -39,9 +39,11 @@ Where the extension decides in the shell's place, the shell asks it:
   draws, with controls of its own in a layer over each strip and what they
   draw across the pages in one over the content pane, as edit mode's ruler is
   with its margin edges, indent markers and tab stops, and a drag's guide line.
-- `placedShape` / `place` — a place tool of the extension's
+- `placedShape` / `placePreview` / `place` — a place tool of the extension's
   (`{ kind: "extension", tool }`) is dragged out as the shape `placedShape`
   names and handed to `place` on release, as a PDF's Text Box and Shapes are.
+  `placePreview` draws the shape as it will land, half transparent, latest-wins
+  as the pointer moves; a tool it doesn't draw, as a text box, is sketched.
 - `selectionChrome` — chrome of its own on the selection, beside the shell's
   resize handles: edit mode's rotation and geometry grips.
 - `pressCanvas` / `canvasCursor` — a select-pointer press offered ahead of the

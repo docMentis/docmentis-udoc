@@ -1138,7 +1138,7 @@ export function parsePdfDate(text: string): Date | null {
 
 /** `color` as an `#rrggbb` hex — the device colour spaces by their usual
  *  conversions — for a swatch, or for drawing an annotation as it is drawn. */
-export function colorHex(color: Color): string {
+export function colorHex(color: Pick<Color, "components">): string {
     const c = color.components;
     let rgb: [number, number, number];
     switch (c.length) {

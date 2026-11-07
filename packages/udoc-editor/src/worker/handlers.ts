@@ -98,6 +98,13 @@ export const EDIT_HANDLERS: EditHandlers = {
                   null)
                 : null,
     },
+    shapePreview: {
+        // What a shape being dragged out would paint — the engine lowers its
+        // preset at this size and resolves its paint against the page's theme. A
+        // pure read, no edit, no repaint.
+        handle: (request, { session, viewer }) =>
+            session ? (session.shapePreview(viewer, request.page, request.node) ?? null) : null,
+    },
     slideId: {
         // A pure read, lenient like the engine's own: a throw — no
         // presentation open — reads as none.

@@ -14,7 +14,7 @@ import type { EditHost } from "./edit-client.js";
 import { createI18n, MESSAGE_PACKS } from "./i18n/index.js";
 import { imageCommands, mountImageSize } from "./image.js";
 import type { ImageSize } from "./image.js";
-import { insertCommands, insertImage, pickImage, place, placedShape } from "./insert.js";
+import { insertCommands, insertImage, pickImage, place, placedShape, placePreview } from "./insert.js";
 import { runEditMenuAction } from "./menu-action.js";
 import type { EditMenuAction } from "./menu-action.js";
 import { mountPageResize, pageCommands } from "./page-commands.js";
@@ -263,6 +263,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
         contextMenuItems: (state, inTable) => (editing(state) ? (inTable ? TABLE_CONTEXT_MENU : CONTEXT_MENU) : null),
         guideBand: (state) => (rulerShown(state) ? ruler : null),
         placedShape,
+        placePreview: (tool, page, p0, p1) => (host ? placePreview(host, tool, page, p0, p1) : null),
         selectionChrome: grips.chrome,
         pressCanvas: (x, y, _ev, canvas) => grips.press(x, y, canvas),
         canvasCursor: (x, y) => grips.cursor(x, y),

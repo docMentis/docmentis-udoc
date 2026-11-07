@@ -774,6 +774,7 @@ export function mountUIShell(
         commitTranslate: (dx, dy) => void translateSelection(dx, dy),
         commitScaleEach: (sx, sy, ax, ay) => void scaleSelectionEach(sx, sy, ax, ay),
         placedShape: (tool) => extension?.placedShape(tool) ?? null,
+        placePreview: (tool, page, p0, p1) => extension?.placePreview(tool, page, p0, p1) ?? null,
         place: (tool, page, p0, p1) => extension?.place(tool, page, p0, p1),
         placeAnnotation: (tool, page, points) => insertAnnotation(tool, page, points),
         markText: (tool) => markText(tool),

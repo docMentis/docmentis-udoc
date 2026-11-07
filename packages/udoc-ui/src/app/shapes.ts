@@ -2,10 +2,10 @@
 // a shape-placing tool armed, the canvas maps the gesture into two page-local
 // document points, and this module turns them into the path segments of the
 // shape between them, in the exact shape the Rust model's serde expects — what
-// the canvas sketches while the drag lasts, and what a shape placed as a page
-// object is drawn with.
+// the canvas sketches while the drag lasts, unless the extension draws its tool
+// itself, and what a shape placed as a page object is drawn with.
 
-import type { Color } from "@docmentis/udoc-wasm";
+import type { Color, PathSegment } from "@docmentis/udoc-wasm";
 import type { ShapeKind } from "./state.js";
 
 /** A page-local document point (top-left origin, y-down). */
@@ -28,11 +28,7 @@ const KAPPA = 0.5522847498307935;
 const ARROW_HEAD = 14;
 
 /** A path segment in page-local document points, in the model's serde shape. */
-export type Segment =
-    | { moveTo: ShapePoint }
-    | { lineTo: ShapePoint }
-    | { cubicTo: { control1: ShapePoint; control2: ShapePoint; end: ShapePoint } }
-    | "close";
+export type Segment = PathSegment;
 
 const pt = (x: number, y: number): ShapePoint => ({ x, y });
 

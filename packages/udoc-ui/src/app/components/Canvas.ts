@@ -4,6 +4,8 @@ import type {
     GraphicsObjectHit,
     LinkAnnotation,
     ShapeHit,
+    ShapePreview,
+    ShapePreviewPath,
     TextHit,
     TextHyperlink,
     UDocHit,
@@ -378,6 +380,10 @@ export interface CanvasHooks {
     /** The outline the shell's extension's place `tool` drags out, or null
      *  for one placed by no drag — see `UIExtension.placedShape`. */
     placedShape?: (tool: string) => ShapeKind | null;
+    /** What dragging the shell's extension's place `tool` across `p0 → p1` on
+     *  page `page` would draw, or null for one the canvas sketches — see
+     *  `UIExtension.placePreview`. */
+    placePreview?: (tool: string, page: number, p0: ShapePoint, p1: ShapePoint) => Promise<ShapePreview | null> | null;
     /**
      * Commit the placement gesture of the shell's extension's `tool` (its
      * press-drag-release) on page `page`, spanning the page-local document
@@ -525,11 +531,46 @@ type TapAction =
 
 /** A drawing on the canvas ahead of the engine — a pen stroke, a polygon, a
  *  shape or text box being placed: `tool`'s line along `segments` on `page`
- *  (page-local document points). */
-interface Sketch {
-    tool: PlaceTool;
-    page: number;
-    segments: readonly Segment[];
+ *  (page-local document points), or what the extension says a shape it places
+ *  will draw there. */
+type Sketch =
+    | {
+          tool: PlaceTool;
+          page: number;
+          segments: readonly Segment[];
+      }
+    | {
+          page: number;
+          preview: ShapePreview;
+      };
+
+/** A finished drawing, up until the first frame after the engine `landed` it. */
+type HeldSketch = Sketch & { landed: boolean };
+
+/** The drag of a shape the extension draws itself: its latest drawing, asked for
+ *  latest-wins as the pointer moves. */
+interface PlacePreviewProbe {
+    /** Whether the extension draws this tool, known from the drag's first move. */
+    asked: boolean;
+    /** What it last answered, or null before its first answer. */
+    answer: ShapePreview | null;
+    /** Whether a question is out. */
+    busy: boolean;
+    /** Whether the pointer moved while one was. */
+    again: boolean;
+}
+
+/** `segments` as an SVG path, each point through `at`. */
+function svgPath(segments: readonly Segment[], at: (p: ShapePoint) => string): string {
+    return segments
+        .map((s) => {
+            if (s === "close") return "Z";
+            if ("moveTo" in s) return `M${at(s.moveTo)}`;
+            if ("lineTo" in s) return `L${at(s.lineTo)}`;
+            if ("quadTo" in s) return `Q${at(s.quadTo.control)} ${at(s.quadTo.end)}`;
+            return `C${at(s.cubicTo.control1)} ${at(s.cubicTo.control2)} ${at(s.cubicTo.end)}`;
+        })
+        .join(" ");
 }
 
 /** Annotation `tool`'s line through `points` on `page` as a sketch, closed
@@ -856,6 +897,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     sketch.style.display = "none";
     const sketchPath = document.createElementNS(SVG_NS, "path");
     sketch.appendChild(sketchPath);
+    const sketchPreview = document.createElementNS(SVG_NS, "g");
+    sketchPreview.classList.add("udoc-ui__sketch-preview");
+    sketch.appendChild(sketchPreview);
     marqueeClip.appendChild(sketch);
     el.appendChild(marqueeClip);
     // The content-clip key last applied to `marqueeClip` (see overlayClip).
@@ -1232,9 +1276,13 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     // until the first frame after the engine has it (`landed`), so it doesn't
     // blink out for the round trip before the engine paints it. Oldest first; a
     // quick hand can finish the next stroke before the last one lands.
-    let heldSketches: Array<Sketch & { landed: boolean }> = [];
+    let heldSketches: HeldSketch[] = [];
     // The sketch layer's paths, one per sketch shown, reused frame to frame.
     const sketchPaths: SVGPathElement[] = [sketchPath];
+    // Those of the previews among them, one per path each draws.
+    const sketchPreviewPaths: SVGPathElement[] = [];
+    // The shape the drag in progress is placing, if the extension draws it.
+    let placeProbe: PlacePreviewProbe | null = null;
 
     // Hover hit probe (latest-wins): the whole `UDocHit` under the resting
     // pointer. Only the engine knows what's under a point, so we ask it
@@ -2765,11 +2813,12 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     /**
      * Finish a shape-placement gesture: map the press/release (canvas CSS px)
      * into page-local document points and hand the shape — an Insert-tab shape,
-     * or an Annotate-tab one — to the shell, keeping its sketch drawn until the
+     * or an Annotate-tab one — to the shell, keeping its drawing up until the
      * engine paints it. A real drag uses the two endpoints; a bare click (no
      * drag) drops a default-sized shape centred on the click — for a box shape
-     * — or a default-length one from it, for a line/arrow. A no-op if the page
-     * scrolled off mid-gesture.
+     * — or a default-length one from it, for a line/arrow; one of the
+     * extension's holds no drawing, as none was up to blink out. A no-op if the
+     * page scrolled off mid-gesture.
      */
     function commitPlace(
         g: { tool: PlaceTool; page: number; startX: number; startY: number; moved: boolean },
@@ -2797,8 +2846,48 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             g.tool.kind === "annotation"
                 ? hooks.placeAnnotation?.(g.tool.tool, g.page, [p0, p1])
                 : hooks.place?.(g.tool.tool, g.page, p0, p1);
+        if (g.tool.kind === "extension" && !g.moved) return;
+        if (placeProbe?.asked) {
+            if (placeProbe.answer) holdSketch({ page: g.page, preview: placeProbe.answer }, placed);
+            return;
+        }
         const sketched = placeSketch(g.tool, g.page, p0, p1);
         if (sketched) holdSketch(sketched, placed);
+    }
+
+    /**
+     * Ask the extension what the shape the drag in progress is placing would
+     * draw, press to pointer, if it draws it. Only it knows — the engine lowers
+     * the shape at each size — and that's a worker hop, so this is latest-wins
+     * like the hover probe: one question out, the newest pointer asked for when
+     * it comes back, a frame behind the pointer rather than queueing a hop per
+     * move. An answer after the drag has ended draws nothing.
+     */
+    function probePlacePreview(): void {
+        const probe = placeProbe;
+        if (gesture?.kind !== "place" || gesture.tool.kind !== "extension" || !probe) return;
+        if (probe.busy) {
+            probe.again = true;
+            return;
+        }
+        const p0 = pagePoint(gesture.page, gesture.startX, gesture.startY);
+        const p1 = pagePoint(gesture.page, gesture.lastX, gesture.lastY);
+        if (!p0 || !p1) return;
+        const asked = hooks.placePreview?.(gesture.tool.tool, gesture.page, p0, p1);
+        if (!asked) return;
+        probe.asked = true;
+        probe.busy = true;
+        const settle = (answer: ShapePreview | null): void => {
+            if (placeProbe !== probe) return;
+            probe.busy = false;
+            probe.answer = answer;
+            renderSketch();
+            if (probe.again) {
+                probe.again = false;
+                probePlacePreview();
+            }
+        };
+        void asked.then(settle, () => settle(null));
     }
 
     /**
@@ -2871,7 +2960,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     /** Keep `drawing` shown until the first frame after `placed` settles — the
      *  engine then has what it draws, and paints it. */
     function holdSketch(drawing: Sketch, placed: Promise<void> | void): void {
-        const held = { ...drawing, landed: false };
+        const held: HeldSketch = { ...drawing, landed: false };
         heldSketches.push(held);
         renderSketch();
         void Promise.resolve(placed).finally(() => {
@@ -2888,10 +2977,14 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         if (gesture?.kind === "ink") {
             drawings.push(lineSketch(gesture.tool, gesture.page, gesture.points, false));
         } else if (gesture?.kind === "place") {
-            const p0 = pagePoint(gesture.page, gesture.startX, gesture.startY);
-            const p1 = pagePoint(gesture.page, gesture.lastX, gesture.lastY);
-            const sketched = p0 && p1 ? placeSketch(gesture.tool, gesture.page, p0, p1) : null;
-            if (sketched) drawings.push(sketched);
+            if (placeProbe?.asked) {
+                if (placeProbe.answer) drawings.push({ page: gesture.page, preview: placeProbe.answer });
+            } else {
+                const p0 = pagePoint(gesture.page, gesture.startX, gesture.startY);
+                const p1 = pagePoint(gesture.page, gesture.lastX, gesture.lastY);
+                const sketched = p0 && p1 ? placeSketch(gesture.tool, gesture.page, p0, p1) : null;
+                if (sketched) drawings.push(sketched);
+            }
         } else if (polygonDraft) {
             const { tool, page, corners, pointer } = polygonDraft;
             drawings.push(lineSketch(tool, page, pointer ? [...corners, pointer] : corners, false));
@@ -2903,19 +2996,39 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
      * Draw {@link currentSketches} in their tools' style, each projected through
      * its page's current view, so it holds its place on the page through a
      * scroll or a zoom — a drawing on a page off-screen is left out. An
-     * annotation draws in its tool's style, an Insert-tab shape in the stroke it
-     * lands with. The ink is an approximation until the engine paints the
-     * result: the line in its colour, width, dash and opacity, without a fill,
-     * a cloud's scallops or a line ending — an arrow's head is its two barbs. A
-     * line with no colour draws as a guide, so the drawing still shows where it
-     * goes.
+     * annotation draws in its tool's style, a text box of the extension's in a
+     * plain stroke, to show where it goes. The ink is an approximation until the
+     * engine paints the result: the line in its colour, width, dash and opacity,
+     * without a fill, a cloud's scallops or a line ending — an arrow's head is its
+     * two barbs. A line with no colour draws as a guide, so the drawing still shows
+     * where it goes. A shape the extension draws shows as it will land, half
+     * transparent.
      */
     function renderSketch(): void {
         const styles = store?.getState().annotationStyles ?? {};
         let shown = 0;
+        let previewShown = 0;
         for (const drawing of currentSketches()) {
             const view = selection.pageToViewport(drawing.page);
-            if (!view || drawing.segments.length === 0) continue;
+            if (!view) continue;
+            const at = (p: ShapePoint): string => {
+                const v = applyPoint(view, p.x, p.y);
+                return `${v.x.toFixed(1)} ${v.y.toFixed(1)}`;
+            };
+            if ("preview" in drawing) {
+                for (const part of drawing.preview.paths) {
+                    let path = sketchPreviewPaths[previewShown];
+                    if (!path) {
+                        path = document.createElementNS(SVG_NS, "path");
+                        sketchPreview.appendChild(path);
+                        sketchPreviewPaths.push(path);
+                    }
+                    previewShown++;
+                    paintPreviewPath(path, part, svgPath(part.segments, at));
+                }
+                continue;
+            }
+            if (drawing.segments.length === 0) continue;
             let path = sketchPaths[shown];
             if (!path) {
                 path = document.createElementNS(SVG_NS, "path");
@@ -2929,19 +3042,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             const width = style ? style.borderStyle.width : SHAPE_STROKE_WIDTH;
             const dash = style?.borderStyle.style === "dashed" ? (style.borderStyle.dash ?? [3]) : null;
             const pen = tool === "pen";
-            const at = (p: ShapePoint): string => {
-                const v = applyPoint(view, p.x, p.y);
-                return `${v.x.toFixed(1)} ${v.y.toFixed(1)}`;
-            };
-            const d = drawing.segments
-                .map((s) => {
-                    if (s === "close") return "Z";
-                    if ("moveTo" in s) return `M${at(s.moveTo)}`;
-                    if ("lineTo" in s) return `L${at(s.lineTo)}`;
-                    return `C${at(s.cubicTo.control1)} ${at(s.cubicTo.control2)} ${at(s.cubicTo.end)}`;
-                })
-                .join(" ");
-            path.setAttribute("d", d);
+            path.setAttribute("d", svgPath(drawing.segments, at));
             path.setAttribute("stroke", color ? colorHex(color) : "none");
             path.setAttribute("stroke-width", String(width * lastScale));
             path.setAttribute("stroke-dasharray", dash ? dash.map((d) => d * lastScale).join(" ") : "none");
@@ -2952,8 +3053,27 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             path.style.display = "";
         }
         for (const path of sketchPaths.slice(shown)) path.style.display = "none";
-        if (shown > 0) marqueeClipKey = applyContentClip(marqueeClip, { branding: lastBrandingRect }, marqueeClipKey);
-        sketch.style.display = shown > 0 ? "block" : "none";
+        for (const path of sketchPreviewPaths.slice(previewShown)) path.style.display = "none";
+        const any = shown + previewShown > 0;
+        if (any) marqueeClipKey = applyContentClip(marqueeClip, { branding: lastBrandingRect }, marqueeClipKey);
+        sketch.style.display = any ? "block" : "none";
+    }
+
+    /** Draw `path` as `part` of a shape's preview paints, along `d`. */
+    function paintPreviewPath(path: SVGPathElement, part: ShapePreviewPath, d: string): void {
+        const { fill, stroke } = part;
+        path.setAttribute("d", d);
+        path.setAttribute("fill", fill ? colorHex(fill.color) : "none");
+        path.setAttribute("fill-opacity", String(fill?.opacity ?? 1));
+        path.setAttribute("stroke", stroke ? colorHex(stroke.paint.color) : "none");
+        path.setAttribute("stroke-opacity", String(stroke?.paint.opacity ?? 1));
+        path.setAttribute("stroke-width", String((stroke?.style.width ?? 0) * lastScale));
+        path.setAttribute("stroke-linecap", stroke?.style.lineCap ?? "butt");
+        path.setAttribute("stroke-linejoin", stroke?.style.lineJoin ?? "miter");
+        path.setAttribute("stroke-miterlimit", String(stroke?.style.miterLimit ?? 10));
+        const dash = stroke?.style.dashArray;
+        path.setAttribute("stroke-dasharray", dash?.length ? dash.map((d) => d * lastScale).join(" ") : "none");
+        path.style.display = "";
     }
 
     /**
@@ -3140,6 +3260,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
                     pointerId: ev.pointerId,
                     moved: false,
                 };
+                placeProbe = { asked: false, answer: null, busy: false, again: false };
             }
             el.setPointerCapture(ev.pointerId);
             return;
@@ -3490,6 +3611,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
                 if (Math.hypot(x - gesture.startX, y - gesture.startY) >= DRAG_THRESHOLD) gesture.moved = true;
                 gesture.lastX = x;
                 gesture.lastY = y;
+                probePlacePreview();
                 renderSketch();
                 return;
             }
@@ -3661,6 +3783,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         if (g.kind === "place") {
             commitPlace(g, x, y);
             // Drop the gesture's own sketch; what it placed holds its own.
+            placeProbe = null;
             renderSketch();
             // One-shot: return to select unless the tool is sticky (the reducer
             // decides; a no-op outside place mode).
@@ -3759,6 +3882,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             g.gesture.cancel();
         }
         if (g.kind === "marquee" || g.kind === "marqueeSelect") marquee.style.display = "none";
+        if (g.kind === "place") placeProbe = null;
         if (g.kind === "ink" || g.kind === "place") renderSketch();
         applyModeCursor();
         if (el.hasPointerCapture(ev.pointerId)) el.releasePointerCapture(ev.pointerId);

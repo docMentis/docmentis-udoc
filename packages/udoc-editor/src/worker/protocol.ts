@@ -1,6 +1,6 @@
 // The requests edit mode sends its render worker beyond the engine's own —
 // answered by the handlers in handlers.ts, sent by `EditClient`.
-import type { UDocFragment } from "@docmentis/udoc-wasm";
+import type { ShapeNode, UDocFragment } from "@docmentis/udoc-wasm";
 
 /**
  * Set whether content overflowing the page bounds is drawn. When on, an object
@@ -205,6 +205,18 @@ export interface SelectionHandlePreviewRequest {
     y: number;
 }
 
+/**
+ * What `node` would paint on page `page` (0-based), read without placing it — the
+ * read behind a shape being dragged out, called **latest-wins** on pointer move,
+ * one in flight. Replies with the whole `ShapePreview`; `null` for a doc type
+ * whose pages take no shape nodes, or a page that isn't there.
+ */
+export interface ShapePreviewRequest {
+    type: "shapePreview";
+    page: number;
+    node: ShapeNode;
+}
+
 /** A request edit mode's worker answers beyond the engine's own. */
 export type EditRequest =
     | SetOverflowVisibleRequest
@@ -218,4 +230,5 @@ export type EditRequest =
     | SlideIdRequest
     | PasteRequest
     | InsertImageRequest
-    | SelectionHandlePreviewRequest;
+    | SelectionHandlePreviewRequest
+    | ShapePreviewRequest;

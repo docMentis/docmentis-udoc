@@ -4,7 +4,7 @@
 // four page-object shapes (see `insert.ts`). The Shape tab's Change Shape offers
 // it too, without the lines.
 import type { ShapePresetGeometryType } from "@docmentis/udoc-wasm";
-import type { PickerSection, ShapeKind } from "@docmentis/udoc-ui/internal";
+import type { PickerSection } from "@docmentis/udoc-ui/internal";
 import { en } from "./i18n/en.js";
 import type { MessageKey } from "./i18n/index.js";
 import { SHAPE_ICONS } from "./shape-icons.js";
@@ -274,16 +274,10 @@ const OUTLINES: ReadonlySet<ShapePresetGeometryType> = new Set<ShapePresetGeomet
     "bracePair",
 ]);
 
-/** The presets whose drag is sketched as an ellipse. */
-const ROUND: ReadonlySet<ShapePresetGeometryType> = new Set<ShapePresetGeometryType>([
-    "ellipse",
-    "donut",
-    "noSmoking",
-    "smileyFace",
-    "flowChartConnector",
-    "flowChartSummingJunction",
-    "flowChartOr",
-]);
+/** The ids of a node built only to preview it, which never reaches the document:
+ *  the node's, and its text's story's. */
+export const PREVIEW_NODE_ID = "0-1";
+export const PREVIEW_STORY_ID = "0-2";
 
 /** A shape the gallery places. */
 export interface GalleryShape {
@@ -298,8 +292,6 @@ export interface GalleryShape {
     readonly arrows: LineArrows | null;
     /** Its name in the document, in English as PowerPoint names a shape. */
     readonly name: string;
-    /** The outline the canvas sketches while it is dragged out. */
-    readonly sketch: ShapeKind;
 }
 
 /** Each of the gallery's shapes, by its tool. */
@@ -309,11 +301,7 @@ const SHAPES: ReadonlyMap<string, GalleryShape> = new Map(
         .map((entry): [ShapeTool, GalleryShape] => {
             const [tool, preset, arrows] = typeof entry === "string" ? [entry, entry, null] : entry;
             const line = LINES.has(preset);
-            const sketch: ShapeKind = line ? (arrows ? "arrow" : "line") : ROUND.has(preset) ? "ellipse" : "rectangle";
-            return [
-                tool,
-                { preset, line, outline: OUTLINES.has(preset), arrows, name: en[`shapeName.${tool}`], sketch },
-            ];
+            return [tool, { preset, line, outline: OUTLINES.has(preset), arrows, name: en[`shapeName.${tool}`] }];
         }),
 );
 

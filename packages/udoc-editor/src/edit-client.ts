@@ -1,6 +1,13 @@
 // Edit mode's calls on the render worker: the requests its own handlers answer
 // (worker/handlers.ts), sent through the shell's client.
-import type { FontFamily, FontFamilySummary, ParagraphStyleSummary, UDocFragment } from "@docmentis/udoc-wasm";
+import type {
+    FontFamily,
+    FontFamilySummary,
+    ParagraphStyleSummary,
+    ShapeNode,
+    ShapePreview,
+    UDocFragment,
+} from "@docmentis/udoc-wasm";
 import type { DocumentLayout } from "@docmentis/udoc-ui";
 import type { SelectionHandle, ThemePalette, UIShellHost, WorkerClient } from "@docmentis/udoc-ui/internal";
 import type { EditRequest, FontPreviewImage } from "./worker/protocol.js";
@@ -174,6 +181,17 @@ export class EditClient {
      */
     selectionHandlePreview(textWarp: boolean, index: number, x: number, y: number): Promise<SelectionHandle | null> {
         return this.#request({ type: "selectionHandlePreview", textWarp, index, x, y });
+    }
+
+    /**
+     * What `node` would paint on page `page` (0-based), read without placing it:
+     * each outline at the size the node gives it, in the page's theme. What a live
+     * drag draws, with nothing written until it ends. Cheap enough to call per
+     * pointer-move; the caller coalesces it latest-wins. Resolves `null` for a doc
+     * type whose pages take no shape nodes, or a page that isn't there.
+     */
+    shapePreview(page: number, node: ShapeNode): Promise<ShapePreview | null> {
+        return this.#request({ type: "shapePreview", page, node });
     }
 
     /** The id of the deck's slide at `index` (0-based), or `null` past the last

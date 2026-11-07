@@ -4334,6 +4334,13 @@ export const uiStyles = css`
         fill: none;
     }
 
+    /* A shape being dragged out, in the paint it will land with: half transparent
+   as one, so its paths don't darken where they overlap, and so what's under it
+   shows while it is positioned. */
+    .udoc-ui-root .udoc-ui__sketch-preview {
+        opacity: 0.5;
+    }
+
     /* A sketch whose line has no colour — a text box drawn without a border —
    still shows where it goes: a dashed hairline in the selection ink. */
     .udoc-ui-root .udoc-ui__sketch-guide {

@@ -14,12 +14,13 @@ import {
     segmentsFor,
 } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, PickerOption, ShapeKind, ShapePoint } from "@docmentis/udoc-ui/internal";
+import type { DeviceColor, ShapePreview } from "@docmentis/udoc-wasm";
 import type { EditHost } from "./edit-client.js";
 import { EditCommand } from "./edit-command.js";
 import type { MessageKey } from "./i18n/index.js";
 import { ICON_IMAGE, ICON_SHAPES } from "./icons.js";
-import { placeMarkup, placeMarkupTextBox } from "./image.js";
-import { galleryShape, SHAPE_GALLERY } from "./shape-gallery.js";
+import { markupPreview, placeMarkup, placeMarkupTextBox } from "./image.js";
+import { galleryShape, PREVIEW_NODE_ID, PREVIEW_STORY_ID, SHAPE_GALLERY } from "./shape-gallery.js";
 import type { GalleryShape } from "./shape-gallery.js";
 import { slideShape, slideTextBox } from "./slide-shape.js";
 import { editStateOf } from "./state.js";
@@ -28,7 +29,7 @@ import { editStateOf } from "./state.js";
 const APPEND_INDEX = 0x7fff_ffff;
 
 /** A placed shape's fill — translucent blue (filled shapes only). */
-const FILL = { components: [0.26, 0.55, 0.96], colorSpace: "srgb" };
+const FILL: DeviceColor = { components: [0.26, 0.55, 0.96], colorSpace: "srgb" };
 /** A placed shape's fill opacity. */
 const FILL_ALPHA = 0.18;
 
@@ -108,6 +109,30 @@ function shapeObject(shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): unknown 
         },
     };
     return object;
+}
+
+/** What {@link shapeObject} draws from `p0` to `p1`, as the sketch layer shows it. */
+function shapeObjectPreview(shape: ShapeKind, p0: ShapePoint, p1: ShapePoint): ShapePreview {
+    const filled = shape === "rectangle" || shape === "ellipse";
+    return {
+        paths: [
+            {
+                segments: segmentsFor(shape, p0, p1),
+                fill: filled ? { color: FILL, opacity: FILL_ALPHA } : null,
+                stroke: {
+                    paint: { color: { components: SHAPE_STROKE.components, colorSpace: "srgb" }, opacity: 1 },
+                    style: {
+                        width: SHAPE_STROKE_WIDTH,
+                        lineCap: "butt",
+                        lineJoin: "miter",
+                        miterLimit: 10,
+                        dashArray: null,
+                        dashOffset: 0,
+                    },
+                },
+            },
+        ],
+    };
 }
 
 /** A quarter turn's cosine and sine, by quarter turns clockwise. */
@@ -241,11 +266,38 @@ async function placeTextBox(
     host.client.setSelection({ portable: { objectText: { page: pageId, anchor: start, focus: end } } });
 }
 
-/** The outline a place `tool` is sketched with while it is dragged out — a
- *  gallery shape's, a PDF shape's own, or a text box's rectangle. */
+/** What a place `tool` drags out: a line or a box of a gallery shape, a PDF
+ *  shape's own, or a text box's rectangle, which is its sketch too. */
 export function placedShape(tool: string): ShapeKind | null {
     if (tool === TEXT_BOX_TOOL) return "rectangle";
-    return galleryShape(tool)?.sketch ?? (PORTABLE_SHAPES.has(tool) ? (tool as ShapeKind) : null);
+    const shape = galleryShape(tool);
+    if (shape) return shape.line ? "line" : "rectangle";
+    return PORTABLE_SHAPES.has(tool) ? (tool as ShapeKind) : null;
+}
+
+/**
+ * What placing `tool` from `p0` to `p1` on page `page` would draw, while it is
+ * dragged out: a PDF's shape as it is drawn here, or the node a gallery shape
+ * places, as the engine would paint it. Null, at once, for a text box, which has
+ * nothing to show by, and for a tool not the document's.
+ */
+export function placePreview(
+    host: EditHost,
+    tool: string,
+    page: number,
+    p0: ShapePoint,
+    p1: ShapePoint,
+): Promise<ShapePreview | null> | null {
+    const state = host.store.getState();
+    if (state.status !== "ready" || tool === TEXT_BOX_TOOL) return null;
+    if (state.docType === "portable") {
+        return PORTABLE_SHAPES.has(tool) ? Promise.resolve(shapeObjectPreview(tool as ShapeKind, p0, p1)) : null;
+    }
+    const shape = galleryShape(tool);
+    if (!shape) return null;
+    if (state.docType === "image") return markupPreview(host, shape, page, p0, p1);
+    if (state.docType !== "presentation") return null;
+    return host.edit.shapePreview(page, slideShape(PREVIEW_NODE_ID, PREVIEW_STORY_ID, shape, p0, p1));
 }
 
 /** Place `tool` on page `page`, spanning the page-local points `p0 → p1`, on

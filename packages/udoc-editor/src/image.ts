@@ -3,7 +3,14 @@
 // its page by the id its manifest entry carries, which also measures it: the
 // page's size in points — the points a crop and the shapes are in, the page's
 // own from its top-left — and its pixels, which a resize names.
-import type { ImagePageCommand, ImagePageInfo, ShapeNode, ShapeSelection, UDocCommand } from "@docmentis/udoc-wasm";
+import type {
+    ImagePageCommand,
+    ImagePageInfo,
+    ShapeNode,
+    ShapePreview,
+    ShapeSelection,
+    UDocCommand,
+} from "@docmentis/udoc-wasm";
 import { allowsEdit, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, ShapePoint } from "@docmentis/udoc-ui/internal";
 import { ICON_FLIP_VERTICAL } from "./arrange.js";
@@ -12,6 +19,7 @@ import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { ICON_CROP, ICON_FLIP, ICON_IMAGE_SIZE } from "./icons.js";
 import { markupShape, markupTextBox } from "./markup.js";
+import { PREVIEW_NODE_ID, PREVIEW_STORY_ID } from "./shape-gallery.js";
 import type { GalleryShape } from "./shape-gallery.js";
 import { editStateOf } from "./state.js";
 
@@ -260,6 +268,20 @@ export function placeMarkup(
         (id, story, size) => markupShape(id, story, shape, p0, p1, size),
         (id) => ({ shapes: [id] }),
     );
+}
+
+/** What drawing `shape` over page `page` from `p0` to `p1` would paint, as a
+ *  drag previews it. */
+export async function markupPreview(
+    host: EditHost,
+    shape: GalleryShape,
+    page: number,
+    p0: ShapePoint,
+    p1: ShapePoint,
+): Promise<ShapePreview | null> {
+    const info = await host.client.image.pageInfoByIndex(page);
+    if (!info) return null;
+    return host.edit.shapePreview(page, markupShape(PREVIEW_NODE_ID, PREVIEW_STORY_ID, shape, p0, p1, info.size));
 }
 
 /** Draw a text box holding `text` over page `page` from `p0` to `p1` — the page's

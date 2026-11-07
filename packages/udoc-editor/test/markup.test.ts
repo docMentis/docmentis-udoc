@@ -17,33 +17,30 @@ const PAGE = { width: 1440, height: 810 };
 
 /** The gallery's shapes these place, as it describes them. */
 const GALLERY: Readonly<Record<string, GalleryShape>> = {
-    rect: { preset: "rect", line: false, outline: false, arrows: null, name: "Rectangle", sketch: "rectangle" },
+    rect: { preset: "rect", line: false, outline: false, arrows: null, name: "Rectangle" },
     roundRect: {
         preset: "roundRect",
         line: false,
         outline: false,
         arrows: null,
         name: "Rectangle: Rounded Corners",
-        sketch: "rectangle",
     },
-    ellipse: { preset: "ellipse", line: false, outline: false, arrows: null, name: "Oval", sketch: "ellipse" },
-    star5: { preset: "star5", line: false, outline: false, arrows: null, name: "Star: 5 Points", sketch: "rectangle" },
+    ellipse: { preset: "ellipse", line: false, outline: false, arrows: null, name: "Oval" },
+    star5: { preset: "star5", line: false, outline: false, arrows: null, name: "Star: 5 Points" },
     bracketPair: {
         preset: "bracketPair",
         line: false,
         outline: true,
         arrows: null,
         name: "Double Bracket",
-        sketch: "rectangle",
     },
-    line: { preset: "line", line: true, outline: false, arrows: null, name: "Line", sketch: "line" },
+    line: { preset: "line", line: true, outline: false, arrows: null, name: "Line" },
     lineArrow: {
         preset: "straightConnector1",
         line: true,
         outline: false,
         arrows: "end",
         name: "Line Arrow",
-        sketch: "arrow",
     },
     bentConnector3DoubleArrow: {
         preset: "bentConnector3",
@@ -51,7 +48,6 @@ const GALLERY: Readonly<Record<string, GalleryShape>> = {
         outline: false,
         arrows: "both",
         name: "Connector: Elbow Double-Arrow",
-        sketch: "arrow",
     },
     curvedConnector3DoubleArrow: {
         preset: "curvedConnector3",
@@ -59,7 +55,6 @@ const GALLERY: Readonly<Record<string, GalleryShape>> = {
         outline: false,
         arrows: "both",
         name: "Connector: Curved Double-Arrow",
-        sketch: "arrow",
     },
 };
 
