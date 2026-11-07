@@ -40,7 +40,7 @@ const ICONS = {
     ICON_TAB_OBJECT: "deployed_code",
     ICON_TAB_PAGE: "draft",
     ICON_TAB_SHAPE: "shapes",
-    ICON_TAB_SLIDE: "slide_library",
+    ICON_TAB_SLIDE: "text_ad",
     ICON_TAB_TABLE: "table",
     ICON_TAB_TEXT: "text_fields",
 
@@ -48,7 +48,7 @@ const ICONS = {
     ICON_RULER: "straighten",
 
     // A deck's Slide tab
-    ICON_CHANGE_LAYOUT: "view_quilt",
+    ICON_CHANGE_LAYOUT: "team_dashboard",
     ICON_IMAGE: "image",
     ICON_SHAPES: "shapes",
 

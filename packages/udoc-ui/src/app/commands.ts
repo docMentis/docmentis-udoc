@@ -40,6 +40,7 @@ import {
     ICON_SHEET_RENAME,
     ICON_SHEET_TAB_COLOR,
     ICON_SHEET_UNHIDE,
+    ICON_SLIDE_ADD,
     ICON_SLIDE_HIDE,
     ICON_UNDO,
     ICON_REDO,
@@ -372,7 +373,7 @@ export const IMAGE_PAGE_MENU: readonly MenuItem[] = PAGE_MENU.slice(1);
 /** A deck's thumbnail menu — {@link PAGE_MENU}'s twin for its slides, with
  *  Add Section, and Hide Slide, checked while every selected slide is hidden. */
 export const SLIDE_MENU: readonly MenuItem[] = [
-    slideRow("thumbnails.newSlide", ICON_PAGE_ADD, { kind: "insertSlide" }),
+    slideRow("thumbnails.newSlide", ICON_SLIDE_ADD, { kind: "insertSlide" }),
     slideRow("thumbnails.duplicateSlide", ICON_PAGE_DUPLICATE, { kind: "duplicateSlides" }),
     {
         action: { kind: "addSlideSection" },

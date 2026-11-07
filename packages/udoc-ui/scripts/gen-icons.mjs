@@ -173,6 +173,7 @@ const ICONS = {
     ICON_PAGE_DUPLICATE: "file_copy",
     ICON_ROTATE_LEFT: "rotate_90_degrees_ccw",
     ICON_ROTATE_RIGHT: "rotate_90_degrees_cw",
+    ICON_SLIDE_ADD: "rectangle_add",
     ICON_SLIDE_HIDE: "visibility_off",
 
     // Sections — a deck's, in the thumbnails' menus

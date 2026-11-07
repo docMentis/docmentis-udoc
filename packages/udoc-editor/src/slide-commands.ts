@@ -1,7 +1,7 @@
 // A deck's Slide tab's slide commands: New Slide and Change Layout, with the
 // layout picker they open, and Delete Slide.
 import type { UDocCommand } from "@docmentis/udoc-ui";
-import { allowsEdit, ICON_DELETE, ICON_PAGE_ADD } from "@docmentis/udoc-ui/internal";
+import { allowsEdit, ICON_DELETE, ICON_SLIDE_ADD } from "@docmentis/udoc-ui/internal";
 import type { CommandDef, UIState } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
 import { createSlideLayoutModal } from "./components/SlideLayoutModal.js";
@@ -165,7 +165,7 @@ export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
     return {
         id: "createSlide",
         label: "command.createSlide",
-        icon: ICON_PAGE_ADD,
+        icon: ICON_SLIDE_ADD,
         group: "slide",
         run: { kind: "action", press: open },
         enabledWhen: (c) => c.ready && c.presentationView !== "slideMaster",
