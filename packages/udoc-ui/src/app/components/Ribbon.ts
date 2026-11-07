@@ -46,7 +46,7 @@ import {
 } from "./controls.js";
 import type { DropdownButton } from "./controls.js";
 import { buildMenuInto } from "./menuItems.js";
-import { buildPaintPanel } from "./PaintPanel.js";
+import { buildOpacityPanel, buildPaintPanel } from "./PaintPanel.js";
 import type { PaintSpec, PaintTransform, LineDash, PaintPanelConfig } from "./PaintPanel.js";
 import type { PaintColorTransform, PaintSchemeColor } from "@docmentis/udoc-wasm";
 import type { I18n, MessageKey } from "../i18n/index.js";
@@ -58,8 +58,7 @@ export interface RibbonCallbacks {
     onMenuAction?: (action: MenuAction) => void;
     /** Make a change of the Annotate tab's Format group — to the armed
      *  annotation tool's style, or to the selected annotations (see
-     *  `formatTarget`). The Color / Fill panels fire it here; the Opacity menu
-     *  through {@link onMenuAction}. */
+     *  `formatTarget`). The Color, Fill and Opacity panels fire it here. */
     onAnnotationStyle?: (change: AnnotationStyleChange) => void;
     /** Press an Annotate-tab text markup: mark the text selected with it, else
      *  arm it — or, armed, put it down. */
@@ -281,7 +280,7 @@ function clusterKind(def: CommandDef<string>): ClusterKind | null {
         return def.run.cluster ?? null;
     }
     if (def.run.kind === "markup") return "toggle";
-    if (def.run.kind === "annotationPaint") return "paint";
+    if (def.run.kind === "annotationPaint" || def.run.kind === "annotationOpacity") return "paint";
     return null;
 }
 
@@ -835,6 +834,26 @@ export function createRibbon(
                                 dd.menu,
                                 annotationPanelConfig(channel, () => dd.controller.close()),
                             ),
+                    },
+                );
+                dd.trigger.dataset.command = def.id;
+                dropdowns.push(dd);
+                return dd.el;
+            }
+            // The Annotate tab's Opacity dropdown, marking what the Format controls
+            // act on.
+            if (def.run.kind === "annotationOpacity") {
+                const dd = createDropdownButton(
+                    { icon: def.icon, label },
+                    {
+                        menuLabel: label,
+                        onOpen: () =>
+                            buildOpacityPanel(dd.menu, {
+                                i18n,
+                                opacity: commandContext(store.getState()).annotation?.opacity ?? null,
+                                onSet: (opacity) => callbacks.onAnnotationStyle?.({ kind: "opacity", opacity }),
+                                close: () => dd.controller.close(),
+                            }),
                     },
                 );
                 dd.trigger.dataset.command = def.id;

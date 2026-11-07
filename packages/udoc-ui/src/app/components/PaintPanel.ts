@@ -23,7 +23,7 @@ import type { PaintChannel } from "../commands.js";
 import type { ThemePalette } from "../../geometry.js";
 import type { I18n, Message, MessageKey } from "../i18n/index.js";
 import { hexToRgb, parseHex, rgbToHex } from "../color.js";
-import { buildColorPicker } from "./ColorPicker.js";
+import { buildColorPicker, buildOpacityInput } from "./ColorPicker.js";
 import {
     ICON_FILL,
     ICON_PALETTE,
@@ -142,9 +142,9 @@ const PAINT_WORDS: Record<PaintChannel, { none: MessageKey; more: MessageKey }> 
 /** The weight presets (points) offered by the stroke Weight fly-out. */
 export const LINE_WEIGHTS: readonly number[] = [0.25, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4.5, 6];
 
-/** The opacities a paint is offered at: the Fill and Line panels' Opacity fly-out,
- *  and the Annotate tab's Opacity menu. */
-export const PAINT_OPACITIES: readonly number[] = [1, 0.75, 0.5, 0.25];
+/** The opacities offered a press away: a panel's Opacity fly-out, and the Opacity
+ *  buttons' panel. */
+const PAINT_OPACITIES: readonly number[] = [1, 0.75, 0.5, 0.25];
 
 /** The dash presets offered by the stroke Dashes fly-out, with a line preview. */
 const DASH_OPTIONS: ReadonlyArray<{ dash: LineDash; label: MessageKey; icon: string }> = [
@@ -561,23 +561,7 @@ export function buildPaintPanel(panel: HTMLElement, cfg: PaintPanelConfig): void
         if (variant !== "stroke") panel.appendChild(divider());
         panel.appendChild(
             flyoutRow(ICON_OPACITY, i18n.t("command.annotationOpacity"), (sub) => {
-                // The current opacity is listed, in order, even when it isn't a
-                // preset — a document can carry any.
-                const current = cfg.opacity ?? null;
-                const opacities =
-                    current === null || PAINT_OPACITIES.includes(current)
-                        ? PAINT_OPACITIES
-                        : [...PAINT_OPACITIES, current].sort((a, b) => b - a);
-                for (const opacity of opacities) {
-                    const preview = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" fill-opacity="${opacity}"/></svg>`;
-                    const text = i18n.t("format.percent", { percent: Math.round(opacity * 100) });
-                    const item = row(preview, text, (e) => {
-                        e.stopPropagation();
-                        onOpacity(opacity);
-                    });
-                    item.classList.toggle("udoc-menu__item--selected", current === opacity);
-                    sub.appendChild(item);
-                }
+                opacityRows(sub, i18n, cfg.opacity ?? null, onOpacity);
             }),
         );
     }
@@ -594,6 +578,88 @@ export function buildPaintPanel(panel: HTMLElement, cfg: PaintPanelConfig): void
             onMoreOptions();
         }),
     );
+}
+
+/**
+ * The preset opacities as rows in `menu`, `current` marked and listed in order
+ * even when it isn't a preset, as a document can carry any. Returns a function
+ * that marks another as current.
+ */
+function opacityRows(
+    menu: HTMLElement,
+    i18n: I18n,
+    current: number | null,
+    onPick: (opacity: number) => void,
+): (marked: number | null) => void {
+    const opacities =
+        current === null || PAINT_OPACITIES.includes(current)
+            ? PAINT_OPACITIES
+            : [...PAINT_OPACITIES, current].sort((a, b) => b - a);
+    const rows = opacities.map((opacity): [number, HTMLButtonElement] => {
+        const preview = `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" fill-opacity="${opacity}"/></svg>`;
+        const text = i18n.t("format.percent", { percent: Math.round(opacity * 100) });
+        const item = row(preview, text, (e) => {
+            e.stopPropagation();
+            onPick(opacity);
+        });
+        menu.appendChild(item);
+        return [opacity, item];
+    });
+    const mark = (marked: number | null): void => {
+        for (const [opacity, item] of rows) item.classList.toggle("udoc-menu__item--selected", opacity === marked);
+    };
+    mark(current);
+    return mark;
+}
+
+/** What an Opacity button's panel acts on. */
+export interface OpacityPanelConfig {
+    /** The language the panel's words are in. */
+    i18n: I18n;
+    /** The opacity it holds, `0` to `1` — null marking nothing, where what it acts
+     *  on differs, its strip opening at opaque. */
+    opacity: number | null;
+    /** Apply `opacity`. */
+    onSet: (opacity: number) => void;
+    /** Close the panel. A preset does; the strip and the field leave it open, to
+     *  go on adjusting. */
+    close: () => void;
+}
+
+/**
+ * Fill `panel` with an Opacity button's content: the presets a press away, over a
+ * strip and a percentage for any other value. A preset applies and closes; the
+ * strip applies on release and the field on Enter or leaving it, so one change is
+ * one undo step.
+ */
+export function buildOpacityPanel(panel: HTMLElement, cfg: OpacityPanelConfig): void {
+    const { i18n, onSet, close } = cfg;
+    panel.innerHTML = "";
+    const mark = opacityRows(panel, i18n, cfg.opacity, (opacity) => {
+        onSet(opacity);
+        close();
+    });
+    panel.appendChild(divider());
+    const input = buildOpacityInput({
+        i18n,
+        value: cfg.opacity ?? 1,
+        onInput: mark,
+        onCommit: onSet,
+    });
+    const holder = document.createElement("div");
+    holder.className = "udoc-opacitypanel__input";
+    holder.appendChild(input.el);
+    // A key pressed here is its own, as in the color picker: an arrow moves the
+    // strip or the field's caret, not the menu's focus, and Enter settles what's
+    // typed. (Escape still closes the menu, which takes it before it gets here.)
+    holder.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        input.commit();
+    });
+    holder.addEventListener("click", (e) => e.stopPropagation());
+    panel.appendChild(holder);
 }
 
 /**

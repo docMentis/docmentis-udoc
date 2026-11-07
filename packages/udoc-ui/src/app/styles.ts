@@ -1372,26 +1372,26 @@ export const uiStyles = css`
         cursor: pointer;
         touch-action: none;
     }
-    /* The opacity strip: the colour fading out over the checks that show through,
+    /* An opacity strip: its colour fading out over the checks that show through,
    beside the percentage it reads as. */
-    .udoc-ui-root .udoc-colorpicker__opacity-row {
+    .udoc-ui-root .udoc-opacity-input {
         display: flex;
         align-items: center;
         gap: 8px;
     }
-    .udoc-ui-root .udoc-colorpicker__opacity {
+    .udoc-ui-root .udoc-opacity-input__strip {
         position: relative;
         flex: 1;
         min-width: 0;
         height: 12px;
         border-radius: 6px;
         background:
-            linear-gradient(to right, transparent, var(--swatch-color, #000)),
+            linear-gradient(to right, transparent, var(--swatch-color, var(--udoc-color-on-surface))),
             repeating-conic-gradient(#c4c4c4 0% 25%, #fff 0% 50%) 0 0 / 8px 8px;
         cursor: pointer;
         touch-action: none;
     }
-    .udoc-ui-root .udoc-colorpicker__percent {
+    .udoc-ui-root .udoc-opacity-input__percent {
         flex: none;
         display: inline-flex;
         align-items: center;
@@ -1406,13 +1406,13 @@ export const uiStyles = css`
         font-variant-numeric: tabular-nums;
         box-sizing: border-box;
     }
-    .udoc-ui-root .udoc-colorpicker__percent:focus-within {
+    .udoc-ui-root .udoc-opacity-input__percent:focus-within {
         border-color: var(--udoc-color-primary);
     }
-    .udoc-ui-root .udoc-colorpicker__percent:has(input[aria-invalid="true"]) {
+    .udoc-ui-root .udoc-opacity-input__percent:has(input[aria-invalid="true"]) {
         border-color: var(--udoc-color-error);
     }
-    .udoc-ui-root .udoc-colorpicker__percent input {
+    .udoc-ui-root .udoc-opacity-input__percent input {
         flex: 1;
         width: 100%;
         min-width: 0;
@@ -1424,6 +1424,11 @@ export const uiStyles = css`
         font: inherit;
         text-align: right;
     }
+    /* An Opacity button's strip, below its presets. */
+    .udoc-ui-root .udoc-opacitypanel__input {
+        min-width: 200px;
+        padding: 6px 14px;
+    }
     /* The colours picked lately; the panel's own label and cells, in the picker's
    gutters. */
     .udoc-ui-root .udoc-colorpicker__recent .udoc-paintpanel__label {
@@ -1432,7 +1437,7 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-colorpicker__recent .udoc-paintpanel__grid {
         padding-inline: 0;
     }
-    .udoc-ui-root :is(.udoc-colorpicker__square, .udoc-colorpicker__hue, .udoc-colorpicker__opacity):focus-visible {
+    .udoc-ui-root :is(.udoc-colorpicker__square, .udoc-colorpicker__hue, .udoc-opacity-input__strip):focus-visible {
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: 2px;
     }

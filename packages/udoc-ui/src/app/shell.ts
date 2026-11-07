@@ -3754,9 +3754,6 @@ export function mountUIShell(
                 store.dispatch({ type: "SET_REVISION_VIEW", view: { ...view, ...change } });
                 break;
             }
-            case "annotationStyle":
-                void restyleAnnotations(action.change);
-                break;
             case "copy":
                 clipboard.copy();
                 break;

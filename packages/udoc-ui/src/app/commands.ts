@@ -18,9 +18,9 @@ import type { Action } from "./actions.js";
 import type { Shortcut } from "./components/controls.js";
 import { annotationFormat } from "./annotations.js";
 import { profileFor } from "./profiles.js";
-import type { AnnotationFormat, AnnotationStyleChange } from "./annotations.js";
+import type { AnnotationFormat } from "./annotations.js";
 import type { Message, MessageKey } from "./i18n/index.js";
-import { PAINT_OPACITIES, STANDARD_COLORS } from "./components/PaintPanel.js";
+import { STANDARD_COLORS } from "./components/PaintPanel.js";
 import {
     ICON_COPY,
     ICON_DELETE,
@@ -243,7 +243,6 @@ const whenSheetViews: EnabledWhen = (c) => c.ready && c.sheetLayoutMode !== null
  * to it (`UIExtension.menuAction`).
  */
 export type MenuAction =
-    | { kind: "annotationStyle"; change: AnnotationStyleChange }
     | { kind: "copy" }
     | { kind: "selectionEdit"; edit: SelectionEdit }
     | { kind: "toggleSlidesHidden" }
@@ -526,15 +525,6 @@ export function sheetTabMenu(state: UIState): readonly MenuItem[] {
  *  own callback. */
 export type PaintChannel = "fill" | "stroke" | "text" | "highlight";
 
-/** The Opacity dropdown: one exclusive set, the value the annotations (or the
- *  armed tool) hold marked. */
-const ANNOTATION_OPACITY_MENU: readonly MenuItem[] = PAINT_OPACITIES.map((opacity) => ({
-    action: { kind: "annotationStyle", change: { kind: "opacity", opacity } },
-    label: ["format.percent", { percent: Math.round(opacity * 100) }],
-    enabledWhen: (c) => c.annotation?.opacity !== undefined,
-    activeWhen: (c) => c.annotation?.opacity === opacity,
-}));
-
 /** The cover's book glyph mirrored — the cover alone on the left, the book
  *  read right to left. */
 const ICON_VIEW_COVER_LEFT = ICON_VIEW_COVER.replace("<svg ", '<svg style="transform: scaleX(-1)" ');
@@ -689,6 +679,9 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  * - `annotationPaint` → the Annotate tab's Color / Fill dropdown: the swatch
  *   mirrors {@link CommandContext.annotation}, the panel picks the colour — and
  *   for Color the line's weight and dashes — and fires `onAnnotationStyle`.
+ * - `annotationOpacity` → the Annotate tab's Opacity dropdown: the panel marks
+ *   {@link CommandContext.annotation}'s opacity, sets any other and fires
+ *   `onAnnotationStyle`.
  */
 export type CommandRun<K extends string = MessageKey> =
     | { kind: "history"; op: HistoryOp }
@@ -716,7 +709,8 @@ export type CommandRun<K extends string = MessageKey> =
           press(store: Store<UIState, Action>): void;
       }
     | { kind: "markup"; tool: MarkupTool }
-    | { kind: "annotationPaint"; channel: "color" | "fill" };
+    | { kind: "annotationPaint"; channel: "color" | "fill" }
+    | { kind: "annotationOpacity" };
 
 /** Which segmented group a ribbon command bunches into: consecutive commands of
  *  one kind butt together with no gap between them — the character toggles, the
@@ -917,7 +911,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         icon: ICON_OPACITY,
         group: "format",
         // With Color and Fill: it styles the same annotation.
-        run: { kind: "menu", menu: ANNOTATION_OPACITY_MENU, cluster: "paint" },
+        run: { kind: "annotationOpacity" },
         enabledWhen: (c) => c.annotation?.opacity !== undefined,
     },
 

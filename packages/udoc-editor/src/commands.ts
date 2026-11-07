@@ -2,7 +2,7 @@
 // over the text selection, Change Shape over a drawing's shapes, and the Fill /
 // Line controls over those or a PDF's page objects (their arrangement commands
 // are `arrange.ts`'s).
-import { allowsEdit, ICON_FILL, ICON_STROKE, ICON_TEXT_HIGHLIGHT } from "@docmentis/udoc-ui/internal";
+import { allowsEdit, ICON_FILL, ICON_OPACITY, ICON_STROKE, ICON_TEXT_HIGHLIGHT } from "@docmentis/udoc-ui/internal";
 import type { CommandDef } from "@docmentis/udoc-ui/internal";
 import {
     fontFamilyControl,
@@ -30,7 +30,8 @@ import {
     ICON_UNDERLINE,
     ICON_WIDTH_SCALE,
 } from "./icons.js";
-import { paintControl } from "./paint.js";
+import { objectOpacityControl, paintControl, selectionOpacity } from "./paint.js";
+import { editStateOf } from "./state.js";
 import { CHANGE_SHAPE_GALLERY, galleryShape } from "./shape-gallery.js";
 import {
     LINE_SPACING_MENU,
@@ -289,6 +290,22 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
                     paintControl(env, { id: "objectStrokeColor", icon: ICON_STROKE, channel: "stroke" }, tools()),
             },
             enabledWhen: (c) => allowsEdit(c.selection, "setStrokingStyle"),
+        },
+        objectOpacity: {
+            id: "objectOpacity",
+            label: "command.annotationOpacity",
+            icon: ICON_OPACITY,
+            group: "paint",
+            run: {
+                kind: "control",
+                cluster: "paint",
+                create: (env) => objectOpacityControl(env, { id: "objectOpacity", icon: ICON_OPACITY }, tools()),
+            },
+            // Live where the selection agrees on a style to carry the opacity: not
+            // on a fill turned off, a group, a form, or differing paint.
+            enabledWhen: (c) =>
+                allowsEdit(c.selection, "setNonstrokingStyle") &&
+                selectionOpacity(editStateOf(c).selectionProperties, "fill") !== null,
         },
     };
 }

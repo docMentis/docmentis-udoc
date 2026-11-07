@@ -37,7 +37,12 @@ export type {
 } from "./app/components/SelectionLayer.js";
 export { applyPoint, fromComponents, invert } from "./app/components/affine.js";
 export type { Affine } from "./app/components/affine.js";
-export { buildPaintPanel, DEFAULT_OFFICE_THEME, themeSwatches } from "./app/components/PaintPanel.js";
+export {
+    buildOpacityPanel,
+    buildPaintPanel,
+    DEFAULT_OFFICE_THEME,
+    themeSwatches,
+} from "./app/components/PaintPanel.js";
 export type {
     LineDash,
     PaintPanelConfig,

@@ -15,6 +15,7 @@ import type {
 } from "@docmentis/udoc-wasm";
 import {
     applyPaintBar,
+    buildOpacityPanel,
     buildPaintPanel,
     createDropdownButton,
     DEFAULT_OFFICE_THEME,
@@ -301,6 +302,33 @@ function mapThemeColors(palette: ThemePalette | null): readonly ThemeSwatch[] {
 }
 
 /**
+ * The Object tab's Opacity button, for command `id` drawn with `icon`: the opacity
+ * of what the selected PDF objects paint with on their non-stroking side — a
+ * path's fill, an image, a shading, text.
+ */
+export function objectOpacityControl(
+    env: RibbonControlEnv,
+    command: { id: string; icon: string },
+    tools: EditTools,
+): RibbonControl {
+    const dd = createDropdownButton(
+        { icon: command.icon, label: env.label },
+        {
+            menuLabel: env.label,
+            onOpen: () =>
+                buildOpacityPanel(dd.menu, {
+                    i18n: tools.i18n,
+                    opacity: selectionOpacity(editState(env.store.getState()).selectionProperties, "fill"),
+                    onSet: (opacity) => void tools.paint.setSelectionOpacity("fill", opacity),
+                    close: () => dd.controller.close(),
+                }),
+        },
+    );
+    dd.trigger.dataset.command = command.id;
+    return { el: dd.el, close: () => dd.controller.close(), destroy: () => dd.destroy() };
+}
+
+/**
  * The last picks — edit mode's write-side memory: the color per channel, and the
  * weight / dash, that a side with no line takes when the Line panel turns it on.
  * Not shown on the triggers or the panel's marks, which mirror the *selection*.
@@ -373,7 +401,10 @@ export function paintControl(
     const panelConfig = (close: () => void): PaintPanelConfig => {
         const state = env.store.getState();
         const properties = editState(state).selectionProperties;
-        const opacityChannel = channel === "fill" || channel === "stroke" ? channel : null;
+        // A PDF's fill-side opacity is the Object tab's Opacity button's: it isn't
+        // the fill's alone, as an image or text has it with no fill to speak of.
+        const fillTakesOpacity = profileFor(state.docType).drawingShapes;
+        const opacityChannel = channel === "stroke" || (channel === "fill" && fillTakesOpacity) ? channel : null;
         const opacity = opacityChannel ? selectionOpacity(properties, opacityChannel) : null;
         return {
             i18n,

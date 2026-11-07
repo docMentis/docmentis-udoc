@@ -59,11 +59,13 @@ listed once, by package. Its major and minor version are those of the
   new layout's slots and keep their content.
 - A deck has Delete Slide, on its Slide tab: it deletes the current slide, or the
   slides selected in the thumbnails.
-- The Fill and Line panels have an Opacity, for a shape's solid fill or line, and on
-  a PDF for a path, an image, a shading or a text object. It sets the opacity alone,
-  and picking another color keeps it.
+- The Fill and Line panels have an Opacity, for a shape's solid fill or line and for
+  a PDF path's line. It sets the opacity alone, and picking another color keeps it.
+- The Object tab has an Opacity button, for a PDF path's fill, an image, a shading or
+  a text object. It offers preset values, a slider and a percentage field for any
+  other.
 - The custom color picker behind More Colors has an opacity slider and a percentage
-  field on a fill or a line, and lists the colors picked lately.
+  field where its panel has an Opacity, and lists the colors picked lately.
 - A deck has a Text Box, on its Slide tab: dragged out, or dropped with a click, it
   puts a text box on the slide that wraps at its width. Its text comes selected, so
   the first key types over it.
@@ -85,6 +87,9 @@ listed once, by package. Its major and minor version are those of the
   the thumbnails, then Text Box, Shapes and Image, as icons named by their tooltips.
   Resize Page opens a dialog of the current page's size. A PDF's ribbon opens on it
   in edit mode, and goes back to it when pages are picked or nothing is selected.
+- The Annotate tab's Opacity takes any value, with a slider and a percentage field
+  below its presets.
+- The Object and Annotate tabs order their paint buttons Line, Fill, Opacity.
 - A word document's ribbon opens on its Text tab in edit mode.
 - A box you're typing in looks different from a shape you've picked: its outline is
   dashed. A PDF's text box also shows only two side handles, as resizing it rewraps
@@ -105,7 +110,8 @@ listed once, by package. Its major and minor version are those of the
 
 #### Fixed
 
-- No Fill and No Line work on a PDF's paths, and their swatches show them.
+- No Fill and No Line work on a PDF's paths, and their swatches show them. A path with
+  both turned off paints nothing, so it isn't kept once the PDF is saved and reopened.
 - Changing a line's weight or dash no longer changes its color, and picking a color
   no longer changes its weight or dash. The Line panel marks the weight and dash the
   line has.

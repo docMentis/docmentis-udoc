@@ -61,8 +61,8 @@ function swallowClick(): void {
 }
 
 /** Drag on `area`: `move` gets the pointer's place in it, each axis `0..1`,
- *  from the press until the release. */
-function dragOn(area: HTMLElement, move: (x: number, y: number) => void): void {
+ *  from the press until the release, when `done` runs. */
+function dragOn(area: HTMLElement, move: (x: number, y: number) => void, done?: () => void): void {
     area.addEventListener("pointerdown", (e) => {
         if (e.button !== 0) return;
         // No text selection, and focus stays where a keyboard would put it.
@@ -78,6 +78,7 @@ function dragOn(area: HTMLElement, move: (x: number, y: number) => void): void {
             area.removeEventListener("pointerup", end);
             area.removeEventListener("pointercancel", end);
             swallowClick();
+            done?.();
         };
         at(e);
         area.addEventListener("pointermove", at);
@@ -96,6 +97,128 @@ function button(className: string, text: string, onClick: () => void): HTMLButto
         onClick();
     });
     return btn;
+}
+
+/** An opacity strip and its percentage, from {@link buildOpacityInput}. */
+export interface OpacityInput {
+    readonly el: HTMLElement;
+    /** Draw the strip in `hex`, a `#rrggbb`: the color fading out over the checks. */
+    setColor(hex: string): void;
+    /** Report the opacity as settled, if it moved since it last was. */
+    commit(): void;
+}
+
+/**
+ * An opacity strip and the percentage it reads as, typed as well as dragged, any
+ * value from 0 to 100. `onInput` gets each change, and `onCommit` each one settled:
+ * a drag's release, an arrow key, or the field left. Its value is what it opened
+ * on until moved, so a percentage that rounds it changes nothing.
+ */
+export function buildOpacityInput(cfg: {
+    i18n: I18n;
+    value: number;
+    onInput?: (opacity: number) => void;
+    onCommit?: (opacity: number) => void;
+}): OpacityInput {
+    const { i18n } = cfg;
+    let opacity = cfg.value;
+    let committed = cfg.value;
+    let hex: string | null = null;
+
+    const el = document.createElement("div");
+    el.className = "udoc-opacity-input";
+    const name = i18n.t("command.annotationOpacity");
+    const strip = document.createElement("div");
+    strip.className = "udoc-opacity-input__strip";
+    strip.tabIndex = 0;
+    strip.setAttribute("role", "slider");
+    strip.setAttribute("aria-label", name);
+    strip.setAttribute("aria-valuemin", "0");
+    strip.setAttribute("aria-valuemax", "100");
+    const thumb = document.createElement("div");
+    thumb.className = "udoc-colorpicker__thumb";
+    strip.appendChild(thumb);
+    const percent = document.createElement("label");
+    percent.className = "udoc-opacity-input__percent";
+    const field = document.createElement("input");
+    field.type = "text";
+    field.inputMode = "numeric";
+    field.maxLength = 3;
+    field.autocomplete = "off";
+    field.setAttribute("aria-label", name);
+    field.title = name;
+    const sign = document.createElement("span");
+    // The language's own percent sign, from its way of writing a percentage.
+    sign.textContent = i18n.t("format.percent", { percent: "" }).trim();
+    sign.setAttribute("aria-hidden", "true");
+    percent.append(field, sign);
+    el.append(strip, percent);
+
+    // Draw it; the field too unless it is what's being typed in, which a reformat
+    // would fight.
+    const draw = (typing = false): void => {
+        const value = Math.round(opacity * 100);
+        thumb.style.left = `${opacity * 100}%`;
+        if (hex) {
+            strip.style.setProperty("--swatch-color", hex);
+            thumb.style.setProperty("--swatch-color", withAlphaHex(hex, opacity));
+        }
+        strip.setAttribute("aria-valuenow", String(value));
+        strip.setAttribute("aria-valuetext", i18n.t("format.percent", { percent: value }));
+        if (!typing) {
+            field.value = String(value);
+            field.removeAttribute("aria-invalid");
+        }
+    };
+    const set = (next: number, typing = false): void => {
+        opacity = next;
+        draw(typing);
+        cfg.onInput?.(opacity);
+    };
+    const commit = (): void => {
+        if (opacity === committed) return;
+        committed = opacity;
+        cfg.onCommit?.(opacity);
+    };
+
+    dragOn(strip, (x) => set(x), commit);
+    strip.addEventListener("keydown", (e) => {
+        const step = (e.shiftKey ? 10 : 1) / 100;
+        const d = { ArrowLeft: -step, ArrowDown: -step, ArrowRight: step, ArrowUp: step }[e.key];
+        let next: number;
+        if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = 1;
+        else if (d !== undefined) next = clamp01(opacity + d);
+        else return;
+        e.preventDefault();
+        set(next);
+        commit();
+    });
+    field.addEventListener("input", () => {
+        const typed = field.value.trim();
+        const value = /^\d+$/.test(typed) ? Number(typed) : NaN;
+        if (value >= 0 && value <= 100) {
+            field.removeAttribute("aria-invalid");
+            set(value / 100, true);
+        } else {
+            field.setAttribute("aria-invalid", "true");
+        }
+    });
+    // Leaving the field shows the opacity it holds, written out in full.
+    field.addEventListener("change", () => {
+        draw();
+        commit();
+    });
+
+    draw();
+    return {
+        el,
+        setColor(next) {
+            hex = next;
+            draw(document.activeElement === field);
+        },
+        commit,
+    };
 }
 
 /** Build the picker, opened on `cfg.initial`. */
@@ -171,44 +294,19 @@ export function buildColorPicker(cfg: ColorPickerConfig): HTMLElement {
         fields.appendChild(pick);
     }
 
-    // The opacity strip and its percentage, on a paint that takes one. Its value
-    // is what it opened on until moved, so an OK doesn't round it.
+    // The opacity strip and its percentage, on a paint that takes one.
     let opacity = cfg.opacity;
-    let opacityStrip: HTMLElement | null = null;
-    let opacityThumb: HTMLElement | null = null;
-    let opacityField: HTMLInputElement | null = null;
-    const opacityRow = document.createElement("div");
-    if (opacity !== undefined) {
-        opacityRow.className = "udoc-colorpicker__opacity-row";
-        const name = i18n.t("command.annotationOpacity");
-        const strip = document.createElement("div");
-        strip.className = "udoc-colorpicker__opacity";
-        strip.tabIndex = 0;
-        strip.setAttribute("role", "slider");
-        strip.setAttribute("aria-label", name);
-        strip.setAttribute("aria-valuemin", "0");
-        strip.setAttribute("aria-valuemax", "100");
-        opacityThumb = document.createElement("div");
-        opacityThumb.className = "udoc-colorpicker__thumb";
-        strip.appendChild(opacityThumb);
-        const percent = document.createElement("label");
-        percent.className = "udoc-colorpicker__percent";
-        const field = document.createElement("input");
-        field.type = "text";
-        field.inputMode = "numeric";
-        field.maxLength = 3;
-        field.autocomplete = "off";
-        field.setAttribute("aria-label", name);
-        field.title = name;
-        const sign = document.createElement("span");
-        // The language's own percent sign, from its way of writing a percentage.
-        sign.textContent = i18n.t("format.percent", { percent: "" }).trim();
-        sign.setAttribute("aria-hidden", "true");
-        percent.append(field, sign);
-        opacityRow.append(strip, percent);
-        opacityStrip = strip;
-        opacityField = field;
-    }
+    const opacityInput =
+        opacity === undefined
+            ? null
+            : buildOpacityInput({
+                  i18n,
+                  value: opacity,
+                  onInput: (next) => {
+                      opacity = next;
+                      render();
+                  },
+              });
 
     // The colours picked lately, each a press away from the picker, not applied.
     const recentCells: Array<[string, HTMLButtonElement]> = [];
@@ -248,28 +346,17 @@ export function buildColorPicker(cfg: ColorPickerConfig): HTMLElement {
     );
 
     el.append(square, hue);
-    if (opacityStrip) el.appendChild(opacityRow);
+    if (opacityInput) el.appendChild(opacityInput.el);
     el.appendChild(fields);
     if (recentCells.length > 0) el.appendChild(recentBlock);
     el.appendChild(actions);
 
-    // Draw `hsv` into every part; a field too unless it is what's being typed in,
-    // which a reformat would fight.
-    const render = (typing = false, typingOpacity = false): void => {
+    // Draw `hsv` into every part; the hex field too unless it is what's being
+    // typed in, which a reformat would fight.
+    const render = (typing = false): void => {
         const hex = hsvToHex(hsv);
         const shown = opacity ?? 1;
-        if (opacityStrip && opacityThumb && opacityField) {
-            const percent = Math.round(shown * 100);
-            opacityStrip.style.setProperty("--swatch-color", hex);
-            opacityThumb.style.left = `${shown * 100}%`;
-            opacityThumb.style.setProperty("--swatch-color", withAlphaHex(hex, shown));
-            opacityStrip.setAttribute("aria-valuenow", String(percent));
-            opacityStrip.setAttribute("aria-valuetext", i18n.t("format.percent", { percent }));
-            if (!typingOpacity) {
-                opacityField.value = String(percent);
-                opacityField.removeAttribute("aria-invalid");
-            }
-        }
+        opacityInput?.setColor(hex);
         for (const [cellHex, cell] of recentCells) {
             cell.classList.toggle("udoc-paintpanel__cell--selected", cellHex === hex);
         }
@@ -338,39 +425,6 @@ export function buildColorPicker(cfg: ColorPickerConfig): HTMLElement {
         hsv = { ...hsv, h };
         render();
     });
-
-    if (opacityStrip && opacityField) {
-        const field = opacityField;
-        dragOn(opacityStrip, (x) => {
-            opacity = x;
-            render();
-        });
-        opacityStrip.addEventListener("keydown", (e) => {
-            const step = (e.shiftKey ? 10 : 1) / 100;
-            const d = { ArrowLeft: -step, ArrowDown: -step, ArrowRight: step, ArrowUp: step }[e.key];
-            let next: number;
-            if (e.key === "Home") next = 0;
-            else if (e.key === "End") next = 1;
-            else if (d !== undefined) next = clamp01((opacity ?? 1) + d);
-            else return;
-            e.preventDefault();
-            opacity = next;
-            render();
-        });
-        field.addEventListener("input", () => {
-            const typed = field.value.trim();
-            const percent = /^\d+$/.test(typed) ? Number(typed) : NaN;
-            if (percent >= 0 && percent <= 100) {
-                opacity = percent / 100;
-                field.removeAttribute("aria-invalid");
-                render(false, true);
-            } else {
-                field.setAttribute("aria-invalid", "true");
-            }
-        });
-        // Leaving the field shows the opacity it holds, written out in full.
-        field.addEventListener("change", () => render());
-    }
 
     input.addEventListener("input", () => {
         const hex = parseHex(input.value);

@@ -55,6 +55,7 @@ export type EditCommandId =
     | "shapeUngroup"
     | "objectFillColor"
     | "objectStrokeColor"
+    | "objectOpacity"
     | "objectOrder"
     | "objectAlign"
     | "objectRotate"
@@ -244,7 +245,7 @@ const TABLE_TAB: EditTab = {
 
 /**
  * The Object tab — the portable (PDF) counterpart of {@link SHAPE_TAB}: its own
- * Fill / Line and arrangement, gated on the object edits, over the page's content
+ * Line, Fill, Opacity and arrangement, gated on the object edits, over the page's content
  * objects (paths, text, images) rather than DrawingML shapes. Picked objects
  * open it, as does a caret in one's text.
  */
@@ -253,8 +254,9 @@ const OBJECT_TAB: EditTab = {
     label: "ribbon.object",
     icon: ICON_TAB_OBJECT,
     commands: [
-        "objectFillColor",
         "objectStrokeColor",
+        "objectFillColor",
+        "objectOpacity",
         "objectOrder",
         "objectAlign",
         "objectRotate",
