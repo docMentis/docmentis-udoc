@@ -56,6 +56,7 @@ export const ko: EditMessages = {
     "ribbon.image": "이미지",
     "ribbon.insert": "삽입",
     "ribbon.page": "페이지",
+    "ribbon.slide": "슬라이드",
     "ribbon.text": "텍스트",
     "ribbon.shape": "도형",
     "ribbon.table": "표",

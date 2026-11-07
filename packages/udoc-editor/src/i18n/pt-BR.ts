@@ -56,6 +56,7 @@ export const ptBR: EditMessages = {
     "ribbon.image": "Imagem",
     "ribbon.insert": "Inserir",
     "ribbon.page": "Página",
+    "ribbon.slide": "Slide",
     "ribbon.text": "Texto",
     "ribbon.shape": "Forma",
     "ribbon.table": "Tabela",

@@ -56,6 +56,7 @@ export const ar: EditMessages = {
     "ribbon.image": "صورة",
     "ribbon.insert": "إدراج",
     "ribbon.page": "صفحة",
+    "ribbon.slide": "شريحة",
     "ribbon.text": "نص",
     "ribbon.shape": "شكل",
     "ribbon.table": "جدول",

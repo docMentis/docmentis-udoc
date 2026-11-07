@@ -26,8 +26,8 @@ import type { EditorMode } from "./mode.js";
 import { editState, INITIAL_EDIT_STATE, updateEditState } from "./state.js";
 import { createRuler, RULER_COMMAND, rulerShown, setShowRuler } from "./ruler.js";
 import { selectionRuler } from "./ruler-edits.js";
-import { changeLayoutCommand, mountSlideLayouts, newSlideCommand } from "./slide-layouts.js";
-import type { SlideLayouts } from "./slide-layouts.js";
+import { changeLayoutCommand, deleteSlideCommand, mountSlideLayouts, newSlideCommand } from "./slide-commands.js";
+import type { SlideLayouts } from "./slide-commands.js";
 import { editorStyles } from "./styles.js";
 import { tableCommands } from "./table.js";
 import { editTabs } from "./tabs.js";
@@ -236,6 +236,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             ...tableCommands(mountedTools),
             ruler: RULER_COMMAND,
             createSlide: newSlideCommand(() => void slideLayouts?.newSlide()),
+            deleteSlide: deleteSlideCommand(() => host),
             changeLayout: changeLayoutCommand(() => void slideLayouts?.changeLayout()),
             ...insertCommands(() => {
                 if (host) pickImage(host);

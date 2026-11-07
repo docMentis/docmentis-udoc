@@ -1297,7 +1297,7 @@ export const uiStyles = css`
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: 1px;
     }
-    /* A gallery's panel — the Insert tab's shapes, Change Shape's: a heading per
+    /* A gallery's panel — Shapes', Change Shape's: a heading per
    section over a grid of icon cells, scrolling past a screenful. */
     .udoc-ui-root .udoc-gallery {
         width: min(340px, calc(100vw - 32px));

@@ -41,13 +41,14 @@ const ICONS = {
     ICON_TAB_OBJECT: "deployed_code",
     ICON_TAB_PAGE: "draft",
     ICON_TAB_SHAPE: "shapes",
+    ICON_TAB_SLIDE: "slide_library",
     ICON_TAB_TABLE: "table",
     ICON_TAB_TEXT: "text_fields",
 
     // View tab
     ICON_RULER: "straighten",
 
-    // Insert tab
+    // A deck's Slide tab and an image's Insert tab
     ICON_CHANGE_LAYOUT: "view_quilt",
     ICON_IMAGE: "image",
     ICON_SHAPES: "shapes",

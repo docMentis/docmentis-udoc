@@ -1,4 +1,4 @@
-// The Insert tab's shape gallery on a deck's slides and over an image's pages:
+// The shape gallery on a deck's slides and over an image's pages:
 // every preset shape the engine draws, grouped as PowerPoint's gallery groups
 // them, with the arrowed lines it offers beside its connectors. A PDF keeps its
 // four page-object shapes (see `insert.ts`). The Shape tab's Change Shape offers
@@ -322,7 +322,7 @@ export function galleryShape(tool: string): GalleryShape | null {
     return SHAPES.get(tool) ?? null;
 }
 
-/** The gallery as the Insert tab's Shapes picker shows it: a section per group,
+/** The gallery as the Shapes picker shows it: a section per group,
  *  a cell per shape. */
 export const SHAPE_GALLERY: readonly PickerSection<MessageKey>[] = Object.entries(GALLERY).map(([group, entries]) => ({
     label: `shapeGroup.${group as ShapeGroup}`,

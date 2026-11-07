@@ -53,12 +53,22 @@ listed once, by package. Its major and minor version are those of the
 - The Shape tab has Change Shape: it gives the selected shapes and pictures, and
   those in a selected group, another outline from the shape gallery, keeping their
   text, fill and line.
-- A deck's Insert tab has Change Layout: it puts the current slide, or the slides
-  or sections selected in the thumbnails, on the slide layout picked from New
-  Slide's thumbnails, with the layout in use marked. Placeholders move to the new
-  layout's slots and keep their content.
+- A deck has Change Layout, on its Slide tab: it puts the current slide, or the
+  slides or sections selected in the thumbnails, on the slide layout picked from
+  New Slide's thumbnails, with the layout in use marked. Placeholders move to the
+  new layout's slots and keep their content.
+- A deck has Delete Slide, on its Slide tab: it deletes the current slide, or the
+  slides selected in the thumbnails.
+- A deck has a Text Box, on its Slide tab: dragged out, or dropped with a click, it
+  puts a text box on the slide that wraps at its width. Its text comes selected, so
+  the first key types over it.
 
 #### Changed
+
+- A deck's Slide tab replaces its Insert tab. It offers New Slide, Delete Slide and
+  Change Layout, then Text Box, Shapes and Image, as icons named by their tooltips.
+  A deck's ribbon opens on it in edit mode, and goes back to it when slides or
+  sections are picked or nothing is selected.
 
 - A PDF's Page tab replaces its Insert tab. It offers Insert Page, Delete Page,
   Rotate Left, Rotate Right and Resize Page, on the current page or those picked in

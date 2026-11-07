@@ -668,7 +668,7 @@ const STAMP_OPTIONS: readonly PickerOption[] = (
  *   tab's shapes or its standard stamps, an extension's own.
  * - `armGallery` → `armPicker` for a picker too long for a list: a panel of
  *   `sections`, each a heading over a grid of its options' icons, named by
- *   their tooltips — the Insert tab's shapes on a slide or an image.
+ *   their tooltips — the shapes on a slide or an image.
  * - `gallery` → that panel for a choice made at once: a cell `press`es with its
  *   tool, arming nothing — the Shape tab's Change Shape.
  * - `menu` → opens a dropdown of {@link MenuItem}s (Order / Align / Rotate);
@@ -769,8 +769,8 @@ export interface CommandDef<K extends string = MessageKey> {
      * Show the {@link label} beside the glyph. Off by default: a tool band is
      * read by shape, and a labeled control costs several times an icon's
      * width. The View tab sets it on its controls, whose glyphs — a scroll, a
-     * layout, a pane shown — say what they do only once you know, and the
-     * Insert tab on its few, which have the band to themselves.
+     * layout, a pane shown — say what they do only once you know, and an
+     * image's Insert tab on its one, which has the band to itself.
      */
     labeled?: boolean;
     /** Whether it shows in its tab at all, for a command that has no use

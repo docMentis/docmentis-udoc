@@ -4,7 +4,7 @@ udoc-editor reaches the shell through one object, `UIExtension`
 (`extension.ts`), handed to `createAs`; udoc-viewer hands none, so what the
 shell does on its own is all a viewer does. Each member exists for a piece of
 edit mode: its mode and its tab strips, the page controls and the mode switch,
-the formatting marks, New Slide and the Insert tab, a PDF's Page tab, the Text,
+the formatting marks, a deck's Slide tab, an image's Insert tab, a PDF's Page tab, the Text,
 Shape and Object tabs' tools, the context menu and the clipboard, the ruler, shape placement,
 and the rotation and geometry grips.
 

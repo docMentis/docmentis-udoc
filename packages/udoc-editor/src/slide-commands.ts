@@ -1,7 +1,7 @@
-// New Slide and Change Layout: the presentation Insert tab's document-level
-// actions, and the layout picker they open.
+// A deck's Slide tab's slide commands: New Slide and Change Layout, with the
+// layout picker they open, and Delete Slide.
 import type { UDocCommand } from "@docmentis/udoc-ui";
-import { ICON_PAGE_ADD } from "@docmentis/udoc-ui/internal";
+import { allowsEdit, ICON_DELETE, ICON_PAGE_ADD } from "@docmentis/udoc-ui/internal";
 import type { CommandDef, UIState } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
 import { createSlideLayoutModal } from "./components/SlideLayoutModal.js";
@@ -36,6 +36,18 @@ function createSlide(index: number, layout?: string, slideSection?: string): UDo
 /** Put the slides `ids` on the slide layout `layout`, in one undo step. */
 function setSlidesLayout(ids: string[], layout: string): UDocCommand {
     return { presentation: { editSlide: { command: { setSlidesLayout: { ids, layout } } } } };
+}
+
+/** Delete the slides picked in the thumbnails, or else the current slide — by
+ *  id, as whatever else is selected is on it, not it. */
+async function deleteSlides(host: EditHost): Promise<void> {
+    const { selectedPages, pageIndex } = host.store.getState();
+    if (selectedPages.length > 0) return host.deleteSelection();
+    const id = await host.edit.slideId(pageIndex);
+    if (id === null) return;
+    await host.commit(() =>
+        host.client.execute({ presentation: { editSlide: { command: { deleteSlides: { ids: [id] } } } } }),
+    );
 }
 
 /** The 0-based slides Change Layout acts on: those of the sections selected in
@@ -155,9 +167,36 @@ export function newSlideCommand(open: () => void): CommandDef<MessageKey> {
         label: "command.createSlide",
         icon: ICON_PAGE_ADD,
         group: "slide",
-        labeled: true,
         run: { kind: "action", press: open },
         enabledWhen: (c) => c.ready && c.presentationView !== "slideMaster",
+    };
+}
+
+/**
+ * The Delete Slide command, over `host` once edit mode is mounted: the slides
+ * picked in the thumbnails, or else the current one. On a deck's slides, not its
+ * notes pages or the Slide Master view. Greyed with a section picked, which holds
+ * its slides' pages too but goes by its own edits: Delete removes the section,
+ * and its menu offers to take the slides with it.
+ */
+export function deleteSlideCommand(host: () => EditHost | null): CommandDef<MessageKey> {
+    return {
+        id: "deleteSlide",
+        label: "thumbnails.deleteSlide",
+        icon: ICON_DELETE,
+        group: "slide",
+        run: {
+            kind: "action",
+            press: () => {
+                const mounted = host();
+                if (mounted) void deleteSlides(mounted);
+            },
+        },
+        enabledWhen: (c) =>
+            c.ready &&
+            c.presentationView === "normal" &&
+            c.pageCount > 0 &&
+            !allowsEdit(c.selection, "deleteSlideSections"),
     };
 }
 
@@ -173,7 +212,6 @@ export function changeLayoutCommand(open: () => void): CommandDef<MessageKey> {
         label: "command.changeLayout",
         icon: ICON_CHANGE_LAYOUT,
         group: "slide",
-        labeled: true,
         run: { kind: "action", press: open },
         enabledWhen: (c) => c.ready && c.presentationView === "normal" && c.pageCount > 0,
     };

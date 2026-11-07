@@ -56,6 +56,7 @@ export const zhTW: EditMessages = {
     "ribbon.image": "影像",
     "ribbon.insert": "插入",
     "ribbon.page": "頁面",
+    "ribbon.slide": "投影片",
     "ribbon.text": "文字",
     "ribbon.shape": "圖案",
     "ribbon.table": "表格",

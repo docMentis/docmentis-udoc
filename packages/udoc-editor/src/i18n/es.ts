@@ -56,6 +56,7 @@ export const es: EditMessages = {
     "ribbon.image": "Imagen",
     "ribbon.insert": "Insertar",
     "ribbon.page": "Página",
+    "ribbon.slide": "Diapositiva",
     "ribbon.text": "Texto",
     "ribbon.shape": "Forma",
     "ribbon.table": "Tabla",

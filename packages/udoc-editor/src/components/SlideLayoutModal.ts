@@ -1,5 +1,5 @@
 // The slide layout picker — a modal grid of slide-layout thumbnails, opened from
-// the presentation Insert tab's "New Slide" and "Change Layout" buttons. Picking a
+// the presentation Slide tab's "New Slide" and "Change Layout" buttons. Picking a
 // layout inserts a new slide built on it (its content placeholders seeded), or
 // puts the slides changed on it; the thumbnail *is* the layout's identity, since
 // layouts carry no name/type in the model.

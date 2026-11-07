@@ -1,8 +1,8 @@
 // What goes on a page or a slide, placed by a pointer gesture the canvas carries
 // out: Shapes — a PDF's four as page objects, from its Page tab, the gallery's on
-// a deck's slides and over an image's pages, from their Insert tabs — and a PDF's
-// Text Box, a page object too; and Image on a slide deck or a PDF's page, asked
-// for and inserted at once.
+// a deck's slides, from its Slide tab, and over an image's pages, from its Insert
+// tab — and Text Box on a slide or a PDF's page, a page object there; and Image on
+// a slide deck or a PDF's page, asked for and inserted at once.
 import {
     ICON_SUBTOOL_ARROW,
     ICON_SUBTOOL_ELLIPSE,
@@ -13,7 +13,7 @@ import {
     SHAPE_STROKE_WIDTH,
     segmentsFor,
 } from "@docmentis/udoc-ui/internal";
-import type { CommandDef, PickerOption, ShapeKind, ShapePoint } from "@docmentis/udoc-ui/internal";
+import type { CommandContext, CommandDef, PickerOption, ShapeKind, ShapePoint } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
 import { EditCommand } from "./edit-command.js";
 import type { MessageKey } from "./i18n/index.js";
@@ -21,7 +21,7 @@ import { ICON_IMAGE, ICON_SHAPES } from "./icons.js";
 import { placeMarkup } from "./image.js";
 import { galleryShape, SHAPE_GALLERY } from "./shape-gallery.js";
 import type { GalleryShape } from "./shape-gallery.js";
-import { slideShape } from "./slide-shape.js";
+import { slideShape, slideTextBox } from "./slide-shape.js";
 import { editStateOf } from "./state.js";
 
 /** A large insert index that clamps to "on top" in the engine. */
@@ -32,23 +32,23 @@ const FILL = { components: [0.26, 0.55, 0.96], colorSpace: "srgb" };
 /** A placed shape's fill opacity. */
 const FILL_ALPHA = 0.18;
 
-/** The shapes the Insert tab places on a PDF, as the shell carries their place
- *  tools. */
+/** The shapes a PDF's Page tab places, as the shell carries their place tools. */
 const PORTABLE_SHAPES: ReadonlySet<string> = new Set<ShapeKind>(["rectangle", "ellipse", "line", "arrow"]);
 
-/** The tool a PDF's Text Box arms. */
-const TEXT_BOX_TOOL = "pageTextBox";
+/** The tool a slide's or a PDF's Text Box arms. */
+const TEXT_BOX_TOOL = "textBox";
 
 /** The standard font a PDF's text box is set in, and its size in points. */
 const TEXT_BOX_FONT = "helvetica";
 const TEXT_BOX_SIZE = 12;
 
 /**
- * What a PDF's text box holds until it is typed over, selected so the first key
- * replaces it. The engine sets no caret in a text object with nothing in it, and
- * one left untyped should still show, to be found and deleted. ASCII, which the
- * standard font's encoding holds byte for byte; the same in every language, as
- * the font has no glyphs for most others.
+ * What a text box holds until it is typed over, selected so the first key
+ * replaces it. One left untyped should still show, to be found and deleted: a
+ * slide's has no fill or outline to show by, and the engine sets no caret in a
+ * PDF's text object with nothing in it. ASCII, which the standard font's encoding
+ * holds byte for byte; the same in every language, as that font has no glyphs for
+ * most others.
  */
 const TEXT_BOX_PLACEHOLDER = "Text";
 
@@ -242,7 +242,7 @@ async function placeTextBox(
 }
 
 /** The outline a place `tool` is sketched with while it is dragged out — a
- *  gallery shape's, a PDF shape's own, or a PDF text box's rectangle. */
+ *  gallery shape's, a PDF shape's own, or a text box's rectangle. */
 export function placedShape(tool: string): ShapeKind | null {
     if (tool === TEXT_BOX_TOOL) return "rectangle";
     return galleryShape(tool)?.sketch ?? (PORTABLE_SHAPES.has(tool) ? (tool as ShapeKind) : null);
@@ -250,9 +250,10 @@ export function placedShape(tool: string): ShapeKind | null {
 
 /** Place `tool` on page `page`, spanning the page-local points `p0 → p1`, on
  *  top of the page: on a PDF, a shape as a page object — the engine mints its
- *  id and selects it — or a text box with the caret in it; on a deck, a gallery
- *  shape on the slide, and on an image, one drawn over it. A no-op for a page
- *  with no id (no document, or none of these), or a tool not the document's. */
+ *  id and selects it — or a text box with its text selected; on a deck, a gallery
+ *  shape or a text box on the slide, and on an image, one drawn over it. A no-op
+ *  for a page with no id (no document, or none of these), or a tool not the
+ *  document's. */
 export async function place(host: EditHost, tool: string, page: number, p0: ShapePoint, p1: ShapePoint): Promise<void> {
     const state = host.store.getState();
     if (state.status !== "ready") return;
@@ -264,6 +265,9 @@ export async function place(host: EditHost, tool: string, page: number, p0: Shap
         const object = shapeObject(tool as ShapeKind, p0, p1);
         await host.commit(() => host.client.execute(EditCommand.insertObjects(pageId, [object])));
         return;
+    }
+    if (tool === TEXT_BOX_TOOL) {
+        return state.docType === "presentation" ? placeSlideTextBox(host, page, p0, p1) : undefined;
     }
     const shape = galleryShape(tool);
     if (!shape) return;
@@ -300,6 +304,32 @@ async function placeSlideShape(
     host.client.setSelection({ presentation: { shapes: { container, selection: { shapes: [id] } } } });
 }
 
+/**
+ * Put a text box on the deck's slide `page` from `p0` to `p1` — the slide's own
+ * points — on top of the slide, with its text selected to be typed over. One
+ * committing edit. A no-op past the last slide.
+ */
+async function placeSlideTextBox(host: EditHost, page: number, p0: ShapePoint, p1: ShapePoint): Promise<void> {
+    const [slide, id, story] = await Promise.all([host.edit.slideId(page), host.client.mintId(), host.client.mintId()]);
+    if (!slide || !id || !story) return;
+    const container = { slide };
+    const node = slideTextBox(id, story, TEXT_BOX_PLACEHOLDER, p0, p1);
+    await host.commit(() =>
+        host.client.execute({
+            presentation: {
+                editShape: {
+                    container,
+                    command: { insertShapes: { parent: null, index: APPEND_INDEX, nodes: [node] } },
+                },
+            },
+        }),
+    );
+    const range = { story, anchor: 0, focus: TEXT_BOX_PLACEHOLDER.length };
+    host.client.setSelection({
+        presentation: { shapes: { container, selection: { shapeText: [id, { range }] } } },
+    });
+}
+
 /** Insert the image file `bytes` as a picture on the current slide or page,
  *  centred and scaled down to fit, then selected — a committing edit, so the picture's
  *  selection rides back. */
@@ -325,10 +355,16 @@ export function pickImage(host: EditHost): void {
     input.click();
 }
 
+/** Whether what goes on a deck's slide has one to go on: a slide shown, so not a
+ *  notes page or the Slide Master view, nor a deck with no slides left. */
+function onSlide(c: CommandContext): boolean {
+    return c.ready && c.docType === "presentation" && c.presentationView === "normal" && c.pageCount > 0;
+}
+
 /** The commands that put things on a page or a slide. Image asks for its file
  *  with `pickImage` — live on a deck's slides, which it inserts onto: not on
- *  its notes pages. A PDF's Text Box and Shapes place page objects, and its
- *  Image puts one on the current page. */
+ *  its notes pages, where its Text Box and Shapes are grey too. A PDF's Text Box
+ *  and Shapes place page objects, and its Image puts one on the current page. */
 export function insertCommands(pickImage: () => void): Readonly<Record<string, CommandDef<MessageKey>>> {
     return {
         insertImage: {
@@ -336,9 +372,8 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             label: "command.insertImage",
             icon: ICON_IMAGE,
             group: "insert",
-            labeled: true,
             run: { kind: "action", press: pickImage },
-            enabledWhen: (c) => c.ready && c.docType === "presentation" && c.presentationView === "normal",
+            enabledWhen: onSlide,
         },
         insertPageImage: {
             id: "insertPageImage",
@@ -354,7 +389,7 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             icon: ICON_SUBTOOL_TEXTBOX,
             group: "insert",
             run: { kind: "arm", tool: { kind: "extension", tool: TEXT_BOX_TOOL } },
-            enabledWhen: (c) => c.ready && c.docType === "portable",
+            enabledWhen: (c) => (c.ready && c.docType === "portable") || onSlide(c),
         },
         insertShape: {
             id: "insertShape",
@@ -364,6 +399,8 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             run: { kind: "armPicker", options: SHAPE_OPTIONS },
             enabledWhen: (c) => c.ready && c.docType === "portable",
         },
+        // An image's current page takes them unless it's animated or a vector,
+        // and not while it's cropped. They have its Insert tab's band to themselves.
         insertGalleryShape: {
             id: "insertGalleryShape",
             label: "command.insertShape",
@@ -371,13 +408,16 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             group: "insert",
             labeled: true,
             run: { kind: "armGallery", sections: SHAPE_GALLERY },
-            // On a deck's slides, not its notes pages. An image's current page
-            // takes them unless it's animated or a vector, and not while it's
-            // cropped.
             enabledWhen: (c) =>
-                c.ready &&
-                ((c.docType === "presentation" && c.presentationView === "normal") ||
-                    (c.docType === "image" && editStateOf(c).pageTakesMarkup && editStateOf(c).cropping === null)),
+                c.ready && c.docType === "image" && editStateOf(c).pageTakesMarkup && editStateOf(c).cropping === null,
+        },
+        insertSlideShape: {
+            id: "insertSlideShape",
+            label: "command.insertShape",
+            icon: ICON_SHAPES,
+            group: "insert",
+            run: { kind: "armGallery", sections: SHAPE_GALLERY },
+            enabledWhen: onSlide,
         },
     };
 }

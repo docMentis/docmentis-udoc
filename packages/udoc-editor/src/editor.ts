@@ -109,7 +109,7 @@ export class UDocEditor extends UDocBase<UDocEditorEvents> {
     /**
      * Insert the image file `bytes` as a picture on the current slide or PDF
      * page, centred and scaled down to fit, then selected — what the Image
-     * button of a deck's Insert tab or a PDF's Page tab does with the file it asks
+     * button of a deck's Slide tab or a PDF's Page tab does with the file it asks
      * for. `contentType` is the file's MIME type (`image/png`, …); an empty one is
      * read from the bytes' own signature, which a PDF always reads. One
      * committing edit (one undo step). The image never enters the CRDT: it

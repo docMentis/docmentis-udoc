@@ -1,7 +1,7 @@
 // Edit mode's tab strips, by doc type. A tab names its commands by id — udoc-ui's
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
-// order. A strip opens folded, a PDF's on its Page tab and a word document's on its
-// Text tab, and a selection opens the tab it is for.
+// order. A strip opens folded, a PDF's on its Page tab, a deck's on its Slide tab
+// and a word document's on its Text tab, and a selection opens the tab it is for.
 import type { UDocType } from "@docmentis/udoc-ui";
 import {
     allowsEdit,
@@ -20,6 +20,7 @@ import {
     ICON_TAB_OBJECT,
     ICON_TAB_PAGE,
     ICON_TAB_SHAPE,
+    ICON_TAB_SLIDE,
     ICON_TAB_TABLE,
     ICON_TAB_TEXT,
 } from "./icons.js";
@@ -70,11 +71,13 @@ export type EditCommandId =
     | "tableUnmerge"
     | "ruler"
     | "createSlide"
+    | "deleteSlide"
     | "changeLayout"
     | "insertImage"
     | "insertPageImage"
     | "insertShape"
     | "insertGalleryShape"
+    | "insertSlideShape"
     | "insertTextBox"
     | "pageCreate"
     | "pageDelete"
@@ -126,6 +129,12 @@ function annotations(caps: SelectionCapabilities): boolean {
 /** Whether `caps` holds a PDF's pages, picked in the thumbnails, or nothing. */
 function pagesOrNothing(caps: SelectionCapabilities): boolean {
     return caps.count === 0 || allowsEdit(caps, "rotatePages");
+}
+
+/** Whether `caps` holds a deck's slides or sections, picked in the thumbnails, or
+ *  nothing. */
+function slidesOrNothing(caps: SelectionCapabilities): boolean {
+    return caps.count === 0 || allowsEdit(caps, "deleteSlides", "deleteSlideSections");
 }
 
 /** Whether `caps` holds an image's pages, picked in the thumbnails. */
@@ -326,14 +335,28 @@ const IMAGE_INSERT_TAB: EditTab = {
     commands: ["insertGalleryShape"],
 };
 
-/** The presentation Insert tab: New Slide, after the current slide, and Change
- *  Layout, which picks from the same layouts; Image, a picture on the slide; and
- *  the gallery's Shapes, dragged out on it. */
-const PRESENTATION_INSERT_TAB: EditTab = {
-    id: "insert",
-    label: "ribbon.insert",
-    icon: ICON_TAB_INSERT,
-    commands: ["createSlide", "changeLayout", "insertImage", "insertGalleryShape"],
+/**
+ * The presentation Slide tab: the slides' edits — New Slide, after the current
+ * slide, then Delete Slide and Change Layout, of the current slide or those
+ * picked in the thumbnails — then what goes on a slide: a text box and the
+ * gallery's shapes, dragged out on it, and a picture. All icons, named by their
+ * tooltips. A deck's strip opens on it, and slides or sections picked or nothing
+ * selected open it.
+ */
+const PRESENTATION_SLIDE_TAB: EditTab = {
+    id: "slide",
+    label: "ribbon.slide",
+    icon: ICON_TAB_SLIDE,
+    commands: [
+        "createSlide",
+        "deleteSlide",
+        "changeLayout",
+        "insertTextBox",
+        "insertSlideShape",
+        "insertImage",
+    ] satisfies EditCommandId[],
+    opensOnEntry: true,
+    opensFor: slidesOrNothing,
 };
 
 /** `docType`'s View tab, as edit mode has it: with the views edit mode alone
@@ -356,12 +379,12 @@ const PORTABLE_TABS: readonly EditTab[] = [
     editViewTab("portable"),
 ];
 
-/** The presentation strip: its own Insert, then Text (character formatting),
+/** The presentation strip: its own Slide, then Text (character formatting),
  *  Table and Shape (free-floating graphics), then Present, and its View last.
  *  Table goes ahead of Shape as Text does: a block of cells also reports the
  *  edits of the frame around them, and the first tab holding for it opens. */
 const PRESENTATION_TABS: readonly EditTab[] = [
-    PRESENTATION_INSERT_TAB,
+    PRESENTATION_SLIDE_TAB,
     PRESENTATION_TEXT_TAB,
     TABLE_TAB,
     SHAPE_TAB,

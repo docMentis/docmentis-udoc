@@ -1,6 +1,6 @@
-// The shapes the Insert tab places on a deck's slides: a gallery shape across
-// the drag, styled from the deck's theme as PowerPoint styles a shape it
-// inserts. Pure — `insert.ts` places what this builds.
+// The shapes the Slide tab places on a deck's slides: a gallery shape across the
+// drag, styled from the deck's theme as PowerPoint styles a shape it inserts, and
+// a text box. Pure — `insert.ts` places what this builds.
 import type {
     PaintColor,
     PaintLine,
@@ -64,6 +64,54 @@ function emptyBody(story: string): TextBody {
     return {
         properties: { anchor: "center" },
         story: { id: story, blocks: [{ paragraph: { properties: { props: [{ align: "center" }] }, spans: [] } }] },
+    };
+}
+
+/**
+ * A text box across the box of `p0` and `p1` (the slide's points), its id `id`:
+ * a rectangle with no style, so no fill or outline, holding `text` in the story
+ * `story`, wrapped at its width. Its text takes the deck's defaults. It says it
+ * fits its lines, as PowerPoint's does, so PowerPoint resizes it once it's edited
+ * there; the engine lays it out at the size it's given, and doesn't resize it.
+ */
+export function slideTextBox(id: string, story: string, text: string, p0: ShapePoint, p1: ShapePoint): ShapeNode {
+    return {
+        shape: {
+            id,
+            nonVisual: { name: "TextBox", description: null, title: null, hidden: false, placeholder: null },
+            properties: {
+                transform: {
+                    offset: { x: Math.min(p0.x, p1.x), y: Math.min(p0.y, p1.y) },
+                    extents: { width: Math.abs(p1.x - p0.x), height: Math.abs(p1.y - p0.y) },
+                    rotation: 0,
+                    flipH: false,
+                    flipV: false,
+                },
+                geometry: { preset: { preset: "rect", adjustValues: [] } },
+                fill: null,
+                line: null,
+                effects: null,
+                scene3d: null,
+                shape3d: null,
+            },
+            style: null,
+            textBody: {
+                properties: { wrap: "square", autoFit: "shape" },
+                story: {
+                    id: story,
+                    blocks: [
+                        {
+                            paragraph: {
+                                properties: { props: [] },
+                                spans: [{ regular: { properties: { props: [] }, text } }],
+                            },
+                        },
+                    ],
+                },
+            },
+            textTransform: null,
+            diagramPoint: null,
+        },
     };
 }
 
