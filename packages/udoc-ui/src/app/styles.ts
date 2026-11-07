@@ -1359,16 +1359,27 @@ export const uiStyles = css`
         height: 120px;
         border-radius: 4px;
         background:
-            linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent),
-            var(--hue-color, #f00);
+            linear-gradient(to top, #000 7px, transparent calc(100% - 7px)),
+            linear-gradient(to right, #fff 7px, transparent calc(100% - 7px)), var(--hue-color, #f00);
         cursor: crosshair;
         touch-action: none;
     }
+    /* A strip's gradient runs along its thumb's travel, so the thumb sits over the
+   value it holds; the strip is as tall as the thumb, ring included. */
     .udoc-ui-root .udoc-colorpicker__hue {
         position: relative;
-        height: 12px;
-        border-radius: 6px;
-        background: linear-gradient(to right, #f00, #ff0 16.67%, #0f0 33.33%, #0ff 50%, #00f 66.67%, #f0f 83.33%, #f00);
+        height: 14px;
+        border-radius: 7px;
+        background: linear-gradient(
+            to right,
+            #f00 7px,
+            #ff0 calc(7px + (100% - 14px) * 0.1667),
+            #0f0 calc(7px + (100% - 14px) * 0.3333),
+            #0ff calc(7px + (100% - 14px) * 0.5),
+            #00f calc(7px + (100% - 14px) * 0.6667),
+            #f0f calc(7px + (100% - 14px) * 0.8333),
+            #f00 calc(100% - 7px)
+        );
         cursor: pointer;
         touch-action: none;
     }
@@ -1383,10 +1394,14 @@ export const uiStyles = css`
         position: relative;
         flex: 1;
         min-width: 0;
-        height: 12px;
-        border-radius: 6px;
+        height: 14px;
+        border-radius: 7px;
         background:
-            linear-gradient(to right, transparent, var(--swatch-color, var(--udoc-color-on-surface))),
+            linear-gradient(
+                to right,
+                transparent 7px,
+                var(--swatch-color, var(--udoc-color-on-surface)) calc(100% - 7px)
+            ),
             repeating-conic-gradient(#c4c4c4 0% 25%, #fff 0% 50%) 0 0 / 8px 8px;
         cursor: pointer;
         touch-action: none;
@@ -1441,12 +1456,15 @@ export const uiStyles = css`
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: 2px;
     }
-    /* A ring in the colour it sits on, legible on light and dark alike. */
+    /* A ring in the colour it sits on, legible on light and dark alike. It travels
+   between its slider's edges, 14px across with its outer ring, never past them:
+   --thumb-x and --thumb-y are how far along, 0 to 1 (see THUMB_RADIUS). */
     .udoc-ui-root .udoc-colorpicker__thumb {
         position: absolute;
-        top: 50%;
-        width: 14px;
-        height: 14px;
+        left: calc(7px + (100% - 14px) * var(--thumb-x, 0));
+        top: calc(7px + (100% - 14px) * var(--thumb-y, 0.5));
+        width: 12px;
+        height: 12px;
         border: 2px solid #fff;
         border-radius: 50%;
         background: var(--swatch-color, transparent);

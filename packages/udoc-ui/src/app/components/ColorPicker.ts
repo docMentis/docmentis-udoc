@@ -60,8 +60,18 @@ function swallowClick(): void {
     setTimeout(() => window.removeEventListener("click", stop, true), 0);
 }
 
-/** Drag on `area`: `move` gets the pointer's place in it, each axis `0..1`,
- *  from the press until the release, when `done` runs. */
+/** How far a slider's thumb's center stays from the slider's edge, in CSS px, so
+ *  the thumb and its ring stay inside it: `.udoc-colorpicker__thumb`'s travel. */
+const THUMB_RADIUS = 7;
+
+/** The value, `0..1`, whose thumb is centered `px` along `size` CSS px of slider. */
+function thumbValue(px: number, size: number): number {
+    return clamp01((px - THUMB_RADIUS) / (size - 2 * THUMB_RADIUS));
+}
+
+/** Drag on `area`: `move` gets the value under the pointer, each axis `0..1`, from
+ *  the press until the release, when `done` runs. The value is the one whose thumb
+ *  is centered under the pointer, so the thumb follows it. */
 function dragOn(area: HTMLElement, move: (x: number, y: number) => void, done?: () => void): void {
     area.addEventListener("pointerdown", (e) => {
         if (e.button !== 0) return;
@@ -71,7 +81,7 @@ function dragOn(area: HTMLElement, move: (x: number, y: number) => void, done?: 
         area.setPointerCapture(e.pointerId);
         const at = (ev: PointerEvent): void => {
             const r = area.getBoundingClientRect();
-            move(clamp01((ev.clientX - r.left) / r.width), clamp01((ev.clientY - r.top) / r.height));
+            move(thumbValue(ev.clientX - r.left, r.width), thumbValue(ev.clientY - r.top, r.height));
         };
         const end = (): void => {
             area.removeEventListener("pointermove", at);
@@ -158,7 +168,7 @@ export function buildOpacityInput(cfg: {
     // would fight.
     const draw = (typing = false): void => {
         const value = Math.round(opacity * 100);
-        thumb.style.left = `${opacity * 100}%`;
+        thumb.style.setProperty("--thumb-x", String(opacity));
         if (hex) {
             strip.style.setProperty("--swatch-color", hex);
             thumb.style.setProperty("--swatch-color", withAlphaHex(hex, opacity));
@@ -362,10 +372,10 @@ export function buildColorPicker(cfg: ColorPickerConfig): HTMLElement {
         }
         const pure = hsvToHex({ h: hsv.h, s: 1, v: 1 });
         square.style.setProperty("--hue-color", pure);
-        squareThumb.style.left = `${hsv.s * 100}%`;
-        squareThumb.style.top = `${(1 - hsv.v) * 100}%`;
+        squareThumb.style.setProperty("--thumb-x", String(hsv.s));
+        squareThumb.style.setProperty("--thumb-y", String(1 - hsv.v));
         squareThumb.style.setProperty("--swatch-color", hex);
-        hueThumb.style.left = `${(hsv.h / 360) * 100}%`;
+        hueThumb.style.setProperty("--thumb-x", String(hsv.h / 360));
         hueThumb.style.setProperty("--swatch-color", pure);
         preview.style.setProperty("--swatch-color", withAlphaHex(hex, shown));
         const saturation = Math.round(hsv.s * 100);
