@@ -54,7 +54,6 @@ export const ko: EditMessages = {
 
     // Ribbon tabs
     "ribbon.image": "이미지",
-    "ribbon.insert": "삽입",
     "ribbon.page": "페이지",
     "ribbon.slide": "슬라이드",
     "ribbon.text": "텍스트",
@@ -222,7 +221,7 @@ export const ko: EditMessages = {
     "image.originalSize": "원본 크기: {width} × {height}px",
     "image.pixels": "px",
 
-    // The Insert tab's shape gallery: its headings, and its shapes' names
+    // The shape gallery: its headings, and its shapes' names
     "shapeGroup.lines": "선",
     "shapeGroup.rectangles": "사각형",
     "shapeGroup.basicShapes": "기본 도형",

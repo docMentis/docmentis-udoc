@@ -62,6 +62,8 @@ listed once, by package. Its major and minor version are those of the
 - A deck has a Text Box, on its Slide tab: dragged out, or dropped with a click, it
   puts a text box on the slide that wraps at its width. Its text comes selected, so
   the first key types over it.
+- An image has a Text Box, on its Image tab, that does the same over the page, in the
+  red of the shapes drawn there.
 
 #### Changed
 
@@ -69,6 +71,9 @@ listed once, by package. Its major and minor version are those of the
   Change Layout, then Text Box, Shapes and Image, as icons named by their tooltips.
   A deck's ribbon opens on it in edit mode, and goes back to it when slides or
   sections are picked or nothing is selected.
+- An image's Insert tab is gone: its Image tab offers Text Box and Shapes after its
+  own tools, as icons named by their tooltips. An image's ribbon opens on it in edit
+  mode, and goes back to it when pages are picked or nothing is selected.
 
 - A PDF's Page tab replaces its Insert tab. It offers Insert Page, Delete Page,
   Rotate Left, Rotate Right and Resize Page, on the current page or those picked in

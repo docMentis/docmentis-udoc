@@ -1,6 +1,6 @@
-// The shapes the Insert tab draws over an image's pages: a markup's outline,
-// in red and unfilled so the image shows through, at a weight that reads at the
-// page's size, and a box's room for a label. Pure — `image.ts` places what
+// The shapes the Image tab draws over an image's pages: a markup's outline, in
+// red and unfilled so the image shows through, at a weight that reads at the page's
+// size, a box's room for a label, and a text box. Pure — `image.ts` places what
 // this builds.
 import type { PaintColor, PaintLine, PaintLineEnd, ShapeNode, TextBody } from "@docmentis/udoc-wasm";
 import type { ShapePoint } from "@docmentis/udoc-ui/internal";
@@ -22,6 +22,12 @@ const POINTS_PER_TEXT_POINT = 30;
 
 /** The smallest a label is set, in points. */
 const MIN_TEXT_SIZE = 12;
+
+/** The least a text box spans across and down, in multiples of its text's size:
+ *  room for a word or two, on a line. A box dropped with a click is sized in
+ *  points, which on a large image is too narrow for one letter a line. */
+const TEXT_BOX_MIN_WIDTH = 6;
+const TEXT_BOX_MIN_HEIGHT = 1.5;
 
 /** The weight in points a shape is outlined at over a page `width` ×
  *  `height` points: a point per {@link POINTS_PER_LINE_POINT} of its shorter
@@ -57,6 +63,70 @@ function labelBody(story: string, size: number): TextBody {
                     },
                 },
             ],
+        },
+    };
+}
+
+/**
+ * A text box across the box of `p0` and `p1` (the page's points) over a page
+ * `page` points in size, its id `id`: a rectangle with no fill or outline, holding
+ * `text` in the story `story`, wrapped at its width, in the markup color and at the
+ * size of a label. It spans at least {@link TEXT_BOX_MIN_WIDTH} ×
+ * {@link TEXT_BOX_MIN_HEIGHT} of that size, moved back onto the page where that
+ * takes it past the edge.
+ */
+export function markupTextBox(
+    id: string,
+    story: string,
+    text: string,
+    p0: ShapePoint,
+    p1: ShapePoint,
+    page: { width: number; height: number },
+): ShapeNode {
+    const size = markupTextSize(page.width, page.height);
+    const properties = { props: [{ size }, { fill: { solid: MARKUP_COLOR } }] };
+    const width = Math.max(Math.abs(p1.x - p0.x), size * TEXT_BOX_MIN_WIDTH);
+    const height = Math.max(Math.abs(p1.y - p0.y), size * TEXT_BOX_MIN_HEIGHT);
+    return {
+        shape: {
+            id,
+            nonVisual: { name: "TextBox", description: null, title: null, hidden: false, placeholder: null },
+            properties: {
+                transform: {
+                    offset: {
+                        x: Math.max(0, Math.min(Math.min(p0.x, p1.x), page.width - width)),
+                        y: Math.max(0, Math.min(Math.min(p0.y, p1.y), page.height - height)),
+                    },
+                    extents: { width, height },
+                    rotation: 0,
+                    flipH: false,
+                    flipV: false,
+                },
+                geometry: { preset: { preset: "rect", adjustValues: [] } },
+                fill: "none",
+                line: null,
+                effects: null,
+                scene3d: null,
+                shape3d: null,
+            },
+            style: null,
+            textBody: {
+                properties: { wrap: "square" },
+                story: {
+                    id: story,
+                    blocks: [
+                        {
+                            paragraph: {
+                                properties: { props: [] },
+                                end: { mark: { properties } },
+                                spans: [{ regular: { properties, text } }],
+                            },
+                        },
+                    ],
+                },
+            },
+            textTransform: null,
+            diagramPoint: null,
         },
     };
 }

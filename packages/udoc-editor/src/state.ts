@@ -100,7 +100,7 @@ export interface EditState {
     selectionLine: PaintLine | null;
 
     /**
-     * Whether the current page of an image takes the shapes the Insert tab
+     * Whether the current page of an image takes what the Image tab
      * draws: false for an animated or a vector page, and for any other doc
      * type. Re-read as the current page and the document change.
      */

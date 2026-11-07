@@ -1,5 +1,5 @@
 /**
- * The shapes the Insert tab draws over an image: a box across the drag, a line
+ * The shapes the Image tab draws over an image: a box across the drag, a line
  * running the way it was dragged, an arrow's heads where it ended — and began,
  * for a double arrow — and an outline weight that reads at the page's size.
  */

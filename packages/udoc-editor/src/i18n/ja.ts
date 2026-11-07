@@ -54,7 +54,6 @@ export const ja: EditMessages = {
 
     // Ribbon tabs
     "ribbon.image": "画像",
-    "ribbon.insert": "挿入",
     "ribbon.page": "ページ",
     "ribbon.slide": "スライド",
     "ribbon.text": "テキスト",
@@ -225,7 +224,7 @@ export const ja: EditMessages = {
     "image.originalSize": "元のサイズ: {width} × {height} px",
     "image.pixels": "px",
 
-    // The Insert tab's shape gallery: its headings, and its shapes' names
+    // The shape gallery: its headings, and its shapes' names
     "shapeGroup.lines": "線",
     "shapeGroup.rectangles": "四角形",
     "shapeGroup.basicShapes": "基本図形",

@@ -1,7 +1,8 @@
 // Edit mode's tab strips, by doc type. A tab names its commands by id — udoc-ui's
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
-// order. A strip opens folded, a PDF's on its Page tab, a deck's on its Slide tab
-// and a word document's on its Text tab, and a selection opens the tab it is for.
+// order. A strip opens folded, a PDF's on its Page tab, a deck's on its Slide tab,
+// an image's on its Image tab and a word document's on its Text tab, and a selection
+// opens the tab it is for.
 import type { UDocType } from "@docmentis/udoc-ui";
 import {
     allowsEdit,
@@ -16,7 +17,6 @@ import type { CommandId, SelectionCapabilities, ToolbarTab } from "@docmentis/ud
 import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_TAB_IMAGE,
-    ICON_TAB_INSERT,
     ICON_TAB_OBJECT,
     ICON_TAB_PAGE,
     ICON_TAB_SHAPE,
@@ -77,7 +77,6 @@ export type EditCommandId =
     | "insertPageImage"
     | "insertShape"
     | "insertGalleryShape"
-    | "insertSlideShape"
     | "insertTextBox"
     | "pageCreate"
     | "pageDelete"
@@ -126,7 +125,8 @@ function annotations(caps: SelectionCapabilities): boolean {
     return allowsEdit(caps, "deleteAnnotations", "translateAnnotations", "resizeAnnotations", "reorderAnnotations");
 }
 
-/** Whether `caps` holds a PDF's pages, picked in the thumbnails, or nothing. */
+/** Whether `caps` holds a PDF's or an image's pages, picked in the thumbnails, or
+ *  nothing. */
 function pagesOrNothing(caps: SelectionCapabilities): boolean {
     return caps.count === 0 || allowsEdit(caps, "rotatePages");
 }
@@ -135,11 +135,6 @@ function pagesOrNothing(caps: SelectionCapabilities): boolean {
  *  nothing. */
 function slidesOrNothing(caps: SelectionCapabilities): boolean {
     return caps.count === 0 || allowsEdit(caps, "deleteSlides", "deleteSlideSections");
-}
-
-/** Whether `caps` holds an image's pages, picked in the thumbnails. */
-function imagePages(caps: SelectionCapabilities): boolean {
-    return allowsEdit(caps, "rotatePages");
 }
 
 /**
@@ -275,11 +270,13 @@ const PORTABLE_ANNOTATE_TAB: EditTab = { ...ANNOTATE_TAB, opensFor: annotations 
 
 /**
  * The image Image tab — the current page's Rotate Left / Right, Flip
- * Horizontal / Vertical, Crop and Image Size; the turns and flips the pages
- * picked in the thumbnails instead, which open it. **Contextual** (see
- * {@link ToolbarTab.contextual}): while a page is cropped, crop mode's own
- * controls show in their place — the aspect the box keeps, Reset, Cancel and
- * Apply.
+ * Horizontal / Vertical, Crop and Image Size, the turns and flips the pages picked
+ * in the thumbnails instead, then what is drawn over the page: a text box and the
+ * gallery's shapes. All icons, named by their tooltips. An image's strip opens on
+ * it, and pages picked or nothing selected open it. **Contextual** (see {@link ToolbarTab.contextual}): while
+ * a page is cropped, crop mode's own controls show in their place — the aspect the
+ * box keeps, Reset, Cancel and Apply — and a page that takes no markup leaves out
+ * the text box and the shapes.
  */
 const IMAGE_TAB: EditTab = {
     id: "image",
@@ -292,13 +289,16 @@ const IMAGE_TAB: EditTab = {
         "flipPageVertical",
         "cropPage",
         "resizePage",
+        "insertTextBox",
+        "insertGalleryShape",
         "cropAspect",
         "cropReset",
         "cropCancel",
         "cropApply",
     ] satisfies EditCommandId[],
     contextual: true,
-    opensFor: imagePages,
+    opensOnEntry: true,
+    opensFor: pagesOrNothing,
 };
 
 /**
@@ -327,14 +327,6 @@ const PORTABLE_PAGE_TAB: EditTab = {
     opensFor: pagesOrNothing,
 };
 
-/** The image Insert tab: the gallery's Shapes, drawn over the page. */
-const IMAGE_INSERT_TAB: EditTab = {
-    id: "insert",
-    label: "ribbon.insert",
-    icon: ICON_TAB_INSERT,
-    commands: ["insertGalleryShape"],
-};
-
 /**
  * The presentation Slide tab: the slides' edits — New Slide, after the current
  * slide, then Delete Slide and Change Layout, of the current slide or those
@@ -352,7 +344,7 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
         "deleteSlide",
         "changeLayout",
         "insertTextBox",
-        "insertSlideShape",
+        "insertGalleryShape",
         "insertImage",
     ] satisfies EditCommandId[],
     opensOnEntry: true,
@@ -402,16 +394,10 @@ const WORDPROCESSING_TABS: readonly EditTab[] = [
     editViewTab("wordprocessing"),
 ];
 
-/** The image strip: its own Image and Insert, then the Text and Shape tabs of
- *  the shapes drawn over its pages — a deck's, as they are a slide's shapes —
- *  and its View last. */
-const IMAGE_TABS: readonly EditTab[] = [
-    IMAGE_TAB,
-    IMAGE_INSERT_TAB,
-    PRESENTATION_TEXT_TAB,
-    SHAPE_TAB,
-    editViewTab("image"),
-];
+/** The image strip: its own Image, then the Text and Shape tabs of the shapes
+ *  drawn over its pages — a deck's, as they are a slide's shapes — and its View
+ *  last. */
+const IMAGE_TABS: readonly EditTab[] = [IMAGE_TAB, PRESENTATION_TEXT_TAB, SHAPE_TAB, editViewTab("image")];
 
 /** The spreadsheet strip: its View. */
 const SPREADSHEET_TABS: readonly EditTab[] = [editViewTab("spreadsheet")];

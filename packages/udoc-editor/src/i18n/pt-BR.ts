@@ -54,7 +54,6 @@ export const ptBR: EditMessages = {
 
     // Ribbon tabs
     "ribbon.image": "Imagem",
-    "ribbon.insert": "Inserir",
     "ribbon.page": "Página",
     "ribbon.slide": "Slide",
     "ribbon.text": "Texto",
@@ -222,7 +221,7 @@ export const ptBR: EditMessages = {
     "image.originalSize": "Original: {width} × {height} px",
     "image.pixels": "px",
 
-    // The Insert tab's shape gallery: its headings, and its shapes' names
+    // The shape gallery: its headings, and its shapes' names
     "shapeGroup.lines": "Linhas",
     "shapeGroup.rectangles": "Retângulos",
     "shapeGroup.basicShapes": "Formas Básicas",

@@ -82,7 +82,7 @@ function mountDocumentState(host: EditHost): () => void {
         updateEditState(store, { paragraphStyles: await edit.paragraphStyleSummaries() });
     };
 
-    // Whether the current page of an image takes the shapes the Insert tab
+    // Whether the current page of an image takes what the Image tab
     // draws — read from the engine, which loads the page to say. Latest-wins:
     // a read overtaken by the next drops its answer.
     let markupReads = 0;

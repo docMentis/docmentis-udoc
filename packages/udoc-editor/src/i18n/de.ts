@@ -54,7 +54,6 @@ export const de: EditMessages = {
 
     // Ribbon tabs
     "ribbon.image": "Bild",
-    "ribbon.insert": "Einfügen",
     "ribbon.page": "Seite",
     "ribbon.slide": "Folie",
     "ribbon.text": "Text",
@@ -226,7 +225,7 @@ export const de: EditMessages = {
     "image.originalSize": "Original: {width} × {height} px",
     "image.pixels": "px",
 
-    // The Insert tab's shape gallery: its headings, and its shapes' names
+    // The shape gallery: its headings, and its shapes' names
     "shapeGroup.lines": "Linien",
     "shapeGroup.rectangles": "Rechtecke",
     "shapeGroup.basicShapes": "Standardformen",

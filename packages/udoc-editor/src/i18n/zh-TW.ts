@@ -54,7 +54,6 @@ export const zhTW: EditMessages = {
 
     // Ribbon tabs
     "ribbon.image": "影像",
-    "ribbon.insert": "插入",
     "ribbon.page": "頁面",
     "ribbon.slide": "投影片",
     "ribbon.text": "文字",
@@ -222,7 +221,7 @@ export const zhTW: EditMessages = {
     "image.originalSize": "原始大小：{width} × {height} 像素",
     "image.pixels": "像素",
 
-    // The Insert tab's shape gallery: its headings, and its shapes' names
+    // The shape gallery: its headings, and its shapes' names
     "shapeGroup.lines": "線條",
     "shapeGroup.rectangles": "矩形",
     "shapeGroup.basicShapes": "基本圖案",

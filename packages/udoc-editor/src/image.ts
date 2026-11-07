@@ -1,9 +1,9 @@
 // An image document's edits: its pages turned, flipped, cropped and resized
-// from the Image tab, and the shapes the Insert tab draws over them. A page edit names
+// from the Image tab, and the shapes and text boxes it draws over them. A page edit names
 // its page by the id its manifest entry carries, which also measures it: the
 // page's size in points — the points a crop and the shapes are in, the page's
 // own from its top-left — and its pixels, which a resize names.
-import type { ImagePageCommand, ImagePageInfo, UDocCommand } from "@docmentis/udoc-wasm";
+import type { ImagePageCommand, ImagePageInfo, ShapeNode, ShapeSelection, UDocCommand } from "@docmentis/udoc-wasm";
 import { allowsEdit, ICON_ROTATE_LEFT, ICON_ROTATE_RIGHT } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, ShapePoint } from "@docmentis/udoc-ui/internal";
 import { ICON_FLIP_VERTICAL } from "./arrange.js";
@@ -11,7 +11,7 @@ import { createImageSizeModal } from "./components/ImageSizeModal.js";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { ICON_CROP, ICON_FLIP, ICON_IMAGE_SIZE } from "./icons.js";
-import { markupShape } from "./markup.js";
+import { markupShape, markupTextBox } from "./markup.js";
 import type { GalleryShape } from "./shape-gallery.js";
 import { editStateOf } from "./state.js";
 
@@ -215,16 +215,15 @@ export function imageCommands(
 }
 
 /**
- * Draw `shape` over page `page` from `p0` to `p1` — the page's own points —
- * and select it. One committing edit. A no-op on a page that takes no markup,
- * or with no image open.
+ * Draw what `build` makes over page `page`, of the size given, under the id and
+ * story minted for it, then select what `selection` names of it. One committing
+ * edit. A no-op on a page that takes no markup, or with no image open.
  */
-export async function placeMarkup(
+async function drawOverPage(
     host: EditHost,
-    shape: GalleryShape,
     page: number,
-    p0: ShapePoint,
-    p1: ShapePoint,
+    build: (id: string, story: string, size: { width: number; height: number }) => ShapeNode,
+    selection: (id: string, story: string) => ShapeSelection,
 ): Promise<void> {
     const [info, id, story] = await Promise.all([
         host.client.image.pageInfoByIndex(page),
@@ -232,7 +231,7 @@ export async function placeMarkup(
         host.client.mintId(),
     ]);
     if (!info || !id || !story) return;
-    const node = markupShape(id, story, shape, p0, p1, info.size);
+    const node = build(id, story, info.size);
     await host.commit(() =>
         host.client.execute({
             image: {
@@ -243,5 +242,39 @@ export async function placeMarkup(
             },
         }),
     );
-    host.client.setSelection({ image: { shapes: { page: info.id, selection: { shapes: [id] } } } });
+    host.client.setSelection({ image: { shapes: { page: info.id, selection: selection(id, story) } } });
+}
+
+/** Draw `shape` over page `page` from `p0` to `p1` — the page's own points — and
+ *  select it. */
+export function placeMarkup(
+    host: EditHost,
+    shape: GalleryShape,
+    page: number,
+    p0: ShapePoint,
+    p1: ShapePoint,
+): Promise<void> {
+    return drawOverPage(
+        host,
+        page,
+        (id, story, size) => markupShape(id, story, shape, p0, p1, size),
+        (id) => ({ shapes: [id] }),
+    );
+}
+
+/** Draw a text box holding `text` over page `page` from `p0` to `p1` — the page's
+ *  own points — with its text selected to be typed over. */
+export function placeMarkupTextBox(
+    host: EditHost,
+    text: string,
+    page: number,
+    p0: ShapePoint,
+    p1: ShapePoint,
+): Promise<void> {
+    return drawOverPage(
+        host,
+        page,
+        (id, story, size) => markupTextBox(id, story, text, p0, p1, size),
+        (id, story) => ({ shapeText: [id, { range: { story, anchor: 0, focus: text.length } }] }),
+    );
 }

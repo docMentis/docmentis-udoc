@@ -769,8 +769,7 @@ export interface CommandDef<K extends string = MessageKey> {
      * Show the {@link label} beside the glyph. Off by default: a tool band is
      * read by shape, and a labeled control costs several times an icon's
      * width. The View tab sets it on its controls, whose glyphs — a scroll, a
-     * layout, a pane shown — say what they do only once you know, and an
-     * image's Insert tab on its one, which has the band to itself.
+     * layout, a pane shown — say what they do only once you know.
      */
     labeled?: boolean;
     /** Whether it shows in its tab at all, for a command that has no use

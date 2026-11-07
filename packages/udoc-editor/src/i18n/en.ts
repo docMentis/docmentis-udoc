@@ -55,7 +55,6 @@ export const en: EditMessages = {
 
     // Ribbon tabs
     "ribbon.image": "Image",
-    "ribbon.insert": "Insert",
     "ribbon.page": "Page",
     "ribbon.slide": "Slide",
     "ribbon.text": "Text",

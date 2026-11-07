@@ -99,8 +99,6 @@ export interface Messages extends UIMessages {
     // Ribbon tabs
     /** Image */
     "ribbon.image": string;
-    /** Insert */
-    "ribbon.insert": string;
     /** Page */
     "ribbon.page": string;
     /** Slide */
@@ -408,7 +406,7 @@ export interface Messages extends UIMessages {
     /** px */
     "image.pixels": string;
 
-    // The shape gallery (a deck's Slide tab, an image's Insert tab): each
+    // The shape gallery (a deck's Slide tab, an image's Image tab): each
     // group's heading, and each shape's name, its tooltip
     /** Lines */
     "shapeGroup.lines": string;

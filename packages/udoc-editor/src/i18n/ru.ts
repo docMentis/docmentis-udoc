@@ -54,7 +54,6 @@ export const ru: EditMessages = {
 
     // Ribbon tabs
     "ribbon.image": "Изображение",
-    "ribbon.insert": "Вставка",
     "ribbon.page": "Страница",
     "ribbon.slide": "Слайд",
     "ribbon.text": "Текст",
@@ -223,7 +222,7 @@ export const ru: EditMessages = {
     "image.originalSize": "Исходный размер: {width} × {height} пикс.",
     "image.pixels": "пикс.",
 
-    // The Insert tab's shape gallery: its headings, and its shapes' names
+    // The shape gallery: its headings, and its shapes' names
     "shapeGroup.lines": "Линии",
     "shapeGroup.rectangles": "Прямоугольники",
     "shapeGroup.basicShapes": "Основные фигуры",

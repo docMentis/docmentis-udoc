@@ -37,7 +37,6 @@ const OPSZ = 20;
 const ICONS = {
     // Ribbon tabs — on the strip, in its icon style
     ICON_TAB_IMAGE: "image",
-    ICON_TAB_INSERT: "add_box",
     ICON_TAB_OBJECT: "deployed_code",
     ICON_TAB_PAGE: "draft",
     ICON_TAB_SHAPE: "shapes",
@@ -48,7 +47,7 @@ const ICONS = {
     // View tab
     ICON_RULER: "straighten",
 
-    // A deck's Slide tab and an image's Insert tab
+    // A deck's Slide tab
     ICON_CHANGE_LAYOUT: "view_quilt",
     ICON_IMAGE: "image",
     ICON_SHAPES: "shapes",

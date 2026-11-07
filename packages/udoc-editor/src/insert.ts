@@ -1,8 +1,8 @@
 // What goes on a page or a slide, placed by a pointer gesture the canvas carries
 // out: Shapes — a PDF's four as page objects, from its Page tab, the gallery's on
-// a deck's slides, from its Slide tab, and over an image's pages, from its Insert
-// tab — and Text Box on a slide or a PDF's page, a page object there; and Image on
-// a slide deck or a PDF's page, asked for and inserted at once.
+// a deck's slides, from its Slide tab, and over an image's pages, from its Image
+// tab — and Text Box on those and a PDF's page, a page object there; and Image on a
+// slide deck or a PDF's page, asked for and inserted at once.
 import {
     ICON_SUBTOOL_ARROW,
     ICON_SUBTOOL_ELLIPSE,
@@ -18,7 +18,7 @@ import type { EditHost } from "./edit-client.js";
 import { EditCommand } from "./edit-command.js";
 import type { MessageKey } from "./i18n/index.js";
 import { ICON_IMAGE, ICON_SHAPES } from "./icons.js";
-import { placeMarkup } from "./image.js";
+import { placeMarkup, placeMarkupTextBox } from "./image.js";
 import { galleryShape, SHAPE_GALLERY } from "./shape-gallery.js";
 import type { GalleryShape } from "./shape-gallery.js";
 import { slideShape, slideTextBox } from "./slide-shape.js";
@@ -35,7 +35,7 @@ const FILL_ALPHA = 0.18;
 /** The shapes a PDF's Page tab places, as the shell carries their place tools. */
 const PORTABLE_SHAPES: ReadonlySet<string> = new Set<ShapeKind>(["rectangle", "ellipse", "line", "arrow"]);
 
-/** The tool a slide's or a PDF's Text Box arms. */
+/** The tool Text Box arms, on a slide, an image or a PDF's page. */
 const TEXT_BOX_TOOL = "textBox";
 
 /** The standard font a PDF's text box is set in, and its size in points. */
@@ -45,8 +45,8 @@ const TEXT_BOX_SIZE = 12;
 /**
  * What a text box holds until it is typed over, selected so the first key
  * replaces it. One left untyped should still show, to be found and deleted: a
- * slide's has no fill or outline to show by, and the engine sets no caret in a
- * PDF's text object with nothing in it. ASCII, which the standard font's encoding
+ * slide's or an image's has no fill or outline to show by, and the engine sets no
+ * caret in a PDF's text object with nothing in it. ASCII, which the standard font's encoding
  * holds byte for byte; the same in every language, as that font has no glyphs for
  * most others.
  */
@@ -251,7 +251,7 @@ export function placedShape(tool: string): ShapeKind | null {
 /** Place `tool` on page `page`, spanning the page-local points `p0 → p1`, on
  *  top of the page: on a PDF, a shape as a page object — the engine mints its
  *  id and selects it — or a text box with its text selected; on a deck, a gallery
- *  shape or a text box on the slide, and on an image, one drawn over it. A no-op
+ *  shape or a text box on the slide, and on an image, either drawn over it. A no-op
  *  for a page with no id (no document, or none of these), or a tool not the
  *  document's. */
 export async function place(host: EditHost, tool: string, page: number, p0: ShapePoint, p1: ShapePoint): Promise<void> {
@@ -267,7 +267,9 @@ export async function place(host: EditHost, tool: string, page: number, p0: Shap
         return;
     }
     if (tool === TEXT_BOX_TOOL) {
-        return state.docType === "presentation" ? placeSlideTextBox(host, page, p0, p1) : undefined;
+        if (state.docType === "presentation") return placeSlideTextBox(host, page, p0, p1);
+        if (state.docType === "image") return placeMarkupTextBox(host, TEXT_BOX_PLACEHOLDER, page, p0, p1);
+        return;
     }
     const shape = galleryShape(tool);
     if (!shape) return;
@@ -361,6 +363,12 @@ function onSlide(c: CommandContext): boolean {
     return c.ready && c.docType === "presentation" && c.presentationView === "normal" && c.pageCount > 0;
 }
 
+/** Whether what is drawn over an image has a page to go on: the current one, unless
+ *  it's animated or a vector, and not while it's cropped. */
+function overImage(c: CommandContext): boolean {
+    return c.ready && c.docType === "image" && editStateOf(c).pageTakesMarkup && editStateOf(c).cropping === null;
+}
+
 /** The commands that put things on a page or a slide. Image asks for its file
  *  with `pickImage` — live on a deck's slides, which it inserts onto: not on
  *  its notes pages, where its Text Box and Shapes are grey too. A PDF's Text Box
@@ -389,7 +397,7 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             icon: ICON_SUBTOOL_TEXTBOX,
             group: "insert",
             run: { kind: "arm", tool: { kind: "extension", tool: TEXT_BOX_TOOL } },
-            enabledWhen: (c) => (c.ready && c.docType === "portable") || onSlide(c),
+            enabledWhen: (c) => (c.ready && c.docType === "portable") || onSlide(c) || overImage(c),
         },
         insertShape: {
             id: "insertShape",
@@ -399,25 +407,13 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
             run: { kind: "armPicker", options: SHAPE_OPTIONS },
             enabledWhen: (c) => c.ready && c.docType === "portable",
         },
-        // An image's current page takes them unless it's animated or a vector,
-        // and not while it's cropped. They have its Insert tab's band to themselves.
         insertGalleryShape: {
             id: "insertGalleryShape",
             label: "command.insertShape",
             icon: ICON_SHAPES,
             group: "insert",
-            labeled: true,
             run: { kind: "armGallery", sections: SHAPE_GALLERY },
-            enabledWhen: (c) =>
-                c.ready && c.docType === "image" && editStateOf(c).pageTakesMarkup && editStateOf(c).cropping === null,
-        },
-        insertSlideShape: {
-            id: "insertSlideShape",
-            label: "command.insertShape",
-            icon: ICON_SHAPES,
-            group: "insert",
-            run: { kind: "armGallery", sections: SHAPE_GALLERY },
-            enabledWhen: onSlide,
+            enabledWhen: (c) => onSlide(c) || overImage(c),
         },
     };
 }
