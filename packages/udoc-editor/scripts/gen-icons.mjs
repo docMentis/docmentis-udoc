@@ -6,6 +6,7 @@
 // udoc-ui's `scripts/gen-icons.mjs` says of its own. The exceptions are the
 // table glyphs Material has no symbol for, in `src/table.ts`: Delete Rows,
 // Delete Columns and Unmerge, each redrawn from the symbol it is the opposite of.
+// A symbol Material draws at the wrong angle takes an entry that turns it.
 //
 //   npm run gen:icons
 //
@@ -28,7 +29,11 @@ const STYLE = "materialsymbolsoutlined";
 const OPSZ = 20;
 // ---------------------------------------------------------------------------
 
-/** Exported constant -> Material Symbol name. */
+/**
+ * Exported constant -> Material Symbol name, or `{ symbol, rotate, note }` for
+ * one turned `rotate` degrees clockwise, `note` saying how and why in its doc
+ * comment.
+ */
 const ICONS = {
     // View tab
     ICON_RULER: "straighten",
@@ -41,6 +46,17 @@ const ICONS = {
     ICON_CROP: "crop",
     ICON_IMAGE_SIZE: "photo_size_select_large",
     ICON_ASPECT_RATIO: "aspect_ratio",
+
+    // The page rail
+    ICON_MOVE_UP: "move_up",
+    ICON_MOVE_DOWN: "move_down",
+    ICON_PAGE_RESIZE: {
+        symbol: "aspect_ratio",
+        rotate: 90,
+        note: "turned a quarter clockwise: upright, as a page is",
+    },
+
+    // An image's crop mode
     ICON_CROP_RESET: "crop_free",
 
     // Text tab
@@ -111,11 +127,26 @@ async function fetchSymbol(name) {
     return `<svg viewBox="${match[1]}" fill="currentColor">${match[2]}</svg>`;
 }
 
-const names = [...new Set(Object.values(ICONS))];
+// Turn a symbol about the centre of its viewBox, `0 -960 960 960` for them all.
+// It holds one path, or the rest would stay as they are: stop rather than draw that.
+function rotated(svg, degrees) {
+    const [head, ...paths] = svg.split("<path ");
+    if (paths.length !== 1) throw new Error(`can't rotate a symbol of ${paths.length} paths: ${svg}`);
+    return `${head}<path transform="rotate(${degrees} 480 -480)" ${paths[0]}`;
+}
+
+const entries = Object.entries(ICONS).map(([constant, icon]) =>
+    typeof icon === "string" ? { constant, symbol: icon } : { constant, ...icon },
+);
+const names = [...new Set(entries.map((entry) => entry.symbol))];
 const svgs = new Map(await Promise.all(names.map(async (name) => [name, await fetchSymbol(name)])));
 
-const rows = Object.entries(ICONS)
-    .map(([constant, name]) => `/** \`${name}\` */\nexport const ${constant} = \`${svgs.get(name)}\`;`)
+const rows = entries
+    .map(({ constant, symbol, rotate, note }) => {
+        const svg = svgs.get(symbol);
+        const doc = note ? `\`${symbol}\`, ${note}.` : `\`${symbol}\``;
+        return `/** ${doc} */\nexport const ${constant} = \`${rotate ? rotated(svg, rotate) : svg}\`;`;
+    })
     .join("\n\n");
 
 writeFileSync(
