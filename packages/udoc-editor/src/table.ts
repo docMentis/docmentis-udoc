@@ -126,11 +126,11 @@ export const TABLE_INSERT_MENU: readonly MenuItem<MessageKey>[] = [
 ];
 
 /** Delete the table: a deck's frame goes as a selected shape does, which a
- *  placeholder that refuses deletion keeps. Not yet a word document's: the
- *  engine removes a table's place from its story but leaves the space the table
- *  took blank, and an undo restores the place without the table. */
+ *  placeholder that refuses deletion keeps. A word document's goes as the one
+ *  position it takes in its story, a delete of text wherever its rows can be
+ *  edited. */
 const canDeleteTable: EnabledWhen = (c) =>
-    inTable(c) && c.docType !== "wordprocessing" && allowsEdit(c.selection, "deleteShapes");
+    inTable(c) && (c.docType === "wordprocessing" || allowsEdit(c.selection, "deleteShapes"));
 
 export const TABLE_DELETE_MENU: readonly MenuItem<MessageKey>[] = [
     {

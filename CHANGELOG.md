@@ -26,11 +26,12 @@ listed once, by package. Its major and minor version are those of the
   cells. Border draws on the edges chosen — all, outside, inside, one side or a
   diagonal — with the color, weight and dash Border Color sets, or takes the
   borders away. Align sets where the cells' text sits, top to bottom and left to
-  right, and the direction it runs. Distribute Columns gives the selected columns
-  equal widths that keep their total. Table Properties sets the rows' height, the
-  columns' width, the cells' margins and, in a word document, whether rows repeat
-  at the top of each page. A deck's table can be deleted from the tab or the
-  table's context menu.
+  right, and the direction it runs. Style turns the table style's header row,
+  total row, first and last column and banding on or off. Distribute Columns
+  gives the selected columns equal widths that keep their total. Table
+  Properties sets the rows' height, the columns' width, the cells' margins and,
+  in a word document, whether rows repeat at the top of each page. A table can
+  be deleted from the tab or its context menu.
 
 #### Changed
 
