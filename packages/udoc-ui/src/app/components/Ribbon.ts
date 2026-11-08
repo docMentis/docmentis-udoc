@@ -471,6 +471,11 @@ export function createRibbon(
     // with the tool surface so their menu controllers don't leak document
     // listeners. Both expose the same close / destroy handles.
     const dropdowns: DropdownButton[] = [];
+    // The menu dropdowns with a row that keeps its panel open (Align ▸ Align
+    // to Page, a table's Style Options), by command: while open, each render
+    // refills the panel, so its marks follow a state the click's edit produces
+    // after the click — a document edit's lands with the next report.
+    const keptOpenMenus = new Map<string, DropdownButton>();
     // The extension's controls on the tool surface, rebuilt with it.
     const controls: RibbonControl[] = [];
     // Recently-picked colors per channel (most-recent first) — the panel's Recent
@@ -789,6 +794,7 @@ export function createRibbon(
                 );
                 dd.trigger.dataset.command = def.id;
                 dropdowns.push(dd);
+                if (items.some((item) => item.keepsOpen)) keptOpenMenus.set(def.id, dd);
                 return dd.el;
             }
             // An extension's control, built and kept in step by its own code.
@@ -875,6 +881,7 @@ export function createRibbon(
         const buildTools = (commands: readonly string[]) => {
             for (const dd of dropdowns) dd.destroy();
             dropdowns.length = 0;
+            keptOpenMenus.clear();
             for (const control of controls) control.destroy?.();
             controls.length = 0;
             toolsSection.innerHTML = "";
@@ -988,6 +995,8 @@ export function createRibbon(
                 } else if (def.run.kind === "menu") {
                     const current = def.run.current?.(store.getState());
                     if (current) showChoice(btn, current.icon, labelOf(current.label));
+                    const kept = keptOpenMenus.get(def.id);
+                    if (kept?.controller.isOpen) fillMenu(kept, def.run.menu);
                 } else if (def.run.kind === "action" && def.run.current) {
                     // Named by its face too: a click does what it says.
                     const current = def.run.current(store.getState());
