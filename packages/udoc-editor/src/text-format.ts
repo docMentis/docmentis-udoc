@@ -83,17 +83,17 @@ export function listStyles(list: ListKind): readonly ListStyle[] {
 
 /** The Text tab's character-format controls (font / size / the style toggles /
  *  text color) all write character properties, so they enable exactly when
- *  the selection accepts a text `setCharacterProperties` edit — a non-empty
+ *  the selection accepts a text `patchCharacterProperties` edit — a non-empty
  *  range in editable text. A bare caret (no spans to restyle) or a non-text
  *  selection leaves them greyed. */
-export const whenTextFormat: EnabledWhen = (c) => allowsTextEdit(c.selection, "setCharacterProperties");
+export const whenTextFormat: EnabledWhen = (c) => allowsTextEdit(c.selection, "patchCharacterProperties");
 
 /** The Text tab's *paragraph* controls (align / indent / spacing / the two list
  *  toggles). Deliberately **not** {@link whenTextFormat}: a character format
  *  needs spans to cover, so a bare caret leaves it greyed, while a caret is
  *  always *inside* a paragraph — clicking in a line and pressing Center is the
  *  ordinary gesture, so these gate on the paragraph edit instead. */
-export const whenParagraphFormat: EnabledWhen = (c) => allowsTextEdit(c.selection, "setParagraphProperties");
+export const whenParagraphFormat: EnabledWhen = (c) => allowsTextEdit(c.selection, "patchParagraphProperties");
 
 /** The style picker: a paragraph edit like {@link whenParagraphFormat}, which
  *  the engine grants only in a word document that has styles to name. */
@@ -307,17 +307,17 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
     }
 
     /** Overlay set-value character `properties` on the text selection. */
-    function setCharacterProperties(properties: TextCharacterProperty[]): Promise<void> {
+    function patchCharacterProperties(properties: TextCharacterProperty[]): Promise<void> {
         if (!textDocType()) return Promise.resolve();
         return commit(() =>
-            client.executeOnSelection({ kind: "setCharacterProperties", properties: { props: properties } }),
+            client.executeOnSelection({ kind: "patchCharacterProperties", properties: { props: properties } }),
         );
     }
 
     /** Toggle a character style (bold / italic / underline / strikethrough): set
      *  the explicit value, so turning a style *off* overrides an inherited one. */
     function formatTextSelection(property: TextFormatProperty, on: boolean): Promise<void> {
-        return setCharacterProperties([textFormatProperty(property, on, store.getState().docType)]);
+        return patchCharacterProperties([textFormatProperty(property, on, store.getState().docType)]);
     }
 
     /** Apply a typeface to the text selection (the Latin / default script slot). */
@@ -349,26 +349,26 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
             client.ensureFont(font, facesToLoad(bold, italic)),
         );
         if (!proceed) return;
-        await setCharacterProperties([{ fontLatin: { named: { name: font } } }]);
+        await patchCharacterProperties([{ fontLatin: { named: { name: font } } }]);
     }
 
     /** Apply a point size to the text selection. */
     function fontSizeSelection(size: number): Promise<void> {
-        return setCharacterProperties([{ size: size }]);
+        return patchCharacterProperties([{ size: size }]);
     }
 
     /** Apply a text color (the span fill) to the text selection. */
     function textFillSelection(paint: PaintSpec): Promise<void> {
-        return setCharacterProperties([{ fill: paintToDrawingFill(paint) }]);
+        return patchCharacterProperties([{ fill: paintToDrawingFill(paint) }]);
     }
 
     /** Overlay set-value paragraph `properties` on every paragraph the text
      *  selection touches — the paragraph half of the Text tab. A caret is inside
-     *  a paragraph, so unlike {@link setCharacterProperties} this needs no range. */
-    function setParagraphProperties(properties: TextParagraphProperty[]): Promise<void> {
+     *  a paragraph, so unlike {@link patchCharacterProperties} this needs no range. */
+    function patchParagraphProperties(properties: TextParagraphProperty[]): Promise<void> {
         if (!textDocType()) return Promise.resolve();
         return commit(() =>
-            client.executeOnSelection({ kind: "setParagraphProperties", properties: { props: properties } }),
+            client.executeOnSelection({ kind: "patchParagraphProperties", properties: { props: properties } }),
         );
     }
 
@@ -387,7 +387,7 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
         const format = editState(store.getState()).selectionText;
         const current = edge === "before" ? format.spaceBefore : format.spaceAfter;
         const points = (current ?? 0) > 0 ? 0 : PARAGRAPH_SPACE_POINTS;
-        return setParagraphProperties([
+        return patchParagraphProperties([
             edge === "before" ? { spacingBefore: { points } } : { spacingAfter: { points } },
         ]);
     }
@@ -397,8 +397,8 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
      *  placeholder's own list style is what a paragraph falls back to, and only a
      *  specified suppression overrides it. */
     function listSelection(style: ListStyle | null): Promise<void> {
-        if (!style) return setParagraphProperties([{ numbering: "none" }]);
-        return setParagraphProperties([
+        if (!style) return patchParagraphProperties([{ numbering: "none" }]);
+        return patchParagraphProperties([
             { numbering: { inline: { format: style.format, textPattern: style.pattern } } },
         ]);
     }
@@ -419,16 +419,16 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
         if (!color) {
             return commit(() => client.executeOnSelection({ kind: "clearCharacterProperties", keys: ["highlight"] }));
         }
-        return setCharacterProperties([{ highlight: color }]);
+        return patchCharacterProperties([{ highlight: color }]);
     }
 
     return {
-        setCharacterProperties,
+        patchCharacterProperties,
         formatTextSelection,
         fontFamilySelection,
         fontSizeSelection,
         textFillSelection,
-        setParagraphProperties,
+        patchParagraphProperties,
         indentSelection,
         toggleParagraphSpace,
         listSelection,

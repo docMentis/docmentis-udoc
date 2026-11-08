@@ -370,10 +370,10 @@ export type SelectionEditKind =
     | "reorderShapes"
     | "setShapeFill"
     | "setShapeLine"
-    | "setShapeTextBodyProperties"
+    | "patchShapeTextBodyProperties"
     | "setShapeGeometry"
     | "resizeTextBox"
-    | "setSectionPageMargins";
+    | "patchSectionPageMargins";
 
 /** Whether `caps` allows a selection edit of any of `kinds` — no per-doc-type
  *  branch: pass every name the control's edit goes by (`deleteObjects`,
@@ -411,9 +411,9 @@ export function entitledCapabilities(caps: SelectionCapabilities, features: read
 export type TextEditKind =
     | "insertText"
     | "deleteText"
-    | "setCharacterProperties"
+    | "patchCharacterProperties"
     | "clearCharacterProperties"
-    | "setParagraphProperties"
+    | "patchParagraphProperties"
     | "clearParagraphProperties"
     | "indentParagraphs"
     | "applyParagraphStyle";
@@ -421,7 +421,7 @@ export type TextEditKind =
 /**
  * Whether `caps` allows the text edit `kind` — the text cousin of
  * {@link allowsEdit}, doc-type-independent (no `if pptx`). No host guard is
- * needed: the text names (`deleteText`, `setCharacterProperties`, …) are globally
+ * needed: the text names (`deleteText`, `patchCharacterProperties`, …) are globally
  * distinct from the object and shape ones (`deleteObjects`, `deleteShapes`, …),
  * so a text gate never collides with an object gate.
  */

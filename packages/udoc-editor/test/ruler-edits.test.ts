@@ -52,18 +52,21 @@ test("each indent marker moves the indents Word's does", () => {
     const indent = (indent: "firstLine" | "hanging" | "left" | "right", by: number) =>
         rulerEdit({ control: { kind: "indent", indent }, by }, GUIDE, "wordprocessing", RULER);
     assert.deepEqual(indent("firstLine", 9), {
-        kind: "setParagraphProperties",
+        kind: "patchParagraphProperties",
         properties: { props: [{ indentFirstLine: 27 }] },
     });
     // The hanging indent's lines move; the first line stays where it was.
     assert.deepEqual(indent("hanging", 9), {
-        kind: "setParagraphProperties",
+        kind: "patchParagraphProperties",
         properties: { props: [{ indentLeft: 9 }, { indentFirstLine: 9 }] },
     });
-    assert.deepEqual(indent("left", 9), { kind: "setParagraphProperties", properties: { props: [{ indentLeft: 9 }] } });
+    assert.deepEqual(indent("left", 9), {
+        kind: "patchParagraphProperties",
+        properties: { props: [{ indentLeft: 9 }] },
+    });
     // The right indent is measured in from the right: moving it right lessens it.
     assert.deepEqual(indent("right", 9), {
-        kind: "setParagraphProperties",
+        kind: "patchParagraphProperties",
         properties: { props: [{ indentRight: -9 }] },
     });
 });
@@ -90,19 +93,19 @@ test("an indent marker reads its indent off the column the ruler's zero stands o
     const indent = (indent: "firstLine" | "hanging" | "left" | "right", by: number) =>
         rulerEdit({ control: { kind: "indent", indent }, by }, second, "wordprocessing", EMPTY_SELECTION_RULER);
     assert.deepEqual(indent("left", 9), {
-        kind: "setParagraphProperties",
+        kind: "patchParagraphProperties",
         properties: { props: [{ indentLeft: 27 }] },
     });
     assert.deepEqual(indent("firstLine", 9), {
-        kind: "setParagraphProperties",
+        kind: "patchParagraphProperties",
         properties: { props: [{ indentFirstLine: 27 }] },
     });
     assert.deepEqual(indent("hanging", 9), {
-        kind: "setParagraphProperties",
+        kind: "patchParagraphProperties",
         properties: { props: [{ indentLeft: 27 }, { indentFirstLine: 9 }] },
     });
     assert.deepEqual(indent("right", -9), {
-        kind: "setParagraphProperties",
+        kind: "patchParagraphProperties",
         properties: { props: [{ indentRight: 18 }] },
     });
 });
@@ -110,7 +113,7 @@ test("an indent marker reads its indent off the column the ruler's zero stands o
 test("a moved Word tab stop is cleared where it stood; a slide's is not", () => {
     const tab = { kind: "tab", index: 0 } as const;
     assert.deepEqual(rulerEdit({ control: tab, by: -25 }, GUIDE, "wordprocessing", RULER), {
-        kind: "setParagraphProperties",
+        kind: "patchParagraphProperties",
         properties: {
             props: [
                 {
@@ -124,7 +127,7 @@ test("a moved Word tab stop is cleared where it stood; a slide's is not", () => 
         },
     });
     assert.deepEqual(rulerEdit({ control: tab, by: -25 }, GUIDE, "presentation", RULER), {
-        kind: "setParagraphProperties",
+        kind: "patchParagraphProperties",
         properties: {
             props: [
                 {
@@ -141,21 +144,21 @@ test("a moved Word tab stop is cleared where it stood; a slide's is not", () => 
 test("a Word margin edge sets the section's page margin on its side", () => {
     const margin = (edge: "left" | "top" | "right" | "bottom", by: number) =>
         rulerEdit({ control: { kind: "margin", edge }, by }, GUIDE, "wordprocessing", RULER);
-    assert.deepEqual(margin("left", 18), { kind: "setSectionPageMargins", left: 90 });
-    assert.deepEqual(margin("right", -18), { kind: "setSectionPageMargins", right: 90 });
-    assert.deepEqual(margin("top", 9), { kind: "setSectionPageMargins", top: 81 });
-    assert.deepEqual(margin("bottom", 9), { kind: "setSectionPageMargins", bottom: 63 });
+    assert.deepEqual(margin("left", 18), { kind: "patchSectionPageMargins", left: 90 });
+    assert.deepEqual(margin("right", -18), { kind: "patchSectionPageMargins", right: 90 });
+    assert.deepEqual(margin("top", 9), { kind: "patchSectionPageMargins", top: 81 });
+    assert.deepEqual(margin("bottom", 9), { kind: "patchSectionPageMargins", bottom: 63 });
 });
 
 test("a slide's margin edge sets its shape's text inset", () => {
     const margin = (edge: "left" | "right", by: number) =>
         rulerEdit({ control: { kind: "margin", edge }, by }, GUIDE, "presentation", RULER);
     assert.deepEqual(margin("left", 3.6), {
-        kind: "setShapeTextBodyProperties",
+        kind: "patchShapeTextBodyProperties",
         properties: { insetLeft: 7.2 + 3.6 },
     });
     assert.deepEqual(margin("right", 3.6), {
-        kind: "setShapeTextBodyProperties",
+        kind: "patchShapeTextBodyProperties",
         properties: { insetRight: 7.2 - 3.6 },
     });
 });
@@ -174,7 +177,7 @@ test("a control moves only where its edit is gated on, and a tab stop where the 
     const left = { kind: "indent", indent: "left" } as const;
     const tab = { kind: "tab", index: 0 } as const;
     const edge = { kind: "margin", edge: "left" } as const;
-    const paragraphs = caps("setParagraphProperties");
+    const paragraphs = caps("patchParagraphProperties");
     assert.ok(rulerMovable(left, GUIDE, "wordprocessing", paragraphs, RULER));
     assert.ok(!rulerMovable(left, GUIDE, "wordprocessing", caps(), RULER), "gated off");
     assert.ok(
@@ -186,8 +189,8 @@ test("a control moves only where its edit is gated on, and a tab stop where the 
         !rulerMovable(tab, GUIDE, "wordprocessing", paragraphs, { ...RULER, tabStops: null }),
         "the paragraphs disagree on their tab stops",
     );
-    assert.ok(rulerMovable(edge, GUIDE, "wordprocessing", caps("setSectionPageMargins"), RULER));
-    assert.ok(rulerMovable(edge, GUIDE, "presentation", caps("setShapeTextBodyProperties"), RULER));
+    assert.ok(rulerMovable(edge, GUIDE, "wordprocessing", caps("patchSectionPageMargins"), RULER));
+    assert.ok(rulerMovable(edge, GUIDE, "presentation", caps("patchShapeTextBodyProperties"), RULER));
     assert.ok(rulerMovable(edge, GUIDE, "portable", caps("resizeTextBox"), EMPTY_SELECTION_RULER));
-    assert.ok(!rulerMovable(edge, GUIDE, "portable", caps("setSectionPageMargins"), EMPTY_SELECTION_RULER));
+    assert.ok(!rulerMovable(edge, GUIDE, "portable", caps("patchSectionPageMargins"), EMPTY_SELECTION_RULER));
 });

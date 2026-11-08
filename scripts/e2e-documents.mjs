@@ -437,7 +437,7 @@ export const DOCUMENTS = {
                     editSectionText: {
                         story,
                         command: {
-                            setCharacterProperties: {
+                            patchCharacterProperties: {
                                 range: { start: 90 + round * 100, end: 95 + round * 100 },
                                 properties: { props: [{ italic: true }] },
                             },

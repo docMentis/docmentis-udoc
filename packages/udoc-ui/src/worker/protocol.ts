@@ -1560,14 +1560,14 @@ export type SelectionEdit =
     /** Shapes: overlay `properties` onto the text body of the selected shapes, or
      *  of the shape whose text the caret is in — its insets (a ruler's margin
      *  edges), anchor, autofit. */
-    | { kind: "setShapeTextBodyProperties"; properties: TextBodyProperties }
+    | { kind: "patchShapeTextBodyProperties"; properties: TextBodyProperties }
     /** Shapes: give the selected shapes and pictures, those in a selected group
      *  too, the outline `geometry` — Change Shape. Anything else stays as it is. */
     | { kind: "setShapeGeometry"; geometry: ShapeGeometry }
-    /** Word: set the page margins of the section the caret is in, in points —
+    /** Word: patch the page margins of the section the caret is in, in points —
      *  the edges given, the rest and the header and footer offsets as they
      *  stand (a ruler's margin edges). */
-    | { kind: "setSectionPageMargins"; left?: number; top?: number; right?: number; bottom?: number }
+    | { kind: "patchSectionPageMargins"; left?: number; top?: number; right?: number; bottom?: number }
     /** PDF: set the box the text caret is in to `frame`, in page-local points
      *  (a ruler's margin edges), inside an `object` edit. The engine's
      *  corner-to-corner rect. */
@@ -1688,7 +1688,7 @@ export type SelectionEdit =
     // spans; the selection is kept, so toggles chain.
     /** Text: overlay character properties onto the text selection (a set-value
      *  edit). */
-    | { kind: "setCharacterProperties"; properties: TextCharacterProperties }
+    | { kind: "patchCharacterProperties"; properties: TextCharacterProperties }
     /** Text: reset each of `keys` to inherited on the text selection — clear
      *  direct character formatting. */
     | { kind: "clearCharacterProperties"; keys: TextCharacterPropertyKey[] }
@@ -1698,7 +1698,7 @@ export type SelectionEdit =
     // character edits above they act on a bare caret too.
     /** Text: overlay paragraph properties onto every paragraph the text selection
      *  touches (a set-value edit). */
-    | { kind: "setParagraphProperties"; properties: TextParagraphProperties }
+    | { kind: "patchParagraphProperties"; properties: TextParagraphProperties }
     /** Text: reset each of `keys` to inherited on those paragraphs — clear direct
      *  paragraph formatting back to the style value. */
     | { kind: "clearParagraphProperties"; keys: TextParagraphPropertyKey[] }

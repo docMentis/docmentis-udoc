@@ -3366,9 +3366,9 @@ const TEXT_KINDS: Record<TextSelectionEditType, "text"> = {
     insertText: "text",
     pasteText: "text",
     deleteText: "text",
-    setCharacterProperties: "text",
+    patchCharacterProperties: "text",
     clearCharacterProperties: "text",
-    setParagraphProperties: "text",
+    patchParagraphProperties: "text",
     clearParagraphProperties: "text",
     indentParagraphs: "text",
     applyParagraphStyle: "text",
@@ -3386,7 +3386,7 @@ const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     flipShapes: "shape",
     setShapeFill: "shape",
     setShapeLine: "shape",
-    setShapeTextBodyProperties: "shape",
+    patchShapeTextBodyProperties: "shape",
     setShapeGeometry: "shape",
     adjustShapeHandle: "shape",
     adjustTextWarpHandle: "shape",
@@ -3446,11 +3446,11 @@ function presentationEdit(edit: SelectionEdit): unknown {
  *  is wrapped in — typed against the gate union tsify declares, as the drawing
  *  ones are. */
 const SECTION_KINDS: Record<SectionSelectionEditType, "section"> = {
-    setSectionPageMargins: "section",
+    patchSectionPageMargins: "section",
 };
 
 /** A word document's edit: an edit of the section the caret is in under
- *  `section` — `{ section: { setSectionPageMargins: { … } } }` — and any other
+ *  `section` — `{ section: { patchSectionPageMargins: { … } } }` — and any other
  *  a drawing edit under `common`. */
 function wordprocessingEdit(edit: SelectionEdit): unknown {
     if (typeof edit !== "string" && "kind" in edit && edit.kind in SECTION_KINDS) {

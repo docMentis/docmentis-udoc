@@ -72,8 +72,8 @@ export function selectionRuler(properties: UDocSelectionProperties | null): Sele
 
 /** The gate a margin edge's edit goes by, for the doc types that take one. */
 const MARGIN_GATES: Partial<Record<UDocType, string>> = {
-    wordprocessing: "setSectionPageMargins",
-    presentation: "setShapeTextBodyProperties",
+    wordprocessing: "patchSectionPageMargins",
+    presentation: "patchShapeTextBodyProperties",
     portable: "resizeTextBox",
 };
 
@@ -86,7 +86,7 @@ export function rulerMovable(
     caps: SelectionCapabilities,
     ruler: SelectionRuler,
 ): boolean {
-    const gate = control.kind === "margin" ? MARGIN_GATES[docType] : "setParagraphProperties";
+    const gate = control.kind === "margin" ? MARGIN_GATES[docType] : "patchParagraphProperties";
     return (
         gate !== undefined &&
         caps.allowed.includes(gate) &&
@@ -110,11 +110,11 @@ export function rulerEdit(
     switch (control.kind) {
         case "indent": {
             const properties = guide.text && indentProperties(control.indent, by, guide.text);
-            return properties && { kind: "setParagraphProperties", properties: { props: properties } };
+            return properties && { kind: "patchParagraphProperties", properties: { props: properties } };
         }
         case "tab": {
             const stops = movedTabStops(control.index, by, docType, ruler);
-            return stops && { kind: "setParagraphProperties", properties: { props: [{ tabStops: stops }] } };
+            return stops && { kind: "patchParagraphProperties", properties: { props: [{ tabStops: stops }] } };
         }
         case "margin":
             return marginEdit(control.edge, by, guide, docType, ruler);
@@ -186,7 +186,7 @@ function marginEdit(
         case "wordprocessing": {
             const sides: { left?: number; top?: number; right?: number; bottom?: number } = {};
             sides[edge] = near ? margins.start + by - page.start : page.end - (margins.end + by);
-            return { kind: "setSectionPageMargins", ...sides };
+            return { kind: "patchSectionPageMargins", ...sides };
         }
         case "presentation": {
             const key = INSET_KEYS[edge];
@@ -194,7 +194,7 @@ function marginEdit(
             if (inset === null) return null;
             const properties: TextBodyProperties = {};
             properties[key] = inset + (near ? by : -by);
-            return { kind: "setShapeTextBodyProperties", properties };
+            return { kind: "patchShapeTextBodyProperties", properties };
         }
         case "portable": {
             const { horizontal: h, vertical: v } = guide;

@@ -6,6 +6,18 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Changed
+
+- The commands that change only the properties they're given are named for it:
+  `setCharacterProperties`, `setParagraphProperties` and
+  `setShapeTextBodyProperties` are `patchCharacterProperties`,
+  `patchParagraphProperties` and `patchShapeTextBodyProperties`, as commands and
+  as selection edits, and the section selection edit `setSectionPageMargins` is
+  `patchSectionPageMargins`. A `set…` command replaces what it names, as the word
+  document command `setSectionPageMargins` does, which keeps its name.
+
 ## [0.8.17] - 2026-11-07
 
 Built on `@docmentis/udoc-wasm` 0.8.20.

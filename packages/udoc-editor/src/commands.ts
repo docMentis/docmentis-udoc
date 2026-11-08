@@ -83,7 +83,7 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
         // Then the font picker, the point-size field, then the Bold /
         // Italic toggles. Each mirrors the selection's resolved format and
         // lowers to a character-property text edit, so all gate on the engine's
-        // text `setCharacterProperties` capability (`whenTextFormat`): live over
+        // text `patchCharacterProperties` capability (`whenTextFormat`): live over
         // a non-empty text range, greyed on a bare caret or a non-text selection.
         fontFamily: {
             id: "fontFamily",
@@ -126,7 +126,7 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
         // Text color + highlight — dropdowns mirroring the selection's span color
         // over the shared color picker (the Fill / Line machinery, `text` /
         // `highlight` channels). A span color is a character property, so they
-        // gate with the sibling text controls on `setCharacterProperties`
+        // gate with the sibling text controls on `patchCharacterProperties`
         // (`whenTextFormat`).
         textFill: {
             id: "textFill",

@@ -71,13 +71,13 @@ export function runEditMenuAction(tools: EditTools, action: EditMenuAction): voi
             updateEditState(host.store, { alignToPage: !editState(host.store.getState()).alignToPage });
             break;
         case "widthScale":
-            void text.setCharacterProperties([{ widthScale: action.scale }]);
+            void text.patchCharacterProperties([{ widthScale: action.scale }]);
             break;
         case "paragraphAlign":
-            void text.setParagraphProperties([{ align: action.align }]);
+            void text.patchParagraphProperties([{ align: action.align }]);
             break;
         case "lineSpacing":
-            void text.setParagraphProperties([{ lineSpacing: { percent: action.lines } }]);
+            void text.patchParagraphProperties([{ lineSpacing: { percent: action.lines } }]);
             break;
         case "paragraphSpace":
             void text.toggleParagraphSpace(action.edge);
