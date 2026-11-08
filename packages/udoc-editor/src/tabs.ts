@@ -62,14 +62,16 @@ export type EditCommandId =
     | "objectGroup"
     | "objectUngroup"
     | "tableSelect"
-    | "tableInsertRowAbove"
-    | "tableInsertRowBelow"
-    | "tableInsertColumnLeft"
-    | "tableInsertColumnRight"
-    | "tableDeleteRows"
-    | "tableDeleteColumns"
-    | "tableMerge"
-    | "tableUnmerge"
+    | "tableInsert"
+    | "tableDelete"
+    | "tableCells"
+    | "tableDistribute"
+    | "tableShading"
+    | "tableBorderColor"
+    | "tableBorder"
+    | "tableAlign"
+    | "tableStyle"
+    | "tableProperties"
     | "ruler"
     | "createSlide"
     | "deleteSlide"
@@ -217,12 +219,15 @@ const SHAPE_TAB: EditTab = {
 };
 
 /**
- * The Table tab — the edits of the table the selection is in: the Select dropdown,
- * the four inserts, the two deletes, then Merge and Unmerge. A block of cells
- * opens it, a selection with no text of its own to format. A caret in a cell opens
- * the Text tab ahead of it, as a caret in a shape's text does ahead of Shape, but
- * leaves this tab open if it is: selecting a row, deleting it and clicking a cell
- * goes from a block to a caret and back, all of it this tab's work.
+ * The Table tab — the edits and the format of the table the selection is in, on
+ * one short band, as an embedded editor has room for: the Select, Insert, Delete
+ * and Cells dropdowns and Distribute Columns; Shading, Border Color and Border;
+ * the Align and Style dropdowns; and Properties, the dialog holding the
+ * measures. A block of cells opens it, a selection with no text of its own to
+ * format. A caret in a cell opens the Text tab ahead of it, as a caret in a
+ * shape's text does ahead of Shape, but leaves this tab open if it is: selecting
+ * a row, deleting it and clicking a cell goes from a block to a caret and back,
+ * all of it this tab's work.
  */
 const TABLE_TAB: EditTab = {
     id: "table",
@@ -230,14 +235,16 @@ const TABLE_TAB: EditTab = {
     icon: ICON_TAB_TABLE,
     commands: [
         "tableSelect",
-        "tableInsertRowAbove",
-        "tableInsertRowBelow",
-        "tableInsertColumnLeft",
-        "tableInsertColumnRight",
-        "tableDeleteRows",
-        "tableDeleteColumns",
-        "tableMerge",
-        "tableUnmerge",
+        "tableInsert",
+        "tableDelete",
+        "tableCells",
+        "tableDistribute",
+        "tableShading",
+        "tableBorderColor",
+        "tableBorder",
+        "tableAlign",
+        "tableStyle",
+        "tableProperties",
     ] satisfies EditCommandId[],
     opensFor: inTable,
     staysOpen: true,

@@ -440,7 +440,13 @@ export type TableEditKind =
     | "insertColumns"
     | "deleteColumns"
     | "mergeCells"
-    | "unmergeCells";
+    | "unmergeCells"
+    | "patchTableProperties"
+    | "patchRowProperties"
+    | "patchCellProperties"
+    | "patchCellBorders"
+    | "setColumnWidth"
+    | "distributeColumns";
 
 /**
  * Whether `caps` allows the table edit `kind` — the table cousin of
@@ -737,6 +743,14 @@ function resolvedPaintDisplay<T>(
     if (paint === "absent") return { kind: "unknown" };
     if (paint === "mixed") return { kind: "mixed" };
     return reduce(paint.value, color ? deviceColorHex(color) : null);
+}
+
+/** The swatch a table's Shading control shows: the shading of the cells the
+ *  selection covers, as the engine resolved it — a cell shaded by its style's
+ *  banding swatches the band. `unknown` outside a table. */
+export function tableShadingDisplay(properties: UDocSelectionProperties | null): PaintDisplay {
+    const table = drawingProperties(properties)?.table;
+    return table ? resolvedPaintDisplay(table.fill, table.fillColor, resolvedFillDisplay) : { kind: "unknown" };
 }
 
 /** A resolved fill (a shape's, or a text span's), displaying as `hex` → its

@@ -60,6 +60,7 @@ export {
     EMPTY_SELECTION_TEXT_FORMAT,
     selectionPaint,
     selectionTextFormat,
+    tableShadingDisplay,
 } from "./geometry.js";
 export type {
     PaintDisplay,

@@ -295,11 +295,11 @@ export type PaintEdits = ReturnType<typeof createPaintEdits>;
  * only). The block shows the document's resolved palette (from the engine's
  * `themePalette()`) when it has landed, the stand-in Office palette until then.
  */
-const THEMED: ReadonlySet<UDocType> = new Set<UDocType>(["presentation", "spreadsheet", "wordprocessing"]);
+export const THEMED: ReadonlySet<UDocType> = new Set<UDocType>(["presentation", "spreadsheet", "wordprocessing"]);
 
 /** The picker's Theme Colors row: the current slide's resolved palette mapped
  *  to swatches, or the stand-in when the engine reported no theme. */
-function mapThemeColors(palette: ThemePalette | null): readonly ThemeSwatch[] {
+export function mapThemeColors(palette: ThemePalette | null): readonly ThemeSwatch[] {
     return palette ? themeSwatches(palette) : DEFAULT_OFFICE_THEME;
 }
 

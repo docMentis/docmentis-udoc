@@ -30,6 +30,8 @@ import { changeLayoutCommand, deleteSlideCommand, mountSlideLayouts, newSlideCom
 import type { SlideLayouts } from "./slide-commands.js";
 import { editorStyles } from "./styles.js";
 import { tableCommands } from "./table.js";
+import { mountTableProperties } from "./table-properties.js";
+import type { TableProperties } from "./table-properties.js";
 import { editTabs } from "./tabs.js";
 import { createEditTools } from "./tools.js";
 import type { EditTools } from "./tools.js";
@@ -212,6 +214,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
     let tools: EditTools | null = null;
     let slideLayouts: SlideLayouts | null = null;
     let imageSize: ImageSize | null = null;
+    let tableProperties: TableProperties | null = null;
     let pageResize: PageResize | null = null;
     const grips = createGrips(() => tools);
     const ruler = createRuler(() => host);
@@ -234,7 +237,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
         commands: {
             ...formatCommands(mountedTools),
             ...arrangeCommands(() => tools?.arrange ?? null),
-            ...tableCommands(mountedTools),
+            ...tableCommands(mountedTools, () => tableProperties?.open()),
             ruler: RULER_COMMAND,
             createSlide: newSlideCommand(() => void slideLayouts?.newSlide()),
             deleteSlide: deleteSlideCommand(() => host),
@@ -257,7 +260,9 @@ export function editMode(options: UDocEditorOptions): EditMode {
             tools?.crop.keydown(e);
         },
         menuAction(action) {
-            if (tools) runEditMenuAction(tools, action as EditMenuAction);
+            const edit = action as EditMenuAction;
+            if (edit.kind === "tableProperties") tableProperties?.open();
+            else if (tools) runEditMenuAction(tools, edit);
         },
         // Edit mode's acts on the selection, a table's rows added over one; view
         // mode keeps the shell's.
@@ -286,10 +291,13 @@ export function editMode(options: UDocEditorOptions): EditMode {
             const unmountPageControls = showPageControls ? mountPageControls(mounted, i18n) : null;
             slideLayouts = mountSlideLayouts(mounted, i18n);
             imageSize = mountImageSize(mounted, i18n);
+            tableProperties = mountTableProperties(mounted, i18n);
             pageResize = mountPageResize(mounted, i18n);
             return () => {
                 pageResize?.destroy();
                 pageResize = null;
+                tableProperties?.destroy();
+                tableProperties = null;
                 imageSize?.destroy();
                 imageSize = null;
                 slideLayouts?.destroy();

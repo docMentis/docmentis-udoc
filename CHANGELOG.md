@@ -18,6 +18,25 @@ listed once, by package. Its major and minor version are those of the
   `patchSectionPageMargins`. A `set…` command replaces what it names, as the word
   document command `setSectionPageMargins` does, which keeps its name.
 
+### udoc-editor
+
+#### Added
+
+- The Table tab formats the table the selection is in. Shading fills the selected
+  cells. Border draws on the edges chosen — all, outside, inside, one side or a
+  diagonal — with the color, weight and dash Border Color sets, or takes the
+  borders away. Align sets where the cells' text sits, top to bottom, and the
+  direction it runs. Distribute Columns gives the selected columns equal widths
+  that keep their total. Table Properties sets the rows' height, the columns'
+  width, the cells' margins and, in a word document, whether rows repeat at the
+  top of each page. A deck's table can be deleted from the tab or the table's
+  context menu.
+
+#### Changed
+
+- The Table tab holds its inserts, deletes and merges in Insert, Delete and Cells
+  dropdowns, leaving the band room for the controls that format the table.
+
 ## [0.8.17] - 2026-11-07
 
 Built on `@docmentis/udoc-wasm` 0.8.20.

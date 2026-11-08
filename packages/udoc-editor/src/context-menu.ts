@@ -1,10 +1,11 @@
 // Edit mode's canvas context menu rows: the clipboard and Delete over any
-// selection, and over a table the Select, Insert, Delete and Merge rows. The
+// selection, and over a table the Select, Insert, Delete, Merge and Table
+// Properties rows. The
 // shell opens the menu (`UIExtension.contextMenuItems`).
 import { allowsEdit, COPY_MENU_ITEM, ICON_DELETE, ICON_TOOL_POINTER } from "@docmentis/udoc-ui/internal";
 import type { EnabledWhen, MenuItem } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
-import { ICON_CUT, ICON_INSERT_ROW_BELOW, ICON_MERGE_CELLS, ICON_PASTE } from "./icons.js";
+import { ICON_CUT, ICON_INSERT_ROW_BELOW, ICON_MERGE_CELLS, ICON_PASTE, ICON_TABLE_PROPERTIES } from "./icons.js";
 import { editAction } from "./menu-action.js";
 import {
     ICON_DELETE_ROWS,
@@ -105,5 +106,14 @@ export const TABLE_CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
         label: "table.unmergeCells",
         icon: ICON_UNMERGE_CELLS,
         enabledWhen: whenTableEdit("unmergeCells"),
+    },
+    // The dialog holding the measures — the rows' height, the columns' width,
+    // the cells' margins — as the Table tab's last button opens it.
+    {
+        action: editAction({ kind: "tableProperties" }),
+        label: "table.properties",
+        icon: ICON_TABLE_PROPERTIES,
+        enabledWhen: whenReady,
+        separatorBefore: true,
     },
 ];

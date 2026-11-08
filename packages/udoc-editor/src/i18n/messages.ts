@@ -381,6 +381,96 @@ export interface Messages extends UIMessages {
     "table.mergeCells": string;
     /** Unmerge Cells */
     "table.unmergeCells": string;
+    /** Cells */
+    "table.cells": string;
+    /** Table */
+    "table.deleteTable": string;
+    /** Distribute Columns */
+    "table.distributeColumns": string;
+    /** Shading */
+    "table.shading": string;
+    /** Border */
+    "table.border": string;
+    /** Border Options */
+    "table.borderOptions": string;
+    /** Border Color */
+    "table.borderColor": string;
+    /** All Borders */
+    "table.borderAll": string;
+    /** Outside Borders */
+    "table.borderOutside": string;
+    /** Inside Borders */
+    "table.borderInside": string;
+    /** Top Border */
+    "table.borderTop": string;
+    /** Bottom Border */
+    "table.borderBottom": string;
+    /** Left Border */
+    "table.borderLeft": string;
+    /** Right Border */
+    "table.borderRight": string;
+    /** Inside Horizontal Border */
+    "table.borderInsideHorizontal": string;
+    /** Inside Vertical Border */
+    "table.borderInsideVertical": string;
+    /** Diagonal Down Border */
+    "table.borderDiagonalDown": string;
+    /** Diagonal Up Border */
+    "table.borderDiagonalUp": string;
+    /** No Border */
+    "table.borderNone": string;
+    /** Cell Alignment */
+    "table.cellAlignment": string;
+    /** Top */
+    "table.alignTop": string;
+    /** Center */
+    "table.alignCenter": string;
+    /** Bottom */
+    "table.alignBottom": string;
+    /** Text Direction */
+    "table.textDirection": string;
+    /** Horizontal */
+    "table.directionHorizontal": string;
+    /** Rotate 90° */
+    "table.directionRotate90": string;
+    /** Rotate 270° */
+    "table.directionRotate270": string;
+    /** Stacked */
+    "table.directionStacked": string;
+    /** Style Options */
+    "table.styleOptions": string;
+    /** Header Row */
+    "table.headerRow": string;
+    /** Total Row */
+    "table.totalRow": string;
+    /** Banded Rows */
+    "table.bandedRows": string;
+    /** First Column */
+    "table.firstColumn": string;
+    /** Last Column */
+    "table.lastColumn": string;
+    /** Banded Columns */
+    "table.bandedColumns": string;
+    /** Table Properties */
+    "table.properties": string;
+    /** Size */
+    "table.size": string;
+    /** Row height */
+    "table.rowHeight": string;
+    /** Column width */
+    "table.columnWidth": string;
+    /** Cell margins */
+    "table.cellMargins": string;
+    /** Top */
+    "table.marginTop": string;
+    /** Bottom */
+    "table.marginBottom": string;
+    /** Left */
+    "table.marginLeft": string;
+    /** Right */
+    "table.marginRight": string;
+    /** Repeat as header row on each page */
+    "table.repeatHeaderRow": string;
 
     // Crop mode and the Image Size dialog
     /** Aspect Ratio */

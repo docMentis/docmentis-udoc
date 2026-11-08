@@ -1,11 +1,12 @@
 // The menu rows edit mode adds carry an intent of its own, which the shell hands
 // back to edit mode (`UIExtension.menuAction`).
-import type { TableSelectionEdit } from "@docmentis/udoc-wasm";
+import type { TableLook, TableSelectionEdit } from "@docmentis/udoc-wasm";
 import type { AlignEdge, EditAxis, MenuAction, TextParagraphAlign, ZOrder } from "@docmentis/udoc-ui/internal";
 import type { ClipboardOp } from "./context-menu.js";
 import type { CropAspect } from "./crop-box.js";
 import { editState, updateEditState } from "./state.js";
 import type { TableSelectScope } from "./table.js";
+import { deleteTable, toggleTableLook } from "./table-format.js";
 import type { ParagraphSpaceEdge } from "./text-format.js";
 import type { EditTools } from "./tools.js";
 
@@ -16,8 +17,10 @@ import type { EditTools } from "./tools.js";
  * / `flip` / `rotate` the Align and Rotate dropdowns; `alignToPage` the Align
  * dropdown's reference toggle (a UI flag, not a document edit). `clipboard` /
  * `delete` are the context menu's acts on the selection, and `selectTable` /
- * `tableEdit` its rows over a table, as the Table tab's are. `cropAspect` is crop mode's Aspect Ratio
- * dropdown.
+ * `tableEdit` its rows over a table, as the Table tab's are, with `deleteTable`
+ * the table itself and `toggleTableLook` one of its Style Options;
+ * `tableProperties` opens the Table Properties dialog, which edit mode holds.
+ * `cropAspect` is crop mode's Aspect Ratio dropdown.
  *
  * The first five are the paragraph menus' rows. `indent` carries a *step*, not
  * a measure: an indent is relative per paragraph — a selection spanning two
@@ -41,6 +44,9 @@ export type EditMenuAction =
     | { kind: "delete" }
     | { kind: "selectTable"; scope: TableSelectScope }
     | { kind: "tableEdit"; edit: TableSelectionEdit }
+    | { kind: "deleteTable" }
+    | { kind: "toggleTableLook"; flag: keyof TableLook }
+    | { kind: "tableProperties" }
     | { kind: "cropAspect"; aspect: CropAspect };
 
 /** `action` as a shell {@link MenuAction}: carried as the extension's own. */
@@ -123,6 +129,15 @@ export function runEditMenuAction(tools: EditTools, action: EditMenuAction): voi
             void host.commit(() => host.client.executeOnSelection(edit));
             break;
         }
+        case "deleteTable":
+            void deleteTable(host);
+            break;
+        case "toggleTableLook":
+            void toggleTableLook(host, action.flag);
+            break;
+        case "tableProperties":
+            // The dialog is edit mode's, which opens it before this is reached.
+            break;
         case "cropAspect":
             crop.setAspect(action.aspect);
             break;
