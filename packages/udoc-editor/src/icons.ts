@@ -224,15 +224,6 @@ export const ICON_BORDER_NONE = `<svg viewBox="0 -960 960 960" fill="currentColo
 /** `border_color` */
 export const ICON_BORDER_COLOR = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M96 0v-192h768V0H96Zm168-360h51l279-279-26-27-25-24-279 279v51Zm-72 72v-152.92L594-843q11-11 23.84-16 12.83-5 27-5 14.16 0 27.16 5t24.1 15.94L747-792q11 11 16 24t5 27.4q0 13.49-4.95 26.54-4.95 13.05-15.75 23.85L345-288H192Zm503-455-51-49 51 49ZM594-639l-26-27-25-24 51 51Z"/></svg>`;
 
-/** `vertical_align_top` */
-export const ICON_CELL_ALIGN_TOP = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M192-744v-72h576v72H192Zm252 600v-390L339-429l-51-51 192-192 192 192-51 51-105-105v390h-72Z"/></svg>`;
-
-/** `vertical_align_center` */
-export const ICON_CELL_ALIGN_CENTER = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="m438-80 6-166-57 57-51-51 144-144 144 144-51 51-57-57 6 166h-84ZM192-432v-72h576v72H192Zm288-144L336-720l51-51 57 57v-150h72v150l57-57 51 51-144 144Z"/></svg>`;
-
-/** `vertical_align_bottom` */
-export const ICON_CELL_ALIGN_BOTTOM = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M192-144v-72h576v72H192Zm288-144L288-480l51-51 105 105v-390h72v390l105-105 51 51-192 192Z"/></svg>`;
-
 /** `text_rotation_none` */
 export const ICON_TEXT_HORIZONTAL = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M192-228v-72h486l-33-33 51-51 120 120-120 120-51-51 33-33H192Zm63-156 163-432h76l163 432h-75l-39-110H369l-39 110h-75Zm137-173h129l-63-179h-4l-62 179Z"/></svg>`;
 

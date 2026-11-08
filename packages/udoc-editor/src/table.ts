@@ -7,9 +7,6 @@ import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_BORDER_ALL,
     ICON_BORDER_COLOR,
-    ICON_CELL_ALIGN_BOTTOM,
-    ICON_CELL_ALIGN_CENTER,
-    ICON_CELL_ALIGN_TOP,
     ICON_DISTRIBUTE_H,
     ICON_INSERT_COLUMN_LEFT,
     ICON_INSERT_COLUMN_RIGHT,
@@ -33,11 +30,13 @@ import {
     tableBorderControl,
     tableShadingControl,
 } from "./table-format.js";
+import { ALIGN_CENTER_ROW, ALIGN_LEFT_ROW, ALIGN_RIGHT_ROW } from "./text-format.js";
 import type { EditTools } from "./tools.js";
 
-// The table glyphs Material Symbols has no symbol for, each drawn from the one it
-// is the opposite of, which keeps its frame and strokes. Modified from Material
-// Symbols, © Google LLC, licensed under the Apache License 2.0:
+// The table glyphs Material Symbols has no symbol for, each drawn from the
+// symbol nearest it — the one it is the opposite of, or the one it adapts — which
+// keeps its frame and strokes. Modified from Material Symbols, © Google LLC,
+// licensed under the Apache License 2.0:
 // https://www.apache.org/licenses/LICENSE-2.0
 
 /** Delete Rows: `add_row_below` with its plus an × of the same size and strokes.
@@ -51,6 +50,19 @@ const ICON_DELETE_COLUMNS = `<svg viewBox="0 -960 960 960" fill="currentColor"><
  *  heads clear of the frame's sides, and their tails meet where the merge arrows'
  *  tips do. */
 export const ICON_UNMERGE_CELLS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M144-144v-240h72v168h168v72H144Zm432 0v-72h168v-168h72v240H576ZM312-336L168-480l144-144 51 51-57 57H432v72H306l57 57-51 51Zm336 0l-51-51 57-57H528v-72h126l-57-57 51-51 144 144-144 144ZM144-576v-240h240v72H216v168h-72Zm600 0v-168H576v-72h240v240h-72Z"/></svg>`;
+
+// The three cell alignments, drawn from `position_top_right`: its frame, and its
+// block centred left to right and set where the cell's text sits — as far below
+// the frame's top as the symbol sets it, mirrored at the bottom, or midway.
+
+/** Top: the block at the top of the frame — and the Align dropdown's own glyph. */
+export const ICON_CELL_ALIGN_TOP = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M312-576h336v-96H312v96ZM216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Zm0-528v528-528Z"/></svg>`;
+
+/** Center: the block midway. */
+export const ICON_CELL_ALIGN_CENTER = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M312-432h336v-96H312v96ZM216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Zm0-528v528-528Z"/></svg>`;
+
+/** Bottom: the block at the bottom of the frame. */
+export const ICON_CELL_ALIGN_BOTTOM = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M312-288h336v-96H312v96ZM216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Zm0-528v528-528Z"/></svg>`;
 
 /** What a Select ▸ … row widens the current table selection to. Named for the
  *  verbs (`selectTableRows` / `selectTableColumns` / `selectTable`) rather than
@@ -209,12 +221,15 @@ const TEXT_DIRECTION_MENU: readonly MenuItem<MessageKey>[] = [
     ),
 ];
 
-/** The Align dropdown: where the cells' text sits, top to bottom, then the
- *  direction it runs in. */
+/** The Align dropdown: where the cells' text sits, top to bottom, then across
+ *  — the paragraph alignments the Text tab sets — then the direction it runs in. */
 export const TABLE_ALIGN_MENU: readonly MenuItem<MessageKey>[] = [
     anchorRow("top", "table.alignTop", ICON_CELL_ALIGN_TOP),
     anchorRow("center", "table.alignCenter", ICON_CELL_ALIGN_CENTER),
     anchorRow("bottom", "table.alignBottom", ICON_CELL_ALIGN_BOTTOM),
+    { ...ALIGN_LEFT_ROW, separatorBefore: true },
+    ALIGN_CENTER_ROW,
+    ALIGN_RIGHT_ROW,
     {
         submenu: TEXT_DIRECTION_MENU,
         label: "table.textDirection",
@@ -337,7 +352,7 @@ export function tableCommands(
         tableAlign: {
             id: "tableAlign",
             label: "table.cellAlignment",
-            icon: ICON_CELL_ALIGN_CENTER,
+            icon: ICON_CELL_ALIGN_TOP,
             group: "tableFormat",
             run: { kind: "menu", menu: TABLE_ALIGN_MENU },
             enabledWhen: whenTableEdit("patchCellProperties"),

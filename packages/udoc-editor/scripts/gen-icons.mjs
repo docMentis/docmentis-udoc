@@ -4,9 +4,12 @@
 // Every icon edit mode's chrome shows beyond udoc-ui's is a Material Symbol
 // picked by name in ICONS below — the chrome draws none of its own, as
 // udoc-ui's `scripts/gen-icons.mjs` says of its own. The exceptions are the
-// table glyphs Material has no symbol for, in `src/table.ts`: Delete Rows,
-// Delete Columns and Unmerge, each redrawn from the symbol it is the opposite of.
-// A symbol Material draws at the wrong angle takes an entry that turns it.
+// table glyphs Material has no symbol for, each redrawn from the symbol nearest
+// it: in `src/table.ts` Delete Rows, Delete Columns and Unmerge, from the one
+// each is the opposite of, and the three cell alignments, from
+// `position_top_right`; in `src/table-format.ts` the two diagonal borders, from
+// `border_clear`. A symbol Material draws at the wrong angle takes an entry that
+// turns it.
 //
 //   npm run gen:icons
 //
@@ -133,9 +136,6 @@ const ICONS = {
     ICON_BORDER_INSIDE_VERTICAL: "border_vertical",
     ICON_BORDER_NONE: "border_clear",
     ICON_BORDER_COLOR: "border_color",
-    ICON_CELL_ALIGN_TOP: "vertical_align_top",
-    ICON_CELL_ALIGN_CENTER: "vertical_align_center",
-    ICON_CELL_ALIGN_BOTTOM: "vertical_align_bottom",
     ICON_TEXT_HORIZONTAL: "text_rotation_none",
     ICON_TEXT_ROTATE_90: "text_rotation_down",
     ICON_TEXT_ROTATE_270: "text_rotate_up",

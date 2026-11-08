@@ -144,12 +144,25 @@ export interface BorderPen {
 /** The pen a Border starts with: Office's, a 1pt solid black line. */
 export const DEFAULT_BORDER_PEN: BorderPen = { paint: { kind: "solid", hex: "#000000" }, weight: 1, dash: "solid" };
 
+// The two diagonal borders Material Symbols has no symbol for, drawn from
+// `border_clear`, the no-border glyph: its dotted frame, less the dotted cross
+// inside it — a diagonal is a cell's own, and the cross's centre would sit on
+// it — with one solid diagonal corner to corner, as thick across as Material's
+// own diagonals. Modified from Material Symbols, © Google LLC, licensed under
+// the Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0
+
+/** Diagonal Down Border: the top-left to bottom-right diagonal. */
+export const ICON_BORDER_DIAGONAL_DOWN = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M144-144v-72h72v72h-72ZM144-294v-72h72v72h-72ZM144-444v-72h72v72h-72ZM144-594v-72h72v72h-72ZM144-744v-72h72v72h-72ZM744-144v-72h72v72h-72ZM744-294v-72h72v72h-72ZM744-444v-72h72v72h-72ZM744-594v-72h72v72h-72ZM744-744v-72h72v72h-72ZM294-744v-72h72v72h-72ZM444-744v-72h72v72h-72ZM594-744v-72h72v72h-72ZM294-144v-72h72v72h-72ZM444-144v-72h72v72h-72ZM594-144v-72h72v72h-72Z"/><path d="M144-816h51l621 621v51h-51L144-765v-51Z"/></svg>`;
+
+/** Diagonal Up Border: the bottom-left to top-right diagonal. */
+export const ICON_BORDER_DIAGONAL_UP = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M144-144v-72h72v72h-72ZM144-294v-72h72v72h-72ZM144-444v-72h72v72h-72ZM144-594v-72h72v72h-72ZM144-744v-72h72v72h-72ZM744-144v-72h72v72h-72ZM744-294v-72h72v72h-72ZM744-444v-72h72v72h-72ZM744-594v-72h72v72h-72ZM744-744v-72h72v72h-72ZM294-744v-72h72v72h-72ZM444-744v-72h72v72h-72ZM594-744v-72h72v72h-72ZM294-144v-72h72v72h-72ZM444-144v-72h72v72h-72ZM594-144v-72h72v72h-72Z"/><path d="M144-144h51l621-621v-51h-51L144-195v51Z"/></svg>`;
+
 /** One of the Border menu's edge choices: what it lays the pen on, its name, and
- *  its glyph — none for the two diagonals, which Material Symbols doesn't draw. */
+ *  its glyph. */
 export interface EdgeChoice {
     edges: TableCellBorderEdge;
     label: MessageKey;
-    icon?: string;
+    icon: string;
 }
 
 /** The edge choices, in Word's and PowerPoint's order. */
@@ -163,8 +176,8 @@ export const BORDER_EDGES: readonly EdgeChoice[] = [
     { edges: "right", label: "table.borderRight", icon: ICON_BORDER_RIGHT },
     { edges: "insideHorizontal", label: "table.borderInsideHorizontal", icon: ICON_BORDER_INSIDE_HORIZONTAL },
     { edges: "insideVertical", label: "table.borderInsideVertical", icon: ICON_BORDER_INSIDE_VERTICAL },
-    { edges: "diagonalDown", label: "table.borderDiagonalDown" },
-    { edges: "diagonalUp", label: "table.borderDiagonalUp" },
+    { edges: "diagonalDown", label: "table.borderDiagonalDown", icon: ICON_BORDER_DIAGONAL_DOWN },
+    { edges: "diagonalUp", label: "table.borderDiagonalUp", icon: ICON_BORDER_DIAGONAL_UP },
 ];
 
 /** The border `pen` draws as: its `DrawingML` line alone, which the renderer
@@ -256,7 +269,7 @@ export function tableBorderColorControl(env: RibbonControlEnv, tools: EditTools,
  */
 export function tableBorderControl(env: RibbonControlEnv, tools: EditTools, state: BorderState): RibbonControl {
     const { i18n } = tools;
-    const face = (): string => state.last.icon ?? ICON_BORDER_ALL;
+    const face = (): string => state.last.icon;
     const split = createSplitButton({
         mainLabel: env.label,
         mainIcon: face(),
@@ -276,7 +289,7 @@ export function tableBorderControl(env: RibbonControlEnv, tools: EditTools, stat
 
     function fill(): void {
         split.menu.innerHTML = "";
-        const row = (icon: string | undefined, label: MessageKey, run: () => void): HTMLButtonElement => {
+        const row = (icon: string, label: MessageKey, run: () => void): HTMLButtonElement => {
             const item = createMenuItem({ icon, text: i18n.t(label) });
             item.addEventListener("click", (e) => {
                 e.stopPropagation();

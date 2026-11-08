@@ -163,6 +163,31 @@ export function textFormatProperty(
  *  govern — `w:spacing@before` / `@after`. */
 export type ParagraphSpaceEdge = "before" | "after";
 
+/** The Align Left, Center and Align Right rows — the paragraph alignments a
+ *  table's Align dropdown offers too, as a cell's text sits across its column
+ *  the way a paragraph does. */
+export const ALIGN_LEFT_ROW: MenuItem<MessageKey> = {
+    action: editAction({ kind: "paragraphAlign", align: "left" }),
+    label: "paragraph.alignLeft",
+    icon: ICON_PARAGRAPH_LEFT,
+    enabledWhen: whenParagraphFormat,
+    activeWhen: (c) => editStateOf(c).selectionText.align === "left",
+};
+export const ALIGN_CENTER_ROW: MenuItem<MessageKey> = {
+    action: editAction({ kind: "paragraphAlign", align: "center" }),
+    label: "paragraph.center",
+    icon: ICON_PARAGRAPH_CENTER,
+    enabledWhen: whenParagraphFormat,
+    activeWhen: (c) => editStateOf(c).selectionText.align === "center",
+};
+export const ALIGN_RIGHT_ROW: MenuItem<MessageKey> = {
+    action: editAction({ kind: "paragraphAlign", align: "right" }),
+    label: "paragraph.alignRight",
+    icon: ICON_PARAGRAPH_RIGHT,
+    enabledWhen: whenParagraphFormat,
+    activeWhen: (c) => editStateOf(c).selectionText.align === "right",
+};
+
 /**
  * The Align & Indent dropdown: the four text alignments as one exclusive set
  * (the row the selection already holds is marked, none when its paragraphs
@@ -175,27 +200,9 @@ export type ParagraphSpaceEdge = "before" | "after";
  * here needs a range.
  */
 export const PARAGRAPH_ALIGN_MENU: readonly MenuItem<MessageKey>[] = [
-    {
-        action: editAction({ kind: "paragraphAlign", align: "left" }),
-        label: "paragraph.alignLeft",
-        icon: ICON_PARAGRAPH_LEFT,
-        enabledWhen: whenParagraphFormat,
-        activeWhen: (c) => editStateOf(c).selectionText.align === "left",
-    },
-    {
-        action: editAction({ kind: "paragraphAlign", align: "center" }),
-        label: "paragraph.center",
-        icon: ICON_PARAGRAPH_CENTER,
-        enabledWhen: whenParagraphFormat,
-        activeWhen: (c) => editStateOf(c).selectionText.align === "center",
-    },
-    {
-        action: editAction({ kind: "paragraphAlign", align: "right" }),
-        label: "paragraph.alignRight",
-        icon: ICON_PARAGRAPH_RIGHT,
-        enabledWhen: whenParagraphFormat,
-        activeWhen: (c) => editStateOf(c).selectionText.align === "right",
-    },
+    ALIGN_LEFT_ROW,
+    ALIGN_CENTER_ROW,
+    ALIGN_RIGHT_ROW,
     {
         action: editAction({ kind: "paragraphAlign", align: "justify" }),
         label: "paragraph.justify",
