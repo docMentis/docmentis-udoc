@@ -6,6 +6,34 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Fixed
+
+- A word document's VML drawings, Word's older drawing format, show on its pages,
+  where they were missing and the text around them didn't wrap: text boxes with
+  their text and pictures, shapes, WordArt, a text watermark and horizontal rules,
+  with their gradients, dashes and arrowheads. A save keeps them.
+- A word document's text boxes follow Word's rules, where they followed a deck's:
+  one set to resize to its text fits it on open, text that doesn't fit is cut at the
+  box's bottom, and a box's outline insets its text.
+- Text set to Automatic color in a word document shows in it, black on a light
+  background and white on a dark one, where its style's color showed through, and a
+  save keeps it.
+- A vertically flipped shape's text is drawn upside down, as Word, PowerPoint and
+  Excel draw it, where it stood upright.
+- A shape's double, thick-thin or triple line draws as its separate lines, where it
+  drew as one solid line of the full width.
+- A save keeps a word document's, deck's or workbook's custom XML parts, and a
+  deck's tags, where a save that rewrote the file dropped them.
+
+### udoc-editor
+
+#### Fixed
+
+- An SVG, EMF or WMF picture inserted into a deck lands at its own size and shape,
+  where it took half the slide in each direction and was stretched to fill it.
+
 ## [0.8.16] - 2026-11-06
 
 Built on `@docmentis/udoc-wasm` 0.8.19.
