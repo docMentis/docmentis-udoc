@@ -88,13 +88,9 @@ export const whenTableEdit =
 const inTable: EnabledWhen = whenTableEdit("insertRows");
 
 export const TABLE_SELECT_MENU: readonly MenuItem<MessageKey>[] = [
-    { action: editAction({ kind: "selectTable", scope: "rows" }), label: "table.selectRow", enabledWhen: whenReady },
-    {
-        action: editAction({ kind: "selectTable", scope: "columns" }),
-        label: "table.selectColumn",
-        enabledWhen: whenReady,
-    },
-    { action: editAction({ kind: "selectTable", scope: "table" }), label: "table.selectTable", enabledWhen: whenReady },
+    { action: editAction({ kind: "selectTable", scope: "rows" }), label: "table.row", enabledWhen: whenReady },
+    { action: editAction({ kind: "selectTable", scope: "columns" }), label: "table.column", enabledWhen: whenReady },
+    { action: editAction({ kind: "selectTable", scope: "table" }), label: "table.table", enabledWhen: whenReady },
 ];
 
 export const TABLE_INSERT_MENU: readonly MenuItem<MessageKey>[] = [
@@ -135,24 +131,58 @@ const canDeleteTable: EnabledWhen = (c) =>
 export const TABLE_DELETE_MENU: readonly MenuItem<MessageKey>[] = [
     {
         action: editAction({ kind: "tableEdit", edit: "deleteRows" }),
-        label: "table.deleteRows",
+        label: "table.rows",
         icon: ICON_DELETE_ROWS,
         enabledWhen: whenTableEdit("deleteRows"),
     },
     {
         action: editAction({ kind: "tableEdit", edit: "deleteColumns" }),
-        label: "table.deleteColumns",
+        label: "table.columns",
         icon: ICON_DELETE_COLUMNS,
         enabledWhen: whenTableEdit("deleteColumns"),
     },
     {
         action: editAction({ kind: "deleteTable" }),
-        label: "table.deleteTable",
+        label: "table.table",
         icon: ICON_DELETE,
         enabledWhen: canDeleteTable,
         separatorBefore: true,
     },
 ];
+
+/**
+ * `menu` with its rows' labels spelled whole by `labels` — the Table tab's
+ * dropdowns, whose button shows only an icon, where the context menu's
+ * fly-outs sit under a row already saying Select, Insert or Delete.
+ */
+function spelledOut(
+    menu: readonly MenuItem<MessageKey>[],
+    labels: Partial<Record<MessageKey, MessageKey>>,
+): readonly MenuItem<MessageKey>[] {
+    return menu.map((item) => ({
+        ...item,
+        label: (typeof item.label === "string" && labels[item.label]) || item.label,
+    }));
+}
+
+const TOOLBAR_SELECT_MENU = spelledOut(TABLE_SELECT_MENU, {
+    "table.row": "table.selectRow",
+    "table.column": "table.selectColumn",
+    "table.table": "table.selectTable",
+});
+
+const TOOLBAR_INSERT_MENU = spelledOut(TABLE_INSERT_MENU, {
+    "table.rowAbove": "table.insertRowAbove",
+    "table.rowBelow": "table.insertRowBelow",
+    "table.columnLeft": "table.insertColumnLeft",
+    "table.columnRight": "table.insertColumnRight",
+});
+
+const TOOLBAR_DELETE_MENU = spelledOut(TABLE_DELETE_MENU, {
+    "table.rows": "table.deleteRows",
+    "table.columns": "table.deleteColumns",
+    "table.table": "table.deleteTable",
+});
 
 /** Merge and Unmerge, the Cells dropdown's two rows. */
 export const TABLE_CELLS_MENU: readonly MenuItem<MessageKey>[] = [
@@ -296,7 +326,7 @@ export function tableCommands(
             label: "table.select",
             icon: ICON_TOOL_POINTER,
             group: "tableSelect",
-            run: { kind: "menu", menu: TABLE_SELECT_MENU },
+            run: { kind: "menu", menu: TOOLBAR_SELECT_MENU },
             enabledWhen: inTable,
         },
         tableInsert: dropdown(
@@ -304,10 +334,17 @@ export function tableCommands(
             "tableEdit",
             "table.insert",
             ICON_INSERT_ROW_BELOW,
-            TABLE_INSERT_MENU,
+            TOOLBAR_INSERT_MENU,
             inTable,
         ),
-        tableDelete: dropdown("tableDelete", "tableEdit", "table.delete", ICON_DELETE_ROWS, TABLE_DELETE_MENU, inTable),
+        tableDelete: dropdown(
+            "tableDelete",
+            "tableEdit",
+            "table.delete",
+            ICON_DELETE_ROWS,
+            TOOLBAR_DELETE_MENU,
+            inTable,
+        ),
         tableCells: dropdown("tableCells", "tableEdit", "table.cells", ICON_MERGE_CELLS, TABLE_CELLS_MENU, inTable),
         tableDistribute: {
             id: "tableDistribute",

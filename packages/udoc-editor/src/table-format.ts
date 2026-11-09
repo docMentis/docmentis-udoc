@@ -202,17 +202,16 @@ export function borderEdit(edges: TableCellBorderEdge, border: TableBorder): Tab
     return { patchCellBorders: { edges, border } };
 }
 
-/** The pen the Border control lays, and the edges it laid last — what the
- *  Border Color and Border controls share, made once for edit mode and kept
- *  across the ribbon's rebuilds. */
+/** The pen the Border control lays — what the Border Color and Border
+ *  controls share, made once for edit mode and kept across the ribbon's
+ *  rebuilds. */
 export interface BorderState {
     pen: BorderPen;
-    last: EdgeChoice;
 }
 
-/** A border state at Office's starting pen, All Borders chosen. */
+/** A border state at Office's starting pen. */
 export function createBorderState(): BorderState {
-    return { pen: { ...DEFAULT_BORDER_PEN }, last: BORDER_EDGES[0] as EdgeChoice };
+    return { pen: { ...DEFAULT_BORDER_PEN } };
 }
 
 /**
@@ -264,16 +263,15 @@ export function tableBorderColorControl(env: RibbonControlEnv, tools: EditTools,
 }
 
 /**
- * The Border split button: the main part lays the pen on the edges chosen last
- * — All Borders to start — and shows them; the caret lists the edge choices,
- * then No Border, each laying the pen (or taking the borders away) at once.
+ * The Border split button: the main part lays the pen on All Borders, which
+ * its glyph shows; the caret lists the edge choices, then No Border, each
+ * laying the pen (or taking the borders away) at once.
  */
 export function tableBorderControl(env: RibbonControlEnv, tools: EditTools, state: BorderState): RibbonControl {
     const { i18n } = tools;
-    const face = (): string => state.last.icon;
     const split = createSplitButton({
         mainLabel: env.label,
-        mainIcon: face(),
+        mainIcon: ICON_BORDER_ALL,
         caretLabel: i18n.t("table.borderOptions"),
         menuLabel: i18n.t("table.borderOptions"),
         onOpen: () => fill(),
@@ -281,12 +279,10 @@ export function tableBorderControl(env: RibbonControlEnv, tools: EditTools, stat
     split.main.dataset.command = "tableBorder";
     split.caret.dataset.command = "tableBorder";
 
-    const lay = (choice: EdgeChoice): void => {
-        state.last = choice;
-        split.main.innerHTML = face();
-        void runTableEdit(tools.host, borderEdit(choice.edges, borderOfPen(state.pen)));
+    const lay = (edges: TableCellBorderEdge): void => {
+        void runTableEdit(tools.host, borderEdit(edges, borderOfPen(state.pen)));
     };
-    split.main.addEventListener("click", () => lay(state.last));
+    split.main.addEventListener("click", () => lay("all"));
 
     function fill(): void {
         split.menu.innerHTML = "";
@@ -299,7 +295,7 @@ export function tableBorderControl(env: RibbonControlEnv, tools: EditTools, stat
             });
             return item;
         };
-        for (const choice of BORDER_EDGES) split.menu.append(row(choice.icon, choice.label, () => lay(choice)));
+        for (const choice of BORDER_EDGES) split.menu.append(row(choice.icon, choice.label, () => lay(choice.edges)));
         const none = row(ICON_BORDER_NONE, "table.borderNone", () => {
             void runTableEdit(tools.host, borderEdit("allAndDiagonals", noBorder()));
         });

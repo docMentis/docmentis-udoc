@@ -342,11 +342,11 @@ export interface Messages extends UIMessages {
 
     // Context menu over a table
     /** Row */
-    "table.selectRow": string;
+    "table.row": string;
     /** Column */
-    "table.selectColumn": string;
+    "table.column": string;
     /** Table */
-    "table.selectTable": string;
+    "table.table": string;
     /** Row Above */
     "table.rowAbove": string;
     /** Row Below */
@@ -356,15 +356,23 @@ export interface Messages extends UIMessages {
     /** Column Right */
     "table.columnRight": string;
     /** Rows */
-    "table.deleteRows": string;
+    "table.rows": string;
     /** Columns */
-    "table.deleteColumns": string;
+    "table.columns": string;
     /** Select */
     "table.select": string;
     /** Insert */
     "table.insert": string;
     /** Delete */
     "table.delete": string;
+
+    // The Table tab's dropdowns, whose buttons show only an icon
+    /** Select Row */
+    "table.selectRow": string;
+    /** Select Column */
+    "table.selectColumn": string;
+    /** Select Table */
+    "table.selectTable": string;
     /** Insert Row Above */
     "table.insertRowAbove": string;
     /** Insert Row Below */
@@ -374,17 +382,17 @@ export interface Messages extends UIMessages {
     /** Insert Column Right */
     "table.insertColumnRight": string;
     /** Delete Rows */
-    "table.deleteRowsButton": string;
+    "table.deleteRows": string;
     /** Delete Columns */
-    "table.deleteColumnsButton": string;
+    "table.deleteColumns": string;
+    /** Delete Table */
+    "table.deleteTable": string;
     /** Merge Cells */
     "table.mergeCells": string;
     /** Unmerge Cells */
     "table.unmergeCells": string;
     /** Cells */
     "table.cells": string;
-    /** Table */
-    "table.deleteTable": string;
     /** Distribute Columns */
     "table.distributeColumns": string;
     /** Shading */
