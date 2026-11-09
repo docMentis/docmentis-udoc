@@ -1670,6 +1670,23 @@ export type SelectionEdit =
      *  close the entry and move `then`. Refused as `enterCellText` is, the
      *  entry staying open. */
     | { kind: "commitCellEntry"; fill: boolean; then: GridCellSelectionMove | null }
+    /** Spreadsheet: Excel's Insert Sheet Rows — as many rows as the selection
+     *  spans, above its first, in the format of the row above. The selection
+     *  stays on the same rows, now the new ones. Refused where Excel refuses
+     *  it: pushing a filled cell or an object off the sheet, cutting through
+     *  an array formula. */
+    | { kind: "insertSheetRows" }
+    /** Spreadsheet: Excel's Insert Sheet Columns, left of the selection's
+     *  first, as `insertSheetRows` inserts rows. */
+    | { kind: "insertSheetColumns" }
+    /** Spreadsheet: Excel's Delete Sheet Rows — the selection's rows; the
+     *  sheet gains as many empty rows at its bottom. Refused where Excel
+     *  refuses it: part of an array formula, a table's header or totals row
+     *  without the table, rows a filter hides. */
+    | { kind: "deleteSheetRows" }
+    /** Spreadsheet: Excel's Delete Sheet Columns, as `deleteSheetRows`
+     *  deletes rows. */
+    | { kind: "deleteSheetColumns" }
     /** PDF: a page edit (`deletePages`, `reorderPages`, …) on the selected pages. */
     | { kind: "page"; edit: SelectionEdit }
     /** PDF: an object edit (`translateObjects`, `insertObjectText`, …) on the

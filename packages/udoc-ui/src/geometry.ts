@@ -326,7 +326,8 @@ export type { Peer, Pointer, PeerPointer };
  *
  * Each kind names what it acts on: a PDF's whole pages (`deletePages`), its page
  * objects (`deleteObjects`) or annotations (`deleteAnnotations`), a deck's
- * slides (`deleteSlides`), a drawing's shapes (`deleteShapes`). The object,
+ * slides (`deleteSlides`), a drawing's shapes (`deleteShapes`), a workbook's
+ * sheet rows and columns (`insertSheetRows`). The object,
  * annotation and shape reorder kinds gate all four z-order moves (Bring to
  * Front / Forward / Send Backward / to Back); align / distribute / flip have no kind of their own —
  * the host gates them from the translate / scale-each kinds + `count`.
@@ -373,7 +374,11 @@ export type SelectionEditKind =
     | "patchShapeTextBodyProperties"
     | "setShapeGeometry"
     | "resizeTextBox"
-    | "patchSectionPageMargins";
+    | "patchSectionPageMargins"
+    | "insertSheetRows"
+    | "insertSheetColumns"
+    | "deleteSheetRows"
+    | "deleteSheetColumns";
 
 /** Whether `caps` allows a selection edit of any of `kinds` — no per-doc-type
  *  branch: pass every name the control's edit goes by (`deleteObjects`,

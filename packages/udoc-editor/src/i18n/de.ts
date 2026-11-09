@@ -205,6 +205,12 @@ export const de: EditMessages = {
     "table.select": "Auswählen",
     "table.insert": "Einfügen",
     "table.delete": "Löschen",
+    "grid.insert": "Einfügen",
+    "grid.delete": "Löschen",
+    "grid.insertSheetRows": "Blattzeilen einfügen",
+    "grid.insertSheetColumns": "Blattspalten einfügen",
+    "grid.deleteSheetRows": "Blattzeilen löschen",
+    "grid.deleteSheetColumns": "Blattspalten löschen",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "Zeile auswählen",

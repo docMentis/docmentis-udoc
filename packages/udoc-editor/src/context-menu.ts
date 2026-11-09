@@ -1,13 +1,22 @@
 // Edit mode's canvas context menu rows: the clipboard and Delete over any
-// selection, and over a table the Select, Insert, Delete, Merge and Table
-// Properties rows. The
-// shell opens the menu (`UIExtension.contextMenuItems`).
+// selection, over a table the Select, Insert, Delete, Merge and Table
+// Properties rows, and over a workbook's grid the Insert and Delete of its rows
+// and columns. The shell opens the menu (`UIExtension.contextMenuItems`).
 import { allowsEdit, COPY_MENU_ITEM, ICON_DELETE, ICON_TOOL_POINTER } from "@docmentis/udoc-ui/internal";
 import type { EnabledWhen, MenuItem } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
-import { ICON_CUT, ICON_INSERT_ROW_BELOW, ICON_MERGE_CELLS, ICON_PASTE, ICON_TABLE_PROPERTIES } from "./icons.js";
+import {
+    ICON_CUT,
+    ICON_INSERT_COLUMN_LEFT,
+    ICON_INSERT_ROW_ABOVE,
+    ICON_INSERT_ROW_BELOW,
+    ICON_MERGE_CELLS,
+    ICON_PASTE,
+    ICON_TABLE_PROPERTIES,
+} from "./icons.js";
 import { editAction } from "./menu-action.js";
 import {
+    ICON_DELETE_COLUMNS,
     ICON_DELETE_ROWS,
     ICON_UNMERGE_CELLS,
     TABLE_DELETE_MENU,
@@ -63,6 +72,49 @@ export const CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
         icon: ICON_DELETE,
         enabledWhen: (c) => allowsEdit(c.selection, "deleteObjects", "deleteAnnotations", "deleteShapes"),
         separatorBefore: true,
+    },
+];
+
+/** A workbook's grid edit of its rows or columns, as a menu row runs it. */
+function sheetTrackRow(
+    kind: "insertSheetRows" | "insertSheetColumns" | "deleteSheetRows" | "deleteSheetColumns",
+    label: MessageKey,
+    icon: string,
+): MenuItem<MessageKey> {
+    return {
+        action: { kind: "selectionEdit", edit: { kind } },
+        label,
+        icon,
+        enabledWhen: (c) => allowsEdit(c.selection, kind),
+    };
+}
+
+/**
+ * The context menu as it reads over a **workbook's grid** — the rows above
+ * plus Insert and Delete fly-outs holding Excel's Home tab rows: Insert Sheet
+ * Rows and Columns, above and left of the selection's first, as many as it
+ * spans, and Delete Sheet Rows and Columns, the selection's.
+ */
+export const GRID_CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
+    ...CONTEXT_MENU,
+    {
+        submenu: [
+            sheetTrackRow("insertSheetRows", "grid.insertSheetRows", ICON_INSERT_ROW_ABOVE),
+            sheetTrackRow("insertSheetColumns", "grid.insertSheetColumns", ICON_INSERT_COLUMN_LEFT),
+        ],
+        label: "grid.insert",
+        icon: ICON_INSERT_ROW_ABOVE,
+        enabledWhen: (c) => allowsEdit(c.selection, "insertSheetRows", "insertSheetColumns"),
+        separatorBefore: true,
+    },
+    {
+        submenu: [
+            sheetTrackRow("deleteSheetRows", "grid.deleteSheetRows", ICON_DELETE_ROWS),
+            sheetTrackRow("deleteSheetColumns", "grid.deleteSheetColumns", ICON_DELETE_COLUMNS),
+        ],
+        label: "grid.delete",
+        icon: ICON_DELETE_ROWS,
+        enabledWhen: (c) => allowsEdit(c.selection, "deleteSheetRows", "deleteSheetColumns"),
     },
 ];
 

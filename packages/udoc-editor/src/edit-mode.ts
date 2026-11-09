@@ -4,7 +4,7 @@ import type { UIExtension, UIState } from "@docmentis/udoc-ui/internal";
 import type { UDocEditorOptions } from "./editor.js";
 import { arrangeCommands } from "./arrange.js";
 import { formatCommands } from "./commands.js";
-import { CONTEXT_MENU, TABLE_CONTEXT_MENU } from "./context-menu.js";
+import { CONTEXT_MENU, GRID_CONTEXT_MENU, TABLE_CONTEXT_MENU } from "./context-menu.js";
 import { cropCommands } from "./crop.js";
 import { createGrips } from "./grips.js";
 import { createModeSwitch } from "./components/ModeSwitch.js";
@@ -266,9 +266,13 @@ export function editMode(options: UDocEditorOptions): EditMode {
             if (edit.kind === "tableProperties") tableProperties?.open();
             else if (tools) runEditMenuAction(tools, edit);
         },
-        // Edit mode's acts on the selection, a table's rows added over one; view
-        // mode keeps the shell's.
-        contextMenuItems: (state, inTable) => (editing(state) ? (inTable ? TABLE_CONTEXT_MENU : CONTEXT_MENU) : null),
+        // Edit mode's acts on the selection, a table's rows added over one and a
+        // workbook grid's rows and columns over it; view mode keeps the shell's.
+        contextMenuItems: (state, inTable) => {
+            if (!editing(state)) return null;
+            if (inTable) return TABLE_CONTEXT_MENU;
+            return state.docType === "spreadsheet" ? GRID_CONTEXT_MENU : CONTEXT_MENU;
+        },
         guideBand: (state) => (rulerShown(state) ? ruler : null),
         placedShape,
         placePreview: (tool, page, p0, p1) =>

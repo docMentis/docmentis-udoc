@@ -6,6 +6,23 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-editor
+
+#### Added
+
+- A workbook's rows and columns can be inserted and deleted, as Excel's Insert
+  and Delete Sheet Rows and Sheet Columns do, from the grid's context menu: as
+  many as the selection spans, the selection staying on the same rows and
+  columns. New rows and columns take the format of the ones above or to the
+  left, and the sheet keeps its size. Formulas, merges, conditional formatting,
+  tables, pictures and charts follow their cells, a range losing its first or
+  last row shrinking as Excel shrinks it, and a save moves the hyperlinks,
+  validations, filter, notes and other content the file places by row and
+  column. Editors inserting and deleting at once in a shared session end up
+  with the same sheet. What Excel refuses is refused, its reason shown under
+  the formula bar, and so for now is a sheet holding a PivotTable, a slicer, a
+  form control, scenarios or a custom view.
+
 ## [0.8.18] - 2026-11-09
 
 Built on `@docmentis/udoc-wasm` 0.8.21.

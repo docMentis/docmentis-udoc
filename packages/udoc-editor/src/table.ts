@@ -44,7 +44,7 @@ import type { EditTools } from "./tools.js";
 export const ICON_DELETE_ROWS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M216-540h528v-228H216v228Zm-72 372v-672h672v672H672V-240.49h72V-468H216v228h72v72H144ZM411-84l-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Z"/></svg>`;
 
 /** Delete Columns: `add_column_right`, as {@link ICON_DELETE_ROWS} is `add_row_below`. */
-const ICON_DELETE_COLUMNS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M192-744v528h228v-528H192Zm-72 600v-672h672v144H719.51v-72H492v528h228v-72h72v144H120ZM687-360l-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Z"/></svg>`;
+export const ICON_DELETE_COLUMNS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M192-744v528h228v-528H192Zm-72 600v-672h672v144H719.51v-72H492v528h228v-72h72v144H120ZM687-360l-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Z"/></svg>`;
 
 /** Unmerge: `cell_merge` with its arrows turned outward. They are shorter, their
  *  heads clear of the frame's sides, and their tails meet where the merge arrows'

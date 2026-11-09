@@ -991,6 +991,16 @@ export function mountUIShell(
         }
     }
 
+    /** Insert or delete a workbook's sheet rows or columns over the selection's
+     *  — a refusal, as Excel shows one, under the formula bar. */
+    async function editSheetTracks(edit: SelectionEdit): Promise<void> {
+        try {
+            await commit(() => client.executeOnSelection(edit));
+        } catch (error) {
+            formulaBar.showRefusal(error instanceof Error ? error.message : String(error));
+        }
+    }
+
     /** Scroll a cell block the keyboard moved to into view — the least that
      *  shows it, its top-left where it is larger than the view. */
     function followCellBlock(box: { rect: { x0: number; y0: number; x1: number; y1: number } } | undefined): void {
@@ -3781,7 +3791,8 @@ export function mountUIShell(
                 clipboard.copy();
                 break;
             case "selectionEdit":
-                void editPages(action.edit);
+                if (isSheetTrackEdit(action.edit)) void editSheetTracks(action.edit);
+                else void editPages(action.edit);
                 break;
             case "toggleSlidesHidden":
                 // Show the slides again when every one is hidden, else hide
@@ -4099,4 +4110,16 @@ export function mountUIShell(
         close,
         destroy,
     };
+}
+
+/** Whether `edit` inserts or deletes a workbook's sheet rows or columns. */
+function isSheetTrackEdit(edit: SelectionEdit): boolean {
+    return (
+        typeof edit !== "string" &&
+        "kind" in edit &&
+        (edit.kind === "insertSheetRows" ||
+            edit.kind === "insertSheetColumns" ||
+            edit.kind === "deleteSheetRows" ||
+            edit.kind === "deleteSheetColumns")
+    );
 }
