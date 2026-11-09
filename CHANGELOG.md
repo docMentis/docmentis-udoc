@@ -18,6 +18,15 @@ listed once, by package. Its major and minor version are those of the
   `patchSectionPageMargins`. A `set…` command replaces what it names, as the word
   document command `setSectionPageMargins` does, which keeps its name.
 
+#### Fixed
+
+- A table cell's diagonal borders show, in word documents and decks, where they
+  were missing.
+- A workbook's conditional formatting computes Excel's math and trigonometry,
+  statistical, logical, information, text and date functions in its rules'
+  formulas, so a rule calling one such as `MEDIAN`, `STDEV` or `LARGE` formats
+  the cells it picks, where it formatted none.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -25,6 +34,11 @@ listed once, by package. Its major and minor version are those of the
 - A word document's formatting marks show an anchor in the margin beside the
   paragraph each floating picture or shape is anchored in, with a padlock on
   one locked there.
+
+#### Changed
+
+- The formula bar shows an array formula in braces on every cell of its range,
+  as Excel does, and an edit starts from the formula without them.
 
 ### udoc-editor
 
@@ -59,6 +73,13 @@ listed once, by package. Its major and minor version are those of the
 - With a block of cells selected, or whole rows, columns or the table, the font
   and paragraph controls format all the text of every cell in it, and show
   what the cells' text has in common.
+- A workbook recalculates as it's edited, as Excel does: a formula typed into a
+  cell shows its result, and each edit, undo or redo recomputes the formulas
+  that depend on the cells it changed, on any sheet. Excel's math and
+  trigonometry, statistical, logical, information, text and date functions are
+  computed as Excel computes them; a formula calling one not computed yet, such
+  as a lookup or financial function, keeps the value it has. Every editor in a
+  shared session computes the same results, `NOW()` and `TODAY()` included.
 
 #### Changed
 
@@ -67,6 +88,20 @@ listed once, by package. Its major and minor version are those of the
 - The Shape tab starts with Text Box and Shapes, on a deck's slides and over an
   image, so a new one can be drawn without leaving the tab; a PDF's Object tab
   starts with its Text Box and Shapes too.
+- A formula typed with more or fewer arguments than its function takes is
+  refused, as Excel refuses `=ABS(1,2)` and `=SUM()`, and the formula bar says
+  so.
+
+#### Fixed
+
+- Resizing a table on a slide resizes its columns and rows, its text keeping its
+  size, where the table stayed as it was and its box snapped back.
+- A row or column inserted into a table takes the format of the one beside it —
+  its height, shading, borders, margins and text formatting — where it took the
+  defaults. A row inserted inside a cell merged down joins that cell, which
+  grows by a row.
+- Deleting whole paragraphs from a word document closes up the space they took,
+  where the text below could stay where it was.
 
 ## [0.8.17] - 2026-11-07
 
