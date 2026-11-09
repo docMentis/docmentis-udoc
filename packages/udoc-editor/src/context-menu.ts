@@ -33,6 +33,13 @@ export type ClipboardOp = "cut" | "paste";
  *  large rather than on the selection. */
 const whenReady: EnabledWhen = (c) => c.ready;
 
+/** Whether the selection deletes — objects, annotations or shapes. */
+const whenDeletes: EnabledWhen = (c) => allowsEdit(c.selection, "deleteObjects", "deleteAnnotations", "deleteShapes");
+
+/** Whether the selection cuts: copies, and deletes objects or shapes — a
+ *  copyable but locked object is only copied. */
+const whenCuts: EnabledWhen = (c) => c.selection.copyable && allowsEdit(c.selection, "deleteObjects", "deleteShapes");
+
 /**
  * The canvas context menu in edit mode — what a right-click offers for the
  * current selection: the shell's Copy row among edit mode's own. These are
@@ -43,7 +50,8 @@ const whenReady: EnabledWhen = (c) => c.ready;
  *
  * Cut and Copy gate on the engine's `copyable` verdict (Cut additionally on a
  * delete kind — cut is copy-then-delete, so a copyable-but-locked object is only
- * copied). Paste needs a document, not a selection: it reads the system
+ * copied). Delete is left out where it can't run, as over a workbook's cells,
+ * rather than shown greyed. Paste needs a document, not a selection: it reads the system
  * clipboard, which may hold something to paste even when nothing is selected.
  *
  * Paste pastes the object, not merely its text: the copy path carries the
@@ -57,7 +65,7 @@ export const CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
         action: editAction({ kind: "clipboard", op: "cut" }),
         label: "contextMenu.cut",
         icon: ICON_CUT,
-        enabledWhen: (c) => c.selection.copyable && allowsEdit(c.selection, "deleteObjects", "deleteShapes"),
+        enabledWhen: whenCuts,
     },
     COPY_MENU_ITEM,
     {
@@ -70,7 +78,8 @@ export const CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
         action: editAction({ kind: "delete" }),
         label: "contextMenu.delete",
         icon: ICON_DELETE,
-        enabledWhen: (c) => allowsEdit(c.selection, "deleteObjects", "deleteAnnotations", "deleteShapes"),
+        enabledWhen: whenDeletes,
+        shownWhen: whenDeletes,
         separatorBefore: true,
     },
 ];

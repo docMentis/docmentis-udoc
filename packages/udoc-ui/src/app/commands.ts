@@ -285,6 +285,11 @@ export interface MenuItem<K extends string = MessageKey> {
      *  {@link EnabledWhen}); a disabled item is greyed and inert. A submenu row
      *  is enabled when any of its children is. */
     enabledWhen: EnabledWhen;
+    /** Whether the row shows at all, for one with no use where it can't run —
+     *  the canvas menu's Delete over a selection that deletes nothing. Absent,
+     *  it always shows, greyed by {@link enabledWhen}. A divider above a row
+     *  left out goes on the next row shown. */
+    shownWhen?: EnabledWhen;
     /** Draw a divider above this item — starts a new visual group. */
     separatorBefore?: boolean;
     /** For a toggle item (e.g. "Align to page"), whether it currently reads as

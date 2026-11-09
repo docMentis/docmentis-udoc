@@ -39,11 +39,23 @@ export interface MenuHost {
  * reflect the current selection.
  *
  * Handles three row kinds: a submenu row (a fly-out of nested items — Arrange ▸
- * Order / Align / Rotate), a checkable toggle row, and a plain action row.
+ * Order / Align / Rotate), a checkable toggle row, and a plain action row. A
+ * row whose `shownWhen` is false is left out.
  */
 export function buildMenuInto(panel: HTMLElement, items: readonly MenuItem<string>[], host: MenuHost): void {
     panel.innerHTML = "";
     const ctx = host.context();
+    // The rows shown, each with whether a divider goes above it: a row left
+    // out passes its divider on to the next one shown, and the first draws
+    // none.
+    const shown: { item: MenuItem<string>; divider: boolean }[] = [];
+    let divider = false;
+    for (const item of items) {
+        divider ||= item.separatorBefore === true;
+        if (!(item.shownWhen?.(ctx) ?? true)) continue;
+        shown.push({ item, divider: divider && shown.length > 0 });
+        divider = false;
+    }
     // The fly-out currently open in this panel, if any — opening another, or
     // hovering a plain row, collapses it, so only one shows at a time.
     let openSub: { panel: HTMLElement; row: HTMLButtonElement } | null = null;
@@ -57,7 +69,7 @@ export function buildMenuInto(panel: HTMLElement, items: readonly MenuItem<strin
     // The icon column is the menu's, not the row's: kept on every row where any
     // row has a glyph, so a row without one lines its label up with the rest,
     // and left out where none has — a list of values — so the labels sit flush.
-    const iconColumn = items.some((item) => item.icon !== undefined);
+    const iconColumn = shown.some(({ item }) => item.icon !== undefined);
     const icon = (item: MenuItem<string>): string =>
         iconColumn ? `<span class="udoc-toolbar__menu-icon">${item.icon ?? ""}</span>` : "";
 
@@ -65,7 +77,7 @@ export function buildMenuInto(panel: HTMLElement, items: readonly MenuItem<strin
     // extension's keys too.
     const label = (item: MenuItem<string>): string => host.i18n.t(item.label as Message);
 
-    for (const item of items) {
+    for (const { item, divider } of shown) {
         const enabled = item.enabledWhen(ctx);
 
         // --- Submenu row: a labeled parent that opens a nested fly-out. ---
@@ -79,7 +91,7 @@ export function buildMenuInto(panel: HTMLElement, items: readonly MenuItem<strin
             row.setAttribute("aria-haspopup", "menu");
             row.setAttribute("aria-expanded", "false");
             row.disabled = !enabled;
-            if (item.separatorBefore) row.classList.add("udoc-toolbar__menu-item--divider");
+            if (divider) row.classList.add("udoc-toolbar__menu-item--divider");
             row.innerHTML = `${icon(item)}<span class="udoc-toolbar__menu-label">${label(item)}</span><span class="udoc-toolbar__menu-caret">${ICON_CHEVRON_RIGHT}</span>`;
 
             const sub = document.createElement("div");
@@ -131,7 +143,7 @@ export function buildMenuInto(panel: HTMLElement, items: readonly MenuItem<strin
         btn.setAttribute("role", item.checked ? "menuitemcheckbox" : item.activeWhen ? "menuitemradio" : "menuitem");
         // A disabled button is inert, so the click can't fire for it.
         btn.disabled = !enabled;
-        if (item.separatorBefore) btn.classList.add("udoc-toolbar__menu-item--divider");
+        if (divider) btn.classList.add("udoc-toolbar__menu-item--divider");
         // A checkable item (the Align reference toggle) carries a trailing on/off
         // switch — visibly stateful in either position — and reports its state to
         // a11y.
