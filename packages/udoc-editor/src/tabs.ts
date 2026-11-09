@@ -234,11 +234,13 @@ const WORDPROCESSING_SHAPE_TAB: EditTab = {
 };
 
 /**
- * The Table tab — the edits and the format of the table the selection is in, on
- * one short band, as an embedded editor has room for: the Select, Insert, Delete
- * and Cells dropdowns and Distribute Columns; Shading, Border Color and Border;
- * the Align and Style dropdowns; and Properties, the dialog holding the
- * measures. A block of cells opens it, a selection with no text of its own to
+ * The Table tab — a new table, then the edits and the format of the table the
+ * selection is in, on one short band, as an embedded editor has room for: Insert
+ * Table, as the Slide and Insert tabs have it — on a deck's slide, or at a caret
+ * in a word document's body, not a cell's; then the Select, Insert, Delete and
+ * Cells dropdowns and Distribute Columns; Shading, Border Color and Border; the
+ * Align and Style dropdowns; and Properties, the dialog holding the measures. A
+ * block of cells opens it, a selection with no text of its own to
  * format. A caret in a cell opens the Text tab ahead of it, as a caret in a
  * shape's text does ahead of Shape, but leaves this tab open if it is: selecting
  * a row, deleting it and clicking a cell goes from a block to a caret and back,
@@ -249,6 +251,7 @@ const TABLE_TAB: EditTab = {
     label: "ribbon.table",
     icon: ICON_TAB_TABLE,
     commands: [
+        "insertTable",
         "tableSelect",
         "tableInsert",
         "tableDelete",

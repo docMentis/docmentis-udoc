@@ -50,7 +50,8 @@ listed once, by package. Its major and minor version are those of the
   dropdowns, leaving the band room for the controls that format the table.
 - The Shape tab starts with Text Box and Shapes, on a deck's slides and over an
   image, so a new one can be drawn without leaving the tab; a PDF's Object tab
-  starts with its Text Box and Shapes too.
+  starts with its Text Box and Shapes too. The Table tab starts with Insert
+  Table.
 
 ## [0.8.17] - 2026-11-07
 
