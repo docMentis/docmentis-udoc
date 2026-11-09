@@ -1,9 +1,23 @@
 // The shapes the Image tab draws over an image's pages: a shape in the paint it's
 // given, with an outline at a weight that reads at the page's size and a box's room
-// for a label, and a text box. Pure — `image.ts` places what this builds.
-import type { PaintColor, PaintFill, PaintLine, PaintLineEnd, ShapeNode, TextBody } from "@docmentis/udoc-wasm";
+// for a label, a text box, and a table. Pure — `image.ts` places what this builds.
+import type {
+    PaintColor,
+    PaintFill,
+    PaintLine,
+    PaintLineEnd,
+    ShapeNode,
+    ShapeSelection,
+    TableCell,
+    TablePartStyle,
+    TableRow,
+    TableStyle,
+    TableThemeableLine,
+    TextBody,
+} from "@docmentis/udoc-wasm";
 import type { ShapePoint } from "@docmentis/udoc-ui/internal";
 import type { GalleryShape } from "./shape-gallery.js";
+import type { TableSize } from "./table-picker.js";
 
 /** What a shape is drawn over an image in. An image has no theme, so these are
  *  never scheme colors. */
@@ -191,4 +205,210 @@ export function markupShape(
             diagramPoint: null,
         },
     };
+}
+
+/** What a table is drawn over an image in: the regions of a deck's default table
+ *  style, Medium Style 2, in colors of its own, as an image has no theme. */
+export interface MarkupTablePaint {
+    /** The header row's fill — and the total row's and the first and last
+     *  column's, when the table's look turns them on. */
+    readonly accent: PaintColor;
+    /** The text on {@link accent}, and the rules between the cells. */
+    readonly onAccent: PaintColor;
+    /** The body's fill. */
+    readonly body: PaintColor;
+    /** The fill every other row takes, banded. */
+    readonly band: PaintColor;
+    /** The body's text. */
+    readonly text: PaintColor;
+}
+
+/** The size a deck's table sets its text at, which a table over an image scales
+ *  every measure of a deck's from: its row height, cell margins and rules. */
+const DECK_TABLE_TEXT_SIZE = 18;
+
+/** A deck's new table's row height, in points: `PowerPoint`'s 370840 EMU, a
+ *  minimum. */
+const DECK_ROW_HEIGHT = 29.2;
+
+/** A deck's cell margins, in points: the schema's defaults, left and right, then
+ *  top and bottom. */
+const DECK_MARGIN_SIDE = 7.2;
+const DECK_MARGIN_END = 3.6;
+
+/** Medium Style 2's rules, in points: between all the cells, and the heavier one
+ *  under the header row and over the total row. */
+const DECK_RULE = 1;
+const DECK_HEADER_RULE = 3;
+
+/** How much of the page's width a new table spans, as a deck's does of its slide. */
+const TABLE_WIDTH_SHARE = 2 / 3;
+
+/** The id of the style a table over an image carries inline. A deck's inline
+ *  `a:tblStyle` is named by a GUID; this one is docMentis's own. */
+const MARKUP_TABLE_STYLE_ID = "{8EAE1DE5-23EC-47FE-95E1-36B4BED9CE17}";
+
+/** How many ids {@link markupTable} mints for a table of `size`: its frame, the
+ *  table, each column and row, and each cell's text story. */
+export function markupTableIds(size: TableSize): number {
+    return 2 + size.columns + size.rows * (1 + size.columns);
+}
+
+/** A solid rule `width` points wide in `color`, as a table style draws it. */
+function rule(width: number, color: PaintColor): TableThemeableLine {
+    return {
+        literal: {
+            width,
+            cap: null,
+            compound: null,
+            align: null,
+            fill: { solid: color },
+            dash: null,
+            join: null,
+            headEnd: null,
+            tailEnd: null,
+        },
+    };
+}
+
+/**
+ * Medium Style 2 in `paint`, its rules scaled by `scale`: the body in
+ * {@link MarkupTablePaint.body} under its text, every cell ruled off in
+ * {@link MarkupTablePaint.onAccent}, banded rows and columns in
+ * {@link MarkupTablePaint.band}, and the header and total rows and the first and
+ * last columns in bold on {@link MarkupTablePaint.accent} — the header ruled off
+ * below it and the total above, more heavily.
+ */
+function markupTableStyle(paint: MarkupTablePaint, scale: number): TableStyle {
+    const inner = rule(DECK_RULE * scale, paint.onAccent);
+    const heavy = rule(DECK_HEADER_RULE * scale, paint.onAccent);
+    const band: TablePartStyle = { cellStyle: { fill: { literal: { solid: paint.band } } } };
+    const accent = (borders: TablePartStyle["cellStyle"] = {}): TablePartStyle => ({
+        character: { props: [{ bold: true }, { fill: { solid: paint.onAccent } }] },
+        cellStyle: { ...borders, fill: { literal: { solid: paint.accent } } },
+    });
+    return {
+        id: MARKUP_TABLE_STYLE_ID,
+        parts: {
+            wholeTable: {
+                character: { props: [{ fill: { solid: paint.text } }] },
+                cellStyle: {
+                    borders: {
+                        left: inner,
+                        right: inner,
+                        top: inner,
+                        bottom: inner,
+                        insideHorizontal: inner,
+                        insideVertical: inner,
+                    },
+                    fill: { literal: { solid: paint.body } },
+                },
+            },
+            band1Horizontal: band,
+            band1Vertical: band,
+            firstRow: accent({ borders: { bottom: heavy } }),
+            lastRow: accent({ borders: { top: heavy } }),
+            firstColumn: accent(),
+            lastColumn: accent(),
+        },
+    };
+}
+
+/**
+ * A table of `size` over a page `page` points in size, as a deck's Insert Table
+ * places one on its slide: two thirds of the page wide and centred on it, its
+ * columns alike, its header row and banded rows on — but in `paint` rather than
+ * the deck's theme, which an image has none of, and at the size of a label rather
+ * than a slide's 18 points, its rows, margins and rules scaled along. A table too
+ * tall for the page starts at its top. Its ids are `mint`'s, in the order
+ * {@link markupTableIds} counts them. With it, the caret in its first cell.
+ */
+export function markupTable(
+    mint: () => string,
+    size: TableSize,
+    page: { width: number; height: number },
+    paint: MarkupTablePaint,
+): { node: ShapeNode; caret: ShapeSelection } {
+    const textSize = markupTextSize(page.width, page.height);
+    const scale = textSize / DECK_TABLE_TEXT_SIZE;
+    const width = page.width * TABLE_WIDTH_SHARE;
+    const rowHeight = DECK_ROW_HEIGHT * scale;
+    const height = rowHeight * size.rows;
+    const side = DECK_MARGIN_SIDE * scale;
+    const end = DECK_MARGIN_END * scale;
+    const frame = mint();
+    const table = mint();
+    const columns = Array.from({ length: size.columns }, () => ({ id: mint(), width: width / size.columns }));
+    const stories: string[] = [];
+    const rows: TableRow[] = Array.from({ length: size.rows }, () => {
+        const id = mint();
+        const cells = columns.map((): TableCell => {
+            const story = mint();
+            stories.push(story);
+            return {
+                regular: {
+                    properties: { margins: { top: end, bottom: end, left: side, right: side } },
+                    body: {
+                        properties: {},
+                        story: {
+                            id: story,
+                            blocks: [
+                                {
+                                    paragraph: {
+                                        properties: { props: [] },
+                                        end: { mark: { properties: { props: [{ size: textSize }] } } },
+                                        spans: [],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+            };
+        });
+        return { regular: { id, properties: { height: { atLeast: rowHeight } }, cells } };
+    });
+    const node: ShapeNode = {
+        graphicFrame: {
+            id: frame,
+            nonVisual: { name: "Table", description: null, title: null, hidden: false, placeholder: null },
+            transform: {
+                offset: { x: (page.width - width) / 2, y: Math.max(0, (page.height - height) / 2) },
+                extents: { width, height },
+                rotation: 0,
+                flipH: false,
+                flipV: false,
+            },
+            graphic: {
+                table: {
+                    id: table,
+                    properties: {
+                        style: { inline: markupTableStyle(paint, scale) },
+                        look: {
+                            firstRow: true,
+                            lastRow: false,
+                            firstColumn: false,
+                            lastColumn: false,
+                            rowBanding: true,
+                            columnBanding: false,
+                        },
+                    },
+                    columns,
+                    rows,
+                },
+            },
+        },
+    };
+    const first = rows[0];
+    const cell = {
+        row: first && "regular" in first ? first.regular.id : "",
+        column: columns[0]?.id ?? "",
+    };
+    const caret: ShapeSelection = {
+        shapeTable: [
+            frame,
+            { cellText: { table, cell, text: { range: { story: stories[0] ?? "", anchor: 0, focus: 0 } } } },
+        ],
+    };
+    return { node, caret };
 }

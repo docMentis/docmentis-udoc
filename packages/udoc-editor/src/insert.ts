@@ -445,7 +445,7 @@ function onSlide(c: CommandContext): boolean {
 
 /** Whether what is drawn over an image has a page to go on: the current one, unless
  *  it's animated or a vector, and not while it's cropped. */
-function overImage(c: CommandContext): boolean {
+export function overImage(c: CommandContext): boolean {
     return c.ready && c.docType === "image" && editStateOf(c).pageTakesMarkup && editStateOf(c).cropping === null;
 }
 

@@ -235,15 +235,15 @@ const WORDPROCESSING_SHAPE_TAB: EditTab = {
 /**
  * The Table tab — a new table, then the edits and the format of the table the
  * selection is in, on one short band, as an embedded editor has room for: Insert
- * Table — on a deck's slide, as its Slide tab has it too, or at a caret in a
- * word document's body, not a cell's; then the Select, Insert, Delete and
- * Cells dropdowns and Distribute Columns; Shading, Border Color and Border; the
- * Align and Style dropdowns; and Properties, the dialog holding the measures. A
- * block of cells opens it, a selection with no text of its own to
- * format. A caret in a cell opens the Text tab ahead of it, as a caret in a
- * shape's text does ahead of Shape, but leaves this tab open if it is: selecting
- * a row, deleting it and clicking a cell goes from a block to a caret and back,
- * all of it this tab's work.
+ * Table — on a deck's slide or over an image's page, as their Slide and Image
+ * tabs have it too, or at a caret in a word document's body, not a cell's; then
+ * the Select, Insert, Delete and Cells dropdowns and Distribute Columns; Shading,
+ * Border Color and Border; the Align and Style dropdowns; and Properties, the
+ * dialog holding the measures. A block of cells opens it, a selection with no
+ * text of its own to format. A caret in a cell opens the Text tab ahead of it, as
+ * a caret in a shape's text does ahead of Shape, but leaves this tab open if it
+ * is: selecting a row, deleting it and clicking a cell goes from a block to a
+ * caret and back, all of it this tab's work.
  */
 const TABLE_TAB: EditTab = {
     id: "table",
@@ -301,11 +301,12 @@ const PORTABLE_ANNOTATE_TAB: EditTab = { ...ANNOTATE_TAB, opensFor: annotations 
  * The image Image tab — the current page's Rotate Left / Right, Flip
  * Horizontal / Vertical, Crop and Image Size, the turns and flips the pages picked
  * in the thumbnails instead, then what is drawn over the page: a text box and the
- * gallery's shapes. All icons, named by their tooltips. An image's strip opens on
- * it, and pages picked or nothing selected open it. **Contextual** (see {@link ToolbarTab.contextual}): while
- * a page is cropped, crop mode's own controls show in their place — the aspect the
- * box keeps, Reset, Cancel and Apply — and a page that takes no markup leaves out
- * the text box and the shapes.
+ * gallery's shapes, dragged out on it, and a table sized on a grid. All icons,
+ * named by their tooltips. An image's strip opens on it, and pages picked or
+ * nothing selected open it. **Contextual** (see {@link ToolbarTab.contextual}):
+ * while a page is cropped, crop mode's own controls show in their place — the
+ * aspect the box keeps, Reset, Cancel and Apply — and a page that takes no markup
+ * leaves out the text box, the shapes and the table.
  */
 const IMAGE_TAB: EditTab = {
     id: "image",
@@ -320,6 +321,7 @@ const IMAGE_TAB: EditTab = {
         "resizePage",
         "insertTextBox",
         "insertGalleryShape",
+        "insertTable",
         "cropAspect",
         "cropReset",
         "cropCancel",
@@ -424,10 +426,10 @@ const WORDPROCESSING_TABS: readonly EditTab[] = [
     editViewTab("wordprocessing"),
 ];
 
-/** The image strip: its own Image, then the Text and Shape tabs of the shapes
- *  drawn over its pages — a deck's, as they are a slide's shapes — and its View
- *  last. */
-const IMAGE_TABS: readonly EditTab[] = [IMAGE_TAB, PRESENTATION_TEXT_TAB, SHAPE_TAB, editViewTab("image")];
+/** The image strip: its own Image, then the Text, Table and Shape tabs of what
+ *  is drawn over its pages — a deck's, as they are a slide's shapes and tables —
+ *  and its View last. Table goes ahead of Shape, as on a deck. */
+const IMAGE_TABS: readonly EditTab[] = [IMAGE_TAB, PRESENTATION_TEXT_TAB, TABLE_TAB, SHAPE_TAB, editViewTab("image")];
 
 /** The spreadsheet strip: its View. */
 const SPREADSHEET_TABS: readonly EditTab[] = [editViewTab("spreadsheet")];

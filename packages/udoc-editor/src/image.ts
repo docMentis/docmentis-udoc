@@ -1,5 +1,5 @@
 // An image document's edits: its pages turned, flipped, cropped and resized
-// from the Image tab, and the shapes and text boxes it draws over them. A page edit names
+// from the Image tab, and the shapes, text boxes and tables it draws over them. A page edit names
 // its page by the id its manifest entry carries, which also measures it: the
 // page's size in points — the points a crop and the shapes are in, the page's
 // own from its top-left — and its pixels, which a resize names.
@@ -18,14 +18,21 @@ import { createImageSizeModal } from "./components/ImageSizeModal.js";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { ICON_CROP, ICON_FLIP, ICON_IMAGE_SIZE } from "./icons.js";
-import { DOCMENTIS_FILL, DOCMENTIS_LINE, DOCMENTIS_ON_FILL } from "./docmentis-theme.js";
-import { markupShape, markupTextBox } from "./markup.js";
-import type { MarkupPaint } from "./markup.js";
+import {
+    DOCMENTIS_FILL,
+    DOCMENTIS_FILL_PALE,
+    DOCMENTIS_LINE,
+    DOCMENTIS_ON_FILL,
+    DOCMENTIS_ON_LINE,
+} from "./docmentis-theme.js";
+import { markupShape, markupTable, markupTableIds, markupTextBox } from "./markup.js";
+import type { MarkupPaint, MarkupTablePaint } from "./markup.js";
 import { drawingColorOf, specifiedPaint } from "./paint.js";
 import type { PaintMemory } from "./paint.js";
 import { PREVIEW_NODE_ID, PREVIEW_STORY_ID } from "./shape-gallery.js";
 import type { GalleryShape } from "./shape-gallery.js";
 import { editStateOf } from "./state.js";
+import type { TableSize } from "./table-picker.js";
 
 /** A large insert index that clamps to "on top" in the engine. */
 const APPEND_INDEX = 0x7fff_ffff;
@@ -243,7 +250,17 @@ async function drawOverPage(
         host.client.mintId(),
     ]);
     if (!info || !id || !story) return;
-    const node = build(id, story, info.size);
+    await insertOverPage(host, info, build(id, story, info.size), selection(id, story));
+}
+
+/** Put `node` on top of page `info`'s markup and select what `selection` names of
+ *  it. One committing edit. */
+async function insertOverPage(
+    host: EditHost,
+    info: ImagePageInfo,
+    node: ShapeNode,
+    selection: ShapeSelection,
+): Promise<void> {
     await host.commit(() =>
         host.client.execute({
             image: {
@@ -254,7 +271,36 @@ async function drawOverPage(
             },
         }),
     );
-    host.client.setSelection({ image: { shapes: { page: info.id, selection: selection(id, story) } } });
+    host.client.setSelection({ image: { shapes: { page: info.id, selection } } });
+}
+
+/** What a table is drawn over an image in: a deck's default style's regions in
+ *  docMentis's colors — an indigo header with white text, a pale body banded a
+ *  step darker, and white rules between the cells. */
+const TABLE_PAINT: MarkupTablePaint = {
+    accent: drawingColorOf(DOCMENTIS_LINE),
+    onAccent: drawingColorOf(DOCMENTIS_ON_LINE),
+    body: drawingColorOf(DOCMENTIS_FILL_PALE),
+    band: drawingColorOf(DOCMENTIS_FILL),
+    text: drawingColorOf(DOCMENTIS_ON_FILL),
+};
+
+/** Draw a table of `size` over the current page, centred, with the caret in its
+ *  first cell — an image's Insert Table. One committing edit. A no-op with no
+ *  image open. */
+export async function placeMarkupTable(host: EditHost, size: TableSize): Promise<void> {
+    const [info, ...ids] = await Promise.all([
+        currentPage(host),
+        ...Array.from({ length: markupTableIds(size) }, () => host.client.mintId()),
+    ]);
+    if (!info) return;
+    const minted: string[] = [];
+    for (const id of ids) {
+        if (!id) return;
+        minted.push(id);
+    }
+    const { node, caret } = markupTable(() => minted.shift() ?? "", size, info.size, TABLE_PAINT);
+    await insertOverPage(host, info, node, caret);
 }
 
 /**

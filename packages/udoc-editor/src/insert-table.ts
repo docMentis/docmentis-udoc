@@ -1,30 +1,36 @@
 // Insert Table: a grid to size the table on — the rows and columns pointed at
 // lit, their count above — and a click inserting it, with the caret in its
-// first cell: on a deck's slide from its Slide or Table tab, at the caret in a
-// word document's body from its Table tab.
+// first cell: on a deck's slide from its Slide or Table tab, over an image's page
+// from its Image or Table tab, at the caret in a word document's body from its
+// Table tab.
 
 import { allowsTextEdit, createDropdownButton } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, RibbonControl, RibbonControlEnv } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
 import { ICON_TAB_TABLE } from "./icons.js";
+import { placeMarkupTable } from "./image.js";
+import { overImage } from "./insert.js";
 import { whenTableEdit } from "./table.js";
 import { inSize, PICKER_COLUMNS, PICKER_ROWS, pickedSize } from "./table-picker.js";
 import type { TableSize } from "./table-picker.js";
 import type { EditTools } from "./tools.js";
 
-/** Where a table can go: a deck's slide shown, or a caret in a word document's
- *  body — text, not a cell's, which nests none yet. */
+/** Where a table can go: a deck's slide shown, an image's page that takes what is
+ *  drawn over it, or a caret in a word document's body — text, not a cell's,
+ *  which nests none yet. */
 export function canInsertTable(c: CommandContext): boolean {
     if (!c.ready) return false;
     if (c.docType === "presentation") return c.presentationView === "normal" && c.pageCount > 0;
+    if (c.docType === "image") return overImage(c);
     if (c.docType !== "wordprocessing") return false;
     return allowsTextEdit(c.selection, "insertText") && !whenTableEdit("insertRows")(c);
 }
 
 /** Insert a `size` table and put the caret in its first cell — one committing
- *  edit. */
+ *  edit. An image's is drawn over its page, as its shapes are. */
 export function insertTable(host: EditHost, size: TableSize): Promise<void> {
+    if (host.store.getState().docType === "image") return placeMarkupTable(host, size);
     return host.commit(() => host.edit.insertTable(size.rows, size.columns));
 }
 

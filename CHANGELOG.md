@@ -46,8 +46,12 @@ listed once, by package. Its major and minor version are those of the
   be deleted from the tab or its context menu.
 - Insert Table sizes a table on a grid and puts it where it's wanted, with the
   caret in its first cell: centred on a deck's slide, from its Slide or Table
-  tab, in PowerPoint's default table style; and at the caret in a word document,
-  from its Table tab, as wide as the text.
+  tab, in PowerPoint's default table style; centred over an image, from its
+  Image or Table tab, in docMentis's colors and at the size of the image's text
+  boxes; and at the caret in a word document, from its Table tab, as wide as the
+  text.
+- An image has a Table tab, which edits and formats a table drawn over it as a
+  deck's Table tab does a slide's.
 - Tab types a tab at the caret. In a table it moves to the next cell instead,
   and Shift+Tab to the one before, selecting the cell's text; Tab in the last
   cell adds a row. Ctrl+Tab, or Option/Alt+Tab where the browser keeps
