@@ -197,17 +197,22 @@ const PRESENTATION_TEXT_TAB: EditTab = {
 };
 
 /**
- * The Shape tab — outline + appearance + arrangement for graphics objects. Change
- * Shape's gallery, then Fill / Line split buttons (color per channel), then a
- * button group of the arrangement dropdowns — Order (z-order), Align (align /
- * distribute to the selection or the page) and Rotate (quarter-turn rotations +
- * flips) — and one of Group and Ungroup. Picked shapes open it.
+ * The Shape tab — new shapes, then outline + appearance + arrangement for
+ * graphics objects. Text Box and the gallery's shapes first, dragged out as the
+ * Slide and Image tabs' are, as PowerPoint's Shape Format starts with its Insert
+ * Shapes; then Change Shape's gallery, then Fill / Line split buttons (color per
+ * channel), then a button group of the arrangement dropdowns — Order (z-order),
+ * Align (align / distribute to the selection or the page) and Rotate
+ * (quarter-turn rotations + flips) — and one of Group and Ungroup. Picked shapes
+ * open it.
  */
 const SHAPE_TAB: EditTab = {
     id: "shape",
     label: "ribbon.shape",
     icon: ICON_TAB_SHAPE,
     commands: [
+        "insertTextBox",
+        "insertGalleryShape",
         "changeShape",
         "shapeFillColor",
         "shapeStrokeColor",
@@ -218,6 +223,14 @@ const SHAPE_TAB: EditTab = {
         "shapeUngroup",
     ] satisfies EditCommandId[],
     opensFor: pickedShapes,
+};
+
+/** The wordprocessing Shape tab — {@link SHAPE_TAB} without Text Box and the
+ *  gallery's shapes: nothing places a drawing in a word document's flow yet,
+ *  and the tab drops them rather than greying them for good. */
+const WORDPROCESSING_SHAPE_TAB: EditTab = {
+    ...SHAPE_TAB,
+    commands: SHAPE_TAB.commands.filter((id) => id !== "insertTextBox" && id !== "insertGalleryShape"),
 };
 
 /**
@@ -253,16 +266,19 @@ const TABLE_TAB: EditTab = {
 };
 
 /**
- * The Object tab — the portable (PDF) counterpart of {@link SHAPE_TAB}: its own
- * Line, Fill, Opacity and arrangement, gated on the object edits, over the page's content
- * objects (paths, text, images) rather than DrawingML shapes. Picked objects
- * open it, as does a caret in one's text.
+ * The Object tab — the portable (PDF) counterpart of {@link SHAPE_TAB}: the Page
+ * tab's Text Box and Shapes first, then its own Line, Fill, Opacity and
+ * arrangement, gated on the object edits, over the page's content objects
+ * (paths, text, images) rather than DrawingML shapes. Picked objects open it, as
+ * does a caret in one's text.
  */
 const OBJECT_TAB: EditTab = {
     id: "object",
     label: "ribbon.object",
     icon: ICON_TAB_OBJECT,
     commands: [
+        "insertTextBox",
+        "insertShape",
         "objectStrokeColor",
         "objectFillColor",
         "objectOpacity",
@@ -414,7 +430,7 @@ const WORDPROCESSING_TABS: readonly EditTab[] = [
     WORDPROCESSING_TEXT_TAB,
     WORDPROCESSING_INSERT_TAB,
     TABLE_TAB,
-    SHAPE_TAB,
+    WORDPROCESSING_SHAPE_TAB,
     REVIEW_TAB,
     editViewTab("wordprocessing"),
 ];

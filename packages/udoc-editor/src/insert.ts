@@ -1,7 +1,8 @@
 // What goes on a page or a slide, placed by a pointer gesture the canvas carries
-// out: Shapes — a PDF's four as page objects, from its Page tab, the gallery's on
-// a deck's slides, from its Slide tab, and over an image's pages, from its Image
-// tab — and Text Box on those and a PDF's page, a page object there; and Image on a
+// out: Shapes — a PDF's four as page objects, from its Page and Object tabs, the
+// gallery's on a deck's slides, from its Slide and Shape tabs, and over an image's
+// pages, from its Image and Shape tabs — and Text Box beside them, on a PDF's page
+// a page object; and Image on a
 // slide deck or a PDF's page, asked for and inserted at once. A shape paints with
 // what was last specified (`PaintMemory`), else its document's default: a deck's
 // theme, or docMentis's colors on a PDF or an image.
