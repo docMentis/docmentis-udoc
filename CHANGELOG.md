@@ -40,6 +40,9 @@ listed once, by package. Its major and minor version are those of the
   and Shift+Tab to the one before, selecting the cell's text; Tab in the last
   cell adds a row. Ctrl+Tab, or Option/Alt+Tab where the browser keeps
   Ctrl+Tab, types a tab in a cell.
+- With a block of cells selected, or whole rows, columns or the table, the font
+  and paragraph controls format all the text of every cell in it, and show
+  what the cells' text has in common.
 
 #### Changed
 
