@@ -5,9 +5,9 @@
 // that started runs to its end. Within that, a **request** — whatever the host
 // sends — runs before any background work, which comes from **tasks**, each a
 // source of one kind of it, in order of priority: the font pump's installs, the
-// thumbnail strip's renders, compose-ahead, the sheet walk. A task hands its
-// work out a slice at a time, taken only when it runs, so no slice is queued
-// ahead of time: a task whose work changed (a new document, a cancelled
+// thumbnail strip's renders, compose-ahead, the sheet walk, formula binding. A
+// task hands its work out a slice at a time, taken only when it runs, so no
+// slice is queued ahead of time: a task whose work changed (a new document, a cancelled
 // thumbnail) has nothing stale left to drop.
 //
 // A slice runs one per turn of the event loop, and only once no request is

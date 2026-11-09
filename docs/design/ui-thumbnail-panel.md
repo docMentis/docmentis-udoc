@@ -51,7 +51,7 @@ Priority control is therefore a **yield gate**, not a queue sort:
   [UI Background Work](ui-background-work.md)): one runs only when no request
   is waiting, no frame is pending, and the reader has been quiet for 300 ms. A
   moving camera, a hover or a keystroke always goes first. Thumbnails go ahead of
-  compose-ahead and the sheet walk, and behind font installs.
+  compose-ahead, the sheet walk and formula binding, and behind font installs.
 - The pending thumbnail queue lives in the worker, one render at a time, ordered
   by distance to the **visible window** (the `thumbnailFocus`/boost
   equivalent), so what the user is looking at fills first. `WorkerClient` queues,

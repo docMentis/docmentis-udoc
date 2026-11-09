@@ -17,8 +17,8 @@
  * scene), `rasterize` (CPU raster), and `composite` (un-premultiply + blit).
  *
  * The rest time one step of the worker's background work each, by its task: a
- * font install, a thumbnail render, a compose-ahead step and a sheet loaded by
- * the sheet walk. A step can't be interrupted, so its length is the longest a
+ * font install, a thumbnail render, a compose-ahead step, a sheet loaded by
+ * the sheet walk and a batch of formulas bound. A step can't be interrupted, so its length is the longest a
  * reader who comes back during it waits.
  */
 export type PerfEvent =
@@ -31,7 +31,8 @@ export type PerfEvent =
     | "fontInstall"
     | "thumbnail"
     | "composeAhead"
-    | "sheetWalk";
+    | "sheetWalk"
+    | "formulaBinding";
 
 /** Aggregated timing for one event type over the current window. */
 export interface PerfEventStats {

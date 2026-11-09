@@ -6,6 +6,7 @@ const BACKGROUND: ReadonlyArray<readonly [PerfEvent, string]> = [
     ["thumbnail", "thumbnails"],
     ["composeAhead", "compose"],
     ["sheetWalk", "sheets"],
+    ["formulaBinding", "formulas"],
 ];
 
 /**

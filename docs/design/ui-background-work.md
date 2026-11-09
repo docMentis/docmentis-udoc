@@ -1,7 +1,8 @@
 # UI Background Work
 
 How the engine worker fits the work nobody has asked for yet (composing ahead,
-thumbnails, a workbook's other sheets, web fonts) around what the reader does.
+thumbnails, a workbook's other sheets and its formulas, web fonts) around what
+the reader does.
 The code is `packages/udoc-ui/src/worker/lanes.ts` and the tasks in `worker.ts`.
 
 ## One job at a time
@@ -25,12 +26,13 @@ A reader waits at most for the one slice already running.
 
 Priority is the order of the table.
 
-| Task          | One slice                                                                                               | Starts                                                                                                               | Stops                                                                              |
-| ------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Font installs | install a fetched batch and re-shape every page, or settle a refusal                                    | the font pump fetched a batch, or a font was refused                                                                 | nothing left to install                                                            |
-| Thumbnails    | rasterize the queued page nearest the strip's focus                                                     | the strip queues a render                                                                                            | queue empty: rendered, cancelled, dropped                                          |
-| Compose-ahead | compose two more pages, post the layout (`composed`); on a worksheet, the next 64 rows not yet composed | an opened document's first paint; an edit, undo, merge, sheet switch, font re-shape; on a worksheet, a painted frame | complete, or a step that didn't grow; on a worksheet, the last row around the view |
-| Sheet walk    | load the next sheet not loaded yet, post its tab (`planeLoaded`)                                        | an opened workbook's first paint                                                                                     | its last sheet                                                                     |
+| Task            | One slice                                                                                               | Starts                                                                                                               | Stops                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Font installs   | install a fetched batch and re-shape every page, or settle a refusal                                    | the font pump fetched a batch, or a font was refused                                                                 | nothing left to install                                                            |
+| Thumbnails      | rasterize the queued page nearest the strip's focus                                                     | the strip queues a render                                                                                            | queue empty: rendered, cancelled, dropped                                          |
+| Compose-ahead   | compose two more pages, post the layout (`composed`); on a worksheet, the next 64 rows not yet composed | an opened document's first paint; an edit, undo, merge, sheet switch, font re-shape; on a worksheet, a painted frame | complete, or a step that didn't grow; on a worksheet, the last row around the view |
+| Sheet walk      | load the next sheet not loaded yet, post its tab (`planeLoaded`)                                        | an opened workbook's first paint                                                                                     | its last sheet                                                                     |
+| Formula binding | bind 64 more formulas of the loaded sheets to the sheets, rows and columns they name (`bindFormulas`)   | an opened workbook's first paint, and each sheet loaded, in a session that may edit                                  | every formula bound                                                                |
 
 A worksheet's grid composes by rows, in blocks, so compose-ahead walks down the
 rows the engine names around the view (`aheadRows`: the view's and 500 more

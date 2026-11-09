@@ -963,15 +963,16 @@ function emitHistory(): void {
 //
 // Two lanes (`lanes.ts`): a reader's requests run before background work, which
 // comes from the tasks below, in order of priority — the font pump's installs,
-// the thumbnail strip's renders, compose-ahead and the sheet walk — and waits,
-// too, for a pending frame to paint and for the reader to have been quiet a
-// moment.
+// the thumbnail strip's renders, compose-ahead, the sheet walk and formula
+// binding — and waits, too, for a pending frame to paint and for the reader to
+// have been quiet a moment.
 
 /**
  * How long the reader must have been quiet before any background work takes a
- * step — a font install, a thumbnail, compose-ahead, the sheet walk — in ms. Each of the
- * reader's inputs can ask the worker something — a hover hit-test, a pick, a
- * keystroke's edit — and one that lands behind a step waits out the whole step.
+ * step — a font install, a thumbnail, compose-ahead, the sheet walk, formula
+ * binding — in ms. Each of the reader's inputs can ask the worker something — a
+ * hover hit-test, a pick, a keystroke's edit — and one that lands behind a step
+ * waits out the whole step.
  * Longer than the gap between keystrokes, so typing doesn't render thumbnails
  * that its next keystroke's edit throws away.
  */
@@ -1056,6 +1057,25 @@ const walkTask: Task = {
     take: () => walkSheet,
 };
 
+/**
+ * How many of a workbook's formulas each binding step binds — each reference to
+ * the sheet, row and column it names, so the first rename or delete of a sheet
+ * doesn't bind them all at once — a few ms of parsing.
+ */
+const BIND_BATCH = 64;
+
+/** Whether the open session may edit, so binds a workbook's formulas ahead: a viewer never does. */
+let bindsFormulas = false;
+
+/** Whether formula binding has steps left: the open workbook's loaded sheets may hold a formula not bound yet. */
+let bindLeft = false;
+
+const bindTask: Task = {
+    quietMs: BACKGROUND_QUIET_MS,
+    pending: () => bindLeft,
+    take: () => bindFormulas,
+};
+
 const lanes = createLanes(
     {
         framePending: () => rafId !== null,
@@ -1071,6 +1091,7 @@ const lanes = createLanes(
         timed("thumbnail", thumbnailTask),
         timed("composeAhead", composeTask),
         timed("sheetWalk", walkTask),
+        timed("formulaBinding", bindTask),
     ],
 );
 
@@ -1300,15 +1321,21 @@ function startBackground(s: WasmSession): void {
     // A document still waiting for its password has nothing to compose yet;
     // `authenticate` opens it again.
     if (s.needsPassword()) return;
-    if (s.docType() === "spreadsheet") walkFrom = 0;
+    if (s.docType() === "spreadsheet") {
+        walkFrom = 0;
+        bindsFormulas = s.entitlements().features.includes("editing");
+        bindLeft = bindsFormulas;
+    }
     startComposeAhead(s);
 }
 
-/** Drop the open document's background work: compose-ahead and the sheet walk. */
+/** Drop the open document's background work: compose-ahead, the sheet walk and formula binding. */
 function stopBackground(): void {
     backgroundAfterPaint = false;
     composeAt = null;
     walkFrom = null;
+    bindsFormulas = false;
+    bindLeft = false;
     loadedSheets.clear();
 }
 
@@ -1464,10 +1491,23 @@ function walkSheet(): void {
     if (plane + 1 < count) walkFrom = plane + 1;
 }
 
+/**
+ * Formula binding's next step: bind up to {@link BIND_BATCH} more of the open
+ * workbook's formulas on its loaded sheets, until none is left.
+ */
+function bindFormulas(): void {
+    // Off before the step, as compose-ahead's is.
+    bindLeft = false;
+    if (!session) return;
+    bindLeft = !session.spreadsheet.bindFormulas(BIND_BATCH);
+}
+
 /** Load sheet `plane` of the open workbook, and post its tab colour, its kind and the sheet layout mode it opens in. */
 function loadSheet(s: WasmSession, plane: number): void {
     s.spreadsheet.loadSheet(plane);
     loadedSheets.add(planeKey(s, plane));
+    // A sheet loaded brings its formulas to bind.
+    if (bindsFormulas) bindLeft = true;
     scope.postMessage({
         type: "planeLoaded",
         plane,
