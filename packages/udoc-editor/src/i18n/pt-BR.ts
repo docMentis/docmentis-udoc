@@ -201,12 +201,6 @@ export const ptBR: EditMessages = {
     "table.select": "Selecionar",
     "table.insert": "Inserir",
     "table.delete": "Excluir",
-    "grid.insert": "Inserir",
-    "grid.delete": "Excluir",
-    "grid.insertSheetRows": "Inserir Linhas na Planilha",
-    "grid.insertSheetColumns": "Inserir Colunas na Planilha",
-    "grid.deleteSheetRows": "Excluir Linhas da Planilha",
-    "grid.deleteSheetColumns": "Excluir Colunas da Planilha",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "Selecionar Linha",

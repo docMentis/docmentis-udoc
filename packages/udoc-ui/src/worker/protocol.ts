@@ -1670,15 +1670,17 @@ export type SelectionEdit =
      *  close the entry and move `then`. Refused as `enterCellText` is, the
      *  entry staying open. */
     | { kind: "commitCellEntry"; fill: boolean; then: GridCellSelectionMove | null }
-    /** Spreadsheet: Excel's Insert Sheet Rows — as many rows as the selection
-     *  spans, above its first, in the format of the row above. The selection
-     *  stays on the same rows, now the new ones. Refused where Excel refuses
-     *  it: pushing a filled cell or an object off the sheet, cutting through
-     *  an array formula. */
-    | { kind: "insertSheetRows" }
-    /** Spreadsheet: Excel's Insert Sheet Columns, left of the selection's
-     *  first, as `insertSheetRows` inserts rows. */
-    | { kind: "insertSheetColumns" }
+    /** Spreadsheet: as many rows as the selection spans — with `before`, above
+     *  its first, as Excel's Insert Sheet Rows, in the format of the row above,
+     *  the selection staying on the same rows, now the new ones; else below
+     *  its last, in its format, the selection staying where it is. Refused
+     *  where Excel refuses it: pushing a filled cell or an object off the
+     *  sheet, cutting through an array formula. */
+    | { kind: "insertSheetRows"; before: boolean }
+    /** Spreadsheet: as many columns as the selection spans, left of its first
+     *  with `before`, else right of its last, as `insertSheetRows` inserts
+     *  rows. */
+    | { kind: "insertSheetColumns"; before: boolean }
     /** Spreadsheet: Excel's Delete Sheet Rows — the selection's rows; the
      *  sheet gains as many empty rows at its bottom. Refused where Excel
      *  refuses it: part of an array formula, a table's header or totals row

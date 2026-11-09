@@ -14,6 +14,7 @@ import type {
 } from "@docmentis/udoc-wasm";
 import { cssPxPerPt } from "../../geometry.js";
 import type {
+    HeaderBands,
     PageView,
     PageViewsFrame,
     PeerPointer,
@@ -50,6 +51,12 @@ import { WheelPaging } from "../wheel-paging.js";
 import { MAC } from "./controls.js";
 import { applyPoint, applyVector, invert, translate } from "./affine.js";
 import type { I18n } from "../i18n/index.js";
+
+/** A worksheet's last row and last column, 0-based: a header selection runs
+ *  its perpendicular axis to them, so one reaching them is whole columns or
+ *  whole rows. */
+const SHEET_LAST_ROW = 1_048_575;
+const SHEET_LAST_COLUMN = 16_383;
 
 /** Whether a picked {@link UDocHit} landed in text — the point carries a caret,
  *  so the host draws the I-beam and a press starts a text selection (a docx body
@@ -1237,6 +1244,9 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     // (a box plus a caret/text item), it lets an interior press drag a text
     // range instead of moving the object.
     let inObjectText = false;
+    // The rows and columns the selection covers, as the header bands tint them
+    // — what a right-click on a header keeps when it holds the header whole.
+    let headerSelection: HeaderBands | null = null;
     // The table the pointer is working in — set by the last press in a table,
     // dropped by any press that isn't one (you left the table). A right-click
     // inside that same table keeps what is picked (see `onContextMenu`).
@@ -1586,7 +1596,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // canvas resolves picks in (the top/left bands share the content pane's
         // edges), so the engine reads a band x as a column and a band y as a row,
         // and the header guide's track edges are measured in it too.
-        const bandPoint = (ev: PointerEvent): { x: number; y: number } => {
+        const bandPoint = (ev: MouseEvent): { x: number; y: number } => {
             const rect = canvas.getBoundingClientRect();
             return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
         };
@@ -1726,6 +1736,41 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             ev.preventDefault();
             client.selectSheet();
         };
+        // A right-click on a header opens the canvas menu over its column or row,
+        // the corner's over the whole sheet: it selects them, as a press does,
+        // unless the selection already holds them whole, so a right-click on one
+        // of three selected columns acts on all three.
+        const onBandMenu = (axis: "column" | "row" | "corner") => (ev: MouseEvent) => {
+            if (s.getState().status !== "ready" || !headerSelectActive()) return;
+            ev.preventDefault();
+            const p = bandPoint(ev);
+            const held = headerSelection;
+            const allRows = held !== null && held.rowStart === 0 && held.rowEnd >= SHEET_LAST_ROW;
+            const allColumns = held !== null && held.columnStart === 0 && held.columnEnd >= SHEET_LAST_COLUMN;
+            if (axis === "corner") {
+                if (!(allRows && allColumns)) client.selectSheet();
+            } else if (axis === "column") {
+                const at = guideBands.columnAt(p.x);
+                const kept = allRows && at !== null && held.columnStart <= at && at <= held.columnEnd;
+                if (!kept) client.selectSheetColumns({ x: p.x, y: 0 }, { x: p.x, y: 0 }, { extend: false });
+            } else {
+                const at = guideBands.rowAt(p.y);
+                const kept = allColumns && at !== null && held.rowStart <= at && at <= held.rowEnd;
+                if (!kept) client.selectSheetRows({ x: 0, y: p.y }, { x: 0, y: p.y }, { extend: false });
+            }
+            hooks.onContextMenu?.(ev.clientX, ev.clientY, false);
+        };
+        const onBandTopMenu = onBandMenu("column");
+        const onBandLeftMenu = onBandMenu("row");
+        const onCornerMenu = onBandMenu("corner");
+        bandTop.addEventListener("contextmenu", onBandTopMenu);
+        bandLeft.addEventListener("contextmenu", onBandLeftMenu);
+        bandCorner.addEventListener("contextmenu", onCornerMenu);
+        cleanups.push(() => {
+            bandTop.removeEventListener("contextmenu", onBandTopMenu);
+            bandLeft.removeEventListener("contextmenu", onBandLeftMenu);
+            bandCorner.removeEventListener("contextmenu", onCornerMenu);
+        });
         const onBandTopDown = onBandDown("column");
         const onBandLeftDown = onBandDown("row");
         const onBandTopMove = onBandMove("column");
@@ -2020,6 +2065,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             // selection repaints no engine pixels (no new frame), so the band
             // learns of the selection here rather than through the per-frame guide.
             guideBands.setSelection(state.local.headers ?? null);
+            headerSelection = state.local.headers ?? null;
             // ObjectText = an object box drawn together with a caret / text range
             // — or a free text's annotation box with the caret in its text, which
             // reads the same way; flow text has the caret / text with no box.

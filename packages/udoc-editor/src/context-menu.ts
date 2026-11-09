@@ -8,6 +8,7 @@ import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_CUT,
     ICON_INSERT_COLUMN_LEFT,
+    ICON_INSERT_COLUMN_RIGHT,
     ICON_INSERT_ROW_ABOVE,
     ICON_INSERT_ROW_BELOW,
     ICON_MERGE_CELLS,
@@ -84,44 +85,51 @@ export const CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
     },
 ];
 
-/** A workbook's grid edit of its rows or columns, as a menu row runs it. */
-function sheetTrackRow(
-    kind: "insertSheetRows" | "insertSheetColumns" | "deleteSheetRows" | "deleteSheetColumns",
-    label: MessageKey,
-    icon: string,
-): MenuItem<MessageKey> {
+/** A workbook's grid edit of its rows or columns, as a menu row runs it,
+ *  gated on its kind. */
+function sheetTrackRow(edit: SheetTrackEdit, label: MessageKey, icon: string): MenuItem<MessageKey> {
     return {
-        action: { kind: "selectionEdit", edit: { kind } },
+        action: { kind: "selectionEdit", edit },
         label,
         icon,
-        enabledWhen: (c) => allowsEdit(c.selection, kind),
+        enabledWhen: (c) => allowsEdit(c.selection, edit.kind),
     };
 }
 
+/** An edit of a workbook's rows or columns. */
+type SheetTrackEdit =
+    | { kind: "insertSheetRows"; before: boolean }
+    | { kind: "insertSheetColumns"; before: boolean }
+    | { kind: "deleteSheetRows" }
+    | { kind: "deleteSheetColumns" };
+
 /**
- * The context menu as it reads over a **workbook's grid** — the rows above
- * plus Insert and Delete fly-outs holding Excel's Home tab rows: Insert Sheet
- * Rows and Columns, above and left of the selection's first, as many as it
- * spans, and Delete Sheet Rows and Columns, the selection's.
+ * The context menu as it reads over a **workbook's grid** or its headers — the
+ * rows above plus Insert and Delete fly-outs, as a table's read: rows above or
+ * below the selection and columns left or right of it, as many as it spans,
+ * and its rows or columns deleted. Whole columns offer the column rows, whole
+ * rows the row rows.
  */
 export const GRID_CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
     ...CONTEXT_MENU,
     {
         submenu: [
-            sheetTrackRow("insertSheetRows", "grid.insertSheetRows", ICON_INSERT_ROW_ABOVE),
-            sheetTrackRow("insertSheetColumns", "grid.insertSheetColumns", ICON_INSERT_COLUMN_LEFT),
+            sheetTrackRow({ kind: "insertSheetRows", before: true }, "table.rowAbove", ICON_INSERT_ROW_ABOVE),
+            sheetTrackRow({ kind: "insertSheetRows", before: false }, "table.rowBelow", ICON_INSERT_ROW_BELOW),
+            sheetTrackRow({ kind: "insertSheetColumns", before: true }, "table.columnLeft", ICON_INSERT_COLUMN_LEFT),
+            sheetTrackRow({ kind: "insertSheetColumns", before: false }, "table.columnRight", ICON_INSERT_COLUMN_RIGHT),
         ],
-        label: "grid.insert",
-        icon: ICON_INSERT_ROW_ABOVE,
+        label: "table.insert",
+        icon: ICON_INSERT_ROW_BELOW,
         enabledWhen: (c) => allowsEdit(c.selection, "insertSheetRows", "insertSheetColumns"),
         separatorBefore: true,
     },
     {
         submenu: [
-            sheetTrackRow("deleteSheetRows", "grid.deleteSheetRows", ICON_DELETE_ROWS),
-            sheetTrackRow("deleteSheetColumns", "grid.deleteSheetColumns", ICON_DELETE_COLUMNS),
+            sheetTrackRow({ kind: "deleteSheetRows" }, "table.rows", ICON_DELETE_ROWS),
+            sheetTrackRow({ kind: "deleteSheetColumns" }, "table.columns", ICON_DELETE_COLUMNS),
         ],
-        label: "grid.delete",
+        label: "table.delete",
         icon: ICON_DELETE_ROWS,
         enabledWhen: (c) => allowsEdit(c.selection, "deleteSheetRows", "deleteSheetColumns"),
     },

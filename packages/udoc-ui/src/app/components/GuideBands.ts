@@ -277,6 +277,22 @@ export class GuideBands {
         return boundaryAt(guide.rows, y, tol);
     }
 
+    /** The column-header track under band-local `x`, by its 0-based index, or
+     *  `null` when the last guide isn't a header or none is there. */
+    columnAt(x: number): number | null {
+        const guide = this.#guide;
+        if (guide?.type !== "header") return null;
+        return trackAt(guide.columns, x);
+    }
+
+    /** The row-header track under band-local `y` — the row-axis mirror of
+     *  {@link columnAt}. */
+    rowAt(y: number): number | null {
+        const guide = this.#guide;
+        if (guide?.type !== "header") return null;
+        return trackAt(guide.rows, y);
+    }
+
     #draw(): void {
         const kind = this.#kind;
         // Reserve the strips via the grid tracks; setting them lays the band
@@ -453,6 +469,11 @@ function boundaryAt(cells: HeaderCell[], pos: number, tol: number): Boundary | n
         }
     }
     return best;
+}
+
+/** The index of the track of `cells` whose span holds `pos`, or `null`. */
+function trackAt(cells: HeaderCell[], pos: number): number | null {
+    return cells.find((cell) => cell.start <= pos && pos < cell.end)?.index ?? null;
 }
 
 function sameExtent(a: SelectionExtent | null, b: SelectionExtent | null): boolean {

@@ -204,12 +204,6 @@ export const ja: EditMessages = {
     "table.select": "選択",
     "table.insert": "挿入",
     "table.delete": "削除",
-    "grid.insert": "挿入",
-    "grid.delete": "削除",
-    "grid.insertSheetRows": "シートの行を挿入",
-    "grid.insertSheetColumns": "シートの列を挿入",
-    "grid.deleteSheetRows": "シートの行を削除",
-    "grid.deleteSheetColumns": "シートの列を削除",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "行の選択",
