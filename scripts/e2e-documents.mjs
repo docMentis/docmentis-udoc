@@ -463,7 +463,7 @@ export const DOCUMENTS = {
                                 cells: [
                                     {
                                         cell: { row: rows[1], column: columns[1] },
-                                        contents: { value: { number: 42 }, formula: null },
+                                        content: { value: { number: 42 } },
                                     },
                                 ],
                             },
@@ -482,7 +482,7 @@ export const DOCUMENTS = {
                                 cells: [
                                     {
                                         cell: { row: rows[3 + round * 2], column: columns[3] },
-                                        contents: { value: { number: 7 + nextValue() }, formula: null },
+                                        content: { value: { number: 7 + nextValue() } },
                                     },
                                 ],
                             },
@@ -505,7 +505,7 @@ export const DOCUMENTS = {
                                 cells: [
                                     {
                                         cell: { row: rows[4 + round * 2], column: columns[4] },
-                                        contents: { value: { text: `D${nextValue()}` }, formula: null },
+                                        content: { value: { text: `D${nextValue()}` } },
                                     },
                                 ],
                             },
