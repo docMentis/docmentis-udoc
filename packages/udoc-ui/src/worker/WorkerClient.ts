@@ -126,6 +126,7 @@ const MUTATING_REQUESTS: ReadonlySet<string> = new Set<WorkerRequest["type"]>([
     "history", // undo / redo
     "execute", // every addressed write (page edits, object inserts, host commands)
     "executeOnSelection", // every selection-relative write (move / rotate / delete / …)
+    "moveToCell", // Tab past a table's last cell adds a row
     "merge",
 ]);
 
@@ -1046,6 +1047,17 @@ export class WorkerClient {
      */
     async executeOnSelection(edit: SelectionEdit): Promise<DocumentLayout> {
         return (await this.#send({ type: "executeOnSelection", edit })) as DocumentLayout;
+    }
+
+    /**
+     * Move to the next cell of the table the selection is in — or to the one
+     * before, unless `forward` — with its whole text selected: Tab and
+     * Shift+Tab. Past the last cell, Tab adds a row with the caret in its first
+     * cell, one undo step, so it resolves with the document's layout like
+     * {@link executeOnSelection}; the selection follows via {@link onSelection}.
+     */
+    async moveToCell(forward: boolean): Promise<DocumentLayout> {
+        return (await this.#send({ type: "moveToCell", forward })) as DocumentLayout;
     }
 
     /**

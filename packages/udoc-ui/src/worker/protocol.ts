@@ -1732,6 +1732,18 @@ export interface ExecuteOnSelectionRequest {
 }
 
 /**
+ * Move to the next cell of the table the selection is in — or to the one
+ * before, unless `forward` — with its whole text selected: Tab and Shift+Tab.
+ * Past the last cell, Tab adds a row with the caret in its first cell, one undo
+ * step. Replies with the document's layout like {@link ExecuteOnSelectionRequest},
+ * as it may have edited, and re-posts the selection.
+ */
+export interface MoveToCellRequest {
+    type: "moveToCell";
+    forward: boolean;
+}
+
+/**
  * Execute one arbitrary, doc-type-tagged {@link import("@docmentis/udoc-wasm").UDocCommand}
  * directly — the generic write seam beneath the typed verbs above, exposed for
  * a host that builds its own commands rather than calling a named method. The
@@ -2172,6 +2184,7 @@ export type WorkerRequest =
     | PlainTextRequest
     | ExecuteRequest
     | ExecuteOnSelectionRequest
+    | MoveToCellRequest
     | SnapshotRequest
     | SaveToBytesRequest
     | OriginalBytesRequest

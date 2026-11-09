@@ -2782,6 +2782,19 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, session ? session.plainText(msg.fragment) : "");
                 break;
             }
+            case "moveToCell": {
+                if (!session) throw new Error("engine worker: moveToCell before open");
+                // A selection change, or a committing edit where Tab passes
+                // the last cell and adds a row: answered as one either way.
+                session.moveToCell(VIEWER, msg.forward);
+                const layout = layoutOf(session);
+                emitSelection(false);
+                emitHistory();
+                scheduleFrame();
+                startComposeAhead(session);
+                reply(id, layout);
+                break;
+            }
             case "executeOnSelection": {
                 if (typeof msg.edit === "object" && "kind" in msg.edit && msg.edit.kind === "commitCellEntry") {
                     cellEntries++;

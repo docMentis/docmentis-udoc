@@ -31,7 +31,7 @@ import type {
     TextHyperlink,
     Watermark,
 } from "@docmentis/udoc-wasm";
-import { allowsEdit, cssPxPerPt } from "../geometry.js";
+import { allowsEdit, allowsTableEdit, allowsTextEdit, cssPxPerPt } from "../geometry.js";
 import type {
     ContentPadding,
     DocumentLayout,
@@ -62,6 +62,7 @@ import { createFormulaBar } from "./components/FormulaBar.js";
 import { SCROLLBAR_THICKNESS_PX, visibleSpan } from "./components/Scrollbar.js";
 import { cellKeyAction } from "./cell-keys.js";
 import type { CellKeyAction } from "./cell-keys.js";
+import { tabKeyAction } from "./tab-keys.js";
 import { createRightPanel } from "./components/RightPanel.js";
 import { createStatusBar } from "./components/StatusBar.js";
 import { createSheetTabs } from "./components/SheetTabs.js";
@@ -801,6 +802,7 @@ export function mountUIShell(
             else if (typingCell()) editCellEntry({ text: { edit: { deleteText: { forward } } } });
         },
         cellKey: (ev) => cellKey(ev),
+        textKey: (ev) => textKey(ev),
         beginCellEntry: (text) =>
             typingCell() ? editCellEntry({ text: { edit: { insertText: { text } } } }) : beginCellEntry("enter", text),
         commitCellEntry: () => void saveCellEntry(false, null),
@@ -901,6 +903,27 @@ export function mountUIShell(
     let followCell = false;
 
     /** Take a key pressed on a workbook's grid, answering whether it did. */
+    /**
+     * Tab at a text caret or in a table — the keys Word and PowerPoint take
+     * (see `tab-keys`): on to the next cell or back to the one before, past the
+     * last adding a row; a tab typed into the text, with Ctrl or Alt in a cell.
+     * Only where text holds shapes' text — a deck's, a word document's, an
+     * image's drawings — and only while editing. Answers whether it took the
+     * key.
+     */
+    function textKey(ev: KeyboardEvent): boolean {
+        const state = store.getState();
+        if (state.status !== "ready" || state.mode === VIEW_MODE || !shapeDocType()) return false;
+        const action = tabKeyAction(ev, {
+            inTable: allowsTableEdit(state.selectionCaps, "insertRows"),
+            typing: allowsTextEdit(state.selectionCaps, "insertText"),
+        });
+        if (action === null) return false;
+        if (action === "insertTab") void insertSelectionText("\t");
+        else if (action !== "none") void commit(() => client.moveToCell(action === "nextCell"));
+        return true;
+    }
+
     function cellKey(ev: KeyboardEvent): boolean {
         const state = store.getState();
         // A key pressed before the report of the press that selected the cell

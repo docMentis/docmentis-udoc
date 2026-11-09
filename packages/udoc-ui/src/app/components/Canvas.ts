@@ -356,6 +356,10 @@ export interface CanvasHooks {
      *  taken before the hidden text input edits with it; answers whether the
      *  grid took it. */
     cellKey?: (ev: KeyboardEvent) => boolean;
+    /** Tab at a text caret or in a table, outside a workbook — on to the next
+     *  cell, or a tab typed — taken before the hidden text input edits with
+     *  it; answers whether it was taken. */
+    textKey?: (ev: KeyboardEvent) => boolean;
     /** Text typed on a workbook's selected cell, which begins an entry in it
      *  in place of what it holds. */
     beginCellEntry?: (text: string) => void;
@@ -819,7 +823,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         insertText: (text) => hooks.insertText?.(text),
         deleteText: (forward) => hooks.deleteText?.(forward),
         moveCaret: (movement, extend) => client.moveTextCaret(movement, extend),
-        key: (ev) => (store?.getState().docType === "spreadsheet" && hooks.cellKey?.(ev)) || false,
+        key: (ev) => (store?.getState().docType === "spreadsheet" ? hooks.cellKey?.(ev) : hooks.textKey?.(ev)) ?? false,
         beginTyping: (text) => hooks.beginCellEntry?.(text),
     });
     el.appendChild(textInput.el);

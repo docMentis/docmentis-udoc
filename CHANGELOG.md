@@ -36,6 +36,10 @@ listed once, by package. Its major and minor version are those of the
   caret in its first cell: centred on a deck's slide, from its Slide tab, in
   PowerPoint's default table style; and at the caret in a word document, from a
   new Insert tab, as wide as the text.
+- Tab types a tab at the caret. In a table it moves to the next cell instead,
+  and Shift+Tab to the one before, selecting the cell's text; Tab in the last
+  cell adds a row. Ctrl+Tab, or Option/Alt+Tab where the browser keeps
+  Ctrl+Tab, types a tab in a cell.
 
 #### Changed
 
