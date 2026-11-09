@@ -102,7 +102,6 @@ export interface Messages extends UIMessages {
     /** Page */
     "ribbon.page": string;
     /** Insert */
-    "ribbon.insert": string;
     /** Slide */
     "ribbon.slide": string;
     /** Text */

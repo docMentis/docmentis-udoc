@@ -55,7 +55,6 @@ export const zhCN: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "图像",
     "ribbon.page": "页面",
-    "ribbon.insert": "插入",
     "ribbon.slide": "幻灯片",
     "ribbon.text": "文本",
     "ribbon.shape": "形状",

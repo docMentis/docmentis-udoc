@@ -1,7 +1,7 @@
 // Insert Table: a grid to size the table on — the rows and columns pointed at
 // lit, their count above — and a click inserting it, with the caret in its
-// first cell: on a deck's slide from its Slide tab, at the caret in a word
-// document's body from its Insert tab, and from the Table tab of either.
+// first cell: on a deck's slide from its Slide or Table tab, at the caret in a
+// word document's body from its Table tab.
 
 import { allowsTextEdit, createDropdownButton } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, RibbonControl, RibbonControlEnv } from "@docmentis/udoc-ui/internal";

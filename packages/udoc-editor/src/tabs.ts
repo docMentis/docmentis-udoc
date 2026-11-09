@@ -17,7 +17,6 @@ import type { CommandId, SelectionCapabilities, ToolbarTab } from "@docmentis/ud
 import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_TAB_IMAGE,
-    ICON_TAB_INSERT,
     ICON_TAB_OBJECT,
     ICON_TAB_PAGE,
     ICON_TAB_SHAPE,
@@ -236,8 +235,8 @@ const WORDPROCESSING_SHAPE_TAB: EditTab = {
 /**
  * The Table tab — a new table, then the edits and the format of the table the
  * selection is in, on one short band, as an embedded editor has room for: Insert
- * Table, as the Slide and Insert tabs have it — on a deck's slide, or at a caret
- * in a word document's body, not a cell's; then the Select, Insert, Delete and
+ * Table — on a deck's slide, as its Slide tab has it too, or at a caret in a
+ * word document's body, not a cell's; then the Select, Insert, Delete and
  * Cells dropdowns and Distribute Columns; Shading, Border Color and Border; the
  * Align and Style dropdowns; and Properties, the dialog holding the measures. A
  * block of cells opens it, a selection with no text of its own to
@@ -415,23 +414,10 @@ const PRESENTATION_TABS: readonly EditTab[] = [
     editViewTab("presentation"),
 ];
 
-/**
- * The wordprocessing Insert tab: what goes into the text at the caret — a table
- * sized on a grid. Its own tab, as Word's Insert is, rather than an entry on the
- * Text tab's formatting or on the Table tab, which edits a table there already.
- */
-const WORDPROCESSING_INSERT_TAB: EditTab = {
-    id: "insert",
-    label: "ribbon.insert",
-    icon: ICON_TAB_INSERT,
-    commands: ["insertTable"] satisfies EditCommandId[],
-};
-
-/** The wordprocessing strip: Text, then Insert, and Table, then Shape for the
- *  drawings in its flow, and its View last. */
+/** The wordprocessing strip: Text, then Table, then Shape for the drawings in
+ *  its flow, then Review, and its View last. */
 const WORDPROCESSING_TABS: readonly EditTab[] = [
     WORDPROCESSING_TEXT_TAB,
-    WORDPROCESSING_INSERT_TAB,
     TABLE_TAB,
     WORDPROCESSING_SHAPE_TAB,
     REVIEW_TAB,

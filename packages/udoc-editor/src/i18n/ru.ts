@@ -55,7 +55,6 @@ export const ru: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "Изображение",
     "ribbon.page": "Страница",
-    "ribbon.insert": "Вставка",
     "ribbon.slide": "Слайд",
     "ribbon.text": "Текст",
     "ribbon.shape": "Фигура",

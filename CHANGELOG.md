@@ -45,9 +45,9 @@ listed once, by package. Its major and minor version are those of the
   in a word document, whether rows repeat at the top of each page. A table can
   be deleted from the tab or its context menu.
 - Insert Table sizes a table on a grid and puts it where it's wanted, with the
-  caret in its first cell: centred on a deck's slide, from its Slide tab, in
-  PowerPoint's default table style; and at the caret in a word document, from a
-  new Insert tab, as wide as the text.
+  caret in its first cell: centred on a deck's slide, from its Slide or Table
+  tab, in PowerPoint's default table style; and at the caret in a word document,
+  from its Table tab, as wide as the text.
 - Tab types a tab at the caret. In a table it moves to the next cell instead,
   and Shift+Tab to the one before, selecting the cell's text; Tab in the last
   cell adds a row. Ctrl+Tab, or Option/Alt+Tab where the browser keeps
@@ -62,8 +62,7 @@ listed once, by package. Its major and minor version are those of the
   dropdowns, leaving the band room for the controls that format the table.
 - The Shape tab starts with Text Box and Shapes, on a deck's slides and over an
   image, so a new one can be drawn without leaving the tab; a PDF's Object tab
-  starts with its Text Box and Shapes too. The Table tab starts with Insert
-  Table.
+  starts with its Text Box and Shapes too.
 
 ## [0.8.17] - 2026-11-07
 

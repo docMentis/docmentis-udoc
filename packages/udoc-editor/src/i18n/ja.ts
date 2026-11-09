@@ -55,7 +55,6 @@ export const ja: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "画像",
     "ribbon.page": "ページ",
-    "ribbon.insert": "挿入",
     "ribbon.slide": "スライド",
     "ribbon.text": "テキスト",
     "ribbon.shape": "図形",
