@@ -191,7 +191,8 @@ export function borderOfPen(pen: BorderPen): TableBorder {
     return { line };
 }
 
-/** No Border: every edge, with a line that has no fill and so draws nothing. */
+/** No Border's line: one with no fill, which draws nothing — laid on every
+ *  edge, the diagonals included. */
 export function noBorder(): TableBorder {
     return { line: changedDrawingLine(null, { fill: "none" }, { fill: "none", weight: 1, dash: "solid" }) };
 }
@@ -300,7 +301,7 @@ export function tableBorderControl(env: RibbonControlEnv, tools: EditTools, stat
         };
         for (const choice of BORDER_EDGES) split.menu.append(row(choice.icon, choice.label, () => lay(choice)));
         const none = row(ICON_BORDER_NONE, "table.borderNone", () => {
-            void runTableEdit(tools.host, borderEdit("all", noBorder()));
+            void runTableEdit(tools.host, borderEdit("allAndDiagonals", noBorder()));
         });
         none.classList.add("udoc-toolbar__menu-item--divider");
         split.menu.append(none);
