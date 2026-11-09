@@ -55,6 +55,7 @@ export const ar: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "صورة",
     "ribbon.page": "صفحة",
+    "ribbon.insert": "إدراج",
     "ribbon.slide": "شريحة",
     "ribbon.text": "نص",
     "ribbon.shape": "شكل",
@@ -65,6 +66,8 @@ export const ar: EditMessages = {
     "command.ruler": "المسطرة",
     "command.createSlide": "شريحة جديدة",
     "command.insertImage": "صورة",
+    "command.insertTable": "جدول",
+    "command.insertTableSize": "جدول {columns} × {rows}",
     "command.insertShape": "أشكال",
     "command.changeShape": "تغيير الشكل",
     "command.changeLayout": "تغيير التخطيط",

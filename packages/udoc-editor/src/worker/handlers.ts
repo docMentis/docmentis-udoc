@@ -141,4 +141,14 @@ export const EDIT_HANDLERS: EditHandlers = {
             return worker.committed(session);
         },
     },
+    insertTable: {
+        handle(request, worker) {
+            const { session } = worker;
+            if (!session) throw new Error("engine worker: insertTable before open");
+            // A committing edit like `insertImage`: the table lands with the
+            // caret in its first cell, which re-posts as the selection.
+            session.insertTable(worker.viewer, request.rows, request.columns);
+            return worker.committed(session);
+        },
+    },
 };

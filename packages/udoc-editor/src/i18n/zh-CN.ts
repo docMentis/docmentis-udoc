@@ -55,6 +55,7 @@ export const zhCN: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "图像",
     "ribbon.page": "页面",
+    "ribbon.insert": "插入",
     "ribbon.slide": "幻灯片",
     "ribbon.text": "文本",
     "ribbon.shape": "形状",
@@ -65,6 +66,8 @@ export const zhCN: EditMessages = {
     "command.ruler": "标尺",
     "command.createSlide": "新建幻灯片",
     "command.insertImage": "图片",
+    "command.insertTable": "表格",
+    "command.insertTableSize": "{columns} × {rows} 表格",
     "command.insertShape": "形状",
     "command.changeShape": "更改形状",
     "command.changeLayout": "更改版式",

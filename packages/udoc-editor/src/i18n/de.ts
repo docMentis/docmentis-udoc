@@ -55,6 +55,7 @@ export const de: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "Bild",
     "ribbon.page": "Seite",
+    "ribbon.insert": "Einfügen",
     "ribbon.slide": "Folie",
     "ribbon.text": "Text",
     "ribbon.shape": "Form",
@@ -65,6 +66,8 @@ export const de: EditMessages = {
     "command.ruler": "Lineal",
     "command.createSlide": "Neue Folie",
     "command.insertImage": "Bild",
+    "command.insertTable": "Tabelle",
+    "command.insertTableSize": "Tabelle {columns} × {rows}",
     "command.insertShape": "Formen",
     "command.changeShape": "Form ändern",
     "command.changeLayout": "Layout ändern",

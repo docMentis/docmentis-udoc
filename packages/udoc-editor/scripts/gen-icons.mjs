@@ -40,6 +40,7 @@ const OPSZ = 20;
 const ICONS = {
     // Ribbon tabs — on the strip, in its icon style
     ICON_TAB_IMAGE: "image",
+    ICON_TAB_INSERT: "add_box",
     ICON_TAB_OBJECT: "deployed_code",
     ICON_TAB_PAGE: "draft",
     ICON_TAB_SHAPE: "shapes",

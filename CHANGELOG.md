@@ -32,6 +32,10 @@ listed once, by package. Its major and minor version are those of the
   Properties sets the rows' height, the columns' width, the cells' margins and,
   in a word document, whether rows repeat at the top of each page. A table can
   be deleted from the tab or its context menu.
+- Insert Table sizes a table on a grid and puts it where it's wanted, with the
+  caret in its first cell: centred on a deck's slide, from its Slide tab, in
+  PowerPoint's default table style; and at the caret in a word document, from a
+  new Insert tab, as wide as the text.
 
 #### Changed
 

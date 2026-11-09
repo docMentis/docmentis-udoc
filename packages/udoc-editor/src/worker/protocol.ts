@@ -182,6 +182,18 @@ export interface InsertImageRequest {
 }
 
 /**
+ * Insert a table of `rows` × `columns` and put the caret in its first cell —
+ * Insert Table: on a deck centred on the current slide, in a word document at
+ * the caret in a section's body. A committing edit (one undo step), replying
+ * like `InsertImageRequest`.
+ */
+export interface InsertTableRequest {
+    type: "insertTable";
+    rows: number;
+    columns: number;
+}
+
+/**
  * Where geometry handle `index` of the selection's `handles` would land if it
  * were dragged to `(x, y)` — a point in that handle's **own local space**
  * (document points, the space the streamed handle's `point` is in), not CSS px.
@@ -230,5 +242,6 @@ export type EditRequest =
     | SlideIdRequest
     | PasteRequest
     | InsertImageRequest
+    | InsertTableRequest
     | SelectionHandlePreviewRequest
     | ShapePreviewRequest;

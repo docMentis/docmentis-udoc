@@ -101,6 +101,8 @@ export interface Messages extends UIMessages {
     "ribbon.image": string;
     /** Page */
     "ribbon.page": string;
+    /** Insert */
+    "ribbon.insert": string;
     /** Slide */
     "ribbon.slide": string;
     /** Text */
@@ -119,6 +121,10 @@ export interface Messages extends UIMessages {
     "command.createSlide": string;
     /** Image */
     "command.insertImage": string;
+    /** Table */
+    "command.insertTable": string;
+    /** {columns} × {rows} Table — the size Insert Table's grid points at */
+    "command.insertTableSize": string;
     /** Shapes */
     "command.insertShape": string;
     /** Change Shape */

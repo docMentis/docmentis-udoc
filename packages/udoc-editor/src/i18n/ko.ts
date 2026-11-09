@@ -55,6 +55,7 @@ export const ko: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "이미지",
     "ribbon.page": "페이지",
+    "ribbon.insert": "삽입",
     "ribbon.slide": "슬라이드",
     "ribbon.text": "텍스트",
     "ribbon.shape": "도형",
@@ -65,6 +66,8 @@ export const ko: EditMessages = {
     "command.ruler": "눈금자",
     "command.createSlide": "새 슬라이드",
     "command.insertImage": "그림",
+    "command.insertTable": "표",
+    "command.insertTableSize": "{columns} × {rows} 표",
     "command.insertShape": "도형",
     "command.changeShape": "도형 변경",
     "command.changeLayout": "레이아웃 변경",

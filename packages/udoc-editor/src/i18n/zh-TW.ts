@@ -55,6 +55,7 @@ export const zhTW: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "影像",
     "ribbon.page": "頁面",
+    "ribbon.insert": "插入",
     "ribbon.slide": "投影片",
     "ribbon.text": "文字",
     "ribbon.shape": "圖案",
@@ -65,6 +66,8 @@ export const zhTW: EditMessages = {
     "command.ruler": "尺規",
     "command.createSlide": "新投影片",
     "command.insertImage": "圖片",
+    "command.insertTable": "表格",
+    "command.insertTableSize": "{columns} × {rows} 表格",
     "command.insertShape": "圖案",
     "command.changeShape": "變更圖案",
     "command.changeLayout": "變更版面配置",

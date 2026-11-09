@@ -55,6 +55,7 @@ export const ptBR: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "Imagem",
     "ribbon.page": "Página",
+    "ribbon.insert": "Inserir",
     "ribbon.slide": "Slide",
     "ribbon.text": "Texto",
     "ribbon.shape": "Forma",
@@ -65,6 +66,8 @@ export const ptBR: EditMessages = {
     "command.ruler": "Régua",
     "command.createSlide": "Novo Slide",
     "command.insertImage": "Imagem",
+    "command.insertTable": "Tabela",
+    "command.insertTableSize": "Tabela {columns} × {rows}",
     "command.insertShape": "Formas",
     "command.changeShape": "Alterar Forma",
     "command.changeLayout": "Alterar Layout",

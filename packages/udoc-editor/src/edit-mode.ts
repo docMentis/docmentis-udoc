@@ -15,6 +15,7 @@ import { createI18n, MESSAGE_PACKS } from "./i18n/index.js";
 import { imageCommands, mountImageSize } from "./image.js";
 import type { ImageSize } from "./image.js";
 import { insertCommands, insertImage, pickImage, place, placedShape, placePreview } from "./insert.js";
+import { insertTableCommand } from "./insert-table.js";
 import { runEditMenuAction } from "./menu-action.js";
 import type { EditMenuAction } from "./menu-action.js";
 import { mountPageResize, pageCommands } from "./page-commands.js";
@@ -245,6 +246,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             ...insertCommands(() => {
                 if (host) pickImage(host);
             }),
+            insertTable: insertTableCommand(mountedTools),
             ...pageCommands(
                 () => host,
                 () => pageResize?.open(),

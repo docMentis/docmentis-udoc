@@ -55,6 +55,7 @@ export const fr: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "Image",
     "ribbon.page": "Page",
+    "ribbon.insert": "Insertion",
     "ribbon.slide": "Diapositive",
     "ribbon.text": "Texte",
     "ribbon.shape": "Forme",
@@ -65,6 +66,8 @@ export const fr: EditMessages = {
     "command.ruler": "Règle",
     "command.createSlide": "Nouvelle diapositive",
     "command.insertImage": "Image",
+    "command.insertTable": "Tableau",
+    "command.insertTableSize": "Tableau {columns} × {rows}",
     "command.insertShape": "Formes",
     "command.changeShape": "Modifier la forme",
     "command.changeLayout": "Modifier la disposition",

@@ -167,6 +167,17 @@ export class EditClient {
     }
 
     /**
+     * Insert a table of `rows` × `columns` and put the caret in its first cell
+     * — on a deck centred on the current slide, in a word document at the
+     * caret in a section's body, splitting the paragraph there. A committing
+     * edit (one undo step), so it resolves with the document's new layout; the
+     * selection follows via the client's `onSelection`.
+     */
+    insertTable(rows: number, columns: number): Promise<DocumentLayout> {
+        return this.#request({ type: "insertTable", rows, columns });
+    }
+
+    /**
      * Where handle `index` of the selection lands if dragged to `(x, y)` — the
      * shape's text warp's handle when `textWarp`, as the streamed handle says,
      * else its outline's — with `(x, y)` a point in that handle's **own local

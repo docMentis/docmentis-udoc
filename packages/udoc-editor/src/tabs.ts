@@ -17,6 +17,7 @@ import type { CommandId, SelectionCapabilities, ToolbarTab } from "@docmentis/ud
 import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_TAB_IMAGE,
+    ICON_TAB_INSERT,
     ICON_TAB_OBJECT,
     ICON_TAB_PAGE,
     ICON_TAB_SHAPE,
@@ -77,6 +78,7 @@ export type EditCommandId =
     | "deleteSlide"
     | "changeLayout"
     | "insertImage"
+    | "insertTable"
     | "insertPageImage"
     | "insertShape"
     | "insertGalleryShape"
@@ -340,9 +342,9 @@ const PORTABLE_PAGE_TAB: EditTab = {
  * The presentation Slide tab: the slides' edits — New Slide, after the current
  * slide, then Delete Slide and Change Layout, of the current slide or those
  * picked in the thumbnails — then what goes on a slide: a text box and the
- * gallery's shapes, dragged out on it, and a picture. All icons, named by their
- * tooltips. A deck's strip opens on it, and slides or sections picked or nothing
- * selected open it.
+ * gallery's shapes, dragged out on it, a picture, and a table sized on a grid.
+ * All icons, named by their tooltips. A deck's strip opens on it, and slides or
+ * sections picked or nothing selected open it.
  */
 const PRESENTATION_SLIDE_TAB: EditTab = {
     id: "slide",
@@ -355,6 +357,7 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
         "insertTextBox",
         "insertGalleryShape",
         "insertImage",
+        "insertTable",
     ] satisfies EditCommandId[],
     opensOnEntry: true,
     opensFor: slidesOrNothing,
@@ -393,10 +396,23 @@ const PRESENTATION_TABS: readonly EditTab[] = [
     editViewTab("presentation"),
 ];
 
-/** The wordprocessing strip: Text and Table, then Shape for the drawings in its
- *  flow, and its View last. */
+/**
+ * The wordprocessing Insert tab: what goes into the text at the caret — a table
+ * sized on a grid. Its own tab, as Word's Insert is, rather than an entry on the
+ * Text tab's formatting or on the Table tab, which edits a table there already.
+ */
+const WORDPROCESSING_INSERT_TAB: EditTab = {
+    id: "insert",
+    label: "ribbon.insert",
+    icon: ICON_TAB_INSERT,
+    commands: ["insertTable"] satisfies EditCommandId[],
+};
+
+/** The wordprocessing strip: Text, then Insert, and Table, then Shape for the
+ *  drawings in its flow, and its View last. */
 const WORDPROCESSING_TABS: readonly EditTab[] = [
     WORDPROCESSING_TEXT_TAB,
+    WORDPROCESSING_INSERT_TAB,
     TABLE_TAB,
     SHAPE_TAB,
     REVIEW_TAB,

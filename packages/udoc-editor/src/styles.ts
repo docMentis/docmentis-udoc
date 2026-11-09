@@ -739,6 +739,39 @@ export const editorStyles = css`
         color: var(--udoc-color-on-surface-variant);
     }
 
+    /* Insert Table's grid: cells to size a table on, those inside the size
+   pointed at lit in the soft tint a selection takes, and above them the size
+   named — or the command, while nothing is pointed at. */
+    .udoc-ui-root .udoc-menu.udoc-table-picker {
+        padding: 6px 10px 10px;
+    }
+    .udoc-ui-root .udoc-table-picker__caption {
+        padding: 2px 0 6px;
+        color: var(--udoc-color-on-surface-variant);
+        font-size: 12px;
+    }
+    .udoc-ui-root .udoc-table-picker__grid {
+        display: grid;
+        gap: 2px;
+    }
+    .udoc-ui-root .udoc-table-picker__cell {
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 2px;
+        background: var(--udoc-color-surface);
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-table-picker__cell--lit {
+        border-color: var(--udoc-color-outline);
+        background-image: linear-gradient(var(--udoc-state-selected) 0 0);
+    }
+    .udoc-ui-root .udoc-table-picker__cell:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: 1px;
+    }
+
     /* Text tab's size field — a narrow fixed-width combobox (a point size is short),
    so picking a different size doesn't shift the Bold / Italic buttons beside it. */
     .udoc-ui-root .udoc-size-select {

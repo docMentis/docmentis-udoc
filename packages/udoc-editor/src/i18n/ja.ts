@@ -55,6 +55,7 @@ export const ja: EditMessages = {
     // Ribbon tabs
     "ribbon.image": "画像",
     "ribbon.page": "ページ",
+    "ribbon.insert": "挿入",
     "ribbon.slide": "スライド",
     "ribbon.text": "テキスト",
     "ribbon.shape": "図形",
@@ -65,6 +66,8 @@ export const ja: EditMessages = {
     "command.ruler": "ルーラー",
     "command.createSlide": "新しいスライド",
     "command.insertImage": "画像",
+    "command.insertTable": "表",
+    "command.insertTableSize": "{columns} × {rows} の表",
     "command.insertShape": "図形",
     "command.changeShape": "図形の変更",
     "command.changeLayout": "レイアウトの変更",
