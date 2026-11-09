@@ -371,6 +371,10 @@ export interface Messages extends UIMessages {
     /** Delete */
     "table.delete": string;
 
+    // A workbook's grid, its context menu's Select
+    /** Sheet */
+    "grid.sheet": string;
+
     // The Table tab's dropdowns, whose buttons show only an icon
     /** Select Row */
     "table.selectRow": string;

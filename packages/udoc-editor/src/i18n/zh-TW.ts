@@ -201,6 +201,7 @@ export const zhTW: EditMessages = {
     "table.select": "選取",
     "table.insert": "插入",
     "table.delete": "刪除",
+    "grid.sheet": "工作表",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "選取列",

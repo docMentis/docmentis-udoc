@@ -201,6 +201,7 @@ export const ar: EditMessages = {
     "table.select": "تحديد",
     "table.insert": "إدراج",
     "table.delete": "حذف",
+    "grid.sheet": "الورقة",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "تحديد الصف",

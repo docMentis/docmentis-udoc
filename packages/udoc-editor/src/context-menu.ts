@@ -105,24 +105,50 @@ type SheetTrackEdit =
 
 /**
  * The context menu as it reads over a **workbook's grid** or its headers — the
- * rows above plus Insert and Delete fly-outs, as a table's read: rows above or
- * below the selection and columns left or right of it, as many as it spans,
- * and its rows or columns deleted. Whole columns offer the column rows, whole
- * rows the row rows.
+ * rows above plus Select, Insert and Delete fly-outs, as a table's read: the
+ * selection widened to whole rows or columns or the whole sheet, rows above or
+ * below it and columns left or right of it, as many as it spans, and its rows
+ * or columns deleted. Whole columns offer the column rows, whole rows the row
+ * rows.
  */
 export const GRID_CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
     ...CONTEXT_MENU,
     {
         submenu: [
+            { action: editAction({ kind: "selectSheet", scope: "rows" }), label: "table.row", enabledWhen: whenReady },
+            {
+                action: editAction({ kind: "selectSheet", scope: "columns" }),
+                label: "table.column",
+                enabledWhen: whenReady,
+            },
+            {
+                action: editAction({ kind: "selectSheet", scope: "sheet" }),
+                label: "grid.sheet",
+                enabledWhen: whenReady,
+            },
+        ],
+        label: "table.select",
+        icon: ICON_TOOL_POINTER,
+        enabledWhen: whenReady,
+        separatorBefore: true,
+    },
+    {
+        submenu: [
             sheetTrackRow({ kind: "insertSheetRows", before: true }, "table.rowAbove", ICON_INSERT_ROW_ABOVE),
             sheetTrackRow({ kind: "insertSheetRows", before: false }, "table.rowBelow", ICON_INSERT_ROW_BELOW),
-            sheetTrackRow({ kind: "insertSheetColumns", before: true }, "table.columnLeft", ICON_INSERT_COLUMN_LEFT),
+            {
+                ...sheetTrackRow(
+                    { kind: "insertSheetColumns", before: true },
+                    "table.columnLeft",
+                    ICON_INSERT_COLUMN_LEFT,
+                ),
+                separatorBefore: true,
+            },
             sheetTrackRow({ kind: "insertSheetColumns", before: false }, "table.columnRight", ICON_INSERT_COLUMN_RIGHT),
         ],
         label: "table.insert",
         icon: ICON_INSERT_ROW_BELOW,
         enabledWhen: (c) => allowsEdit(c.selection, "insertSheetRows", "insertSheetColumns"),
-        separatorBefore: true,
     },
     {
         submenu: [

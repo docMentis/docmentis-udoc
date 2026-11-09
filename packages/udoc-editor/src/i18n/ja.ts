@@ -204,6 +204,7 @@ export const ja: EditMessages = {
     "table.select": "選択",
     "table.insert": "挿入",
     "table.delete": "削除",
+    "grid.sheet": "シート",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "行の選択",

@@ -202,6 +202,7 @@ export const ru: EditMessages = {
     "table.select": "Выделить",
     "table.insert": "Вставить",
     "table.delete": "Удалить",
+    "grid.sheet": "Лист",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "Выделить строку",

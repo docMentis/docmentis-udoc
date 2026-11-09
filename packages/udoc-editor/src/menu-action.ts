@@ -43,6 +43,7 @@ export type EditMenuAction =
     | { kind: "clipboard"; op: ClipboardOp }
     | { kind: "delete" }
     | { kind: "selectTable"; scope: TableSelectScope }
+    | { kind: "selectSheet"; scope: "rows" | "columns" | "sheet" }
     | { kind: "tableEdit"; edit: TableSelectionEdit }
     | { kind: "deleteTable" }
     | { kind: "toggleTableLook"; flag: keyof TableLook }
@@ -103,6 +104,12 @@ export function runEditMenuAction(tools: EditTools, action: EditMenuAction): voi
             break;
         case "delete":
             void host.deleteSelection();
+            break;
+        case "selectSheet":
+            // Presence, as a table's Select: a workbook grid's selection widened
+            // to whole rows or columns, or the whole sheet.
+            if (action.scope === "sheet") host.client.selectSheet();
+            else host.client.widenSheetSelection(action.scope);
             break;
         case "selectTable":
             // Presence, not an edit: the three widenings re-state what is

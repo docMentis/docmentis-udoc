@@ -201,6 +201,7 @@ export const ko: EditMessages = {
     "table.select": "선택",
     "table.insert": "삽입",
     "table.delete": "삭제",
+    "grid.sheet": "시트",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "행 선택",

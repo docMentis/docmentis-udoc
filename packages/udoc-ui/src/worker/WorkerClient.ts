@@ -1206,6 +1206,17 @@ export class WorkerClient {
     }
 
     /**
+     * Widen a worksheet's selection to the whole **rows** or **columns** it
+     * spans — the grid's right-click Select ▸ Row / Column, as a table's. Whole
+     * rows widened to columns, or whole columns to rows, are the whole sheet.
+     * A no-op on any other selection. Geometry arrives via {@link onSelection}.
+     * Fire-and-forget.
+     */
+    widenSheetSelection(to: "rows" | "columns"): void {
+        this.#post({ type: "widenSheetSelection", to });
+    }
+
+    /**
      * Move the text caret per a keyboard `movement` (arrows / Home / End),
      * extending the selection instead of collapsing when Shift is held.
      * Presence only — not an edit, not undoable; the fresh geometry arrives

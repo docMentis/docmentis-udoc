@@ -892,6 +892,18 @@ export interface SelectAllRequest {
 }
 
 /**
+ * Widen a worksheet's selection to the whole rows or columns it spans — the
+ * right-click Select ▸ Row / Column over the grid, as a table's. Whole rows
+ * widened to columns, or whole columns to rows, are the whole sheet. A no-op
+ * on any other selection. Geometry rides back in a {@link SelectionReport}.
+ * Fire-and-forget.
+ */
+export interface WidenSheetSelectionRequest {
+    type: "widenSheetSelection";
+    to: "rows" | "columns";
+}
+
+/**
  * Widen the current **table** selection to the whole rows / columns it touches,
  * or to the whole table — the right-click Select ▸ Row / Column / Table
  * commands.
@@ -2152,6 +2164,7 @@ export type WorkerRequest =
     | SelectPagesRequest
     | SelectCellsRequest
     | SelectTableCellsRequest
+    | WidenSheetSelectionRequest
     | SelectTableRowsRequest
     | SelectTableColumnsRequest
     | SelectWholeTableRequest

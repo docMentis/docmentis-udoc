@@ -80,6 +80,7 @@ import type {
     SlideSelectionEditType,
     TextSelectionEditType,
     UDocCommand,
+    UDocSelection,
     UDocSelectionEdit,
     UDocType,
     WorksheetSelectionEditType,
@@ -2394,6 +2395,18 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 }
                 break;
             }
+            case "widenSheetSelection": {
+                // Presence, not an edit: the selection re-stated over whole
+                // rows or columns.
+                if (session) {
+                    const widened = widenedSheetSelection(session.selection(), msg.to);
+                    if (widened) {
+                        emitSelection(true, session.setSelection(VIEWER, widened));
+                        refreshChrome(session);
+                    }
+                }
+                break;
+            }
             case "selectTableRows":
             case "selectTableColumns":
             case "selectTable": {
@@ -3665,4 +3678,29 @@ function reply(id: number | undefined, result: unknown, error?: unknown, transfe
     } else {
         scope.postMessage({ _id: id, ok: true, result }, transfer ?? []);
     }
+}
+
+/** `selection` widened to the whole rows or columns its worksheet block spans:
+ *  whole rows to columns, or whole columns to rows, are the whole sheet; `null`
+ *  for any selection that isn't on a worksheet's grid. */
+function widenedSheetSelection(selection: UDocSelection | undefined, to: "rows" | "columns"): UDocSelection | null {
+    if (selection === undefined || !("spreadsheet" in selection)) return null;
+    const sheetSelection = selection.spreadsheet;
+    if (typeof sheetSelection === "string") return null;
+    if ("cells" in sheetSelection || "entry" in sheetSelection) {
+        const { sheet, anchor, focus } = "cells" in sheetSelection ? sheetSelection.cells : sheetSelection.entry;
+        return {
+            spreadsheet:
+                to === "rows"
+                    ? { rows: { sheet, anchor: anchor.row, focus: focus.row } }
+                    : { columns: { sheet, anchor: anchor.column, focus: focus.column } },
+        };
+    }
+    if ("rows" in sheetSelection) {
+        return to === "rows" ? selection : { spreadsheet: { all: { sheet: sheetSelection.rows.sheet } } };
+    }
+    if ("columns" in sheetSelection) {
+        return to === "columns" ? selection : { spreadsheet: { all: { sheet: sheetSelection.columns.sheet } } };
+    }
+    return selection;
 }

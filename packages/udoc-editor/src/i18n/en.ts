@@ -202,6 +202,7 @@ export const en: EditMessages = {
     "table.select": "Select",
     "table.insert": "Insert",
     "table.delete": "Delete",
+    "grid.sheet": "Sheet",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "Select Row",
