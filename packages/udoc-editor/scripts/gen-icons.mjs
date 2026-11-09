@@ -143,6 +143,11 @@ const ICONS = {
     ICON_TEXT_STACKED: "text_rotate_vertical",
     ICON_TABLE_STYLE: "table_chart",
     ICON_TABLE_PROPERTIES: "tune",
+
+    // A word document's floating drawing, selected: its anchor, and the lock
+    // on one that stays in its paragraph
+    ICON_OBJECT_ANCHOR: "anchor",
+    ICON_OBJECT_ANCHOR_LOCK: "lock",
 };
 
 const url = (name) =>

@@ -151,4 +151,21 @@ export const EDIT_HANDLERS: EditHandlers = {
             return worker.committed(session);
         },
     },
+    objectAnchorPreview: {
+        // Where a dragged anchor would land — beside the paragraph the engine
+        // picks for the point. A pure read, no edit, no repaint; `null` where
+        // there is no anchor to move or nowhere to move it.
+        handle: (request, { session, viewer }) =>
+            session ? (session.objectAnchorPreview(viewer, request.x, request.y) ?? null) : null,
+    },
+    moveObjectAnchor: {
+        handle(request, worker) {
+            const { session } = worker;
+            if (!session) throw new Error("engine worker: moveObjectAnchor before open");
+            // A committing edit like `insertTable`: the drawing's slot moves and
+            // it stays selected there, which re-posts as the selection.
+            session.moveObjectAnchor(worker.viewer, request.x, request.y);
+            return worker.committed(session);
+        },
+    },
 };

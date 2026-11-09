@@ -1,6 +1,7 @@
 // Edit mode's grips on the selection: a rotation grip above each selected box,
-// and the geometry grips (yellow diamonds) a lone shape offers — a rounded
-// rectangle's corner, an arrow's head, its text warp's sweep. udoc-ui's
+// the geometry grips (yellow diamonds) a lone shape offers — a rounded
+// rectangle's corner, an arrow's head, its text warp's sweep — and a word
+// document's floating drawing's anchor, in the margin. udoc-ui's
 // selection layer draws them
 // beside its resize handles (`SelectionChrome`), and the canvas hands a press on
 // one to the gesture this runs (`UIExtension.pressCanvas`).
@@ -11,10 +12,12 @@ import type {
     CanvasGestureHost,
     ChromeFrame,
     KeepOutRect,
+    SelectionBox,
     SelectionChrome,
     SelectionHandle,
     SelectionPlacement,
 } from "@docmentis/udoc-ui/internal";
+import { ICON_OBJECT_ANCHOR, ICON_OBJECT_ANCHOR_LOCK } from "./icons.js";
 import type { EditTools } from "./tools.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -30,6 +33,12 @@ const ROTATE_HANDLE_SIZE = 10;
 const ROTATE_HIT = 8;
 /** Gap (CSS px) from the box's top edge out to the rotation handle's center. */
 const ROTATE_GAP = 18;
+
+/** The anchor grip's smallest side (CSS px): the box the engine reports is a
+ *  glyph's size in points, which zoomed out is too small to see or grab. */
+const ANCHOR_MIN = 16;
+/** How far past the anchor grip a press still takes it (CSS px). */
+const ANCHOR_HIT = 3;
 
 /** Rotation-snap increment (radians) the Shift modifier locks to — 15°, the
  *  step PowerPoint/Figma/Illustrator use for constrained rotation. */
@@ -177,6 +186,18 @@ export function createGrips(tools: () => EditTools | null): Grips {
      * the cursor and letting it jump on release.
      */
     let handlePreview: SelectionHandle | null = null;
+    /** The anchor grip, while a floating drawing is selected. */
+    let anchorEl: HTMLElement | null = null;
+    /** Whether {@link anchorEl} wears the padlock, as it was last drawn. */
+    let anchorLocked = false;
+    /**
+     * Where a live drag of the anchor would drop it, as the engine reports it —
+     * drawn in place of the selection's own anchor until the committed
+     * geometry arrives. The anchor snaps beside a paragraph rather than
+     * following the pointer, so this is the engine's answer, as
+     * {@link handlePreview} is for a geometry grip.
+     */
+    let anchorPreview: SelectionBox | null = null;
 
     /** The adjust handles in `f`, or none when the engine reports no
      *  reshapeable geometry (a multi-shape selection, a doc type with none).
@@ -234,6 +255,62 @@ export function createGrips(tools: () => EditTools | null): Grips {
         const lv = frame?.project(grab.page, grab.transform);
         const back = lv ? invert(lv) : null;
         return back ? applyPoint(back, x, y) : null;
+    }
+
+    /** The anchor of the floating drawing selected in `f` — mid-drag, where the
+     *  engine says it would land — or null with none. */
+    function anchorItem(f: ChromeFrame): { at: SelectionBox; locked: boolean } | null {
+        const anchor = f.state.local.objectAnchor;
+        if (!anchor || f.boxes.length === 0) return null;
+        return { at: anchorPreview ?? anchor.at, locked: anchor.locked };
+    }
+
+    /** The viewport square the anchor grip at `at` stands in: the box the engine
+     *  reports, projected, and grown about its centre to {@link ANCHOR_MIN}.
+     *  Null with its page off screen. */
+    function anchorSquare(f: ChromeFrame, at: SelectionBox): { x: number; y: number; size: number } | null {
+        const lv = f.project(at.page, fromComponents(at.transform));
+        if (!lv) return null;
+        const a = applyPoint(lv, at.rect.x0, at.rect.y0);
+        const b = applyPoint(lv, at.rect.x1, at.rect.y1);
+        const size = Math.max(ANCHOR_MIN, Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+        return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, size };
+    }
+
+    /** Whether `(x, y)` (viewport CSS px) falls on an anchor grip that drags —
+     *  one not locked in its paragraph. */
+    function anchorAt(x: number, y: number): boolean {
+        const item = frame ? anchorItem(frame) : null;
+        if (!frame || !item || item.locked) return false;
+        const square = anchorSquare(frame, item.at);
+        if (!square) return false;
+        const half = square.size / 2 + ANCHOR_HIT;
+        return Math.abs(x - square.x) <= half && Math.abs(y - square.y) <= half;
+    }
+
+    /** Draw the anchor grip for `f`, or take it down with no anchor to show. */
+    function renderAnchor(f: ChromeFrame, group: HTMLElement): void {
+        const item = anchorItem(f);
+        const square = item ? anchorSquare(f, item.at) : null;
+        if (!item || !square) {
+            anchorEl?.remove();
+            anchorEl = null;
+            return;
+        }
+        if (!anchorEl || anchorLocked !== item.locked) {
+            anchorEl?.remove();
+            anchorEl = document.createElement("div");
+            anchorEl.className = "udoc-ui__object-anchor";
+            anchorEl.innerHTML = item.locked
+                ? `${ICON_OBJECT_ANCHOR}<span class="udoc-ui__object-anchor-lock">${ICON_OBJECT_ANCHOR_LOCK}</span>`
+                : ICON_OBJECT_ANCHOR;
+            anchorLocked = item.locked;
+        }
+        if (anchorEl.parentElement !== group) group.appendChild(anchorEl);
+        const half = square.size / 2;
+        anchorEl.style.width = `${square.size}px`;
+        anchorEl.style.height = `${square.size}px`;
+        anchorEl.style.transform = `translate(${square.x - half}px, ${square.y - half}px)`;
     }
 
     /**
@@ -322,24 +399,38 @@ export function createGrips(tools: () => EditTools | null): Grips {
                 el.style.transform = `translate(${c.x - aHalf}px, ${c.y - aHalf}px) rotate(45deg)`;
             }
             trim(usedRot, usedAdjust);
+            renderAnchor(f, group);
         },
         reach(f): KeepOutRect | null {
-            if (!rotates(f) || f.boxes.length === 0) return null;
+            if (f.boxes.length === 0) return null;
             let left = Infinity;
             let top = Infinity;
             let right = -Infinity;
             let bottom = -Infinity;
-            for (const { place, onScreen } of f.boxes) {
-                const grip = rotateGripPos(place, onScreen);
-                left = Math.min(left, grip.x);
-                top = Math.min(top, grip.y);
-                right = Math.max(right, grip.x);
-                bottom = Math.max(bottom, grip.y);
+            if (rotates(f)) {
+                for (const { place, onScreen } of f.boxes) {
+                    const grip = rotateGripPos(place, onScreen);
+                    left = Math.min(left, grip.x);
+                    top = Math.min(top, grip.y);
+                    right = Math.max(right, grip.x);
+                    bottom = Math.max(bottom, grip.y);
+                }
             }
-            return { left, top, right, bottom };
+            // The anchor stands in the margin, outside every box.
+            const item = anchorItem(f);
+            const square = item ? anchorSquare(f, item.at) : null;
+            if (square) {
+                const half = square.size / 2;
+                left = Math.min(left, square.x - half);
+                top = Math.min(top, square.y - half);
+                right = Math.max(right, square.x + half);
+                bottom = Math.max(bottom, square.y + half);
+            }
+            return left > right ? null : { left, top, right, bottom };
         },
         reset() {
             handlePreview = null;
+            anchorPreview = null;
         },
     };
 
@@ -503,16 +594,85 @@ export function createGrips(tools: () => EditTools | null): Grips {
         };
     }
 
+    /**
+     * A drag of the anchor grip pressed at `(x, y)`: the anchor snaps beside the
+     * paragraph under the pointer as the engine picks it, and the release moves
+     * the drawing's anchor there — the drawing itself staying where it stands.
+     */
+    function anchorGesture(x: number, y: number, canvas: CanvasGestureHost): CanvasGesture {
+        let moved = false;
+        // Whether the drag is still on — a probe answering after release draws
+        // nothing.
+        let live = true;
+        // The drag probe, coalesced latest-wins: one query in flight, the newest
+        // pointer chased on completion.
+        let probeSeq = 0;
+        let probeBusy = false;
+        let probeLatest: { x: number; y: number } | null = null;
+
+        /** Ask where an anchor dropped at canvas-local `(px, py)` would stand,
+         *  and draw it there. A point on no paragraph keeps the last answer. */
+        const probe = (px: number, py: number): void => {
+            const edit = tools()?.host.edit;
+            if (!edit) return;
+            probeLatest = { x: px, y: py };
+            if (probeBusy) return;
+            probeBusy = true;
+            const seq = ++probeSeq;
+            void edit.objectAnchorPreview(px, py).then((at) => {
+                probeBusy = false;
+                if (seq === probeSeq && live && at) {
+                    anchorPreview = at;
+                    canvas.refreshChrome();
+                }
+                const next = probeLatest;
+                if (next && (next.x !== px || next.y !== py) && live) probe(next.x, next.y);
+            });
+        };
+        // Drop the preview: the anchor returns to where the drawing has it.
+        const unpreview = (): void => {
+            anchorPreview = null;
+            canvas.refreshChrome();
+        };
+        return {
+            move(px, py) {
+                if (!moved) {
+                    if (Math.hypot(px - x, py - y) < DRAG_THRESHOLD) return;
+                    moved = true;
+                }
+                probe(px, py);
+            },
+            up(px, py) {
+                live = false;
+                const host = tools()?.host;
+                if (!moved || !host) {
+                    unpreview();
+                    return;
+                }
+                // Hold the previewed anchor until the moved geometry arrives, so
+                // it settles where it was dropped instead of flashing back.
+                canvas.committing();
+                void host.commit(() => host.edit.moveObjectAnchor(px, py));
+            },
+            cancel() {
+                live = false;
+                unpreview();
+            },
+        };
+    }
+
     return {
         chrome,
         press(x, y, canvas) {
             const grab = adjustHandleAt(x, y);
             if (grab) return adjustGesture(grab, x, y, canvas);
+            if (anchorAt(x, y)) return anchorGesture(x, y, canvas);
             const seed = rotateHitTest(x, y);
             return seed ? rotateGesture(seed, x, y, canvas) : null;
         },
         cursor(x, y) {
             if (adjustHandleAt(x, y)) return "crosshair";
+            if (anchorAt(x, y)) return "move";
             const seed = rotateHitTest(x, y);
             return seed ? rotateCursorForAngle(seed.baseAngle) : null;
         },

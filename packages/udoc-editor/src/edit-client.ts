@@ -9,7 +9,13 @@ import type {
     UDocFragment,
 } from "@docmentis/udoc-wasm";
 import type { DocumentLayout } from "@docmentis/udoc-ui";
-import type { SelectionHandle, ThemePalette, UIShellHost, WorkerClient } from "@docmentis/udoc-ui/internal";
+import type {
+    SelectionBox,
+    SelectionHandle,
+    ThemePalette,
+    UIShellHost,
+    WorkerClient,
+} from "@docmentis/udoc-ui/internal";
 import type { EditRequest, FontPreviewImage } from "./worker/protocol.js";
 
 /** Edit mode's requests of the render worker, over the shell's client. */
@@ -203,6 +209,31 @@ export class EditClient {
      */
     shapePreview(page: number, node: ShapeNode): Promise<ShapePreview | null> {
         return this.#request({ type: "shapePreview", page, node });
+    }
+
+    /**
+     * Where the anchor of the floating drawing selected in a word document would
+     * stand if it were dropped at CSS-px point `(x, y)` of the viewport: beside
+     * the paragraph nearest the point, a box on its page, as
+     * {@link moveObjectAnchor} would put it. What a live drag of the anchor
+     * draws, with nothing written until it ends. Cheap enough to call per
+     * pointer-move; the caller coalesces it latest-wins. Resolves `null` where
+     * the selection is not one floating drawing picked whole, its anchor is
+     * locked, or the point lands on no paragraph.
+     */
+    objectAnchorPreview(x: number, y: number): Promise<SelectionBox | null> {
+        return this.#request({ type: "objectAnchorPreview", x, y });
+    }
+
+    /**
+     * Move the anchor of the floating drawing selected in a word document onto
+     * the paragraph nearest CSS-px point `(x, y)` of the viewport — to that
+     * paragraph's start, as Word does — keeping the drawing where it stands on
+     * the page. A committing edit (one undo step), so it resolves with the
+     * document's new layout; the drawing stays selected.
+     */
+    moveObjectAnchor(x: number, y: number): Promise<DocumentLayout> {
+        return this.#request({ type: "moveObjectAnchor", x, y });
     }
 
     /** The id of the deck's slide at `index` (0-based), or `null` past the last

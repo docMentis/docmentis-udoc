@@ -218,6 +218,34 @@ export interface SelectionHandlePreviewRequest {
 }
 
 /**
+ * Where the anchor of the floating drawing selected in a word document would
+ * stand if it were dropped at CSS-px point `(x, y)` of the viewport: beside the
+ * paragraph nearest the point, as `MoveObjectAnchorRequest` would put it. A pure
+ * read, called **latest-wins** on pointer move, one in flight. Replies with the
+ * anchor's `SelectionBox` on its page; `null` where the selection is not one
+ * floating drawing picked whole in a section's body, its anchor is locked, or
+ * the point lands on no paragraph.
+ */
+export interface ObjectAnchorPreviewRequest {
+    type: "objectAnchorPreview";
+    x: number;
+    y: number;
+}
+
+/**
+ * Move the anchor of the floating drawing selected in a word document onto the
+ * paragraph nearest CSS-px point `(x, y)` of the viewport — to that paragraph's
+ * start, as Word does — keeping the drawing where it stands on the page. A
+ * committing edit (one undo step), replying like `InsertImageRequest`; the
+ * drawing stays selected.
+ */
+export interface MoveObjectAnchorRequest {
+    type: "moveObjectAnchor";
+    x: number;
+    y: number;
+}
+
+/**
  * What `node` would paint on page `page` (0-based), read without placing it — the
  * read behind a shape being dragged out, called **latest-wins** on pointer move,
  * one in flight. Replies with the whole `ShapePreview`; `null` for a doc type
@@ -244,4 +272,6 @@ export type EditRequest =
     | InsertImageRequest
     | InsertTableRequest
     | SelectionHandlePreviewRequest
-    | ShapePreviewRequest;
+    | ShapePreviewRequest
+    | ObjectAnchorPreviewRequest
+    | MoveObjectAnchorRequest;

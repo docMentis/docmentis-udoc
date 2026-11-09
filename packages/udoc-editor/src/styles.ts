@@ -921,6 +921,39 @@ export const editorStyles = css`
         border: 1.5px solid #b8860b;
         will-change: transform;
     }
+    /* A word document's floating drawing, selected: its anchor, in the margin
+   beside the paragraph the drawing is anchored in, where formatting marks draw
+   it in grey. Drawn in the selection's color, sized by the layer to the box the
+   engine reports, and dragged onto another paragraph to anchor the drawing
+   there; a locked anchor wears a padlock and does not drag. Carries no pointer
+   events, like the rest of the chrome. */
+    .udoc-ui-root .udoc-ui__object-anchor {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        box-sizing: border-box;
+        color: var(--udoc-canvas-selection);
+        will-change: transform;
+    }
+    .udoc-ui-root .udoc-ui__object-anchor > svg {
+        width: 100%;
+        height: 100%;
+    }
+    .udoc-ui-root .udoc-ui__object-anchor-lock {
+        position: absolute;
+        right: -25%;
+        bottom: -15%;
+        width: 55%;
+        height: 55%;
+        display: flex;
+        background: #fff;
+        border-radius: 2px;
+    }
+    .udoc-ui-root .udoc-ui__object-anchor-lock > svg {
+        width: 100%;
+        height: 100%;
+    }
 
     /* The ruler's controls (ruler-controls.ts), in the layers over its strips:
    each margin's edge, and the indent markers and tab stops of the paragraph a

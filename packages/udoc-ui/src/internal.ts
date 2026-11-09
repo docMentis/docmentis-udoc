@@ -64,6 +64,7 @@ export {
 } from "./geometry.js";
 export type {
     PaintDisplay,
+    SelectionBox,
     SelectionCapabilities,
     SelectionHandle,
     SelectionPaint,

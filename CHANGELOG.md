@@ -18,10 +18,22 @@ listed once, by package. Its major and minor version are those of the
   `patchSectionPageMargins`. A `set…` command replaces what it names, as the word
   document command `setSectionPageMargins` does, which keeps its name.
 
+### udoc-viewer and udoc-editor
+
+#### Added
+
+- A word document's formatting marks show an anchor in the margin beside the
+  paragraph each floating picture or shape is anchored in, with a padlock on
+  one locked there.
+
 ### udoc-editor
 
 #### Added
 
+- A floating picture or shape selected in a word document shows its anchor
+  beside the paragraph it's anchored in. Dragging the anchor onto another
+  paragraph anchors the drawing there without moving it on the page; a locked
+  anchor stays where it is.
 - The Table tab formats the table the selection is in. Shading fills the selected
   cells. Border draws on the edges chosen — all, outside, inside, one side or a
   diagonal — with the color, weight and dash Border Color sets, or takes the
