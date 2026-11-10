@@ -1,24 +1,31 @@
 // A table's edits: the rows the context menu shows over a table, and the Table
 // tab's commands, which offer the same edits on the ribbon.
-import { allowsEdit, allowsTableEdit, ICON_DELETE, ICON_FILL, ICON_TOOL_POINTER } from "@docmentis/udoc-ui/internal";
+import { allowsEdit, allowsTableEdit, ICON_FILL, ICON_TOOL_POINTER } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, EnabledWhen, MenuItem, TableEditKind } from "@docmentis/udoc-ui/internal";
 import type { TableLook, TableSelectionEdit, TextAnchor, TextDirection } from "@docmentis/udoc-wasm";
 import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_BORDER_ALL,
     ICON_BORDER_COLOR,
+    ICON_DELETE_COLUMNS,
+    ICON_DELETE_ROWS,
+    ICON_DELETE_TABLE,
     ICON_DISTRIBUTE_H,
     ICON_INSERT_COLUMN_LEFT,
     ICON_INSERT_COLUMN_RIGHT,
     ICON_INSERT_ROW_ABOVE,
     ICON_INSERT_ROW_BELOW,
     ICON_MERGE_CELLS,
+    ICON_SELECT_COLUMNS,
+    ICON_SELECT_ROWS,
+    ICON_SELECT_TABLE,
     ICON_TABLE_PROPERTIES,
     ICON_TABLE_STYLE,
     ICON_TEXT_HORIZONTAL,
     ICON_TEXT_ROTATE_270,
     ICON_TEXT_ROTATE_90,
     ICON_TEXT_STACKED,
+    ICON_UNMERGE_CELLS,
 } from "./icons.js";
 import { editAction, runEditMenuAction } from "./menu-action.js";
 import { editStateOf } from "./state.js";
@@ -34,27 +41,12 @@ import {
 import { ALIGN_CENTER_ROW, ALIGN_LEFT_ROW, ALIGN_RIGHT_ROW } from "./text-format.js";
 import type { EditTools } from "./tools.js";
 
-// The table glyphs Material Symbols has no symbol for, each drawn from the
-// symbol nearest it — the one it is the opposite of, or the one it adapts — which
-// keeps its frame and strokes. Modified from Material Symbols, © Google LLC,
-// licensed under the Apache License 2.0:
+// The three cell alignments Material Symbols has no symbol for, drawn from
+// `position_top_right`: its frame, and its block centred left to right and set
+// where the cell's text sits — as far below the frame's top as the symbol sets
+// it, mirrored at the bottom, or midway. Modified from Material Symbols,
+// © Google LLC, licensed under the Apache License 2.0:
 // https://www.apache.org/licenses/LICENSE-2.0
-
-/** Delete Rows: `add_row_below` with its plus an × of the same size and strokes.
- *  Not the trash can, which on the same menu deletes the whole shape. */
-export const ICON_DELETE_ROWS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M216-540h528v-228H216v228Zm-72 372v-672h672v672H672V-240.49h72V-468H216v228h72v72H144ZM411-84l-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Z"/></svg>`;
-
-/** Delete Columns: `add_column_right`, as {@link ICON_DELETE_ROWS} is `add_row_below`. */
-export const ICON_DELETE_COLUMNS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M192-744v528h228v-528H192Zm-72 600v-672h672v144H719.51v-72H492v528h228v-72h72v144H120ZM687-360l-51-51 69-69-69-69 51-51 69 69 69-69 51 51-69 69 69 69-51 51-69-69-69 69Z"/></svg>`;
-
-/** Unmerge: `cell_merge` with its arrows turned outward. They are shorter, their
- *  heads clear of the frame's sides, and their tails meet where the merge arrows'
- *  tips do. */
-export const ICON_UNMERGE_CELLS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M144-144v-240h72v168h168v72H144Zm432 0v-72h168v-168h72v240H576ZM312-336L168-480l144-144 51 51-57 57H432v72H306l57 57-51 51Zm336 0l-51-51 57-57H528v-72h126l-57-57 51-51 144 144-144 144ZM144-576v-240h240v72H216v168h-72Zm600 0v-168H576v-72h240v240h-72Z"/></svg>`;
-
-// The three cell alignments, drawn from `position_top_right`: its frame, and its
-// block centred left to right and set where the cell's text sits — as far below
-// the frame's top as the symbol sets it, mirrored at the bottom, or midway.
 
 /** Top: the block at the top of the frame — and the Align dropdown's own glyph. */
 export const ICON_CELL_ALIGN_TOP = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M312-576h336v-96H312v96ZM216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Zm0-528v528-528Z"/></svg>`;
@@ -89,9 +81,24 @@ export const whenTableEdit =
 const inTable: EnabledWhen = whenTableEdit("insertRows");
 
 export const TABLE_SELECT_MENU: readonly MenuItem<MessageKey>[] = [
-    { action: editAction({ kind: "selectTable", scope: "rows" }), label: "table.row", enabledWhen: whenReady },
-    { action: editAction({ kind: "selectTable", scope: "columns" }), label: "table.column", enabledWhen: whenReady },
-    { action: editAction({ kind: "selectTable", scope: "table" }), label: "table.table", enabledWhen: whenReady },
+    {
+        action: editAction({ kind: "selectTable", scope: "rows" }),
+        label: "table.row",
+        icon: ICON_SELECT_ROWS,
+        enabledWhen: whenReady,
+    },
+    {
+        action: editAction({ kind: "selectTable", scope: "columns" }),
+        label: "table.column",
+        icon: ICON_SELECT_COLUMNS,
+        enabledWhen: whenReady,
+    },
+    {
+        action: editAction({ kind: "selectTable", scope: "table" }),
+        label: "table.table",
+        icon: ICON_SELECT_TABLE,
+        enabledWhen: whenReady,
+    },
 ];
 
 export const TABLE_INSERT_MENU: readonly MenuItem<MessageKey>[] = [
@@ -145,7 +152,7 @@ export const TABLE_DELETE_MENU: readonly MenuItem<MessageKey>[] = [
     {
         action: editAction({ kind: "deleteTable" }),
         label: "table.table",
-        icon: ICON_DELETE,
+        icon: ICON_DELETE_TABLE,
         enabledWhen: canDeleteTable,
         separatorBefore: true,
     },

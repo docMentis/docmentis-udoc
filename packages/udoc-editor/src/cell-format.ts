@@ -50,11 +50,12 @@ import {
     ICON_PARAGRAPH_CENTER,
     ICON_PARAGRAPH_LEFT,
     ICON_PARAGRAPH_RIGHT,
+    ICON_UNMERGE_CELLS,
     ICON_WRAP_TEXT,
 } from "./icons.js";
 import { paintToGridColor } from "./paint.js";
 import { editState, editStateOf } from "./state.js";
-import { ICON_CELL_ALIGN_BOTTOM, ICON_CELL_ALIGN_CENTER, ICON_CELL_ALIGN_TOP, ICON_UNMERGE_CELLS } from "./table.js";
+import { ICON_CELL_ALIGN_BOTTOM, ICON_CELL_ALIGN_CENTER, ICON_CELL_ALIGN_TOP } from "./table.js";
 import { borderColorControl, borderControl, createBorderState, themeOf } from "./table-format.js";
 import type { BorderPen, LayBorder } from "./table-format.js";
 import type { EditTools } from "./tools.js";

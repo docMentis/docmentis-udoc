@@ -6,6 +6,17 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-editor
+
+#### Changed
+
+- The icons that draw a table are Pictogrammers' Material Design Icons: the Table
+  tab's own, Table Style and Table Properties, and those for inserting and
+  deleting rows and columns, deleting the table, and merging and splitting
+  cells, on the ribbon and in the menus, a workbook's included. Select's Row,
+  Column and Table rows show an icon each, and Delete Table shows a table where
+  it showed a trash can.
+
 ## [0.8.19] - 2026-11-09
 
 Built on `@docmentis/udoc-wasm` 0.8.22.

@@ -2,16 +2,18 @@
 // Regenerate `src/icons.ts` from Google's Material Symbols and Pictogrammers'
 // Material Design Icons.
 //
-// Every icon edit mode's chrome shows beyond udoc-ui's is a Material Symbol,
-// or where Material has none a Material Design Icon, picked by name in ICONS
-// below — the chrome draws none of its own, as udoc-ui's
-// `scripts/gen-icons.mjs` says of its own. The exceptions are the
-// table glyphs Material has no symbol for, each redrawn from the symbol nearest
-// it: in `src/table.ts` Delete Rows, Delete Columns and Unmerge, from the one
-// each is the opposite of, and the three cell alignments, from
-// `position_top_right`; in `src/table-format.ts` the two diagonal borders, from
-// `border_clear`. A symbol Material draws at the wrong angle takes an entry that
-// turns it.
+// Every icon edit mode's chrome shows beyond udoc-ui's is a Material Symbol or
+// a Material Design Icon, picked by name in ICONS below — the chrome draws none
+// of its own, as udoc-ui's `scripts/gen-icons.mjs` says of its own. The icons
+// that draw a table are Material Design Icons, whose table set is fuller than
+// Material's: the table itself, its style and properties, and each selection
+// and edit of its rows, columns and cells, a delete and a split among them. Its borders and
+// text directions stay Material Symbols, as does the rest, with a Material
+// Design Icon where Material has none. The exceptions are the table glyphs
+// neither has, each redrawn from the symbol nearest it: in `src/table.ts` the
+// three cell alignments, from `position_top_right`; in `src/table-format.ts`
+// the two diagonal borders, from `border_clear`. An icon drawn at the wrong
+// angle takes an entry that turns it.
 //
 //   npm run gen:icons
 //
@@ -25,8 +27,7 @@
 // A Material Design Icon (pictogrammers.com/library/mdi) comes from the
 // Templarian/MaterialDesign-SVG repository, pinned to MDI_COMMIT the same way.
 // Its one drawing is on a 24px grid, which the chrome scales to 20px, in the
-// older Material Icons style, so it goes where Material Symbols has nothing.
-// The generator refuses a Brand / Logo one, which isn't licensed under Apache
+// older Material Icons style, a little heavier than the symbols. The generator refuses a Brand / Logo one, which isn't licensed under Apache
 // 2.0 as the rest are, and a deprecated one, which a later major release drops.
 
 import { writeFileSync } from "node:fs";
@@ -55,7 +56,7 @@ const ICONS = {
     ICON_TAB_PAGE: "draft",
     ICON_TAB_SHAPE: "shapes",
     ICON_TAB_SLIDE: "text_ad",
-    ICON_TAB_TABLE: "table",
+    ICON_TAB_TABLE: { mdi: "table" },
     ICON_TAB_TEXT: "text_fields",
     ICON_TAB_CELL: "grid_on",
 
@@ -137,12 +138,22 @@ const ICONS = {
     ICON_CUT: "content_cut",
     ICON_PASTE: "content_paste",
 
-    // Table
-    ICON_INSERT_ROW_ABOVE: "add_row_above",
-    ICON_INSERT_ROW_BELOW: "add_row_below",
-    ICON_INSERT_COLUMN_LEFT: "add_column_left",
-    ICON_INSERT_COLUMN_RIGHT: "add_column_right",
-    ICON_MERGE_CELLS: "cell_merge",
+    // Table — Material Design Icons, as the header comment says
+    ICON_SELECT_ROWS: { mdi: "table-row" },
+    ICON_SELECT_COLUMNS: { mdi: "table-column" },
+    ICON_SELECT_TABLE: { mdi: "table" },
+    ICON_INSERT_ROW_ABOVE: { mdi: "table-row-plus-before" },
+    ICON_INSERT_ROW_BELOW: { mdi: "table-row-plus-after" },
+    ICON_INSERT_COLUMN_LEFT: { mdi: "table-column-plus-before" },
+    ICON_INSERT_COLUMN_RIGHT: { mdi: "table-column-plus-after" },
+    ICON_DELETE_ROWS: { mdi: "table-row-remove" },
+    ICON_DELETE_COLUMNS: { mdi: "table-column-remove" },
+    ICON_DELETE_TABLE: { mdi: "table-remove" },
+    ICON_MERGE_CELLS: { mdi: "table-merge-cells" },
+    ICON_UNMERGE_CELLS: { mdi: "table-split-cell" },
+    ICON_TABLE_STYLE: { mdi: "table-headers-eye" },
+    ICON_TABLE_PROPERTIES: { mdi: "table-cog" },
+    // The table's borders and text directions, which stay Material Symbols
     ICON_BORDER_ALL: "border_all",
     ICON_BORDER_OUTSIDE: "border_outer",
     ICON_BORDER_INSIDE: "border_inner",
@@ -158,8 +169,6 @@ const ICONS = {
     ICON_TEXT_ROTATE_90: "text_rotation_down",
     ICON_TEXT_ROTATE_270: "text_rotate_up",
     ICON_TEXT_STACKED: "text_rotate_vertical",
-    ICON_TABLE_STYLE: "table_chart",
-    ICON_TABLE_PROPERTIES: "tune",
 
     // A word document's floating drawing, selected: its anchor, and the lock
     // on one that stays in its paragraph

@@ -7,6 +7,8 @@ import type { EnabledWhen, MenuItem } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_CUT,
+    ICON_DELETE_COLUMNS,
+    ICON_DELETE_ROWS,
     ICON_INSERT_COLUMN_LEFT,
     ICON_INSERT_COLUMN_RIGHT,
     ICON_INSERT_ROW_ABOVE,
@@ -14,17 +16,10 @@ import {
     ICON_MERGE_CELLS,
     ICON_PASTE,
     ICON_TABLE_PROPERTIES,
+    ICON_UNMERGE_CELLS,
 } from "./icons.js";
 import { editAction } from "./menu-action.js";
-import {
-    ICON_DELETE_COLUMNS,
-    ICON_DELETE_ROWS,
-    ICON_UNMERGE_CELLS,
-    TABLE_DELETE_MENU,
-    TABLE_INSERT_MENU,
-    TABLE_SELECT_MENU,
-    whenTableEdit,
-} from "./table.js";
+import { TABLE_DELETE_MENU, TABLE_INSERT_MENU, TABLE_SELECT_MENU, whenTableEdit } from "./table.js";
 
 /** A clipboard operation of edit mode's on the current selection / caret — a
  *  copy is the shell's (`COPY_MENU_ITEM`). */
