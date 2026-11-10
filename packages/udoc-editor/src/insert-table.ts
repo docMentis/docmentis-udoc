@@ -8,7 +8,7 @@ import { allowsTextEdit, createDropdownButton } from "@docmentis/udoc-ui/interna
 import type { CommandContext, CommandDef, RibbonControl, RibbonControlEnv } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
-import { ICON_TAB_TABLE } from "./icons.js";
+import { ICON_INSERT_TABLE } from "./icons.js";
 import { placeMarkupTable } from "./image.js";
 import { overImage } from "./insert.js";
 import { whenTableEdit } from "./table.js";
@@ -44,7 +44,7 @@ export function insertTable(host: EditHost, size: TableSize): Promise<void> {
 export function insertTableControl(env: RibbonControlEnv, tools: EditTools): RibbonControl {
     const { i18n } = tools;
     const dd = createDropdownButton(
-        { icon: ICON_TAB_TABLE, label: env.label },
+        { icon: ICON_INSERT_TABLE, label: env.label },
         { menuLabel: env.label, onOpen: () => fill() },
     );
     dd.trigger.dataset.command = "insertTable";
@@ -141,7 +141,7 @@ export function insertTableCommand(tools: () => EditTools): CommandDef<MessageKe
     return {
         id: "insertTable",
         label: "command.insertTable",
-        icon: ICON_TAB_TABLE,
+        icon: ICON_INSERT_TABLE,
         group: "insert",
         run: { kind: "control", create: (env) => insertTableControl(env, tools()) },
         enabledWhen: canInsertTable,

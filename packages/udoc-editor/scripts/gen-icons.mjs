@@ -139,6 +139,7 @@ const ICONS = {
     ICON_PASTE: "content_paste",
 
     // Table — Material Design Icons, as the header comment says
+    ICON_INSERT_TABLE: { mdi: "table-plus" },
     ICON_SELECT_ROWS: { mdi: "table-row" },
     ICON_SELECT_COLUMNS: { mdi: "table-column" },
     ICON_SELECT_TABLE: { mdi: "table" },
