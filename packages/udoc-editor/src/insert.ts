@@ -21,7 +21,7 @@ import { DOCMENTIS_FILL, DOCMENTIS_LINE } from "./docmentis-theme.js";
 import type { EditHost } from "./edit-client.js";
 import { EditCommand } from "./edit-command.js";
 import type { MessageKey } from "./i18n/index.js";
-import { ICON_IMAGE, ICON_SHAPES } from "./icons.js";
+import { ICON_INSERT_IMAGE, ICON_SHAPES } from "./icons.js";
 import { markupPreview, placeMarkup, placeMarkupTextBox } from "./image.js";
 import { galleryShape, PREVIEW_NODE_ID, PREVIEW_STORY_ID, SHAPE_GALLERY } from "./shape-gallery.js";
 import type { GalleryShape } from "./shape-gallery.js";
@@ -458,7 +458,7 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
         insertImage: {
             id: "insertImage",
             label: "command.insertImage",
-            icon: ICON_IMAGE,
+            icon: ICON_INSERT_IMAGE,
             group: "insert",
             run: { kind: "action", press: pickImage },
             enabledWhen: onSlide,
@@ -466,7 +466,7 @@ export function insertCommands(pickImage: () => void): Readonly<Record<string, C
         insertPageImage: {
             id: "insertPageImage",
             label: "command.insertImage",
-            icon: ICON_IMAGE,
+            icon: ICON_INSERT_IMAGE,
             group: "insert",
             run: { kind: "action", press: pickImage },
             enabledWhen: (c) => c.ready && c.docType === "portable",

@@ -9,7 +9,8 @@
 // Material's: the table itself, its style and properties, and each selection
 // and edit of its rows, columns and cells, a delete and a split among them. So
 // are the Arrange controls that draw shapes stacked — Group, Ungroup and the
-// four order moves — where Material's show arrows and plain outlines. A table's
+// four order moves — where Material's show arrows and plain outlines, and
+// Insert Image, a picture with a plus as Insert Table's table has. A table's
 // borders and text directions stay Material Symbols, as does the rest, with a
 // Material Design Icon where Material has none. The exceptions are the table
 // glyphs neither has, each redrawn from the symbol nearest it: in
@@ -73,11 +74,11 @@ const ICONS = {
 
     // A deck's Slide tab
     ICON_CHANGE_LAYOUT: "team_dashboard",
-    ICON_IMAGE: "image",
+    ICON_INSERT_IMAGE: { mdi: "image-plus" },
     ICON_SHAPES: "shapes",
 
     // Shape tab
-    ICON_CHANGE_SHAPE: "category",
+    ICON_CHANGE_SHAPE: "shape_line",
 
     // An image's Home tab
     ICON_CROP: "crop",

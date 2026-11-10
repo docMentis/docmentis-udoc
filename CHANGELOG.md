@@ -19,6 +19,11 @@ listed once, by package. Its major and minor version are those of the
 - Group, Ungroup, Bring to Front, Bring Forward, Send Backward and Send to Back
   show Pictogrammers' Material Design Icons, which draw the shapes they stack,
   where they showed arrows and outlines. The Order button shows Bring Forward's.
+- The Image button that inserts a picture shows Pictogrammers' Material Design
+  Icons' picture with a plus, as the Table button that inserts a table shows
+  its table with one.
+- Change Shape shows a circle and a square joined by a line, where it showed
+  three shapes side by side.
 
 ## [0.8.19] - 2026-11-09
 
