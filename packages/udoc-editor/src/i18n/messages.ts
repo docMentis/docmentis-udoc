@@ -390,8 +390,6 @@ export interface Messages extends UIMessages {
     "cell.alignBottom": string;
     /** Wrap Text */
     "cell.wrapText": string;
-    /** Merge */
-    "cell.merge": string;
     /** Merge & Center */
     "cell.mergeAndCenter": string;
     /** Merge Across */

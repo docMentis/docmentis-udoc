@@ -61,6 +61,7 @@ export {
     selectionPaint,
     selectionTextFormat,
     sheetCellFormat,
+    sheetCellMerged,
     tableShadingDisplay,
 } from "./geometry.js";
 export type {

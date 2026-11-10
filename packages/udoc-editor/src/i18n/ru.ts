@@ -212,7 +212,6 @@ export const ru: EditMessages = {
     "cell.alignMiddle": "По середине",
     "cell.alignBottom": "По нижнему краю",
     "cell.wrapText": "Переносить текст",
-    "cell.merge": "Объединить",
     "cell.mergeAndCenter": "Объединить и поместить в центре",
     "cell.mergeAcross": "Объединить по строкам",
     "cell.numberFormat": "Числовой формат",

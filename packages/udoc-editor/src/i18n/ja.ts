@@ -214,7 +214,6 @@ export const ja: EditMessages = {
     "cell.alignMiddle": "上下中央揃え",
     "cell.alignBottom": "下揃え",
     "cell.wrapText": "折り返して全体を表示する",
-    "cell.merge": "結合",
     "cell.mergeAndCenter": "セルを結合して中央揃え",
     "cell.mergeAcross": "横方向に結合",
     "cell.numberFormat": "表示形式",

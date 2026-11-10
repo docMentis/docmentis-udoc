@@ -769,6 +769,12 @@ export function sheetCellFormat(properties: UDocSelectionProperties | null): Gri
     return properties && "spreadsheet" in properties ? (properties.spreadsheet.format ?? null) : null;
 }
 
+/** Whether a workbook's active cell is in a merge — what its Merge & Center
+ *  control shows pressed. */
+export function sheetCellMerged(properties: UDocSelectionProperties | null): boolean {
+    return properties !== null && "spreadsheet" in properties && properties.spreadsheet.merged;
+}
+
 /** An sRGB color → its `#RRGGBB` hex. */
 function srgbHex(color: PaintSRgbColor): string {
     const byte = (value: number) => value.toString(16).padStart(2, "0").toUpperCase();

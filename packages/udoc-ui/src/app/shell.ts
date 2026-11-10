@@ -3888,6 +3888,7 @@ export function mountUIShell(
         hold: (message, work) => busyModal.hold(message, work),
         annotationsSelected,
         deleteSelection,
+        runMenuAction,
         insertSelectionText,
         clipboardSink: canvas.clipboardSink,
         focusClipboardSink: canvas.focusClipboardSink,

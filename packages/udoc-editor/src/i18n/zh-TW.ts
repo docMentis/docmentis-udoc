@@ -211,7 +211,6 @@ export const zhTW: EditMessages = {
     "cell.alignMiddle": "垂直置中",
     "cell.alignBottom": "靠下對齊",
     "cell.wrapText": "自動換行",
-    "cell.merge": "合併",
     "cell.mergeAndCenter": "跨欄置中",
     "cell.mergeAcross": "跨欄合併",
     "cell.numberFormat": "數值格式",

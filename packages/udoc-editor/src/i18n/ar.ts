@@ -211,7 +211,6 @@ export const ar: EditMessages = {
     "cell.alignMiddle": "محاذاة إلى الوسط",
     "cell.alignBottom": "محاذاة إلى الأسفل",
     "cell.wrapText": "التفاف النص",
-    "cell.merge": "دمج",
     "cell.mergeAndCenter": "دمج وتوسيط",
     "cell.mergeAcross": "دمج عبر",
     "cell.numberFormat": "تنسيق الأرقام",

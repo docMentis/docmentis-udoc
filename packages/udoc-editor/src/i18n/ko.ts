@@ -211,7 +211,6 @@ export const ko: EditMessages = {
     "cell.alignMiddle": "세로 가운데 맞춤",
     "cell.alignBottom": "아래쪽 맞춤",
     "cell.wrapText": "자동 줄 바꿈",
-    "cell.merge": "병합",
     "cell.mergeAndCenter": "병합하고 가운데 맞춤",
     "cell.mergeAcross": "전체 병합",
     "cell.numberFormat": "표시 형식",

@@ -215,7 +215,6 @@ export const de: EditMessages = {
     "cell.alignMiddle": "Vertikal zentrieren",
     "cell.alignBottom": "Unten ausrichten",
     "cell.wrapText": "Textumbruch",
-    "cell.merge": "Verbinden",
     "cell.mergeAndCenter": "Verbinden und zentrieren",
     "cell.mergeAcross": "Verbinden über",
     "cell.numberFormat": "Zahlenformat",

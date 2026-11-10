@@ -13,12 +13,16 @@ import type {
 import {
     allowsEdit,
     applyPaintBar,
+    buildMenuInto,
     buildPaintPanel,
+    commandContext,
     createDropdownButton,
+    createSplitButton,
     displayToActivePaint,
     ICON_FILL,
     paintSwatch,
     sheetCellFormat,
+    sheetCellMerged,
 } from "@docmentis/udoc-ui/internal";
 import type {
     CommandContext,
@@ -80,7 +84,7 @@ function runCellEdit(host: UIShellHost, edit: SelectionEdit): Promise<void> {
 }
 
 /** A menu row's intent: `edit` on the selection, which the shell runs — a
- *  merge it refuses showing its reason under the formula bar. */
+ *  merge Excel refuses showing its reason under the formula bar. */
 function cellEditAction(edit: SelectionEdit): MenuAction {
     return { kind: "selectionEdit", edit };
 }
@@ -191,11 +195,14 @@ export const CELL_ALIGN_MENU: readonly MenuItem<MessageKey>[] = [
 /** Live where the selection takes a merge: a block of cells. */
 const whenMerge: EnabledWhen = (c) => allowsEdit(c.selection, "mergeSheetCells");
 
-/** The Merge dropdown: Excel's Merge & Center menu. A merge keeps only its
- *  top-left cell's contents, emptying the rest. */
+/** Merge & Center: the selected block made one cell, its contents centered. */
+const MERGE_AND_CENTER: SelectionEdit = { kind: "mergeSheetCells", across: false, center: true };
+
+/** The Merge & Center menu, Excel's. A merge keeps only its top-left cell's
+ *  contents, emptying the rest. */
 export const CELL_MERGE_MENU: readonly MenuItem<MessageKey>[] = [
     {
-        action: cellEditAction({ kind: "mergeSheetCells", across: false, center: true }),
+        action: cellEditAction(MERGE_AND_CENTER),
         label: "cell.mergeAndCenter",
         enabledWhen: whenMerge,
     },
@@ -217,6 +224,48 @@ export const CELL_MERGE_MENU: readonly MenuItem<MessageKey>[] = [
         enabledWhen: whenCellEdit("unmergeSheetCells"),
     },
 ];
+
+/**
+ * The Merge & Center split button, Excel's: the main part reads pressed while
+ * the active cell is in a merge, and takes it away there, else merges the
+ * selected block and centers it; the caret opens {@link CELL_MERGE_MENU}.
+ */
+function cellMergeControl(env: RibbonControlEnv, tools: EditTools): RibbonControl {
+    const { i18n, host } = tools;
+    const merged = (state: UIState): boolean => sheetCellMerged(editState(state).selectionProperties);
+    const split = createSplitButton({
+        mainLabel: env.label,
+        mainIcon: ICON_MERGE_CELLS,
+        caretLabel: i18n.t("ribbon.listOptions", { label: env.label }),
+        menuLabel: i18n.t("ribbon.listOptions", { label: env.label }),
+        onOpen: () =>
+            buildMenuInto(split.menu, CELL_MERGE_MENU, {
+                i18n,
+                context: () => commandContext(env.store.getState()),
+                action: (action) => host.runMenuAction(action),
+                close: () => split.controller.close(),
+            }),
+    });
+    split.main.dataset.command = "cellMerge";
+    split.caret.dataset.command = "cellMerge";
+    split.main.addEventListener("click", () => {
+        const edit: SelectionEdit = merged(env.store.getState()) ? { kind: "unmergeSheetCells" } : MERGE_AND_CENTER;
+        host.runMenuAction(cellEditAction(edit));
+    });
+    return {
+        el: split.el,
+        sync: (state) => {
+            const on = merged(state);
+            split.setActive(on);
+            split.main.setAttribute("aria-pressed", String(on));
+            // Off a merge the main part merges, which only a block of cells
+            // takes — not whole rows, columns or the sheet.
+            if (!on && !allowsEdit(state.selectionCaps, "mergeSheetCells")) split.main.disabled = true;
+        },
+        close: () => split.controller.close(),
+        destroy: () => split.destroy(),
+    };
+}
 
 /** The number formats the Number Format dropdown offers — Excel's, but for
  *  its currency, accounting and long date, which differ by locale — each by
@@ -251,7 +300,7 @@ function numberFormatName(state: UIState): MessageKey {
 /**
  * The Cell tab's commands, over the {@link EditTools} once edit mode is
  * mounted: Fill Color, then Border Color and Border, which share a pen of
- * their own; the Alignment dropdown, Wrap Text and Merge; the Number Format
+ * their own; the Alignment dropdown, Wrap Text and Merge & Center; the Number Format
  * dropdown and the decimal steps; and Clear Formats.
  */
 export function cellCommands(tools: () => EditTools): Readonly<Record<string, Def>> {
@@ -283,7 +332,7 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
             id: "cellBorderColor",
             label: "table.borderColor",
             icon: ICON_BORDER_COLOR,
-            group: "cellBorder",
+            group: "font",
             run: {
                 kind: "control",
                 cluster: "paint",
@@ -295,7 +344,7 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
             id: "cellBorder",
             label: "table.border",
             icon: ICON_BORDER_ALL,
-            group: "cellBorder",
+            group: "font",
             run: {
                 kind: "control",
                 cluster: "paint",
@@ -328,10 +377,10 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
         },
         cellMerge: {
             id: "cellMerge",
-            label: "cell.merge",
+            label: "cell.mergeAndCenter",
             icon: ICON_MERGE_CELLS,
             group: "cellAlignment",
-            run: { kind: "menu", menu: CELL_MERGE_MENU },
+            run: { kind: "control", create: (env) => cellMergeControl(env, tools()) },
             enabledWhen: (c) => allowsEdit(c.selection, "mergeSheetCells", "unmergeSheetCells"),
         },
         cellNumberFormat: {

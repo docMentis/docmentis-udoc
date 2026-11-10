@@ -211,7 +211,6 @@ export const zhCN: EditMessages = {
     "cell.alignMiddle": "垂直居中",
     "cell.alignBottom": "底端对齐",
     "cell.wrapText": "自动换行",
-    "cell.merge": "合并",
     "cell.mergeAndCenter": "合并后居中",
     "cell.mergeAcross": "跨越合并",
     "cell.numberFormat": "数字格式",

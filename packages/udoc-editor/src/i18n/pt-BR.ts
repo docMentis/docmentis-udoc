@@ -211,7 +211,6 @@ export const ptBR: EditMessages = {
     "cell.alignMiddle": "Alinhar no Meio",
     "cell.alignBottom": "Alinhar Embaixo",
     "cell.wrapText": "Quebrar Texto Automaticamente",
-    "cell.merge": "Mesclar",
     "cell.mergeAndCenter": "Mesclar e Centralizar",
     "cell.mergeAcross": "Mesclar Através",
     "cell.numberFormat": "Formato de Número",

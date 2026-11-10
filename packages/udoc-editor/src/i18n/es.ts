@@ -213,7 +213,6 @@ export const es: EditMessages = {
     "cell.alignMiddle": "Alinear en el medio",
     "cell.alignBottom": "Alinear en la parte inferior",
     "cell.wrapText": "Ajustar texto",
-    "cell.merge": "Combinar",
     "cell.mergeAndCenter": "Combinar y centrar",
     "cell.mergeAcross": "Combinar horizontalmente",
     "cell.numberFormat": "Formato de número",

@@ -4,7 +4,7 @@ import type { Feature, ShapePreview, UDocType } from "@docmentis/udoc-wasm";
 import type { Store } from "./framework/index.js";
 import type { Action } from "./app/actions.js";
 import type { ClipboardCopy } from "./app/clipboard.js";
-import type { CommandDef, MenuItem } from "./app/commands.js";
+import type { CommandDef, MenuAction, MenuItem } from "./app/commands.js";
 import type { Messages } from "./app/i18n/index.js";
 import type { OverlayOptions, OverlaySource } from "./app/components/OverlayManager.js";
 import type { GuideBand } from "./app/components/GuideBands.js";
@@ -142,6 +142,9 @@ export interface UIShellHost {
     annotationsSelected(): boolean;
     /** Delete what is selected, as the Delete key does. */
     deleteSelection(): Promise<void>;
+    /** Run a menu row's intent as the shell's own menus do — for a menu an
+     *  extension's control builds, as a split button's. */
+    runMenuAction(action: MenuAction): void;
     /** Type `text` at the text caret, as the keyboard does. */
     insertSelectionText(text: string): Promise<void>;
     /**

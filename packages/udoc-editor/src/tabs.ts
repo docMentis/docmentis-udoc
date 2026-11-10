@@ -404,7 +404,7 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
  * The spreadsheet Cell tab — the selected cells formatted as Excel's Home tab
  * formats them: the Text tab's font fields, Bold, Italic, Underline and
  * Strikethrough, and Text Color, with Fill Color beside it; Border Color and
- * Border; the Alignment dropdown, Wrap Text and the Merge dropdown; the Number
+ * Border; the Alignment dropdown, Wrap Text and Merge & Center; the Number
  * Format dropdown and the two decimal steps; and Clear Formats. A workbook's
  * strip opens on it, and a selection of cells opens it.
  */
