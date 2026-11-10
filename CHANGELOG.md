@@ -6,6 +6,17 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Fixed
+
+- A workbook's conditional formatting computes Excel's text, lookup and
+  reference, array, date and time, financial, engineering, database and
+  information functions in its rules' formulas, so a rule calling one such as
+  `XLOOKUP`, `TEXT` or `NETWORKDAYS` formats the cells it picks, where it
+  formatted none. Text such as `3/15/2026` or `9:30 AM` reads in them as the
+  date or time Excel reads it.
+
 ### udoc-editor
 
 #### Added
@@ -32,6 +43,11 @@ listed once, by package. Its major and minor version are those of the
   Cells and Unmerge Cells; and Clear Formats. A merge keeps its top-left
   cell's contents, as Excel does, and is one undo step. The formats save to
   the workbook's styles, and editors in a shared session see each other's.
+- A workbook's formulas recompute the same functions as it is edited —
+  `VLOOKUP`, `XLOOKUP`, `INDEX` and `MATCH`, `FILTER`, `SORT` and `UNIQUE`,
+  `TEXT`, `IFS` and `SWITCH`, `SUBTOTAL` and `AGGREGATE`, `PMT`, `RAND` and
+  the rest — where a formula calling one kept the value saved in the file
+  however the cells it reads changed.
 
 #### Changed
 
