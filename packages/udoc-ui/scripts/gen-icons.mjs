@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-// Regenerate `src/app/icons.ts` from Google's Material Symbols.
+// Regenerate `src/app/icons.ts` from Google's Material Symbols and
+// Pictogrammers' Material Design Icons.
 //
-// Every icon the editor chrome shows is a Material Symbol picked by name in
-// ICONS below — the chrome draws none of its own. A control whose concept has
-// no symbol shows its text label instead of an icon. The one drawing the chrome
-// does is a sample of a value, not an icon: the Stroke panel's weight and dash
-// rows show the line they set.
+// Every icon the editor chrome shows is a Material Symbol, or where Material
+// has none a Material Design Icon, picked by name in ICONS below — the chrome
+// draws none of its own. A control whose concept has no icon in either shows
+// its text label instead of an icon. The one drawing the chrome does is a
+// sample of a value, not an icon: the Stroke panel's weight and dash rows show
+// the line they set.
 //
 //   npm run gen:icons
 //
@@ -15,6 +17,13 @@
 // optical size — the chrome's icon size (`--udoc-btn-glyph`). The optical
 // sizes are separate drawings, not scalings: the 20px one carries heavier
 // strokes than the 24px and 48px masters so it holds up at 20px.
+//
+// A Material Design Icon (pictogrammers.com/library/mdi) comes from the
+// Templarian/MaterialDesign-SVG repository, pinned to MDI_COMMIT the same way.
+// Its one drawing is on a 24px grid, which the chrome scales to 20px, in the
+// older Material Icons style, so it goes where Material Symbols has nothing.
+// The generator refuses a Brand / Logo one, which isn't licensed under Apache
+// 2.0 as the rest are, and a deprecated one, which a later major release drops.
 
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -26,9 +35,13 @@ const OUT = join(dirname(fileURLToPath(import.meta.url)), "../src/app/icons.ts")
 const COMMIT = "bd8cb85bd4bad964fe6918f79665bb40c3a8efef"; // 2026-09-25
 const STYLE = "materialsymbolsoutlined";
 const OPSZ = 20;
+const MDI_COMMIT = "9e04201d4557e729822fb57f62a316c3dea1d4a8"; // v7.4.47, 2023-12-26
 // ---------------------------------------------------------------------------
 
-/** Exported constant -> Material Symbol name. */
+/**
+ * Exported constant -> Material Symbol name, or `{ mdi }` naming a Material
+ * Design Icon instead, as its library spells it (`table-row-remove`).
+ */
 const ICONS = {
     // Ribbon tabs — on the strip, in its icon style
     ICON_TAB_ANNOTATE: "edit_note",
@@ -198,39 +211,78 @@ const ICONS = {
     ICON_RESUME: "play_arrow",
 };
 
-const url = (name) =>
+const symbolUrl = (name) =>
     `https://raw.githubusercontent.com/google/material-design-icons/${COMMIT}` +
     `/symbols/web/${name}/${STYLE}/${name}_${OPSZ}px.svg`;
+const mdiUrl = (path) => `https://raw.githubusercontent.com/Templarian/MaterialDesign-SVG/${MDI_COMMIT}/${path}`;
 
-// Google's file is `<svg xmlns=… height=… viewBox=… width=…>…</svg>`. Inline in
-// HTML it needs no namespace, and CSS sets its size, so only the viewBox and
-// the drawing survive; `currentColor` lets the button's color tint it.
-async function fetchSymbol(name) {
-    const response = await fetch(url(name));
-    if (!response.ok) throw new Error(`${name}: ${response.status} ${response.statusText}`);
-    const svg = (await response.text()).trim();
+async function fetchOk(url) {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`${url}: ${response.status} ${response.statusText}`);
+    return response;
+}
+
+// Google's file is `<svg xmlns=… height=… viewBox=… width=…>…</svg>`, and
+// Pictogrammers' `<svg xmlns=… id=… viewBox=…>…</svg>`. Inline in HTML it needs
+// no namespace or id, and CSS sets its size, so only the viewBox and the drawing
+// survive; `currentColor` lets the button's color tint it.
+async function fetchSvg(url) {
+    const svg = (await (await fetchOk(url)).text()).trim();
     const match = /^<svg\b[^>]*\bviewBox="([^"]+)"[^>]*>([\s\S]*)<\/svg>$/.exec(svg);
-    if (!match) throw new Error(`${name}: unexpected SVG shape`);
+    if (!match) throw new Error(`${url}: unexpected SVG shape`);
     return `<svg viewBox="${match[1]}" fill="currentColor">${match[2]}</svg>`;
 }
 
-const names = [...new Set(Object.values(ICONS))];
-const svgs = new Map(await Promise.all(names.map(async (name) => [name, await fetchSymbol(name)])));
+// Stop on a Material Design Icon the library has no such name for, or that
+// the header comment above says the chrome mustn't take.
+async function checkMdi(names) {
+    if (names.length === 0) return;
+    const meta = new Map((await (await fetchOk(mdiUrl("meta.json"))).json()).map((icon) => [icon.name, icon]));
+    for (const name of names) {
+        const icon = meta.get(name);
+        if (!icon) throw new Error(`${name}: no Material Design Icon of that name`);
+        if (icon.tags.includes("Brand / Logo"))
+            throw new Error(`${name}: a brand's logo, not licensed under Apache 2.0`);
+        if (icon.deprecated) throw new Error(`${name}: deprecated`);
+    }
+}
 
-const rows = Object.entries(ICONS)
-    .map(([constant, name]) => `/** \`${name}\` */\nexport const ${constant} = \`${svgs.get(name)}\`;`)
+const entries = Object.entries(ICONS).map(([constant, icon]) =>
+    typeof icon === "string"
+        ? { constant, url: symbolUrl(icon), doc: `\`${icon}\`` }
+        : {
+              constant,
+              mdi: icon.mdi,
+              url: mdiUrl(`svg/${icon.mdi}.svg`),
+              doc: `Material Design Icons' \`${icon.mdi}\``,
+          },
+);
+const mdiNames = [...new Set(entries.filter((entry) => entry.mdi).map((entry) => entry.mdi))];
+await checkMdi(mdiNames);
+const urls = [...new Set(entries.map((entry) => entry.url))];
+const svgs = new Map(await Promise.all(urls.map(async (url) => [url, await fetchSvg(url)])));
+
+const rows = entries
+    .map(({ constant, url, doc }) => `/** ${doc} */\nexport const ${constant} = \`${svgs.get(url)}\`;`)
     .join("\n\n");
 
+// The header names Material Design Icons only once ICONS takes one.
+const mdi = mdiNames.length > 0;
 writeFileSync(
     OUT,
     `// AUTO-GENERATED by scripts/gen-icons.mjs — do not edit by hand.
 // Material Symbols Outlined, ${OPSZ}px optical size, google/material-design-icons@${COMMIT.slice(0, 12)}.
+${mdi ? `// Material Design Icons, Templarian/MaterialDesign-SVG@${MDI_COMMIT.slice(0, 12)}.\n` : ""}\
 // Regenerate: \`npm run gen:icons\` (pick icons in the script's ICONS table).
 //
 // Material Symbols are © Google LLC, licensed under the Apache License 2.0:
+${mdi ? "// https://www.apache.org/licenses/LICENSE-2.0\n// Material Design Icons are © Pictogrammers, licensed under the Apache License 2.0:\n" : ""}\
 // https://www.apache.org/licenses/LICENSE-2.0
 
 ${rows}
 `,
 );
-console.log(`[gen-icons] wrote ${Object.keys(ICONS).length} icons (${names.length} symbols) -> ${OUT}`);
+console.log(
+    `[gen-icons] wrote ${Object.keys(ICONS).length} icons (${urls.length - mdiNames.length} symbols, ` +
+        `${mdiNames.length} Material Design Icons) -> ${OUT}`,
+);
