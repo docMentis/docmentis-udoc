@@ -8,7 +8,7 @@ import {
     RIGHT_PANEL_TABS,
     VIEW_MODE,
     initialState,
-    isLeftPanelTab,
+    panelOpenable,
     planeOfView,
     planeOfWordprocessingView,
     renderZoom,
@@ -669,20 +669,18 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             if (action.style === state.ribbonTabStyle) return state;
             return { ...state, ribbonTabStyle: action.style };
 
-        case "TOGGLE_PANEL": {
-            if (state.disabledPanels.has(action.panel)) return state;
-            const next = state.activePanel === action.panel ? null : action.panel;
-            return { ...state, activePanel: next };
-        }
+        case "TOGGLE_PANEL":
+            if (state.activePanel === action.panel) return { ...state, activePanel: null };
+            // Opened as OPEN_PANEL opens one.
+            if (!panelOpenable(state, action.panel)) return state;
+            return { ...state, activePanel: action.panel };
 
-        case "OPEN_PANEL": {
+        case "OPEN_PANEL":
             // A hidden panel — by the host, the doc type, or its whole side —
             // can't be opened.
-            const sideVisible = isLeftPanelTab(action.panel) ? state.leftPanelVisible : state.rightPanelVisible;
-            if (!sideVisible || state.disabledPanels.has(action.panel)) return state;
+            if (!panelOpenable(state, action.panel)) return state;
             if (state.activePanel === action.panel) return state;
             return { ...state, activePanel: action.panel };
-        }
 
         case "CLOSE_PANEL":
             if (state.activePanel === null) return state;

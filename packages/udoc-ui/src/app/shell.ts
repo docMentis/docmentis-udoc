@@ -11,6 +11,7 @@ import type {
     ExportFormat,
     FileFormat,
     PageExportFormat,
+    PageMode,
     SaveStrategy,
     ComposedShapeMedia,
     LinkAnnotation,
@@ -114,6 +115,7 @@ import type { ModeEntitlement, TabSource } from "./profiles.js";
 import type {
     AnnotationTool,
     UIState,
+    LeftPanelTab,
     MarkupTool,
     PanelTab,
     PresentationView,
@@ -189,6 +191,14 @@ const READ_PAGE_GAP: PageGap = { horizontal: 12, vertical: 12 };
 
 /** The gaps with the View tab's Gapless on: the pages butt together. */
 const NO_PAGE_GAP: PageGap = { horizontal: 0, vertical: 0 };
+
+/** The side panel a PDF's `/PageMode` asks to be opened with. */
+const PAGE_MODE_PANELS: Partial<Record<PageMode, LeftPanelTab>> = {
+    useOutlines: "outline",
+    useThumbs: "thumbnail",
+    useOc: "layers",
+    useAttachments: "attachments",
+};
 const READ_PADDING: ContentPadding = { top: { px: 18 }, right: { px: 18 }, bottom: { px: 18 }, left: { px: 18 } };
 
 /**
@@ -2026,11 +2036,12 @@ export function mountUIShell(
                 const shown = store.getState().currentPlane;
                 if (shown === before && shown !== planes.current) void switchPlane(shown);
             });
-            // A PDF that asks to open with its outline showing opens the outline
-            // tab — async, off the critical path.
-            if (layout.docType === "portable") void openOutlineIfAsked();
-            // Whether it has layers, which the View tab's Layers shows for.
-            if (layout.docType === "portable") void readLayers();
+            // Whether it has layers, which the View tab's Layers shows for; and
+            // the panel a PDF asks to open with — async, off the critical path.
+            if (layout.docType === "portable") {
+                const layersRead = readLayers();
+                void openPanelIfAsked(layersRead);
+            }
             // What its tracked changes show, which the Review tab marks.
             if (layout.docType === "wordprocessing") void readRevisionView();
             // Which widgets a press fills a form field in through — async, off
@@ -2170,17 +2181,24 @@ export function mountUIShell(
     }
 
     /**
-     * Open the outline tab when the document asks to be shown with its outline
-     * (`/PageMode /UseOutlines`) — unless the tab is disabled, already open, or
-     * another document was opened meanwhile.
+     * Open the panel the PDF asks to be shown with, by its `/PageMode`: its
+     * outline, its thumbnails, its layers — once `layersRead` says it has some —
+     * or its attachments. Not when the host gave its own `activePanel`, which
+     * holds for every document; opened as `openPanel` opens one, so not a panel
+     * the host hid, or whose side it hid; nor when another document was opened
+     * meanwhile.
      */
-    async function openOutlineIfAsked(): Promise<void> {
+    async function openPanelIfAsked(layersRead: Promise<void>): Promise<void> {
+        if (shellOptions.activePanel !== undefined) return;
         const generation = store.getState().docGeneration;
         const mode = await client.portable.pageMode();
+        const panel = mode === null ? undefined : PAGE_MODE_PANELS[mode];
+        if (panel === undefined) return;
+        if (panel === "layers") await layersRead;
         const state = store.getState();
-        if (mode !== "useOutlines" || state.docGeneration !== generation) return;
-        if (state.activePanel === "outline" || state.disabledPanels.has("outline")) return;
-        store.dispatch({ type: "TOGGLE_PANEL", panel: "outline" });
+        if (state.docGeneration !== generation) return;
+        if (panel === "layers" && !state.hasLayers) return;
+        store.dispatch({ type: "OPEN_PANEL", panel });
     }
 
     /** Read whether the PDF just opened has layers — what the View tab's

@@ -94,7 +94,9 @@ export interface UDocOptions {
     showLoadingOverlay?: boolean;
     /** The side panel open at start — not one hidden by the options above, or
      *  by its side's. Default `null`, none; {@link UDocBase.openPanel} and
-     *  {@link UDocBase.closePanel} change it. */
+     *  {@link UDocBase.closePanel} change it. Left out, a PDF that asks to be
+     *  opened with its outline, thumbnails or layers showing opens with that
+     *  panel; given, `null` included, it holds for every document. */
     activePanel?: PanelTab | null;
     /** Start the notes panel — a deck's speaker notes, under its slides —
      *  open, as PowerPoint's Normal view does. Default `false`: it starts

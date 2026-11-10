@@ -285,6 +285,13 @@ export function isLeftPanelTab(tab: PanelTab): tab is LeftPanelTab {
     return LEFT_TABS_SET.has(tab);
 }
 
+/** Whether `panel` can be opened: neither it nor its side is hidden, by the
+ *  host or for the open doc type. */
+export function panelOpenable(state: UIState, panel: PanelTab): boolean {
+    const sideVisible = isLeftPanelTab(panel) ? state.leftPanelVisible : state.rightPanelVisible;
+    return sideVisible && !state.disabledPanels.has(panel);
+}
+
 // -----------------------------------------------------------------------------
 // Mode
 // -----------------------------------------------------------------------------

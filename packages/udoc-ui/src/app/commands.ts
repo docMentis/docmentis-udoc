@@ -2,7 +2,7 @@ import type { HistoryOp, SelectionEdit } from "../worker/protocol.js";
 import type { RevisionView, RevisionViewMode, SheetLayoutMode, StampIcon, UDocType } from "@docmentis/udoc-wasm";
 import { allowsEdit } from "../geometry.js";
 import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
-import { copyAllowed, PAGELESS_PLANE, revisionViewOf, sheetLayoutModeOf } from "./state.js";
+import { copyAllowed, PAGELESS_PLANE, panelOpenable, revisionViewOf, sheetLayoutModeOf } from "./state.js";
 import type {
     AnnotationTool,
     CommandId,
@@ -154,8 +154,9 @@ export interface CommandContext {
     /** Whether a cell is being typed into — Excel's Edit mode, which greys a
      *  workbook's views until what's typed is entered or dropped. */
     cellEntry: boolean;
-    /** Whether the open PDF has layers — the View tab's Layers shows for them. */
-    hasLayers: boolean;
+    /** Whether the open PDF's layers can be shown: it has some, and its Layers
+     *  panel can be opened — the View tab's Layers shows for them. */
+    layersPanel: boolean;
     /** What the Annotate tab's Format controls act on and show — the armed
      *  annotation tool's style, else the selected annotations' — or null when
      *  there is neither. A control is live when its entry is present. */
@@ -196,7 +197,7 @@ export function commandContext(state: UIState): CommandContext {
         revisionView: revisionViewOf(state),
         sheetLayoutMode: sheetLayoutModeOf(state),
         cellEntry: state.activeCell?.entry != null,
-        hasLayers: state.hasLayers,
+        layersPanel: state.hasLayers && panelOpenable(state, "layers"),
         annotation: annotationFormat(state),
     };
 }
@@ -1252,7 +1253,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             pressed: (state) => state.activePanel === "layers",
             press: (store) => store.dispatch({ type: "TOGGLE_PANEL", panel: "layers" }),
         },
-        shownWhen: (c) => c.hasLayers,
+        shownWhen: (c) => c.layersPanel,
         enabledWhen: whenReady,
     },
     // A word document's formatting marks, as Word's toggle and its key show

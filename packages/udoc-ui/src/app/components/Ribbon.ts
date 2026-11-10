@@ -16,6 +16,7 @@ import type {
     ScrollMode,
     ToolbarTab,
 } from "../state.js";
+import { panelOpenable } from "../state.js";
 import { tabsFor } from "../profiles.js";
 import type { TabSource } from "../profiles.js";
 import { COMMAND_CATALOG, commandContext } from "../commands.js";
@@ -186,7 +187,7 @@ interface RibbonSlice {
     revisionView: RevisionView | null;
     openedRevisionView: RevisionView | null;
     formulaBarVisible: boolean;
-    hasLayers: boolean;
+    layersPanel: boolean;
     /** What a deck's Preview shows — Stop while a preview plays — and is
      *  live by, with whether the slide shown plays anything. */
     slidePreviewing: boolean;
@@ -227,7 +228,7 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.revisionView === b.revisionView &&
         a.openedRevisionView === b.openedRevisionView &&
         a.formulaBarVisible === b.formulaBarVisible &&
-        a.hasLayers === b.hasLayers &&
+        a.layersPanel === b.layersPanel &&
         a.slidePreviewing === b.slidePreviewing &&
         a.currentSlidePlays === b.currentSlidePlays
     );
@@ -259,7 +260,7 @@ function selectSlice(s: UIState): RibbonSlice {
         revisionView: s.revisionView,
         openedRevisionView: s.openedRevisionView,
         formulaBarVisible: s.formulaBarVisible,
-        hasLayers: s.hasLayers,
+        layersPanel: s.hasLayers && panelOpenable(s, "layers"),
         slidePreviewing: s.slidePreviewing,
         currentSlidePlays: s.currentSlidePlays,
     };

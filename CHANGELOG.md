@@ -8,6 +8,13 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- A PDF that asks to be opened with its thumbnails or its layers showing opens
+  with that panel, as one that asks for its outline does; Layers opens only when
+  the PDF has some. A host's `activePanel`, given, `null` included, holds over
+  what any document asks for.
+
 #### Changed
 
 - The View tab's Gap is Gapless, turned the other way: on, it butts the pages
@@ -17,6 +24,13 @@ listed once, by package. Its major and minor version are those of the
 
 #### Fixed
 
+- A panel the host hid, or whose side it hid, no longer opens out of sight. With
+  `showLeftPanel: false`, a PDF that asks for its outline set `activePanel` to
+  `"outline"` and fired `panel:changed`; with `showRightPanel: false`, Ctrl+F
+  (Cmd+F on macOS) did the same for Search.
+- The View tab's Layers shows only when the Layers panel can open, and not with
+  `showLeftPanel: false` or `showLayersPanel: false`, where pressing it showed
+  nothing.
 - On macOS, the input-source indicator no longer shows up on the document with
   each click. With nothing to type into, such as a selected shape or text
   selected for copying, it doesn't show at all.
