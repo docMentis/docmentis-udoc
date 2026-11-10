@@ -6,6 +6,10 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+## [0.8.19] - 2026-11-09
+
+Built on `@docmentis/udoc-wasm` 0.8.22.
+
 ### All packages
 
 #### Fixed
