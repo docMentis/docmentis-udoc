@@ -25,6 +25,11 @@ listed once, by package. Its major and minor version are those of the
 - Change Shape shows a circle and a square joined by a line, where it showed
   three shapes side by side.
 
+#### Fixed
+
+- Backspace while an input method is composing text edits only the text being
+  composed, where it also deleted what was selected and the caret was lost.
+
 ## [0.8.19] - 2026-11-09
 
 Built on `@docmentis/udoc-wasm` 0.8.22.

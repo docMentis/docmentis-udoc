@@ -74,8 +74,13 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
     let composing = false;
 
     el.addEventListener("keydown", (ev) => {
-        // The IME owns its keystrokes (229 = "Process").
-        if (composing || ev.isComposing) return;
+        // The IME owns its keystrokes (229 = "Process") outright: their default
+        // edits the composition, and none may reach the document shortcuts,
+        // where a Backspace would delete the selection.
+        if (composing || ev.isComposing) {
+            ev.stopPropagation();
+            return;
+        }
         if (hooks.key?.(ev)) {
             ev.preventDefault();
             ev.stopPropagation();
