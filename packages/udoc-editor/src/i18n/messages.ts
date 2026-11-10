@@ -112,6 +112,8 @@ export interface Messages extends UIMessages {
     "ribbon.table": string;
     /** Object */
     "ribbon.object": string;
+    /** Cell */
+    "ribbon.cell": string;
 
     // Commands
     /** Ruler */
@@ -374,6 +376,52 @@ export interface Messages extends UIMessages {
     // A workbook's grid, its context menu's Select
     /** Sheet */
     "grid.sheet": string;
+
+    // The Cell tab, a workbook's
+    /** Fill Color */
+    "cell.fillColor": string;
+    /** Alignment */
+    "cell.alignment": string;
+    /** Top Align */
+    "cell.alignTop": string;
+    /** Middle Align */
+    "cell.alignMiddle": string;
+    /** Bottom Align */
+    "cell.alignBottom": string;
+    /** Wrap Text */
+    "cell.wrapText": string;
+    /** Merge */
+    "cell.merge": string;
+    /** Merge & Center */
+    "cell.mergeAndCenter": string;
+    /** Merge Across */
+    "cell.mergeAcross": string;
+    /** Number Format */
+    "cell.numberFormat": string;
+    /** General */
+    "cell.formatGeneral": string;
+    /** Number */
+    "cell.formatNumber": string;
+    /** Short Date */
+    "cell.formatShortDate": string;
+    /** Time */
+    "cell.formatTime": string;
+    /** Percentage */
+    "cell.formatPercentage": string;
+    /** Fraction */
+    "cell.formatFraction": string;
+    /** Scientific */
+    "cell.formatScientific": string;
+    /** Text */
+    "cell.formatText": string;
+    /** Custom */
+    "cell.formatCustom": string;
+    /** Increase Decimal */
+    "cell.increaseDecimal": string;
+    /** Decrease Decimal */
+    "cell.decreaseDecimal": string;
+    /** Clear Formats */
+    "cell.clearFormats": string;
 
     // The Table tab's dropdowns, whose buttons show only an icon
     /** Select Row */

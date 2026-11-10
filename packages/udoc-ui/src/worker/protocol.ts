@@ -11,7 +11,12 @@ import type {
     ActionHideTarget,
     Annotation,
     CellEntryEdit,
+    GridBorderProperties,
+    GridCellAlignment,
     GridCellSelectionMove,
+    GridFill,
+    GridFont,
+    GridNumberFormat,
     Destination,
     SessionConfig,
     PaintFill,
@@ -26,6 +31,7 @@ import type {
     TextParagraphPropertyKey,
     NonstrokingStyle,
     StrokingStyle,
+    TableCellBorderEdge,
     TableSelectionEdit,
     UDocError,
     UDocCommand,
@@ -1701,6 +1707,30 @@ export type SelectionEdit =
     /** Spreadsheet: Excel's Delete Sheet Columns, as `deleteSheetRows`
      *  deletes rows. */
     | { kind: "deleteSheetColumns" }
+    // Spreadsheet cell formatting — the Cell tab's controls over the selected
+    // cells, whole rows and columns, or the whole sheet.
+    /** Spreadsheet: lay `font`'s set fields over each selected cell's font. */
+    | { kind: "patchCellFont"; font: GridFont }
+    /** Spreadsheet: fill each selected cell with `fill`, `null` none. */
+    | { kind: "setCellFill"; fill: GridFill | null }
+    /** Spreadsheet: lay `line` on the edges `edges` names of the selected
+     *  block, `null` taking the borders there away. */
+    | { kind: "patchSheetCellBorders"; edges: TableCellBorderEdge; line: GridBorderProperties | null }
+    /** Spreadsheet: lay `alignment`'s set fields over each selected cell's. */
+    | { kind: "patchCellAlignment"; alignment: GridCellAlignment }
+    /** Spreadsheet: show each selected cell's value through `format`. */
+    | { kind: "setCellNumberFormat"; format: GridNumberFormat }
+    /** Spreadsheet: Excel's Increase Decimal, or with `increase` false
+     *  Decrease Decimal, from the active cell's format. */
+    | { kind: "stepCellDecimals"; increase: boolean }
+    /** Spreadsheet: Excel's Clear Formats over the selection. */
+    | { kind: "clearCellFormats" }
+    /** Spreadsheet: Excel's Merge Cells over the selected block — `across`
+     *  one merge per row, `center` Merge & Center — keeping each merge's
+     *  top-left contents. One undo step. */
+    | { kind: "mergeSheetCells"; across: boolean; center: boolean }
+    /** Spreadsheet: Excel's Unmerge Cells over the selection. */
+    | { kind: "unmergeSheetCells" }
     /** PDF: a page edit (`deletePages`, `reorderPages`, …) on the selected pages. */
     | { kind: "page"; edit: SelectionEdit }
     /** PDF: an object edit (`translateObjects`, `insertObjectText`, …) on the

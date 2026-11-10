@@ -46,6 +46,13 @@ const ICONS = {
     ICON_TAB_SLIDE: "text_ad",
     ICON_TAB_TABLE: "table",
     ICON_TAB_TEXT: "text_fields",
+    ICON_TAB_CELL: "grid_on",
+
+    ICON_WRAP_TEXT: "wrap_text",
+    ICON_NUMBER_FORMAT: "123",
+    ICON_DECIMAL_INCREASE: "decimal_increase",
+    ICON_DECIMAL_DECREASE: "decimal_decrease",
+    ICON_CLEAR_FORMAT: "format_clear",
 
     // View tab
     ICON_RULER: "straighten",

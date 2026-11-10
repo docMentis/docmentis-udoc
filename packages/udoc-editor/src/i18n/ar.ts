@@ -60,6 +60,7 @@ export const ar: EditMessages = {
     "ribbon.shape": "شكل",
     "ribbon.table": "جدول",
     "ribbon.object": "كائن",
+    "ribbon.cell": "خلية",
 
     // Commands
     "command.ruler": "المسطرة",
@@ -202,6 +203,30 @@ export const ar: EditMessages = {
     "table.insert": "إدراج",
     "table.delete": "حذف",
     "grid.sheet": "الورقة",
+
+    // The Cell tab, a workbook's
+    "cell.fillColor": "لون التعبئة",
+    "cell.alignment": "المحاذاة",
+    "cell.alignTop": "محاذاة إلى الأعلى",
+    "cell.alignMiddle": "محاذاة إلى الوسط",
+    "cell.alignBottom": "محاذاة إلى الأسفل",
+    "cell.wrapText": "التفاف النص",
+    "cell.merge": "دمج",
+    "cell.mergeAndCenter": "دمج وتوسيط",
+    "cell.mergeAcross": "دمج عبر",
+    "cell.numberFormat": "تنسيق الأرقام",
+    "cell.formatGeneral": "عام",
+    "cell.formatNumber": "رقم",
+    "cell.formatShortDate": "تاريخ قصير",
+    "cell.formatTime": "الوقت",
+    "cell.formatPercentage": "نسبة مئوية",
+    "cell.formatFraction": "كسر",
+    "cell.formatScientific": "علمي",
+    "cell.formatText": "نص",
+    "cell.formatCustom": "مخصص",
+    "cell.increaseDecimal": "زيادة المنازل العشرية",
+    "cell.decreaseDecimal": "إنقاص المنازل العشرية",
+    "cell.clearFormats": "مسح التنسيقات",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "تحديد الصف",

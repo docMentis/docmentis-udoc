@@ -1,8 +1,8 @@
 // Edit mode's tab strips, by doc type. A tab names its commands by id — udoc-ui's
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
 // order. A strip opens folded, a PDF's on its Page tab, a deck's on its Slide tab,
-// an image's on its Image tab and a word document's on its Text tab, and a selection
-// opens the tab it is for.
+// an image's on its Image tab, a word document's on its Text tab and a workbook's on
+// its Cell tab, and a selection opens the tab it is for.
 import type { UDocType } from "@docmentis/udoc-ui";
 import {
     allowsEdit,
@@ -16,6 +16,7 @@ import {
 import type { CommandId, SelectionCapabilities, ToolbarTab } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
 import {
+    ICON_TAB_CELL,
     ICON_TAB_IMAGE,
     ICON_TAB_OBJECT,
     ICON_TAB_PAGE,
@@ -72,6 +73,16 @@ export type EditCommandId =
     | "tableAlign"
     | "tableStyle"
     | "tableProperties"
+    | "cellFill"
+    | "cellBorderColor"
+    | "cellBorder"
+    | "cellAlign"
+    | "cellWrap"
+    | "cellMerge"
+    | "cellNumberFormat"
+    | "cellDecimalsUp"
+    | "cellDecimalsDown"
+    | "cellClearFormats"
     | "ruler"
     | "createSlide"
     | "deleteSlide"
@@ -111,6 +122,12 @@ function inText(caps: SelectionCapabilities): boolean {
 /** Whether `caps` is in a table: a caret in a cell, or a block of cells. */
 function inTable(caps: SelectionCapabilities): boolean {
     return allowsTableEdit(caps, "insertRows");
+}
+
+/** Whether `caps` holds a workbook's cells: a block of them, whole rows or
+ *  columns, or the whole sheet. */
+function sheetCells(caps: SelectionCapabilities): boolean {
+    return allowsEdit(caps, "patchCellFont");
 }
 
 /** Whether `caps` holds picked shapes: a slide's, a word document's drawings,
@@ -383,6 +400,41 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
     opensFor: slidesOrNothing,
 };
 
+/**
+ * The spreadsheet Cell tab — the selected cells formatted as Excel's Home tab
+ * formats them: the Text tab's font fields, Bold, Italic, Underline and
+ * Strikethrough, and Text Color, with Fill Color beside it; Border Color and
+ * Border; the Alignment dropdown, Wrap Text and the Merge dropdown; the Number
+ * Format dropdown and the two decimal steps; and Clear Formats. A workbook's
+ * strip opens on it, and a selection of cells opens it.
+ */
+const CELL_TAB: EditTab = {
+    id: "cell",
+    label: "ribbon.cell",
+    icon: ICON_TAB_CELL,
+    commands: [
+        "fontFamily",
+        "fontSize",
+        "bold",
+        "italic",
+        "underline",
+        "strikethrough",
+        "textFill",
+        "cellFill",
+        "cellBorderColor",
+        "cellBorder",
+        "cellAlign",
+        "cellWrap",
+        "cellMerge",
+        "cellNumberFormat",
+        "cellDecimalsUp",
+        "cellDecimalsDown",
+        "cellClearFormats",
+    ] satisfies EditCommandId[],
+    opensOnEntry: true,
+    opensFor: sheetCells,
+};
+
 /** `docType`'s View tab, as edit mode has it: with the views edit mode alone
  *  offers, and the ruler among its guides where edit mode draws one — over a
  *  PDF's pages, a deck's slides and a word document's pages. */
@@ -431,8 +483,8 @@ const WORDPROCESSING_TABS: readonly EditTab[] = [
  *  and its View last. Table goes ahead of Shape, as on a deck. */
 const IMAGE_TABS: readonly EditTab[] = [IMAGE_TAB, PRESENTATION_TEXT_TAB, TABLE_TAB, SHAPE_TAB, editViewTab("image")];
 
-/** The spreadsheet strip: its View. */
-const SPREADSHEET_TABS: readonly EditTab[] = [editViewTab("spreadsheet")];
+/** The spreadsheet strip: its Cell tab, and its View. */
+const SPREADSHEET_TABS: readonly EditTab[] = [CELL_TAB, editViewTab("spreadsheet")];
 
 /** Edit mode's tab strip for a document of `docType`. */
 export function editTabs(docType: UDocType | null): readonly EditTab[] {

@@ -24,10 +24,11 @@ import { editAction, runEditMenuAction } from "./menu-action.js";
 import { editStateOf } from "./state.js";
 import { consensusValue } from "./table-edits.js";
 import {
+    borderColorControl,
+    borderControl,
     createBorderState,
+    layTableBorder,
     selectionTable,
-    tableBorderColorControl,
-    tableBorderControl,
     tableShadingControl,
 } from "./table-format.js";
 import { ALIGN_CENTER_ROW, ALIGN_LEFT_ROW, ALIGN_RIGHT_ROW } from "./text-format.js";
@@ -371,7 +372,11 @@ export function tableCommands(
             label: "table.border",
             icon: ICON_BORDER_ALL,
             group: "tablePaint",
-            run: { kind: "control", cluster: "paint", create: (env) => tableBorderControl(env, tools(), border) },
+            run: {
+                kind: "control",
+                cluster: "paint",
+                create: (env) => borderControl(env, tools(), border, "tableBorder", layTableBorder(tools().host)),
+            },
             enabledWhen: whenTableEdit("patchCellBorders"),
         },
         tableBorderColor: {
@@ -382,7 +387,7 @@ export function tableCommands(
             run: {
                 kind: "control",
                 cluster: "paint",
-                create: (env) => tableBorderColorControl(env, tools(), border),
+                create: (env) => borderColorControl(env, tools(), border, "tableBorderColor"),
             },
             enabledWhen: whenTableEdit("patchCellBorders"),
         },

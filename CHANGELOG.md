@@ -24,6 +24,14 @@ listed once, by package. Its major and minor version are those of the
   sheet. What Excel refuses is refused, its reason shown under the formula
   bar, and so for now is a sheet holding a PivotTable, a slicer, a form
   control, scenarios or a custom view.
+- A workbook has a Cell tab, which its edit mode opens on, to format the
+  selected cells, whole rows and columns or the whole sheet as Excel's Home
+  tab does: their font, size, bold, italic, underline, strikethrough and
+  color; their fill and borders; their alignment and Wrap Text; their number
+  format, with more or fewer decimals; Merge & Center, Merge Across, Merge
+  Cells and Unmerge Cells; and Clear Formats. A merge keeps its top-left
+  cell's contents, as Excel does, and is one undo step. The formats save to
+  the workbook's styles, and editors in a shared session see each other's.
 
 #### Changed
 

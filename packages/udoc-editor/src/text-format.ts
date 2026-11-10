@@ -2,13 +2,14 @@
 // current text selection — a shape's text on a slide, the body caret in a doc —
 // the edits they make, and the paragraph menus.
 import type {
+    GridFont,
     ParagraphStyleSummary,
     TextCharacterProperty,
     TextNumberFormat,
     TextParagraphProperty,
     UDocType,
 } from "@docmentis/udoc-wasm";
-import { allowsTextEdit, profileFor } from "@docmentis/udoc-ui/internal";
+import { allowsEdit, allowsTextEdit, profileFor } from "@docmentis/udoc-ui/internal";
 import type { EnabledWhen, Message, MenuItem, PaintSpec, UIShellHost } from "@docmentis/udoc-ui/internal";
 import { facesToLoad } from "./fonts/faces.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
@@ -21,7 +22,7 @@ import {
     ICON_PARAGRAPH_RIGHT,
 } from "./icons.js";
 import { editAction } from "./menu-action.js";
-import { paintToDrawingColor, paintToDrawingFill } from "./paint.js";
+import { paintToDrawingColor, paintToDrawingFill, paintToGridColor } from "./paint.js";
 import { editState, editStateOf } from "./state.js";
 
 /** A boolean character-style the Text tab toggles — the `b` / `i` / `u` /
@@ -84,9 +85,11 @@ export function listStyles(list: ListKind): readonly ListStyle[] {
 /** The Text tab's character-format controls (font / size / the style toggles /
  *  text color) all write character properties, so they enable exactly when
  *  the selection accepts a text `patchCharacterProperties` edit — a non-empty
- *  range in editable text. A bare caret (no spans to restyle) or a non-text
- *  selection leaves them greyed. */
-export const whenTextFormat: EnabledWhen = (c) => allowsTextEdit(c.selection, "patchCharacterProperties");
+ *  range in editable text — or, as the Cell tab's, a workbook's cells' font.
+ *  A bare caret (no spans to restyle) or a non-text selection leaves them
+ *  greyed. */
+export const whenTextFormat: EnabledWhen = (c) =>
+    allowsTextEdit(c.selection, "patchCharacterProperties") || allowsEdit(c.selection, "patchCellFont");
 
 /** The Text tab's *paragraph* controls (align / indent / spacing / the two list
  *  toggles). Deliberately **not** {@link whenTextFormat}: a character format
@@ -156,6 +159,25 @@ export function textFormatProperty(
             return { baselineAlign: on ? (categorical ? "superscript" : { percent: 0.3 }) : "baseline" };
         case "subscript":
             return { baselineAlign: on ? (categorical ? "subscript" : { percent: -0.25 }) : "baseline" };
+    }
+}
+
+/** The font a Text-tab toggle lays over a workbook's cells for `property` at
+ *  `on`: a cell's font has the same styles, its underline a single line. */
+export function cellFontProperty(property: TextFormatProperty, on: boolean): GridFont {
+    switch (property) {
+        case "bold":
+            return { bold: on };
+        case "italic":
+            return { italic: on };
+        case "underline":
+            return { underline: on ? "single" : "none" };
+        case "strikethrough":
+            return { strike: on };
+        case "superscript":
+            return { verticalAlign: on ? "superscript" : "baseline" };
+        case "subscript":
+            return { verticalAlign: on ? "subscript" : "baseline" };
     }
 }
 
@@ -313,6 +335,17 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
         return profileFor(store.getState().docType).drawingShapes;
     }
 
+    // A workbook's cells take the same controls: the font of each selected
+    // cell, whole rows and columns, or the whole sheet.
+    function sheetDocType(): boolean {
+        return store.getState().docType === "spreadsheet";
+    }
+
+    /** Lay `font`'s set fields over each selected cell's font. */
+    function patchCellFont(font: GridFont): Promise<void> {
+        return commit(() => client.executeOnSelection({ kind: "patchCellFont", font }));
+    }
+
     /** Overlay set-value character `properties` on the text selection. */
     function patchCharacterProperties(properties: TextCharacterProperty[]): Promise<void> {
         if (!textDocType()) return Promise.resolve();
@@ -324,12 +357,13 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
     /** Toggle a character style (bold / italic / underline / strikethrough): set
      *  the explicit value, so turning a style *off* overrides an inherited one. */
     function formatTextSelection(property: TextFormatProperty, on: boolean): Promise<void> {
+        if (sheetDocType()) return patchCellFont(cellFontProperty(property, on));
         return patchCharacterProperties([textFormatProperty(property, on, store.getState().docType)]);
     }
 
     /** Apply a typeface to the text selection (the Latin / default script slot). */
     async function fontFamilySelection(font: string): Promise<void> {
-        if (!textDocType()) return;
+        if (!textDocType() && !sheetDocType()) return;
         // Load first, apply second. A family the document has never used lays out
         // in a stand-in and reflows when the real one lands, so applying first
         // makes one click move the text twice. Every face the change will
@@ -356,16 +390,20 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
             client.ensureFont(font, facesToLoad(bold, italic)),
         );
         if (!proceed) return;
-        await patchCharacterProperties([{ fontLatin: { named: { name: font } } }]);
+        if (sheetDocType()) await patchCellFont({ name: font });
+        else await patchCharacterProperties([{ fontLatin: { named: { name: font } } }]);
     }
 
     /** Apply a point size to the text selection. */
     function fontSizeSelection(size: number): Promise<void> {
+        if (sheetDocType()) return patchCellFont({ size });
         return patchCharacterProperties([{ size: size }]);
     }
 
-    /** Apply a text color (the span fill) to the text selection. */
+    /** Apply a text color (the span fill) to the text selection — a cell's
+     *  font color, automatic for "no fill". */
     function textFillSelection(paint: PaintSpec): Promise<void> {
+        if (sheetDocType()) return patchCellFont({ color: paintToGridColor(paint) ?? { value: "auto", tint: 0 } });
         return patchCharacterProperties([{ fill: paintToDrawingFill(paint) }]);
     }
 

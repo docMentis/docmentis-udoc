@@ -89,7 +89,7 @@ export function runTableEdit(host: UIShellHost, edit: TableSelectionEdit): Promi
 
 /** The theme block the color panels show: the document's palette for an Office
  *  document, none for a PDF. */
-function themeOf(env: RibbonControlEnv) {
+export function themeOf(env: RibbonControlEnv) {
     const state = env.store.getState();
     return state.docType !== null && THEMED.has(state.docType) ? mapThemeColors(editState(state).themePalette) : null;
 }
@@ -215,12 +215,18 @@ export function createBorderState(): BorderState {
 }
 
 /**
- * The Border Color dropdown: the pen the Border control lays — its color, and
- * its weight and dash in the panel's fly-outs. It sets the pen and nothing else,
- * as Word's Pen Color does: the borders already drawn keep theirs, and the next
- * Border draws with it. The swatch shows the pen's color.
+ * A Border Color dropdown, for command `command`: the pen the Border control
+ * lays — its color, and its weight and dash in the panel's fly-outs. It sets
+ * the pen and nothing else, as Word's Pen Color does: the borders already drawn
+ * keep theirs, and the next Border draws with it. The swatch shows the pen's
+ * color.
  */
-export function tableBorderColorControl(env: RibbonControlEnv, tools: EditTools, state: BorderState): RibbonControl {
+export function borderColorControl(
+    env: RibbonControlEnv,
+    tools: EditTools,
+    state: BorderState,
+    command: string,
+): RibbonControl {
     const { i18n } = tools;
     const dd = createDropdownButton(
         { icon: paintSwatch(ICON_BORDER_COLOR, displayOfPen(state.pen)), label: env.label },
@@ -247,7 +253,7 @@ export function tableBorderColorControl(env: RibbonControlEnv, tools: EditTools,
             },
         },
     );
-    dd.trigger.dataset.command = "tableBorderColor";
+    dd.trigger.dataset.command = command;
 
     function setPen(pen: BorderPen): void {
         state.pen = pen;
@@ -262,12 +268,28 @@ export function tableBorderColorControl(env: RibbonControlEnv, tools: EditTools,
     };
 }
 
+/** What a Border control does with a choice: lays `pen` on `edges` of the
+ *  selected block, or with `null` takes the borders there away. */
+export type LayBorder = (edges: TableCellBorderEdge, pen: BorderPen | null) => void;
+
+/** A table's {@link LayBorder}: its cells' borders, as `DrawingML` lines. */
+export function layTableBorder(host: UIShellHost): LayBorder {
+    return (edges, pen) => void runTableEdit(host, borderEdit(edges, pen ? borderOfPen(pen) : noBorder()));
+}
+
 /**
- * The Border split button: the main part lays the pen on All Borders, which
- * its glyph shows; the caret lists the edge choices, then No Border, each
- * laying the pen (or taking the borders away) at once.
+ * A Border split button, for command `command`: the main part lays the pen on
+ * All Borders, which its glyph shows; the caret lists the edge choices, then No
+ * Border, each laying the pen (or taking the borders away) at once, as `lay`
+ * does.
  */
-export function tableBorderControl(env: RibbonControlEnv, tools: EditTools, state: BorderState): RibbonControl {
+export function borderControl(
+    env: RibbonControlEnv,
+    tools: EditTools,
+    state: BorderState,
+    command: string,
+    lay: LayBorder,
+): RibbonControl {
     const { i18n } = tools;
     const split = createSplitButton({
         mainLabel: env.label,
@@ -276,13 +298,9 @@ export function tableBorderControl(env: RibbonControlEnv, tools: EditTools, stat
         menuLabel: i18n.t("table.borderOptions"),
         onOpen: () => fill(),
     });
-    split.main.dataset.command = "tableBorder";
-    split.caret.dataset.command = "tableBorder";
-
-    const lay = (edges: TableCellBorderEdge): void => {
-        void runTableEdit(tools.host, borderEdit(edges, borderOfPen(state.pen)));
-    };
-    split.main.addEventListener("click", () => lay("all"));
+    split.main.dataset.command = command;
+    split.caret.dataset.command = command;
+    split.main.addEventListener("click", () => lay("all", state.pen));
 
     function fill(): void {
         split.menu.innerHTML = "";
@@ -295,10 +313,10 @@ export function tableBorderControl(env: RibbonControlEnv, tools: EditTools, stat
             });
             return item;
         };
-        for (const choice of BORDER_EDGES) split.menu.append(row(choice.icon, choice.label, () => lay(choice.edges)));
-        const none = row(ICON_BORDER_NONE, "table.borderNone", () => {
-            void runTableEdit(tools.host, borderEdit("allAndDiagonals", noBorder()));
-        });
+        for (const choice of BORDER_EDGES) {
+            split.menu.append(row(choice.icon, choice.label, () => lay(choice.edges, state.pen)));
+        }
+        const none = row(ICON_BORDER_NONE, "table.borderNone", () => lay("allAndDiagonals", null));
         none.classList.add("udoc-toolbar__menu-item--divider");
         split.menu.append(none);
     }

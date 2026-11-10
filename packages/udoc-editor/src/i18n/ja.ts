@@ -60,6 +60,7 @@ export const ja: EditMessages = {
     "ribbon.shape": "図形",
     "ribbon.table": "表",
     "ribbon.object": "オブジェクト",
+    "ribbon.cell": "セル",
 
     // Commands
     "command.ruler": "ルーラー",
@@ -205,6 +206,30 @@ export const ja: EditMessages = {
     "table.insert": "挿入",
     "table.delete": "削除",
     "grid.sheet": "シート",
+
+    // The Cell tab, a workbook's
+    "cell.fillColor": "塗りつぶしの色",
+    "cell.alignment": "配置",
+    "cell.alignTop": "上揃え",
+    "cell.alignMiddle": "上下中央揃え",
+    "cell.alignBottom": "下揃え",
+    "cell.wrapText": "折り返して全体を表示する",
+    "cell.merge": "結合",
+    "cell.mergeAndCenter": "セルを結合して中央揃え",
+    "cell.mergeAcross": "横方向に結合",
+    "cell.numberFormat": "表示形式",
+    "cell.formatGeneral": "標準",
+    "cell.formatNumber": "数値",
+    "cell.formatShortDate": "短い日付形式",
+    "cell.formatTime": "時刻",
+    "cell.formatPercentage": "パーセンテージ",
+    "cell.formatFraction": "分数",
+    "cell.formatScientific": "指数",
+    "cell.formatText": "文字列",
+    "cell.formatCustom": "ユーザー定義",
+    "cell.increaseDecimal": "小数点以下の表示桁数を増やす",
+    "cell.decreaseDecimal": "小数点以下の表示桁数を減らす",
+    "cell.clearFormats": "書式のクリア",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "行の選択",

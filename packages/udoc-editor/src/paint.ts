@@ -4,6 +4,7 @@
 import type {
     Brush,
     DeviceColor,
+    GridColor,
     NonstrokingStyle,
     PaintColor,
     PaintColorTransform,
@@ -77,6 +78,15 @@ export function paintToDrawingColor(paint: PaintSpec): PaintColor | null {
 export function paintToDrawingFill(paint: PaintSpec): PaintFill {
     const color = paintToDrawingColor(paint);
     return color ? { solid: color } : "none";
+}
+
+/** A picker paint as a workbook's `GridColor`, opaque, or `null` for "no
+ *  fill": a theme pick as the color it shows, not a reference to the
+ *  workbook's theme. */
+export function paintToGridColor(paint: PaintSpec): GridColor | null {
+    if (paint.kind === "none") return null;
+    const [r, g, b] = hexToRgbBytes(paint.hex);
+    return { value: { rgb: 0xff000000 + ((r << 16) | (g << 8) | b) }, tint: 0 };
 }
 
 function toDrawingTransform(t: PaintTransform): PaintColorTransform {

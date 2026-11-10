@@ -3564,6 +3564,15 @@ const WORKSHEET_KINDS: Record<WorksheetSelectionEditType, "worksheet"> = {
     insertSheetColumns: "worksheet",
     deleteSheetRows: "worksheet",
     deleteSheetColumns: "worksheet",
+    patchCellFont: "worksheet",
+    setCellFill: "worksheet",
+    patchSheetCellBorders: "worksheet",
+    patchCellAlignment: "worksheet",
+    setCellNumberFormat: "worksheet",
+    stepCellDecimals: "worksheet",
+    clearCellFormats: "worksheet",
+    mergeSheetCells: "worksheet",
+    unmergeSheetCells: "worksheet",
 };
 
 function spreadsheetEdit(edit: SelectionEdit): unknown {

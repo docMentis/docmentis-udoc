@@ -60,6 +60,7 @@ export const zhCN: EditMessages = {
     "ribbon.shape": "形状",
     "ribbon.table": "表格",
     "ribbon.object": "对象",
+    "ribbon.cell": "单元格",
 
     // Commands
     "command.ruler": "标尺",
@@ -202,6 +203,30 @@ export const zhCN: EditMessages = {
     "table.insert": "插入",
     "table.delete": "删除",
     "grid.sheet": "工作表",
+
+    // The Cell tab, a workbook's
+    "cell.fillColor": "填充颜色",
+    "cell.alignment": "对齐方式",
+    "cell.alignTop": "顶端对齐",
+    "cell.alignMiddle": "垂直居中",
+    "cell.alignBottom": "底端对齐",
+    "cell.wrapText": "自动换行",
+    "cell.merge": "合并",
+    "cell.mergeAndCenter": "合并后居中",
+    "cell.mergeAcross": "跨越合并",
+    "cell.numberFormat": "数字格式",
+    "cell.formatGeneral": "常规",
+    "cell.formatNumber": "数值",
+    "cell.formatShortDate": "短日期",
+    "cell.formatTime": "时间",
+    "cell.formatPercentage": "百分比",
+    "cell.formatFraction": "分数",
+    "cell.formatScientific": "科学记数",
+    "cell.formatText": "文本",
+    "cell.formatCustom": "自定义",
+    "cell.increaseDecimal": "增加小数位数",
+    "cell.decreaseDecimal": "减少小数位数",
+    "cell.clearFormats": "清除格式",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "选择行",

@@ -60,6 +60,7 @@ export const zhTW: EditMessages = {
     "ribbon.shape": "圖案",
     "ribbon.table": "表格",
     "ribbon.object": "物件",
+    "ribbon.cell": "儲存格",
 
     // Commands
     "command.ruler": "尺規",
@@ -202,6 +203,30 @@ export const zhTW: EditMessages = {
     "table.insert": "插入",
     "table.delete": "刪除",
     "grid.sheet": "工作表",
+
+    // The Cell tab, a workbook's
+    "cell.fillColor": "填滿色彩",
+    "cell.alignment": "對齊方式",
+    "cell.alignTop": "靠上對齊",
+    "cell.alignMiddle": "垂直置中",
+    "cell.alignBottom": "靠下對齊",
+    "cell.wrapText": "自動換行",
+    "cell.merge": "合併",
+    "cell.mergeAndCenter": "跨欄置中",
+    "cell.mergeAcross": "跨欄合併",
+    "cell.numberFormat": "數值格式",
+    "cell.formatGeneral": "通用格式",
+    "cell.formatNumber": "數值",
+    "cell.formatShortDate": "簡短日期",
+    "cell.formatTime": "時間",
+    "cell.formatPercentage": "百分比",
+    "cell.formatFraction": "分數",
+    "cell.formatScientific": "科學記號",
+    "cell.formatText": "文字",
+    "cell.formatCustom": "自訂",
+    "cell.increaseDecimal": "增加小數位數",
+    "cell.decreaseDecimal": "減少小數位數",
+    "cell.clearFormats": "清除格式",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "選取列",

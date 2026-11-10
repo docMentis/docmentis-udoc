@@ -60,6 +60,7 @@ export const ko: EditMessages = {
     "ribbon.shape": "도형",
     "ribbon.table": "표",
     "ribbon.object": "개체",
+    "ribbon.cell": "셀",
 
     // Commands
     "command.ruler": "눈금자",
@@ -202,6 +203,30 @@ export const ko: EditMessages = {
     "table.insert": "삽입",
     "table.delete": "삭제",
     "grid.sheet": "시트",
+
+    // The Cell tab, a workbook's
+    "cell.fillColor": "채우기 색",
+    "cell.alignment": "맞춤",
+    "cell.alignTop": "위쪽 맞춤",
+    "cell.alignMiddle": "세로 가운데 맞춤",
+    "cell.alignBottom": "아래쪽 맞춤",
+    "cell.wrapText": "자동 줄 바꿈",
+    "cell.merge": "병합",
+    "cell.mergeAndCenter": "병합하고 가운데 맞춤",
+    "cell.mergeAcross": "전체 병합",
+    "cell.numberFormat": "표시 형식",
+    "cell.formatGeneral": "일반",
+    "cell.formatNumber": "숫자",
+    "cell.formatShortDate": "간단한 날짜",
+    "cell.formatTime": "시간",
+    "cell.formatPercentage": "백분율",
+    "cell.formatFraction": "분수",
+    "cell.formatScientific": "지수",
+    "cell.formatText": "텍스트",
+    "cell.formatCustom": "사용자 지정",
+    "cell.increaseDecimal": "자릿수 늘림",
+    "cell.decreaseDecimal": "자릿수 줄임",
+    "cell.clearFormats": "서식 지우기",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "행 선택",

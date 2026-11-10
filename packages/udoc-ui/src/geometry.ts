@@ -10,6 +10,8 @@
 import type {
     Feature,
     FileFormat,
+    GridCellFormatProperties,
+    PaintSRgbColor,
     PresentationPlaneKind,
     SheetLayoutMode,
     SheetState,
@@ -378,7 +380,16 @@ export type SelectionEditKind =
     | "insertSheetRows"
     | "insertSheetColumns"
     | "deleteSheetRows"
-    | "deleteSheetColumns";
+    | "deleteSheetColumns"
+    | "patchCellFont"
+    | "setCellFill"
+    | "patchSheetCellBorders"
+    | "patchCellAlignment"
+    | "setCellNumberFormat"
+    | "stepCellDecimals"
+    | "clearCellFormats"
+    | "mergeSheetCells"
+    | "unmergeSheetCells";
 
 /** Whether `caps` allows a selection edit of any of `kinds` — no per-doc-type
  *  branch: pass every name the control's edit goes by (`deleteObjects`,
@@ -629,6 +640,8 @@ export function drawingProperties(properties: UDocSelectionProperties | null): C
  * {@link EMPTY_SELECTION_TEXT_FORMAT}.
  */
 export function selectionTextFormat(properties: UDocSelectionProperties | null): SelectionTextFormat {
+    const cell = sheetCellFormat(properties);
+    if (cell) return cellTextFormat(cell);
     const text = drawingProperties(properties)?.text;
     if (!text) return EMPTY_SELECTION_TEXT_FORMAT;
     return {
@@ -750,6 +763,35 @@ function resolvedPaintDisplay<T>(
     return reduce(paint.value, color ? deviceColorHex(color) : null);
 }
 
+/** The format of a workbook's active cell, resolved — what the Cell tab's
+ *  controls show — or `null` outside a worksheet's grid. */
+export function sheetCellFormat(properties: UDocSelectionProperties | null): GridCellFormatProperties | null {
+    return properties && "spreadsheet" in properties ? (properties.spreadsheet.format ?? null) : null;
+}
+
+/** An sRGB color → its `#RRGGBB` hex. */
+function srgbHex(color: PaintSRgbColor): string {
+    const byte = (value: number) => value.toString(16).padStart(2, "0").toUpperCase();
+    return `#${byte(color.r)}${byte(color.g)}${byte(color.b)}`;
+}
+
+/** A cell's font as the Text tab's controls mirror one: its name, size and
+ *  styles, each the cell's alone, so none is mixed. */
+function cellTextFormat(cell: GridCellFormatProperties): SelectionTextFormat {
+    const state = (on: boolean): TextFormatState => (on ? "on" : "off");
+    return {
+        ...EMPTY_SELECTION_TEXT_FORMAT,
+        font: cell.fontName,
+        size: String(cell.fontSize),
+        bold: state(cell.bold),
+        italic: state(cell.italic),
+        underline: state(cell.underline !== "none"),
+        strikethrough: state(cell.strike),
+        superscript: state(cell.verticalAlign === "superscript"),
+        subscript: state(cell.verticalAlign === "subscript"),
+    };
+}
+
 /** The swatch a table's Shading control shows: the shading of the cells the
  *  selection covers, as the engine resolved it — a cell shaded by its style's
  *  banding swatches the band. `unknown` outside a table. */
@@ -814,6 +856,15 @@ function resolvedColorDisplay(color: PaintColor, hex: string): PaintDisplay {
  * (a neutral swatch), as does no selection.
  */
 export function selectionPaint(properties: UDocSelectionProperties | null): SelectionPaint {
+    const cell = sheetCellFormat(properties);
+    if (cell) {
+        return {
+            fill: cell.fillColor ? { kind: "solid", hex: srgbHex(cell.fillColor) } : { kind: "none" },
+            stroke: { kind: "unknown" },
+            text: { kind: "solid", hex: srgbHex(cell.fontColor) },
+            highlight: { kind: "unknown" },
+        };
+    }
     if (properties && "portable" in properties) {
         const p = properties.portable.object;
         return {

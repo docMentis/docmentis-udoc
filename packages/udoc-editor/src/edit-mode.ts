@@ -3,6 +3,7 @@ import { selectionPaint, selectionTextFormat, subscribeSelector } from "@docment
 import type { UIExtension, UIState } from "@docmentis/udoc-ui/internal";
 import type { UDocEditorOptions } from "./editor.js";
 import { arrangeCommands } from "./arrange.js";
+import { cellCommands } from "./cell-format.js";
 import { formatCommands } from "./commands.js";
 import { CONTEXT_MENU, GRID_CONTEXT_MENU, TABLE_CONTEXT_MENU } from "./context-menu.js";
 import { cropCommands } from "./crop.js";
@@ -239,6 +240,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             ...formatCommands(mountedTools),
             ...arrangeCommands(() => tools?.arrange ?? null),
             ...tableCommands(mountedTools, () => tableProperties?.open()),
+            ...cellCommands(mountedTools),
             ruler: RULER_COMMAND,
             createSlide: newSlideCommand(() => void slideLayouts?.newSlide()),
             deleteSlide: deleteSlideCommand(() => host),

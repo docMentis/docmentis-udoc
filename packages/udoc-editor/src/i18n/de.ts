@@ -60,6 +60,7 @@ export const de: EditMessages = {
     "ribbon.shape": "Form",
     "ribbon.table": "Tabelle",
     "ribbon.object": "Objekt",
+    "ribbon.cell": "Zelle",
 
     // Commands
     "command.ruler": "Lineal",
@@ -206,6 +207,30 @@ export const de: EditMessages = {
     "table.insert": "Einfügen",
     "table.delete": "Löschen",
     "grid.sheet": "Blatt",
+
+    // The Cell tab, a workbook's
+    "cell.fillColor": "Füllfarbe",
+    "cell.alignment": "Ausrichtung",
+    "cell.alignTop": "Oben ausrichten",
+    "cell.alignMiddle": "Vertikal zentrieren",
+    "cell.alignBottom": "Unten ausrichten",
+    "cell.wrapText": "Textumbruch",
+    "cell.merge": "Verbinden",
+    "cell.mergeAndCenter": "Verbinden und zentrieren",
+    "cell.mergeAcross": "Verbinden über",
+    "cell.numberFormat": "Zahlenformat",
+    "cell.formatGeneral": "Standard",
+    "cell.formatNumber": "Zahl",
+    "cell.formatShortDate": "Datum, kurz",
+    "cell.formatTime": "Uhrzeit",
+    "cell.formatPercentage": "Prozent",
+    "cell.formatFraction": "Bruch",
+    "cell.formatScientific": "Wissenschaftlich",
+    "cell.formatText": "Text",
+    "cell.formatCustom": "Benutzerdefiniert",
+    "cell.increaseDecimal": "Dezimalstelle hinzufügen",
+    "cell.decreaseDecimal": "Dezimalstelle löschen",
+    "cell.clearFormats": "Formate löschen",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "Zeile auswählen",

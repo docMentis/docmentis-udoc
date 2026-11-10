@@ -991,9 +991,10 @@ export function mountUIShell(
         }
     }
 
-    /** Insert or delete a workbook's sheet rows or columns over the selection's
-     *  — a refusal, as Excel shows one, under the formula bar. */
-    async function editSheetTracks(edit: SelectionEdit): Promise<void> {
+    /** Run a workbook grid edit Excel may refuse — an insert or a delete of
+     *  sheet rows or columns, a merge — over the selection: a refusal, as
+     *  Excel shows one, under the formula bar. */
+    async function editSheetGrid(edit: SelectionEdit): Promise<void> {
         try {
             await commit(() => client.executeOnSelection(edit));
         } catch (error) {
@@ -3791,7 +3792,7 @@ export function mountUIShell(
                 clipboard.copy();
                 break;
             case "selectionEdit":
-                if (isSheetTrackEdit(action.edit)) void editSheetTracks(action.edit);
+                if (isRefusableSheetEdit(action.edit)) void editSheetGrid(action.edit);
                 else void editPages(action.edit);
                 break;
             case "toggleSlidesHidden":
@@ -4112,14 +4113,17 @@ export function mountUIShell(
     };
 }
 
-/** Whether `edit` inserts or deletes a workbook's sheet rows or columns. */
-function isSheetTrackEdit(edit: SelectionEdit): boolean {
+/** Whether `edit` is a workbook grid edit Excel refuses where it would break
+ *  the sheet, as a refusal under the formula bar: an insert or a delete of
+ *  sheet rows or columns, or a merge. */
+function isRefusableSheetEdit(edit: SelectionEdit): boolean {
     return (
         typeof edit !== "string" &&
         "kind" in edit &&
         (edit.kind === "insertSheetRows" ||
             edit.kind === "insertSheetColumns" ||
             edit.kind === "deleteSheetRows" ||
-            edit.kind === "deleteSheetColumns")
+            edit.kind === "deleteSheetColumns" ||
+            edit.kind === "mergeSheetCells")
     );
 }

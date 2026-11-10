@@ -60,12 +60,14 @@ export {
     EMPTY_SELECTION_TEXT_FORMAT,
     selectionPaint,
     selectionTextFormat,
+    sheetCellFormat,
     tableShadingDisplay,
 } from "./geometry.js";
 export type {
     PaintDisplay,
     SelectionBox,
     SelectionCapabilities,
+    SelectionEditKind,
     SelectionHandle,
     SelectionPaint,
     SelectionTextFormat,

@@ -60,6 +60,7 @@ export const ptBR: EditMessages = {
     "ribbon.shape": "Forma",
     "ribbon.table": "Tabela",
     "ribbon.object": "Objeto",
+    "ribbon.cell": "Célula",
 
     // Commands
     "command.ruler": "Régua",
@@ -202,6 +203,30 @@ export const ptBR: EditMessages = {
     "table.insert": "Inserir",
     "table.delete": "Excluir",
     "grid.sheet": "Planilha",
+
+    // The Cell tab, a workbook's
+    "cell.fillColor": "Cor de Preenchimento",
+    "cell.alignment": "Alinhamento",
+    "cell.alignTop": "Alinhar em Cima",
+    "cell.alignMiddle": "Alinhar no Meio",
+    "cell.alignBottom": "Alinhar Embaixo",
+    "cell.wrapText": "Quebrar Texto Automaticamente",
+    "cell.merge": "Mesclar",
+    "cell.mergeAndCenter": "Mesclar e Centralizar",
+    "cell.mergeAcross": "Mesclar Através",
+    "cell.numberFormat": "Formato de Número",
+    "cell.formatGeneral": "Geral",
+    "cell.formatNumber": "Número",
+    "cell.formatShortDate": "Data Abreviada",
+    "cell.formatTime": "Hora",
+    "cell.formatPercentage": "Porcentagem",
+    "cell.formatFraction": "Fração",
+    "cell.formatScientific": "Científico",
+    "cell.formatText": "Texto",
+    "cell.formatCustom": "Personalizado",
+    "cell.increaseDecimal": "Aumentar Casas Decimais",
+    "cell.decreaseDecimal": "Diminuir Casas Decimais",
+    "cell.clearFormats": "Limpar Formatos",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "Selecionar Linha",

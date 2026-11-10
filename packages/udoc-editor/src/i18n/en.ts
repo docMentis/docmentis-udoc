@@ -61,6 +61,7 @@ export const en: EditMessages = {
     "ribbon.shape": "Shape",
     "ribbon.table": "Table",
     "ribbon.object": "Object",
+    "ribbon.cell": "Cell",
 
     // Commands
     "command.ruler": "Ruler",
@@ -203,6 +204,30 @@ export const en: EditMessages = {
     "table.insert": "Insert",
     "table.delete": "Delete",
     "grid.sheet": "Sheet",
+
+    // The Cell tab, a workbook's
+    "cell.fillColor": "Fill Color",
+    "cell.alignment": "Alignment",
+    "cell.alignTop": "Top Align",
+    "cell.alignMiddle": "Middle Align",
+    "cell.alignBottom": "Bottom Align",
+    "cell.wrapText": "Wrap Text",
+    "cell.merge": "Merge",
+    "cell.mergeAndCenter": "Merge & Center",
+    "cell.mergeAcross": "Merge Across",
+    "cell.numberFormat": "Number Format",
+    "cell.formatGeneral": "General",
+    "cell.formatNumber": "Number",
+    "cell.formatShortDate": "Short Date",
+    "cell.formatTime": "Time",
+    "cell.formatPercentage": "Percentage",
+    "cell.formatFraction": "Fraction",
+    "cell.formatScientific": "Scientific",
+    "cell.formatText": "Text",
+    "cell.formatCustom": "Custom",
+    "cell.increaseDecimal": "Increase Decimal",
+    "cell.decreaseDecimal": "Decrease Decimal",
+    "cell.clearFormats": "Clear Formats",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "Select Row",

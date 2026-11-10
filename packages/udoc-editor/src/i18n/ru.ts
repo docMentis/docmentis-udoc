@@ -60,6 +60,7 @@ export const ru: EditMessages = {
     "ribbon.shape": "Фигура",
     "ribbon.table": "Таблица",
     "ribbon.object": "Объект",
+    "ribbon.cell": "Ячейка",
 
     // Commands
     "command.ruler": "Линейка",
@@ -203,6 +204,30 @@ export const ru: EditMessages = {
     "table.insert": "Вставить",
     "table.delete": "Удалить",
     "grid.sheet": "Лист",
+
+    // The Cell tab, a workbook's
+    "cell.fillColor": "Цвет заливки",
+    "cell.alignment": "Выравнивание",
+    "cell.alignTop": "По верхнему краю",
+    "cell.alignMiddle": "По середине",
+    "cell.alignBottom": "По нижнему краю",
+    "cell.wrapText": "Переносить текст",
+    "cell.merge": "Объединить",
+    "cell.mergeAndCenter": "Объединить и поместить в центре",
+    "cell.mergeAcross": "Объединить по строкам",
+    "cell.numberFormat": "Числовой формат",
+    "cell.formatGeneral": "Общий",
+    "cell.formatNumber": "Числовой",
+    "cell.formatShortDate": "Краткая дата",
+    "cell.formatTime": "Время",
+    "cell.formatPercentage": "Процентный",
+    "cell.formatFraction": "Дробный",
+    "cell.formatScientific": "Экспоненциальный",
+    "cell.formatText": "Текстовый",
+    "cell.formatCustom": "Пользовательский",
+    "cell.increaseDecimal": "Увеличить разрядность",
+    "cell.decreaseDecimal": "Уменьшить разрядность",
+    "cell.clearFormats": "Очистить форматы",
 
     // The Table tab's dropdowns, whose buttons show only an icon
     "table.selectRow": "Выделить строку",
