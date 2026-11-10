@@ -7,13 +7,15 @@
 // of its own, as udoc-ui's `scripts/gen-icons.mjs` says of its own. The icons
 // that draw a table are Material Design Icons, whose table set is fuller than
 // Material's: the table itself, its style and properties, and each selection
-// and edit of its rows, columns and cells, a delete and a split among them. Its borders and
-// text directions stay Material Symbols, as does the rest, with a Material
-// Design Icon where Material has none. The exceptions are the table glyphs
-// neither has, each redrawn from the symbol nearest it: in `src/table.ts` the
-// three cell alignments, from `position_top_right`; in `src/table-format.ts`
-// the two diagonal borders, from `border_clear`. An icon drawn at the wrong
-// angle takes an entry that turns it.
+// and edit of its rows, columns and cells, a delete and a split among them. So
+// are the Arrange controls that draw shapes stacked — Group, Ungroup and the
+// four order moves — where Material's show arrows and plain outlines. A table's
+// borders and text directions stay Material Symbols, as does the rest, with a
+// Material Design Icon where Material has none. The exceptions are the table
+// glyphs neither has, each redrawn from the symbol nearest it: in
+// `src/table.ts` the three cell alignments, from `position_top_right`; in
+// `src/table-format.ts` the two diagonal borders, from `border_clear`. An icon
+// drawn at the wrong angle takes an entry that turns it.
 //
 //   npm run gen:icons
 //
@@ -117,11 +119,10 @@ const ICONS = {
     ICON_LIST_NUMBER: "format_list_numbered",
 
     // Arrange
-    ICON_ORDER: "flip_to_front",
-    ICON_BRING_TO_FRONT: "vertical_align_top",
-    ICON_BRING_FORWARD: "arrow_upward",
-    ICON_SEND_BACKWARD: "arrow_downward",
-    ICON_SEND_TO_BACK: "vertical_align_bottom",
+    ICON_BRING_TO_FRONT: { mdi: "arrange-bring-to-front" },
+    ICON_BRING_FORWARD: { mdi: "arrange-bring-forward" },
+    ICON_SEND_BACKWARD: { mdi: "arrange-send-backward" },
+    ICON_SEND_TO_BACK: { mdi: "arrange-send-to-back" },
     ICON_ALIGN_LEFT: "align_horizontal_left",
     ICON_ALIGN_CENTER_H: "align_horizontal_center",
     ICON_ALIGN_RIGHT: "align_horizontal_right",
@@ -131,8 +132,8 @@ const ICONS = {
     ICON_DISTRIBUTE_H: "horizontal_distribute",
     ICON_DISTRIBUTE_V: "vertical_distribute",
     ICON_FLIP: "flip",
-    ICON_GROUP: "stack_group",
-    ICON_UNGROUP: "stack",
+    ICON_GROUP: { mdi: "group" },
+    ICON_UNGROUP: { mdi: "ungroup" },
 
     // Clipboard
     ICON_CUT: "content_cut",

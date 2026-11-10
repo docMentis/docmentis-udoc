@@ -16,6 +16,9 @@ listed once, by package. Its major and minor version are those of the
   splitting cells, on the ribbon and in the menus, a workbook's included.
   Select's Row, Column and Table rows show an icon each, and Delete Table shows
   a table where it showed a trash can.
+- Group, Ungroup, Bring to Front, Bring Forward, Send Backward and Send to Back
+  show Pictogrammers' Material Design Icons, which draw the shapes they stack,
+  where they showed arrows and outlines. The Order button shows Bring Forward's.
 
 ## [0.8.19] - 2026-11-09
 

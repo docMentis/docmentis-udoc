@@ -26,7 +26,6 @@ import {
     ICON_DISTRIBUTE_V,
     ICON_FLIP,
     ICON_GROUP,
-    ICON_ORDER,
     ICON_SEND_BACKWARD,
     ICON_SEND_TO_BACK,
     ICON_UNGROUP,
@@ -369,7 +368,13 @@ export function arrangeCommands(arrange: () => ArrangeEdits | null): Readonly<Re
     const group = () => void arrange()?.groupSelection();
     const ungroup = () => void arrange()?.ungroupSelection();
     return {
-        shapeOrder: dropdown("shapeOrder", "arrange.order", ICON_ORDER, SHAPE_ORDER_MENU, anyEnabled(SHAPE_ORDER_MENU)),
+        shapeOrder: dropdown(
+            "shapeOrder",
+            "arrange.order",
+            ICON_BRING_FORWARD,
+            SHAPE_ORDER_MENU,
+            anyEnabled(SHAPE_ORDER_MENU),
+        ),
         shapeAlign: dropdown("shapeAlign", "arrange.align", ICON_ALIGN_LEFT, SHAPE_ALIGN_MENU, canAlignShapes),
         shapeRotate: dropdown(
             "shapeRotate",
@@ -387,7 +392,7 @@ export function arrangeCommands(arrange: () => ArrangeEdits | null): Readonly<Re
         objectOrder: dropdown(
             "objectOrder",
             "arrange.order",
-            ICON_ORDER,
+            ICON_BRING_FORWARD,
             OBJECT_ORDER_MENU,
             anyEnabled(OBJECT_ORDER_MENU),
         ),
