@@ -451,7 +451,12 @@ export const DOCUMENTS = {
         file: "xlsx/nasa_asp_schedule_2026_01.xlsx",
         ids(e) {
             const w = J(e, "parts/sheet_0-1.json").worksheet;
-            return { sheet: w.id, rows: Object.keys(w.rows), columns: Object.keys(w.columns) };
+            // Each row's cells: the worksheet's `cells`, or, from an engine
+            // before rows carried their data on their runs, each row record's.
+            const cells =
+                w.cells ?? Object.fromEntries(Object.entries(w.rows).map(([row, record]) => [row, record.cells ?? {}]));
+            const columns = [...new Set(Object.values(cells).flatMap((held) => Object.keys(held)))];
+            return { sheet: w.id, rows: Object.keys(cells), columns };
         },
         first(s, { sheet, rows, columns }) {
             run(s, "setCells", {
