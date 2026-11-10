@@ -91,7 +91,7 @@ const ICONS = {
     ICON_VIEW_COVER: "menu_book",
     ICON_VIEW_ROTATE_LEFT: "rotate_left",
     ICON_VIEW_ROTATE_RIGHT: "rotate_right",
-    ICON_VIEW_PAGE_GAP: "expand",
+    ICON_VIEW_GAPLESS: "grid_3x3_off",
     ICON_FORMATTING_MARKS: "format_paragraph",
     ICON_FORMULA_BAR: "function",
     ICON_NOTES: "speaker_notes",

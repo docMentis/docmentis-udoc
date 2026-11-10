@@ -120,7 +120,7 @@ export const de: Messages = {
     "showMarkup.formatting": "Formatierung",
     "command.rotateViewLeft": "Ansicht nach links drehen",
     "command.rotateViewRight": "Ansicht nach rechts drehen",
-    "command.pageGap": "Abstand",
+    "command.gapless": "Ohne Abstand",
     "command.formattingMarks": "Formatierungszeichen",
     "command.formulaBar": "Bearbeitungsleiste",
     "formulaBar.label": "Bearbeitungsleiste",

@@ -120,7 +120,7 @@ export const zhTW: Messages = {
     "showMarkup.formatting": "格式設定",
     "command.rotateViewLeft": "向左旋轉檢視",
     "command.rotateViewRight": "向右旋轉檢視",
-    "command.pageGap": "間距",
+    "command.gapless": "無間距",
     "command.formattingMarks": "編輯標記",
     "command.formulaBar": "資料編輯列",
     "formulaBar.label": "資料編輯列",

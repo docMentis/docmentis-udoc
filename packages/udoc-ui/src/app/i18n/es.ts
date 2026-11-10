@@ -120,7 +120,7 @@ export const es: Messages = {
     "showMarkup.formatting": "Formato",
     "command.rotateViewLeft": "Girar vista a la izquierda",
     "command.rotateViewRight": "Girar vista a la derecha",
-    "command.pageGap": "Espacio",
+    "command.gapless": "Sin espacio",
     "command.formattingMarks": "Marcas de formato",
     "command.formulaBar": "Barra de fórmulas",
     "formulaBar.label": "Barra de fórmulas",

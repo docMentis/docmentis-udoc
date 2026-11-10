@@ -217,8 +217,8 @@ export interface Messages {
     "command.rotateViewLeft": string;
     /** Rotate View Right */
     "command.rotateViewRight": string;
-    /** Gap */
-    "command.pageGap": string;
+    /** Gapless */
+    "command.gapless": string;
     /** Formatting Marks */
     "command.formattingMarks": string;
     /** Formula Bar */

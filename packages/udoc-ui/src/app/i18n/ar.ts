@@ -120,7 +120,7 @@ export const ar: Messages = {
     "showMarkup.formatting": "التنسيق",
     "command.rotateViewLeft": "تدوير العرض إلى اليسار",
     "command.rotateViewRight": "تدوير العرض إلى اليمين",
-    "command.pageGap": "المسافة",
+    "command.gapless": "بدون مسافة",
     "command.formattingMarks": "علامات التنسيق",
     "command.formulaBar": "شريط الصيغة",
     "formulaBar.label": "شريط الصيغة",

@@ -85,7 +85,7 @@ import {
     ICON_VIEW_COVER,
     ICON_VIEW_ROTATE_LEFT,
     ICON_VIEW_ROTATE_RIGHT,
-    ICON_VIEW_PAGE_GAP,
+    ICON_VIEW_GAPLESS,
     ICON_LAYERS,
     ICON_FORMATTING_MARKS,
     ICON_FORMULA_BAR,
@@ -1225,16 +1225,16 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         run: { kind: "action", press: (store) => turnedView(store, 90) },
         enabledWhen: whenPaged,
     },
-    // The gaps between them, shown or butted together.
-    pageGap: {
-        id: "pageGap",
-        label: "command.pageGap",
-        icon: ICON_VIEW_PAGE_GAP,
+    // The pages butted together, with no gaps between them — off, the gaps
+    // show.
+    gapless: {
+        id: "gapless",
+        label: "command.gapless",
+        icon: ICON_VIEW_GAPLESS,
         group: "gap",
-        labeled: true,
         run: {
             kind: "toggle",
-            pressed: (state) => state.showPageGap,
+            pressed: (state) => !state.showPageGap,
             press: (store) => store.dispatch({ type: "SET_SHOW_PAGE_GAP", showPageGap: !store.getState().showPageGap }),
         },
         enabledWhen: whenPaged,

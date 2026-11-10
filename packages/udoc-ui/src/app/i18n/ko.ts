@@ -120,7 +120,7 @@ export const ko: Messages = {
     "showMarkup.formatting": "서식",
     "command.rotateViewLeft": "보기 왼쪽으로 회전",
     "command.rotateViewRight": "보기 오른쪽으로 회전",
-    "command.pageGap": "간격",
+    "command.gapless": "간격 없음",
     "command.formattingMarks": "편집 기호",
     "command.formulaBar": "수식 입력줄",
     "formulaBar.label": "수식 입력줄",

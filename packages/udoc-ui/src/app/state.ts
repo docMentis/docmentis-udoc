@@ -407,7 +407,7 @@ export type CommandId =
     | "pageLayout"
     | "rotateViewLeft"
     | "rotateViewRight"
-    | "pageGap"
+    | "gapless"
     | "layers"
     | "formattingMarks"
     | "formulaBar";
@@ -911,9 +911,9 @@ export interface UIState {
      */
     pageGap: PageGap | null;
     /**
-     * Whether the gaps between pages show — the View tab's Gap. Off
-     * butts the pages together; the page controls keep their own gap either
-     * way.
+     * Whether the gaps between pages show — off with the View tab's Gapless
+     * on, which butts the pages together; the page controls keep their own
+     * gap either way.
      */
     showPageGap: boolean;
 

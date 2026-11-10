@@ -120,7 +120,7 @@ export const ja: Messages = {
     "showMarkup.formatting": "書式設定",
     "command.rotateViewLeft": "表示を左に回転",
     "command.rotateViewRight": "表示を右に回転",
-    "command.pageGap": "間隔",
+    "command.gapless": "間隔なし",
     "command.formattingMarks": "編集記号",
     "command.formulaBar": "数式バー",
     "formulaBar.label": "数式バー",

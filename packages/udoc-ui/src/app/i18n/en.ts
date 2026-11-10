@@ -121,7 +121,7 @@ export const en: Messages = {
     "showMarkup.formatting": "Formatting",
     "command.rotateViewLeft": "Rotate View Left",
     "command.rotateViewRight": "Rotate View Right",
-    "command.pageGap": "Gap",
+    "command.gapless": "Gapless",
     "command.formattingMarks": "Formatting Marks",
     "command.formulaBar": "Formula Bar",
     "formulaBar.label": "Formula bar",

@@ -187,7 +187,7 @@ const ACTIVITY_INPUTS = ["pointerdown", "pointermove", "keydown", "wheel"] as co
  */
 const READ_PAGE_GAP: PageGap = { horizontal: 12, vertical: 12 };
 
-/** The gaps with the View tab's Gap off: the pages butt together. */
+/** The gaps with the View tab's Gapless on: the pages butt together. */
 const NO_PAGE_GAP: PageGap = { horizontal: 0, vertical: 0 };
 const READ_PADDING: ContentPadding = { top: { px: 18 }, right: { px: 18 }, bottom: { px: 18 }, left: { px: 18 } };
 
@@ -1065,7 +1065,7 @@ export function mountUIShell(
 
     // The page spacing: the extension's, for page chrome of its own that needs
     // room around the pages, else the reading spacing — the host's `pageGap`,
-    // when it set one; none with the View tab's Gap off.
+    // when it set one; none with the View tab's Gapless on.
     function spacingFor(s: UIState): PageSpacing {
         return (
             extension?.spacing(s) ?? {
@@ -1609,7 +1609,7 @@ export function mountUIShell(
     // the engine so it tracks the theme. Outline-variant — the soft outline —
     // reads as a page edge against the canvas background without competing with
     // page content, matching the guide grid marks. Where the pages touch (the
-    // View tab's Gap off) there is no edge to mark, only a line ruled
+    // View tab's Gapless on) there is no edge to mark, only a line ruled
     // between pages, so none is drawn; nor around a word document shown
     // pageless, whose pane is its page.
     function syncPageBorder(): void {

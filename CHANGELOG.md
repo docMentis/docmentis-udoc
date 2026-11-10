@@ -8,6 +8,13 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Changed
+
+- The View tab's Gap is Gapless, turned the other way: on, it butts the pages
+  together, and it starts off, so the gaps show as before. It shows a crossed-out
+  grid with no text beside it, its name in its tooltip. Its `translations` key is
+  `command.gapless`, where it was `command.pageGap`.
+
 #### Fixed
 
 - On macOS, the input-source indicator no longer shows up on the document with

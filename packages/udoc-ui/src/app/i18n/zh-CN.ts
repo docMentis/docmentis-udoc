@@ -120,7 +120,7 @@ export const zhCN: Messages = {
     "showMarkup.formatting": "格式设置",
     "command.rotateViewLeft": "向左旋转视图",
     "command.rotateViewRight": "向右旋转视图",
-    "command.pageGap": "间距",
+    "command.gapless": "无间距",
     "command.formattingMarks": "格式标记",
     "command.formulaBar": "编辑栏",
     "formulaBar.label": "编辑栏",

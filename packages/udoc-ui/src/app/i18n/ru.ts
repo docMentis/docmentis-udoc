@@ -120,7 +120,7 @@ export const ru: Messages = {
     "showMarkup.formatting": "Форматирование",
     "command.rotateViewLeft": "Повернуть вид влево",
     "command.rotateViewRight": "Повернуть вид вправо",
-    "command.pageGap": "Интервал",
+    "command.gapless": "Без интервала",
     "command.formattingMarks": "Знаки форматирования",
     "command.formulaBar": "Строка формул",
     "formulaBar.label": "Строка формул",

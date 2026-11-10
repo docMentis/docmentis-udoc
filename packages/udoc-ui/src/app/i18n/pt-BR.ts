@@ -120,7 +120,7 @@ export const ptBR: Messages = {
     "showMarkup.formatting": "Formatação",
     "command.rotateViewLeft": "Girar Exibição para a Esquerda",
     "command.rotateViewRight": "Girar Exibição para a Direita",
-    "command.pageGap": "Espaço",
+    "command.gapless": "Sem espaço",
     "command.formattingMarks": "Marcas de Formatação",
     "command.formulaBar": "Barra de Fórmulas",
     "formulaBar.label": "Barra de fórmulas",

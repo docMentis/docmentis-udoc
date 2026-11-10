@@ -36,11 +36,11 @@ const SCROLL: readonly CommandId[] = ["singleScroll", "continuousScroll"];
 
 /** How a word document's pages are arranged: how they pair up, and the gaps
  *  between them. */
-const ARRANGEMENT: readonly CommandId[] = ["pageLayout", "pageGap"];
+const ARRANGEMENT: readonly CommandId[] = ["pageLayout", "gapless"];
 
 /** How a PDF's pages are arranged: as a word document's, and the turn they're
  *  shown at. */
-const PORTABLE_ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLeft", "rotateViewRight", "pageGap"];
+const PORTABLE_ARRANGEMENT: readonly CommandId[] = ["pageLayout", "rotateViewLeft", "rotateViewRight", "gapless"];
 
 /**
  * `docType`'s Present tab, as PowerPoint's Slide Show tab: the document
@@ -71,7 +71,7 @@ const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; sh
     portable: { pages: [...SCROLL, ...PORTABLE_ARRANGEMENT], shows: ["layers"] },
     wordprocessing: { pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT], shows: ["formattingMarks"] },
     presentation: { pages: ["normalView", "notesPageView", "slideMasterView", ...SCROLL], shows: ["notes"] },
-    image: { pages: [...SCROLL, "pageGap"], shows: [] },
+    image: { pages: [...SCROLL, "gapless"], shows: [] },
     spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar"] },
 };
 
@@ -181,8 +181,8 @@ export interface DocProfile {
      */
     viewRotation: boolean;
     /**
-     * Whether the View tab offers its Gap, the gaps between pages shown or the
-     * pages butted together: a stack of pages a reader runs down (PDF, Word, a
+     * Whether the View tab offers its Gapless, the pages butted together or the
+     * gaps between them shown: a stack of pages a reader runs down (PDF, Word, a
      * multi-page image) does; a deck keeps its slides apart, whatever it holds
      * (see {@link arrangementFor}).
      */
@@ -422,7 +422,7 @@ export function profileFor(docType: UDocType | null): DocProfile {
  * The arrangement the open document is shown in: the View tab's layout where
  * its doc type offers it ({@link DocProfile.pageArrangement} — PDF, Word), else
  * single pages; its rotation where it offers that
- * ({@link DocProfile.viewRotation} — PDF), else upright pages; and its Gap
+ * ({@link DocProfile.viewRotation} — PDF), else upright pages; and its Gapless
  * where it offers that ({@link DocProfile.pageGapToggle} — PDF, Word, an
  * image), else the gaps.
  */
