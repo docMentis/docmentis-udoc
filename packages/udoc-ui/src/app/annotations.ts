@@ -343,7 +343,7 @@ function markupEntries(style: AnnotationStyle, author: string | null, now: Date)
         richContents: null,
         replyType: null,
         intent: null,
-        created: pdfDate(now),
+        created: dateTime(now),
         popup: null,
         inReplyTo: null,
     };
@@ -359,7 +359,7 @@ function commented(rect: Rect, style: AnnotationStyle, kind: AnnotationKind, now
         rect,
         contents: null,
         name: null,
-        modified: pdfDate(now),
+        modified: dateTime(now),
         flags: {
             invisible: false,
             hidden: false,
@@ -588,7 +588,7 @@ export function restyled(annotation: Annotation, change: AnnotationStyleChange, 
         next.rect = inkRect(next.kind, lineOf(next).width) ?? next.rect;
     }
     next.appearance = null;
-    next.modified = pdfDate(now);
+    next.modified = dateTime(now);
     return next;
 }
 
@@ -750,7 +750,7 @@ function textEntries(annotation: Annotation): TextAnnotation | null {
 
 /** Oldest first, by `/CreationDate`; one without keeps its place. */
 function byCreation(a: Comment, b: Comment): number {
-    const made = (c: Comment) => parsePdfDate(markupOf(c.annotation)?.created ?? "")?.getTime() ?? NaN;
+    const made = (c: Comment) => parseDateTime(markupOf(c.annotation)?.created ?? "")?.getTime() ?? NaN;
     const [ta, tb] = [made(a), made(b)];
     return Number.isNaN(ta) || Number.isNaN(tb) ? 0 : ta - tb;
 }
@@ -781,7 +781,7 @@ export function replyTo(parent: Annotation, richContents: string, author: string
         rect: parent.rect,
         contents: null,
         name: null,
-        modified: pdfDate(now),
+        modified: dateTime(now),
         flags: {
             invisible: false,
             hidden: false,
@@ -808,7 +808,7 @@ export function replyTo(parent: Annotation, richContents: string, author: string
                     richContents: richContents,
                     replyType: null,
                     intent: null,
-                    created: pdfDate(now),
+                    created: dateTime(now),
                     popup: null,
                     inReplyTo: parent.id,
                 },
@@ -1106,33 +1106,31 @@ function unit(from: ShapePoint, to: ShapePoint): ShapePoint | null {
     return length > 0 ? { x: dx / length, y: dy / length } : null;
 }
 
-/** `now` as a PDF date string (§7.9.4): `D:YYYYMMDDHHmmSS` in local time and
- *  its offset from UT. */
-export function pdfDate(now: Date): string {
+/** `now` as the engine's `DateTime`: ISO 8601's `YYYY-MM-DDThh:mm:ss` in
+ *  local time, and its offset from UTC. */
+export function dateTime(now: Date): string {
     const two = (n: number) => String(n).padStart(2, "0");
     const offset = -now.getTimezoneOffset();
     const sign = offset < 0 ? "-" : "+";
     const minutes = Math.abs(offset);
+    const zone = offset === 0 ? "Z" : `${sign}${two(Math.floor(minutes / 60))}:${two(minutes % 60)}`;
     return (
-        `D:${now.getFullYear()}${two(now.getMonth() + 1)}${two(now.getDate())}` +
-        `${two(now.getHours())}${two(now.getMinutes())}${two(now.getSeconds())}` +
-        `${sign}${two(Math.floor(minutes / 60))}'${two(minutes % 60)}'`
+        `${String(now.getFullYear()).padStart(4, "0")}-${two(now.getMonth() + 1)}-${two(now.getDate())}` +
+        `T${two(now.getHours())}:${two(now.getMinutes())}:${two(now.getSeconds())}${zone}`
     );
 }
 
-/** The PDF date string `text` (§7.9.4) as a `Date` — in local time when it
- *  gives no offset from UT, and reading the one-digit offset hours some writers
- *  give — or null when it doesn't read as one. */
-export function parsePdfDate(text: string): Date | null {
-    const match =
-        /^(?:D:)?(\d{4})(\d{2})?(\d{2})?(\d{2})?(\d{2})?(\d{2})?(?:([Zz+-])(?:(\d{1,2})'?(\d{2})?'?)?)?$/.exec(
-            text.trim(),
-        );
+/** The engine's `DateTime` `text` as a `Date` — in local time when it gives no
+ *  offset from UTC — or null when it doesn't read as one. */
+export function parseDateTime(text: string): Date | null {
+    const match = /^(-?\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$/.exec(text);
     if (!match) return null;
-    const [, y, mo = "01", d = "01", h = "00", mi = "00", sec = "00", sign, oh = "0", om = "0"] = match;
-    const parts = [Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(sec)] as const;
-    if (!sign) return new Date(...parts);
-    const offset = sign === "Z" || sign === "z" ? 0 : (sign === "-" ? -1 : 1) * (Number(oh) * 60 + Number(om));
+    const [, y, mo, d, h, mi, sec, fraction = "", zone] = match;
+    const ms = Number(fraction.padEnd(3, "0").slice(0, 3));
+    const parts = [Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi), Number(sec), ms] as const;
+    if (!zone) return new Date(...parts);
+    const offset =
+        zone === "Z" ? 0 : (zone[0] === "-" ? -1 : 1) * (Number(zone.slice(1, 3)) * 60 + Number(zone.slice(4)));
     return new Date(Date.UTC(...parts) - offset * 60_000);
 }
 

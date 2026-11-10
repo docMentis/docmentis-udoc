@@ -20,7 +20,7 @@
 // written out as XML, which the engine narrows to rich text in turn.
 
 import type { AnnotationSubtype, Comment } from "../annotations.js";
-import { markupOf, parsePdfDate, subtypeOf } from "../annotations.js";
+import { markupOf, parseDateTime, subtypeOf } from "../annotations.js";
 import {
     ICON_ATTACHMENT,
     ICON_DELETE,
@@ -409,7 +409,7 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
         if (!subtype?.icon) kind.textContent = kindLabel;
         kind.title = kindLabel;
         author.textContent = markup?.author || markup?.subject || "";
-        showDate(date, parsePdfDate(markup?.created ?? comment.annotation.modified ?? ""), i18n.locale);
+        showDate(date, parseDateTime(markup?.created ?? comment.annotation.modified ?? ""), i18n.locale);
         const says = i18n.t(
             flags.locked && flags.lockedContents ? LOCKS.both : flags.locked ? LOCKS.locked : LOCKS.contents,
         );

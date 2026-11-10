@@ -28,7 +28,7 @@ import {
     markupFor,
     markupOf,
     commentOpen,
-    parsePdfDate,
+    parseDateTime,
     restyled,
     selectedComment,
 } from "../../src/app/annotations.ts";
@@ -344,35 +344,35 @@ test("a page's comments thread as Acrobat lists them: replies under what they an
     // Shaped on the ISO 32000-2 errata file Acrobat wrote: a caret with a
     // strikeout grouped under it (a replace-text edit), a chain of one
     // reviewer's states, replies, and what isn't a comment at all.
-    const caret = caretOf(note("caret", "Issue #149", "D:20240429120000+2'00'"));
-    const strike = { ...note("strike", "Issue #149", "D:20240429120000+2'00'", "caret", { rt: "group" }) };
+    const caret = caretOf(note("caret", "Issue #149", "2024-04-29T12:00:00+02:00"));
+    const strike = { ...note("strike", "Issue #149", "2024-04-29T12:00:00+02:00", "caret", { rt: "group" }) };
     const link = { ...note("link", "", ""), kind: { link: {} } } as unknown as Annotation;
     const annotations: Annotation[] = [
-        note("editor", "PDF Association", "D:20240429120000+2'00'"),
+        note("editor", "PDF Association", "2024-04-29T12:00:00+02:00"),
         // A reviewer's states: Completed, then — answering that one — Accepted.
-        note("completed", "PDF Association", "D:20240429120000+2'00'", "editor", {
+        note("completed", "PDF Association", "2024-04-29T12:00:00+02:00", "editor", {
             state: "Completed",
             model: "Review",
         }),
-        note("accepted", "PDF Association", "D:20240429120000+2'00'", "completed", {
+        note("accepted", "PDF Association", "2024-04-29T12:00:00+02:00", "completed", {
             state: "Accepted",
             model: "Review",
         }),
-        note("nothing", "Walter", "D:20240501000000Z", "editor", { state: "None", model: "Review" }),
-        note("marked", "Walter", "D:20240501000000Z", "editor", { state: "Marked", model: "Marked" }),
+        note("nothing", "Walter", "2024-05-01T00:00:00Z", "editor", { state: "None", model: "Review" }),
+        note("marked", "Walter", "2024-05-01T00:00:00Z", "editor", { state: "Marked", model: "Marked" }),
         // Replies, listed out of the order they were made — one written in UT
-        // at 09:00, one at 10:00+02'00' (08:00 UT) — and a reply to a reply.
-        note("later", "Walter", "D:20240501090000Z", "editor"),
-        note("earlier", "Ann", "D:20240501100000+02'00'", "editor"),
-        note("nested", "Ann", "D:20240502000000Z", "later"),
+        // at 09:00, one at 10:00+02:00 (08:00 UT) — and a reply to a reply.
+        note("later", "Walter", "2024-05-01T09:00:00Z", "editor"),
+        note("earlier", "Ann", "2024-05-01T10:00:00+02:00", "editor"),
+        note("nested", "Ann", "2024-05-02T00:00:00Z", "later"),
         caret,
         strike,
         // A reply to the strikeout answers the group, whose primary is the caret.
-        note("on-strike", "Walter", "D:20240503000000Z", "strike"),
+        note("on-strike", "Walter", "2024-05-03T00:00:00Z", "strike"),
         // One answering what isn't on the page, and two answering each other.
-        note("orphan", "Walter", "D:20240504000000Z", "elsewhere"),
-        note("loop-a", "Walter", "D:20240505000000Z", "loop-b"),
-        note("loop-b", "Walter", "D:20240505000000Z", "loop-a"),
+        note("orphan", "Walter", "2024-05-04T00:00:00Z", "elsewhere"),
+        note("loop-a", "Walter", "2024-05-05T00:00:00Z", "loop-b"),
+        note("loop-b", "Walter", "2024-05-05T00:00:00Z", "loop-a"),
         link,
     ];
     const page: PageComments = {
@@ -400,13 +400,13 @@ test("a page's comments thread as Acrobat lists them: replies under what they an
     assert.equal(editor?.richContents, "<body>editor</body>");
     assert.equal(threads[1]?.marked, false);
     assert.equal(commentThreads(page), threads, "read once per read of the page");
-    assert.equal(parsePdfDate("D:20240429120000+2'00'")?.toISOString(), "2024-04-29T10:00:00.000Z");
+    assert.equal(parseDateTime("2024-04-29T12:00:00+02:00")?.toISOString(), "2024-04-29T10:00:00.000Z");
 });
 
 test("the popup shows the whole thread of what is selected — a group member its primary's", () => {
-    const caret = caretOf(note("caret", "Ann", "D:20240429120000Z"));
-    const strike = note("strike", "Ann", "D:20240429120000Z", "caret", { rt: "group" });
-    const reply = note("reply", "Walter", "D:20240430120000Z", "caret");
+    const caret = caretOf(note("caret", "Ann", "2024-04-29T12:00:00Z"));
+    const strike = note("strike", "Ann", "2024-04-29T12:00:00Z", "caret", { rt: "group" });
+    const reply = note("reply", "Walter", "2024-04-30T12:00:00Z", "caret");
     const annotations = [caret, strike, reply];
     const page: PageComments = { page: "p", index: 0, annotations, richContents: annotations.map(() => "") };
     const shown = selectedComment(

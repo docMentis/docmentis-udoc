@@ -88,7 +88,7 @@ export const Command = {
     addStandardFont: (id: string, font: StandardFont): UDocCommand => portable({ addStandardFont: { id, font } }),
 
     /** Set the text of annotation `id` on `pageId` from `richContents` (XHTML):
-     *  its `/RC` and `/Contents` together, modified at `modified` (a PDF date).
+     *  its `/RC` and `/Contents` together, modified at `modified` (a `DateTime`).
      *  Its appearance is generated afresh where it shows the text. */
     setAnnotationRichContents: (pageId: string, id: string, richContents: string, modified: string): UDocCommand =>
         portable({

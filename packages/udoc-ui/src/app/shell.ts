@@ -131,10 +131,10 @@ import {
     annotationFormat,
     annotationStyle,
     commentOpen,
+    dateTime,
     editedInBox,
     formatTarget,
     markupFor,
-    pdfDate,
     replyTo,
     restyle,
     restyled,
@@ -2708,7 +2708,7 @@ export function mountUIShell(
     function saveComment(comment: Comment, richContents: string): Promise<void> {
         const id = comment.annotation.id;
         if (id === undefined) return Promise.resolve();
-        const modified = pdfDate(new Date());
+        const modified = dateTime(new Date());
         return commit(() =>
             client.execute(Command.setAnnotationRichContents(comment.page, id, richContents, modified)),
         );
