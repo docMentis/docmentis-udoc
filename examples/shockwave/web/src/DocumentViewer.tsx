@@ -72,7 +72,8 @@ export function useDocumentLook(ui: RefObject<{ setTheme(theme: Theme): void } |
 }
 
 /**
- * A viewer on `source`, with its top toolbar unless `showToolbar` is false,
+ * A viewer on `source`, with its top toolbar unless `showToolbar` is false, and
+ * its left and right side panels unless `showLeftPanel` or `showRightPanel` is,
  * in `colors`, for one with no one signed in to say them; when `readsOnly`, for a
  * buyer, with no download or print button, so that the source stays here, and no
  * annotating, which goes nowhere; a deck's notes and hidden slides still show
@@ -83,6 +84,8 @@ export function useDocumentLook(ui: RefObject<{ setTheme(theme: Theme): void } |
  */
 export function DocumentViewer({
     showToolbar = true,
+    showLeftPanel = true,
+    showRightPanel = true,
     colors,
     readsOnly = false,
     onOpened,
@@ -93,6 +96,8 @@ export function DocumentViewer({
     ...source
 }: ViewerSource & {
     showToolbar?: boolean;
+    showLeftPanel?: boolean;
+    showRightPanel?: boolean;
     colors?: ViewerColors;
     readsOnly?: boolean;
     onOpened?: (opened: Opened) => void;
@@ -125,6 +130,8 @@ export function DocumentViewer({
         const allows = !readsOnly;
         UDocViewer.create(ref.current!, {
             showToolbar,
+            showLeftPanel,
+            showRightPanel,
             showDownloadButton: allows,
             showPrintButton: allows,
             enableAnnotation: allows,
@@ -159,7 +166,7 @@ export function DocumentViewer({
             viewer?.destroy();
             if (open) closed.current?.();
         };
-    }, [file, documentId, version, packagePath, url, showToolbar, readsOnly, themeRef]);
+    }, [file, documentId, version, packagePath, url, showToolbar, showLeftPanel, showRightPanel, readsOnly, themeRef]);
 
     return <div ref={ref} className="viewer" {...attributes} />;
 }

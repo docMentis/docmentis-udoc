@@ -61,6 +61,8 @@ export function UploadDialog({
                     <DocumentViewer
                         file={file}
                         showToolbar={false}
+                        showLeftPanel={false}
+                        showRightPanel={false}
                         onOpened={({ format, ms }) =>
                             announceMoment({ kind: "document:opened", where: "upload", format, ms })
                         }
