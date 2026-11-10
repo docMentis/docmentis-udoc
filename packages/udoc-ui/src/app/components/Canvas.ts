@@ -1541,6 +1541,19 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             el.removeEventListener("lostpointercapture", onLostCapture);
         });
 
+        // A press on the document keeps the keyboard where it is while the
+        // hidden field holds it. Left alone, the press would focus the host and
+        // the field would take the keyboard back a frame later: a field taking
+        // focus is what macOS marks with its input-source indicator, so it would
+        // show again on every click. Only a press on the canvas or the bare host
+        // is held; chrome over the canvas — a form field, the comment popup —
+        // still takes focus as before.
+        const onMouseDown = (ev: MouseEvent): void => {
+            if ((ev.target === canvas || ev.target === el) && textInput.holdsKeyboard()) ev.preventDefault();
+        };
+        el.addEventListener("mousedown", onMouseDown);
+        cleanups.push(() => el.removeEventListener("mousedown", onMouseDown));
+
         // Right-click: the context menu over the document (edit mode only).
         el.addEventListener("contextmenu", onContextMenu);
         cleanups.push(() => el.removeEventListener("contextmenu", onContextMenu));

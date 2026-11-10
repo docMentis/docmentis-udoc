@@ -6,6 +6,14 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Fixed
+
+- On macOS, the input-source indicator no longer shows up on the document with
+  each click. With nothing to type into, such as a selected shape or text
+  selected for copying, it doesn't show at all.
+
 ### udoc-editor
 
 #### Changed
