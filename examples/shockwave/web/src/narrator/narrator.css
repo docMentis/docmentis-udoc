@@ -127,7 +127,7 @@
 }
 
 /* What the guide tells, in the middle row, scrolling when it outgrows it:
-   the offers to act on, then the highlights. */
+   the page's guides, then the highlights. */
 .narrator-body {
     grid-row: 2;
     display: flex;
@@ -137,8 +137,9 @@
     overflow: auto;
 }
 
-/* Cards the viewer acts through, each a button. */
-.narrator-cards {
+/* The guides: cards the viewer clicks for the narrator to act in the app,
+   each a button. */
+.narrator-guides {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -147,7 +148,7 @@
     list-style: none;
 }
 
-.narrator-card {
+.narrator-guide {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -161,16 +162,16 @@
     text-align: left;
 }
 
-.narrator-card:hover {
+.narrator-guide:hover {
     border-color: var(--dm-indigo);
 }
 
-.narrator-card strong {
+.narrator-guide strong {
     font-size: 14px;
     font-weight: 600;
 }
 
-.narrator-card span {
+.narrator-guide span {
     color: var(--dm-muted);
     font-size: 13px;
 }

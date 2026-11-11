@@ -465,13 +465,12 @@ Shockwave looks like the product it is, and beside it a narrator speaks for
 docMentis. It's a panel docked at the window's right edge, styled apart from
 the app so that no one takes one for the other, collapsing to a badge in the
 corner. It stays beside a deal room's frontstage too, with no one signed in: the
-buyer's experience is part of what's shown. It says two kinds of things:
+buyer's experience is part of what's shown. It shows two kinds of card:
 
-- **Steps**, what to do next, in chapters, a persona's workflow each: "Sign in
-  as the marketer", then "Upload the new datasheet". A step points at its
-  target with a ring around it, never a dimmed overlay that would block the
-  click it asks for, and is done once the moment it waits for happens, or
-  skipped.
+- **Guides**, which the visitor clicks for the narrator to do something in the
+  app for them, as a visitor would, through the app's own forms and buttons:
+  "Sign in as Maya Patel" fills in the sign-in form and presses its button. A
+  page's guides show while it does, first in the panel.
 - **Highlights**, what just happened and the docMentis technology that made it
   happen: "Previewed before upload. Client-first: docMentis rendered this file
   in your browser, so you see it before it's uploaded, not after." A
@@ -483,25 +482,20 @@ buyer's experience is part of what's shown. It says two kinds of things:
   open), and sits in the panel's list, newest first.
 
 The product knows nothing of the narrator. It announces **moments** through a
-small module of events of its own (`web/src/moments.ts`) — `route` and
-`session`, which say how things stand, and `document:opened`,
+small module of events of its own (`web/src/moments.ts`) — `document:opened`,
 `document:closed`, `thumbnails:shown`, `thumbnails:hidden`,
-`viewer-colors:shown`, `viewer-colors:hidden` and `asset:added`, which say
-what just happened — and marks what a step can point at with
-`data-narrator="…"`; the narrator is their only listener. Taking it out leaves
-the product whole. The product's root, `#app`, is all of the window it knows:
+`viewer-colors:shown` and `viewer-colors:hidden`, which say what just
+happened — and the narrator is their only listener. Taking it out leaves the
+product whole. The product's root, `#app`, is all of the window it knows:
 its dialogs are modal to it alone, over it and not the narrator, which stays
 in view and in reach while one is open, as it must while a file is previewed
 before its upload. The script, `web/src/narrator/script.ts`, is typed data: the
-chapters' steps, each with its target and the moment that ends it, and the
-highlights, each with the moments it tells about and what it says. A step that
-how things stand already does, such as opening a page already open, is passed
-as it comes. Its progress is kept in the browser, so a chapter carries on when
-someone signs in as its next persona.
+guides, each with the page it's offered on and what it does, and the
+highlights, each with the moments it tells about and what it says.
 
-A step points at the app's own elements alone. The viewer's and the editor's
-controls are theirs, with no public way to find one, so a step that points at
-a button in their toolbar is likely a gap.
+A guide acts through the app's own elements alone. The viewer's and the
+editor's controls are theirs, with no public way to find one, so a guide that
+would press a button in their toolbar is likely a gap.
 
 ## Running it against this checkout
 

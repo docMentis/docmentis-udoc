@@ -6,22 +6,20 @@
 // tab and the edge; the dot and the flash last until the panel unfolds, or
 // what's new is gone.
 //
-// On the sign-in page, the panel offers to sign in as each persona, through
-// the app's own form: the narrator fills it in and presses its button, as a
-// visitor would. Those offers are new from the moment the page shows, and go
-// with it. It knows the app's pages and forms; the app knows nothing of it.
-//
-// It hears the moments the app announces. A highlight shows while what it
-// tells about shows: from the moment it shows to the moment it goes, in the
-// panel, newest first, and new as it shows while the panel is folded.
+// It shows two kinds of card, the script's. A page's guides, which the visitor
+// clicks for the narrator to act in the app, as signing in as a persona fills
+// in the sign-in form and presses its button: new from the moment the page
+// shows, and gone with it. Then the highlights, from the moments the app
+// announces: each while what it tells about shows, from the moment it shows to
+// the moment it goes, newest first, and new as it shows while the panel is
+// folded.
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router";
 
-import { DEMO_PASSWORD, PERSONAS } from "../../../shared/personas.ts";
 import { onMoment } from "../moments";
 import type { Moment } from "../moments";
 import { DocMentisMark } from "./DocMentisMark";
-import { HIGHLIGHTS } from "./script";
+import { GUIDES, HIGHLIGHTS } from "./script";
 import "./narrator.css";
 
 /** The docmentis.com typeface the panel is set in. */
@@ -47,27 +45,6 @@ function savedAnnounce(): Announce {
         // Not kept; the default it is.
     }
     return "flash";
-}
-
-/**
- * Sign in as `email` through the app's sign-in form, as a visitor would:
- * fill in the email and the demo's password, then press its button.
- */
-function signInAs(email: string): void {
-    const user = document.querySelector<HTMLInputElement>('input[autocomplete="username"]');
-    const password = document.querySelector<HTMLInputElement>('input[autocomplete="current-password"]');
-    const submit = user?.form?.querySelector<HTMLButtonElement>('button[type="submit"]');
-    if (!user || !password || !submit) return;
-    enter(user, email);
-    enter(password, DEMO_PASSWORD);
-    // A moment to see it filled in before it's sent.
-    setTimeout(() => submit.click(), 400);
-}
-
-/** Put `value` in `input` as typing does, so that the app's form hears it. */
-function enter(input: HTMLInputElement, value: string): void {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(input, value);
-    input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function saveAnnounce(announce: Announce): void {
@@ -108,7 +85,8 @@ export function Narrator() {
     const [toldNew, setToldNew] = useState(false);
     const now = useRef({ open });
     now.current = { open };
-    // What's new, told on the folded tab as the viewer chose: a highlight, while it's there.
+    const offered = GUIDES.filter((guide) => guide.offeredAt(pathname));
+    // What's new, told on the folded tab as the viewer chose: a page's guides, or a highlight while it's there.
     const unseen = (offersNew || (toldNew && told.length > 0)) && announce !== "off";
     const flashing = unseen && announce === "flash";
 
@@ -118,10 +96,10 @@ export function Narrator() {
         document.head.append(font);
     }, []);
 
-    // The sign-in page's offers, new as it shows and gone as it goes. With the
-    // panel unfolded, they're simply there.
+    // A page's guides, new as it shows and gone as it goes. With the panel
+    // unfolded, they're simply there.
     useEffect(() => {
-        setOffersNew(pathname === "/sign-in" && !now.current.open);
+        setOffersNew(GUIDES.some((guide) => guide.offeredAt(pathname)) && !now.current.open);
     }, [pathname]);
 
     // Each highlight as what it tells about shows, and gone as that goes.
@@ -169,13 +147,13 @@ export function Narrator() {
             {open && (
                 <div className="narrator-panel">
                     <div className="narrator-body">
-                        {pathname === "/sign-in" && (
-                            <ul className="narrator-cards">
-                                {PERSONAS.map(({ email, name, title }) => (
-                                    <li key={email}>
-                                        <button className="narrator-card" onClick={() => signInAs(email)}>
-                                            <strong>Sign in as {name}</strong>
-                                            <span>{title}</span>
+                        {offered.length > 0 && (
+                            <ul className="narrator-guides">
+                                {offered.map(({ id, title, detail, act }) => (
+                                    <li key={id}>
+                                        <button className="narrator-guide" onClick={act}>
+                                            <strong>{title}</strong>
+                                            {detail && <span>{detail}</span>}
                                         </button>
                                     </li>
                                 ))}

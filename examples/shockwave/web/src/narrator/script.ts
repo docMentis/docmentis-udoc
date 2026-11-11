@@ -1,8 +1,34 @@
-// What the narrator says: typed data (docs/design/examples-shockwave.md). Its
-// highlights, each the docMentis technology behind something the app shows,
-// with its figures: shown while that shows, from the moment the app announces
-// it showing to the moment it announces it gone.
+// What the narrator offers and says: typed data (docs/design/examples-shockwave.md),
+// as two kinds of card. Its guides, each a card the visitor clicks for the
+// narrator to do something in the app for them, offered on the page it's for. Its
+// highlights, each the docMentis technology behind something the app shows, with
+// its figures: shown while that shows, from the moment the app announces it
+// showing to the moment it announces it gone.
+import { PERSONAS } from "../../../shared/personas.ts";
 import type { Moment } from "../moments";
+import { signInAs } from "./acts";
+
+export interface Guide {
+    id: string;
+    /** Whether it's offered on the page at `pathname`. */
+    offeredAt: (pathname: string) => boolean;
+    title: string;
+    /** A line under the title; none for a guide without. */
+    detail?: string;
+    /** What clicking it does in the app. */
+    act: () => void;
+}
+
+export const GUIDES: Guide[] = [
+    // On the sign-in page, signing in as each persona.
+    ...PERSONAS.map(({ email, name, title }) => ({
+        id: `sign-in-as-${email}`,
+        offeredAt: (pathname: string) => pathname === "/sign-in",
+        title: `Sign in as ${name}`,
+        detail: title,
+        act: () => signInAs(email),
+    })),
+];
 
 export interface Highlight {
     id: string;
