@@ -74,7 +74,7 @@ const ICONS = {
 
     // A deck's Slide tab
     ICON_CHANGE_LAYOUT: "team_dashboard",
-    ICON_INSERT_IMAGE: { mdi: "image-plus" },
+    ICON_INSERT_IMAGE: { mdi: "image-plus-outline" },
     ICON_SHAPES: "shapes",
 
     // Shape tab
