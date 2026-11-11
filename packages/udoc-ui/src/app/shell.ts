@@ -2924,10 +2924,10 @@ export function mountUIShell(
     }
 
     // Open a thread holding `richContents`, by this user, now, its ids minted
-    // here — in a document: on the text selected; on a slide: on the shape
-    // selected, or the one whose text is, else on the slide selected, else on
-    // the slide shown; on a sheet: at the active cell. The thread opens in the
-    // panel.
+    // here — in a document: on the text selected; on a slide: on the text
+    // selected in a shape, else the shape selected, or the one whose text is,
+    // else on the slide selected, else on the slide shown; on a sheet: at the
+    // active cell. The thread opens in the panel.
     async function newOfficeComment(richContents: string): Promise<void> {
         const docType = store.getState().docType;
         if (docType !== "wordprocessing" && docType !== "presentation" && docType !== "spreadsheet") return;
@@ -4469,19 +4469,26 @@ function isRefusableSheetEdit(edit: SelectionEdit): boolean {
     );
 }
 
-/** Where a new comment on a slide stands, by what `selection` holds: the shape
- *  selected, or the one whose text or table is, on its slide — else the slide
- *  selected; null for anything else, a notes page's shapes among it. */
+/** Where a new comment on a slide stands, by what `selection` holds: the text
+ *  selected in a shape, else the shape selected, or the one whose text or
+ *  table is, on its slide — else the slide selected; null for anything else, a
+ *  notes page's shapes among it. */
 function slideCommentPlace(selection: UDocSelection | null): { slide: string; place: SlideCommentPlace } | null {
     if (!selection || !("presentation" in selection)) return null;
     const chosen = selection.presentation;
     if (chosen === "none") return null;
     if ("shapes" in chosen && "slide" in chosen.shapes.container) {
+        const slide = chosen.shapes.container.slide;
         const held = chosen.shapes.selection;
+        if ("shapeText" in held && "range" in held.shapeText[1]) {
+            const { anchor, focus } = held.shapeText[1].range;
+            if (anchor !== focus) {
+                const range = { start: Math.min(anchor, focus), end: Math.max(anchor, focus) };
+                return { slide, place: { text: { shape: held.shapeText[0], range } } };
+            }
+        }
         const shape = "shapes" in held ? held.shapes[0] : "shapeText" in held ? held.shapeText[0] : held.shapeTable[0];
-        return shape === undefined
-            ? { slide: chosen.shapes.container.slide, place: { slide: {} } }
-            : { slide: chosen.shapes.container.slide, place: { shape: { shape } } };
+        return shape === undefined ? { slide, place: { slide: {} } } : { slide, place: { shape: { shape } } };
     }
     if ("slides" in chosen) {
         const slide = chosen.slides.ids[0];
