@@ -7,7 +7,7 @@
 // What's in it: tenants and their brands, their users, the users' sessions; the
 // library: its folders, its files, their versions and their thumbnails; the
 // collections its published files are arranged in; and the deal rooms sales prepare
-// them in, each with the frontstage its buyers read.
+// them in, each with the frontstage its buyers read, and what they read there.
 import { DatabaseSync } from "node:sqlite";
 import type { SQLInputValue, SQLOutputValue, StatementResultingChanges } from "node:sqlite";
 
@@ -282,6 +282,39 @@ const MIGRATIONS = [
         SELECT tenant_id, asset_id, number, 0, png FROM thumbnails WHERE png IS NOT NULL;
     DROP TABLE thumbnails;
     ALTER TABLE page_thumbnails RENAME TO thumbnails;
+    `,
+    // What buyers read, as it happened: a session is one opening of a file by a
+    // visitor, at the version shown then, and each page view in it a stretch of
+    // time a page was on screen, in milliseconds since the session began, named by
+    // when it began. This grows with time, held back by what a report and a session
+    // may hold. The running totals before it are let go.
+    `
+    DROP TABLE frontstage_page_reads;
+    DROP TABLE frontstage_file_opens;
+    CREATE TABLE frontstage_sessions (
+        tenant_id TEXT NOT NULL,
+        room_id TEXT NOT NULL,
+        visitor_id TEXT NOT NULL,
+        id TEXT NOT NULL,
+        asset_id TEXT NOT NULL,
+        version INTEGER NOT NULL,
+        started_at INTEGER NOT NULL,
+        PRIMARY KEY (tenant_id, id),
+        FOREIGN KEY (tenant_id, room_id, visitor_id) REFERENCES frontstage_visitors (tenant_id, room_id, id)
+            ON DELETE CASCADE,
+        FOREIGN KEY (tenant_id, asset_id) REFERENCES assets (tenant_id, id) ON DELETE CASCADE
+    );
+    CREATE INDEX frontstage_sessions_by_file ON frontstage_sessions (tenant_id, asset_id, started_at);
+    CREATE INDEX frontstage_sessions_by_visitor ON frontstage_sessions (tenant_id, room_id, visitor_id);
+    CREATE TABLE frontstage_page_views (
+        tenant_id TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        started_ms INTEGER NOT NULL,
+        ended_ms INTEGER NOT NULL,
+        page INTEGER NOT NULL,
+        PRIMARY KEY (tenant_id, session_id, started_ms),
+        FOREIGN KEY (tenant_id, session_id) REFERENCES frontstage_sessions (tenant_id, id) ON DELETE CASCADE
+    );
     `,
 ];
 

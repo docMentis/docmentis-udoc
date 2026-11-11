@@ -358,39 +358,46 @@ export interface FrontstageFile {
     package: string;
 }
 
-/** What a buyer's browser reports of a frontstage: its page seen, a file opened, or how long pages of one were read. */
+/**
+ * What a buyer's browser reports of a frontstage: its page seen, a file opened,
+ * which starts a session, or the page views of a session since the last report.
+ */
 export type FrontstageReport =
     | { kind: "visited" }
     | { kind: "opened"; fileId: string }
     | {
           kind: "read";
-          fileId: string;
-          /** Each page read since the last report: 0-based, and for how long, in milliseconds. */
-          pages: { page: number; ms: number }[];
+          /** The session `opened` answered with. */
+          session: string;
+          /** Each view that began or grew since the last report: a view again is the same one, longer. */
+          views: PageView[];
       };
 
-/** How one page of a file was read, by all its visitors. */
-export interface PageReading {
-    /** Which, 0-based: a workbook's sheet, or anything else's page. */
-    page: number;
-    ms: number;
-    visitors: number;
+/** What a frontstage answers a file's opening with: the session to report its page views in. */
+export interface FrontstageSession {
+    session: string;
 }
 
-/** How buyers read one file of a deal room. */
+/** A stretch of time one page was on screen in a session. */
+export interface PageView {
+    /** Which, 0-based: a workbook's sheet, or anything else's page. */
+    page: number;
+    /** When it began and ended, in milliseconds since the session began. */
+    from: number;
+    to: number;
+}
+
+/** How buyers read one file of a deal room, in all. */
 export interface DealRoomFileActivity {
     assetId: string;
     /** The browsers that opened it. */
     visitors: number;
     /** How many times it was opened. */
-    opens: number;
-    /** How long it was read, in milliseconds, at any version. */
+    sessions: number;
+    /** How long its pages were on screen, in milliseconds, at any version. */
     ms: number;
     /** When it was last opened, in milliseconds since the epoch; `null` for never. */
     lastOpenedAt: number | null;
-    /** The version `pages` are of: the one on the frontstage, or else the last read; `null` when none was. */
-    version: number | null;
-    pages: PageReading[];
 }
 
 /** How buyers read a deal room's frontstage. */
@@ -401,6 +408,50 @@ export interface DealRoomActivity {
     lastVisitAt: number | null;
     /** Each file on the frontstage, or read while it was, in the room's order. */
     files: DealRoomFileActivity[];
+}
+
+/** One opening of a file by a buyer's browser. */
+export interface ReadingSession {
+    id: string;
+    /** Which browser: the room's visitors numbered as they first came, from 1. */
+    visitor: number;
+    /** The version shown, as it opened. */
+    version: number;
+    /** When it opened, in milliseconds since the epoch. */
+    startedAt: number;
+    /** From its opening to the end of its last page view, in milliseconds. */
+    length: number;
+    /** How long its pages were on screen, in milliseconds. */
+    ms: number;
+}
+
+/** How buyers read one file of a deal room, a session at a time, at one version. */
+export interface DocumentActivity {
+    assetId: string;
+    /** The version this is of: the one on the frontstage, or else the last read; `null` when none was. */
+    version: number | null;
+    /** That version's pages, as its card shows them; `null` when none are kept. */
+    thumbnails: Thumbnails | null;
+    /** Its sessions at that version, the latest first. */
+    sessions: ReadingSession[];
+    /** Each of that version's pages, in order, and how long each session had it on screen. */
+    pages: {
+        page: number;
+        ms: number;
+        sessions: { id: string; ms: number }[];
+    }[];
+}
+
+/** One session of a file, as it happened. */
+export interface SessionActivity {
+    assetId: string;
+    session: ReadingSession;
+    /** The version's pages, as its card shows them; `null` when none are kept. */
+    thumbnails: Thumbnails | null;
+    /** How many pages it has, or as many as were read. */
+    pageCount: number;
+    /** Its page views, in the order they began. */
+    views: PageView[];
 }
 
 /** A deal room the user is on, with visitors they haven't looked at yet. */

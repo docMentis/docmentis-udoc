@@ -444,20 +444,27 @@ pages of the version shown.
 
 **What buyers read is recorded, anonymously, and both of their pages say so.** A browser
 that comes gets a cookie for that link alone, naming a visitor with nothing of who it is,
-so that it can't be followed from one frontstage to another. It reports coming, opening a
-file, and how long each page stays on screen: only while the page is in view and something's
-been done with it in the last minute. Time in a slide show isn't counted, since the viewer
-doesn't say which slide it's on (`GAPS.md`). This is the one thing anyone can write with no
-account, so a report has to be about a file that frontstage shows, small, and one of 120 a
-minute from an address at that link, which leaves other links alone. Those signed in at the
-tenant aren't counted.
+so that it can't be followed from one frontstage to another. It reports coming, and each
+file it opens, a session, at the version shown then; and in that session, each stretch of
+time a page stays on screen, timed from the opening: only while the page is in view and
+something's been done with it in the last minute, so a page left open, or put away, leaves a
+gap. Time in a slide show isn't counted, since the viewer doesn't say which slide it's on
+(`GAPS.md`). This is the one thing anyone can write with no account, so a report has to be
+about a file that frontstage shows, or a session of the browser's own, of no more than 64 page
+views, none ending later than now; it's one of 120 a minute from an address at that link,
+which leaves other links alone; and a session keeps 5,000 page views at most. Those signed in
+at the tenant aren't counted.
 
-It's kept as running totals, by visitor, file, version and page, so it grows with visitors
-and pages and not with time. Backstage, a room shows how many came, each file's visitors,
-opens, time and last opening, and the time on each page of the version shown. Home tells
-those on a room of visitors since they last looked at it; a manager who isn't on it sees them
-by opening it. Taking a room off its frontstage keeps all this; removing a file or deleting a
-room deletes what's of it.
+It's kept as it happened, a row to each session and each page view, so it grows with time.
+Backstage, it reads at three depths. A room shows how many came, and each file's visitors,
+sessions, time and last opening. A file shows each page of the version last read, its image
+beside a bar of the time it was on screen, split by session, the latest seven each in a color
+of their own and the earlier ones together in gray, and its sessions, each with its visitor,
+numbered as they first came, when it opened and how long it lasted. A session shows each page
+with when it was on screen: a timeline from the opening to its last page view, a block for
+each view. Home tells those on a room of visitors since they last looked at it; a manager who
+isn't on it sees them by opening it. Taking a room off its frontstage keeps all this; removing
+a file or deleting a room deletes what's of it.
 
 ## The narrator
 

@@ -46,6 +46,8 @@
     --md-sys-color-surface-container-highest: light-dark(#eddfdc, #3a3331);
     --md-sys-color-on-surface: light-dark(#201a18, #eddfdc);
     --md-sys-color-on-surface-variant: light-dark(#53433f, #d8c2bb);
+    --md-sys-color-inverse-surface: light-dark(#362f2c, #eddfdc);
+    --md-sys-color-inverse-on-surface: light-dark(#fbeeeb, #362f2c);
     --md-sys-color-outline: light-dark(#85736e, #a08c87);
     --md-sys-color-outline-variant: light-dark(#d8c2bb, #53433f);
     --md-sys-color-scrim: light-dark(#000000, #000000);
@@ -112,6 +114,20 @@
     --sw-on-format: #ffffff;
     /* A document's page, which is white, light or dark. */
     --sw-paper: #ffffff;
+    /* Buyers' sessions, told apart in a chart: custom colors, since Material has
+       no categorical palette. The docs' data-viz palette, its first seven in its
+       order, each stepped for light and dark, checked by its validator against
+       the cards' surface-container-low (adjacent pairs apart for color-blind
+       readers, and in a band of lightness); the latest session first. The
+       earlier ones, together, are the outline's gray. */
+    --sw-session-1: light-dark(#2a78d6, #3987e5);
+    --sw-session-2: light-dark(#eb6834, #d95926);
+    --sw-session-3: light-dark(#1baf7a, #199e70);
+    --sw-session-4: light-dark(#eda100, #c98500);
+    --sw-session-5: light-dark(#e87ba4, #d55181);
+    --sw-session-6: light-dark(#008300, #008300);
+    --sw-session-7: light-dark(#6250d6, #9085e9);
+    --sw-session-earlier: var(--md-sys-color-outline);
 
     font: var(--md-sys-typescale-body-medium);
     letter-spacing: var(--md-sys-typescale-body-medium-tracking);
@@ -2547,128 +2563,199 @@ input {
     letter-spacing: var(--md-sys-typescale-body-small-tracking);
 }
 
-/* A file in buyer activity, whose row opens how long its pages were read. */
-.activity-toggle {
+/* A file's or a session's buyer activity: a card of rows, one to each page, each
+   its image, its number, its chart and its value, a grid's columns so that every
+   row's chart starts and ends where the others' do. Material has no chart; the
+   rows are a list's, the marks after the docs' data-viz rules. */
+.activity-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.activity-pages {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
     padding: 0;
-    border: 0;
-    background: none;
-    cursor: pointer;
+    list-style: none;
 }
 
-.activity-toggle > svg:first-child {
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
+.activity-page {
+    display: grid;
+    grid-template-columns: 64px 64px minmax(0, 1fr) 96px;
+    align-items: center;
+    gap: 16px;
+    min-height: 56px;
+    padding: 4px 0;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.activity-pages .activity-page:last-child {
+    border-bottom: 0;
+}
+
+/* A page's image, as its card shows it, fit to a box of its own on a white page. */
+.activity-page-image {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 48px;
+    overflow: hidden;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+}
+
+.activity-page-image img {
+    max-width: 100%;
+    max-height: 100%;
+    background: var(--sw-paper);
+    box-shadow: 0 0 0 1px var(--md-sys-color-outline-variant);
+}
+
+.activity-page-number {
     color: var(--md-sys-color-on-surface-variant);
-}
-
-.file-table tbody tr.page-readings-row,
-.file-table tbody tr.page-readings-row:hover,
-.file-table tbody tr.page-readings-row:active {
-    background: var(--md-sys-color-surface-container);
-    cursor: default;
-}
-
-.page-readings-row td {
-    height: auto;
-    padding: 16px;
-    white-space: normal;
-}
-
-.page-readings-none {
-    color: var(--md-sys-color-on-surface-variant);
-}
-
-/* How long each page was read: a table, its time a bar and a value. One hue, the
-   primary, 8 thick, and square at its baseline with its data end rounded 4. Material
-   has no chart. The text keeps to the text roles. */
-.page-readings {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.page-readings caption {
-    padding-bottom: 8px;
-    color: var(--md-sys-color-on-surface-variant);
-    font: var(--md-sys-typescale-title-small);
-    letter-spacing: var(--md-sys-typescale-title-small-tracking);
-    text-align: left;
-}
-
-.page-readings th {
-    padding: 4px 16px 4px 0;
-    color: var(--md-sys-color-on-surface-variant);
-    font: var(--md-sys-typescale-body-small);
-    letter-spacing: var(--md-sys-typescale-body-small-tracking);
-    text-align: left;
-}
-
-.page-readings td {
-    height: 24px;
-    padding: 0 16px 0 0;
     font: var(--md-sys-typescale-body-small);
     letter-spacing: var(--md-sys-typescale-body-small-tracking);
     white-space: nowrap;
 }
 
-.page-readings .numeric {
-    width: 1%;
-    padding-right: 0;
-    text-align: right;
-}
-
-.page-readings td:first-child,
-.page-readings th:first-child {
-    width: 1%;
-}
-
-.page-readings td:nth-child(2) {
-    width: 100%;
-}
-
-/* The bar's length is its time against the longest's, in a track of its own, so
-   that its value, beside it, never squeezes it out of proportion. */
-.page-reading-time {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.page-reading-track {
-    flex: 1;
+.activity-page-chart {
+    position: relative;
     min-width: 0;
 }
 
-.page-reading-bar {
-    display: block;
+.activity-page-value {
+    color: var(--md-sys-color-on-surface);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* The sessions' colors, a swatch beside each, in the order their parts sit in a bar. */
+.session-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 0;
+    padding: 0;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+    list-style: none;
+}
+
+.session-legend li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.session-swatch {
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+/* A page's time, by session: one bar from the baseline, as long as its time
+   against the longest page's, a part to each session as long as its share, 2px of
+   the card's surface between parts; square at its baseline, its data end rounded. */
+.page-time-bar {
+    display: flex;
+    gap: 2px;
     min-width: 2px;
-    height: 8px;
+    height: 12px;
+}
+
+.page-time-part {
+    flex-basis: 0;
+    min-width: 2px;
+}
+
+.page-time-part:last-child {
     border-radius: 0 4px 4px 0;
+}
+
+/* A mark answers the pointer and keyboard focus, which its tooltip follows. */
+.page-time-part:hover,
+.page-time-part:focus-visible,
+.timeline-view:hover,
+.timeline-view:focus-visible {
+    outline: 2px solid var(--md-sys-color-on-surface);
+    outline-offset: 1px;
+}
+
+/* A session's timeline: from its opening, at the left, to the end of its last page
+   view, at the right, under an axis of the time since the opening, whose marks
+   run down each row as hairlines; a block for each time a page was on screen. */
+.activity-axis {
+    min-height: 0;
+    padding: 0 0 4px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.timeline-axis {
+    height: 16px;
+}
+
+.timeline-mark {
+    position: absolute;
+    top: 0;
+    color: var(--md-sys-color-on-surface-variant);
+    font: var(--md-sys-typescale-body-small);
+    letter-spacing: var(--md-sys-typescale-body-small-tracking);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    transform: translateX(-50%);
+}
+
+.timeline-mark:first-child {
+    transform: none;
+}
+
+.timeline-track {
+    position: relative;
+    display: block;
+    height: 24px;
+}
+
+.timeline-gridline {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--md-sys-color-outline-variant);
+}
+
+.timeline-view {
+    position: absolute;
+    top: 6px;
+    min-width: 2px;
+    height: 12px;
+    border-radius: 2px;
     background: var(--md-sys-color-primary);
 }
 
-.page-reading-value {
-    flex-shrink: 0;
-    width: 80px;
-    color: var(--md-sys-color-on-surface);
-}
-
-/* A table in a table's row is its own: it takes none of the outer rows' state. */
-.file-table .page-readings tr,
-.file-table .page-readings tr:hover,
-.file-table .page-readings tr:active {
-    background: none;
-    cursor: default;
-}
-
-.file-table .page-readings th {
-    height: auto;
-    padding: 4px 16px 4px 0;
-    border: 0;
+/* A mark's value and what it's of, by the pointer or the mark focused: Material's
+   plain tooltip, its value first. */
+.chart-tooltip {
+    position: fixed;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    max-width: 280px;
+    padding: 4px 8px;
+    border-radius: var(--md-sys-shape-corner-extra-small);
+    background: var(--md-sys-color-inverse-surface);
+    color: var(--md-sys-color-inverse-on-surface);
     font: var(--md-sys-typescale-body-small);
     letter-spacing: var(--md-sys-typescale-body-small-tracking);
+    pointer-events: none;
+    transform: translate(-50%, calc(-100% - 12px));
 }
 
-.file-table .page-readings .numeric {
-    padding-right: 0;
+.chart-tooltip strong {
+    font-weight: 500;
 }

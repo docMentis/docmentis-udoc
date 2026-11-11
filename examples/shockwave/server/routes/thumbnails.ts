@@ -23,6 +23,14 @@ export function thumbnailsOf(assetId: string, number: number, pageCount: number)
     return { path: `/api/thumbnails/${encodeURIComponent(assetId)}/${number}`, pageCount };
 }
 
+/** The thumbnails of version `number` of file `assetId`, as kept: `null` for none. */
+export function keptThumbnails(db: TenantDb, assetId: string, number: number): Thumbnails | null {
+    const { pages } = db
+        .prepare("SELECT COUNT(*) AS pages FROM thumbnails WHERE tenant_id = :tenant AND asset_id = ? AND number = ?")
+        .get(assetId, number) as { pages: number };
+    return thumbnailsOf(assetId, number, pages);
+}
+
 /** In a query over `assets`, how many thumbnails the file's version `number`, a column of the query's, has. */
 export function thumbnailCount(number: string): string {
     return `(

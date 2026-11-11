@@ -12,6 +12,7 @@ import { Narrator } from "./narrator/Narrator";
 import { CollectionFilePage } from "./pages/CollectionFilePage";
 import { CollectionPage } from "./pages/CollectionPage";
 import { CollectionsPage } from "./pages/CollectionsPage";
+import { DocumentActivityPage, SessionActivityPage } from "./pages/DealRoomActivityPages";
 import { DealRoomFilePage } from "./pages/DealRoomFilePage";
 import { DealRoomPage } from "./pages/DealRoomPage";
 import { DealRoomsPage } from "./pages/DealRoomsPage";
@@ -59,6 +60,8 @@ const router = createBrowserRouter([
                     { path: "deal-rooms", element: <DealRoomsPage /> },
                     { path: "deal-rooms/:roomId", element: <DealRoomPage /> },
                     { path: "deal-rooms/:roomId/files/:assetId", element: <DealRoomFilePage /> },
+                    { path: "deal-rooms/:roomId/activity/files/:assetId", element: <DocumentActivityPage /> },
+                    { path: "deal-rooms/:roomId/activity/sessions/:sessionId", element: <SessionActivityPage /> },
                     {
                         path: "learning",
                         element: <PlaceholderPage title="Learning" subtitle="What to learn, and what to teach." />,

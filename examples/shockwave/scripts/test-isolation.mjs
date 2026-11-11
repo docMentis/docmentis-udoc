@@ -253,13 +253,14 @@ async function buildTenant(people, ids, marker) {
         body: JSON.stringify({ kind: "opened", fileId: copy.id }),
     });
     const visitorCookie = reported.headers.getSetCookie()[0].split(";")[0];
+    const { session } = await reported.json();
     const buyer = clientWith(visitorCookie);
     await buyer("POST", `/api/frontstage/${token}/activity`, {
         kind: "read",
-        fileId: copy.id,
-        pages: [{ page: 0, ms: 1000 }],
+        session,
+        views: [{ page: 0, from: 0, to: 1000 }],
     });
-    return { folder, deck, draft, collection, room, copy, token, visitorCookie };
+    return { folder, deck, draft, collection, room, copy, token, visitorCookie, session };
 }
 
 console.log("Building two tenants…");
@@ -314,6 +315,7 @@ const secrets = [
     B.draft.documentId,
     B.copy.documentId,
     B.token,
+    B.session,
     ...Object.values(northwindIds),
 ];
 const leaked = (text) => secrets.filter((secret) => text.includes(secret));
@@ -375,6 +377,14 @@ const PROBES = [
     probe("PUT", "/api/deal-rooms/:id/frontstage", (x) => ({ id: x.room }), { body: { assetIds: [made()] } }),
     probe("DELETE", "/api/deal-rooms/:id/frontstage", (x) => ({ id: x.room })),
     probe("GET", "/api/deal-rooms/:id/activity", (x) => ({ id: x.room })),
+    probe("GET", "/api/deal-rooms/:id/activity/files/:assetId", (x) => ({ id: x.room, assetId: x.copy })),
+    // Larchmere's own room, naming Northwind's file and session.
+    probe("GET", "/api/deal-rooms/:id/activity/files/:assetId", (x) => ({ id: A.room.id, assetId: x.copy })),
+    probe("GET", "/api/deal-rooms/:id/activity/sessions/:sessionId", (x) => ({ id: x.room, sessionId: x.session })),
+    probe("GET", "/api/deal-rooms/:id/activity/sessions/:sessionId", (x) => ({
+        id: A.room.id,
+        sessionId: x.session,
+    })),
     probe("POST", "/api/deal-rooms/:id/activity/seen", (x) => ({ id: x.room })),
     // Larchmere's own link, naming what's Northwind's.
     probe("GET", "/api/frontstage/:token/thumbnails/:assetId/:number/:page", (x) => ({
@@ -387,7 +397,7 @@ const PROBES = [
         body: (x) => ({ kind: "opened", fileId: x.copy }),
     }),
     probe("POST", "/api/frontstage/:token/activity", () => ({ token: A.token }), {
-        body: (x) => ({ kind: "read", fileId: x.copy, pages: [{ page: 0, ms: 1000 }] }),
+        body: (x) => ({ kind: "read", session: x.session, views: [{ page: 0, from: 0, to: 1000 }] }),
     }),
 ];
 
@@ -452,6 +462,7 @@ console.log("1. Every route, with Northwind's ids, as each of Larchmere's roles"
         copy: B.copy.id,
         collection: B.collection.id,
         room: B.room.id,
+        session: B.session,
     });
     const madeUpIds = () => ({
         tenant: made(),
@@ -460,6 +471,7 @@ console.log("1. Every route, with Northwind's ids, as each of Larchmere's roles"
         copy: made(),
         collection: made(),
         room: made(),
+        session: made(),
     });
     let probes = 0;
     for (const role of ROLES) {
@@ -610,6 +622,8 @@ console.log("3. Every list Larchmere can read");
         "/api/deal-rooms/sellers",
         "/api/deal-rooms/news",
         `/api/deal-rooms/${A.room.id}/activity`,
+        `/api/deal-rooms/${A.room.id}/activity/files/${A.copy.id}`,
+        `/api/deal-rooms/${A.room.id}/activity/sessions/${A.session}`,
         `/api/tenants/${tenantA}/users`,
     ];
     for (const role of ROLES)
@@ -854,10 +868,9 @@ const CROSSINGS = {
     "frontstage_files.room_id": `INSERT INTO frontstage_files (tenant_id, room_id, asset_id, name, position) VALUES ('${tenantA}', '${B.room.id}', '${A.copy.id}', 'x', 9)`,
     "frontstage_files.asset_id": `INSERT INTO frontstage_files (tenant_id, room_id, asset_id, name, position) VALUES ('${tenantA}', '${A.room.id}', '${B.copy.id}', 'x', 9)`,
     "frontstage_visitors.room_id": `INSERT INTO frontstage_visitors (tenant_id, room_id, id, first_at, last_at) VALUES ('${tenantA}', '${B.room.id}', '${made()}', 1, 1)`,
-    "frontstage_file_opens.room_id": `INSERT INTO frontstage_file_opens (tenant_id, room_id, visitor_id, asset_id, opens, last_at) VALUES ('${tenantA}', '${B.room.id}', '${made()}', '${A.copy.id}', 1, 1)`,
-    "frontstage_file_opens.asset_id": `UPDATE frontstage_file_opens SET asset_id = '${B.copy.id}' WHERE tenant_id = '${tenantA}'`,
-    "frontstage_page_reads.room_id": `INSERT INTO frontstage_page_reads (tenant_id, room_id, visitor_id, asset_id, version, page, ms) VALUES ('${tenantA}', '${B.room.id}', '${made()}', '${A.copy.id}', 1, 0, 1)`,
-    "frontstage_page_reads.asset_id": `UPDATE frontstage_page_reads SET asset_id = '${B.copy.id}' WHERE tenant_id = '${tenantA}'`,
+    "frontstage_sessions.room_id": `INSERT INTO frontstage_sessions (tenant_id, room_id, visitor_id, id, asset_id, version, started_at) VALUES ('${tenantA}', '${B.room.id}', '${made()}', '${made()}', '${A.copy.id}', 1, 1)`,
+    "frontstage_sessions.asset_id": `UPDATE frontstage_sessions SET asset_id = '${B.copy.id}' WHERE tenant_id = '${tenantA}'`,
+    "frontstage_page_views.session_id": `INSERT INTO frontstage_page_views (tenant_id, session_id, started_ms, ended_ms, page) VALUES ('${tenantA}', '${B.session}', 99, 100, 0)`,
 };
 
 /** What keys on something else than its tenant: a session's token, and an event's row number. */
@@ -1039,10 +1052,10 @@ console.log("10. What buyers report");
         const count = (table, tenant) =>
             db.prepare(`SELECT count(*) AS n FROM ${table} WHERE tenant_id = ?`).get(tenant).n;
         const counts = {
-            a: ["frontstage_visitors", "frontstage_file_opens", "frontstage_page_reads"]
+            a: ["frontstage_visitors", "frontstage_sessions", "frontstage_page_views"]
                 .map((table) => count(table, tenantA))
                 .join(),
-            b: ["frontstage_visitors", "frontstage_file_opens", "frontstage_page_reads"]
+            b: ["frontstage_visitors", "frontstage_sessions", "frontstage_page_views"]
                 .map((table) => count(table, tenantB))
                 .join(),
         };
@@ -1074,16 +1087,16 @@ console.log("10. What buyers report");
 
     // A file of the other tenant's, through one's own link, is no file at all.
     const beforeFile = reads();
-    for (const body of [
-        { kind: "opened", fileId: fileB },
-        { kind: "read", fileId: fileB, pages: [{ page: 0, ms: 5 }] },
+    for (const [label, body, client] of [
+        ["opened: Northwind's file", { kind: "opened", fileId: fileB }, anyone],
+        [
+            "read: Northwind's session, with its own browser's cookie,",
+            { kind: "read", session: B.session, views: [{ page: 0, from: 0, to: 5 }] },
+            clientWith(B.visitorCookie),
+        ],
     ]) {
-        const refused = await report(anyone, A.token, body);
-        check(
-            `${body.kind}: Northwind's file through Larchmere's link is refused`,
-            refused.status === 404,
-            refused.status,
-        );
+        const refused = await report(client, A.token, body);
+        check(`${label} through Larchmere's link is refused`, refused.status === 404, refused.status);
     }
     check("and nothing's kept, at either tenant", JSON.stringify(reads()) === JSON.stringify(beforeFile));
 
@@ -1092,23 +1105,42 @@ console.log("10. What buyers report");
         ["no kind", {}],
         ["an unknown kind", { kind: "pwned" }],
         ["no file", { kind: "opened" }],
-        ["no pages", { kind: "read", fileId: fileB }],
-        ["empty pages", { kind: "read", fileId: fileB, pages: [] }],
-        ["a negative page", { kind: "read", fileId: fileB, pages: [{ page: -1, ms: 5 }] }],
-        ["a fractional page", { kind: "read", fileId: fileB, pages: [{ page: 1.5, ms: 5 }] }],
-        ["a page too far", { kind: "read", fileId: fileB, pages: [{ page: 100000, ms: 5 }] }],
-        ["negative time", { kind: "read", fileId: fileB, pages: [{ page: 0, ms: -5 }] }],
-        ["no time", { kind: "read", fileId: fileB, pages: [{ page: 0, ms: 0 }] }],
-        ["too much time at once", { kind: "read", fileId: fileB, pages: [{ page: 0, ms: 121000 }] }],
+        ["no session", { kind: "read", views: [{ page: 0, from: 0, to: 5 }] }],
+        ["no views", { kind: "read", session: B.session }],
+        ["empty views", { kind: "read", session: B.session, views: [] }],
+        ["a negative page", { kind: "read", session: B.session, views: [{ page: -1, from: 0, to: 5 }] }],
+        ["a fractional page", { kind: "read", session: B.session, views: [{ page: 1.5, from: 0, to: 5 }] }],
+        ["a page too far", { kind: "read", session: B.session, views: [{ page: 100000, from: 0, to: 5 }] }],
+        ["a negative start", { kind: "read", session: B.session, views: [{ page: 0, from: -5, to: 5 }] }],
+        ["an end before its start", { kind: "read", session: B.session, views: [{ page: 0, from: 10, to: 5 }] }],
+        ["no time", { kind: "read", session: B.session, views: [{ page: 0, from: 5, to: 5 }] }],
+        ["a fractional time", { kind: "read", session: B.session, views: [{ page: 0, from: 0.5, to: 5 }] }],
         [
-            "too many pages",
-            { kind: "read", fileId: fileB, pages: Array.from({ length: 65 }, (_, page) => ({ page, ms: 1 })) },
+            "too many views",
+            {
+                kind: "read",
+                session: B.session,
+                views: Array.from({ length: 65 }, (_, page) => ({ page, from: page, to: page + 1 })),
+            },
         ],
     ];
     for (const [label, body] of malformed)
         check(`${label} is refused`, (await report(anyone, B.token, body)).status === 400);
     const tooLarge = await report(anyone, B.token, { kind: "visited", padding: "x".repeat(17 * 1024) });
     check("a report too large is refused", tooLarge.status === 413, tooLarge.status);
+
+    // A session is its own browser's, and goes no later than now.
+    const beforeSession = reads();
+    const view = { kind: "read", session: B.session, views: [{ page: 0, from: 2000, to: 3000 }] };
+    const stranger = await report(anyone, B.token, view);
+    check("another browser's session is refused", stranger.status === 404, stranger.status);
+    const later = await report(clientWith(B.visitorCookie), B.token, {
+        kind: "read",
+        session: B.session,
+        views: [{ page: 0, from: 0, to: 24 * 60 * 60 * 1000 }],
+    });
+    check("a view that ends after now is refused", later.status === 400, later.status);
+    check("and neither is kept", JSON.stringify(reads()) === JSON.stringify(beforeSession));
 
     // Those at the tenant, opening their own link, aren't buyers. One from elsewhere is.
     const beforeOwn = reads();
@@ -1192,10 +1224,14 @@ function cloneLarchmereInto(mark, token, documentIdOf) {
             VALUES (${b}, ${q(A.room.id)}, ${q(A.copy.id)}, ${q(mark)}, 0);
         INSERT INTO frontstage_visitors (tenant_id, room_id, id, first_at, last_at)
             SELECT ${b}, room_id, id, first_at, last_at FROM frontstage_visitors WHERE tenant_id = ${a} AND room_id = ${q(A.room.id)};
-        INSERT INTO frontstage_file_opens (tenant_id, room_id, visitor_id, asset_id, opens, last_at)
-            SELECT ${b}, room_id, visitor_id, asset_id, 999, last_at FROM frontstage_file_opens WHERE tenant_id = ${a} AND room_id = ${q(A.room.id)};
-        INSERT INTO frontstage_page_reads (tenant_id, room_id, visitor_id, asset_id, version, page, ms)
-            SELECT ${b}, room_id, visitor_id, asset_id, version, page, 999999 FROM frontstage_page_reads WHERE tenant_id = ${a} AND room_id = ${q(A.room.id)};
+        INSERT INTO frontstage_sessions (tenant_id, room_id, visitor_id, id, asset_id, version, started_at)
+            SELECT ${b}, room_id, visitor_id, id, asset_id, version, started_at
+            FROM frontstage_sessions WHERE tenant_id = ${a} AND room_id = ${q(A.room.id)};
+        INSERT INTO frontstage_page_views (tenant_id, session_id, started_ms, ended_ms, page)
+            SELECT ${b}, session_id, started_ms, started_ms + 999999, page FROM frontstage_page_views
+            WHERE tenant_id = ${a} AND session_id IN (
+                SELECT id FROM frontstage_sessions WHERE tenant_id = ${a} AND room_id = ${q(A.room.id)}
+            );
         COMMIT;
     `);
     db.close();
@@ -1232,6 +1268,8 @@ console.log("11. Northwind holds rows with Larchmere's very ids");
         `/api/deal-rooms/${A.room.id}/banner`,
         `/api/deal-rooms/${A.room.id}/files/${A.copy.id}`,
         `/api/deal-rooms/${A.room.id}/activity`,
+        `/api/deal-rooms/${A.room.id}/activity/files/${A.copy.id}`,
+        `/api/deal-rooms/${A.room.id}/activity/sessions/${A.session}`,
         "/api/deal-rooms/news",
         `/api/assets/${A.copy.id}/versions`,
         `/api/thumbnails/${A.copy.id}/1/0`,
@@ -1286,6 +1324,8 @@ console.log("11. Northwind holds rows with Larchmere's very ids");
         ["room", northwind.member, `/api/deal-rooms/${A.room.id}`],
         ["room's file", northwind.member, `/api/deal-rooms/${A.room.id}/files/${A.copy.id}`],
         ["room's activity", northwind.member, `/api/deal-rooms/${A.room.id}/activity`, "999"],
+        ["room's file's activity", northwind.member, `/api/deal-rooms/${A.room.id}/activity/files/${A.copy.id}`, "999"],
+        ["room's session", northwind.member, `/api/deal-rooms/${A.room.id}/activity/sessions/${A.session}`, "999"],
         ["folder", northwind.admin, `/api/library?folder=${A.folder.id}`],
     ];
     for (const [label, client, path, marked = mark] of own) {
@@ -1397,28 +1437,36 @@ console.log("11. Northwind holds rows with Larchmere's very ids");
         const db = new DatabaseSync(dbFile);
         db.prepare("UPDATE assets SET published_version = 77 WHERE tenant_id = ? AND id = ?").run(tenantB, A.copy.id);
         db.close();
-        const reader = clientWith();
-        const reportAt = (token, page) =>
-            reader("POST", `/api/frontstage/${token}/activity`, {
-                kind: "read",
-                fileId: A.copy.id,
-                pages: [{ page, ms: 1000 }],
+        const openAt = async (token) => {
+            const answer = await fetch(`${BASE}/api/frontstage/${token}/activity`, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ kind: "opened", fileId: A.copy.id }),
             });
-        const atA = await reportAt(A.token, 7);
-        const atB = await reportAt(`${cloneToken}again`, 8);
-        check("a buyer reports at each tenant's link", atA.status === 204 && atB.status === 204, [
+            const cookie = answer.headers.getSetCookie()[0]?.split(";")[0];
+            return { status: answer.status, cookie, session: (await answer.json().catch(() => ({}))).session };
+        };
+        const atA = await openAt(A.token);
+        const atB = await openAt(`${cloneToken}again`);
+        check("a buyer opens the file at each tenant's link", atA.status === 201 && atB.status === 201, [
             atA.status,
             atB.status,
         ]);
         const kept = new DatabaseSync(dbFile, { readOnly: true });
         const rows = kept
-            .prepare("SELECT tenant_id, version, page FROM frontstage_page_reads WHERE asset_id = ? AND page IN (7, 8)")
-            .all(A.copy.id);
+            .prepare("SELECT tenant_id, version FROM frontstage_sessions WHERE id IN (?, ?)")
+            .all(atA.session, atB.session);
         kept.close();
-        const rowOf = (tenant, page) => rows.find((row) => row.tenant_id === tenant && row.page === page);
-        check("Larchmere's link keeps it against Larchmere's version", rowOf(tenantA, 7)?.version === 1, rows);
-        check("Northwind's link keeps it against Northwind's version", rowOf(tenantB, 8)?.version === 77, rows);
+        const rowOf = (tenant) => rows.find((row) => row.tenant_id === tenant);
+        check("Larchmere's link keeps it against Larchmere's version", rowOf(tenantA)?.version === 1, rows);
+        check("Northwind's link keeps it against Northwind's version", rowOf(tenantB)?.version === 77, rows);
         check("and neither against the other", rows.length === 2, rows);
+        const crossed = await clientWith(atA.cookie)("POST", `/api/frontstage/${cloneToken}again/activity`, {
+            kind: "read",
+            session: atA.session,
+            views: [{ page: 0, from: 0, to: 1000 }],
+        });
+        check("a session at one tenant's link is none at the other's", crossed.status === 404, crossed.status);
     }
     const northwindNow = fingerprintOf(tenantB);
     const versions = [

@@ -6,6 +6,7 @@ import type {
     DealRoomActivity,
     DealRoomFileDetail,
     DealRoomNews,
+    DocumentActivity,
     Failure,
     Folder,
     FolderListing,
@@ -14,6 +15,7 @@ import type {
     PublishedFile,
     Reviewer,
     Seller,
+    SessionActivity,
     Tenant,
     User,
     Version,
@@ -242,6 +244,12 @@ export const api = {
     },
     /** How buyers read a deal room's frontstage. */
     dealRoomActivity: (id: string) => request<DealRoomActivity>(`/api/deal-rooms/${id}/activity`),
+    /** How buyers read a file of a deal room, a session at a time. */
+    documentActivity: (id: string, assetId: string) =>
+        request<DocumentActivity>(`/api/deal-rooms/${id}/activity/files/${assetId}`),
+    /** One session of a file of a deal room, as it happened. */
+    sessionActivity: (id: string, sessionId: string) =>
+        request<SessionActivity>(`/api/deal-rooms/${id}/activity/sessions/${sessionId}`),
     /** Note that the user has looked at what buyers did in a deal room. */
     markDealRoomActivitySeen: (id: string) => request<void>(`/api/deal-rooms/${id}/activity/seen`, { method: "POST" }),
     /** The deal rooms the user is on, with visitors since they last looked, those who came last first. */

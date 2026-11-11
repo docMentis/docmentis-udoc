@@ -17,9 +17,12 @@ import type {
     DealRoomFile,
     DealRoomFileDetail,
     DealRoomNews,
-    PageReading,
+    DocumentActivity,
+    PageView,
     PublishedFile,
+    ReadingSession,
     Role,
+    SessionActivity,
     Seller,
 } from "../../shared/api.ts";
 import {
@@ -35,6 +38,7 @@ import type { TenantDb } from "../db.ts";
 import { anySentToReview, entersDealRoom } from "../dealRooms.ts";
 import { COLOR, Refusal, idsOf, imageTypeOf, nameOf, noteOf, sendImage, signedIn, signedInAs } from "../http.ts";
 import type { Access, Scope } from "../scope.ts";
+import { keptThumbnails } from "./thumbnails.ts";
 import { addCopiedVersion, addEvent, versionsOf } from "./versions.ts";
 
 /** The largest banner image, in bytes. */
@@ -115,6 +119,66 @@ function filesOf(db: TenantDb, roomId: string): DealRoomFile[] {
 /** Note that room `id` has changed. */
 function touch(db: TenantDb, id: string, at = Date.now()): void {
     db.prepare("UPDATE deal_rooms SET updated_at = ? WHERE tenant_id = :tenant AND id = ?").run(at, id);
+}
+
+/**
+ * The sessions of room `roomId`, the latest first: those of file `asset` at
+ * `version`, or session `session` alone. Each names its file, and its visitor
+ * by the room's visitors numbered as they first came, from 1.
+ */
+function sessionsOf(
+    db: TenantDb,
+    roomId: string,
+    which: { asset?: string; version?: number; session?: string },
+): { assetId: string; session: ReadingSession }[] {
+    const rows = db
+        .prepare(
+            `SELECT session.id, session.asset_id, session.version, session.started_at,
+                (
+                    SELECT COUNT(*) FROM frontstage_visitors AS earlier
+                    WHERE earlier.tenant_id = visitor.tenant_id AND earlier.room_id = visitor.room_id
+                        AND (earlier.first_at < visitor.first_at
+                            OR (earlier.first_at = visitor.first_at AND earlier.id <= visitor.id))
+                ) AS visitor,
+                coalesce(MAX(view.ended_ms), 0) AS length,
+                coalesce(SUM(view.ended_ms - view.started_ms), 0) AS ms
+            FROM frontstage_sessions AS session
+            JOIN frontstage_visitors AS visitor ON visitor.tenant_id = session.tenant_id
+                AND visitor.room_id = session.room_id AND visitor.id = session.visitor_id
+            LEFT JOIN frontstage_page_views AS view ON view.tenant_id = session.tenant_id
+                AND view.session_id = session.id
+            WHERE session.tenant_id = :tenant AND session.room_id = :room
+                AND (:asset IS NULL OR session.asset_id = :asset)
+                AND (:version IS NULL OR session.version = :version)
+                AND (:session IS NULL OR session.id = :session)
+            GROUP BY session.id
+            ORDER BY session.started_at DESC, session.id`,
+        )
+        .all({
+            room: roomId,
+            asset: which.asset ?? null,
+            version: which.version ?? null,
+            session: which.session ?? null,
+        }) as unknown as {
+        id: string;
+        asset_id: string;
+        version: number;
+        started_at: number;
+        visitor: number;
+        length: number;
+        ms: number;
+    }[];
+    return rows.map((row) => ({
+        assetId: row.asset_id,
+        session: {
+            id: row.id,
+            visitor: row.visitor,
+            version: row.version,
+            startedAt: row.started_at,
+            length: row.length,
+            ms: row.ms,
+        },
+    }));
 }
 
 export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
@@ -303,43 +367,104 @@ export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
                 WHERE tenant_id = :tenant AND room_id = ?`,
             )
             .get(id) as { visitors: number; last_at: number | null };
-        const opens = db.prepare(
-            `SELECT COUNT(*) AS visitors, SUM(opens) AS opens, MAX(last_at) AS last_at FROM frontstage_file_opens
-            WHERE tenant_id = :tenant AND asset_id = ?`,
+        const opened = db.prepare(
+            `SELECT COUNT(DISTINCT visitor_id) AS visitors, COUNT(*) AS sessions, MAX(started_at) AS last_at
+            FROM frontstage_sessions WHERE tenant_id = :tenant AND asset_id = ?`,
         );
-        const total = db.prepare(
-            "SELECT SUM(ms) AS ms, MAX(version) AS version FROM frontstage_page_reads WHERE tenant_id = :tenant AND asset_id = ?",
-        );
-        const pages = db.prepare(
-            `SELECT page, SUM(ms) AS ms, COUNT(*) AS visitors FROM frontstage_page_reads
-            WHERE tenant_id = :tenant AND asset_id = ? AND version = ? GROUP BY page ORDER BY page`,
+        const read = db.prepare(
+            `SELECT SUM(view.ended_ms - view.started_ms) AS ms FROM frontstage_page_views AS view
+            JOIN frontstage_sessions AS session ON session.tenant_id = view.tenant_id AND session.id = view.session_id
+            WHERE view.tenant_id = :tenant AND session.asset_id = ?`,
         );
         return {
             visitors: visits.visitors,
             lastVisitAt: visits.last_at,
             files: files.flatMap(({ asset, onFrontstage }) => {
-                const opened = opens.get(asset.id) as {
-                    visitors: number;
-                    opens: number | null;
-                    last_at: number | null;
-                };
-                const read = total.get(asset.id) as { ms: number | null; version: number | null };
-                if (!onFrontstage && opened.visitors === 0) return [];
-                const version = asset.publishedVersion ?? read.version;
+                const each = opened.get(asset.id) as { visitors: number; sessions: number; last_at: number | null };
+                if (!onFrontstage && each.sessions === 0) return [];
+                const { ms } = read.get(asset.id) as { ms: number | null };
                 return [
                     {
                         assetId: asset.id,
-                        visitors: opened.visitors,
-                        opens: opened.opens ?? 0,
-                        ms: read.ms ?? 0,
-                        lastOpenedAt: opened.last_at,
-                        version,
-                        pages: version === null ? [] : (pages.all(asset.id, version) as unknown as PageReading[]),
+                        visitors: each.visitors,
+                        sessions: each.sessions,
+                        ms: ms ?? 0,
+                        lastOpenedAt: each.last_at,
                     },
                 ];
             }),
         };
     });
+
+    /**
+     * A `DocumentActivity`: how buyers read file `assetId` of the room, a session
+     * at a time, at the version its last session read, or else the one on the
+     * frontstage. `404` for a file the room doesn't hold.
+     */
+    app.get<{ Params: { id: string; assetId: string } }>(
+        "/api/deal-rooms/:id/activity/files/:assetId",
+        async (request): Promise<DocumentActivity> => {
+            const scope = seller(request);
+            const { db } = scope;
+            const room = roomFor(scope, request.params.id);
+            const asset = room.files.find((file) => file.asset.id === request.params.assetId)?.asset;
+            if (!asset) throw new Refusal(404, "notFound", "no such file");
+            const last = db
+                .prepare(
+                    `SELECT version FROM frontstage_sessions WHERE tenant_id = :tenant AND asset_id = ?
+                    ORDER BY started_at DESC LIMIT 1`,
+                )
+                .get(asset.id) as { version: number } | undefined;
+            const version = last?.version ?? asset.publishedVersion;
+            if (version === null) return { assetId: asset.id, version, thumbnails: null, sessions: [], pages: [] };
+            const sessions = sessionsOf(db, room.id, { asset: asset.id, version });
+            const reads = db
+                .prepare(
+                    `SELECT view.session_id AS id, view.page, SUM(view.ended_ms - view.started_ms) AS ms
+                    FROM frontstage_page_views AS view
+                    JOIN frontstage_sessions AS session ON session.tenant_id = view.tenant_id
+                        AND session.id = view.session_id
+                    WHERE view.tenant_id = :tenant AND session.room_id = ? AND session.asset_id = ?
+                        AND session.version = ?
+                    GROUP BY view.session_id, view.page`,
+                )
+                .all(room.id, asset.id, version) as unknown as { id: string; page: number; ms: number }[];
+            const thumbnails = keptThumbnails(db, asset.id, version);
+            const pageCount = Math.max(thumbnails?.pageCount ?? 0, ...reads.map(({ page }) => page + 1));
+            // Each page's sessions in the sessions' order, the latest first.
+            const order = new Map(sessions.map(({ session }, index) => [session.id, index]));
+            const pages = Array.from({ length: pageCount }, (_, page) => {
+                const its = reads
+                    .filter((read) => read.page === page)
+                    .sort((x, y) => order.get(x.id)! - order.get(y.id)!)
+                    .map(({ id, ms }) => ({ id, ms }));
+                return { page, ms: its.reduce((sum, { ms }) => sum + ms, 0), sessions: its };
+            });
+            return { assetId: asset.id, version, thumbnails, sessions: sessions.map(({ session }) => session), pages };
+        },
+    );
+
+    /** A `SessionActivity`: one session of a file of the room, as it happened. `404` for none of the room's. */
+    app.get<{ Params: { id: string; sessionId: string } }>(
+        "/api/deal-rooms/:id/activity/sessions/:sessionId",
+        async (request): Promise<SessionActivity> => {
+            const scope = seller(request);
+            const { db } = scope;
+            const room = roomFor(scope, request.params.id);
+            const [found] = sessionsOf(db, room.id, { session: request.params.sessionId });
+            if (!found) throw new Refusal(404, "notFound", "no such session");
+            const { assetId, session } = found;
+            const views = db
+                .prepare(
+                    `SELECT page, started_ms AS "from", ended_ms AS "to" FROM frontstage_page_views
+                    WHERE tenant_id = :tenant AND session_id = ? ORDER BY started_ms`,
+                )
+                .all(session.id) as unknown as PageView[];
+            const thumbnails = keptThumbnails(db, assetId, session.version);
+            const pageCount = Math.max(thumbnails?.pageCount ?? 0, ...views.map(({ page }) => page + 1));
+            return { assetId, session, thumbnails, pageCount, views };
+        },
+    );
 
     /** Note that the user, if they're on the room, has looked at what buyers did: `204`. */
     app.post<{ Params: { id: string } }>("/api/deal-rooms/:id/activity/seen", async (request, reply) => {

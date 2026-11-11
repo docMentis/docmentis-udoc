@@ -31,6 +31,8 @@ export type ColorRole =
     | "surface-container-highest"
     | "on-surface"
     | "on-surface-variant"
+    | "inverse-surface"
+    | "inverse-on-surface"
     | "outline"
     | "outline-variant"
     | "scrim"
@@ -274,6 +276,8 @@ const TONES: Record<
     "surface-container-highest": ["neutral", 90, 22],
     "on-surface": ["neutral", 10, 90],
     "on-surface-variant": ["neutralVariant", 30, 80],
+    "inverse-surface": ["neutral", 20, 90],
+    "inverse-on-surface": ["neutral", 95, 20],
     outline: ["neutralVariant", 50, 60],
     "outline-variant": ["neutralVariant", 80, 30],
     scrim: ["neutral", 0, 0],
