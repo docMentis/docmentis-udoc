@@ -21,7 +21,7 @@ import type { UIState } from "../state.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 /** The radius of the line's two bends, CSS px. */
-const BEND_RADIUS_PX = 6;
+const BEND_RADIUS_PX = 12;
 
 /** Where a tether runs between, read as client rects when it's drawn. */
 export interface TetherEnds {
