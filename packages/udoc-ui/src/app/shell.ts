@@ -2903,16 +2903,20 @@ export function mountUIShell(
         return commit(() => client.execute(Command.deleteAnnotations(page, [id])));
     }
 
-    // Edit the Office comment part `comment` is in with `command`: a slide's
-    // comments or a sheet's, the ones whose commands are built.
+    // Edit the Office comment part `comment` is in with `command`: the
+    // document's, a slide's or a sheet's.
     function editOfficeComment(comment: Comment, command: CommentCommand): Promise<void> {
         const { source } = comment;
-        if (source.kind !== "office" || source.owner === null) return Promise.resolve();
+        if (source.kind !== "office") return Promise.resolve();
         const owner = source.owner;
         switch (store.getState().docType) {
+            case "wordprocessing":
+                return commit(() => client.execute(Command.editDocumentComment(command)));
             case "presentation":
+                if (owner === null) return Promise.resolve();
                 return commit(() => client.execute(Command.editSlideComment(owner, command)));
             case "spreadsheet":
+                if (owner === null) return Promise.resolve();
                 return commit(() => client.execute(Command.editSheetComment(owner, command)));
             default:
                 return Promise.resolve();
@@ -2920,12 +2924,13 @@ export function mountUIShell(
     }
 
     // Open a thread holding `richContents`, by this user, now, its ids minted
-    // here — on a slide: on the shape selected, or the one whose text is, else
-    // on the slide selected, else on the slide shown; on a sheet: at the
-    // active cell. The thread opens in the panel.
+    // here — in a document: on the text selected; on a slide: on the shape
+    // selected, or the one whose text is, else on the slide selected, else on
+    // the slide shown; on a sheet: at the active cell. The thread opens in the
+    // panel.
     async function newOfficeComment(richContents: string): Promise<void> {
         const docType = store.getState().docType;
-        if (docType !== "presentation" && docType !== "spreadsheet") return;
+        if (docType !== "wordprocessing" && docType !== "presentation" && docType !== "spreadsheet") return;
         const [id, story, chosen] = await Promise.all([mintId(), mintId(), selection()]);
         if (id === null || story === null) return;
         const comment = {
@@ -2935,6 +2940,11 @@ export function mountUIShell(
             created: dateTime(new Date()),
             body: richContents,
         };
+        if (docType === "wordprocessing") {
+            await commit(() => client.executeOnSelection({ kind: "insertComment", comment }));
+            store.dispatch({ type: "OPEN_OFFICE_COMMENT", id });
+            return;
+        }
         let command: UDocCommand;
         if (docType === "spreadsheet") {
             const active = activeCell(chosen);

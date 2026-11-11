@@ -23,6 +23,7 @@ import type {
     SpreadsheetCommand,
     StandardFont,
     UDocCommand,
+    WordprocessingCommand,
     WorkbookCommand,
     WorksheetCommand,
 } from "@docmentis/udoc-wasm";
@@ -39,6 +40,11 @@ function portable(command: PortableCommand): UDocCommand {
 /** Wrap a presentation command in the doc-type-tagged `UDocCommand`. */
 function presentation(command: PresentationCommand): UDocCommand {
     return { presentation: command };
+}
+
+/** Wrap a wordprocessing command in the doc-type-tagged `UDocCommand`. */
+function wordprocessing(command: WordprocessingCommand): UDocCommand {
+    return { wordprocessing: command };
 }
 
 /** Wrap a spreadsheet command in the doc-type-tagged `UDocCommand`. */
@@ -73,6 +79,9 @@ export const Command = {
     /** Open a thread on slide `slide` at `place` with `comment`. */
     insertSlideComment: (slide: string, place: SlideCommentPlace, comment: CommentDraft): UDocCommand =>
         presentation({ insertComment: { slide, place, comment } }),
+
+    /** Edit the document's comments with `command`. */
+    editDocumentComment: (command: CommentCommand): UDocCommand => wordprocessing({ editComment: { command } }),
 
     /** Edit the comments of worksheet `sheet` with `command`. */
     editSheetComment: (sheet: SheetId, command: CommentCommand): UDocCommand =>

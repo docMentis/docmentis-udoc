@@ -3554,6 +3554,7 @@ const TEXT_KINDS: Record<TextSelectionEditType, "text"> = {
     clearParagraphProperties: "text",
     indentParagraphs: "text",
     applyParagraphStyle: "text",
+    insertCommentRange: "text",
 };
 const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     translateShapes: "shape",
@@ -3637,6 +3638,9 @@ const SECTION_KINDS: Record<SectionSelectionEditType, "section"> = {
 function wordprocessingEdit(edit: SelectionEdit): unknown {
     if (typeof edit !== "string" && "kind" in edit && edit.kind in SECTION_KINDS) {
         return { section: byKind(edit) };
+    }
+    if (typeof edit !== "string" && "kind" in edit && edit.kind === "insertComment") {
+        return byKind(edit);
     }
     return { common: drawingEdit(edit) };
 }
