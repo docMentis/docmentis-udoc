@@ -376,6 +376,7 @@ export const ptBR: Messages = {
     "comments.page": "Página {page}",
     "comments.slide": "Slide {slide}",
     "comments.cell": "{sheet}!{cell}",
+    "comments.new": "Novo comentário",
     "comments.empty": "Nenhum comentário neste documento",
     "comments.loading": "Carregando comentários…",
 

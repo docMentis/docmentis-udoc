@@ -376,6 +376,7 @@ export const ja: Messages = {
     "comments.page": "{page}ページ",
     "comments.slide": "スライド {slide}",
     "comments.cell": "{sheet}!{cell}",
+    "comments.new": "新しいコメント",
     "comments.empty": "この文書にコメントはありません",
     "comments.loading": "コメントを読み込み中…",
 

@@ -376,6 +376,7 @@ export const fr: Messages = {
     "comments.page": "Page {page}",
     "comments.slide": "Diapositive {slide}",
     "comments.cell": "{sheet}!{cell}",
+    "comments.new": "Nouveau commentaire",
     "comments.empty": "Aucun commentaire dans ce document",
     "comments.loading": "Chargement des commentaires…",
 

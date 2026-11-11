@@ -375,7 +375,7 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
         cancel: () => stopEditing(false),
     });
 
-    const reply = createReplyField(i18n, {
+    const reply = createReplyField(i18n, REPLY_WORDS, {
         save: (richContents) => {
             if (current) callbacks.onReply(current.comment, richContents);
             stopReplying();
@@ -454,8 +454,8 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
     return { el, reply: reply.el, replying: () => replying, show, startEditing };
 }
 
-/** The field that answers an entry. */
-interface ReplyField {
+/** The field that answers an entry — or writes a new thread's first comment. */
+export interface ReplyField {
     el: HTMLElement;
     /** Empty it. */
     clear(): void;
@@ -463,10 +463,28 @@ interface ReplyField {
     focus(): void;
 }
 
-/** A field that answers an entry: always editable, its Save — or Ctrl/⌘+Enter
- *  — sending what it holds, when it holds anything, and its Cancel — or
- *  Escape — dropping it. */
-function createReplyField(i18n: I18n, on: { save: (richContents: string) => void; cancel: () => void }): ReplyField {
+/** What a reply field is called, and its Save and Cancel, as messages. */
+export interface ReplyFieldWords {
+    field: MessageKey;
+    save: MessageKey;
+    cancel: MessageKey;
+}
+
+/** The words of the field that answers an entry. */
+const REPLY_WORDS: ReplyFieldWords = {
+    field: "comment.replyField",
+    save: "comment.saveReply",
+    cancel: "comment.cancelReply",
+};
+
+/** A field that answers an entry, called by `words`: always editable, its
+ *  Save — or Ctrl/⌘+Enter — sending what it holds, when it holds anything,
+ *  and its Cancel — or Escape — dropping it. */
+export function createReplyField(
+    i18n: I18n,
+    words: ReplyFieldWords,
+    on: { save: (richContents: string) => void; cancel: () => void },
+): ReplyField {
     const el = document.createElement("div");
     el.className = "udoc-comment-thread__reply";
     const text = document.createElement("div");
@@ -474,14 +492,14 @@ function createReplyField(i18n: I18n, on: { save: (richContents: string) => void
     text.contentEditable = "true";
     text.setAttribute("role", "textbox");
     text.setAttribute("aria-multiline", "true");
-    text.setAttribute("aria-label", i18n.t("comment.replyField"));
-    text.dataset.placeholder = i18n.t("comment.replyField");
+    text.setAttribute("aria-label", i18n.t(words.field));
+    text.dataset.placeholder = i18n.t(words.field);
     const actions = document.createElement("div");
     actions.className = "udoc-comment__actions";
-    const cancel = createButton({ text: i18n.t("common.cancel"), label: i18n.t("comment.cancelReply") });
+    const cancel = createButton({ text: i18n.t("common.cancel"), label: i18n.t(words.cancel) });
     const save = createButton({
         text: i18n.t("common.save"),
-        label: i18n.t("comment.saveReply"),
+        label: i18n.t(words.save),
         className: "udoc-comment__primary",
     });
     actions.append(cancel, save);

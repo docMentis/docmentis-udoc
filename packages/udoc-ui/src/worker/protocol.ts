@@ -1443,6 +1443,15 @@ export interface SlideLayoutIdRequest {
 }
 
 /**
+ * Read the id of the slide at `index` (0-based, in slide order). Replies with
+ * its hex key, or null past the last slide or for any other document.
+ */
+export interface SlideIdRequest {
+    type: "slideId";
+    index: number;
+}
+
+/**
  * Read the open deck's sections, in order, each as the run of the slide order
  * it holds — what the thumbnails group the slides under. Replies with a
  * {@link SlideSectionRun}`[]`, empty for a deck without sections and for any
@@ -2286,6 +2295,7 @@ export type WorkerRequest =
     | SelectedAnnotationsRequest
     | PageCommentsRequest
     | OfficeCommentsRequest
+    | SlideIdRequest
     | CommentAnchorsRequest
     | PageAnnotationsRequest
     | AnnotationRequest

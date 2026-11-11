@@ -376,6 +376,7 @@ export const ru: Messages = {
     "comments.page": "Страница {page}",
     "comments.slide": "Слайд {slide}",
     "comments.cell": "{sheet}!{cell}",
+    "comments.new": "Новый комментарий",
     "comments.empty": "В этом документе нет комментариев",
     "comments.loading": "Загрузка комментариев…",
 

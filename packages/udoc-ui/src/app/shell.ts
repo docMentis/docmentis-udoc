@@ -30,6 +30,7 @@ import type {
     ScrollAlignment,
     RevisionView,
     SheetLayoutMode,
+    SlideCommentPlace,
     SlideMasterSummary,
     TextHyperlink,
     Watermark,
@@ -1351,6 +1352,7 @@ export function mountUIShell(
                 void editOfficeComment(comment, { setCommentStatus: { id: comment.id, status } }),
             onDismiss: () => canvas.focusClipboardSink(),
             onChoose: (comment) => chooseComment(comment),
+            onNewComment: (richContents) => void newOfficeComment(richContents),
         },
         {
             // The panel shows a pattern the engine refuses from the state.
@@ -2834,6 +2836,31 @@ export function mountUIShell(
         if (store.getState().docType !== "presentation") return Promise.resolve();
         const slide = source.owner;
         return commit(() => client.execute(Command.editSlideComment(slide, command)));
+    }
+
+    // Open a thread on the slide holding `richContents`, by this user, now: on
+    // the shape selected — or the one whose text is — else on the slide
+    // selected, else on the slide shown. The thread opens in the panel, its
+    // ids minted here.
+    async function newOfficeComment(richContents: string): Promise<void> {
+        if (store.getState().docType !== "presentation") return;
+        const [id, story, chosen] = await Promise.all([mintId(), mintId(), selection()]);
+        if (id === null || story === null) return;
+        let placed = slideCommentPlace(chosen);
+        if (!placed) {
+            const slide = await client.presentation.slideId(store.getState().pageIndex);
+            if (slide === null) return;
+            placed = { slide, place: { slide: {} } };
+        }
+        const comment = {
+            id,
+            story,
+            author: { name: userName ?? "" },
+            created: dateTime(new Date()),
+            body: richContents,
+        };
+        await commit(() => client.execute(Command.insertSlideComment(placed.slide, placed.place, comment)));
+        store.dispatch({ type: "OPEN_OFFICE_COMMENT", id });
     }
 
     // Answer the Office thread `comment` is in with a reply holding
@@ -4340,4 +4367,25 @@ function isRefusableSheetEdit(edit: SelectionEdit): boolean {
             edit.kind === "deleteSheetColumns" ||
             edit.kind === "mergeSheetCells")
     );
+}
+
+/** Where a new comment on a slide stands, by what `selection` holds: the shape
+ *  selected, or the one whose text or table is, on its slide — else the slide
+ *  selected; null for anything else, a notes page's shapes among it. */
+function slideCommentPlace(selection: UDocSelection | null): { slide: string; place: SlideCommentPlace } | null {
+    if (!selection || !("presentation" in selection)) return null;
+    const chosen = selection.presentation;
+    if (chosen === "none") return null;
+    if ("shapes" in chosen && "slide" in chosen.shapes.container) {
+        const held = chosen.shapes.selection;
+        const shape = "shapes" in held ? held.shapes[0] : "shapeText" in held ? held.shapeText[0] : held.shapeTable[0];
+        return shape === undefined
+            ? { slide: chosen.shapes.container.slide, place: { slide: {} } }
+            : { slide: chosen.shapes.container.slide, place: { shape: { shape } } };
+    }
+    if ("slides" in chosen) {
+        const slide = chosen.slides.ids[0];
+        return slide === undefined ? null : { slide, place: { slide: {} } };
+    }
+    return null;
 }

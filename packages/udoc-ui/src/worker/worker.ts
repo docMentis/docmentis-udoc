@@ -2800,6 +2800,15 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, session ? slideCount(session) : 0);
                 break;
             }
+            case "slideId": {
+                // A pure read of the slide order.
+                const open = session;
+                reply(
+                    id,
+                    open ? (safeRead(() => open.presentation.model.root.slideIds(), [])[msg.index] ?? null) : null,
+                );
+                break;
+            }
             case "slideLayoutId": {
                 // A read that loads the slide on first use. None with no open /
                 // non-presentation doc, or past the last slide.

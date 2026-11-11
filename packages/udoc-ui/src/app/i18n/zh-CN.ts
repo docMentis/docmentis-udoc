@@ -374,6 +374,7 @@ export const zhCN: Messages = {
     "comments.page": "第 {page} 页",
     "comments.slide": "第 {slide} 张幻灯片",
     "comments.cell": "{sheet}!{cell}",
+    "comments.new": "新建批注",
     "comments.empty": "此文档暂无批注",
     "comments.loading": "正在加载批注…",
 

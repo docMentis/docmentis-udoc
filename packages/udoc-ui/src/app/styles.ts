@@ -3380,6 +3380,20 @@ export const uiStyles = css`
         cursor: default;
         border-color: var(--udoc-color-primary);
     }
+    /* New comment, above the groups: the button, or the field it opens in a
+   card outlined as the open thread's is. */
+    .udoc-ui-root .udoc-comments-panel__new {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .udoc-ui-root .udoc-comments-panel__new .udoc-comment-thread__reply {
+        align-self: stretch;
+        padding: 8px;
+        background: var(--udoc-color-surface-container-high);
+        border: 1px solid var(--udoc-color-primary);
+        border-radius: 6px;
+    }
 
     /* A Word, Excel or PowerPoint comment thread's marker (udoc:comment-markers):
    at the top-right of the first rect it stands in, a constant screen size at

@@ -1564,6 +1564,14 @@ export class WorkerClient {
             this.#send({ type: "slideLayoutId", index }) as Promise<string | null>,
 
         /**
+         * The id of the slide at `index` (0-based, in slide order) — `null` past
+         * the last slide, or for any other document. What a slide's own
+         * commands name it by.
+         */
+        slideId: (index: number): Promise<string | null> =>
+            this.#send({ type: "slideId", index }) as Promise<string | null>,
+
+        /**
          * The open deck's sections, in order, each with the run of the slide
          * order it holds; none for a deck without sections, or any other
          * document. A read: what the thumbnails group the slides under.

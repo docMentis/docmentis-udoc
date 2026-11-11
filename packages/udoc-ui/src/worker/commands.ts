@@ -12,11 +12,13 @@ import type {
     AcroFormFieldFill,
     Annotation,
     CommentCommand,
+    CommentDraft,
     PortableCommand,
     PresentationCommand,
     GridColor,
     SheetId,
     SheetState,
+    SlideCommentPlace,
     SpreadsheetCommand,
     StandardFont,
     UDocCommand,
@@ -66,6 +68,10 @@ export const Command = {
     /** Edit the comments of slide `slide` with `command`. */
     editSlideComment: (slide: string, command: CommentCommand): UDocCommand =>
         presentation({ editComment: { slide, command } }),
+
+    /** Open a thread on slide `slide` at `place` with `comment`. */
+    insertSlideComment: (slide: string, place: SlideCommentPlace, comment: CommentDraft): UDocCommand =>
+        presentation({ insertComment: { slide, place, comment } }),
 
     /** Insert host-built `annotations` on top of `pageId`'s — each with no id and
      *  no appearance, which the engine mints and generates. */

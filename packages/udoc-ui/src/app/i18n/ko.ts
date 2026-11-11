@@ -376,6 +376,7 @@ export const ko: Messages = {
     "comments.page": "{page}페이지",
     "comments.slide": "슬라이드 {slide}",
     "comments.cell": "{sheet}!{cell}",
+    "comments.new": "새 메모",
     "comments.empty": "이 문서에 메모가 없습니다",
     "comments.loading": "메모를 불러오는 중…",
 

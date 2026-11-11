@@ -374,6 +374,7 @@ export const ar: Messages = {
     "comments.page": "صفحة {page}",
     "comments.slide": "شريحة {slide}",
     "comments.cell": "{sheet}!{cell}",
+    "comments.new": "تعليق جديد",
     "comments.empty": "لا توجد تعليقات في هذا المستند",
     "comments.loading": "جارٍ تحميل التعليقات…",
 

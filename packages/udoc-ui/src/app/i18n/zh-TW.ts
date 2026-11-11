@@ -374,6 +374,7 @@ export const zhTW: Messages = {
     "comments.page": "第 {page} 頁",
     "comments.slide": "投影片 {slide}",
     "comments.cell": "{sheet}!{cell}",
+    "comments.new": "新增註解",
     "comments.empty": "此文件沒有註解",
     "comments.loading": "正在載入註解…",
 

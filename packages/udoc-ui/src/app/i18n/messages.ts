@@ -691,6 +691,8 @@ export interface Messages {
     "comments.slide": string;
     /** {sheet}!{cell} — a sheet's cell, as Excel names it */
     "comments.cell": string;
+    /** New comment — opens a field for a new comment thread */
+    "comments.new": string;
     /** No comments in this document */
     "comments.empty": string;
     /** Loading comments… */

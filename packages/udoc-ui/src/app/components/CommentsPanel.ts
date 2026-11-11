@@ -1,7 +1,8 @@
 // The right panel's Comments tab: every comment in the document, as Acrobat
 // lists them — grouped by page, each a thread, in the thread view the comment
 // popup shows one in. A Word, Excel or PowerPoint document's are listed the
-// same way, grouped by page, by cell or by slide.
+// same way, grouped by page, by cell or by slide; where they may be written,
+// New comment opens a field above them for a new thread's first comment.
 //
 // A thread shows its comment and a count of its replies; the thread of the
 // annotation selected is open, its replies nested under it, and any entry of
@@ -19,13 +20,17 @@ import { commentThreads, officeThreads, threadHolding } from "../annotations.js"
 import { ICON_CHEVRON_DOWN } from "../icons.js";
 import type { UIState } from "../state.js";
 import { VIEW_MODE } from "../state.js";
-import { createCommentThread } from "./CommentThread.js";
-import type { CommentThreadCallbacks, CommentThreadView } from "./CommentThread.js";
+import { createCommentThread, createReplyField } from "./CommentThread.js";
+import type { CommentThreadCallbacks, CommentThreadView, ReplyFieldWords } from "./CommentThread.js";
+import { createButton } from "./controls.js";
 import type { I18n } from "../i18n/index.js";
 
 export interface CommentsPanelCallbacks extends CommentThreadCallbacks {
     /** Go to `comment` and select it. */
     onChoose: (comment: Comment) => void;
+    /** Open a thread whose first comment holds `richContents` (XHTML), on
+     *  what the document has selected. */
+    onNewComment: (richContents: string) => void;
 }
 
 interface CommentsPanelSlice {
@@ -91,6 +96,9 @@ interface Card {
     thread: Comment;
 }
 
+/** The words of the field that writes a new thread's first comment. */
+const NEW_COMMENT_WORDS: ReplyFieldWords = { field: "comments.new", save: "common.save", cancel: "common.cancel" };
+
 /** The doc types whose Office comments may be edited — those whose comment
  *  commands are built. */
 const OFFICE_EDITED_DOC_TYPES: ReadonlySet<string> = new Set(["presentation"]);
@@ -101,6 +109,28 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
     el.setAttribute("aria-label", i18n.t("rightPanel.comments"));
     const empty = document.createElement("div");
     empty.className = "udoc-panel-placeholder";
+
+    // New comment, and the field it opens in its place: Save opens the thread,
+    // Save and Cancel each put the button back.
+    const compose = document.createElement("div");
+    compose.className = "udoc-comments-panel__new";
+    const start = createButton({ text: i18n.t("comments.new"), label: i18n.t("comments.new") });
+    const field = createReplyField(i18n, NEW_COMMENT_WORDS, {
+        save: (richContents) => {
+            closeField();
+            callbacks.onNewComment(richContents);
+        },
+        cancel: closeField,
+    });
+    function closeField(): void {
+        field.clear();
+        compose.replaceChildren(start);
+    }
+    start.addEventListener("click", () => {
+        compose.replaceChildren(field.el);
+        field.focus();
+    });
+    compose.append(start);
 
     /** The cards by their comment's id, kept while it is listed so an edit in
      *  progress stays. */
@@ -206,7 +236,8 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         for (const key of groups.keys()) if (!keys.has(key)) groups.delete(key);
 
         empty.textContent = i18n.t(slice.allRead ? "comments.empty" : "comments.loading");
-        setChildren(el, shownGroups.length > 0 ? shownGroups : [empty]);
+        const listing = shownGroups.length > 0 ? shownGroups : [empty];
+        setChildren(el, slice.officeEditing ? [compose, ...listing] : listing);
         // The thread selected on the page is brought into view here, once.
         const openKey = open?.thread.id ?? null;
         if (open && openKey !== revealed) open.el.scrollIntoView({ block: "nearest" });
