@@ -327,7 +327,7 @@ export const PRESENTATION_PROFILE: DocProfile = {
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],
-    rightPanels: ["search"],
+    rightPanels: RIGHT_PANEL_TABS,
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
@@ -358,7 +358,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
     // the bottom sheet-tab bar (`sheetTabs`). With every tab omitted the left
     // panel and its toolbar side panel button drop out entirely.
     leftPanels: [],
-    rightPanels: ["search"],
+    rightPanels: RIGHT_PANEL_TABS,
     textEditing: false,
     pagedViewControls: false,
     pageArrangement: false,
@@ -388,7 +388,7 @@ export const WORDPROCESSING_PROFILE: DocProfile = {
     sheetTabs: false,
     // The layers and attachments read PDF parts.
     leftPanels: ["thumbnail", "outline"],
-    rightPanels: ["search"],
+    rightPanels: RIGHT_PANEL_TABS,
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,
@@ -461,8 +461,8 @@ export function tabsFor(
  * the state's `disabledPanels`, seeded when a document opens. Derived as the
  * complement of the profile's {@link DocProfile.leftPanels} and
  * {@link DocProfile.rightPanels}: a PDF drops no navigator, the other paged
- * and slide types all but the thumbnails, a spreadsheet the whole strip; all but
- * a PDF drop Comments, and an image Search too.
+ * and slide types all but the thumbnails, a spreadsheet the whole strip; an
+ * unknown doc type drops Comments, and an image Search too.
  */
 export function profileDisabledPanels(docType: UDocType | null): readonly PanelTab[] {
     const profile = profileFor(docType);

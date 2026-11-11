@@ -11,6 +11,7 @@ import type {
     ActionHideTarget,
     Annotation,
     CellEntryEdit,
+    Comment as ModelComment,
     GridBorderProperties,
     GridCellAlignment,
     GridCellSelectionMove,
@@ -1281,6 +1282,59 @@ export interface PageAnnotations {
     annotations: Annotation[];
 }
 
+/**
+ * Read a Word, Excel or PowerPoint document's comments: each comment part,
+ * loaded, every comment in it with its body as XHTML and, where it opens a
+ * thread, what the comments panel lists the thread under — a docx comment's
+ * page laying the document out as far as it. Replies with
+ * {@link OfficeCommentsReply}; no comments for any other document.
+ */
+export interface OfficeCommentsRequest {
+    type: "officeComments";
+}
+
+/** An {@link OfficeCommentsRequest}'s answer: the comments, and the layout after
+ *  them — a docx comment's page lays the document out as far as it. */
+export interface OfficeCommentsReply {
+    comments: OfficeComment[];
+    layout: DocumentLayout;
+}
+
+/** A Word, Excel or PowerPoint comment, as the comments panel reads it. */
+export interface OfficeComment {
+    comment: ModelComment;
+    /** Its body as XHTML, narrowed to rich text. */
+    richBody: string;
+    /** What the panel lists the thread it opens under: a docx comment's page,
+     *  an xlsx comment's cell, a pptx comment's slide; null for a reply, and
+     *  for a docx comment whose page isn't found. */
+    group: CommentGroup | null;
+    /** The plane and page the thread it opens stands on — an xlsx comment's on
+     *  its sheet's first; null where `group` is. */
+    at: { plane: number; page: number } | null;
+    /** The comment part it is in, its id key. */
+    part: string;
+}
+
+/**
+ * Read where each comment thread of a Word, Excel or PowerPoint document stands
+ * on page `page` of `plane`: its rects, page-local points. Replies with
+ * `CommentAnchor`[] — none for any other document.
+ */
+export interface CommentAnchorsRequest {
+    type: "commentAnchors";
+    plane: number;
+    page: number;
+}
+
+/** What the comments panel lists threads under: a page, a cell of a sheet, a
+ *  slide — keyed, and ordered as the document reads. */
+export interface CommentGroup {
+    key: string;
+    order: number;
+    label: { page: number } | { sheet: string; cell: string } | { slide: number };
+}
+
 /** A page's annotations — its hex key and its index — in paint order, without
  *  their appearances, with the rich contents of each: XHTML, its `/RC`, else
  *  its `/Contents` a paragraph a line. */
@@ -2228,6 +2282,8 @@ export type WorkerRequest =
     | SelectedObjectsRequest
     | SelectedAnnotationsRequest
     | PageCommentsRequest
+    | OfficeCommentsRequest
+    | CommentAnchorsRequest
     | PageAnnotationsRequest
     | AnnotationRequest
     | SelectionGeometryRequest

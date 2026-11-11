@@ -34,6 +34,7 @@ import type {
     FormWidget,
     HistoryOp,
     MediaFile,
+    OfficeComment,
     PageAnnotations,
     PageComments,
     ResizeAck,
@@ -2723,6 +2724,25 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, session ? pageComments(session, msg.pages) : []);
                 break;
             }
+            case "officeComments": {
+                // A read that loads what it reads — each comment part, and a
+                // docx laid out as far as its comments' pages — with the
+                // layout after it.
+                reply(id, {
+                    comments: session ? officeComments(session) : [],
+                    layout: session
+                        ? layoutOf(session)
+                        : { firstUncomposedPage: 0, scrollSize: { width: 0, height: 0 } },
+                });
+                break;
+            }
+            case "commentAnchors": {
+                // A read of the pages composed, but for a sheet's or a
+                // slide's comments, which it loads.
+                const open = session;
+                reply(id, open ? safeRead(() => open.commentAnchors(msg.plane, msg.page), []) : []);
+                break;
+            }
             case "pageAnnotations": {
                 // A read that loads what it reads, as pageComments.
                 reply(id, session ? pageAnnotations(session, msg.pages) : []);
@@ -3370,6 +3390,90 @@ function pageComments(s: WasmSession, pages: string[]): PageComments[] {
         });
     }
     return comments;
+}
+
+/** The comments of the Word, Excel or PowerPoint document `s` holds, each with
+ *  its body as XHTML and, where it opens a thread, what the comments panel
+ *  lists it under: a docx comment's page — the document laid out as far as it
+ *  — an xlsx comment's cell, a pptx comment's slide. None for any other. */
+function officeComments(s: WasmSession): OfficeComment[] {
+    switch (s.docType()) {
+        case "wordprocessing": {
+            const list = safeRead(() => s.wordprocessing.model.comments.dump(), undefined);
+            if (!list) return [];
+            return (list.comments ?? []).map((comment) => {
+                const page =
+                    comment.replyTo === undefined
+                        ? safeRead(() => s.wordprocessing.commentPage(0, comment.id), undefined)
+                        : undefined;
+                return {
+                    comment,
+                    richBody: safeRead(() => s.wordprocessing.model.comment(comment.id).richBody(), undefined) ?? "",
+                    group: page === undefined ? null : { key: `page:${page}`, order: page, label: { page: page + 1 } },
+                    at: page === undefined ? null : { plane: 0, page },
+                    part: list.id,
+                };
+            });
+        }
+        case "spreadsheet": {
+            const comments: OfficeComment[] = [];
+            for (let plane = 0; plane < s.planeCount(); plane++) {
+                const sheetId = safeRead(() => s.spreadsheet.model.root.sheetIdByIndex(plane), undefined);
+                if (sheetId === undefined) continue;
+                const sheet = s.spreadsheet.model.sheet(sheetId);
+                const list = safeRead(() => sheet.comments.dump(), undefined);
+                if (!list) continue;
+                const name = s.planeName(plane) ?? "";
+                for (const at of list.comments ?? []) {
+                    const cell = safeRead(() => sheet.cellAddress(at.anchor), undefined) ?? "";
+                    comments.push({
+                        comment: at.comment,
+                        richBody: safeRead(() => sheet.comment(at.comment.id).richBody(), undefined) ?? "",
+                        group:
+                            at.comment.replyTo === undefined
+                                ? {
+                                      key: `${sheetId}!${cell}`,
+                                      order: plane * 1e12 + cellOrder(cell),
+                                      label: { sheet: name, cell },
+                                  }
+                                : null,
+                        at: at.comment.replyTo === undefined ? { plane, page: 0 } : null,
+                        part: list.id,
+                    });
+                }
+            }
+            return comments;
+        }
+        case "presentation": {
+            const ids = safeRead(() => s.presentation.model.root.slideIds(), []);
+            return ids.flatMap((slideId, index) => {
+                const slide = s.presentation.model.slide(slideId);
+                const list = safeRead(() => slide.comments.dump(), undefined);
+                if (!list) return [];
+                return (list.comments ?? []).map((at) => ({
+                    comment: at.comment,
+                    richBody: safeRead(() => slide.comment(at.comment.id).richBody(), undefined) ?? "",
+                    group:
+                        at.comment.replyTo === undefined
+                            ? { key: slideId, order: index, label: { slide: index + 1 } }
+                            : null,
+                    at: at.comment.replyTo === undefined ? { plane: 0, page: index } : null,
+                    part: list.id,
+                }));
+            });
+        }
+        default:
+            return [];
+    }
+}
+
+/** Where the cell `address` (`B3`) stands in reading order on its sheet: row
+ *  by row, column by column. */
+function cellOrder(address: string): number {
+    const match = /^([A-Z]+)(\d+)$/.exec(address);
+    if (!match) return 0;
+    const column = [...match[1]!].reduce((n, letter) => n * 26 + letter.charCodeAt(0) - 64, 0);
+    return Number(match[2]) * 1e5 + column;
 }
 
 function pageAnnotations(s: WasmSession, pages: string[]): PageAnnotations[] {

@@ -372,6 +372,8 @@ export const es: Messages = {
 
     // Comments panel
     "comments.page": "Página {page}",
+    "comments.slide": "Diapositiva {slide}",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "No hay comentarios en este documento",
     "comments.loading": "Cargando comentarios…",
 
@@ -391,6 +393,8 @@ export const es: Messages = {
     "comment.locked": "Bloqueado: no se puede eliminar ni mover",
     "comment.lockedContents": "Bloqueado: el texto no se puede editar",
     "comment.lockedBoth": "Bloqueado: no se puede eliminar, mover ni editar",
+    "comment.resolved": "Resuelto",
+    "comment.closed": "Cerrado",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "Nota",

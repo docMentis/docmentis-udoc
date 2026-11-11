@@ -234,13 +234,19 @@ test("the comment popup shows a lone markup annotation, save a sound and a free 
         index: 2,
         annotation: note,
         thread: {
-            page: "p",
-            index: 2,
-            annotation: note,
+            id: "",
+            group: { key: "p", order: 2, label: { page: 3 } },
+            author: "Walter",
+            created: "2026-09-26T12:00:00-07:00",
+            kind: "text",
+            status: null,
             richContents: "<body/>",
+            contents: "",
+            locked: { position: false, contents: false },
             reviews: [],
             marked: false,
             replies: [],
+            source: { kind: "annotation", page: "p", annotation: note },
         },
     });
     assert.equal(selecting([square])?.annotation, square, "a square is a comment too");
@@ -338,7 +344,7 @@ const caretOf = (annotation: Annotation): Annotation =>
 
 /** The ids of `threads`, each with its replies', as nested arrays. */
 const shape = (threads: readonly Comment[]): unknown[] =>
-    threads.map((c) => (c.replies.length ? [c.annotation.id, shape(c.replies)] : c.annotation.id));
+    threads.map((c) => (c.replies.length ? [c.id, shape(c.replies)] : c.id));
 
 test("a page's comments thread as Acrobat lists them: replies under what they answer, groups and states on their comment", () => {
     // Shaped on the ISO 32000-2 errata file Acrobat wrote: a caret with a

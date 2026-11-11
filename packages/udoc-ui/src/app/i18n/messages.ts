@@ -683,6 +683,10 @@ export interface Messages {
     // Comments panel
     /** Page {page} */
     "comments.page": string;
+    /** Slide {slide} */
+    "comments.slide": string;
+    /** {sheet}!{cell} — a sheet's cell, as Excel names it */
+    "comments.cell": string;
     /** No comments in this document */
     "comments.empty": string;
     /** Loading comments… */
@@ -721,6 +725,10 @@ export interface Messages {
     "comment.lockedContents": string;
     /** Locked: can't be deleted, moved or edited */
     "comment.lockedBoth": string;
+    /** Resolved — an Office comment's status */
+    "comment.resolved": string;
+    /** Closed — an Office comment's status */
+    "comment.closed": string;
 
     // An annotation's kind, as a comment names it
     /** Note */

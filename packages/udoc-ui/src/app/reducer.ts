@@ -109,6 +109,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 hasLayers: false,
                 comments: new Map(),
                 allCommentsRead: false,
+                officeComments: null,
+                openOfficeComment: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -252,6 +254,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 openedRevisionView: null,
                 comments: new Map(),
                 allCommentsRead: false,
+                officeComments: null,
+                openOfficeComment: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -784,6 +788,12 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_COMMENTS":
             return { ...state, comments: action.comments, allCommentsRead: action.everyPage };
+
+        case "SET_OFFICE_COMMENTS":
+            return { ...state, officeComments: action.comments };
+
+        case "OPEN_OFFICE_COMMENT":
+            return { ...state, openOfficeComment: action.id };
 
         case "SET_SEARCH":
             return {

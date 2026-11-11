@@ -372,6 +372,8 @@ export const ru: Messages = {
 
     // Comments panel
     "comments.page": "Страница {page}",
+    "comments.slide": "Слайд {slide}",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "В этом документе нет комментариев",
     "comments.loading": "Загрузка комментариев…",
 
@@ -392,6 +394,8 @@ export const ru: Messages = {
     "comment.locked": "Заблокировано: нельзя удалить или переместить",
     "comment.lockedContents": "Заблокировано: текст нельзя изменить",
     "comment.lockedBoth": "Заблокировано: нельзя удалить, переместить или изменить",
+    "comment.resolved": "Решено",
+    "comment.closed": "Закрыто",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "Записка",

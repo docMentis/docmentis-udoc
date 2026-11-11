@@ -12,7 +12,7 @@ import type {
     UDocSearchScope,
     UDocType,
 } from "@docmentis/udoc-wasm";
-import type { PageComments, SelectedAnnotations, SlideSectionRun } from "../worker/protocol.js";
+import type { OfficeComment, PageComments, SelectedAnnotations, SlideSectionRun } from "../worker/protocol.js";
 import type { AnnotationStyle } from "./annotations.js";
 import type { Peer, Scrollbars, SelectionCapabilities, Size } from "../geometry.js";
 import type {
@@ -280,6 +280,11 @@ export type Action =
     | { type: "SET_SELECTED_ANNOTATIONS"; selected: SelectedAnnotations | null }
     // The comments read, by page key — every page's when `everyPage`
     | { type: "SET_COMMENTS"; comments: ReadonlyMap<string, PageComments>; everyPage: boolean }
+    // A Word, Excel or PowerPoint document's comments, read
+    | { type: "SET_OFFICE_COMMENTS"; comments: readonly OfficeComment[] }
+    // Open an Office comment thread — its marker's, or the panel's choice — or
+    // none
+    | { type: "OPEN_OFFICE_COMMENT"; id: string | null }
     // A new search: its query and how it matches. Drops the matches found
     // before; the shell runs it.
     | {

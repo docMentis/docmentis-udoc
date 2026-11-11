@@ -372,6 +372,8 @@ export const ja: Messages = {
 
     // Comments panel
     "comments.page": "{page}ページ",
+    "comments.slide": "スライド {slide}",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "この文書にコメントはありません",
     "comments.loading": "コメントを読み込み中…",
 
@@ -389,6 +391,8 @@ export const ja: Messages = {
     "comment.locked": "ロック済み: 削除や移動はできません",
     "comment.lockedContents": "ロック済み: テキストは編集できません",
     "comment.lockedBoth": "ロック済み: 削除、移動、編集はできません",
+    "comment.resolved": "解決済み",
+    "comment.closed": "終了",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "ノート注釈",

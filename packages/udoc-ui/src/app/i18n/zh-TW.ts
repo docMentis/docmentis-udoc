@@ -370,6 +370,8 @@ export const zhTW: Messages = {
 
     // Comments panel
     "comments.page": "第 {page} 頁",
+    "comments.slide": "投影片 {slide}",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "此文件沒有註解",
     "comments.loading": "正在載入註解…",
 
@@ -387,6 +389,8 @@ export const zhTW: Messages = {
     "comment.locked": "已鎖定：無法刪除或移動",
     "comment.lockedContents": "已鎖定：無法編輯文字",
     "comment.lockedBoth": "已鎖定：無法刪除、移動或編輯",
+    "comment.resolved": "已解決",
+    "comment.closed": "已關閉",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "附註",

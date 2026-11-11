@@ -1,6 +1,7 @@
 // The right panel's Comments tab: every comment in the document, as Acrobat
 // lists them — grouped by page, each a thread, in the thread view the comment
-// popup shows one in.
+// popup shows one in. A Word, Excel or PowerPoint document's are listed the
+// same way, grouped by page, by cell or by slide.
 //
 // A thread shows its comment and a count of its replies; the thread of the
 // annotation selected is open, its replies nested under it, and any entry of
@@ -11,10 +12,10 @@
 
 import type { Store } from "../../framework/index.js";
 import { subscribeSelector } from "../../framework/index.js";
-import type { PageComments } from "../../worker/protocol.js";
+import type { CommentGroup, OfficeComment, PageComments } from "../../worker/protocol.js";
 import type { Action } from "../actions.js";
 import type { Comment } from "../annotations.js";
-import { commentThreads, threadHolding } from "../annotations.js";
+import { commentThreads, officeThreads, threadHolding } from "../annotations.js";
 import { ICON_CHEVRON_DOWN } from "../icons.js";
 import type { UIState } from "../state.js";
 import { createCommentThread } from "./CommentThread.js";
@@ -28,6 +29,10 @@ export interface CommentsPanelCallbacks extends CommentThreadCallbacks {
 
 interface CommentsPanelSlice {
     comments: ReadonlyMap<string, PageComments>;
+    /** A Word, Excel or PowerPoint document's comments, once read. */
+    office: readonly OfficeComment[] | null;
+    /** The Office thread open, by its first comment's id. */
+    openOffice: string | null;
     allRead: boolean;
     /** The selection's page and annotation ids, or null for none. */
     selected: { page: string; ids: readonly string[] } | null;
@@ -39,7 +44,9 @@ function selectSlice(state: UIState): CommentsPanelSlice {
     const selected = state.selectedAnnotations;
     return {
         comments: state.comments,
-        allRead: state.allCommentsRead,
+        office: state.officeComments,
+        openOffice: state.openOfficeComment,
+        allRead: state.allCommentsRead || state.officeComments !== null,
         selected: selected && {
             page: selected.page,
             ids: selected.annotations.flatMap((a) => (a.id === undefined ? [] : [a.id])),
@@ -51,6 +58,8 @@ function selectSlice(state: UIState): CommentsPanelSlice {
 function sliceEqual(a: CommentsPanelSlice, b: CommentsPanelSlice): boolean {
     return (
         a.comments === b.comments &&
+        a.office === b.office &&
+        a.openOffice === b.openOffice &&
         a.allRead === b.allRead &&
         a.annotating === b.annotating &&
         a.selected?.page === b.selected?.page &&
@@ -95,7 +104,7 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
     let unsubscribe: (() => void) | null = null;
 
     function cardFor(thread: Comment): Card {
-        const key = thread.annotation.id ?? "";
+        const key = thread.id;
         const existing = cards.get(key);
         if (existing) {
             existing.thread = thread;
@@ -143,33 +152,36 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         return group;
     }
 
+    /** What a group's header names it by. */
+    function labelOf(group: CommentGroup): string {
+        const { label } = group;
+        if ("page" in label) return i18n.t("comments.page", { page: label.page });
+        if ("slide" in label) return i18n.t("comments.slide", { slide: label.slide });
+        return i18n.t("comments.cell", { sheet: label.sheet, cell: label.cell });
+    }
+
     function render(slice: CommentsPanelSlice): void {
         last = slice;
-        const pages = [...slice.comments.values()].sort((a, b) => a.index - b.index);
         const shownGroups: HTMLElement[] = [];
         const listed = new Set<string>();
+        const keys = new Set<string>();
         let open: Card | null = null;
-        for (const page of pages) {
-            const threads = commentThreads(page);
-            if (threads.length === 0) continue;
-            const selected = new Set(
-                slice.selected?.page === page.page
-                    ? slice.selected.ids.map((id) => threadHolding(threads, page, id))
-                    : [],
-            );
-            const group = groupFor(page.page);
-            const folded = collapsed.has(page.page);
+        for (const { group: listing, threads, selected } of listedGroups(slice)) {
+            keys.add(listing.key);
+            const group = groupFor(listing.key);
+            const folded = collapsed.has(listing.key);
             group.el.classList.toggle("udoc-comments-panel__page--collapsed", folded);
             group.header.setAttribute("aria-expanded", String(!folded));
-            group.label.textContent = i18n.t("comments.page", { page: page.index + 1 });
+            group.label.textContent = labelOf(listing);
             group.count.textContent = String(threads.length);
             const children: HTMLElement[] = [group.header];
             for (const thread of threads) {
                 const card = cardFor(thread);
-                listed.add(thread.annotation.id ?? "");
+                listed.add(thread.id);
                 const isOpen = selected.has(thread);
                 card.el.classList.toggle("udoc-comments-panel__card--selected", isOpen);
-                card.view.show(thread, isOpen, slice.annotating);
+                // An Office comment only reads until its edits are built.
+                card.view.show(thread, isOpen, slice.annotating && thread.source.kind === "annotation");
                 if (isOpen) open = card;
                 if (!folded) children.push(card.el);
             }
@@ -177,12 +189,12 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
             shownGroups.push(group.el);
         }
         for (const key of cards.keys()) if (!listed.has(key)) cards.delete(key);
-        for (const key of groups.keys()) if (!slice.comments.has(key)) groups.delete(key);
+        for (const key of groups.keys()) if (!keys.has(key)) groups.delete(key);
 
         empty.textContent = i18n.t(slice.allRead ? "comments.empty" : "comments.loading");
         setChildren(el, shownGroups.length > 0 ? shownGroups : [empty]);
         // The thread selected on the page is brought into view here, once.
-        const openKey = open?.thread.annotation.id ?? null;
+        const openKey = open?.thread.id ?? null;
         if (open && openKey !== revealed) open.el.scrollIntoView({ block: "nearest" });
         revealed = openKey;
     }
@@ -209,4 +221,34 @@ export type CommentsPanelComponent = ReturnType<typeof createCommentsPanel>;
 function setChildren(parent: HTMLElement, children: readonly HTMLElement[]): void {
     const same = children.length === parent.children.length && children.every((c, i) => parent.children[i] === c);
     if (!same) parent.replaceChildren(...children);
+}
+
+/** The groups the panel lists, in the order the document reads, each with its
+ *  threads and those the selection opens: a PDF's pages, read page by page,
+ *  and a Word, Excel or PowerPoint document's pages, cells or slides. */
+function listedGroups(
+    slice: CommentsPanelSlice,
+): Array<{ group: CommentGroup; threads: Comment[]; selected: Set<Comment | null> }> {
+    const listed: Array<{ group: CommentGroup; threads: Comment[]; selected: Set<Comment | null> }> = [];
+    for (const page of slice.comments.values()) {
+        const threads = commentThreads(page);
+        if (threads.length === 0) continue;
+        const selected = new Set(
+            slice.selected?.page === page.page ? slice.selected.ids.map((id) => threadHolding(threads, page, id)) : [],
+        );
+        listed.push({ group: threads[0]!.group, threads, selected });
+    }
+    const office = new Map<string, { group: CommentGroup; threads: Comment[]; selected: Set<Comment | null> }>();
+    for (const thread of slice.office ? officeThreads(slice.office) : []) {
+        const at = office.get(thread.group.key);
+        const selected = new Set<Comment | null>(thread.id === slice.openOffice ? [thread] : []);
+        if (at) {
+            at.threads.push(thread);
+            if (thread.id === slice.openOffice) at.selected.add(thread);
+        } else {
+            office.set(thread.group.key, { group: thread.group, threads: [thread], selected });
+        }
+    }
+    listed.push(...office.values());
+    return listed.sort((a, b) => a.group.order - b.group.order);
 }

@@ -370,6 +370,8 @@ export const zhCN: Messages = {
 
     // Comments panel
     "comments.page": "第 {page} 页",
+    "comments.slide": "第 {slide} 张幻灯片",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "此文档暂无批注",
     "comments.loading": "正在加载批注…",
 
@@ -387,6 +389,8 @@ export const zhCN: Messages = {
     "comment.locked": "已锁定：无法删除或移动",
     "comment.lockedContents": "已锁定：无法编辑文本",
     "comment.lockedBoth": "已锁定：无法删除、移动或编辑",
+    "comment.resolved": "已解决",
+    "comment.closed": "已关闭",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "附注",

@@ -1,7 +1,7 @@
 import { EMPTY_SELECTION_CAPABILITIES } from "../geometry.js";
 import type { Peer, Scrollbars, SelectionCapabilities, Size } from "../geometry.js";
 import { defaultDpiForDocType } from "../worker/protocol.js";
-import type { PageComments, SelectedAnnotations, SlideSectionRun } from "../worker/protocol.js";
+import type { OfficeComment, PageComments, SelectedAnnotations, SlideSectionRun } from "../worker/protocol.js";
 import type { AnnotationStyles } from "./annotations.js";
 import type { MessageKey } from "./i18n/index.js";
 import type {
@@ -735,6 +735,14 @@ export interface UIState {
     comments: ReadonlyMap<string, PageComments>;
     /** Whether {@link comments} holds every page's — the panel's read landed. */
     allCommentsRead: boolean;
+    /**
+     * A Word, Excel or PowerPoint document's comments, read while the comments
+     * panel is open and again whenever the document changes; null until read.
+     */
+    officeComments: readonly OfficeComment[] | null;
+    /** The Office comment thread open in the comments panel and on its marker,
+     *  by its first comment's id; null for none. */
+    openOfficeComment: string | null;
 
     // --- Search ------------------------------------------------------------
     /** The search's query; empty for none. Kept across documents, so a search
@@ -1116,6 +1124,8 @@ export const initialState: UIState = {
     selectedAnnotations: null,
     comments: new Map(),
     allCommentsRead: false,
+    officeComments: null,
+    openOfficeComment: null,
 
     searchQuery: "",
     searchCaseSensitive: false,

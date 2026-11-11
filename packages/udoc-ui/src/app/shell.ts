@@ -24,6 +24,7 @@ import type {
     Destination,
     CellEntryEdit,
     CellEntryMode,
+    CommentAnchor,
     GridCellSelectionMove,
     ScrollAlignment,
     RevisionView,
@@ -72,6 +73,7 @@ import { createToolbar } from "./components/Toolbar.js";
 import { createViewControls } from "./components/ViewControls.js";
 import type { OverlayOptions, OverlaySource } from "./components/OverlayManager.js";
 import { createAnnotationBar } from "./components/AnnotationBar.js";
+import { commentMarkers } from "./components/CommentMarkers.js";
 import { commentPopup } from "./components/CommentPopup.js";
 import { formFieldInput } from "./components/FormFieldInput.js";
 import { mediaPlayers } from "./components/MediaPlayer.js";
@@ -135,6 +137,7 @@ import {
     editedInBox,
     formatTarget,
     markupFor,
+    OFFICE_COMMENT_DOC_TYPES,
     replyTo,
     restyle,
     restyled,
@@ -1142,6 +1145,51 @@ export function mountUIShell(
         file: mediaFile,
     });
     canvas.setOverlay("udoc:media", mediaSource, { aboveSelection: true });
+    // A marker over each Word, Excel or PowerPoint comment thread on screen,
+    // from the anchors read for each page shown; a press opens the thread in
+    // the comments panel. Each change drops what was read, and the frame it
+    // paints asks again.
+    let commentAnchorsRead = new Map<string, readonly CommentAnchor[]>();
+    let commentAnchorsGeneration = 0;
+    const commentMarkersShow = (): boolean => {
+        const state = store.getState();
+        return state.status === "ready" && OFFICE_COMMENT_DOC_TYPES.has(state.docType ?? "");
+    };
+    const commentMarkersSource = commentMarkers({
+        active: commentMarkersShow,
+        cells: () => store.getState().docType === "spreadsheet",
+        anchors: (page) => commentAnchorsRead.get(`${store.getState().currentPlane}:${page}`) ?? [],
+        pageToViewport: (page) => canvas.pageToViewport(page),
+        open: () => store.getState().openOfficeComment,
+        onOpen: (id) => {
+            store.dispatch({ type: "OPEN_OFFICE_COMMENT", id });
+            store.dispatch({ type: "OPEN_PANEL", panel: "comments" });
+        },
+        label: i18n.t("rightPanel.comments"),
+    });
+    canvas.setOverlay("udoc:comment-markers", commentMarkersSource);
+    const unsubCommentMarkers = client.onPageViews((frame) => {
+        if (!commentMarkersShow()) return;
+        const plane = store.getState().currentPlane;
+        for (const { index } of frame.views) {
+            const key = `${plane}:${index}`;
+            if (commentAnchorsRead.has(key)) continue;
+            commentAnchorsRead.set(key, []);
+            const generation = commentAnchorsGeneration;
+            void client.commentAnchors(plane, index).then((anchors) => {
+                if (generation !== commentAnchorsGeneration) return;
+                commentAnchorsRead.set(key, anchors);
+                canvas.setOverlay("udoc:comment-markers", commentMarkersSource);
+            });
+        }
+    });
+    const forgetCommentAnchors = (): void => {
+        commentAnchorsGeneration += 1;
+        commentAnchorsRead = new Map();
+    };
+    const unsubDocumentChangedMarkers = client.onDocumentChanged(forgetCommentAnchors);
+    // A document opened in place of another reads its own.
+    const unsubDocumentOpenedMarkers = subscribeSelector(store, (s) => s.docGeneration, forgetCommentAnchors);
     // Each frame asks for the media of the pages it shows that weren't asked
     // for since the document last changed. A change asks nothing itself: the
     // frame it paints does, once the layout has it.
@@ -2706,12 +2754,12 @@ export function mountUIShell(
     // the comments panel's — its `/RC` and `/Contents` at once; the engine
     // generates its appearance afresh where that shows the text, a free text's.
     function saveComment(comment: Comment, richContents: string): Promise<void> {
-        const id = comment.annotation.id;
+        if (comment.source.kind !== "annotation") return Promise.resolve();
+        const { page, annotation } = comment.source;
+        const id = annotation.id;
         if (id === undefined) return Promise.resolve();
         const modified = dateTime(new Date());
-        return commit(() =>
-            client.execute(Command.setAnnotationRichContents(comment.page, id, richContents, modified)),
-        );
+        return commit(() => client.execute(Command.setAnnotationRichContents(page, id, richContents, modified)));
     }
 
     // Answer `comment` with a reply holding `richContents`, by this user. The
@@ -2719,10 +2767,12 @@ export function mountUIShell(
     // selected again, sent straight behind the insert so the selection reads
     // its report prompts already see it — the thread stays open where it was.
     function replyToComment(comment: Comment, richContents: string): Promise<void> {
-        const reply = replyTo(comment.annotation, richContents, userName, new Date());
+        if (comment.source.kind !== "annotation") return Promise.resolve();
+        const { page, annotation } = comment.source;
+        const reply = replyTo(annotation, richContents, userName, new Date());
         if (!reply) return Promise.resolve();
         const selected = store.getState().selectedAnnotations;
-        const done = commit(() => client.execute(Command.insertAnnotations(comment.page, [reply])));
+        const done = commit(() => client.execute(Command.insertAnnotations(page, [reply])));
         const ids = selected?.annotations.flatMap((a) => (a.id === undefined ? [] : [a.id])) ?? [];
         if (selected && ids.length > 0) setSelection({ portable: { annotations: { page: selected.page, ids } } });
         else clearSelection();
@@ -2731,9 +2781,11 @@ export function mountUIShell(
 
     // Delete `comment`, which no reply answers — the thread offers only those.
     function deleteComment(comment: Comment): Promise<void> {
-        const id = comment.annotation.id;
+        if (comment.source.kind !== "annotation") return Promise.resolve();
+        const { page, annotation } = comment.source;
+        const id = annotation.id;
         if (id === undefined) return Promise.resolve();
-        return commit(() => client.execute(Command.deleteAnnotations(comment.page, [id])));
+        return commit(() => client.execute(Command.deleteAnnotations(page, [id])));
     }
 
     // Fill in the form field whose widget is `widget` on page `page`, a press
@@ -2886,10 +2938,36 @@ export function mountUIShell(
     // Go to a comment chosen in the comments panel — its rect at the viewport's
     // top-left, as a PDF destination lands — and select it.
     function chooseComment(comment: Comment): void {
-        const id = comment.annotation.id;
-        if (id === undefined || store.getState().status !== "ready") return;
-        client.goToRect(comment.index, comment.annotation.rect, store.getState().navigationScrollAlignment);
-        setSelection({ portable: { annotations: { page: comment.page, ids: [id] } } });
+        if (store.getState().status !== "ready") return;
+        if (comment.source.kind === "office") {
+            store.dispatch({ type: "OPEN_OFFICE_COMMENT", id: comment.id });
+            void goToOfficeComment(comment.id, comment.source.at);
+            return;
+        }
+        const { page, annotation } = comment.source;
+        const id = annotation.id;
+        if (id === undefined) return;
+        client.goToRect(comment.group.order, annotation.rect, store.getState().navigationScrollAlignment);
+        setSelection({ portable: { annotations: { page, ids: [id] } } });
+    }
+
+    // Go to a Word, Excel or PowerPoint comment's thread `id`, standing on
+    // `at`: the view lands on the first rect it stands in there — on a sheet
+    // not shown, once the sheet is.
+    async function goToOfficeComment(id: string, at: { plane: number; page: number }): Promise<void> {
+        const anchors = await client.commentAnchors(at.plane, at.page);
+        const rect = anchors.find((anchor) => anchor.comment === id)?.rects[0];
+        const state = store.getState();
+        if (!rect || state.status !== "ready") return;
+        const alignment = state.navigationScrollAlignment;
+        if (at.plane === state.currentPlane) {
+            client.goToRect(at.page, rect, alignment);
+            return;
+        }
+        // The sheet switch posts its request as the store notifies, in the
+        // microtask the dispatch queues; the landing queues behind it.
+        store.dispatch({ type: "SET_CURRENT_PLANE", plane: at.plane });
+        queueMicrotask(() => client.goToRect(at.page, rect, alignment));
     }
 
     // A search runs batch by batch: each request asks the engine for the batch
@@ -2899,6 +2977,26 @@ export function mountUIShell(
     // search or a clear retires a run, and an edit, an open or fonts landing —
     // each can move text — run the search in force again.
     let searchGeneration = 0;
+
+    // Take up `layout`, the layout a read that lays pages out — a search, a
+    // docx comment's page — answers with, where it differs from the store's.
+    function takeLayout(layout: DocumentLayout): void {
+        const { pageCount, firstUncomposedPage, scrollSize } = store.getState();
+        if (
+            (layout.pageCount ?? layout.firstUncomposedPage) !== pageCount ||
+            layout.firstUncomposedPage !== firstUncomposedPage ||
+            layout.scrollSize.width !== scrollSize.width ||
+            layout.scrollSize.height !== scrollSize.height
+        ) {
+            store.dispatch({
+                type: "DOC_RELAYOUT",
+                pageCount: layout.pageCount ?? null,
+                firstUncomposedPage: layout.firstUncomposedPage,
+                scrollSize: layout.scrollSize,
+            });
+        }
+    }
+
     async function runSearch(): Promise<readonly SearchMatch[]> {
         const run = ++searchGeneration;
         const state = store.getState();
@@ -2914,20 +3012,7 @@ export function mountUIShell(
                 const { batch, layout } = await client.search(query, options, state.searchScope, from);
                 if (run !== searchGeneration) return [];
                 // A search lays out the pages its matches are drawn on.
-                const { pageCount, firstUncomposedPage, scrollSize } = store.getState();
-                if (
-                    (layout.pageCount ?? layout.firstUncomposedPage) !== pageCount ||
-                    layout.firstUncomposedPage !== firstUncomposedPage ||
-                    layout.scrollSize.width !== scrollSize.width ||
-                    layout.scrollSize.height !== scrollSize.height
-                ) {
-                    store.dispatch({
-                        type: "DOC_RELAYOUT",
-                        pageCount: layout.pageCount ?? null,
-                        firstUncomposedPage: layout.firstUncomposedPage,
-                        scrollSize: layout.scrollSize,
-                    });
-                }
+                takeLayout(layout);
                 store.dispatch({ type: "SEARCH_BATCH", matches: batch.matches, first: from === null });
                 if (batch.next === null) break;
                 from = batch.next;
@@ -3006,7 +3091,8 @@ export function mountUIShell(
     // for its popup, and every page while the comments panel is open — read
     // again whenever the document changes, and otherwise only when what is
     // shown needs a page not read yet. The latest read wins, and changes in one
-    // frame are read once.
+    // frame are read once. A Word, Excel or PowerPoint document's are read
+    // whole while the panel is open, its layout taken up after, as a search's.
     let commentsGeneration = 0;
     let commentsPending: number | null = null;
     function refreshComments(changed: boolean): void {
@@ -3015,15 +3101,35 @@ export function mountUIShell(
             page: state.selectedAnnotations?.page,
         });
         const state = store.getState();
-        if (state.status !== "ready" || state.docType !== "portable") return;
+        if (state.status !== "ready") return;
+        const office = OFFICE_COMMENT_DOC_TYPES.has(state.docType ?? "");
+        if (state.docType !== "portable" && !office) return;
         const { everyPage, page } = shown(state);
-        const missing = everyPage ? !state.allCommentsRead : page !== undefined && !state.comments.has(page);
+        const missing = office
+            ? everyPage && state.officeComments === null
+            : everyPage
+              ? !state.allCommentsRead
+              : page !== undefined && !state.comments.has(page);
         if (!changed && !missing) return;
+        if (office && !everyPage) return;
         if (commentsPending !== null) cancelAnimationFrame(commentsPending);
         commentsPending = requestAnimationFrame(() => {
             commentsPending = null;
             const generation = ++commentsGeneration;
             const reading = shown(store.getState());
+            if (office) {
+                void client
+                    .officeComments()
+                    .then(({ comments, layout }) => {
+                        if (generation !== commentsGeneration) return;
+                        takeLayout(layout);
+                        store.dispatch({ type: "SET_OFFICE_COMMENTS", comments });
+                    })
+                    .catch(() => {
+                        // Worker gone or document closed — nothing to show.
+                    });
+                return;
+            }
             void (async () => {
                 const pages = reading.everyPage ? await pageIds() : reading.page !== undefined ? [reading.page] : [];
                 const read = pages.length > 0 ? await client.portable.pageComments(pages) : [];
@@ -3940,6 +4046,9 @@ export function mountUIShell(
         unsubDocumentChanged();
         unsubPageMedia();
         unsubDocumentChangedMedia();
+        unsubCommentMarkers();
+        unsubDocumentChangedMarkers();
+        unsubDocumentOpenedMarkers();
         unsubMediaMode();
         unsubCommentsShown();
         if (commentsPending !== null) cancelAnimationFrame(commentsPending);

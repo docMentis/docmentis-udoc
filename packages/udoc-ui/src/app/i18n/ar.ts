@@ -370,6 +370,8 @@ export const ar: Messages = {
 
     // Comments panel
     "comments.page": "صفحة {page}",
+    "comments.slide": "شريحة {slide}",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "لا توجد تعليقات في هذا المستند",
     "comments.loading": "جارٍ تحميل التعليقات…",
 
@@ -392,6 +394,8 @@ export const ar: Messages = {
     "comment.locked": "مؤمّن: لا يمكن حذفه أو نقله",
     "comment.lockedContents": "مؤمّن: لا يمكن تحرير النص",
     "comment.lockedBoth": "مؤمّن: لا يمكن حذفه أو نقله أو تحريره",
+    "comment.resolved": "تم الحل",
+    "comment.closed": "مغلق",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "ملاحظة",

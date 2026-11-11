@@ -372,6 +372,8 @@ export const ko: Messages = {
 
     // Comments panel
     "comments.page": "{page}페이지",
+    "comments.slide": "슬라이드 {slide}",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "이 문서에 메모가 없습니다",
     "comments.loading": "메모를 불러오는 중…",
 
@@ -389,6 +391,8 @@ export const ko: Messages = {
     "comment.locked": "잠김: 삭제하거나 이동할 수 없음",
     "comment.lockedContents": "잠김: 텍스트를 편집할 수 없음",
     "comment.lockedBoth": "잠김: 삭제, 이동 또는 편집할 수 없음",
+    "comment.resolved": "해결됨",
+    "comment.closed": "닫힘",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "노트",

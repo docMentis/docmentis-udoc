@@ -372,6 +372,8 @@ export const de: Messages = {
 
     // Comments panel
     "comments.page": "Seite {page}",
+    "comments.slide": "Folie {slide}",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "Keine Kommentare in diesem Dokument",
     "comments.loading": "Kommentare werden geladen…",
 
@@ -390,6 +392,8 @@ export const de: Messages = {
     "comment.locked": "Gesperrt: kann nicht gelöscht oder verschoben werden",
     "comment.lockedContents": "Gesperrt: Text kann nicht bearbeitet werden",
     "comment.lockedBoth": "Gesperrt: kann nicht gelöscht, verschoben oder bearbeitet werden",
+    "comment.resolved": "Gelöst",
+    "comment.closed": "Geschlossen",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "Notiz",

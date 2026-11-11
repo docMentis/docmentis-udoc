@@ -372,6 +372,8 @@ export const ptBR: Messages = {
 
     // Comments panel
     "comments.page": "Página {page}",
+    "comments.slide": "Slide {slide}",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "Nenhum comentário neste documento",
     "comments.loading": "Carregando comentários…",
 
@@ -391,6 +393,8 @@ export const ptBR: Messages = {
     "comment.locked": "Bloqueado: não pode ser excluído nem movido",
     "comment.lockedContents": "Bloqueado: o texto não pode ser editado",
     "comment.lockedBoth": "Bloqueado: não pode ser excluído, movido nem editado",
+    "comment.resolved": "Resolvido",
+    "comment.closed": "Fechado",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "Nota",

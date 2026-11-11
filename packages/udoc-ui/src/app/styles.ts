@@ -3207,6 +3207,15 @@ export const uiStyles = css`
         font-size: 11px;
         color: var(--udoc-color-on-surface-variant);
     }
+    /* An Office comment's settled status, after its date: Resolved, Closed. */
+    .udoc-ui-root .udoc-comment__status {
+        flex: none;
+        padding: 0 6px;
+        border-radius: 8px;
+        font-size: 11px;
+        background: var(--udoc-color-surface-container-high);
+        color: var(--udoc-color-on-surface-variant);
+    }
     /* Rich text: its spaces kept as typed, as rich text keeps them; while it is
    written, four lines tall until it is dragged taller. */
     .udoc-ui-root .udoc-comment__text {
@@ -3331,6 +3340,47 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-comments-panel__card--selected:hover {
         cursor: default;
         border-color: var(--udoc-color-primary);
+    }
+
+    /* A Word, Excel or PowerPoint comment thread's marker (udoc:comment-markers):
+   at the top-right of the first rect it stands in, a constant screen size at
+   every zoom; the open thread's filled. */
+    .udoc-ui-root .udoc-comment-marker {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        padding: 3px;
+        border: 1px solid var(--udoc-color-primary);
+        border-radius: 6px;
+        background: var(--udoc-color-surface);
+        color: var(--udoc-color-primary);
+        cursor: pointer;
+        pointer-events: auto;
+    }
+    .udoc-ui-root .udoc-comment-marker svg {
+        width: 100%;
+        height: 100%;
+    }
+    .udoc-ui-root .udoc-comment-marker--open {
+        background: var(--udoc-color-primary);
+        color: var(--udoc-color-on-primary);
+    }
+    /* A cell's: a flag inside its top-right corner, the icon left out. */
+    .udoc-ui-root .udoc-comment-marker--cell {
+        transform: translate(-100%, 0);
+        width: 9px;
+        height: 9px;
+        padding: 0;
+        border: none;
+        border-radius: 0;
+        background: linear-gradient(45deg, transparent 50%, var(--udoc-color-primary) 50%);
+    }
+    .udoc-ui-root .udoc-comment-marker--cell svg {
+        display: none;
     }
 
     /* The annotation bar (udoc:annotation-bar): the selected annotation's comment,

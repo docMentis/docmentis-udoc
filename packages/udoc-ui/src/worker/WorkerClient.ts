@@ -30,6 +30,7 @@ import type {
     AcroForm,
     ActionHideTarget,
     Annotation,
+    CommentAnchor,
     CellEntryEdit,
     DelimiterGuess,
     Destination,
@@ -73,6 +74,7 @@ import type {
     PageComments,
     PageViewsReport,
     ResizeAck,
+    OfficeCommentsReply,
     SearchReply,
     SelectedAnnotations,
     SelectionEdit,
@@ -871,6 +873,26 @@ export class WorkerClient {
      */
     async updateLayout(pageLimit: number): Promise<DocumentLayout> {
         return (await this.#send({ type: "updateLayout", pageLimit })) as DocumentLayout;
+    }
+
+    /**
+     * The comments of a Word, Excel or PowerPoint document, each with its body
+     * as XHTML and, where it opens a thread, what the comments panel lists it
+     * under — none for any other document. Resolves with them and the layout
+     * after, since a docx comment's page lays the document out as far as it.
+     */
+    async officeComments(): Promise<OfficeCommentsReply> {
+        return (await this.#send({ type: "officeComments" })) as OfficeCommentsReply;
+    }
+
+    /**
+     * Where each comment thread of a Word, Excel or PowerPoint document stands
+     * on page `page` of `plane`: its rects, page-local points, under its first
+     * comment's id — none for any other document. What the comment markers are
+     * drawn from, and choosing a thread goes to.
+     */
+    async commentAnchors(plane: number, page: number): Promise<CommentAnchor[]> {
+        return (await this.#send({ type: "commentAnchors", plane, page })) as CommentAnchor[];
     }
 
     /**

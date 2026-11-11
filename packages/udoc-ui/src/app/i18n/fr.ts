@@ -372,6 +372,8 @@ export const fr: Messages = {
 
     // Comments panel
     "comments.page": "Page {page}",
+    "comments.slide": "Diapositive {slide}",
+    "comments.cell": "{sheet}!{cell}",
     "comments.empty": "Aucun commentaire dans ce document",
     "comments.loading": "Chargement des commentaires…",
 
@@ -391,6 +393,8 @@ export const fr: Messages = {
     "comment.locked": "Verrouillé : ne peut être ni supprimé ni déplacé",
     "comment.lockedContents": "Verrouillé : le texte ne peut pas être modifié",
     "comment.lockedBoth": "Verrouillé : ne peut être ni supprimé, ni déplacé, ni modifié",
+    "comment.resolved": "Résolu",
+    "comment.closed": "Fermé",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "Note",

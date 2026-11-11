@@ -20,7 +20,7 @@
 // written out as XML, which the engine narrows to rich text in turn.
 
 import type { AnnotationSubtype, Comment } from "../annotations.js";
-import { markupOf, parseDateTime, subtypeOf } from "../annotations.js";
+import { parseDateTime } from "../annotations.js";
 import {
     ICON_ATTACHMENT,
     ICON_DELETE,
@@ -102,6 +102,12 @@ const DATE_TICK_MS = 60_000;
 
 /** What an entry's lock says, by the flags set: Locked, LockedContents
  *  (Table 167). */
+/** What an Office comment's settled status reads as. */
+const STATUSES: Record<"resolved" | "closed", MessageKey> = {
+    resolved: "comment.resolved",
+    closed: "comment.closed",
+};
+
 const LOCKS: Record<"locked" | "contents" | "both", MessageKey> = {
     locked: "comment.locked",
     contents: "comment.lockedContents",
@@ -176,7 +182,7 @@ export function createCommentThread(i18n: I18n, callbacks: CommentThreadCallback
         order = [];
         const kept = new Set<string>();
         for (const [comment, depth] of walked) {
-            const key = comment.annotation.id ?? "";
+            const key = comment.id;
             kept.add(key);
             let entry = entries.get(key);
             if (!entry) {
@@ -207,7 +213,7 @@ export function createCommentThread(i18n: I18n, callbacks: CommentThreadCallback
     }
 
     function editComment(): void {
-        const key = showing?.annotation.id;
+        const key = showing?.id;
         if (key !== undefined) entries.get(key)?.startEditing();
     }
 
@@ -283,7 +289,9 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
     author.className = "udoc-comment__author";
     const date = document.createElement("span");
     date.className = "udoc-comment__date";
-    header.append(kind, author, date);
+    const status = document.createElement("span");
+    status.className = "udoc-comment__status";
+    header.append(kind, author, date, status);
     const text = document.createElement("div");
     text.className = "udoc-comment__text";
     text.setAttribute("role", "textbox");
@@ -315,7 +323,7 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
     let replying = false;
 
     const fillFrom = (comment: Comment): void => {
-        fill(text, comment.richContents, comment.annotation.contents ?? "");
+        fill(text, comment.richContents, comment.contents);
         current = { comment, richContents: comment.richContents, written: write(text), editing: false };
     };
     const showMode = (): void => {
@@ -390,29 +398,29 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
     });
 
     function show(comment: Comment, open: boolean, annotating: boolean): void {
-        const { flags } = comment.annotation;
-        locked = flags.locked || flags.lockedContents;
-        writable = annotating && !flags.lockedContents;
+        const { position, contents } = comment.locked;
+        locked = position || contents;
+        writable = annotating && !contents;
         answerable = annotating && open;
-        deletable = annotating && !flags.locked && comment.replies.length === 0;
+        deletable = annotating && !position && comment.replies.length === 0;
         // A reply the entry can no longer make is dropped; the thread lays out
         // the list once its entries are shown.
         if (replying && !answerable) {
             replying = false;
             reply.clear();
         }
-        const markup = markupOf(comment.annotation);
-        const subtype = KINDS[subtypeOf(comment.annotation.kind)];
+        const subtype = comment.kind === null ? undefined : KINDS[comment.kind];
         shown(kind, subtype !== undefined);
         kind.innerHTML = subtype?.icon ?? "";
         const kindLabel = subtype ? i18n.t(subtype.label) : "";
         if (!subtype?.icon) kind.textContent = kindLabel;
         kind.title = kindLabel;
-        author.textContent = markup?.author || markup?.subject || "";
-        showDate(date, parseDateTime(markup?.created ?? comment.annotation.modified ?? ""), i18n.locale);
-        const says = i18n.t(
-            flags.locked && flags.lockedContents ? LOCKS.both : flags.locked ? LOCKS.locked : LOCKS.contents,
-        );
+        author.textContent = comment.author;
+        showDate(date, parseDateTime(comment.created ?? ""), i18n.locale);
+        const settled = comment.status === "resolved" || comment.status === "closed";
+        shown(status, settled);
+        status.textContent = settled ? i18n.t(STATUSES[comment.status as "resolved" | "closed"]) : "";
+        const says = i18n.t(position && contents ? LOCKS.both : position ? LOCKS.locked : LOCKS.contents);
         lock.title = says;
         lock.setAttribute("aria-label", says);
         // What is being typed stays until it is saved or cancelled — or dropped,

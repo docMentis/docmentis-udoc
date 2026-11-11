@@ -21,12 +21,13 @@ import type {
     Color,
     DefaultAppearance,
     Rect,
+    CommentStatus,
     StampIcon,
     StandardFont,
     TextAnnotation,
 } from "@docmentis/udoc-wasm";
 import type { PaintDisplay, SelectionQuad } from "../geometry.js";
-import type { PageComments } from "../worker/protocol.js";
+import type { CommentGroup, OfficeComment, PageComments } from "../worker/protocol.js";
 import type { LineDash, PaintSpec } from "./components/PaintPanel.js";
 import type { AnnotationTool, UIState, MarkupTool } from "./state.js";
 import type { ShapePoint } from "./shapes.js";
@@ -604,22 +605,74 @@ export function selectedAnnotation(state: UIState): { page: string; index: numbe
     return { page: selected.page, index: selected.index, annotation };
 }
 
-/** A comment — a markup annotation (§12.5.6.2), the kinds Acrobat lists as
- *  comments — with its page, its text, what its reviewers last set on it, and
- *  the replies that answer it. */
+/** A comment as the comments panel and the popup show it — a PDF markup
+ *  annotation (§12.5.6.2), the kinds Acrobat lists as comments, or a Word,
+ *  Excel or PowerPoint comment — with what the panel lists it under, its text,
+ *  what its reviewers last set on it, and the replies that answer it. */
 export interface Comment {
-    page: string;
-    index: number;
-    annotation: Annotation;
-    /** Its rich contents: XHTML, `/RC` or its `/Contents`. */
+    /** Its annotation's id, or the Office comment's own. */
+    id: string;
+    /** What the panel lists its thread under. */
+    group: CommentGroup;
+    author: string;
+    /** When it was made, ISO 8601; null where the file doesn't say. */
+    created: string | null;
+    /** Its annotation's subtype, which its entry shows; null for an Office
+     *  comment. */
+    kind: AnnotationSubtype | null;
+    /** An Office comment's status; null for a PDF's, whose states are its
+     *  reviews. */
+    status: CommentStatus | null;
+    /** Its rich contents: XHTML — `/RC` or its `/Contents`, or an Office
+     *  comment's body. */
     richContents: string;
+    /** The plain text its field falls back to: `/Contents`. */
+    contents: string;
+    /** Whether it may not be moved or deleted, and whether its text may not be
+     *  edited. */
+    locked: { position: boolean; contents: boolean };
     /** The state each author last set on it in the Review model, but `None`. */
     reviews: CommentReview[];
     /** Whether an author last set it Marked, in the Marked model. */
     marked: boolean;
-    /** The replies that answer it (`/IRT`, `/RT /R`), oldest first, each with
-     *  its own. */
+    /** The replies that answer it (`/IRT`, `/RT /R`; an Office comment's
+     *  `replyTo`), oldest first, each with its own. */
     replies: Comment[];
+    /** What an edit of it goes to: its annotation on its page, or the Office
+     *  comment part it is in. */
+    source: CommentSource;
+}
+
+/** What a comment is in the document. */
+export type CommentSource =
+    | { kind: "annotation"; page: string; annotation: Annotation }
+    | { kind: "office"; part: string; at: { plane: number; page: number } };
+
+/** The annotation a PDF comment is; null for a Word, Excel or PowerPoint one. */
+export function annotationOf(comment: Comment): Annotation | null {
+    return comment.source.kind === "annotation" ? comment.source.annotation : null;
+}
+
+/** The comment the markup annotation `annotation` on page `page` (its key and
+ *  index) is, its rich contents `richContents`, before its replies and states
+ *  are read. */
+function pdfComment(page: string, index: number, annotation: Annotation, richContents: string): Comment {
+    const markup = markupOf(annotation);
+    return {
+        id: annotation.id ?? "",
+        group: { key: page, order: index, label: { page: index + 1 } },
+        author: markup?.author || markup?.subject || "",
+        created: markup?.created ?? annotation.modified ?? null,
+        kind: subtypeOf(annotation.kind),
+        status: null,
+        richContents,
+        contents: annotation.contents ?? "",
+        locked: { position: annotation.flags.locked, contents: annotation.flags.lockedContents },
+        reviews: [],
+        marked: false,
+        replies: [],
+        source: { kind: "annotation", page, annotation },
+    };
 }
 
 /** A state an author set on a comment (§12.5.6.3). */
@@ -658,15 +711,7 @@ export function commentThreads(page: PageComments): Comment[] {
     const comments = new Map<string, Comment>();
     page.annotations.forEach((annotation, i) => {
         if (annotation.id === undefined || roleOf(annotation) !== "comment") return;
-        comments.set(annotation.id, {
-            page: page.page,
-            index: page.index,
-            annotation,
-            richContents: page.richContents[i] ?? "",
-            reviews: [],
-            marked: false,
-            replies: [],
-        });
+        comments.set(annotation.id, pdfComment(page.page, page.index, annotation, page.richContents[i] ?? ""));
     });
     // The comment `id` stands for — itself, its group's primary, the comment
     // a state note is set on — and how many state notes lie on the way; null
@@ -687,7 +732,7 @@ export function commentThreads(page: PageComments): Comment[] {
 
     const threads: Comment[] = [];
     for (const comment of comments.values()) {
-        const parent = owner(markupOf(comment.annotation)!.inReplyTo);
+        const parent = owner(markupOf(annotationOf(comment)!)!.inReplyTo);
         if (parent && !answers(parent.comment, comment, owner)) parent.comment.replies.push(comment);
         else threads.push(comment);
     }
@@ -725,7 +770,8 @@ function answers(parent: Comment, reply: Comment, owner: (id: string | null) => 
     for (let at: Comment | null = parent; at !== null && !seen.has(at); ) {
         if (at === reply) return true;
         seen.add(at);
-        const irt: string | null = markupOf(at.annotation)?.inReplyTo ?? null;
+        const annotation = annotationOf(at);
+        const irt: string | null = (annotation && markupOf(annotation)?.inReplyTo) ?? null;
         at = irt === null ? null : (owner(irt)?.comment ?? null);
     }
     return false;
@@ -750,15 +796,89 @@ function textEntries(annotation: Annotation): TextAnnotation | null {
 
 /** Oldest first, by `/CreationDate`; one without keeps its place. */
 function byCreation(a: Comment, b: Comment): number {
-    const made = (c: Comment) => parseDateTime(markupOf(c.annotation)?.created ?? "")?.getTime() ?? NaN;
+    const made = (c: Comment) => {
+        const annotation = annotationOf(c);
+        return parseDateTime((annotation && markupOf(annotation)?.created) ?? "")?.getTime() ?? NaN;
+    };
     const [ta, tb] = [made(a), made(b)];
     return Number.isNaN(ta) || Number.isNaN(tb) ? 0 : ta - tb;
+}
+
+/** The doc types whose comments are Word's, Excel's and PowerPoint's — read
+ *  whole for the comments panel, rather than a PDF's page by page. */
+export const OFFICE_COMMENT_DOC_TYPES: ReadonlySet<string> = new Set(["wordprocessing", "spreadsheet", "presentation"]);
+
+/** The threads read from a Word, Excel or PowerPoint document's comments, kept
+ *  while the read is. */
+const officeThreadsRead = new WeakMap<readonly OfficeComment[], Comment[]>();
+
+/**
+ * The comment threads of a Word, Excel or PowerPoint document's `comments`, in
+ * the order the read lists them: each comment that opens one — its `replyTo`
+ * none, naming a comment the list doesn't hold, or leading round — with every
+ * comment that leads back to it as its replies, oldest first, under what the
+ * read lists the thread by. A thread it lists under nothing — a docx comment
+ * whose page wasn't found — is left out.
+ */
+export function officeThreads(comments: readonly OfficeComment[]): Comment[] {
+    const cached = officeThreadsRead.get(comments);
+    if (cached) return cached;
+    const byId = new Map(comments.map((read) => [read.comment.id, read]));
+    // The comment `read`'s thread opens with: where its `replyTo` leads.
+    const rootOf = (read: OfficeComment): OfficeComment => {
+        let at = read;
+        for (let steps = 0; steps < comments.length; steps++) {
+            const answered = at.comment.replyTo;
+            const parent = answered === undefined ? undefined : byId.get(answered);
+            if (!parent) return at;
+            if (parent === read) return read;
+            at = parent;
+        }
+        return read;
+    };
+    const entry = (read: OfficeComment, group: CommentGroup, at: { plane: number; page: number }): Comment => ({
+        id: read.comment.id,
+        group,
+        author: read.comment.author.name,
+        created: read.comment.created ?? null,
+        kind: null,
+        status: read.comment.status ?? "active",
+        richContents: read.richBody,
+        contents: "",
+        locked: { position: false, contents: false },
+        reviews: [],
+        marked: false,
+        replies: [],
+        source: { kind: "office", part: read.part, at },
+    });
+    const threads = new Map<string, Comment>();
+    for (const read of comments) {
+        if (rootOf(read) === read && read.group && read.at) {
+            threads.set(read.comment.id, entry(read, read.group, read.at));
+        }
+    }
+    for (const read of comments) {
+        const thread = threads.get(rootOf(read).comment.id);
+        if (thread?.source.kind === "office" && thread.id !== read.comment.id) {
+            thread.replies.push(entry(read, thread.group, thread.source.at));
+        }
+    }
+    const made = (comment: Comment) => parseDateTime(comment.created ?? "")?.getTime() ?? NaN;
+    for (const thread of threads.values()) {
+        thread.replies.sort((a, b) => {
+            const [ta, tb] = [made(a), made(b)];
+            return Number.isNaN(ta) || Number.isNaN(tb) ? 0 : ta - tb;
+        });
+    }
+    const listed = [...threads.values()];
+    officeThreadsRead.set(comments, listed);
+    return listed;
 }
 
 /** The thread in `threads` that holds the annotation `id` — as a comment, a
  *  reply, a member of a group or a state note — or null. */
 export function threadHolding(threads: readonly Comment[], page: PageComments, id: string): Comment | null {
-    const holds = (comment: Comment): boolean => comment.annotation.id === id || comment.replies.some(holds);
+    const holds = (comment: Comment): boolean => comment.id === id || comment.replies.some(holds);
     const own = threads.find(holds);
     if (own) return own;
     // A member or a state note stands for the comment it answers.
@@ -850,13 +970,14 @@ export function selectedComment(state: UIState): ShownComment | null {
     const thread = page && id !== undefined ? threadHolding(commentThreads(page), page, id) : null;
     return {
         ...selected,
-        thread: thread ?? {
-            ...selected,
-            richContents: state.selectedAnnotations?.richContents[0] ?? "",
-            reviews: [],
-            marked: false,
-            replies: [],
-        },
+        thread:
+            thread ??
+            pdfComment(
+                selected.page,
+                selected.index,
+                selected.annotation,
+                state.selectedAnnotations?.richContents[0] ?? "",
+            ),
     };
 }
 
