@@ -358,6 +358,7 @@ export const ja: Messages = {
     "search.clear": "検索をクリア",
     "search.matchCase": "大文字と小文字を区別する",
     "search.fuzzyMatch": "あいまい検索",
+    "search.regex": "正規表現を使用する",
     "search.previousMatch": "前の検索結果",
     "search.previousMatchTooltip": "前の検索結果 (Shift+Enter)",
     "search.nextMatch": "次の検索結果",
@@ -367,6 +368,7 @@ export const ja: Messages = {
     "search.statusRunning": "{current}/{total}+",
     "search.searching": "検索中…",
     "search.noResults": "結果なし",
+    "search.invalidPattern": "無効な正規表現",
     "search.page": "{page}ページ",
     "search.slide": "スライド {page}",
 

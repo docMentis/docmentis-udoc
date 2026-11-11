@@ -1213,9 +1213,10 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * Search the open document for `query`, matching letter case only with
      * `caseSensitive`, and — with `fuzzy` — comparing with separators dropped
      * and typographic punctuation folded, so a quotation from another source
-     * still finds its text. `scope` limits the search to part of the document
-     * (a PDF's pages, a deck's slides, a workbook's sheet); without it the whole
-     * document is searched.
+     * still finds its text. With `regex`, `query` is a regular expression,
+     * matched against the text as it is, so `fuzzy` doesn't apply. `scope`
+     * limits the search to part of the document (a PDF's pages, a deck's
+     * slides, a workbook's sheet); without it the whole document is searched.
      *
      * The matches arrive in document order, batch by batch, each firing
      * `"search:changed"`; their highlights show on the pages, and the first match
@@ -1224,6 +1225,10 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * {@link clearSearch} or an edit retires it. The search stays in force: an
      * edit runs it again, and `"search:changed"` carries what that run finds.
      * Each match carries its page, its highlight and the words around it.
+     *
+     * Rejects with an `invalidRequest` `UDocError` when `regex` is on and
+     * `query` isn't a regular expression; the search panel shows the pattern
+     * as invalid, and nothing is found until the query changes.
      */
     search(query: string, options?: SearchOptions & { scope?: UDocSearchScope }): Promise<readonly SearchMatch[]> {
         return this.shell.search(query, options);

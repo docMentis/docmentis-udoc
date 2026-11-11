@@ -358,6 +358,7 @@ export const es: Messages = {
     "search.clear": "Borrar búsqueda",
     "search.matchCase": "Coincidir mayúsculas y minúsculas",
     "search.fuzzyMatch": "Coincidencia aproximada",
+    "search.regex": "Usar expresión regular",
     "search.previousMatch": "Coincidencia anterior",
     "search.previousMatchTooltip": "Coincidencia anterior (Mayús+Entrar)",
     "search.nextMatch": "Siguiente coincidencia",
@@ -367,6 +368,7 @@ export const es: Messages = {
     "search.statusRunning": "{current} de {total}+",
     "search.searching": "Buscando…",
     "search.noResults": "Sin resultados",
+    "search.invalidPattern": "Expresión regular no válida",
     "search.page": "Página {page}",
     "search.slide": "Diapositiva {page}",
 

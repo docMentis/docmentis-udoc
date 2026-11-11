@@ -358,6 +358,7 @@ export const ko: Messages = {
     "search.clear": "검색 지우기",
     "search.matchCase": "대/소문자 구분",
     "search.fuzzyMatch": "유사 검색",
+    "search.regex": "정규식 사용",
     "search.previousMatch": "이전 결과",
     "search.previousMatchTooltip": "이전 결과 (Shift+Enter)",
     "search.nextMatch": "다음 결과",
@@ -367,6 +368,7 @@ export const ko: Messages = {
     "search.statusRunning": "{total}+개 중 {current}번째",
     "search.searching": "검색 중…",
     "search.noResults": "결과 없음",
+    "search.invalidPattern": "잘못된 정규식",
     "search.page": "{page}페이지",
     "search.slide": "슬라이드 {page}",
 

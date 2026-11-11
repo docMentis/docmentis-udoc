@@ -356,6 +356,7 @@ export const zhTW: Messages = {
     "search.clear": "清除搜尋",
     "search.matchCase": "大小寫須相符",
     "search.fuzzyMatch": "模糊比對",
+    "search.regex": "使用規則運算式",
     "search.previousMatch": "上一個相符項目",
     "search.previousMatchTooltip": "上一個相符項目 (Shift+Enter)",
     "search.nextMatch": "下一個相符項目",
@@ -365,6 +366,7 @@ export const zhTW: Messages = {
     "search.statusRunning": "第 {current} 項，共 {total}+ 項",
     "search.searching": "正在搜尋…",
     "search.noResults": "沒有結果",
+    "search.invalidPattern": "無效的規則運算式",
     "search.page": "第 {page} 頁",
     "search.slide": "投影片 {page}",
 

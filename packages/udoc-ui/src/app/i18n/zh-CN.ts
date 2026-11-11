@@ -356,6 +356,7 @@ export const zhCN: Messages = {
     "search.clear": "清除搜索",
     "search.matchCase": "区分大小写",
     "search.fuzzyMatch": "模糊匹配",
+    "search.regex": "使用正则表达式",
     "search.previousMatch": "上一个匹配项",
     "search.previousMatchTooltip": "上一个匹配项 (Shift+Enter)",
     "search.nextMatch": "下一个匹配项",
@@ -365,6 +366,7 @@ export const zhCN: Messages = {
     "search.statusRunning": "第 {current} 项，共 {total}+ 项",
     "search.searching": "正在搜索…",
     "search.noResults": "无结果",
+    "search.invalidPattern": "无效的正则表达式",
     "search.page": "第 {page} 页",
     "search.slide": "第 {page} 张幻灯片",
 

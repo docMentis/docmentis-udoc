@@ -356,6 +356,7 @@ export const ar: Messages = {
     "search.clear": "مسح البحث",
     "search.matchCase": "مطابقة حالة الأحرف",
     "search.fuzzyMatch": "مطابقة تقريبية",
+    "search.regex": "استخدام تعبير نمطي",
     "search.previousMatch": "النتيجة السابقة",
     "search.previousMatchTooltip": "النتيجة السابقة (Shift+Enter)",
     "search.nextMatch": "النتيجة التالية",
@@ -365,6 +366,7 @@ export const ar: Messages = {
     "search.statusRunning": "{current} من {total}+",
     "search.searching": "جارٍ البحث…",
     "search.noResults": "لا توجد نتائج",
+    "search.invalidPattern": "تعبير نمطي غير صالح",
     "search.page": "صفحة {page}",
     "search.slide": "شريحة {page}",
 

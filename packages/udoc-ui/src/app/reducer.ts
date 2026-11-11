@@ -801,6 +801,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 searchQuery: action.query,
                 searchCaseSensitive: action.caseSensitive,
                 searchFuzzy: action.fuzzy,
+                searchRegex: action.regex,
+                searchInvalidPattern: false,
                 searchScope: action.scope,
                 searchMatches: [],
                 searchActiveIndex: -1,
@@ -828,7 +830,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         }
 
         case "SEARCH_DONE":
-            return { ...state, searchRunning: false };
+            return { ...state, searchRunning: false, searchInvalidPattern: action.invalidPattern === true };
 
         case "SET_SEARCH_ACTIVE_INDEX":
             if (action.index < 0 || action.index >= state.searchMatches.length) return state;
@@ -859,7 +861,14 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...state, navigationScrollAlignment: action.alignment };
 
         case "CLEAR_SEARCH":
-            return { ...state, searchQuery: "", searchMatches: [], searchActiveIndex: -1, searchRunning: false };
+            return {
+                ...state,
+                searchQuery: "",
+                searchMatches: [],
+                searchActiveIndex: -1,
+                searchRunning: false,
+                searchInvalidPattern: false,
+            };
 
         case "SET_COMMENT_POPUP":
             return { ...state, commentPopup: { id: action.id, open: action.open } };

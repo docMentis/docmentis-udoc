@@ -751,8 +751,14 @@ export interface UIState {
     /** Whether the search matches letter case exactly. */
     searchCaseSensitive: boolean;
     /** Whether the search compares with separators dropped and punctuation
-     *  folded — for a quotation from another source. */
+     *  folded — for a quotation from another source. Never with
+     *  {@link searchRegex}, which folds nothing. */
     searchFuzzy: boolean;
+    /** Whether the search reads its query as a regular expression. */
+    searchRegex: boolean;
+    /** Whether the engine refused the query as a regular expression, so the
+     *  search finds nothing until it changes. */
+    searchInvalidPattern: boolean;
     /** The part of the document the search covers; null for all of it. */
     searchScope: UDocSearchScope | null;
     /** The matches found, in document order — grown batch by batch while the
@@ -1130,6 +1136,8 @@ export const initialState: UIState = {
     searchQuery: "",
     searchCaseSensitive: false,
     searchFuzzy: false,
+    searchRegex: false,
+    searchInvalidPattern: false,
     searchScope: null,
     searchMatches: [],
     searchActiveIndex: -1,

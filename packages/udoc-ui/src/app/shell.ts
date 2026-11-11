@@ -303,7 +303,7 @@ export interface UIShell {
     pageAnnotations: PageAnnotations;
     /** Subscribe to the annotation events, with legacy's payloads; returns the unsubscribe. */
     onPageAnnotationEvent: (listener: PageAnnotationListener) => () => void;
-    /** Search the open document for `query`; resolves with every match once the search has found them all, or with none if a newer search, a clear or an edit retires it. */
+    /** Search the open document for `query`; resolves with every match once the search has found them all, or with none if a newer search, a clear or an edit retires it; rejects with a `regex` query the engine can't read. */
     search: (query: string, options?: SearchOptions & { scope?: UDocSearchScope }) => Promise<readonly SearchMatch[]>;
     /** Drop the search: no query, no matches, no highlights. */
     clearSearch: () => void;
@@ -1321,7 +1321,8 @@ export function mountUIShell(
             onChoose: (comment) => chooseComment(comment),
         },
         {
-            search: (query, options) => void search(query, options),
+            // The panel shows a pattern the engine refuses from the state.
+            search: (query, options) => void search(query, options).catch(() => undefined),
             clear: () => clearSearch(),
         },
     );
@@ -3005,7 +3006,11 @@ export function mountUIShell(
             store.dispatch({ type: "SEARCH_DONE" });
             return [];
         }
-        const options = { caseSensitive: state.searchCaseSensitive, fuzzy: state.searchFuzzy };
+        const options = {
+            caseSensitive: state.searchCaseSensitive,
+            fuzzy: state.searchFuzzy,
+            regex: state.searchRegex,
+        };
         let from: SearchContinuation | null = null;
         try {
             for (;;) {
@@ -3017,9 +3022,16 @@ export function mountUIShell(
                 if (batch.next === null) break;
                 from = batch.next;
             }
-        } catch {
-            // Worker gone or document closed: the matches found so far stand.
+        } catch (error) {
             if (run !== searchGeneration) return [];
+            // The engine reads a regular expression before anything else, and
+            // refuses one it can't read: the search stands with no matches,
+            // the panel saying why, and the call that ran it rejects.
+            if (from === null && options.regex && error instanceof UDocError && error.code === "invalidRequest") {
+                store.dispatch({ type: "SEARCH_DONE", invalidPattern: true });
+                throw error;
+            }
+            // Worker gone or document closed: the matches found so far stand.
         }
         store.dispatch({ type: "SEARCH_DONE" });
         return store.getState().searchMatches;
@@ -3029,11 +3041,15 @@ export function mountUIShell(
         query: string,
         options: SearchOptions & { scope?: UDocSearchScope } = {},
     ): Promise<readonly SearchMatch[]> {
+        const regex = options.regex ?? false;
         store.dispatch({
             type: "SET_SEARCH",
             query,
             caseSensitive: options.caseSensitive ?? false,
-            fuzzy: options.fuzzy ?? false,
+            // The engine runs a regular expression over the text as it is, so
+            // fuzzy doesn't apply to one.
+            fuzzy: !regex && (options.fuzzy ?? false),
+            regex,
             scope: options.scope ?? null,
         });
         return runSearch();
@@ -3050,7 +3066,9 @@ export function mountUIShell(
         if (store.getState().searchQuery === "" || searchRerun !== null) return;
         searchRerun = requestAnimationFrame(() => {
             searchRerun = null;
-            void runSearch();
+            // A pattern the engine refuses shows in the panel; nobody waits
+            // on a run again.
+            runSearch().catch(() => undefined);
         });
     }
     const unsubSearchEdited = client.onDocumentChanged(rerunSearch);

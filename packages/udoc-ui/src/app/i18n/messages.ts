@@ -657,6 +657,8 @@ export interface Messages {
     "search.matchCase": string;
     /** Fuzzy Match */
     "search.fuzzyMatch": string;
+    /** Use Regular Expression */
+    "search.regex": string;
     /** Previous Match */
     "search.previousMatch": string;
     /** Previous Match (Shift+Enter) */
@@ -675,6 +677,8 @@ export interface Messages {
     "search.searching": string;
     /** No results */
     "search.noResults": string;
+    /** Invalid regular expression */
+    "search.invalidPattern": string;
     /** Page {page} */
     "search.page": string;
     /** Slide {page} */

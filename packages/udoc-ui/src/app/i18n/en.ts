@@ -359,6 +359,7 @@ export const en: Messages = {
     "search.clear": "Clear Search",
     "search.matchCase": "Match Case",
     "search.fuzzyMatch": "Fuzzy Match",
+    "search.regex": "Use Regular Expression",
     "search.previousMatch": "Previous Match",
     "search.previousMatchTooltip": "Previous Match (Shift+Enter)",
     "search.nextMatch": "Next Match",
@@ -368,6 +369,7 @@ export const en: Messages = {
     "search.statusRunning": "{current} of {total}+",
     "search.searching": "Searching…",
     "search.noResults": "No results",
+    "search.invalidPattern": "Invalid regular expression",
     "search.page": "Page {page}",
     "search.slide": "Slide {page}",
 

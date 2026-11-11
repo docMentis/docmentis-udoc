@@ -20,6 +20,11 @@ listed once, by package. Its major and minor version are those of the
   with that panel, as one that asks for its outline does; Layers opens only when
   the PDF has some. A host's `activePanel`, given, `null` included, holds over
   what any document asks for.
+- Search finds text by regular expression, with the Search panel's `.*` toggle
+  or `regex: true` in `search`'s options. Fuzzy matching doesn't apply to a
+  regular expression, so the panel turns one off as the other comes on. A
+  pattern that isn't a regular expression shows as invalid in the panel, and
+  `search` rejects with an `invalidRequest` `UDocError`.
 
 #### Changed
 

@@ -3477,6 +3477,10 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-search-panel__input-wrapper:focus-within {
         border-color: var(--udoc-color-primary);
     }
+    .udoc-ui-root .udoc-search-panel__input-wrapper--invalid,
+    .udoc-ui-root .udoc-search-panel__input-wrapper--invalid:focus-within {
+        border-color: var(--udoc-color-error);
+    }
     .udoc-ui-root .udoc-search-panel__input-icon {
         display: flex;
         align-items: center;
@@ -3556,6 +3560,9 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-search-panel__status {
         color: var(--udoc-color-on-surface-variant);
         font-size: 12px;
+    }
+    .udoc-ui-root .udoc-search-panel__status--error {
+        color: var(--udoc-color-error);
     }
     .udoc-ui-root .udoc-search-panel__nav-buttons {
         display: flex;

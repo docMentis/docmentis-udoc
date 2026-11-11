@@ -358,6 +358,7 @@ export const de: Messages = {
     "search.clear": "Suche löschen",
     "search.matchCase": "Groß-/Kleinschreibung beachten",
     "search.fuzzyMatch": "Unscharfe Suche",
+    "search.regex": "Regulären Ausdruck verwenden",
     "search.previousMatch": "Vorheriger Treffer",
     "search.previousMatchTooltip": "Vorheriger Treffer (Umschalt+Eingabe)",
     "search.nextMatch": "Nächster Treffer",
@@ -367,6 +368,7 @@ export const de: Messages = {
     "search.statusRunning": "{current} von {total}+",
     "search.searching": "Suche läuft…",
     "search.noResults": "Keine Ergebnisse",
+    "search.invalidPattern": "Ungültiger regulärer Ausdruck",
     "search.page": "Seite {page}",
     "search.slide": "Folie {page}",
 

@@ -1,10 +1,10 @@
 // The right panel's Search tab — a port of the previous udoc-viewer's search panel.
 //
-// A query field with its match-case and fuzzy toggles, the count and the
-// previous / next buttons, and the results list: each match's context under a
-// header for the page (or sheet) it starts on. Enter runs a new query, or steps
-// to the next match of the one already run (Shift+Enter, the previous);
-// choosing a result makes it current, and the view goes to it.
+// A query field with its match-case, fuzzy and regular-expression toggles, the
+// count and the previous / next buttons, and the results list: each match's
+// context under a header for the page (or sheet) it starts on. Enter runs a new
+// query, or steps to the next match of the one already run (Shift+Enter, the
+// previous); choosing a result makes it current, and the view goes to it.
 
 import type { SearchMatch } from "@docmentis/udoc-wasm";
 import type { Store } from "../../framework/index.js";
@@ -18,7 +18,7 @@ import type { I18n } from "../i18n/index.js";
 
 export interface SearchPanelCallbacks {
     /** Run `query` as a new search. */
-    search: (query: string, options: { caseSensitive: boolean; fuzzy: boolean }) => void;
+    search: (query: string, options: { caseSensitive: boolean; fuzzy: boolean; regex: boolean }) => void;
     /** Drop the search. */
     clear: () => void;
 }
@@ -27,6 +27,8 @@ interface SearchPanelSlice {
     query: string;
     caseSensitive: boolean;
     fuzzy: boolean;
+    regex: boolean;
+    invalidPattern: boolean;
     matches: readonly SearchMatch[];
     activeIndex: number;
     running: boolean;
@@ -44,6 +46,8 @@ function selectSlice(state: UIState): SearchPanelSlice {
         query: state.searchQuery,
         caseSensitive: state.searchCaseSensitive,
         fuzzy: state.searchFuzzy,
+        regex: state.searchRegex,
+        invalidPattern: state.searchInvalidPattern,
         matches: state.searchMatches,
         activeIndex: state.searchActiveIndex,
         running: state.searchRunning,
@@ -58,6 +62,8 @@ function sliceEqual(a: SearchPanelSlice, b: SearchPanelSlice): boolean {
         a.query === b.query &&
         a.caseSensitive === b.caseSensitive &&
         a.fuzzy === b.fuzzy &&
+        a.regex === b.regex &&
+        a.invalidPattern === b.invalidPattern &&
         a.matches === b.matches &&
         a.activeIndex === b.activeIndex &&
         a.running === b.running &&
@@ -104,7 +110,13 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
     fuzzyBtn.textContent = "~";
     fuzzyBtn.title = i18n.t("search.fuzzyMatch");
     fuzzyBtn.setAttribute("aria-label", i18n.t("search.fuzzyMatch"));
-    header.append(inputWrapper, caseBtn, fuzzyBtn);
+    const regexBtn = document.createElement("button");
+    regexBtn.type = "button";
+    regexBtn.className = "udoc-search-panel__toggle";
+    regexBtn.textContent = ".*";
+    regexBtn.title = i18n.t("search.regex");
+    regexBtn.setAttribute("aria-label", i18n.t("search.regex"));
+    header.append(inputWrapper, caseBtn, fuzzyBtn, regexBtn);
 
     const nav = document.createElement("div");
     nav.className = "udoc-search-panel__nav";
@@ -184,6 +196,11 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
         caseBtn.setAttribute("aria-pressed", String(slice.caseSensitive));
         fuzzyBtn.classList.toggle("udoc-search-panel__toggle--active", slice.fuzzy);
         fuzzyBtn.setAttribute("aria-pressed", String(slice.fuzzy));
+        regexBtn.classList.toggle("udoc-search-panel__toggle--active", slice.regex);
+        regexBtn.setAttribute("aria-pressed", String(slice.regex));
+        inputWrapper.classList.toggle("udoc-search-panel__input-wrapper--invalid", slice.invalidPattern);
+        input.setAttribute("aria-invalid", String(slice.invalidPattern));
+        status.classList.toggle("udoc-search-panel__status--error", slice.invalidPattern);
         prevBtn.disabled = slice.matches.length === 0;
         nextBtn.disabled = slice.matches.length === 0;
 
@@ -195,6 +212,8 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
             });
         } else if (slice.running) {
             status.textContent = i18n.t("search.searching");
+        } else if (slice.invalidPattern) {
+            status.textContent = i18n.t("search.invalidPattern");
         } else {
             status.textContent = slice.query ? i18n.t("search.noResults") : "";
         }
@@ -223,7 +242,11 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
     function run(): void {
         const state = storeRef?.getState();
         if (!state) return;
-        callbacks.search(input.value, { caseSensitive: state.searchCaseSensitive, fuzzy: state.searchFuzzy });
+        callbacks.search(input.value, {
+            caseSensitive: state.searchCaseSensitive,
+            fuzzy: state.searchFuzzy,
+            regex: state.searchRegex,
+        });
     }
 
     function mount(container: HTMLElement, store: Store<UIState, Action>): void {
@@ -241,11 +264,29 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
             }),
             on(caseBtn, "click", () => {
                 const state = store.getState();
-                callbacks.search(input.value, { caseSensitive: !state.searchCaseSensitive, fuzzy: state.searchFuzzy });
+                callbacks.search(input.value, {
+                    caseSensitive: !state.searchCaseSensitive,
+                    fuzzy: state.searchFuzzy,
+                    regex: state.searchRegex,
+                });
             }),
+            // A regular expression folds nothing, so fuzzy doesn't apply to
+            // one: turning either on turns the other off.
             on(fuzzyBtn, "click", () => {
                 const state = store.getState();
-                callbacks.search(input.value, { caseSensitive: state.searchCaseSensitive, fuzzy: !state.searchFuzzy });
+                callbacks.search(input.value, {
+                    caseSensitive: state.searchCaseSensitive,
+                    fuzzy: !state.searchFuzzy,
+                    regex: false,
+                });
+            }),
+            on(regexBtn, "click", () => {
+                const state = store.getState();
+                callbacks.search(input.value, {
+                    caseSensitive: state.searchCaseSensitive,
+                    fuzzy: false,
+                    regex: !state.searchRegex,
+                });
             }),
             on(clearBtn, "click", () => {
                 input.value = "";

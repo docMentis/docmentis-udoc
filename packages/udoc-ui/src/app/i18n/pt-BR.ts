@@ -358,6 +358,7 @@ export const ptBR: Messages = {
     "search.clear": "Limpar Pesquisa",
     "search.matchCase": "Diferenciar Maiúsculas e Minúsculas",
     "search.fuzzyMatch": "Correspondência Aproximada",
+    "search.regex": "Usar Expressão Regular",
     "search.previousMatch": "Resultado Anterior",
     "search.previousMatchTooltip": "Resultado Anterior (Shift+Enter)",
     "search.nextMatch": "Próximo Resultado",
@@ -367,6 +368,7 @@ export const ptBR: Messages = {
     "search.statusRunning": "{current} de {total}+",
     "search.searching": "Pesquisando…",
     "search.noResults": "Nenhum resultado",
+    "search.invalidPattern": "Expressão regular inválida",
     "search.page": "Página {page}",
     "search.slide": "Slide {page}",
 

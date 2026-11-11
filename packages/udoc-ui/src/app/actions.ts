@@ -292,13 +292,15 @@ export type Action =
           query: string;
           caseSensitive: boolean;
           fuzzy: boolean;
+          regex: boolean;
           scope: UDocSearchScope | null;
       }
     // A batch of the running search's matches — the first of a run replaces
     // what an earlier run found, the rest append
     | { type: "SEARCH_BATCH"; matches: readonly SearchMatch[]; first: boolean }
-    // The running search found its last match
-    | { type: "SEARCH_DONE" }
+    // The running search found its last match — or, with `invalidPattern`,
+    // none, the engine refusing its query as a regular expression
+    | { type: "SEARCH_DONE"; invalidPattern?: boolean }
     // Make match `index` current (a result clicked), and go to it — by
     // `scrollAlignment` when given, else the standing search alignment
     | { type: "SET_SEARCH_ACTIVE_INDEX"; index: number; scrollAlignment?: ScrollAlignment }

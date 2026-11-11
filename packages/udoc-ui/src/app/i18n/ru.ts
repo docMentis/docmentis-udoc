@@ -358,6 +358,7 @@ export const ru: Messages = {
     "search.clear": "Очистить поиск",
     "search.matchCase": "Учитывать регистр",
     "search.fuzzyMatch": "Нечёткое совпадение",
+    "search.regex": "Использовать регулярное выражение",
     "search.previousMatch": "Предыдущее совпадение",
     "search.previousMatchTooltip": "Предыдущее совпадение (Shift+Enter)",
     "search.nextMatch": "Следующее совпадение",
@@ -367,6 +368,7 @@ export const ru: Messages = {
     "search.statusRunning": "{current} из {total}+",
     "search.searching": "Поиск…",
     "search.noResults": "Нет результатов",
+    "search.invalidPattern": "Недопустимое регулярное выражение",
     "search.page": "Страница {page}",
     "search.slide": "Слайд {page}",
 
