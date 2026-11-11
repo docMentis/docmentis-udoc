@@ -250,13 +250,23 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         unsubscribe = subscribeSelector(store, selectSlice, render, { equality: sliceEqual });
     }
 
+    /** The selected thread's card and the height of its first comment's
+     *  header — where the comment tether lands — as client rects; null with
+     *  none selected. */
+    function selectedCard(): { rect: DOMRect; y: number } | null {
+        const card = el.querySelector(".udoc-comments-panel__card--selected");
+        if (!card) return null;
+        const header = (card.querySelector(".udoc-comment__header") ?? card).getBoundingClientRect();
+        return { rect: card.getBoundingClientRect(), y: header.top + header.height / 2 };
+    }
+
     function destroy(): void {
         unsubscribe?.();
         unsubscribe = null;
         el.remove();
     }
 
-    return { el, mount, destroy };
+    return { el, mount, selectedCard, destroy };
 }
 
 export type CommentsPanelComponent = ReturnType<typeof createCommentsPanel>;

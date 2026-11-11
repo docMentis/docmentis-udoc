@@ -92,6 +92,11 @@ export interface UDocOptions {
     showSearchTether?: boolean;
     /** Show the Comments panel. Default `true`. */
     showCommentsPanel?: boolean;
+    /** Join the open comment on the document — a Word, Excel or PowerPoint
+     *  thread's marker, or a PDF's annotation selected — to its card in the
+     *  Comments panel with a line, which follows both as they scroll. Default
+     *  `true`. */
+    showCommentTether?: boolean;
     /** Cover the document area while a document opens — the docMentis wordmark
      *  and how far the open has got — once it has taken 300ms; the toolbar
      *  stays as it is. `false` is honored

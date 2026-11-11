@@ -301,12 +301,14 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
         requestAnimationFrame(() => input.focus({ preventScroll: true }));
     }
 
-    /** The current match's result and the results list it scrolls in, as
-     *  client rects — or null with no result current. */
-    function activeResult(): { row: DOMRect; list: DOMRect } | null {
+    /** The current match's result, the height of its middle — where the
+     *  search tether lands — and the results list it scrolls in, as client
+     *  rects; null with no result current. */
+    function activeResult(): { rect: DOMRect; y: number; clip: DOMRect } | null {
         const row = results.querySelector(".udoc-search-result--active");
         if (!row) return null;
-        return { row: row.getBoundingClientRect(), list: results.getBoundingClientRect() };
+        const rect = row.getBoundingClientRect();
+        return { rect, y: rect.top + rect.height / 2, clip: results.getBoundingClientRect() };
     }
 
     function destroy(): void {

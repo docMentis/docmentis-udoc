@@ -86,6 +86,7 @@ const OPTION_GROUPS: OptionGroup[] = [
             { kind: "toggle", id: "showSearchPanel", label: "Search Panel", default: true },
             { kind: "toggle", id: "showSearchTether", label: "Search Tether", default: true },
             { kind: "toggle", id: "showCommentsPanel", label: "Comments Panel", default: true },
+            { kind: "toggle", id: "showCommentTether", label: "Comment Tether", default: true },
         ],
     },
     {

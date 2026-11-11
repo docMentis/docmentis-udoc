@@ -30,6 +30,9 @@ listed once, by package. Its major and minor version are those of the
   and the results scroll. It hides while either end is out of sight, and on a
   narrow screen, where the panel slides over the document.
   `showSearchTether: false` leaves it out.
+- A line, alike, joins the open comment on the document to its card in the
+  Comments panel: a Word, Excel or PowerPoint thread's marker, or a PDF's
+  annotation, when one is selected. `showCommentTether: false` leaves it out.
 
 #### Changed
 

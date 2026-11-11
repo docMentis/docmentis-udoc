@@ -47,11 +47,8 @@ export class SearchLayer {
     #clipKey = "";
     /** The current match's first highlight drawn, or null when none is. */
     #activeHighlight: SVGPolygonElement | null = null;
-    /** Called after each draw, for chrome that follows the current match. */
-    readonly #onDraw: () => void;
 
-    constructor(container: HTMLElement, onDraw: () => void = () => undefined) {
-        this.#onDraw = onDraw;
+    constructor(container: HTMLElement) {
         this.#chrome = document.createElement("div");
         this.#chrome.className = "udoc-search-layer";
         this.#chrome.setAttribute("aria-hidden", "true");
@@ -133,6 +130,5 @@ export class SearchLayer {
         }
         for (let i = used; i < this.#polys.length; i++) this.#polys[i]!.style.display = "none";
         this.#activeHighlight = activeHighlight;
-        this.#onDraw();
     }
 }

@@ -2802,9 +2802,10 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-search-highlight--active {
         fill: var(--udoc-canvas-search-active);
     }
-    /* The line from the current match to its result in the Search tab: over the
-   body, the document area and the panel both, taking no press (SearchTether). */
-    .udoc-ui-root .udoc-search-tether {
+    /* A tether: the line from something on the document to its entry in the
+   right panel, over the body, the document area and the panel both, taking no
+   press (Tether). */
+    .udoc-ui-root .udoc-tether {
         position: absolute;
         inset: 0;
         z-index: 1;
@@ -2812,32 +2813,40 @@ export const uiStyles = css`
         pointer-events: none;
     }
     /* Hidden with the canvas it starts on, under an extension document. */
-    .udoc-ui-root.udoc-extension-document-open .udoc-search-tether {
+    .udoc-ui-root.udoc-extension-document-open .udoc-tether {
         visibility: hidden;
     }
-    .udoc-ui-root .udoc-search-tether svg {
+    .udoc-ui-root .udoc-tether svg {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
     }
-    .udoc-ui-root .udoc-search-tether__line {
+    .udoc-ui-root .udoc-tether__line {
         fill: none;
-        stroke: var(--udoc-canvas-search-active);
         stroke-width: 2;
         stroke-dasharray: 6 4;
     }
-    /* The current match's colour without its transparency, which a line this
-   thin needs to show. Guarded: a browser that can't take the colour apart
-   would leave the line no stroke at all, not this rule's fallback. */
+    /* The current search match's to its result: the match's colour. */
+    .udoc-ui-root .udoc-tether--search .udoc-tether__line {
+        stroke: var(--udoc-canvas-search-active);
+    }
+    /* That colour without its transparency, which a line this thin needs to
+   show. Guarded: a browser that can't take the colour apart would leave the
+   line no stroke at all, not this rule's fallback. */
     @supports (color: rgb(from red r g b)) {
-        .udoc-ui-root .udoc-search-tether__line {
+        .udoc-ui-root .udoc-tether--search .udoc-tether__line {
             stroke: rgb(from var(--udoc-canvas-search-active) r g b / 1);
         }
     }
+    /* The open comment's to its card: the colour of the open marker and of
+   the selected card's outline. */
+    .udoc-ui-root .udoc-tether--comment .udoc-tether__line {
+        stroke: var(--udoc-color-primary);
+    }
     @media (forced-colors: active) {
-        .udoc-ui-root .udoc-search-tether__line {
+        .udoc-ui-root .udoc-tether .udoc-tether__line {
             stroke: Highlight;
         }
     }

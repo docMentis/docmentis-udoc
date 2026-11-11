@@ -58,6 +58,9 @@ function createMarker(comment: string, callbacks: CommentMarkersCallbacks): HTML
     const el = document.createElement("button");
     el.type = "button";
     el.className = "udoc-comment-marker";
+    // The thread it stands for, by its first comment's id — what the comment
+    // tether finds the open thread's marker by.
+    el.dataset.comment = comment;
     el.innerHTML = ICON_COMMENTS;
     el.setAttribute("aria-label", callbacks.label);
     el.title = callbacks.label;

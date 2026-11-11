@@ -174,13 +174,22 @@ export function createRightPanel(i18n: I18n, comments: CommentsPanelCallbacks, s
         el.remove();
     }
 
-    /** The current search match's result in the Search tab and the results
-     *  list, as client rects — or null when the tab isn't showing one. */
-    function searchActiveResult(): { row: DOMRect; list: DOMRect } | null {
+    /** The current search match's result in the Search tab, where the search
+     *  tether lands, and the results list it scrolls in, as client rects — or
+     *  null when the tab isn't showing one. */
+    function searchActiveResult(): { rect: DOMRect; y: number; clip: DOMRect } | null {
         return searchPanel?.activeResult() ?? null;
     }
 
-    return { el, mount, searchActiveResult, destroy };
+    /** The selected comment thread's card in the Comments tab, where the
+     *  comment tether lands, and the tab's content it scrolls in, as client
+     *  rects — or null when the tab isn't showing one. */
+    function commentsSelectedCard(): { rect: DOMRect; y: number; clip: DOMRect } | null {
+        const card = commentsPanel?.selectedCard();
+        return card ? { ...card, clip: content.getBoundingClientRect() } : null;
+    }
+
+    return { el, mount, searchActiveResult, commentsSelectedCard, destroy };
 }
 
 function selectRightPanel(state: UIState): RightPanelSlice {

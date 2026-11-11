@@ -12,7 +12,7 @@
 
 import type { PaintDisplay, SelectionBox } from "../../geometry.js";
 import { ICON_COMMENTS, ICON_DELETE, ICON_STROKE } from "../icons.js";
-import { applyPoint, fromComponents, type Affine } from "./affine.js";
+import { boxCorners, type Affine } from "./affine.js";
 import { createButton, createDropdownButton } from "./controls.js";
 import type { OverlaySource } from "./OverlayManager.js";
 import { applyPaintBar, paintSwatch } from "./Ribbon.js";
@@ -106,21 +106,7 @@ export function createAnnotationBar(i18n: I18n, callbacks: AnnotationBarCallback
         if (!box || !m) return [];
         const shows = acting();
         if (!shows.comment && !shows.color && !shows.remove) return [];
-        // The box's corners, through its own transform onto the page, then
-        // onto the screen.
-        const local = fromComponents(box.transform);
-        const { x0, y0, x1, y1 } = box.rect;
-        const corners = (
-            [
-                [x0, y0],
-                [x1, y0],
-                [x0, y1],
-                [x1, y1],
-            ] as const
-        ).map(([x, y]) => {
-            const p = applyPoint(local, x, y);
-            return applyPoint(m, p.x, p.y);
-        });
+        const corners = boxCorners(box, m);
         return [
             {
                 key: "bar",

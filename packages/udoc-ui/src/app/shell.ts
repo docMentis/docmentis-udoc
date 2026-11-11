@@ -68,7 +68,9 @@ import { cellKeyAction } from "./cell-keys.js";
 import type { CellKeyAction } from "./cell-keys.js";
 import { tabKeyAction } from "./tab-keys.js";
 import { createRightPanel } from "./components/RightPanel.js";
-import { createSearchTether } from "./components/SearchTether.js";
+import { createTether } from "./components/Tether.js";
+import type { TetherComponent } from "./components/Tether.js";
+import { boxCorners } from "./components/affine.js";
 import { createStatusBar } from "./components/StatusBar.js";
 import { createSheetTabs } from "./components/SheetTabs.js";
 import { createRibbon } from "./components/Ribbon.js";
@@ -473,6 +475,7 @@ export interface UIShellOptions {
     showSearchPanel?: boolean;
     showSearchTether?: boolean;
     showCommentsPanel?: boolean;
+    showCommentTether?: boolean;
     showThemeButton?: boolean;
     showFullscreenButton?: boolean;
     showPrintButton?: boolean;
@@ -784,16 +787,72 @@ export function mountUIShell(
         },
     });
 
-    // The line from the current search match to its result in the Search tab,
-    // unless the host leaves it out. Its ends are read when it's drawn, a frame
-    // on, once the canvas and the panel below exist.
-    const searchTether =
-        (shellOptions.showSearchTether ?? true)
-            ? createSearchTether({
-                  match: () => canvas.searchAnchor(),
-                  result: () => rightPanel.searchActiveResult(),
-              })
-            : null;
+    // The tethers, each unless the host leaves it out: the line from the
+    // current search match to its result in the Search tab, and from the open
+    // comment to its card in the Comments tab. Their ends are read when they're
+    // drawn, a frame on, once the canvas and the panel below exist.
+    const tethers: TetherComponent[] = [];
+    if (shellOptions.showSearchTether ?? true) {
+        tethers.push(
+            createTether(
+                {
+                    from: () => {
+                        const rect = canvas.searchHighlight();
+                        return rect && { rect, area: canvas.documentArea() };
+                    },
+                    to: () => rightPanel.searchActiveResult(),
+                },
+                {
+                    kind: "search",
+                    watch: (s) => ({ active: s.searchActiveIndex, matches: s.searchMatches, panel: s.activePanel }),
+                },
+            ),
+        );
+    }
+    if (shellOptions.showCommentTether ?? true) {
+        tethers.push(
+            createTether(
+                {
+                    from: () => {
+                        const rect = openCommentRect();
+                        return rect && { rect, area: canvas.documentArea() };
+                    },
+                    to: () => rightPanel.commentsSelectedCard(),
+                },
+                {
+                    kind: "comment",
+                    watch: (s) => ({
+                        open: s.openOfficeComment,
+                        selected: s.selectedAnnotations,
+                        office: s.officeComments,
+                        comments: s.comments,
+                        panel: s.activePanel,
+                    }),
+                },
+            ),
+        );
+    }
+
+    // Where the comment tether starts, as a client rect: the open Word, Excel
+    // or PowerPoint thread's marker, or — a PDF's comments being annotations —
+    // the one annotation the annotation bar stands on.
+    function openCommentRect(): DOMRect | null {
+        const open = store.getState().openOfficeComment;
+        if (open !== null) {
+            const marker = canvas.el.querySelector(`.udoc-comment-marker[data-comment="${CSS.escape(open)}"]`);
+            return marker?.getBoundingClientRect() ?? null;
+        }
+        const box = oneAnnotationBox();
+        const m = box && canvas.pageToViewport(box.page);
+        if (!box || !m) return null;
+        const corners = boxCorners(box, m);
+        const xs = corners.map((c) => c.x);
+        const ys = corners.map((c) => c.y);
+        const area = canvas.documentArea();
+        const left = Math.min(...xs);
+        const top = Math.min(...ys);
+        return new DOMRect(area.left + left, area.top + top, Math.max(...xs) - left, Math.max(...ys) - top);
+    }
 
     // These commit fns are hoisted, so every object edit (move / rotate / scale)
     // commits through the same edit path as a page edit (relayout, compose-ahead,
@@ -807,7 +866,9 @@ export function mountUIShell(
         place: (tool, page, p0, p1) => extension?.place(tool, page, p0, p1),
         placeAnnotation: (tool, page, points) => insertAnnotation(tool, page, points),
         markText: (tool) => markText(tool),
-        searchDrawn: () => searchTether?.schedule(),
+        framePlaced: () => {
+            for (const tether of tethers) tether.schedule();
+        },
         // A widget fills its field in only for a session entitled to form
         // filling; without it, a press on one selects text as on the page.
         formWidget: (annotation) =>
@@ -1247,13 +1308,21 @@ export function mountUIShell(
     // `selectedAnnotations`, which holds only selected annotations: its read
     // dumps the page's annotations, which typing would redo at every key.
     let annotationBoxes: readonly SelectionBox[] = [];
+    /** The box of the one annotation the selection draws — one selected, or
+     *  the free text a caret is in — while the pointer selects; null for none,
+     *  several, or a tool armed. What the annotation bar stands on, and the
+     *  comment tether starts from. */
+    function oneAnnotationBox(): SelectionBox | null {
+        return store.getState().pointerMode.kind === "select" && annotationBoxes.length === 1
+            ? annotationBoxes[0]!
+            : null;
+    }
     // The bar of the one annotation selected, or the free text a caret is in,
     // above it: open its comment, change its colour — the Annotate tab's Color,
     // its panel and its recents — or delete it. Not while a tool is armed, when
     // the Format colour styles the tool rather than the selection.
     const annotationBar = createAnnotationBar(i18n, {
-        box: () =>
-            store.getState().pointerMode.kind === "select" && annotationBoxes.length === 1 ? annotationBoxes[0]! : null,
+        box: () => oneAnnotationBox(),
         selectedId: () => selectedAnnotation(store.getState())?.annotation.id,
         pageToViewport: (page) => canvas.pageToViewport(page),
         commentable: () => {
@@ -1361,7 +1430,7 @@ export function mountUIShell(
         },
     );
     rightPanel.mount(rightPanelSlot, store);
-    searchTether?.mount(bodySlot, rightPanelSlot, store);
+    for (const tether of tethers) tether.mount(bodySlot, rightPanelSlot, store);
 
     // Dock the view controls into the host the placement selects, and toggle the
     // hosts' visibility. `top-toolbar` falls back to `floating` when the top bar
@@ -4213,7 +4282,7 @@ export function mountUIShell(
         notesPane.destroy();
         formulaBar.destroy();
         statusBar.destroy();
-        searchTether?.destroy();
+        for (const tether of tethers) tether.destroy();
         rightPanel.destroy();
         leftPanel.destroy();
         canvas.destroy();

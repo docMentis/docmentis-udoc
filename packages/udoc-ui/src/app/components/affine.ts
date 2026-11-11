@@ -74,3 +74,25 @@ export function rotate(rad: number): Affine {
 export function fromComponents(t: GraphicsAffine): Affine {
     return [t.scaleX, t.skewY, t.skewX, t.scaleY, t.translateX, t.translateY];
 }
+
+/** The four corners of a selection box on screen — its rect, axis-aligned in
+ *  its own space, through its `local → page` transform onto the page, then
+ *  through `pageToViewport`. Rotated or skewed, they needn't be axis-aligned. */
+export function boxCorners(
+    box: { rect: { x0: number; y0: number; x1: number; y1: number }; transform: GraphicsAffine },
+    pageToViewport: Affine,
+): Array<{ x: number; y: number }> {
+    const local = fromComponents(box.transform);
+    const { x0, y0, x1, y1 } = box.rect;
+    return (
+        [
+            [x0, y0],
+            [x1, y0],
+            [x0, y1],
+            [x1, y1],
+        ] as const
+    ).map(([x, y]) => {
+        const p = applyPoint(local, x, y);
+        return applyPoint(pageToViewport, p.x, p.y);
+    });
+}
