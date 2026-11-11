@@ -174,7 +174,13 @@ export function createRightPanel(i18n: I18n, comments: CommentsPanelCallbacks, s
         el.remove();
     }
 
-    return { el, mount, destroy };
+    /** The current search match's result in the Search tab and the results
+     *  list, as client rects — or null when the tab isn't showing one. */
+    function searchActiveResult(): { row: DOMRect; list: DOMRect } | null {
+        return searchPanel?.activeResult() ?? null;
+    }
+
+    return { el, mount, searchActiveResult, destroy };
 }
 
 function selectRightPanel(state: UIState): RightPanelSlice {

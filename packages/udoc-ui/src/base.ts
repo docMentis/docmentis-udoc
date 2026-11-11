@@ -86,6 +86,10 @@ export interface UDocOptions {
     showLayersPanel?: boolean;
     /** Show the Search panel. Default `true`. */
     showSearchPanel?: boolean;
+    /** Join the current search match on the document to its result in the
+     *  Search panel with a line, which follows both as they scroll. Default
+     *  `true`. */
+    showSearchTether?: boolean;
     /** Show the Comments panel. Default `true`. */
     showCommentsPanel?: boolean;
     /** Cover the document area while a document opens — the docMentis wordmark

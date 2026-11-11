@@ -301,6 +301,14 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
         requestAnimationFrame(() => input.focus({ preventScroll: true }));
     }
 
+    /** The current match's result and the results list it scrolls in, as
+     *  client rects — or null with no result current. */
+    function activeResult(): { row: DOMRect; list: DOMRect } | null {
+        const row = results.querySelector(".udoc-search-result--active");
+        if (!row) return null;
+        return { row: row.getBoundingClientRect(), list: results.getBoundingClientRect() };
+    }
+
     function destroy(): void {
         unsubRender?.();
         for (const off of unsubEvents) off();
@@ -308,7 +316,7 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
         el.remove();
     }
 
-    return { el, mount, destroy };
+    return { el, mount, activeResult, destroy };
 }
 
 export type SearchPanelComponent = ReturnType<typeof createSearchPanel>;

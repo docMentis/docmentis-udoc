@@ -45,8 +45,13 @@ export class SearchLayer {
      *  content-anchored layer does (see {@link applyContentClip}). */
     #brandingRect: Rect | null = null;
     #clipKey = "";
+    /** The current match's first highlight drawn, or null when none is. */
+    #activeHighlight: SVGPolygonElement | null = null;
+    /** Called after each draw, for chrome that follows the current match. */
+    readonly #onDraw: () => void;
 
-    constructor(container: HTMLElement) {
+    constructor(container: HTMLElement, onDraw: () => void = () => undefined) {
+        this.#onDraw = onDraw;
         this.#chrome = document.createElement("div");
         this.#chrome.className = "udoc-search-layer";
         this.#chrome.setAttribute("aria-hidden", "true");
@@ -78,6 +83,12 @@ export class SearchLayer {
         this.#draw();
     }
 
+    /** The current match's first highlight on the pages drawn — its first quad
+     *  there, the pages in view order — or null when none of it is drawn. */
+    activeHighlight(): SVGPolygonElement | null {
+        return this.#activeHighlight;
+    }
+
     /** The branding decal's viewport rect (CSS px), or null when there is none. */
     setBrandingRect(rect: Rect | null): void {
         this.#brandingRect = rect;
@@ -90,6 +101,7 @@ export class SearchLayer {
 
     #draw(): void {
         let used = 0;
+        let activeHighlight: SVGPolygonElement | null = null;
         for (const view of this.#frame.views) {
             const highlights = this.#byPage.get(view.index);
             if (!highlights) continue;
@@ -115,9 +127,12 @@ export class SearchLayer {
                     highlight.active ? "udoc-search-highlight udoc-search-highlight--active" : "udoc-search-highlight",
                 );
                 poly.style.display = "";
+                if (highlight.active && !activeHighlight) activeHighlight = poly;
                 used++;
             }
         }
         for (let i = used; i < this.#polys.length; i++) this.#polys[i]!.style.display = "none";
+        this.#activeHighlight = activeHighlight;
+        this.#onDraw();
     }
 }

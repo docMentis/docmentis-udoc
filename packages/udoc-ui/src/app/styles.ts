@@ -2802,6 +2802,45 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-search-highlight--active {
         fill: var(--udoc-canvas-search-active);
     }
+    /* The line from the current match to its result in the Search tab: over the
+   body, the document area and the panel both, taking no press (SearchTether). */
+    .udoc-ui-root .udoc-search-tether {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    /* Hidden with the canvas it starts on, under an extension document. */
+    .udoc-ui-root.udoc-extension-document-open .udoc-search-tether {
+        visibility: hidden;
+    }
+    .udoc-ui-root .udoc-search-tether svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .udoc-ui-root .udoc-search-tether__line {
+        fill: none;
+        stroke: var(--udoc-canvas-search-active);
+        stroke-width: 2;
+        stroke-dasharray: 6 4;
+    }
+    /* The current match's colour without its transparency, which a line this
+   thin needs to show. Guarded: a browser that can't take the colour apart
+   would leave the line no stroke at all, not this rule's fallback. */
+    @supports (color: rgb(from red r g b)) {
+        .udoc-ui-root .udoc-search-tether__line {
+            stroke: rgb(from var(--udoc-canvas-search-active) r g b / 1);
+        }
+    }
+    @media (forced-colors: active) {
+        .udoc-ui-root .udoc-search-tether__line {
+            stroke: Highlight;
+        }
+    }
     /* The hovered annotation's outline, under the selection and over the search
    highlights: one line around all its quads, padded and round-cornered,
    projected per frame (AnnotationHoverLayer) — a rect in --udoc-canvas-hover

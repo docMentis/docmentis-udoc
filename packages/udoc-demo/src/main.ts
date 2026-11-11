@@ -84,6 +84,7 @@ const OPTION_GROUPS: OptionGroup[] = [
         items: [
             { kind: "toggle", id: "showRightPanel", label: "Right Panel", default: true },
             { kind: "toggle", id: "showSearchPanel", label: "Search Panel", default: true },
+            { kind: "toggle", id: "showSearchTether", label: "Search Tether", default: true },
             { kind: "toggle", id: "showCommentsPanel", label: "Comments Panel", default: true },
         ],
     },

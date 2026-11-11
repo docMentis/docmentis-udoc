@@ -489,6 +489,10 @@ export interface CanvasHooks {
     resizeColumn?: (index: number, points: number) => void;
     /** Commit a row header-boundary drag — the row twin of {@link resizeColumn}. */
     resizeRow?: (index: number, points: number) => void;
+    /** The search highlights were drawn again — a frame painted, or the matches
+     *  or the current one changed — for chrome that follows the current match
+     *  ({@link searchAnchor}). */
+    searchDrawn?: () => void;
 }
 
 /**
@@ -805,7 +809,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     const searchHost = document.createElement("div");
     searchHost.className = "udoc-ui__search";
     el.appendChild(searchHost);
-    const search = new SearchLayer(searchHost);
+    const search = new SearchLayer(searchHost, () => hooks.searchDrawn?.());
 
     // The hovered annotation's outline, over the search highlights and under
     // the selection, which marks a selected annotation with its own box. Driven
@@ -4203,6 +4207,15 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         /** Page `page`'s page→viewport affine this frame (CSS px), or null when
          *  it isn't on screen — for an overlay anchored to a point on the page. */
         pageToViewport: (page: number) => selection.pageToViewport(page),
+        /** The current search match's first highlight drawn, and the document
+         *  area it draws in, as client rects — or null when none of the match
+         *  is drawn. The highlight may lie outside the area, on a page drawn
+         *  but scrolled out of sight. */
+        searchAnchor: (): { highlight: DOMRect; area: DOMRect } | null => {
+            const highlight = search.activeHighlight();
+            if (!highlight) return null;
+            return { highlight: highlight.getBoundingClientRect(), area: searchHost.getBoundingClientRect() };
+        },
         /** The hidden text input, focused for all of edit mode and, in view
          *  mode, while the selection is copyable — where the native `copy` /
          *  `cut` / `paste` events fire. */

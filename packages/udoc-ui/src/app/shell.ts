@@ -67,6 +67,7 @@ import { cellKeyAction } from "./cell-keys.js";
 import type { CellKeyAction } from "./cell-keys.js";
 import { tabKeyAction } from "./tab-keys.js";
 import { createRightPanel } from "./components/RightPanel.js";
+import { createSearchTether } from "./components/SearchTether.js";
 import { createStatusBar } from "./components/StatusBar.js";
 import { createSheetTabs } from "./components/SheetTabs.js";
 import { createRibbon } from "./components/Ribbon.js";
@@ -469,6 +470,7 @@ export interface UIShellOptions {
     showOutlinePanel?: boolean;
     showLayersPanel?: boolean;
     showSearchPanel?: boolean;
+    showSearchTether?: boolean;
     showCommentsPanel?: boolean;
     showThemeButton?: boolean;
     showFullscreenButton?: boolean;
@@ -781,6 +783,17 @@ export function mountUIShell(
         },
     });
 
+    // The line from the current search match to its result in the Search tab,
+    // unless the host leaves it out. Its ends are read when it's drawn, a frame
+    // on, once the canvas and the panel below exist.
+    const searchTether =
+        (shellOptions.showSearchTether ?? true)
+            ? createSearchTether({
+                  match: () => canvas.searchAnchor(),
+                  result: () => rightPanel.searchActiveResult(),
+              })
+            : null;
+
     // These commit fns are hoisted, so every object edit (move / rotate / scale)
     // commits through the same edit path as a page edit (relayout, compose-ahead,
     // the onEdit cue) — not the worker client directly, which would skip the sync
@@ -793,6 +806,7 @@ export function mountUIShell(
         place: (tool, page, p0, p1) => extension?.place(tool, page, p0, p1),
         placeAnnotation: (tool, page, points) => insertAnnotation(tool, page, points),
         markText: (tool) => markText(tool),
+        searchDrawn: () => searchTether?.schedule(),
         // A widget fills its field in only for a session entitled to form
         // filling; without it, a press on one selects text as on the page.
         formWidget: (annotation) =>
@@ -1345,6 +1359,7 @@ export function mountUIShell(
         },
     );
     rightPanel.mount(rightPanelSlot, store);
+    searchTether?.mount(bodySlot, rightPanelSlot, store);
 
     // Dock the view controls into the host the placement selects, and toggle the
     // hosts' visibility. `top-toolbar` falls back to `floating` when the top bar
@@ -4171,6 +4186,7 @@ export function mountUIShell(
         notesPane.destroy();
         formulaBar.destroy();
         statusBar.destroy();
+        searchTether?.destroy();
         rightPanel.destroy();
         leftPanel.destroy();
         canvas.destroy();
