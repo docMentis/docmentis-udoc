@@ -21,6 +21,9 @@ export interface SearchPanelCallbacks {
     search: (query: string, options: { caseSensitive: boolean; fuzzy: boolean; regex: boolean }) => void;
     /** Drop the search. */
     clear: () => void;
+    /** Hide the line from the current match to its result, or show it again:
+     *  the current result chosen again. */
+    toggleTether: () => void;
 }
 
 interface SearchPanelSlice {
@@ -184,7 +187,10 @@ export function createSearchPanel(i18n: I18n, callbacks: SearchPanelCallbacks) {
             mark.textContent = matched;
             item.append(document.createTextNode(before), mark, document.createTextNode(after));
             const index = i;
-            item.addEventListener("click", () => storeRef?.dispatch({ type: "SET_SEARCH_ACTIVE_INDEX", index }));
+            item.addEventListener("click", () => {
+                if (storeRef?.getState().searchActiveIndex === index) callbacks.toggleTether();
+                storeRef?.dispatch({ type: "SET_SEARCH_ACTIVE_INDEX", index });
+            });
             results.appendChild(item);
         }
     }

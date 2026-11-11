@@ -2822,28 +2822,17 @@ export const uiStyles = css`
         left: 0;
         width: 100%;
         height: 100%;
+        /* A shadow tight to the line, lifting it off the page under it. On
+       the svg, not the path: a filter function on an SVG shape isn't drawn
+       everywhere. */
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
     }
+    /* Every tether in the selection's colour. */
     .udoc-ui-root .udoc-tether__line {
         fill: none;
-        stroke-width: 2;
+        stroke: var(--udoc-canvas-selection);
+        stroke-width: 1.5;
         stroke-dasharray: 6 4;
-    }
-    /* The current search match's to its result: the match's colour. */
-    .udoc-ui-root .udoc-tether--search .udoc-tether__line {
-        stroke: var(--udoc-canvas-search-active);
-    }
-    /* That colour without its transparency, which a line this thin needs to
-   show. Guarded: a browser that can't take the colour apart would leave the
-   line no stroke at all, not this rule's fallback. */
-    @supports (color: rgb(from red r g b)) {
-        .udoc-ui-root .udoc-tether--search .udoc-tether__line {
-            stroke: rgb(from var(--udoc-canvas-search-active) r g b / 1);
-        }
-    }
-    /* The open comment's to its card: the colour of the open marker and of
-   the selected card's outline. */
-    .udoc-ui-root .udoc-tether--comment .udoc-tether__line {
-        stroke: var(--udoc-color-primary);
     }
     @media (forced-colors: active) {
         .udoc-ui-root .udoc-tether .udoc-tether__line {

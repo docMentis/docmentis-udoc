@@ -28,6 +28,9 @@ import type { I18n } from "../i18n/index.js";
 export interface CommentsPanelCallbacks extends CommentThreadCallbacks {
     /** Go to `comment` and select it. */
     onChoose: (comment: Comment) => void;
+    /** Hide the line from the open comment to its card, or show it again: the
+     *  selected card chosen again. */
+    onToggleTether: () => void;
     /** Open a thread whose first comment holds `richContents` (XHTML), on
      *  what the document has selected. */
     onNewComment: (richContents: string) => void;
@@ -163,6 +166,7 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         card.el.addEventListener("click", (ev) => {
             const target = ev.target as HTMLElement;
             if (target.closest("button, [contenteditable='true']")) return;
+            if (card.el.classList.contains("udoc-comments-panel__card--selected")) callbacks.onToggleTether();
             callbacks.onChoose(card.thread);
         });
         cards.set(key, card);

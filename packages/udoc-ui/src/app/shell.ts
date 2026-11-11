@@ -69,7 +69,6 @@ import type { CellKeyAction } from "./cell-keys.js";
 import { tabKeyAction } from "./tab-keys.js";
 import { createRightPanel } from "./components/RightPanel.js";
 import { createTether } from "./components/Tether.js";
-import type { TetherComponent } from "./components/Tether.js";
 import { boxCorners } from "./components/affine.js";
 import { createStatusBar } from "./components/StatusBar.js";
 import { createSheetTabs } from "./components/SheetTabs.js";
@@ -791,47 +790,51 @@ export function mountUIShell(
     // current search match to its result in the Search tab, and from the open
     // comment to its card in the Comments tab. Their ends are read when they're
     // drawn, a frame on, once the canvas and the panel below exist.
-    const tethers: TetherComponent[] = [];
-    if (shellOptions.showSearchTether ?? true) {
-        tethers.push(
-            createTether(
-                {
-                    from: () => {
-                        const rect = canvas.searchHighlight();
-                        return rect && { rect, area: canvas.documentArea() };
-                    },
-                    to: () => rightPanel.searchActiveResult(),
-                },
-                {
-                    kind: "search",
-                    watch: (s) => ({ active: s.searchActiveIndex, matches: s.searchMatches, panel: s.activePanel }),
-                },
-            ),
-        );
-    }
-    if (shellOptions.showCommentTether ?? true) {
-        tethers.push(
-            createTether(
-                {
-                    from: () => {
-                        const rect = openCommentRect();
-                        return rect && { rect, area: canvas.documentArea() };
-                    },
-                    to: () => rightPanel.commentsSelectedCard(),
-                },
-                {
-                    kind: "comment",
-                    watch: (s) => ({
-                        open: s.openOfficeComment,
-                        selected: s.selectedAnnotations,
-                        office: s.officeComments,
-                        comments: s.comments,
-                        panel: s.activePanel,
-                    }),
-                },
-            ),
-        );
-    }
+    const searchTether =
+        (shellOptions.showSearchTether ?? true)
+            ? createTether(
+                  {
+                      from: () => {
+                          const rect = canvas.searchHighlight();
+                          return rect && { rect, area: canvas.documentArea() };
+                      },
+                      to: () => rightPanel.searchActiveResult(),
+                  },
+                  {
+                      kind: "search",
+                      watch: (s) => ({ active: s.searchActiveIndex, matches: s.searchMatches, panel: s.activePanel }),
+                      current: (s) => s.searchMatches[s.searchActiveIndex] ?? null,
+                  },
+              )
+            : null;
+    const commentTether =
+        (shellOptions.showCommentTether ?? true)
+            ? createTether(
+                  {
+                      from: () => {
+                          const rect = openCommentRect();
+                          return rect && { rect, area: canvas.documentArea() };
+                      },
+                      to: () => rightPanel.commentsSelectedCard(),
+                  },
+                  {
+                      kind: "comment",
+                      watch: (s) => ({
+                          open: s.openOfficeComment,
+                          selected: s.selectedAnnotations,
+                          office: s.officeComments,
+                          comments: s.comments,
+                          panel: s.activePanel,
+                      }),
+                      // The open Office thread, or the PDF annotations selected.
+                      current: (s) =>
+                          s.openOfficeComment ??
+                          (s.selectedAnnotations &&
+                              `${s.selectedAnnotations.page}:${s.selectedAnnotations.annotations.map((a) => a.id).join()}`),
+                  },
+              )
+            : null;
+    const tethers = [searchTether, commentTether].filter((tether) => tether !== null);
 
     // Where the comment tether starts, as a client rect: the open Word, Excel
     // or PowerPoint thread's marker, or — a PDF's comments being annotations —
@@ -1421,12 +1424,14 @@ export function mountUIShell(
                 void editOfficeComment(comment, { setCommentStatus: { id: comment.id, status } }),
             onDismiss: () => canvas.focusClipboardSink(),
             onChoose: (comment) => chooseComment(comment),
+            onToggleTether: () => commentTether?.toggle(),
             onNewComment: (richContents) => void newOfficeComment(richContents),
         },
         {
             // The panel shows a pattern the engine refuses from the state.
             search: (query, options) => void search(query, options).catch(() => undefined),
             clear: () => clearSearch(),
+            toggleTether: () => searchTether?.toggle(),
         },
     );
     rightPanel.mount(rightPanelSlot, store);

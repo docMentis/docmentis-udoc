@@ -10,7 +10,9 @@
 // and the state it watches; it hides while the middle of either end is
 // scrolled out of sight, while the panel's tab doesn't show the entry, and
 // while the panel lies over the document rather than beside it, as a narrow
-// layout's drawer does.
+// layout's drawer does. Choosing the panel's entry again, while it's the one
+// the line stands for, hides the line, and once more shows it; another entry
+// chosen shows it again.
 
 import type { Store } from "../../framework/index.js";
 import { shallowEqual, subscribeSelector } from "../../framework/index.js";
@@ -32,11 +34,13 @@ export interface TetherEnds {
 }
 
 export interface TetherOptions {
-    /** What it's a tether of, a modifier class that colours its line. */
+    /** What it's a tether of, a modifier class on its layer. */
     kind: string;
     /** The state an end moves with besides the document and the panel's
      *  scroll — compared field by field. */
     watch: (state: UIState) => Record<string, unknown>;
+    /** What the line stands for now — another, and a hidden line shows again. */
+    current: (state: UIState) => unknown;
 }
 
 export function createTether(ends: TetherEnds, options: TetherOptions) {
@@ -52,9 +56,12 @@ export function createTether(ends: TetherEnds, options: TetherOptions) {
 
     const cleanups: Array<() => void> = [];
     let pending: number | null = null;
+    /** Hidden by {@link toggle}, till what it stands for changes. */
+    let hidden = false;
 
     /** The line's path in the layer's own coordinates, or null when it hides. */
     function route(): string | null {
+        if (hidden) return null;
         const start = ends.from();
         if (!start) return null;
         const end = ends.to();
@@ -104,11 +111,23 @@ export function createTether(ends: TetherEnds, options: TetherOptions) {
         });
     }
 
+    /** Hide the line for what it stands for now, or show it again. */
+    function toggle(): void {
+        hidden = !hidden;
+        schedule();
+    }
+
     /** Lay the line over `body`, the document area's and `panel`'s container,
      *  following what moves either end. */
     function mount(body: HTMLElement, panel: HTMLElement, store: Store<UIState, Action>): void {
         body.appendChild(el);
         cleanups.push(subscribeSelector(store, options.watch, schedule, { equality: shallowEqual }));
+        cleanups.push(
+            subscribeSelector(store, options.current, () => {
+                hidden = false;
+                schedule();
+            }),
+        );
         // The panel's list scrolling: a scroll doesn't bubble, so the panel
         // catches it on the way down.
         panel.addEventListener("scroll", schedule, { capture: true, passive: true });
@@ -129,7 +148,7 @@ export function createTether(ends: TetherEnds, options: TetherOptions) {
         el.remove();
     }
 
-    return { el, mount, schedule, destroy };
+    return { el, mount, schedule, toggle, destroy };
 }
 
 export type TetherComponent = ReturnType<typeof createTether>;

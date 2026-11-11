@@ -26,13 +26,15 @@ listed once, by package. Its major and minor version are those of the
   pattern that isn't a regular expression shows as invalid in the panel, and
   `search` rejects with an `invalidRequest` `UDocError`.
 - A line joins the current search match on the document to its result in the
-  Search panel, in the current match's colour, and follows both as the document
-  and the results scroll. It hides while either end is out of sight, and on a
+  Search panel, in the selection's colour, and follows both as the document and
+  the results scroll. It hides while either end is out of sight, and on a
   narrow screen, where the panel slides over the document.
   `showSearchTether: false` leaves it out.
 - A line, alike, joins the open comment on the document to its card in the
   Comments panel: a Word, Excel or PowerPoint thread's marker, or a PDF's
   annotation, when one is selected. `showCommentTether: false` leaves it out.
+  Choosing the current result, or the selected card, again hides its line, and
+  once more shows it.
 
 #### Changed
 
