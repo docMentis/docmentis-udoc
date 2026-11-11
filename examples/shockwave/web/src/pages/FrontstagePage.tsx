@@ -101,7 +101,7 @@ export function FrontstagePage() {
                         const path = `${frontstagePath(token!)}/files/${encodeURIComponent(file.id)}`;
                         return (
                             <li key={file.id} className="stage-file" onClick={() => navigate(path)}>
-                                <Thumbnail file={file} flips={false} />
+                                <Thumbnail file={file} />
                                 <div className="stage-file-text">
                                     <Link className="stage-file-name" to={path}>
                                         {file.name}

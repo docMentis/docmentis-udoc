@@ -45,7 +45,7 @@ export const HIGHLIGHTS: Highlight[] = [
         id: "thumbnails-on-the-server",
         tells: (moment) => moment.kind === "thumbnails:shown" && moment.where === "card",
         title: "Thumbnails rendered on the server",
-        body: "udoc-server generates thumbnails on the server. The first page's is generated and stored at upload; the other pages' are generated in real time, upon request. This reduces your storage cost while providing the best user experience.",
+        body: "udoc-server generates thumbnails on the server. Every page's is generated once, when a file is uploaded or a version is saved, and stored, so flipping through a card's pages loads stored images, each page as that version was saved, with nothing rendered on request.",
         figures: formatAndTime,
         ends: (moment) => moment.kind === "thumbnails:hidden" && moment.where === "card",
     },

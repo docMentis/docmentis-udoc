@@ -58,11 +58,10 @@ with no `Cache-Control`, `ETag` or `Last-Modified`, so a browser asks again
 each time. The first answer for a document took 0.8 to 1.3 s, which opens it;
 later ones, while udoc-server kept it open, 5 to 25 ms.
 
-**Workaround.** The backend renders each version's first page once, as it's
-uploaded or saved; keeps it in its database; and serves it from
-`/api/thumbnails/:assetId/:number`, for a browser to keep, asking each time that it
-may still read it (`server/routes/thumbnails.ts`). The other pages a card in the Library flips to
-are asked of udoc-server, and rendered again after a reload.
+**Workaround.** The backend renders each page of each version once, as it's
+uploaded or saved; keeps them in its database; and serves each from
+`/api/thumbnails/:assetId/:number/:page`, for a browser to keep, asking each time
+that it may still read it (`server/routes/thumbnails.ts`).
 
 ## A page at an IPv6 address can't verify free usage
 
@@ -140,11 +139,11 @@ of the version published.
 form for a checkpoint. A checkpoint opens in the viewer, and copies through
 `file.:format`, but its pages can't be asked for as images.
 
-**Workaround.** Saving a version renders its first page as it is then, and keeps
-it as that version's thumbnail. A card in the Library flips through the working
-copy's other pages, which only those who read the Library see. A card in
-Collections, or on a frontstage, shows its version's first page alone, and doesn't
-flip.
+**Workaround.** Saving a version renders each of its pages as they are then, and
+keeps them as that version's thumbnails, so every card flips through its own
+version's pages, a published one's too. An edit someone makes between the
+checkpoint and the rendering shows in them. Every version keeps an image of each
+of its pages, and saving one waits for them all to render.
 
 ## A document can't be copied
 
@@ -159,7 +158,7 @@ from it, with the same pages.
 `checkpoints/:version/file.:format`, and imports that; for a format udoc-server can't
 save, it imports the original (`server/udoc.ts`). Each copy costs a save and an import,
 each a session that asks for a permit. Measured once, through the upload route, whose
-import also renders a first page: a 19 KB word document took 0.5 s to save and 1.5 s to
+import then also rendered a first page: a 19 KB word document took 0.5 s to save and 1.5 s to
 import, and an 82 MB deck 0.7 s and 3.9 s. The copy has no history of its own, and the
 bytes kept aren't the upload's.
 

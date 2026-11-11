@@ -265,6 +265,24 @@ const MIGRATIONS = [
     );
     CREATE INDEX frontstage_page_reads_by_visitor ON frontstage_page_reads (tenant_id, room_id, visitor_id);
     `,
+    // A version's thumbnails are each of its pages as it was saved, `page` counting
+    // from 0, and a version udoc-server rendered none of has no row. Those kept
+    // before were first pages alone, and stay so.
+    `
+    CREATE TABLE page_thumbnails (
+        tenant_id TEXT NOT NULL,
+        asset_id TEXT NOT NULL,
+        number INTEGER NOT NULL,
+        page INTEGER NOT NULL,
+        png BLOB NOT NULL,
+        PRIMARY KEY (tenant_id, asset_id, number, page),
+        FOREIGN KEY (tenant_id, asset_id, number) REFERENCES versions (tenant_id, asset_id, number) ON DELETE CASCADE
+    );
+    INSERT INTO page_thumbnails (tenant_id, asset_id, number, page, png)
+        SELECT tenant_id, asset_id, number, 0, png FROM thumbnails WHERE png IS NOT NULL;
+    DROP TABLE thumbnails;
+    ALTER TABLE page_thumbnails RENAME TO thumbnails;
+    `,
 ];
 
 /** SQLite's code for a `UNIQUE` constraint failing. */

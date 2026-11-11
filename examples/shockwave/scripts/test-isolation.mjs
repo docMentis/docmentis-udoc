@@ -327,7 +327,7 @@ const versionProbes = (file) => [
     probe("GET", "/api/assets/:id", (x) => ({ id: x[file] })),
     probe("GET", "/api/assets/:id/versions", (x) => ({ id: x[file] })),
     probe("POST", "/api/assets/:id/versions", (x) => ({ id: x[file] }), { body: { note: "taken" } }),
-    probe("GET", "/api/thumbnails/:assetId/:number", (x) => ({ assetId: x[file], number: 1 })),
+    probe("GET", "/api/thumbnails/:assetId/:number/:page", (x) => ({ assetId: x[file], number: 1, page: 0 })),
     ...["submit", "approve", "return", "publish", "reassign", "dismiss"].map((step) =>
         probe("POST", `/api/assets/:id/versions/:number/${step}`, (x) => ({ id: x[file], number: 1 }), {
             body: { note: "taken", reviewerId: larchmereIds.reviewer },
@@ -377,10 +377,11 @@ const PROBES = [
     probe("GET", "/api/deal-rooms/:id/activity", (x) => ({ id: x.room })),
     probe("POST", "/api/deal-rooms/:id/activity/seen", (x) => ({ id: x.room })),
     // Larchmere's own link, naming what's Northwind's.
-    probe("GET", "/api/frontstage/:token/thumbnails/:assetId/:number", (x) => ({
+    probe("GET", "/api/frontstage/:token/thumbnails/:assetId/:number/:page", (x) => ({
         token: A.token,
         assetId: x.copy,
         number: 1,
+        page: 0,
     })),
     probe("POST", "/api/frontstage/:token/activity", () => ({ token: A.token }), {
         body: (x) => ({ kind: "opened", fileId: x.copy }),
@@ -808,7 +809,7 @@ console.log("6. What gives a tenant away");
     check("and answers the same", wrong.status === noOne.status && wrong.text === noOne.text);
 
     // A browser keeps an image, and asks each time whether it still may.
-    const thumbnail = `/api/thumbnails/${B.deck.id}/1`;
+    const thumbnail = `/api/thumbnails/${B.deck.id}/1/0`;
     const kept = await fetch(BASE + thumbnail, { headers: { cookie: cookies[northwindEmails.admin] } });
     await kept.arrayBuffer();
     const etag = kept.headers.get("etag");
@@ -840,7 +841,7 @@ const CROSSINGS = {
     "version_events.asset_id": `INSERT INTO version_events (tenant_id, asset_id, number, kind, user_id, at) VALUES ('${tenantA}', '${B.deck.id}', 1, 'saved', '${larchmereIds.admin}', 1)`,
     "version_events.user_id": `INSERT INTO version_events (tenant_id, asset_id, number, kind, user_id, at) VALUES ('${tenantA}', '${A.deck.id}', 1, 'saved', '${northwindIds.admin}', 1)`,
     "version_events.to_user_id": `INSERT INTO version_events (tenant_id, asset_id, number, kind, user_id, to_user_id, at) VALUES ('${tenantA}', '${A.deck.id}', 1, 'saved', '${larchmereIds.admin}', '${northwindIds.admin}', 1)`,
-    "thumbnails.asset_id": `INSERT INTO thumbnails (tenant_id, asset_id, number, png) VALUES ('${tenantA}', '${B.deck.id}', 1, NULL)`,
+    "thumbnails.asset_id": `INSERT INTO thumbnails (tenant_id, asset_id, number, page, png) VALUES ('${tenantA}', '${B.deck.id}', 1, 0, x'00')`,
     "collection_items.collection_id": `INSERT INTO collection_items (tenant_id, collection_id, asset_id, position) VALUES ('${tenantA}', '${B.collection.id}', '${A.deck.id}', 9)`,
     "collection_items.asset_id": `INSERT INTO collection_items (tenant_id, collection_id, asset_id, position) VALUES ('${tenantA}', '${A.collection.id}', '${B.deck.id}', 9)`,
     "deal_room_people.room_id": `INSERT INTO deal_room_people (tenant_id, room_id, user_id) VALUES ('${tenantA}', '${B.room.id}', '${larchmereIds.admin}')`,
@@ -1172,8 +1173,8 @@ function cloneLarchmereInto(mark, token, documentIdOf) {
         INSERT INTO version_events (tenant_id, asset_id, number, kind, user_id, at, note)
             SELECT ${b}, asset_id, number, kind, ${q(northwindIds.admin)}, at, ${q(mark)}
             FROM version_events WHERE tenant_id = ${a} AND asset_id IN ${assetIdsOf};
-        INSERT INTO thumbnails (tenant_id, asset_id, number, png)
-            SELECT ${b}, asset_id, number, x'89504e47' FROM thumbnails WHERE tenant_id = ${a} AND asset_id IN ${assetIdsOf};
+        INSERT INTO thumbnails (tenant_id, asset_id, number, page, png)
+            SELECT ${b}, asset_id, number, page, x'89504e47' FROM thumbnails WHERE tenant_id = ${a} AND asset_id IN ${assetIdsOf};
         INSERT INTO collections (tenant_id, id, name, description, updated_at)
             SELECT ${b}, id, ${q(mark)}, ${q(mark)}, updated_at FROM collections WHERE tenant_id = ${a} AND id = ${q(A.collection.id)};
         INSERT INTO collection_items (tenant_id, collection_id, asset_id, position, instructions)
@@ -1222,7 +1223,7 @@ console.log("11. Northwind holds rows with Larchmere's very ids");
         `/api/assets/${A.deck.id}/versions`,
         `/api/assets/${A.draft.id}`,
         `/api/assets/${A.draft.id}/versions`,
-        `/api/thumbnails/${A.deck.id}/1`,
+        `/api/thumbnails/${A.deck.id}/1/0`,
         "/api/collections",
         `/api/collections/${A.collection.id}`,
         "/api/published-files",
@@ -1233,7 +1234,7 @@ console.log("11. Northwind holds rows with Larchmere's very ids");
         `/api/deal-rooms/${A.room.id}/activity`,
         "/api/deal-rooms/news",
         `/api/assets/${A.copy.id}/versions`,
-        `/api/thumbnails/${A.copy.id}/1`,
+        `/api/thumbnails/${A.copy.id}/1/0`,
     ];
     const readAll = async (client) => {
         const lines = [];

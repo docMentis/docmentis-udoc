@@ -128,11 +128,19 @@ export interface Folder {
 }
 
 /**
- * Pixels to a point a file's card shows its pages at, the first kept and the
- * others rendered as they're flipped to: a letter page 306 pixels wide, a 16:9
- * slide 480, sharp on a card at twice the pixels.
+ * Pixels to a point a file's card shows its pages at, each kept as its version
+ * was saved: a letter page 306 pixels wide, a 16:9 slide 480, sharp on a card at
+ * twice the pixels.
  */
 export const CARD_PAGE_SCALE = 0.5;
+
+/** A version's pages, as its card shows them: each kept as the version was saved. */
+export interface Thumbnails {
+    /** Where they are: page `i`, counting from 0, is at `${path}/${i}`, for an `<img>`. */
+    path: string;
+    /** How many there are, at least 1. */
+    pageCount: number;
+}
 
 /** A file in a tenant's library: an asset, its document kept by udoc-server. */
 export interface Asset {
@@ -146,8 +154,8 @@ export interface Asset {
     size: number;
     /** The document udoc-server keeps it as, opened from `/udoc/documents/:documentId/package`. */
     documentId: string;
-    /** Where its first page is, for an `<img>`; `null` when it has none, as a workbook. */
-    thumbnail: string | null;
+    /** Its latest version's pages, for its card; `null` when it has none, as a workbook. */
+    thumbnails: Thumbnails | null;
     uploadedBy: { id: string; name: string };
     /** When it was uploaded, in milliseconds since the epoch. */
     uploadedAt: number;
@@ -234,8 +242,8 @@ export interface PublishedFile {
     version: number;
     /** The checkpoint that version is, opened from `/udoc/documents/:documentId/checkpoints/:checkpoint/package`. */
     checkpoint: number;
-    /** Where that version's first page is, for an `<img>`; `null` when it has none. */
-    thumbnail: string | null;
+    /** That version's pages, for its card; `null` when it has none. */
+    thumbnails: Thumbnails | null;
     /** When that version was published, in milliseconds since the epoch. */
     publishedAt: number;
 }
@@ -344,8 +352,8 @@ export interface FrontstageFile {
     description: string | null;
     /** What it was read as, udoc's name for its format: `pdf`, `pptx`, … */
     format: string;
-    /** Where its first page is, for an `<img>`; `null` when it has none. */
-    thumbnail: string | null;
+    /** The version shown's pages, for its card; `null` when it has none. */
+    thumbnails: Thumbnails | null;
     /** Where the viewer opens it from. */
     package: string;
 }

@@ -84,11 +84,11 @@ export interface TenantDocuments {
     /** Save document `id` as it is now as a new checkpoint: the checkpoint's number. */
     checkpoint(id: string): Promise<number>;
     /**
-     * Document `id`'s first page as a PNG, `scale` pixels to a point; `null`
-     * for one udoc-server turns down, as a workbook's, all of its first sheet
-     * (GAPS.md).
+     * Document `id`'s pages as PNGs, in order, `scale` pixels to a point, up to
+     * the first udoc-server turns down: none for a workbook, whose first page is
+     * all of its first sheet (GAPS.md).
      */
-    renderFirstPage(id: string, scale: number): Promise<Uint8Array | null>;
+    renderPages(id: string, scale: number): Promise<Uint8Array[]>;
 }
 
 export interface Udoc {
@@ -338,19 +338,26 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
                     return ((await response.json()) as { version: number }).version;
                 },
 
-                async renderFirstPage(id, scale) {
-                    try {
-                        const page = await ask(
-                            tenantId,
-                            "GET",
-                            `/documents/${encodeURIComponent(id)}/layout/pages/0.png?scale=${scale}`,
-                        );
-                        return new Uint8Array(await page.arrayBuffer());
-                    } catch (error) {
-                        // A page it won't render is the request's fault; its own failing isn't.
-                        if (error instanceof UdocFailure && error.status < 500) return null;
-                        throw error;
+                async renderPages(id, scale) {
+                    const document = `/documents/${encodeURIComponent(id)}`;
+                    const counted = await ask(tenantId, "GET", `${document}/layout/page-count`);
+                    const { pageCount } = (await counted.json()) as { pageCount: number };
+                    const pages: Uint8Array[] = [];
+                    for (let index = 0; index < pageCount; index++) {
+                        try {
+                            const page = await ask(
+                                tenantId,
+                                "GET",
+                                `${document}/layout/pages/${index}.png?scale=${scale}`,
+                            );
+                            pages.push(new Uint8Array(await page.arrayBuffer()));
+                        } catch (error) {
+                            // A page it won't render is the request's fault; its own failing isn't.
+                            if (error instanceof UdocFailure && error.status < 500) break;
+                            throw error;
+                        }
                     }
+                    return pages;
                 },
             };
         },

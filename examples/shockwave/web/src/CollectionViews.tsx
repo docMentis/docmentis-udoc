@@ -1,7 +1,6 @@
 // How a collection shows: as a card, among the others and on Home, with its
 // first file's first page on its tray; and its files as cards, each with how to
-// use it, and opening the version published. A file's cards here don't flip: a
-// published version's other pages can't be rendered yet (GAPS.md).
+// use it, flipping through the pages of the version published, and opening it.
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 
@@ -43,7 +42,7 @@ export function CollectionCard({ collection }: { collection: Collection }) {
     );
 }
 
-/** A file in a collection as a card: the published version's first page, its name, and how to use it. */
+/** A file in a collection as a card: the published version's pages, its name, and how to use it. */
 export function CollectionFileCard({
     collectionId,
     item: { file, instructions },
@@ -58,7 +57,7 @@ export function CollectionFileCard({
     const path = collectionFilePath(collectionId, file.id);
     return (
         <div className="file-card" onClick={() => navigate(path)}>
-            <Thumbnail file={file} flips={false} />
+            <Thumbnail file={file} />
             <div className="file-card-body">
                 <div className="file-card-title">
                     <Link className="file-name" to={path}>

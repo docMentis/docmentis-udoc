@@ -34,10 +34,10 @@ export interface DocumentClosed {
     where: "upload" | "file";
 }
 
-/** Thumbnails in view, where there were none: the first of them shown, its file's first page, kept at upload. */
+/** Thumbnails in view, where there were none: the first of them shown, its file's first page, kept as its version was saved. */
 export interface ThumbnailsShown {
     kind: "thumbnails:shown";
-    /** Where: files' cards, in the library's grid or on Home. */
+    /** Where: files' cards that flip, wherever they show. */
     where: "card";
     /** udoc's name for the format of the first one's document: `pdf`, `pptx`, … */
     format: string;
@@ -48,7 +48,7 @@ export interface ThumbnailsShown {
 /** No thumbnail in view any more: the last of them gone. */
 export interface ThumbnailsHidden {
     kind: "thumbnails:hidden";
-    /** Where: files' cards, in the library's grid or on Home. */
+    /** Where: files' cards that flip, wherever they show. */
     where: "card";
 }
 

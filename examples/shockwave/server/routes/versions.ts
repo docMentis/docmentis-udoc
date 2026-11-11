@@ -29,7 +29,7 @@ import type { TenantDb } from "../db.ts";
 import { anySentToReview, entersDealRoom } from "../dealRooms.ts";
 import { Refusal, noteOf, signedIn } from "../http.ts";
 import type { Access } from "../scope.ts";
-import { keepThumbnail } from "./thumbnails.ts";
+import { keepThumbnails } from "./thumbnails.ts";
 
 /**
  * What each step asks of a version and its user: who takes it, of those who edit
@@ -308,8 +308,8 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
 
     /**
      * Save the file's document as it is now as a new version, `{ note }`: a
-     * checkpoint udoc-server takes, its first page kept as that version's
-     * thumbnail. `201`, a `VersionedAsset`.
+     * checkpoint udoc-server takes, each of its pages kept as that version's
+     * thumbnails. `201`, a `VersionedAsset`.
      */
     app.post<{ Params: { id: string }; Body: { note?: unknown } | undefined }>(
         "/api/assets/:id/versions",
@@ -322,10 +322,10 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
             const checkpoint = await documents.checkpoint(documentId);
             const number = db.transaction(() => addVersion(db, id, checkpoint, user.id, Date.now(), note));
             try {
-                await keepThumbnail(db, documents, { assetId: id, documentId, number });
+                await keepThumbnails(db, documents, { assetId: id, documentId, number });
             } catch (error) {
-                // The version is kept all the same, with no thumbnail.
-                request.log.warn(error, "a thumbnail wasn't rendered");
+                // The version is kept all the same, with no thumbnails.
+                request.log.warn(error, "thumbnails weren't rendered");
             }
             const answer: VersionedAsset = { asset: anyFileOf(db, id), versions: versionsOf(db, id) };
             return reply.code(201).send(answer);

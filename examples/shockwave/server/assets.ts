@@ -1,4 +1,4 @@
-// A file, as the routes read one: its row, with its uploader, its thumbnail and
+// A file, as the routes read one: its row, with its uploader, its thumbnails and
 // its latest version, and the `Asset` the API answers; and as those who sell with
 // a library's file read one, its published version alone, and the `PublishedFile`
 // the API answers. A deal room's file is an asset too, kept out of the library by
@@ -6,7 +6,7 @@
 import type { Asset, PublishedFile, VersionStatus } from "../shared/api.ts";
 import type { TenantDb } from "./db.ts";
 import { Refusal } from "./http.ts";
-import { thumbnailPath } from "./routes/thumbnails.ts";
+import { thumbnailCount, thumbnailsOf } from "./routes/thumbnails.ts";
 
 export interface AssetRow {
     id: string;
@@ -18,8 +18,8 @@ export interface AssetRow {
     uploaded_by: string;
     uploader_name: string;
     uploaded_at: number;
-    /** 1 for a latest version with no thumbnail. */
-    no_thumbnail: number;
+    /** How many thumbnails the latest version has. */
+    thumbnail_count: number;
     latest_number: number;
     latest_status: VersionStatus;
     published_version: number | null;
@@ -28,14 +28,14 @@ export interface AssetRow {
 
 export const ASSET_COLUMNS = `assets.id, assets.name, assets.folder_id, assets.format, assets.size,
     assets.document_id, assets.uploaded_by, users.name AS uploader_name, assets.uploaded_at,
-    thumbnails.png IS NULL AS no_thumbnail,
+    ${thumbnailCount("latest.number")} AS thumbnail_count,
     latest.number AS latest_number, latest.status AS latest_status, assets.published_version,
     room_file.room_id AS deal_room_id`;
 
 /**
- * The assets, with their uploaders, their latest versions and those versions'
- * thumbnails; `room_file` is the row of one that's a deal room's. A query over these
- * still says whose: `assets.tenant_id = :tenant`.
+ * The assets, with their uploaders and their latest versions; `room_file` is the
+ * row of one that's a deal room's. A query over these still says whose:
+ * `assets.tenant_id = :tenant`.
  */
 export const ASSETS = `assets JOIN users ON users.tenant_id = assets.tenant_id AND users.id = assets.uploaded_by
     JOIN versions AS latest ON latest.tenant_id = assets.tenant_id AND latest.asset_id = assets.id
@@ -43,8 +43,6 @@ export const ASSETS = `assets JOIN users ON users.tenant_id = assets.tenant_id A
             SELECT MAX(number) FROM versions
             WHERE versions.tenant_id = assets.tenant_id AND versions.asset_id = assets.id
         )
-    LEFT JOIN thumbnails ON thumbnails.tenant_id = assets.tenant_id AND thumbnails.asset_id = assets.id
-        AND thumbnails.number = latest.number
     LEFT JOIN deal_room_files AS room_file ON room_file.tenant_id = assets.tenant_id
         AND room_file.asset_id = assets.id`;
 
@@ -59,7 +57,7 @@ export function assetOfRow(row: AssetRow): Asset {
         format: row.format,
         size: row.size,
         documentId: row.document_id,
-        thumbnail: row.no_thumbnail ? null : thumbnailPath(row.id, row.latest_number),
+        thumbnails: thumbnailsOf(row.id, row.latest_number, row.thumbnail_count),
         uploadedBy: { id: row.uploaded_by, name: row.uploader_name },
         uploadedAt: row.uploaded_at,
         latestVersion: { number: row.latest_number, status: row.latest_status },
@@ -91,13 +89,13 @@ export interface PublishedFileRow {
     document_id: string;
     number: number;
     checkpoint: number;
-    /** 1 for a published version with a thumbnail. */
-    has_thumbnail: number;
+    /** How many thumbnails the published version has. */
+    thumbnail_count: number;
     published_at: number;
 }
 
 export const PUBLISHED_FILE_COLUMNS = `assets.id, assets.name, assets.format, assets.document_id,
-    published.number, published.checkpoint, thumbnails.png IS NOT NULL AS has_thumbnail,
+    published.number, published.checkpoint, ${thumbnailCount("published.number")} AS thumbnail_count,
     (
         SELECT MAX(event.at) FROM version_events AS event
         WHERE event.tenant_id = assets.tenant_id AND event.asset_id = assets.id
@@ -105,14 +103,12 @@ export const PUBLISHED_FILE_COLUMNS = `assets.id, assets.name, assets.format, as
     ) AS published_at`;
 
 /**
- * The library's files with a published version, with that version and its thumbnail.
- * A query over these still says whose: `assets.tenant_id = :tenant`.
+ * The library's files with a published version, with that version. A query over
+ * these still says whose: `assets.tenant_id = :tenant`.
  */
 export const PUBLISHED_FILES = `assets JOIN versions AS published ON published.tenant_id = assets.tenant_id
         AND published.asset_id = assets.id AND published.number = assets.published_version
-        AND assets.id NOT IN (SELECT asset_id FROM deal_room_files WHERE tenant_id = assets.tenant_id)
-    LEFT JOIN thumbnails ON thumbnails.tenant_id = assets.tenant_id AND thumbnails.asset_id = assets.id
-        AND thumbnails.number = published.number`;
+        AND assets.id NOT IN (SELECT asset_id FROM deal_room_files WHERE tenant_id = assets.tenant_id)`;
 
 export function publishedFileOfRow(row: PublishedFileRow): PublishedFile {
     return {
@@ -122,7 +118,7 @@ export function publishedFileOfRow(row: PublishedFileRow): PublishedFile {
         documentId: row.document_id,
         version: row.number,
         checkpoint: row.checkpoint,
-        thumbnail: row.has_thumbnail ? thumbnailPath(row.id, row.number) : null,
+        thumbnails: thumbnailsOf(row.id, row.number, row.thumbnail_count),
         publishedAt: row.published_at,
     };
 }

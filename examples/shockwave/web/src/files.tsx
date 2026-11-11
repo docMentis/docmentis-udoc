@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 
-import { CARD_PAGE_SCALE } from "../../shared/api.ts";
 import type { Asset } from "../../shared/api.ts";
 import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
 import { announceMoment } from "./moments";
@@ -36,37 +35,28 @@ export function FileBadge({ format }: { format: string }) {
 }
 
 /** What a card needs of a file to show its pages. */
-type PagedFile = Pick<Asset, "format" | "thumbnail"> & { documentId?: string };
-
-/** Where page `index` of `file` is: its first, kept by the backend; another, rendered by udoc-server as it's asked for. */
-function pageSource(file: PagedFile, index: number): string {
-    if (index === 0 && file.thumbnail) return file.thumbnail;
-    const document = encodeURIComponent(file.documentId ?? "");
-    return `/udoc/documents/${document}/layout/pages/${index}.png?scale=${CARD_PAGE_SCALE}`;
-}
+type PagedFile = Pick<Asset, "format" | "thumbnails">;
 
 /** How many thumbnails that flip are in view: the first to show, and the last to go, are moments. */
 let inView = 0;
 
 /**
- * A file's pages, on its card: its first, kept by the backend, and unless
- * `flips` is false, with the arrows over it, the others, which udoc-server
- * renders as they're flipped to, as the document is now: a published version's
- * card, which can't show that (GAPS.md), doesn't flip. The page shown stays
- * until the one flipped to has loaded; the next arrow shows until udoc-server
- * has no next page. A file with no first page, as a workbook, whose first page
- * is all of its first sheet (GAPS.md), shows a large badge of its type.
+ * A file's pages, on its card, each kept by the backend as its version was
+ * saved: its first, and unless `flips` is false, with the arrows over it, the
+ * others. The page shown stays until the one flipped to has loaded. A file with
+ * no pages kept, as a workbook, whose first page is all of its first sheet
+ * (GAPS.md), shows a large badge of its type.
  */
 export function Thumbnail({ file, flips = true }: { file: PagedFile; flips?: boolean }) {
     const [state, setState] = useState<"loading" | "shown" | "failed">("loading");
     // The page flipped to, and the one shown: another while it loads.
     const [page, setPage] = useState(0);
     const [shown, setShown] = useState(0);
-    // The last page, once a flip past it has found it.
-    const [lastPage, setLastPage] = useState(Infinity);
     const madeAt = useRef(performance.now());
     const shownAfter = useRef(0);
     const showing = state === "shown";
+    const { thumbnails } = file;
+    const lastPage = (thumbnails?.pageCount ?? 1) - 1;
 
     // In view from its first page loaded until it goes.
     useEffect(() => {
@@ -91,24 +81,20 @@ export function Thumbnail({ file, flips = true }: { file: PagedFile; flips?: boo
         setShown(page);
     }
 
-    // A page flipped to that doesn't load leaves the one shown, the last.
+    // A page flipped to that doesn't load leaves the one shown.
     function failed() {
-        if (page === 0) {
-            setState("failed");
-            return;
-        }
-        setLastPage(shown);
-        setPage(shown);
+        if (page === 0) setState("failed");
+        else setPage(shown);
     }
 
     return (
         <div className="thumbnail" aria-busy={page !== shown}>
-            {state === "failed" || !file.thumbnail ? (
+            {state === "failed" || !thumbnails ? (
                 <FileBadge format={file.format} />
             ) : (
                 <>
                     <img
-                        src={pageSource(file, page)}
+                        src={`${thumbnails.path}/${page}`}
                         alt=""
                         loading="lazy"
                         className={state === "shown" ? "thumbnail-shown" : undefined}

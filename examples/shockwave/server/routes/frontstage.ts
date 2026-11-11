@@ -21,6 +21,7 @@ import type { TenantDb } from "../db.ts";
 import { Refusal, sendImage, sendKept } from "../http.ts";
 import type { Access } from "../scope.ts";
 import { frontstagePackagePath } from "../udoc.ts";
+import { thumbnailCount } from "./thumbnails.ts";
 
 interface StageRow {
     room_id: string;
@@ -47,8 +48,8 @@ interface StagedFileRow {
     description: string | null;
     format: string;
     number: number;
-    /** 1 for a version with a thumbnail. */
-    has_thumbnail: number;
+    /** How many thumbnails the version has. */
+    thumbnail_count: number;
 }
 
 const GONE = () => new Refusal(404, "notFound", "no such frontstage");
@@ -143,12 +144,10 @@ export function frontstageRoutes(app: FastifyInstance, access: Access): void {
         const files = db
             .prepare(
                 `SELECT assets.id, file.name, file.description, assets.format, assets.published_version AS number,
-                    thumbnails.png IS NOT NULL AS has_thumbnail
+                    ${thumbnailCount("assets.published_version")} AS thumbnail_count
                 FROM frontstage_files AS file
                 JOIN assets ON assets.tenant_id = file.tenant_id AND assets.id = file.asset_id
                     AND assets.published_version IS NOT NULL
-                LEFT JOIN thumbnails ON thumbnails.tenant_id = assets.tenant_id AND thumbnails.asset_id = assets.id
-                    AND thumbnails.number = assets.published_version
                 WHERE file.tenant_id = :tenant AND file.room_id = ? ORDER BY file.position`,
             )
             .all(stage.room_id) as unknown as StagedFileRow[];
@@ -170,7 +169,10 @@ export function frontstageRoutes(app: FastifyInstance, access: Access): void {
                 name: file.name,
                 description: file.description,
                 format: file.format,
-                thumbnail: file.has_thumbnail ? `${address}/thumbnails/${file.id}/${file.number}` : null,
+                thumbnails:
+                    file.thumbnail_count === 0
+                        ? null
+                        : { path: `${address}/thumbnails/${file.id}/${file.number}`, pageCount: file.thumbnail_count },
                 package: frontstagePackagePath(token, file.id, file.number),
             })),
         };
@@ -282,24 +284,26 @@ export function frontstageRoutes(app: FastifyInstance, access: Access): void {
         return sendImage(request, reply, `logo-${logo.logo_changed_at}`, logo.logo_type, logo.logo);
     });
 
-    /** The first page of a file on the frontstage, at the version shown; `404` for anything else. */
-    app.get<{ Params: { token: string; assetId: string; number: string } }>(
-        "/api/frontstage/:token/thumbnails/:assetId/:number",
+    /** A page of a file on the frontstage, at the version shown, counting from 0; `404` for anything else. */
+    app.get<{ Params: { token: string; assetId: string; number: string; page: string } }>(
+        "/api/frontstage/:token/thumbnails/:assetId/:number/:page",
         async (request, reply) => {
-            const { token, assetId, number } = request.params;
+            const { token, assetId } = request.params;
+            const number = Number(request.params.number);
+            const page = Number(request.params.page);
             const row = tenantOf(token)
                 .prepare(
                     `SELECT thumbnails.png FROM frontstages AS stage
                     JOIN frontstage_files AS file ON file.tenant_id = stage.tenant_id AND file.room_id = stage.room_id
                     JOIN assets ON assets.tenant_id = file.tenant_id AND assets.id = file.asset_id
                     JOIN thumbnails ON thumbnails.tenant_id = assets.tenant_id AND thumbnails.asset_id = assets.id
-                        AND thumbnails.number = assets.published_version
+                        AND thumbnails.number = assets.published_version AND thumbnails.page = ?
                     WHERE stage.tenant_id = :tenant AND stage.token = ? AND file.asset_id = ?
                         AND assets.published_version = ?`,
                 )
-                .get(token, assetId, Number(number)) as { png: Uint8Array | null } | undefined;
-            if (!row?.png) throw GONE();
-            return sendKept(request, reply, `${assetId}-${number}`, "image/png", row.png);
+                .get(page, token, assetId, number) as { png: Uint8Array } | undefined;
+            if (!row) throw GONE();
+            return sendKept(request, reply, `${assetId}-${number}-${page}`, "image/png", row.png);
         },
     );
 }

@@ -233,10 +233,8 @@ mounted at `/udoc` (`basePath`) on its own HTTP server, and it keeps that tenant
 documents, renders their pages and serves them part by part and for collaboration.
 SQLite, Node's own `node:sqlite`, keeps what the app adds: tenants, users, sessions, and
 an asset for each document, naming its tenant and its udoc document id, and each
-version's first page as a thumbnail, rendered by udoc-server once, as the
-version's uploaded or saved. The other pages a card in the Library flips to,
-udoc-server renders as they're asked for, and none is kept. No document is kept
-twice.
+version's pages as thumbnails, rendered by udoc-server once, as the version's
+uploaded or saved. No document is kept twice.
 
 **Tenants.** Shockwave is multi-tenant, and no tenant sees anything of another. They
 share one database, and each row says whose it is:
@@ -383,10 +381,9 @@ be added, and deleting a file takes it out of every collection.
 
 **A collection shows the published version, and nothing around it.** The API answers a
 `PublishedFile`, with no working copy, other versions or uploader, whoever asks. For
-those who don't read the Library, a version's thumbnail is theirs only while it's the
-one published, so a draft's first page never reaches them, and the gate opens that
-checkpoint alone. A card here shows that first page and doesn't flip, since udoc-server
-can't render a checkpoint's pages (`GAPS.md`).
+those who don't read the Library, a version's thumbnails are theirs only while it's the
+one published, so a draft's pages never reach them, and the gate opens that
+checkpoint alone. A card here flips through that version's pages, as they were saved.
 
 **A tenant's collections are its own** ([above](#how-it-fits-together)): another
 tenant's answers `404`, as one that isn't there. Within a tenant, everyone sees all its
@@ -442,8 +439,8 @@ slides still reach them (`GAPS.md`), so it's on whoever prepares a file to clear
 
 The page is the room's banner, its image under its color, which fades up from the text
 so that it reads on any image, over one row to a file: the document and what it says
-side by side, turn about. Pressing one opens the document. Its first page doesn't flip,
-since udoc-server can't render a checkpoint's pages (`GAPS.md`).
+side by side, turn about. Pressing one opens the document; its card flips through the
+pages of the version shown.
 
 **What buyers read is recorded, anonymously, and both of their pages say so.** A browser
 that comes gets a cookie for that link alone, naming a visitor with nothing of who it is,

@@ -155,8 +155,7 @@ export function FileCard({
     const path = waiting ? `${filePath(asset)}?version=${waiting.number}` : filePath(asset);
     return (
         <div className="file-card" onClick={() => navigate(path)}>
-            {/* A deal room's waiting on someone not on it: its working copy's pages aren't theirs. */}
-            <Thumbnail file={asset} flips={asset.dealRoomId === null} />
+            <Thumbnail file={asset} />
             <div className="file-card-body">
                 <div className="file-card-title">
                     <Link className="file-name" to={path}>

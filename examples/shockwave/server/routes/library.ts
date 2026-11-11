@@ -1,8 +1,8 @@
 // The library: `/api/library`, what a folder holds, and `/api/folders` and
 // `/api/assets`, its folders and its files. Those who keep or review a
 // tenant's library read it, and an admin changes it. A file's document is
-// udoc-server's to keep: an upload is imported into it, its first page rendered
-// and kept as its thumbnail, and a file deleted is forgotten by it.
+// udoc-server's to keep: an upload is imported into it, each of its pages
+// rendered and kept as its thumbnails, and a file deleted is forgotten by it.
 import { randomUUID } from "node:crypto";
 
 import type { FastifyInstance, FastifyRequest } from "fastify";
@@ -15,7 +15,7 @@ import { isUniqueFailure } from "../db.ts";
 import type { TenantDb } from "../db.ts";
 import { Refusal, nameOf, signedInAs } from "../http.ts";
 import type { Access, Scope } from "../scope.ts";
-import { keepThumbnail, thumbnailPath } from "./thumbnails.ts";
+import { keepThumbnails, thumbnailsOf } from "./thumbnails.ts";
 import { addFirstVersion } from "./versions.ts";
 
 /** The largest upload: udoc-server's own limit. */
@@ -153,8 +153,8 @@ export function libraryRoutes(app: FastifyInstance, access: Access): void {
     /**
      * Upload a file into folder `?folder=`, or with none, the top, as
      * `?name=`: the body is its bytes, as `application/octet-stream`.
-     * udoc-server imports it, and renders its first page, kept as its
-     * thumbnail: `201 { asset }`, or udoc-server's failure when it doesn't
+     * udoc-server imports it, and renders each of its pages, kept as its
+     * thumbnails: `201 { asset }`, or udoc-server's failure when it doesn't
      * read it.
      */
     app.post<{ Querystring: { folder?: string; name?: string }; Body: unknown }>(
@@ -175,7 +175,7 @@ export function libraryRoutes(app: FastifyInstance, access: Access): void {
                 format: document.format,
                 size: bytes.length,
                 documentId: document.id,
-                thumbnail: null,
+                thumbnails: null,
                 uploadedBy: { id: user.id, name: user.name },
                 uploadedAt: Date.now(),
                 latestVersion: { number: 1, status: "draft" },
@@ -205,15 +205,15 @@ export function libraryRoutes(app: FastifyInstance, access: Access): void {
                 throw error;
             }
             try {
-                const png = await keepThumbnail(db, documents, {
+                const pageCount = await keepThumbnails(db, documents, {
                     assetId: asset.id,
                     documentId: document.id,
                     number: 1,
                 });
-                if (png) asset.thumbnail = thumbnailPath(asset.id, 1);
+                asset.thumbnails = thumbnailsOf(asset.id, 1, pageCount);
             } catch (error) {
-                // The file is kept all the same, with no thumbnail.
-                request.log.warn(error, "a thumbnail wasn't rendered");
+                // The file is kept all the same, with no thumbnails.
+                request.log.warn(error, "thumbnails weren't rendered");
             }
             return reply.code(201).send({ asset });
         },

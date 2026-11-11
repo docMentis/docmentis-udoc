@@ -502,10 +502,10 @@ export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
                             name: source.name,
                             version: source.version,
                         });
-                        // The first page as it was published: the copy's first version is that.
+                        // The pages as they were published: the copy's first version is that.
                         db.prepare(
-                            `INSERT INTO thumbnails (tenant_id, asset_id, number, png)
-                            SELECT tenant_id, ?, 1, png FROM thumbnails
+                            `INSERT INTO thumbnails (tenant_id, asset_id, number, page, png)
+                            SELECT tenant_id, ?, 1, page, png FROM thumbnails
                             WHERE tenant_id = :tenant AND asset_id = ? AND number = ?`,
                         ).run(assetId, source.id, source.version);
                     }
