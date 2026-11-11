@@ -1314,6 +1314,9 @@ export interface OfficeComment {
     at: { plane: number; page: number } | null;
     /** The comment part it is in, its id key. */
     part: string;
+    /** What names that part, which an edit of it names: a slide's id, a
+     *  sheet's; null for a document's own. */
+    owner: string | null;
 }
 
 /**

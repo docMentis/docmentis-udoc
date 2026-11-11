@@ -398,6 +398,8 @@ export const ru: Messages = {
     "comment.lockedBoth": "Заблокировано: нельзя удалить, переместить или изменить",
     "comment.resolved": "Решено",
     "comment.closed": "Закрыто",
+    "comment.resolve": "Решить",
+    "comment.reopen": "Открыть снова",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "Записка",

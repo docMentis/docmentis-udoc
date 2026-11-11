@@ -646,7 +646,7 @@ export interface Comment {
 /** What a comment is in the document. */
 export type CommentSource =
     | { kind: "annotation"; page: string; annotation: Annotation }
-    | { kind: "office"; part: string; at: { plane: number; page: number } };
+    | { kind: "office"; part: string; owner: string | null; at: { plane: number; page: number } };
 
 /** The annotation a PDF comment is; null for a Word, Excel or PowerPoint one. */
 export function annotationOf(comment: Comment): Annotation | null {
@@ -849,7 +849,7 @@ export function officeThreads(comments: readonly OfficeComment[]): Comment[] {
         reviews: [],
         marked: false,
         replies: [],
-        source: { kind: "office", part: read.part, at },
+        source: { kind: "office", part: read.part, owner: read.owner, at },
     });
     const threads = new Map<string, Comment>();
     for (const read of comments) {

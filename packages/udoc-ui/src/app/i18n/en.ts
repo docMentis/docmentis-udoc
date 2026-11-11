@@ -397,6 +397,8 @@ export const en: Messages = {
     "comment.lockedBoth": "Locked: can't be deleted, moved or edited",
     "comment.resolved": "Resolved",
     "comment.closed": "Closed",
+    "comment.resolve": "Resolve",
+    "comment.reopen": "Reopen",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "Note",

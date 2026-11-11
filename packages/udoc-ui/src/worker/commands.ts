@@ -11,6 +11,7 @@ import type {
     AcroFormField,
     AcroFormFieldFill,
     Annotation,
+    CommentCommand,
     PortableCommand,
     PresentationCommand,
     GridColor,
@@ -62,6 +63,10 @@ function worksheet(sheet: SheetId, command: WorksheetCommand): UDocCommand {
  *  and the open document's engine binds them to the right command in Rust (the id
  *  resolution the worker's old `runOnSelection` did). */
 export const Command = {
+    /** Edit the comments of slide `slide` with `command`. */
+    editSlideComment: (slide: string, command: CommentCommand): UDocCommand =>
+        presentation({ editComment: { slide, command } }),
+
     /** Insert host-built `annotations` on top of `pageId`'s — each with no id and
      *  no appearance, which the engine mints and generates. */
     insertAnnotations: (pageId: string, annotations: Annotation[]): UDocCommand =>

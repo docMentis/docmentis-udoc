@@ -397,6 +397,8 @@ export const es: Messages = {
     "comment.lockedBoth": "Bloqueado: no se puede eliminar, mover ni editar",
     "comment.resolved": "Resuelto",
     "comment.closed": "Cerrado",
+    "comment.resolve": "Resolver",
+    "comment.reopen": "Volver a abrir",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "Nota",

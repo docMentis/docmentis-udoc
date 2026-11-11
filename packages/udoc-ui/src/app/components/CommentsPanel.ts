@@ -18,6 +18,7 @@ import type { Comment } from "../annotations.js";
 import { commentThreads, officeThreads, threadHolding } from "../annotations.js";
 import { ICON_CHEVRON_DOWN } from "../icons.js";
 import type { UIState } from "../state.js";
+import { VIEW_MODE } from "../state.js";
 import { createCommentThread } from "./CommentThread.js";
 import type { CommentThreadCallbacks, CommentThreadView } from "./CommentThread.js";
 import type { I18n } from "../i18n/index.js";
@@ -36,8 +37,12 @@ interface CommentsPanelSlice {
     allRead: boolean;
     /** The selection's page and annotation ids, or null for none. */
     selected: { page: string; ids: readonly string[] } | null;
-    /** Whether the session may annotate — without it, every thread only reads. */
+    /** Whether the session may annotate — without it, every PDF thread only
+     *  reads. */
     annotating: boolean;
+    /** Whether an Office thread may be written: in an editing mode, on a
+     *  document whose comment edits are built. */
+    officeEditing: boolean;
 }
 
 function selectSlice(state: UIState): CommentsPanelSlice {
@@ -52,6 +57,7 @@ function selectSlice(state: UIState): CommentsPanelSlice {
             ids: selected.annotations.flatMap((a) => (a.id === undefined ? [] : [a.id])),
         },
         annotating: state.features.includes("annotation"),
+        officeEditing: state.mode !== VIEW_MODE && OFFICE_EDITED_DOC_TYPES.has(state.docType ?? ""),
     };
 }
 
@@ -62,6 +68,7 @@ function sliceEqual(a: CommentsPanelSlice, b: CommentsPanelSlice): boolean {
         a.openOffice === b.openOffice &&
         a.allRead === b.allRead &&
         a.annotating === b.annotating &&
+        a.officeEditing === b.officeEditing &&
         a.selected?.page === b.selected?.page &&
         (a.selected?.ids.join() ?? "") === (b.selected?.ids.join() ?? "")
     );
@@ -83,6 +90,10 @@ interface Card {
     view: CommentThreadView;
     thread: Comment;
 }
+
+/** The doc types whose Office comments may be edited — those whose comment
+ *  commands are built. */
+const OFFICE_EDITED_DOC_TYPES: ReadonlySet<string> = new Set(["presentation"]);
 
 export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallbacks) {
     const el = document.createElement("div");
@@ -180,8 +191,11 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
                 listed.add(thread.id);
                 const isOpen = selected.has(thread);
                 card.el.classList.toggle("udoc-comments-panel__card--selected", isOpen);
-                // An Office comment only reads until its edits are built.
-                card.view.show(thread, isOpen, slice.annotating && thread.source.kind === "annotation");
+                card.view.show(
+                    thread,
+                    isOpen,
+                    thread.source.kind === "annotation" ? slice.annotating : slice.officeEditing,
+                );
                 if (isOpen) open = card;
                 if (!folded) children.push(card.el);
             }

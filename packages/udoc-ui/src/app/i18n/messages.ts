@@ -733,6 +733,10 @@ export interface Messages {
     "comment.resolved": string;
     /** Closed — an Office comment's status */
     "comment.closed": string;
+    /** Resolve — mark a comment thread resolved */
+    "comment.resolve": string;
+    /** Reopen — mark a resolved comment thread active again */
+    "comment.reopen": string;
 
     // An annotation's kind, as a comment names it
     /** Note */

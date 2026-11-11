@@ -393,6 +393,8 @@ export const zhCN: Messages = {
     "comment.lockedBoth": "已锁定：无法删除、移动或编辑",
     "comment.resolved": "已解决",
     "comment.closed": "已关闭",
+    "comment.resolve": "解决",
+    "comment.reopen": "重新打开",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "附注",

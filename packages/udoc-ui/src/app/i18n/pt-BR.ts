@@ -397,6 +397,8 @@ export const ptBR: Messages = {
     "comment.lockedBoth": "Bloqueado: não pode ser excluído, movido nem editado",
     "comment.resolved": "Resolvido",
     "comment.closed": "Fechado",
+    "comment.resolve": "Resolver",
+    "comment.reopen": "Reabrir",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "Nota",

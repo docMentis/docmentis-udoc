@@ -24,6 +24,7 @@ import { parseDateTime } from "../annotations.js";
 import {
     ICON_ATTACHMENT,
     ICON_DELETE,
+    ICON_CHECK,
     ICON_EDIT,
     ICON_LOCK,
     ICON_REPLY,
@@ -121,6 +122,9 @@ export interface CommentThreadCallbacks {
     onReply: (comment: Comment, richContents: string) => void;
     /** Delete `comment`, which no reply answers. */
     onDelete: (comment: Comment) => void;
+    /** Set the status of `comment`, a thread's first, which has one — an
+     *  Office comment's: resolve it, or open it again. */
+    onStatus?: (comment: Comment, status: "active" | "resolved") => void;
     /** Hand the keyboard back, an edit, a reply or a delete done. */
     onDismiss: () => void;
 }
@@ -146,7 +150,7 @@ interface Entry {
     replying(): boolean;
     /** Show `comment`, written to where its locks allow, and answered where
      *  the thread is `open` — neither unless `annotating`. */
-    show(comment: Comment, open: boolean, annotating: boolean): void;
+    show(comment: Comment, open: boolean, annotating: boolean, first: boolean): void;
     startEditing(): void;
 }
 
@@ -189,7 +193,7 @@ export function createCommentThread(i18n: I18n, callbacks: CommentThreadCallback
                 entry = createEntry(i18n, callbacks, layOut);
                 entries.set(key, entry);
             }
-            entry.show(comment, open, annotating);
+            entry.show(comment, open, annotating, depth === 0);
             entry.el.classList.toggle("udoc-comment--reply", depth > 0);
             entry.el.style.setProperty("--udoc-comment-depth", String(depth));
             entry.reply.style.setProperty("--udoc-comment-depth", String(depth + 1));
@@ -304,6 +308,7 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
     lock.setAttribute("role", "img");
     lock.innerHTML = ICON_LOCK;
     const answer = createButton({ icon: ICON_REPLY, label: i18n.t("comment.reply") });
+    const settle = createButton({ icon: ICON_CHECK, label: i18n.t("comment.resolve") });
     const edit = createButton({ icon: ICON_EDIT, label: i18n.t("comment.edit") });
     const remove = createButton({ icon: ICON_DELETE, label: i18n.t("common.delete") });
     const cancel = createButton({ text: i18n.t("common.cancel"), label: i18n.t("comment.cancelEditing") });
@@ -312,7 +317,7 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
         label: i18n.t("comment.save"),
         className: "udoc-comment__primary",
     });
-    actions.append(lock, answer, edit, remove, cancel, save);
+    actions.append(lock, settle, answer, edit, remove, cancel, save);
     el.append(header, text, actions);
 
     let current: Shown | null = null;
@@ -320,6 +325,7 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
     let writable = false;
     let answerable = false;
     let deletable = false;
+    let settleable = false;
     let replying = false;
 
     const fillFrom = (comment: Comment): void => {
@@ -331,8 +337,9 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
         const contentEditable = editing ? "true" : "false";
         if (text.contentEditable !== contentEditable) text.contentEditable = contentEditable;
         text.dataset.placeholder = editing ? i18n.t("comment.placeholder") : "";
-        shown(actions, locked || writable || answerable || deletable || editing);
+        shown(actions, locked || writable || answerable || deletable || settleable || editing);
         shown(lock, locked);
+        shown(settle, settleable && !editing);
         shown(answer, answerable && !editing && !replying);
         shown(edit, writable && !editing);
         shown(remove, deletable && !editing);
@@ -396,13 +403,24 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
         callbacks.onDelete(current.comment);
         callbacks.onDismiss();
     });
+    settle.addEventListener("click", () => {
+        if (!current || !settleable) return;
+        callbacks.onStatus?.(current.comment, current.comment.status === "active" ? "resolved" : "active");
+        callbacks.onDismiss();
+    });
 
-    function show(comment: Comment, open: boolean, annotating: boolean): void {
+    function show(comment: Comment, open: boolean, annotating: boolean, first: boolean): void {
         const { position, contents } = comment.locked;
         locked = position || contents;
         writable = annotating && !contents;
         answerable = annotating && open;
         deletable = annotating && !position && comment.replies.length === 0;
+        // A thread is resolved, or opened again, at its first comment.
+        settleable = annotating && first && comment.status !== null && callbacks.onStatus !== undefined;
+        const done = comment.status === "resolved" || comment.status === "closed";
+        const settleLabel = i18n.t(done ? "comment.reopen" : "comment.resolve");
+        settle.title = settleLabel;
+        settle.setAttribute("aria-label", settleLabel);
         // A reply the entry can no longer make is dropped; the thread lays out
         // the list once its entries are shown.
         if (replying && !answerable) {

@@ -398,6 +398,8 @@ export const ar: Messages = {
     "comment.lockedBoth": "مؤمّن: لا يمكن حذفه أو نقله أو تحريره",
     "comment.resolved": "تم الحل",
     "comment.closed": "مغلق",
+    "comment.resolve": "حل",
+    "comment.reopen": "إعادة فتح",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "ملاحظة",

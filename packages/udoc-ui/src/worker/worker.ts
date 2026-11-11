@@ -3412,6 +3412,7 @@ function officeComments(s: WasmSession): OfficeComment[] {
                     group: page === undefined ? null : { key: `page:${page}`, order: page, label: { page: page + 1 } },
                     at: page === undefined ? null : { plane: 0, page },
                     part: list.id,
+                    owner: null,
                 };
             });
         }
@@ -3439,6 +3440,7 @@ function officeComments(s: WasmSession): OfficeComment[] {
                                 : null,
                         at: at.comment.replyTo === undefined ? { plane, page: 0 } : null,
                         part: list.id,
+                        owner: sheetId,
                     });
                 }
             }
@@ -3459,6 +3461,7 @@ function officeComments(s: WasmSession): OfficeComment[] {
                             : null,
                     at: at.comment.replyTo === undefined ? { plane: 0, page: index } : null,
                     part: list.id,
+                    owner: slideId,
                 }));
             });
         }

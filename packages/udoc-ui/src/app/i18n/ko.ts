@@ -395,6 +395,8 @@ export const ko: Messages = {
     "comment.lockedBoth": "잠김: 삭제, 이동 또는 편집할 수 없음",
     "comment.resolved": "해결됨",
     "comment.closed": "닫힘",
+    "comment.resolve": "해결",
+    "comment.reopen": "다시 열기",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "노트",

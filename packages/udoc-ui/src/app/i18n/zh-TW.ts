@@ -393,6 +393,8 @@ export const zhTW: Messages = {
     "comment.lockedBoth": "已鎖定：無法刪除、移動或編輯",
     "comment.resolved": "已解決",
     "comment.closed": "已關閉",
+    "comment.resolve": "解決",
+    "comment.reopen": "重新開啟",
 
     // An annotation's kind, as a comment names it
     "annotationKind.note": "附註",

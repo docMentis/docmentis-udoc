@@ -25,6 +25,7 @@ import type {
     CellEntryEdit,
     CellEntryMode,
     CommentAnchor,
+    CommentCommand,
     GridCellSelectionMove,
     ScrollAlignment,
     RevisionView,
@@ -1147,8 +1148,7 @@ export function mountUIShell(
     canvas.setOverlay("udoc:media", mediaSource, { aboveSelection: true });
     // A marker over each Word, Excel or PowerPoint comment thread on screen,
     // from the anchors read for each page shown; a press opens the thread in
-    // the comments panel. Each change drops what was read, and the frame it
-    // paints asks again.
+    // the comments panel. Each change reads the pages shown again.
     let commentAnchorsRead = new Map<string, readonly CommentAnchor[]>();
     let commentAnchorsGeneration = 0;
     const commentMarkersShow = (): boolean => {
@@ -1168,10 +1168,13 @@ export function mountUIShell(
         label: i18n.t("rightPanel.comments"),
     });
     canvas.setOverlay("udoc:comment-markers", commentMarkersSource);
-    const unsubCommentMarkers = client.onPageViews((frame) => {
+    // The pages the last frame showed, which an edit that paints no frame —
+    // a comment's — asks again for.
+    let commentMarkerViews: readonly PageView[] = [];
+    const askCommentAnchors = (): void => {
         if (!commentMarkersShow()) return;
         const plane = store.getState().currentPlane;
-        for (const { index } of frame.views) {
+        for (const { index } of commentMarkerViews) {
             const key = `${plane}:${index}`;
             if (commentAnchorsRead.has(key)) continue;
             commentAnchorsRead.set(key, []);
@@ -1182,12 +1185,25 @@ export function mountUIShell(
                 canvas.setOverlay("udoc:comment-markers", commentMarkersSource);
             });
         }
+    };
+    const unsubCommentMarkers = client.onPageViews((frame) => {
+        commentMarkerViews = frame.views;
+        askCommentAnchors();
     });
+    // What was read is dropped on each change, and the pages shown asked
+    // again — the old markers standing until the new land.
     const forgetCommentAnchors = (): void => {
         commentAnchorsGeneration += 1;
         commentAnchorsRead = new Map();
     };
-    const unsubDocumentChangedMarkers = client.onDocumentChanged(forgetCommentAnchors);
+    const unsubDocumentChangedMarkers = client.onDocumentChanged(() => {
+        const shown = commentAnchorsRead;
+        forgetCommentAnchors();
+        askCommentAnchors();
+        // Until the new land, the pages keep what they showed.
+        for (const [key, anchors] of shown)
+            if (commentAnchorsRead.get(key)?.length === 0) commentAnchorsRead.set(key, anchors);
+    });
     // A document opened in place of another reads its own.
     const unsubDocumentOpenedMarkers = subscribeSelector(store, (s) => s.docGeneration, forgetCommentAnchors);
     // Each frame asks for the media of the pages it shows that weren't asked
@@ -1317,6 +1333,8 @@ export function mountUIShell(
             onSave: (comment, richContents) => void saveComment(comment, richContents),
             onReply: (comment, richContents) => void replyToComment(comment, richContents),
             onDelete: (comment) => void deleteComment(comment),
+            onStatus: (comment, status) =>
+                void editOfficeComment(comment, { setCommentStatus: { id: comment.id, status } }),
             onDismiss: () => canvas.focusClipboardSink(),
             onChoose: (comment) => chooseComment(comment),
         },
@@ -2755,7 +2773,9 @@ export function mountUIShell(
     // the comments panel's — its `/RC` and `/Contents` at once; the engine
     // generates its appearance afresh where that shows the text, a free text's.
     function saveComment(comment: Comment, richContents: string): Promise<void> {
-        if (comment.source.kind !== "annotation") return Promise.resolve();
+        if (comment.source.kind === "office") {
+            return editOfficeComment(comment, { setCommentBody: { id: comment.id, body: richContents } });
+        }
         const { page, annotation } = comment.source;
         const id = annotation.id;
         if (id === undefined) return Promise.resolve();
@@ -2768,7 +2788,7 @@ export function mountUIShell(
     // selected again, sent straight behind the insert so the selection reads
     // its report prompts already see it — the thread stays open where it was.
     function replyToComment(comment: Comment, richContents: string): Promise<void> {
-        if (comment.source.kind !== "annotation") return Promise.resolve();
+        if (comment.source.kind === "office") return replyToOfficeComment(comment, richContents);
         const { page, annotation } = comment.source;
         const reply = replyTo(annotation, richContents, userName, new Date());
         if (!reply) return Promise.resolve();
@@ -2782,11 +2802,43 @@ export function mountUIShell(
 
     // Delete `comment`, which no reply answers — the thread offers only those.
     function deleteComment(comment: Comment): Promise<void> {
-        if (comment.source.kind !== "annotation") return Promise.resolve();
+        if (comment.source.kind === "office") {
+            return editOfficeComment(comment, { deleteComments: { ids: [comment.id] } });
+        }
         const { page, annotation } = comment.source;
         const id = annotation.id;
         if (id === undefined) return Promise.resolve();
         return commit(() => client.execute(Command.deleteAnnotations(page, [id])));
+    }
+
+    // Edit the Office comment part `comment` is in with `command`: a slide's
+    // comments, the only ones whose commands are built.
+    function editOfficeComment(comment: Comment, command: CommentCommand): Promise<void> {
+        const { source } = comment;
+        if (source.kind !== "office" || source.owner === null) return Promise.resolve();
+        if (store.getState().docType !== "presentation") return Promise.resolve();
+        const slide = source.owner;
+        return commit(() => client.execute(Command.editSlideComment(slide, command)));
+    }
+
+    // Answer the Office thread `comment` is in with a reply holding
+    // `richContents`, by this user, now — its ids minted here, as a command
+    // carries every id it creates.
+    async function replyToOfficeComment(comment: Comment, richContents: string): Promise<void> {
+        const [id, story] = await Promise.all([mintId(), mintId()]);
+        if (id === null || story === null) return;
+        await editOfficeComment(comment, {
+            replyToComment: {
+                thread: comment.id,
+                comment: {
+                    id,
+                    story,
+                    author: { name: userName ?? "" },
+                    created: dateTime(new Date()),
+                    body: richContents,
+                },
+            },
+        });
     }
 
     // Fill in the form field whose widget is `widget` on page `page`, a press
