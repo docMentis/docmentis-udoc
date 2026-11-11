@@ -294,18 +294,34 @@ export interface PageView {
     rotation: number;
 }
 
+/** A page at least partly on screen, as {@link UDocBase.visiblePages} lists it. */
+export interface VisiblePage {
+    /** The page's 0-based index. */
+    readonly page: number;
+    /**
+     * How much of the page's area is on screen, more than `0` and at most `1`:
+     * `0.5` for a page half on screen, `1` for one wholly on it.
+     */
+    readonly visibleRatio: number;
+}
+
 /**
- * The indices of the pages of `views` that a window of `width` × `height` CSS px
- * at the viewport's top-left shows some of, ascending. The engine's views are
- * the contiguous span between the first and last page on screen, so this drops
- * one in between that is off it — in the other column of two pages side by
- * side, zoomed in.
+ * The pages of `views` that a window of `width` × `height` CSS px at the
+ * viewport's top-left shows some of, ascending, each with how much of it the
+ * window shows. The engine's views are the contiguous span between the first
+ * and last page on screen, so this drops one in between that is off it — in
+ * the other column of two pages side by side, zoomed in.
  */
-export function pagesOnScreen(views: readonly PageView[], width: number, height: number): number[] {
-    return views
-        .filter((view) => view.x < width && view.x + view.width > 0 && view.y < height && view.y + view.height > 0)
-        .map((view) => view.index)
-        .sort((a, b) => a - b);
+export function pagesOnScreen(views: readonly PageView[], width: number, height: number): VisiblePage[] {
+    const shown: VisiblePage[] = [];
+    for (const view of views) {
+        const across = Math.min(view.x + view.width, width) - Math.max(view.x, 0);
+        const down = Math.min(view.y + view.height, height) - Math.max(view.y, 0);
+        if (across <= 0 || down <= 0) continue;
+        const visibleRatio = Math.min(1, (across * down) / (view.width * view.height));
+        shown.push({ page: view.index, visibleRatio });
+    }
+    return shown.sort((a, b) => a.page - b.page);
 }
 
 // The selection-geometry types are the engine's declarations (imported at the

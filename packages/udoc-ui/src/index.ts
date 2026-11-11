@@ -50,6 +50,7 @@ export type {
     Size,
     ViewLength,
     Viewport,
+    VisiblePage,
 } from "./geometry.js";
 
 // A document in and out (generated from the Rust serde): the doc type it opened

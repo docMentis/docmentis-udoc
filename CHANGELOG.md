@@ -13,7 +13,9 @@ listed once, by package. Its major and minor version are those of the
 - A `visiblePages:changed` event lists the pages on screen each time they
   change, for tracking which pages a reader sees when continuous scrolling shows
   several at once. It fires only when the pages change, not for each scroll, and
-  leaves out a page side by side with them that's scrolled off.
+  leaves out a page side by side with them that's scrolled off. `visiblePages`
+  lists them at any time with how much of each shows, for counting a page as
+  read only once enough of it has been on screen.
 - A PDF that asks to be opened with its thumbnails or its layers showing opens
   with that panel, as one that asks for its outline does; Layers opens only when
   the PDF has some. A host's `activePanel`, given, `null` included, holds over

@@ -20,7 +20,7 @@ import type {
 import { profileFor } from "./app/profiles.js";
 import { SCROLLBAR_THICKNESS_PX } from "./app/components/Scrollbar.js";
 import { cssPxPerPt, pagesOnScreen } from "./geometry.js";
-import type { Fit, LayoutMode, PageGap, PageViewsFrame, ScrollAlignment, ScrollMode } from "./geometry.js";
+import type { Fit, LayoutMode, PageGap, PageViewsFrame, ScrollAlignment, ScrollMode, VisiblePage } from "./geometry.js";
 import type {
     Annotation,
     UDocCommand,
@@ -384,8 +384,9 @@ export interface UDocEvents {
      * Fires when the pages on screen change — scrolled, zoomed or laid out
      * again, once the frame showing them has painted, and when a document
      * closes or another starts opening. `pages` are the 0-based indices of
-     * the pages at least partly on screen, ascending, and `previousPages`
-     * those it last reported; both are empty with none. Unlike
+     * the pages at least partly on screen, ascending — the pages
+     * {@link UDocBase.visiblePages} lists — and `previousPages` those it last
+     * reported; both are empty with none. Unlike
      * `"viewport:changed"`, it doesn't fire for a scroll or zoom that leaves
      * the same pages on screen, and lists only pages on screen: zoomed in on
      * two pages side by side, not those in the column scrolled off, nor the
@@ -542,11 +543,11 @@ function sameViewport(a: Viewport, b: Viewport): boolean {
 }
 
 /**
- * The pages `frame` shows some of, as `"visiblePages:changed"` reports them:
+ * The pages `frame` shows some of, as {@link UDocBase.visiblePages} lists them:
  * through the canvas of `state`, less the strips the engine kept clear for the
  * frame's scrollbars, where it keeps them.
  */
-function visiblePagesOf(frame: PageViewsFrame, state: UIState): readonly number[] {
+function visiblePagesOf(frame: PageViewsFrame, state: UIState): readonly VisiblePage[] {
     const gutters = profileFor(state.docType).scrollbarGutters;
     const strip = (shown: boolean): number => (gutters && shown ? SCROLLBAR_THICKNESS_PX : 0);
     const width = state.viewportWidth - strip(frame.scrollbars.y);
@@ -554,8 +555,12 @@ function visiblePagesOf(frame: PageViewsFrame, state: UIState): readonly number[
     return Object.freeze(pagesOnScreen(frame.views, width, height));
 }
 
-function samePages(a: readonly number[], b: readonly number[]): boolean {
-    return a.length === b.length && a.every((page, i) => page === b[i]);
+/** What {@link UDocBase.visiblePages} lists with no page on screen. */
+const NO_VISIBLE_PAGES: readonly VisiblePage[] = Object.freeze([]);
+
+/** Whether `a` and `b` list the same pages, however much of each shows. */
+function samePages(a: readonly VisiblePage[], b: readonly VisiblePage[]): boolean {
+    return a.length === b.length && a.every((shown, i) => shown.page === b[i]?.page);
 }
 
 /**
@@ -598,6 +603,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     protected readonly shell: UIShell;
     readonly #eventHandlers = new Map<keyof E, Set<EventHandler<E, keyof E>>>();
     readonly #unsubscribes: Array<() => void> = [];
+    /** The pages on screen as of the last painted frame. */
+    #visiblePages: readonly VisiblePage[] = NO_VISIBLE_PAGES;
 
     protected constructor(shell: UIShell) {
         this.shell = shell;
@@ -1794,6 +1801,17 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
+     * The pages at least partly on screen as of the last painted frame, in
+     * page order, each with how much of its area shows; empty with none, or
+     * no document open. It changes with every scroll and zoom, so read it
+     * when you need it, on `"viewport:changed"` or a timer;
+     * `"visiblePages:changed"` fires only when the pages themselves change.
+     */
+    get visiblePages(): readonly VisiblePage[] {
+        return this.#visiblePages;
+    }
+
+    /**
      * How many sheets the open workbook has, hidden ones included, so that an
      * index counts the workbook's own sheets in order. `0` with no
      * document open, or one without sheets.
@@ -2023,12 +2041,12 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * the screen. Returns the unsubscribe.
      */
     #watchVisiblePages(): () => void {
-        let last: readonly number[] = Object.freeze([]);
-        const report = (pages: readonly number[]): void => {
-            if (samePages(last, pages)) return;
-            const previousPages = last;
-            last = pages;
-            this.#emit("visiblePages:changed", { pages, previousPages });
+        const pagesOf = (visible: readonly VisiblePage[]): number[] => visible.map((shown) => shown.page);
+        const report = (visible: readonly VisiblePage[]): void => {
+            const previous = this.#visiblePages;
+            this.#visiblePages = visible;
+            if (samePages(previous, visible)) return;
+            this.#emit("visiblePages:changed", { pages: pagesOf(visible), previousPages: pagesOf(previous) });
         };
         const offFrames = this.shell.onPageViews((frame) => {
             // A frame painted for a viewport since moved on from is stale.
@@ -2040,7 +2058,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
             this.shell.store,
             (s) => s.status === "ready",
             (ready) => {
-                if (!ready) report(Object.freeze([]));
+                if (!ready) report(NO_VISIBLE_PAGES);
             },
         );
         return () => {
