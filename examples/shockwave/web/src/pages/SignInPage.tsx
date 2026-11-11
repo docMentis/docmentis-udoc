@@ -1,7 +1,7 @@
 // Signing in: a work email and a password.
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Navigate, useLocation } from "react-router";
+import { Navigate } from "react-router";
 
 import { ApiError } from "../api";
 import { Logo } from "../icons";
@@ -11,7 +11,6 @@ import { useDocumentTitle } from "../ui";
 export function SignInPage() {
     useDocumentTitle("Sign in");
     const { user, signIn } = useSession();
-    const from = (useLocation().state as { from?: string } | null)?.from ?? "/";
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [signingIn, setSigningIn] = useState(false);
@@ -34,8 +33,8 @@ export function SignInPage() {
         }
     }
 
-    // Back where they were sent here from.
-    if (user) return <Navigate to={from} replace />;
+    // Signed in, to Home, whichever page sent them here.
+    if (user) return <Navigate to="/" replace />;
     return (
         <div className="sign-in">
             <form className="sign-in-card" onSubmit={(event) => void submit(event)}>

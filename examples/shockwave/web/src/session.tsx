@@ -2,7 +2,7 @@
 // and out.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Navigate, useLocation } from "react-router";
+import { Navigate } from "react-router";
 
 import type { Tenant, User } from "../../shared/api.ts";
 import { api } from "./api";
@@ -53,11 +53,10 @@ export function useUser(): User {
     return user;
 }
 
-/** `children` for a user signed in; the sign-in page, coming back here after, for no one. */
+/** `children` for a user signed in; the sign-in page for no one. */
 export function RequireSession({ children }: { children: ReactNode }) {
     const { user } = useSession();
-    const location = useLocation();
     if (user === undefined) return null;
-    if (!user) return <Navigate to="/sign-in" replace state={{ from: location.pathname }} />;
+    if (!user) return <Navigate to="/sign-in" replace />;
     return children;
 }
