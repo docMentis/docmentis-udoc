@@ -13,6 +13,7 @@ import type {
     Annotation,
     CommentCommand,
     CommentDraft,
+    GridCellRef,
     PortableCommand,
     PresentationCommand,
     GridColor,
@@ -72,6 +73,14 @@ export const Command = {
     /** Open a thread on slide `slide` at `place` with `comment`. */
     insertSlideComment: (slide: string, place: SlideCommentPlace, comment: CommentDraft): UDocCommand =>
         presentation({ insertComment: { slide, place, comment } }),
+
+    /** Edit the comments of worksheet `sheet` with `command`. */
+    editSheetComment: (sheet: SheetId, command: CommentCommand): UDocCommand =>
+        spreadsheet({ editComment: { sheet, command } }),
+
+    /** Open a thread at `cell` of worksheet `sheet` with `comment`. */
+    insertSheetComment: (sheet: SheetId, cell: GridCellRef, comment: CommentDraft): UDocCommand =>
+        spreadsheet({ insertComment: { sheet, cell, comment } }),
 
     /** Insert host-built `annotations` on top of `pageId`'s — each with no id and
      *  no appearance, which the engine mints and generates. */

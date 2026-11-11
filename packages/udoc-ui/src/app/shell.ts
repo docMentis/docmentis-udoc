@@ -26,6 +26,7 @@ import type {
     CellEntryMode,
     CommentAnchor,
     CommentCommand,
+    GridCellRef,
     GridCellSelectionMove,
     ScrollAlignment,
     RevisionView,
@@ -2903,29 +2904,30 @@ export function mountUIShell(
     }
 
     // Edit the Office comment part `comment` is in with `command`: a slide's
-    // comments, the only ones whose commands are built.
+    // comments or a sheet's, the ones whose commands are built.
     function editOfficeComment(comment: Comment, command: CommentCommand): Promise<void> {
         const { source } = comment;
         if (source.kind !== "office" || source.owner === null) return Promise.resolve();
-        if (store.getState().docType !== "presentation") return Promise.resolve();
-        const slide = source.owner;
-        return commit(() => client.execute(Command.editSlideComment(slide, command)));
+        const owner = source.owner;
+        switch (store.getState().docType) {
+            case "presentation":
+                return commit(() => client.execute(Command.editSlideComment(owner, command)));
+            case "spreadsheet":
+                return commit(() => client.execute(Command.editSheetComment(owner, command)));
+            default:
+                return Promise.resolve();
+        }
     }
 
-    // Open a thread on the slide holding `richContents`, by this user, now: on
-    // the shape selected — or the one whose text is — else on the slide
-    // selected, else on the slide shown. The thread opens in the panel, its
-    // ids minted here.
+    // Open a thread holding `richContents`, by this user, now, its ids minted
+    // here — on a slide: on the shape selected, or the one whose text is, else
+    // on the slide selected, else on the slide shown; on a sheet: at the
+    // active cell. The thread opens in the panel.
     async function newOfficeComment(richContents: string): Promise<void> {
-        if (store.getState().docType !== "presentation") return;
+        const docType = store.getState().docType;
+        if (docType !== "presentation" && docType !== "spreadsheet") return;
         const [id, story, chosen] = await Promise.all([mintId(), mintId(), selection()]);
         if (id === null || story === null) return;
-        let placed = slideCommentPlace(chosen);
-        if (!placed) {
-            const slide = await client.presentation.slideId(store.getState().pageIndex);
-            if (slide === null) return;
-            placed = { slide, place: { slide: {} } };
-        }
         const comment = {
             id,
             story,
@@ -2933,7 +2935,21 @@ export function mountUIShell(
             created: dateTime(new Date()),
             body: richContents,
         };
-        await commit(() => client.execute(Command.insertSlideComment(placed.slide, placed.place, comment)));
+        let command: UDocCommand;
+        if (docType === "spreadsheet") {
+            const active = activeCell(chosen);
+            if (!active) return;
+            command = Command.insertSheetComment(active.sheet, active.cell, comment);
+        } else {
+            let placed = slideCommentPlace(chosen);
+            if (!placed) {
+                const slide = await client.presentation.slideId(store.getState().pageIndex);
+                if (slide === null) return;
+                placed = { slide, place: { slide: {} } };
+            }
+            command = Command.insertSlideComment(placed.slide, placed.place, comment);
+        }
+        await commit(() => client.execute(command));
         store.dispatch({ type: "OPEN_OFFICE_COMMENT", id });
     }
 
@@ -4461,5 +4477,16 @@ function slideCommentPlace(selection: UDocSelection | null): { slide: string; pl
         const slide = chosen.slides.ids[0];
         return slide === undefined ? null : { slide, place: { slide: {} } };
     }
+    return null;
+}
+
+/** The active cell `selection` holds on a sheet — the anchor of the cells
+ *  selected or being entered — with its sheet; null for anything else. */
+function activeCell(selection: UDocSelection | null): { sheet: string; cell: GridCellRef } | null {
+    if (!selection || !("spreadsheet" in selection)) return null;
+    const chosen = selection.spreadsheet;
+    if (chosen === "none") return null;
+    if ("cells" in chosen) return { sheet: chosen.cells.sheet, cell: chosen.cells.anchor };
+    if ("entry" in chosen) return { sheet: chosen.entry.sheet, cell: chosen.entry.anchor };
     return null;
 }

@@ -104,7 +104,7 @@ const NEW_COMMENT_WORDS: ReplyFieldWords = { field: "comments.new", save: "commo
 
 /** The doc types whose Office comments may be edited — those whose comment
  *  commands are built. */
-const OFFICE_EDITED_DOC_TYPES: ReadonlySet<string> = new Set(["presentation"]);
+const OFFICE_EDITED_DOC_TYPES: ReadonlySet<string> = new Set(["presentation", "spreadsheet"]);
 
 export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallbacks) {
     const el = document.createElement("div");
