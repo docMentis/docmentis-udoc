@@ -6,7 +6,7 @@
 // frontstage's is as unknown as a frontstage taken down.
 //
 // A buyer's browser also reports what it reads: a session for each file it opens, and
-// in it, each stretch of time a page was on screen. It's the one thing here anyone can
+// in it, each stretch of time a page was on screen, several at once as they scroll by. It's the one thing here anyone can
 // write, with no account. So a report is held to what the frontstage shows and to the
 // browser's own sessions, small, no later than now, and counted, per link, so that a
 // flood at one link slows no other. A browser is known by a cookie for this link
@@ -272,20 +272,19 @@ export function frontstageRoutes(app: FastifyInstance, access: Access): void {
                             "SELECT COUNT(*) AS views FROM frontstage_page_views WHERE tenant_id = :tenant AND session_id = ?",
                         )
                         .get(report.session) as { views: number };
-                    // A view again is the one that began then, grown; a full session's only grow.
+                    // A view again is the page's that began then, grown; a full session's only grow.
                     const add = db.prepare(
-                        `INSERT INTO frontstage_page_views (tenant_id, session_id, started_ms, ended_ms, page)
-                        VALUES (:tenant, :session, :from, :to, :page)
-                        ON CONFLICT (tenant_id, session_id, started_ms) DO UPDATE
+                        `INSERT INTO frontstage_page_views (tenant_id, session_id, page, started_ms, ended_ms)
+                        VALUES (:tenant, :session, :page, :from, :to)
+                        ON CONFLICT (tenant_id, session_id, page, started_ms) DO UPDATE
                             SET ended_ms = max(ended_ms, excluded.ended_ms)`,
                     );
                     const grow = db.prepare(
                         `UPDATE frontstage_page_views SET ended_ms = max(ended_ms, :to)
-                        WHERE tenant_id = :tenant AND session_id = :session AND started_ms = :from`,
+                        WHERE tenant_id = :tenant AND session_id = :session AND page = :page AND started_ms = :from`,
                     );
-                    for (const { page, from, to } of report.views)
-                        if (views < MAX_VIEWS_IN_SESSION) add.run({ session: report.session, from, to, page });
-                        else grow.run({ session: report.session, from, to });
+                    for (const view of report.views)
+                        (views < MAX_VIEWS_IN_SESSION ? add : grow).run({ session: report.session, ...view });
                 });
                 return reply.code(204).send();
             }

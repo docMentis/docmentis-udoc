@@ -1,6 +1,6 @@
 // What a buyer's browser reports of a frontstage, for those who shared it: that it
 // came, each file it opened, a session, and in that session, each stretch of time a
-// page stayed on screen. A report that doesn't go through is let go: reading carries
+// page stayed on screen, several at once as they scroll by. A report that doesn't go through is let go: reading carries
 // on regardless. A slide show counts for nothing here, since the viewer doesn't say
 // which slide it's on (GAPS.md).
 import type { FrontstageReport, FrontstageSession, PageView } from "../../shared/api.ts";
@@ -56,10 +56,10 @@ export function reportVisit(token: string): void {
     void send(token, { kind: "visited" });
 }
 
-/** Someone reading a file: on which page, until it stops. */
+/** Someone reading a file: which pages are on screen, until it stops. */
 export interface Reading {
-    /** They've turned to `page`, 0-based. */
-    turnTo(page: number): void;
+    /** `pages` are on screen now, 0-based, and no others. */
+    see(pages: readonly number[]): void;
     /** A slide show has started or ended. */
     presenting(playing: boolean): void;
     /** They've stopped: what's not reported yet is. */
@@ -68,18 +68,20 @@ export interface Reading {
 
 /**
  * Report that file `fileId` of the frontstage at `token` was opened, a session of
- * its own, and from now on each stretch of time a page of it stays on screen: only
- * while the page is in view and something's been done with it lately, so that one
- * left open doesn't count. Each view is timed from the opening.
+ * its own, with `pages` on screen, and from now on each stretch of time a page of it
+ * stays on screen, each of those on screen together: only while the page is in view
+ * and something's been done with it lately, so that one left open doesn't count.
+ * Each view is timed from the opening.
  */
-export function startReading(token: string, fileId: string): Reading {
+export function startReading(token: string, fileId: string, pages: readonly number[]): Reading {
     const began = performance.now();
     // The session to report in: undefined until the opening's answered, `null` for none.
     let session: string | null | undefined;
-    // The view going on, if a page is being read, and those begun or grown since the last report, by when they began.
-    let current: PageView | undefined;
-    const changed = new Map<number, PageView>();
-    let page = 0;
+    // The pages on screen; the view going on of each being read; and those begun or
+    // grown since the last report, by their page and when they began.
+    let onScreen = pages;
+    const current = new Map<number, PageView>();
+    const changed = new Map<string, PageView>();
     let inSlideShow = false;
     let lastTick = began;
     let lastActive = began;
@@ -106,12 +108,17 @@ export function startReading(token: string, fileId: string): Reading {
         const elapsed = Math.min(now - lastTick, TICK_MS * 2);
         lastTick = now;
         if (!inSlideShow && document.visibilityState === "visible" && now - lastActive < IDLE_AFTER_MS) {
-            // The page still on screen grows its view; another begins one, when the time just counted did.
+            // A page still on screen grows its view; one come on screen begins one, when the time just counted did.
+            const from = Math.round(now - elapsed - began);
             const to = Math.round(now - began);
-            if (current?.page === page) current.to = to;
-            else current = { page, from: Math.round(now - elapsed - began), to };
-            if (current.to > current.from) changed.set(current.from, { ...current });
-        } else current = undefined;
+            for (const page of current.keys()) if (!onScreen.includes(page)) current.delete(page);
+            for (const page of onScreen) {
+                const view = current.get(page) ?? { page, from, to };
+                view.to = to;
+                current.set(page, view);
+                if (view.to > view.from) changed.set(`${page} ${view.from}`, { ...view });
+            }
+        } else current.clear();
         if (now - lastReport >= REPORT_EVERY_MS) {
             lastReport = now;
             report();
@@ -132,9 +139,9 @@ export function startReading(token: string, fileId: string): Reading {
     window.addEventListener("pagehide", report);
 
     return {
-        turnTo(next) {
+        see(next) {
             tick();
-            page = next;
+            onScreen = next;
             active();
         },
         presenting(playing) {

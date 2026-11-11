@@ -125,6 +125,8 @@ export function FrontstageFilePage() {
     const file = stage?.files.find(({ id }) => id === fileId);
     useFrontstageTitle(file?.name ?? stage?.title, stage?.from.name);
     const reading = useRef<Reading>(undefined);
+    // The pages on screen, which may come before the document says it's open.
+    const onScreen = useRef<readonly number[]>([]);
     useEffect(
         () => () => {
             reading.current?.stop();
@@ -159,7 +161,7 @@ export function FrontstageFilePage() {
                                 colors={stage.from.viewerColors}
                                 readsOnly
                                 onOpened={({ format, ms }) => {
-                                    reading.current ??= startReading(token!, file.id);
+                                    reading.current ??= startReading(token!, file.id, onScreen.current);
                                     announceMoment({ kind: "document:opened", where: "file", format, ms });
                                 }}
                                 onClosed={() => {
@@ -167,7 +169,10 @@ export function FrontstageFilePage() {
                                     reading.current = undefined;
                                     announceMoment({ kind: "document:closed", where: "file" });
                                 }}
-                                onPage={(page) => reading.current?.turnTo(page)}
+                                onPages={(pages) => {
+                                    onScreen.current = pages;
+                                    reading.current?.see(pages);
+                                }}
                                 onSlideShow={(playing) => reading.current?.presenting(playing)}
                             />
                         </div>

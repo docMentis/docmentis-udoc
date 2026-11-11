@@ -255,11 +255,16 @@ async function buildTenant(people, ids, marker) {
     const visitorCookie = reported.headers.getSetCookie()[0].split(";")[0];
     const { session } = await reported.json();
     const buyer = clientWith(visitorCookie);
-    await buyer("POST", `/api/frontstage/${token}/activity`, {
+    // Two pages on screen together, from the same moment.
+    const read = await buyer("POST", `/api/frontstage/${token}/activity`, {
         kind: "read",
         session,
-        views: [{ page: 0, from: 0, to: 1000 }],
+        views: [
+            { page: 0, from: 0, to: 1000 },
+            { page: 1, from: 0, to: 1000 },
+        ],
     });
+    check(`${marker}: a buyer's pages on screen together are kept`, read.status === 204, read.status);
     return { folder, deck, draft, collection, room, copy, token, visitorCookie, session };
 }
 

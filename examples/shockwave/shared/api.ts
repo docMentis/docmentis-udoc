@@ -394,7 +394,7 @@ export interface DealRoomFileActivity {
     visitors: number;
     /** How many times it was opened. */
     sessions: number;
-    /** How long its pages were on screen, in milliseconds, at any version. */
+    /** How long it was read, at any version: how long any of its pages was on screen, in milliseconds. */
     ms: number;
     /** When it was last opened, in milliseconds since the epoch; `null` for never. */
     lastOpenedAt: number | null;
@@ -421,7 +421,7 @@ export interface ReadingSession {
     startedAt: number;
     /** From its opening to the end of its last page view, in milliseconds. */
     length: number;
-    /** How long its pages were on screen, in milliseconds. */
+    /** How long any of its pages was on screen, in milliseconds: pages on screen together count once. */
     ms: number;
 }
 
@@ -434,7 +434,7 @@ export interface DocumentActivity {
     thumbnails: Thumbnails | null;
     /** Its sessions at that version, the latest first. */
     sessions: ReadingSession[];
-    /** Each of that version's pages, in order, and how long each session had it on screen. */
+    /** Each of that version's pages, in order, and how long each session had it on screen, whatever else was. */
     pages: {
         page: number;
         ms: number;

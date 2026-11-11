@@ -78,9 +78,9 @@ export function useDocumentLook(ui: RefObject<{ setTheme(theme: Theme): void } |
  * buyer, with no download or print button, so that the source stays here, and no
  * annotating, which goes nowhere; a deck's notes and hidden slides still show
  * (GAPS.md). `onOpened` hears when it's open, `onClosed` when it closes,
- * opened, `onFailed` when it doesn't open, which the viewer shows itself, `onPage`
- * when it turns to another page, or a workbook's sheet, 0-based, and `onSlideShow`
- * when a slide show starts or ends.
+ * opened, `onFailed` when it doesn't open, which the viewer shows itself, `onPages`
+ * when other pages come on screen, those on it now, 0-based, a workbook's the
+ * sheet shown, and `onSlideShow` when a slide show starts or ends.
  */
 export function DocumentViewer({
     showToolbar = true,
@@ -91,7 +91,7 @@ export function DocumentViewer({
     onOpened,
     onClosed,
     onFailed,
-    onPage,
+    onPages,
     onSlideShow,
     ...source
 }: ViewerSource & {
@@ -103,7 +103,7 @@ export function DocumentViewer({
     onOpened?: (opened: Opened) => void;
     onClosed?: () => void;
     onFailed?: () => void;
-    onPage?: (page: number) => void;
+    onPages?: (pages: readonly number[]) => void;
     onSlideShow?: (playing: boolean) => void;
 }) {
     const ref = useRef<HTMLDivElement>(null);
@@ -115,8 +115,8 @@ export function DocumentViewer({
     closed.current = onClosed;
     const failed = useRef(onFailed);
     failed.current = onFailed;
-    const turned = useRef(onPage);
-    turned.current = onPage;
+    const seen = useRef(onPages);
+    seen.current = onPages;
     const presenting = useRef(onSlideShow);
     presenting.current = onSlideShow;
     const { file, documentId, version, packagePath, url } = source;
@@ -141,8 +141,12 @@ export function DocumentViewer({
                 if (gone) return created.destroy();
                 viewer = created;
                 viewerRef.current = created;
-                created.on("currentPage:changed", ({ page }) => turned.current?.(page));
-                created.on("currentSheet:changed", ({ sheet }) => sheet >= 0 && turned.current?.(sheet));
+                // A workbook's pages are its sheets' print pages; what's on screen is the sheet shown.
+                created.on(
+                    "visiblePages:changed",
+                    ({ pages }) => created.docType !== "spreadsheet" && seen.current?.(pages),
+                );
+                created.on("currentSheet:changed", ({ sheet }) => seen.current?.(sheet >= 0 ? [sheet] : []));
                 created.on("slideShow:changed", ({ playing }) => presenting.current?.(playing));
                 if (file) await viewer.open(file);
                 else if (url) await viewer.open(url);

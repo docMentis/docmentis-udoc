@@ -446,9 +446,10 @@ pages of the version shown.
 that comes gets a cookie for that link alone, naming a visitor with nothing of who it is,
 so that it can't be followed from one frontstage to another. It reports coming, and each
 file it opens, a session, at the version shown then; and in that session, each stretch of
-time a page stays on screen, timed from the opening: only while the page is in view and
-something's been done with it in the last minute, so a page left open, or put away, leaves a
-gap. Time in a slide show isn't counted, since the viewer doesn't say which slide it's on
+time a page stays on screen, timed from the opening, as the viewer's `visiblePages:changed`
+says which are, several at once when scrolling shows them together, and a workbook's the sheet
+shown: only while the page is in view and something's been done with it in the last minute,
+so a page left open, or put away, leaves a gap. Time in a slide show isn't counted, since the viewer doesn't say which slide it's on
 (`GAPS.md`). This is the one thing anyone can write with no account, so a report has to be
 about a file that frontstage shows, or a session of the browser's own, of no more than 64 page
 views, none ending later than now; it's one of 120 a minute from an address at that link,
@@ -460,7 +461,8 @@ Backstage, it reads at three depths. A room shows how many came, and each file's
 sessions, time and last opening. A file shows each page of the version last read, its image
 beside a bar of the time it was on screen, split by session, the latest seven each in a color
 of their own and the earlier ones together in gray, and its sessions, each with its visitor,
-numbered as they first came, when it opened and how long it lasted. A session shows each page
+numbered as they first came, when it opened, how long it lasted, and how long it was read:
+the time any page was on screen, pages on screen together counted once. A session shows each page
 with when it was on screen: a timeline from the opening to its last page view, a block for
 each view. Home tells those on a room of visitors since they last looked at it; a manager who
 isn't on it sees them by opening it. Taking a room off its frontstage keeps all this; removing

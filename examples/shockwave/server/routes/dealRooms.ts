@@ -140,8 +140,7 @@ function sessionsOf(
                         AND (earlier.first_at < visitor.first_at
                             OR (earlier.first_at = visitor.first_at AND earlier.id <= visitor.id))
                 ) AS visitor,
-                coalesce(MAX(view.ended_ms), 0) AS length,
-                coalesce(SUM(view.ended_ms - view.started_ms), 0) AS ms
+                coalesce(MAX(view.ended_ms), 0) AS length
             FROM frontstage_sessions AS session
             JOIN frontstage_visitors AS visitor ON visitor.tenant_id = session.tenant_id
                 AND visitor.room_id = session.room_id AND visitor.id = session.visitor_id
@@ -166,8 +165,26 @@ function sessionsOf(
         started_at: number;
         visitor: number;
         length: number;
-        ms: number;
     }[];
+    // How long each was read: its views, in order, each session's together.
+    const views = db
+        .prepare(
+            `SELECT view.session_id, view.started_ms AS "from", view.ended_ms AS "to"
+            FROM frontstage_page_views AS view
+            JOIN frontstage_sessions AS session ON session.tenant_id = view.tenant_id AND session.id = view.session_id
+            WHERE view.tenant_id = :tenant AND session.room_id = :room
+                AND (:asset IS NULL OR session.asset_id = :asset)
+                AND (:version IS NULL OR session.version = :version)
+                AND (:session IS NULL OR session.id = :session)
+            ORDER BY view.session_id, view.started_ms`,
+        )
+        .all({
+            room: roomId,
+            asset: which.asset ?? null,
+            version: which.version ?? null,
+            session: which.session ?? null,
+        }) as unknown as (Interval & { session_id: string })[];
+    const viewsOf = bySession(views);
     return rows.map((row) => ({
         assetId: row.asset_id,
         session: {
@@ -176,9 +193,38 @@ function sessionsOf(
             version: row.version,
             startedAt: row.started_at,
             length: row.length,
-            ms: row.ms,
+            ms: readingTime(viewsOf.get(row.id) ?? []),
         },
     }));
+}
+
+/** A stretch of time, in milliseconds since a session began. */
+interface Interval {
+    from: number;
+    to: number;
+}
+
+/** `views`, each session's together, in the order they came. */
+function bySession<T extends { session_id: string }>(views: T[]): Map<string, T[]> {
+    const grouped = new Map<string, T[]>();
+    for (const view of views) {
+        const its = grouped.get(view.session_id);
+        if (its) its.push(view);
+        else grouped.set(view.session_id, [view]);
+    }
+    return grouped;
+}
+
+/** How long anything was on screen in `views`, in the order they began: pages on screen together count once. */
+function readingTime(views: Interval[]): number {
+    let total = 0;
+    let reached = -Infinity;
+    for (const { from, to } of views) {
+        if (to <= reached) continue;
+        total += to - Math.max(from, reached);
+        reached = to;
+    }
+    return total;
 }
 
 export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
@@ -372,9 +418,9 @@ export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
             FROM frontstage_sessions WHERE tenant_id = :tenant AND asset_id = ?`,
         );
         const read = db.prepare(
-            `SELECT SUM(view.ended_ms - view.started_ms) AS ms FROM frontstage_page_views AS view
+            `SELECT view.session_id, view.started_ms AS "from", view.ended_ms AS "to" FROM frontstage_page_views AS view
             JOIN frontstage_sessions AS session ON session.tenant_id = view.tenant_id AND session.id = view.session_id
-            WHERE view.tenant_id = :tenant AND session.asset_id = ?`,
+            WHERE view.tenant_id = :tenant AND session.asset_id = ? ORDER BY view.session_id, view.started_ms`,
         );
         return {
             visitors: visits.visitors,
@@ -382,13 +428,14 @@ export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
             files: files.flatMap(({ asset, onFrontstage }) => {
                 const each = opened.get(asset.id) as { visitors: number; sessions: number; last_at: number | null };
                 if (!onFrontstage && each.sessions === 0) return [];
-                const { ms } = read.get(asset.id) as { ms: number | null };
+                const views = read.all(asset.id) as unknown as (Interval & { session_id: string })[];
+                const viewsOf = bySession(views);
                 return [
                     {
                         assetId: asset.id,
                         visitors: each.visitors,
                         sessions: each.sessions,
-                        ms: ms ?? 0,
+                        ms: [...viewsOf.values()].reduce((sum, its) => sum + readingTime(its), 0),
                         lastOpenedAt: each.last_at,
                     },
                 ];

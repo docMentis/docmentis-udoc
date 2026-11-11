@@ -316,6 +316,23 @@ const MIGRATIONS = [
         FOREIGN KEY (tenant_id, session_id) REFERENCES frontstage_sessions (tenant_id, id) ON DELETE CASCADE
     );
     `,
+    // Several pages are on screen at once, scrolling, and two can come into view
+    // in the same moment: a page view is named by its page and when it began.
+    `
+    CREATE TABLE page_views_by_page (
+        tenant_id TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        page INTEGER NOT NULL,
+        started_ms INTEGER NOT NULL,
+        ended_ms INTEGER NOT NULL,
+        PRIMARY KEY (tenant_id, session_id, page, started_ms),
+        FOREIGN KEY (tenant_id, session_id) REFERENCES frontstage_sessions (tenant_id, id) ON DELETE CASCADE
+    );
+    INSERT INTO page_views_by_page (tenant_id, session_id, page, started_ms, ended_ms)
+        SELECT tenant_id, session_id, page, started_ms, ended_ms FROM frontstage_page_views;
+    DROP TABLE frontstage_page_views;
+    ALTER TABLE page_views_by_page RENAME TO frontstage_page_views;
+    `,
 ];
 
 /** SQLite's code for a `UNIQUE` constraint failing. */
