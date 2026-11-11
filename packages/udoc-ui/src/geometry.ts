@@ -294,6 +294,20 @@ export interface PageView {
     rotation: number;
 }
 
+/**
+ * The indices of the pages of `views` that a window of `width` × `height` CSS px
+ * at the viewport's top-left shows some of, ascending. The engine's views are
+ * the contiguous span between the first and last page on screen, so this drops
+ * one in between that is off it — in the other column of two pages side by
+ * side, zoomed in.
+ */
+export function pagesOnScreen(views: readonly PageView[], width: number, height: number): number[] {
+    return views
+        .filter((view) => view.x < width && view.x + view.width > 0 && view.y < height && view.y + view.height > 0)
+        .map((view) => view.index)
+        .sort((a, b) => a - b);
+}
+
 // The selection-geometry types are the engine's declarations (imported at the
 // top), re-exported so the host imports them from one place. Page-anchored, in
 // page-local document points and camera-independent — the selection layer

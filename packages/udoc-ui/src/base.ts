@@ -18,7 +18,8 @@ import type {
     WordprocessingView,
 } from "./app/state.js";
 import { profileFor } from "./app/profiles.js";
-import { cssPxPerPt } from "./geometry.js";
+import { SCROLLBAR_THICKNESS_PX } from "./app/components/Scrollbar.js";
+import { cssPxPerPt, pagesOnScreen } from "./geometry.js";
 import type { Fit, LayoutMode, PageGap, PageViewsFrame, ScrollAlignment, ScrollMode } from "./geometry.js";
 import type {
     Annotation,
@@ -380,6 +381,18 @@ export interface UDocEvents {
      */
     "viewport:changed": { firstVisiblePage: number; lastVisiblePage: number; zoom: number; scrollTop: number };
     /**
+     * Fires when the pages on screen change — scrolled, zoomed or laid out
+     * again, once the frame showing them has painted, and when a document
+     * closes or another starts opening. `pages` are the 0-based indices of
+     * the pages at least partly on screen, ascending, and `previousPages`
+     * those it last reported; both are empty with none. Unlike
+     * `"viewport:changed"`, it doesn't fire for a scroll or zoom that leaves
+     * the same pages on screen, and lists only pages on screen: zoomed in on
+     * two pages side by side, not those in the column scrolled off, nor the
+     * shown spread's page scrolled off in spread scrolling.
+     */
+    "visiblePages:changed": { pages: readonly number[]; previousPages: readonly number[] };
+    /**
      * Fires as {@link UDocBase.open} reads a document's bytes — fetching its
      * URL, reading its `Blob`, or once for bytes given whole: `loaded` of
      * `total` (`0` when the size isn't known), and `percent` (`null` then).
@@ -529,6 +542,23 @@ function sameViewport(a: Viewport, b: Viewport): boolean {
 }
 
 /**
+ * The pages `frame` shows some of, as `"visiblePages:changed"` reports them:
+ * through the canvas of `state`, less the strips the engine kept clear for the
+ * frame's scrollbars, where it keeps them.
+ */
+function visiblePagesOf(frame: PageViewsFrame, state: UIState): readonly number[] {
+    const gutters = profileFor(state.docType).scrollbarGutters;
+    const strip = (shown: boolean): number => (gutters && shown ? SCROLLBAR_THICKNESS_PX : 0);
+    const width = state.viewportWidth - strip(frame.scrollbars.y);
+    const height = state.viewportHeight - strip(frame.scrollbars.x);
+    return Object.freeze(pagesOnScreen(frame.views, width, height));
+}
+
+function samePages(a: readonly number[], b: readonly number[]): boolean {
+    return a.length === b.length && a.every((page, i) => page === b[i]);
+}
+
+/**
  * Mount a document UI into `container`, or with `null` mount it nowhere, for a
  * headless one, run as `wrapper` — the docMentis
  * package embedding it, which the engine reports with every permit request and
@@ -587,6 +617,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
                 (sheets) => this.#emit("sheets:changed", { sheets }),
             ),
             this.#watchViewport(),
+            this.#watchVisiblePages(),
             subscribeSelector(
                 shell.store,
                 (s) => s.loadProgress,
@@ -1984,6 +2015,38 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
             last = next;
             this.#emit("viewport:changed", next);
         });
+    }
+
+    /**
+     * Fire `"visiblePages:changed"` for a painted frame that shows other pages
+     * than the last one it fired for, and with none once the document leaves
+     * the screen. Returns the unsubscribe.
+     */
+    #watchVisiblePages(): () => void {
+        let last: readonly number[] = Object.freeze([]);
+        const report = (pages: readonly number[]): void => {
+            if (samePages(last, pages)) return;
+            const previousPages = last;
+            last = pages;
+            this.#emit("visiblePages:changed", { pages, previousPages });
+        };
+        const offFrames = this.shell.onPageViews((frame) => {
+            // A frame painted for a viewport since moved on from is stale.
+            const state = this.shell.getState();
+            if (!frame.fresh || state.status !== "ready") return;
+            report(visiblePagesOf(frame, state));
+        });
+        const offStatus = subscribeSelector(
+            this.shell.store,
+            (s) => s.status === "ready",
+            (ready) => {
+                if (!ready) report(Object.freeze([]));
+            },
+        );
+        return () => {
+            offFrames();
+            offStatus();
+        };
     }
 
     /** Fire one of the common events — the bridge above. */
