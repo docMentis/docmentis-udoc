@@ -162,6 +162,61 @@ import then also rendered a first page: a 19 KB word document took 0.5 s to save
 import, and an 82 MB deck 0.7 s and 3.9 s. The copy has no history of its own, and the
 bytes kept aren't the upload's.
 
+## Coming back past a cut fails on a page both sides first edited
+
+**Needed.** A reviewer's comments, made in a branch of the version submitted,
+merged into the working copy however its log, or the branch's, was cut
+meanwhile. And an editor left open across a cut coming back with what it
+hadn't sent.
+
+**Offered.** After a cut, a page's first edit copies the page into the log,
+under ids every editor on that cut writes alike, so two first edits there
+are one. Made on two different cuts, one page's copies have those ids with
+other dependencies, and `catchUp` refuses a log holding the other one,
+`malformed`, "Every op id should be unique", before it moves the editor's own
+edits onto that log, which would copy the page again. So a merge fails with
+`422` when the reviewer first edited a slide after the branch's log was cut,
+and the working copy's editors first edited it on theirs. With no branch at
+all, an editor behind a cut, holding an unsent first edit on a slide, can't
+come back once someone has first edited that slide on the cut log. Seen on a
+deck, with the engine built from its checkout on 2026-11-12. The Word
+document, workbook and PDF runs of `npm run e2e -- branches` didn't meet it,
+since there the two sides never first edited one page on two cuts.
+
+**Workaround.** None. Nothing is lost: a merge refuses before anything reaches
+the working copy, and the branch can be merged once the engine takes such a
+log.
+
+## What only a deleted PDF page used is kept by some saves and not others
+
+**Needed.** One document, whichever session saves it: a reviewer's note on a
+page the working copy deleted meanwhile, merged, and the document then
+comparing equal however it is opened or saved.
+
+**Offered.** Sessions disagree about the parts only a deleted page used. An
+editor that deleted the page saves without its image, while the server's save
+of the same document keeps it. A note added to the page while another editor
+deleted it is kept by the server's save of the whole document, but left out of
+a fresh open and of a checkpoint opened on its own. Seen with two live editors
+and no branch or cut, so it isn't theirs.
+
+**Workaround.** None. `npm run e2e -- branches` leaves a note on a deleted page
+out, since no two models would compare.
+
+## A comment on what was deleted lands differently in each format
+
+**Needed.** A reviewer's comment whose place the working copy deleted
+meanwhile, shown to whoever picks the comments up.
+
+**Offered.** Each format keeps such a comment its own way, as it does between
+two live editors. A Word comment stays where its text was, its range empty. A
+deck's goes on naming the shape it was on, which is gone. A workbook's model
+keeps it, but a workbook saved from it leaves it out. A PDF note is on no page,
+though some saves keep it (above). What the Comments panel shows for the deck's
+and the workbook's isn't looked into yet.
+
+**Workaround.** None yet.
+
 ## A buyer can read a deck's notes and hidden slides
 
 **Needed.** A deck shown to a buyer as its slides, so that what a seller wrote for
