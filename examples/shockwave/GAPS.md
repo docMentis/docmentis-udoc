@@ -108,16 +108,19 @@ an edit takes to arrive, and is refused while the editor isn't joined. On a slow
 enough connection, an edit made just before saving could still land in the next
 version.
 
-## Comments and annotations are a PDF's alone
+## Drawing markup is a PDF's alone
 
 **Needed.** A reviewer marking up what they're reviewing, whatever its format:
 most of what's reviewed here is decks and word documents.
 
-**Offered.** The Annotate tab, the comments panel and `addPageAnnotation` work
-on a PDF. A deck or a word document has none of them.
+**Offered.** The viewer writes a Word, Excel or PowerPoint document's comment
+threads, on its text, a shape, a slide or a cell, as it writes a PDF's, in this
+checkout's packages, not yet released. But the Annotate tab, which draws a
+highlight, ink or a shape over the page, and `addPageAnnotation` work on a PDF
+alone.
 
-**Workaround.** A reviewer returns a version with a written note, for every
-format. Marking one up waits on this.
+**Workaround.** A reviewer comments on a deck, a word document or a workbook,
+and draws only on a PDF.
 
 ## A new upload can't become a version of a document
 

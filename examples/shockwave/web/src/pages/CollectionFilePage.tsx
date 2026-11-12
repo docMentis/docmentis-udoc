@@ -73,6 +73,7 @@ export function CollectionFilePage() {
                         <DocumentViewer
                             documentId={file.documentId}
                             version={file.checkpoint}
+                            comments="hidden"
                             onOpened={({ format, ms }) =>
                                 announceMoment({ kind: "document:opened", where: "file", format, ms })
                             }

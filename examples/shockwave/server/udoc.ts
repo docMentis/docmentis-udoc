@@ -9,10 +9,11 @@
 // gate: the backend's own, with this process's token, for the tenant it names; a
 // signed-in user's, reading a document their tenant has an asset for, all of it if
 // they read the library and only its published version if not; one who changes the
-// library, joining the collaboration that edits it; those who enter a deal room,
-// doing either with its files, and a reviewer, reading the versions sent to them; and
-// a buyer's, with no account, reading a file a frontstage's link shows, at the version
-// it shows.
+// library, joining the collaboration that edits its working copy, `main`; those who
+// enter a deal room, doing either with its files, and a reviewer, reading the
+// versions sent to them and the branches they're reviewed in, and joining a branch's
+// collaboration while its version waits on them; and a buyer's, with no account,
+// reading a file a frontstage's link shows, at the version it shows.
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
@@ -44,6 +45,9 @@ const DOCUMENT_PATH = new RegExp(`^${BASE}/documents/([^/]+)(?:/|$)`);
 
 /** One checkpoint's routes: `/udoc/documents/:id/checkpoints/:version`, and those under it. */
 const CHECKPOINT_PATH = new RegExp(`^${BASE}/documents/[^/]+/checkpoints/(\\d+)(?:/|$)`);
+
+/** One branch's routes: `/udoc/documents/:id/branches/:branch`, and those under it. */
+const BRANCH_PATH = new RegExp(`^${BASE}/documents/[^/]+/branches/([^/]+)(?:/|$)`);
 
 /**
  * Where a frontstage's file opens: `/udoc/frontstage/:token/files/:assetId/versions/:number/package`,
@@ -81,8 +85,12 @@ export interface TenantDocuments {
      * how many bytes it is.
      */
     copyCheckpoint(id: string, checkpoint: number, format: string): Promise<{ id: string; size: number }>;
-    /** Save document `id` as it is now as a new checkpoint: the checkpoint's number. */
+    /** Save document `id`'s working copy as it is now as a new checkpoint: the checkpoint's number. */
     checkpoint(id: string): Promise<number>;
+    /** Start a branch of document `id` at checkpoint `checkpoint`: the branch's id. */
+    startBranch(id: string, checkpoint: number): Promise<string>;
+    /** Merge branch `branch` of document `id` into its working copy: each edit made in it reaches the copy's editors and its log. */
+    mergeBranch(id: string, branch: string): Promise<void>;
     /**
      * Document `id`'s pages as PNGs, in order, `scale` pixels to a point, up to
      * the first udoc-server turns down: none for a workbook, whose first page is
@@ -180,6 +188,28 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
     }
 
     /**
+     * Whether branch `branch` of document `id` is the one a version sent to `userId`
+     * is reviewed in; `waiting`, while it's still waiting on them, submitted.
+     */
+    function branchSentToReview(
+        tenant: TenantDb,
+        id: string,
+        branch: string,
+        userId: string,
+        waiting: boolean,
+    ): boolean {
+        const row = tenant
+            .prepare(
+                `SELECT 1 FROM versions JOIN assets ON assets.tenant_id = versions.tenant_id
+                    AND assets.id = versions.asset_id
+                WHERE versions.tenant_id = :tenant AND assets.document_id = ? AND versions.review_branch = ?
+                    AND versions.reviewer_id = ? AND (? = 0 OR versions.status = 'submitted')`,
+            )
+            .get(id, branch, userId, waiting ? 1 : 0);
+        return row !== undefined;
+    }
+
+    /**
      * What `request` asks of udoc-server, if it reads a file on a frontstage at the
      * version the frontstage shows: whose it is, and its address there. Nothing else
      * gets a buyer in.
@@ -229,26 +259,39 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
         if (request.method !== "GET" && request.method !== "HEAD")
             return { status: 403, failure: { error: "forbidden", message: "a document is read here, not changed" } };
         const checkpoint = CHECKPOINT_PATH.exec(path)?.[1];
+        const branch = BRANCH_PATH.exec(path)?.[1];
         const room = roomOfDocument(tenant, id!);
         if (room) {
-            // Those on a deal room read all of its file; a reviewer, the versions sent to them.
+            // Those on a deal room read all of its file; a reviewer, the versions sent
+            // to them, and the branches they're reviewed in.
             if (entersDealRoom(tenant, user, room.roomId)) return { tenantId };
-            return checkpoint !== undefined && checkpointSentToReview(tenant, room.assetId, Number(checkpoint), user.id)
-                ? { tenantId }
-                : unknown;
+            const sent =
+                (checkpoint !== undefined &&
+                    checkpointSentToReview(tenant, room.assetId, Number(checkpoint), user.id)) ||
+                (branch !== undefined && branchSentToReview(tenant, id!, branch, user.id, false));
+            return sent ? { tenantId } : unknown;
         }
         if (readsLibrary(user.role)) return { tenantId };
         // Anyone else reads the version published, and nothing of the document around it.
         return checkpoint !== undefined && published(tenant, id!, Number(checkpoint)) ? { tenantId } : unknown;
     }
 
-    /** The tenant of the document `request`, a WebSocket upgrade, joins the collaboration of, if the user changes it. */
+    /**
+     * The tenant of the document `request`, a WebSocket upgrade, joins a collaboration
+     * of, if the user may: its working copy's, `main`'s, if they change it; a review
+     * branch's, if they're the reviewer it waits on. No one else writes in a review.
+     */
     function editorsTenant(request: IncomingMessage): string | undefined {
         const user = userOf(db, request);
         if (!user) return undefined;
         const tenant = new TenantDb(db, user.tenant.id);
-        const id = DOCUMENT_PATH.exec(pathOf(request))?.[1];
+        const path = pathOf(request);
+        const id = DOCUMENT_PATH.exec(path)?.[1];
         if (!keptFor(tenant, id)) return undefined;
+        const branch = BRANCH_PATH.exec(path)?.[1] ?? MAIN_BRANCH;
+        if (branch !== MAIN_BRANCH) {
+            return branchSentToReview(tenant, id!, branch, user.id, true) ? user.tenant.id : undefined;
+        }
         const room = roomOfDocument(tenant, id!);
         const edits = room ? entersDealRoom(tenant, user, room.roomId) : managesLibrary(user.role);
         return edits ? user.tenant.id : undefined;
@@ -336,6 +379,21 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
                 async checkpoint(id) {
                     const response = await ask(tenantId, "POST", `/documents/${encodeURIComponent(id)}/checkpoints`);
                     return ((await response.json()) as { version: number }).version;
+                },
+
+                async startBranch(id, checkpoint) {
+                    const path = `/documents/${encodeURIComponent(id)}/versions/${checkpoint}/branches`;
+                    const response = await ask(tenantId, "POST", path);
+                    return ((await response.json()) as { branch: string }).branch;
+                },
+
+                async mergeBranch(id, branch) {
+                    const from = encodeURIComponent(branch);
+                    await ask(
+                        tenantId,
+                        "POST",
+                        `/documents/${encodeURIComponent(id)}/branches/${MAIN_BRANCH}/merge?from=${from}`,
+                    );
                 },
 
                 async renderPages(id, scale) {

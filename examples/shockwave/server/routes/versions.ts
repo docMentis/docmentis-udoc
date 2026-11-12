@@ -4,6 +4,9 @@
 // reviewed, and what's approved and published is exactly what was read. A
 // version is saved as a draft, submitted to a reviewer, who alone then approves
 // or returns it; one returned stays so, and what changes goes in a new version.
+// It's reviewed in a branch of the document started at it, where its reviewer
+// comments; deciding merges the branch into the working copy, so each comment
+// reaches whoever edits it, on what it was made on, wherever that has moved.
 // Any approved version may be published, an older one taking the file back to
 // it. No one reviews what they submitted themselves. A deal room's file has its
 // versions the same way, those who enter the room in place of those who keep the
@@ -60,6 +63,7 @@ interface VersionRow {
     status: VersionStatus;
     reviewer_id: string | null;
     reviewer_name: string | null;
+    review_branch: string | null;
 }
 
 interface EventRow {
@@ -83,7 +87,7 @@ export function versionsOf(db: TenantDb, assetId: string): Version[] {
     const rows = db
         .prepare(
             `SELECT versions.number, versions.checkpoint, versions.status, versions.reviewer_id,
-                users.name AS reviewer_name
+                users.name AS reviewer_name, versions.review_branch
             FROM versions LEFT JOIN users ON users.tenant_id = versions.tenant_id AND users.id = versions.reviewer_id
             WHERE versions.tenant_id = :tenant AND versions.asset_id = ? ORDER BY versions.number DESC`,
         )
@@ -99,11 +103,12 @@ export function versionsOf(db: TenantDb, assetId: string): Version[] {
             WHERE version_events.tenant_id = :tenant AND version_events.asset_id = ? ORDER BY version_events.id`,
         )
         .all(assetId) as unknown as EventRow[];
-    return rows.map(({ number, checkpoint, status, reviewer_id: reviewerId, reviewer_name: reviewerName }) => ({
+    return rows.map(({ number, checkpoint, status, reviewer_id: reviewerId, reviewer_name: reviewerName, ...row }) => ({
         number,
         checkpoint,
         status,
         reviewer: reviewerId === null ? null : { id: reviewerId, name: reviewerName! },
+        reviewBranch: row.review_branch,
         events: events
             .filter((event) => event.number === number)
             .map((event) => ({
@@ -336,14 +341,17 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
      * Take a step with version `number`, `{ note, reviewerId }`, `reviewerId`
      * for a step that sends it to someone: a `VersionedAsset`; a `403` for a
      * user the step isn't theirs to take; and a `409` for a version not where
-     * it starts from, or that has taken it already.
+     * it starts from, or that has taken it already. Submitting starts the branch
+     * it's reviewed in; approving or returning merges that branch into the working
+     * copy, after the step is kept: a merge that fails leaves the comments in the
+     * branch, which the version still opens.
      */
     for (const [step, { taker, from, to, event, needsNote }] of Object.entries(STEPS)) {
         app.post<{
             Params: { id: string; number: string };
             Body: { note?: unknown; reviewerId?: unknown } | undefined;
         }>(`/api/assets/:id/versions/:number/${step}`, async (request): Promise<VersionedAsset> => {
-            const { user, db } = signedIn(access, request);
+            const { user, db, documents } = signedIn(access, request);
             const asset = fileFor(db, user, request.params.id);
             const edits = editsFile(db, user, asset);
             const reviews = reviewsLibrary(user.role);
@@ -358,9 +366,12 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
             const number = Number(request.params.number);
             const row = db
                 .prepare(
-                    "SELECT status, reviewer_id FROM versions WHERE tenant_id = :tenant AND asset_id = ? AND number = ?",
+                    `SELECT status, reviewer_id, checkpoint, review_branch FROM versions
+                    WHERE tenant_id = :tenant AND asset_id = ? AND number = ?`,
                 )
-                .get(asset.id, number) as { status: VersionStatus; reviewer_id: string | null } | undefined;
+                .get(asset.id, number) as
+                | Pick<VersionRow, "status" | "reviewer_id" | "checkpoint" | "review_branch">
+                | undefined;
             if (!row) throw new Refusal(404, "notFound", "no such version");
             if (!from.includes(row.status))
                 throw new Refusal(409, "wrongStatus", `only a version that's ${from.join(" or ")} can take this step`);
@@ -397,10 +408,12 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
 
             const note = noteOf(request.body?.note);
             if (needsNote && !note) throw new Refusal(400, "badRequest", "a note is needed");
+            const branch = step === "submit" ? await documents.startBranch(asset.documentId, row.checkpoint) : null;
             db.transaction(() => {
                 db.prepare(
-                    "UPDATE versions SET status = ?, reviewer_id = ? WHERE tenant_id = :tenant AND asset_id = ? AND number = ?",
-                ).run(to ?? row.status, sentTo ?? row.reviewer_id, asset.id, number);
+                    `UPDATE versions SET status = ?, reviewer_id = ?, review_branch = coalesce(?, review_branch)
+                    WHERE tenant_id = :tenant AND asset_id = ? AND number = ?`,
+                ).run(to ?? row.status, sentTo ?? row.reviewer_id, branch, asset.id, number);
                 if (step === "publish")
                     db.prepare("UPDATE assets SET published_version = ? WHERE tenant_id = :tenant AND id = ?").run(
                         number,
@@ -416,6 +429,13 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
                     note,
                 });
             });
+            if ((step === "approve" || step === "return") && row.review_branch !== null) {
+                try {
+                    await documents.mergeBranch(asset.documentId, row.review_branch);
+                } catch (error) {
+                    request.log.warn(error, "the review's branch wasn't merged into the working copy");
+                }
+            }
             return { asset: anyFileOf(db, asset.id), versions: versionsOf(db, asset.id) };
         });
     }

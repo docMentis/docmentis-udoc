@@ -160,6 +160,7 @@ export function FrontstageFilePage() {
                                 packagePath={file.package}
                                 colors={stage.from.viewerColors}
                                 readsOnly
+                                comments="hidden"
                                 onOpened={({ format, ms }) => {
                                     reading.current ??= startReading(token!, file.id, onScreen.current);
                                     announceMoment({ kind: "document:opened", where: "file", format, ms });

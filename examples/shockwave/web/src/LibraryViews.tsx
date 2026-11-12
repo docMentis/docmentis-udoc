@@ -140,7 +140,7 @@ export function FileGrid({ folders, assets, menu }: ViewProps) {
 /**
  * A file as a card: its pages, its name, who uploaded it and when, and where its
  * versions stand; or, for a version `waiting` on the user, what it's waiting for,
- * and opening that version.
+ * and opening that version, or, one returned, the working copy being edited.
  */
 export function FileCard({
     asset,
@@ -152,7 +152,13 @@ export function FileCard({
     waiting?: { number: number; status: VersionStatus };
 }) {
     const navigate = useNavigate();
-    const path = waiting ? `${filePath(asset)}?version=${waiting.number}` : filePath(asset);
+    // A version returned is acted on in the working copy, where its review's
+    // comments are by now; any other, where it's waiting.
+    const path = !waiting
+        ? filePath(asset)
+        : waiting.status === "returned"
+          ? `${filePath(asset)}?edit=1`
+          : `${filePath(asset)}?version=${waiting.number}`;
     return (
         <div className="file-card" onClick={() => navigate(path)}>
             <Thumbnail file={asset} />

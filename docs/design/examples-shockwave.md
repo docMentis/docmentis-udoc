@@ -34,21 +34,21 @@ Seismic, Highspot, Showpad and Letter AI each do these jobs:
 
 ## Where docMentis fits
 
-| Job                                 | docMentis today                                                                                                              | Strength                         |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| Previewing the library, any format  | the viewer: PDF, DOCX, PPTX, XLSX, images, Markdown, HTML, CSV, video and audio, web pages                                   | core                             |
-| Previewing before uploading         | the viewer renders the file in the browser, in WebAssembly; it never leaves the computer                                     | core                             |
-| Thumbnails                          | udoc-server's page routes, PNG or SVG; udoc-node's `exportPageToBytes`                                                       | core                             |
-| Personalizing a deck                | the editor edits the PPTX, DOCX or XLSX itself, in the browser, with no trip to desktop Office                               | core                             |
-| A frozen PDF of an approved version | `exportToBytes("pdf")`, udoc-server's `pages.pdf`                                                                            | core                             |
-| Compliance review                   | annotations, and comment threads with their replies                                                                          | partial: checked for a PDF alone |
-| Co-editing an RFP                   | udoc-server's collaboration over WebSocket, with presence and each other's pointers                                          | core                             |
-| Presenting                          | the slide show: PowerPoint's transitions, animations and Morph, the presenter view on a second screen; a PDF too             | core                             |
-| Buyer engagement, page by page      | the viewer's `currentPage:changed`, `viewport:changed`, `document:downloaded` and `document:printed`, which the host records | core                             |
-| Sharing under control               | `setWatermarks`; `showDownloadButton`, `showPrintButton` and `enableCopy` turned off                                         | partial: no redaction            |
-| Searching the library, AI on it     | search within one document alone: only a word document saves as text or Markdown, and a PDF's or a deck's text can't be had  | gap                              |
-| Decks generated from a template     | udoc-node opens, saves and exports a document, with no API to edit it                                                        | gap                              |
-| Copying slides between decks        | not looked into yet                                                                                                          | likely gap                       |
+| Job                                 | docMentis today                                                                                                              | Strength                        |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| Previewing the library, any format  | the viewer: PDF, DOCX, PPTX, XLSX, images, Markdown, HTML, CSV, video and audio, web pages                                   | core                            |
+| Previewing before uploading         | the viewer renders the file in the browser, in WebAssembly; it never leaves the computer                                     | core                            |
+| Thumbnails                          | udoc-server's page routes, PNG or SVG; udoc-node's `exportPageToBytes`                                                       | core                            |
+| Personalizing a deck                | the editor edits the PPTX, DOCX or XLSX itself, in the browser, with no trip to desktop Office                               | core                            |
+| A frozen PDF of an approved version | `exportToBytes("pdf")`, udoc-server's `pages.pdf`                                                                            | core                            |
+| Compliance review                   | comment threads in Word, Excel, PowerPoint and PDF, made on the version reviewed and merged into the working copy            | partial: drawn markup PDF alone |
+| Co-editing an RFP                   | udoc-server's collaboration over WebSocket, with presence and each other's pointers                                          | core                            |
+| Presenting                          | the slide show: PowerPoint's transitions, animations and Morph, the presenter view on a second screen; a PDF too             | core                            |
+| Buyer engagement, page by page      | the viewer's `currentPage:changed`, `viewport:changed`, `document:downloaded` and `document:printed`, which the host records | core                            |
+| Sharing under control               | `setWatermarks`; `showDownloadButton`, `showPrintButton` and `enableCopy` turned off                                         | partial: no redaction           |
+| Searching the library, AI on it     | search within one document alone: only a word document saves as text or Markdown, and a PDF's or a deck's text can't be had  | gap                             |
+| Decks generated from a template     | udoc-node opens, saves and exports a document, with no API to edit it                                                        | gap                             |
+| Copying slides between decks        | not looked into yet                                                                                                          | likely gap                      |
 
 The gaps are what Shockwave logs in `GAPS.md` as it reaches them, and the
 strongest candidates for the engine's roadmap.
@@ -171,7 +171,7 @@ profile, as Seismic and Highspot keep the two apart:
 | Role     | May                                                                                                      |
 | -------- | -------------------------------------------------------------------------------------------------------- |
 | admin    | keep the Library (create, prepare, submit, publish what's approved, retire), see Insights, and Settings  |
-| reviewer | review what's sent to them from the Library or a deal room: approve it, or return it with a note         |
+| reviewer | review what's sent to them from the Library or a deal room: comment on it, approve it, or return it      |
 | manager  | arrange Collections, teach in Learning, enter every deal room, see Insights, and all a member may        |
 | member   | find content in Collections, prepare it and share it in the Deal Rooms they're on, and learn in Learning |
 
@@ -276,7 +276,9 @@ it; anyone else reads only the checkpoint its file publishes, and nothing of the
 document around it. An upgrade, which joins the collaboration that edits a
 document, passes only for those who change the Library. A deal room's file is
 another matter: those who enter the room read it and join its collaboration, and
-a reviewer reads the versions sent to them. A buyer has no session: a frontstage's
+a reviewer reads the versions sent to them. Either way, a version is reviewed in a
+branch of the document ([below](#versions)): its reviewer reads it, and joins its
+collaboration while the version waits on them, and no one else writes there. A buyer has no session: a frontstage's
 link admits them to the package of each file it shows, at the version it shows
 ([below](#deal-rooms)). The browser
 never imports, checkpoints or deletes a document in udoc-server: the backend does.
@@ -322,16 +324,28 @@ save ──▶ draft ──submit──▶ submitted ──approve──▶ appr
 | Step     | Who                                 | What it does                                                                                                            |
 | -------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | save     | admin                               | a new checkpoint, a draft version, with a note on what changed                                                          |
-| submit   | admin                               | sends a draft to the reviewer they choose                                                                               |
+| submit   | admin                               | sends a draft to the reviewer they choose, starting the branch it's reviewed in                                         |
 | reassign | admin, or the reviewer it's sent to | sends it to another reviewer                                                                                            |
-| approve  | the reviewer it's sent to           | approves what was submitted, as it stands                                                                               |
-| return   | the reviewer it's sent to           | sends it back with a note. It stays returned: what changes goes in a new version                                        |
+| approve  | the reviewer it's sent to           | approves what was submitted, as it stands; their comments reach the working copy                                        |
+| return   | the reviewer it's sent to           | sends it back with a note and their comments. It stays returned: what changes goes in a new version                     |
 | publish  | admin                               | makes an approved version the file's published one, in place of any before, so an older one takes the file back to it   |
 | dismiss  | admin                               | takes an approved or returned version off what's waiting; it stays as it is, and an approved one can still be published |
 
 A version goes to one reviewer, who alone decides it, so it's on record who was
 responsible. No one reviews what they submitted themselves: roles keep the two apart
 today, and the backend rules it out whatever a role comes to allow.
+
+**Reviewing.** Submitting starts a branch of the document at the version's checkpoint
+([Node Branches](node-branches.md)), its id kept as `versions.review_branch`. The
+reviewer reads the version there, in the viewer, joined to the branch's
+collaboration, and comments on it — a Word, Excel or PowerPoint thread on what it's
+about, a PDF's annotations. What they write is theirs until
+they decide: anyone else sees the version as submitted. Approving or returning it
+merges the branch into the working copy, so each comment reaches whoever edits it, on
+what it was made on, wherever that has moved since, and they reply to it and resolve
+it there; the next version holds the threads, replies and all, for its own review.
+After deciding, the version opens its branch, read-only, with what was written there.
+Comments live in the document, so Collections and the frontstage hide them.
 
 Publishing is apart from a version's status, a pointer on the file
 (`assets.published_version`): an approved version stays approved once another
@@ -340,11 +354,12 @@ note is kept as it happened (`version_events`), each version's history.
 
 A file's page opens the working copy for those who edit it, and for anyone else, the
 version sent to them to review, or else the latest; its Versions tab opens any other,
-read-only, as a checkpoint is. The Library shows where each file's versions stand,
+read-only, as a checkpoint is, or its review's branch once it's decided. The Library shows where each file's versions stand,
 its latest and any other that's published, and filters by it.
 
 Home's "Needs your attention" lists the versions waiting on the user, by who they
-are and not by their role, each saying what for and opening that version:
+are and not by their role, each saying what for and opening that version — one
+returned, the working copy, being edited, where its review's comments are:
 
 | Waiting   | On               | Until                                                     |
 | --------- | ---------------- | --------------------------------------------------------- |
@@ -356,8 +371,9 @@ A version published once isn't waiting to be again, so rolling back leaves nothi
 behind. Sales read a published version through [Collections](#collections); the gate
 lets them read that and no more.
 
-What this can't do yet is in `GAPS.md`: marking up anything but a PDF, taking a new
-upload as a version, and rendering a checkpoint's pages as images. Retiring a file,
+What this can't do yet is in `GAPS.md`: drawn markup on anything but a PDF, a merge
+past a cut where both lines first edited one page, taking a new upload as a version,
+and rendering a checkpoint's pages as images. Retiring a file,
 and a version's expiry, are still to come.
 
 ## Collections

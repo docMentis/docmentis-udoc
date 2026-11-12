@@ -6,9 +6,10 @@ import { useEffect, useRef } from "react";
 import { UDocEditor } from "@docmentis/udoc-editor";
 
 import { useDocumentLook } from "./DocumentViewer";
+import type { CollaborationState } from "./DocumentViewer";
 
 /** How editing stands: its edits being kept, or, for a lost connection, not until it's back, or not at all. */
-export type EditingState = "joined" | "interrupted" | "failed";
+export type EditingState = CollaborationState;
 
 /** An editor on document `documentId`, as `userName`; `onState` hears how editing stands as it changes, and `undefined` as it ends. */
 export function DocumentEditor({

@@ -333,6 +333,12 @@ const MIGRATIONS = [
     DROP TABLE frontstage_page_views;
     ALTER TABLE page_views_by_page RENAME TO frontstage_page_views;
     `,
+    // A version submitted for review is reviewed in a branch udoc-server starts at
+    // its checkpoint, `review_branch`: what its reviewer writes on it goes there,
+    // and into the working copy once they decide. One submitted before has none.
+    `
+    ALTER TABLE versions ADD COLUMN review_branch TEXT;
+    `,
 ];
 
 /** SQLite's code for a `UNIQUE` constraint failing. */

@@ -2,7 +2,10 @@
 // to it, a card, its title bar the file's name, what the app knows of it and what
 // can be done with what's shown, over what's shown from udoc-server: the working
 // copy, in the viewer or being edited, or a version, read-only, as the address says.
-// Those who don't edit it see the version sent to them to review, or the latest.
+// Those who don't edit it see the version sent to them to review, or the latest. A
+// version is reviewed in a branch of its own: its reviewer comments there while it
+// waits on them, and once they decide, it shows what they wrote; until then, anyone
+// else sees the version as it was submitted.
 // Beside the card, a card of the app's own on the file, its tabs each what a feature
 // knows of it, folded to a strip with the button that unfolds it.
 import { useState } from "react";
@@ -15,6 +18,7 @@ import { api } from "./api";
 import { DocumentEditor } from "./DocumentEditor";
 import type { EditingState } from "./DocumentEditor";
 import { DocumentViewer } from "./DocumentViewer";
+import type { CollaborationState } from "./DocumentViewer";
 import { announceMoment } from "./moments";
 import { useUser } from "./session";
 import { useSidePanel } from "./sidePanel";
@@ -110,6 +114,7 @@ export function FileWorkspace({
     const { open: panel, show: showPanel, toggle: panelToggle } = useSidePanel();
     const [tab, setTab] = useState<"versions" | "details">("versions");
     const [editingState, setEditingState] = useState<EditingState>();
+    const [reviewingState, setReviewingState] = useState<CollaborationState>();
 
     // What's shown: the version the address names; or the working copy, for
     // those who edit it; or, for anyone else, what's waiting on them.
@@ -128,6 +133,15 @@ export function FileWorkspace({
     const mayReview = reviews && isReviewer && submitter !== user.id;
     const reassignable = reviewers.filter(({ id }) => id !== shown?.reviewer?.id && id !== submitter);
     const dealtWith = shown?.events.some((event) => event.kind === "dismissed" || event.kind === "published");
+    // The branch it's reviewed in, for its reviewer, and for everyone once they've
+    // decided; and whether they're commenting in it now.
+    const decided = shown?.status === "approved" || shown?.status === "returned";
+    const review = shown?.reviewBranch && (isReviewer || decided) ? shown.reviewBranch : undefined;
+    const commenting = review !== undefined && mayReview && shown?.status === "submitted";
+    // A step taken while comments can't reach the server would leave them out of the merge.
+    const unsaved = commenting && reviewingState !== "joined";
+    const connection = editing ? editingState : commenting ? reviewingState : undefined;
+    const kept = editing ? "Your edits" : "Your comments";
 
     /** The file as a change to its versions left it, with the side panel showing them. */
     function changed(versioned: VersionedAsset) {
@@ -148,14 +162,14 @@ export function FileWorkspace({
                             <p>
                                 {shown ? `Version ${shown.number}` : "Working copy"} · {about}
                             </p>
-                            {editing && editingState === "interrupted" && (
+                            {connection === "interrupted" && (
                                 <p className="error" role="status">
-                                    Connection lost. Your edits are kept here until it's back.
+                                    Connection lost. {kept} are kept here until it's back.
                                 </p>
                             )}
-                            {editing && editingState === "failed" && (
+                            {connection === "failed" && (
                                 <p className="error" role="alert">
-                                    Your edits aren't being saved. Reload the page to try again.
+                                    {kept} aren't being saved. Reload the page to try again.
                                 </p>
                             )}
                         </div>
@@ -203,6 +217,7 @@ export function FileWorkspace({
                                     <button
                                         type="button"
                                         className="button"
+                                        disabled={unsaved}
                                         onClick={() => setTask({ step: "return", version: shown })}
                                     >
                                         Return
@@ -210,6 +225,7 @@ export function FileWorkspace({
                                     <button
                                         type="button"
                                         className="button primary"
+                                        disabled={unsaved}
                                         onClick={() => setTask({ step: "approve", version: shown })}
                                     >
                                         Approve
@@ -247,7 +263,8 @@ export function FileWorkspace({
                         ) : (
                             <DocumentViewer
                                 documentId={asset.documentId}
-                                version={shown?.checkpoint}
+                                {...(review ? { branch: review } : { version: shown?.checkpoint })}
+                                {...(commenting && { collaborateAs: user.name, onState: setReviewingState })}
                                 onOpened={({ format, ms }) =>
                                     announceMoment({ kind: "document:opened", where: "file", format, ms })
                                 }

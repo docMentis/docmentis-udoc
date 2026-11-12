@@ -208,6 +208,13 @@ export interface Version {
     status: VersionStatus;
     /** Who reviews it, or reviewed it; `null` before it's submitted. */
     reviewer: { id: string; name: string } | null;
+    /**
+     * The branch it's reviewed in, `null` before it's submitted: started at its
+     * checkpoint, opened from `/udoc/documents/:documentId/branches/:reviewBranch/package`,
+     * and what its reviewer comments goes there, then into the working copy once
+     * they approve or return it.
+     */
+    reviewBranch: string | null;
     /** What happened to it, oldest first; the first, its being saved. */
     events: VersionEvent[];
 }
