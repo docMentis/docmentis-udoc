@@ -89,6 +89,7 @@ import {
     ICON_LAYERS,
     ICON_FORMATTING_MARKS,
     ICON_COMMENTS,
+    ICON_NEW_COMMENT,
     ICON_FORMULA_BAR,
 } from "./icons.js";
 
@@ -1287,6 +1288,27 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             press: (store) => store.dispatch({ type: "SET_SHOW_COMMENTS", visible: !store.getState().showComments }),
         },
         enabledWhen: (c) => c.ready && OFFICE_COMMENT_DOC_TYPES.has(c.docType ?? ""),
+    },
+    // Edit mode's New Comment, on a deck's Slide tab, a workbook's Cell tab
+    // and a word document's Review tab: the comments panel opens on its field
+    // for a new thread, which Save opens on what is selected — on a slide with
+    // nothing selected, the slide.
+    newComment: {
+        id: "newComment",
+        label: "comments.new",
+        icon: ICON_NEW_COMMENT,
+        group: "comment",
+        run: {
+            kind: "action",
+            press: (store) => {
+                store.dispatch({ type: "NEW_COMMENT" });
+                store.dispatch({ type: "OPEN_PANEL", panel: "comments" });
+            },
+        },
+        enabledWhen: (c) =>
+            c.ready &&
+            (c.selection.allowed.includes("insertComment") ||
+                (c.docType === "presentation" && c.presentationView === "normal")),
     },
     // A workbook's formula bar above its grid.
     formulaBar: {

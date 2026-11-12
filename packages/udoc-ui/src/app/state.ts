@@ -418,6 +418,7 @@ export type CommandId =
     | "layers"
     | "formattingMarks"
     | "comments"
+    | "newComment"
     | "formulaBar";
 
 /**
@@ -1011,6 +1012,9 @@ export interface UIState {
      *  pages — each thread's marker and its text's highlight — the View tab's
      *  Comments. Kept across documents. */
     showComments: boolean;
+    /** Bumped by a toolbar's New Comment: the comments panel opens its field
+     *  for a new thread on each change it hasn't seen. */
+    newCommentGen: number;
     /** Whether the open PDF has layers to show or hide — what the View tab's
      *  Layers button shows for. Read after the document opens. */
     hasLayers: boolean;
@@ -1212,6 +1216,7 @@ export const initialState: UIState = {
     formulaBarVisible: true,
     showFormattingMarks: false,
     showComments: true,
+    newCommentGen: 0,
     hasLayers: false,
 
     toolbarVisible: true,

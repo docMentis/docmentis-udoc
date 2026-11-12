@@ -717,6 +717,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         case "SET_SHOW_COMMENTS":
             return action.visible === state.showComments ? state : { ...state, showComments: action.visible };
 
+        case "NEW_COMMENT":
+            return { ...state, newCommentGen: state.newCommentGen + 1 };
+
         case "SET_REVISION_VIEW":
             return { ...state, revisionView: action.view };
 

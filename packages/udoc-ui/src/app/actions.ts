@@ -252,6 +252,8 @@ export type Action =
     | { type: "SET_FORMULA_BAR_VISIBLE"; visible: boolean }
     | { type: "SET_SHOW_FORMATTING_MARKS"; visible: boolean }
     | { type: "SET_SHOW_COMMENTS"; visible: boolean }
+    // A toolbar's New Comment: the comments panel opens its field.
+    | { type: "NEW_COMMENT" }
     | { type: "SET_HAS_LAYERS"; hasLayers: boolean }
     // What a word document's tracked changes show: the view chosen, and the one
     // the open document opened on

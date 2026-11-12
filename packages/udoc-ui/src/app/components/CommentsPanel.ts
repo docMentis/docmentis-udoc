@@ -52,6 +52,8 @@ interface CommentsPanelSlice {
     /** Whether an Office thread may be written: in an editing mode, on a
      *  document whose comment edits are built. */
     officeEditing: boolean;
+    /** Bumped by a toolbar's New Comment ({@link UIState.newCommentGen}). */
+    newCommentGen: number;
 }
 
 function selectSlice(state: UIState): CommentsPanelSlice {
@@ -67,6 +69,7 @@ function selectSlice(state: UIState): CommentsPanelSlice {
         },
         annotating: state.features.includes("annotation"),
         officeEditing: state.mode !== VIEW_MODE && OFFICE_EDITED_DOC_TYPES.has(state.docType ?? ""),
+        newCommentGen: state.newCommentGen,
     };
 }
 
@@ -78,6 +81,7 @@ function sliceEqual(a: CommentsPanelSlice, b: CommentsPanelSlice): boolean {
         a.allRead === b.allRead &&
         a.annotating === b.annotating &&
         a.officeEditing === b.officeEditing &&
+        a.newCommentGen === b.newCommentGen &&
         a.selected?.page === b.selected?.page &&
         (a.selected?.ids.join() ?? "") === (b.selected?.ids.join() ?? "")
     );
@@ -114,8 +118,9 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
     const empty = document.createElement("div");
     empty.className = "udoc-panel-placeholder";
 
-    // New comment, and the field it opens in its place: Save opens the thread,
-    // Save and Cancel each put the button back.
+    // New comment, and the field it opens in its place — as a toolbar's New
+    // Comment does too: Save opens the thread, Save and Cancel each put the
+    // button back.
     const compose = document.createElement("div");
     compose.className = "udoc-comments-panel__new";
     const start = createButton({
@@ -134,11 +139,15 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         field.clear();
         compose.replaceChildren(start);
     }
-    start.addEventListener("click", () => {
+    function openField(): void {
         compose.replaceChildren(field.el);
         field.focus();
-    });
+    }
+    start.addEventListener("click", openField);
     compose.append(start);
+    /** The last toolbar New Comment the panel answered, by its count — one
+     *  pressed while the panel was shut is answered as it opens. */
+    let newCommentGen = 0;
 
     /** The cards by their comment's id, kept while it is listed so an edit in
      *  progress stays. */
@@ -251,6 +260,14 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         empty.textContent = i18n.t(slice.allRead ? "comments.empty" : "comments.loading");
         const listing = shownGroups.length > 0 ? shownGroups : [empty];
         setChildren(el, slice.officeEditing ? [compose, ...listing] : listing);
+        if (slice.newCommentGen !== newCommentGen) {
+            newCommentGen = slice.newCommentGen;
+            // Focused a frame on, once the panel the press opened shows.
+            if (slice.officeEditing) {
+                compose.replaceChildren(field.el);
+                requestAnimationFrame(() => field.focus());
+            }
+        }
         // The thread selected on the page is brought into view here, once.
         const openKey = open?.thread.id ?? null;
         if (open && openKey !== revealed) open.el.scrollIntoView({ block: "nearest" });
@@ -284,11 +301,15 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
 
 export type CommentsPanelComponent = ReturnType<typeof createCommentsPanel>;
 
-/** Give `parent` `children`, in order — left as it is when it has them, as
- *  moving a node takes the keyboard from a field in it. */
+/** Give `parent` `children`, in order, moving only a node out of its place —
+ *  as moving a node takes the keyboard from a field in it, one already in its
+ *  place, as the new thread's field heading the list, stays. */
 function setChildren(parent: HTMLElement, children: readonly HTMLElement[]): void {
-    const same = children.length === parent.children.length && children.every((c, i) => parent.children[i] === c);
-    if (!same) parent.replaceChildren(...children);
+    children.forEach((child, index) => {
+        const at = parent.children[index] ?? null;
+        if (at !== child) parent.insertBefore(child, at);
+    });
+    while (parent.children.length > children.length) parent.lastElementChild!.remove();
 }
 
 /** The groups the panel lists, in the order the document reads, each with its

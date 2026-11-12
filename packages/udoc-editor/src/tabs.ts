@@ -379,9 +379,10 @@ const PORTABLE_PAGE_TAB: EditTab = {
  * The presentation Slide tab: the slides' edits — New Slide, after the current
  * slide, then Delete Slide and Change Layout, of the current slide or those
  * picked in the thumbnails — then what goes on a slide: a text box and the
- * gallery's shapes, dragged out on it, a picture, and a table sized on a grid.
- * All icons, named by their tooltips. A deck's strip opens on it, and slides or
- * sections picked or nothing selected open it.
+ * gallery's shapes, dragged out on it, a picture, and a table sized on a grid —
+ * then New Comment, on what is selected or else the slide. All icons, named by
+ * their tooltips. A deck's strip opens on it, and slides or sections picked or
+ * nothing selected open it.
  */
 const PRESENTATION_SLIDE_TAB: EditTab = {
     id: "slide",
@@ -395,6 +396,7 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
         "insertGalleryShape",
         "insertImage",
         "insertTable",
+        "newComment",
     ] satisfies EditCommandId[],
     opensOnEntry: true,
     opensFor: slidesOrNothing,
@@ -405,8 +407,9 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
  * formats them: the Text tab's font fields, Bold, Italic, Underline and
  * Strikethrough, and Text Color, with Fill Color beside it; Border Color and
  * Border; the Alignment dropdown, Wrap Text and Merge & Center; the Number
- * Format dropdown and the two decimal steps; and Clear Formats. A workbook's
- * strip opens on it, and a selection of cells opens it.
+ * Format dropdown and the two decimal steps; Clear Formats; and New Comment, on
+ * the active cell. A workbook's strip opens on it, and a selection of cells
+ * opens it.
  */
 const CELL_TAB: EditTab = {
     id: "cell",
@@ -430,6 +433,7 @@ const CELL_TAB: EditTab = {
         "cellDecimalsUp",
         "cellDecimalsDown",
         "cellClearFormats",
+        "newComment",
     ] satisfies EditCommandId[],
     opensOnEntry: true,
     opensFor: sheetCells,
@@ -468,13 +472,20 @@ const PRESENTATION_TABS: readonly EditTab[] = [
     editViewTab("presentation"),
 ];
 
+/** A word document's Review tab, as edit mode has it: view mode's, then New
+ *  Comment, on the text selected. */
+const WORDPROCESSING_REVIEW_TAB: EditTab = {
+    ...REVIEW_TAB,
+    commands: [...REVIEW_TAB.commands, "newComment" satisfies EditCommandId],
+};
+
 /** The wordprocessing strip: Text, then Table, then Shape for the drawings in
  *  its flow, then Review, and its View last. */
 const WORDPROCESSING_TABS: readonly EditTab[] = [
     WORDPROCESSING_TEXT_TAB,
     TABLE_TAB,
     WORDPROCESSING_SHAPE_TAB,
-    REVIEW_TAB,
+    WORDPROCESSING_REVIEW_TAB,
     editViewTab("wordprocessing"),
 ];
 
