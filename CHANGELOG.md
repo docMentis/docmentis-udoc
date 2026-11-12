@@ -8,7 +8,18 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- `--udoc-formula-bar-background` sets the fill of a spreadsheet's formula
+  bar, which `--udoc-status-bar-background` set before.
+
 #### Changed
+
+- A spreadsheet's formula bar draws its Name Box and contents as the other
+  fields are drawn: outlined, with no fill of their own. The contents field's
+  border darkens under the pointer, takes your primary color on focus, and
+  the error color while a refused entry is shown. The page and zoom fields
+  take your primary color on focus too, where they darkened.
 
 - A Word, Excel or PowerPoint document's comments are written as a PDF's are,
   wherever the user may annotate: in the viewer, and in the editor's view mode

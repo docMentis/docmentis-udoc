@@ -183,14 +183,14 @@ export function createFormulaBar(i18n: I18n, hooks: FormulaBarHooks) {
         enter.disabled = !typing;
         input.readOnly = !next.editable || cell === null;
         if (document.activeElement !== input) input.value = cell?.input ?? "";
-        if (!typing) refusal.hidden = true;
+        if (!typing) clearRefusal();
     }
 
     /** Leave the bar for the grid, what it shows the cell's again — the
      *  latest, which a report landing while the bar held the keyboard left
      *  unshown. */
     function done(): void {
-        refusal.hidden = true;
+        clearRefusal();
         // The grid's keyboard sink never takes the keyboard from a text field.
         input.blur();
         hooks.focusGrid();
@@ -207,7 +207,7 @@ export function createFormulaBar(i18n: I18n, hooks: FormulaBarHooks) {
     });
     input.addEventListener("blur", () => hooks.keyboard(false));
     input.addEventListener("input", () => {
-        refusal.hidden = true;
+        clearRefusal();
         hooks.replace(input.value, caret());
     });
     input.addEventListener("keydown", (e) => {
@@ -239,10 +239,18 @@ export function createFormulaBar(i18n: I18n, hooks: FormulaBarHooks) {
         unsub = subscribeSelector(store, selectSlice, render, { equality: sliceEqual });
     }
 
-    /** Show why a save was refused, under the bar. */
+    /** Show why a save was refused, under the bar, and mark the field
+     *  invalid. */
     function showRefusal(message: string): void {
         refusal.textContent = message;
         refusal.hidden = false;
+        input.setAttribute("aria-invalid", "true");
+    }
+
+    /** Take a refusal away, and the field's invalid mark with it. */
+    function clearRefusal(): void {
+        refusal.hidden = true;
+        input.removeAttribute("aria-invalid");
     }
 
     function destroy(): void {

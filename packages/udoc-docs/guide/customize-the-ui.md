@@ -128,6 +128,7 @@ one apart without changing the rest:
 | `--udoc-ribbon-background`           | The ribbon                                            | `--udoc-color-surface-container` |
 | `--udoc-panel-background`            | The side panels                                       | `--udoc-color-surface-container` |
 | `--udoc-status-bar-background`       | The status bar                                        | `--udoc-color-surface-container` |
+| `--udoc-formula-bar-background`      | A spreadsheet's formula bar                           | `--udoc-color-surface-container` |
 | `--udoc-canvas-background`           | The area around the pages, and the gaps between them  | `--udoc-color-surface`           |
 | `--udoc-canvas-guide-background`     | The ruler, and a spreadsheet's row and column headers | `--udoc-color-surface-container` |
 | `--udoc-canvas-scrollbar-background` | The scrollbars' tracks                                | `--udoc-color-surface-container` |

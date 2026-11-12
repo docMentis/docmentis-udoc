@@ -41,14 +41,14 @@ The `--udoc-color-` prefix is dropped in the tables.
 
 ### Surface: the planes
 
-| Role                        | Light     | Dark      | Paints                                                                                                                                   |
-| --------------------------- | --------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `surface-container-lowest`  | `#e0e0e0` | `#121212` | Nothing yet: a well sunk below the canvas                                                                                                |
-| `surface`                   | `#e6e6e6` | `#181818` | The canvas, via `--udoc-canvas-background`; the slide picker's preview well; the ruler's text margins                                    |
-| `surface-container-low`     | `#ececec` | `#1e1e1e` | Nothing yet: a frame below the chrome, such as the toolbar stepping down from the ribbon                                                 |
-| `surface-container`         | `#f3f3f3` | `#252525` | The chrome around the canvas, via the [region tokens](#component-tokens): toolbar, ribbon, panels, status bar, guide, scrollbar tracks   |
-| `surface-container-high`    | `#f9f9f9` | `#2c2c2c` | Cards and text boxes inside a panel; the chrome floating over the canvas: floating toolbar, comment popup, annotation bar, page controls |
-| `surface-container-highest` | `#ffffff` | `#333333` | Menus, tooltips, dialogs; the ruler's selected span and text area                                                                        |
+| Role                        | Light     | Dark      | Paints                                                                                                                                              |
+| --------------------------- | --------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `surface-container-lowest`  | `#e0e0e0` | `#121212` | Nothing yet: a well sunk below the canvas                                                                                                           |
+| `surface`                   | `#e6e6e6` | `#181818` | The canvas, via `--udoc-canvas-background`; the slide picker's preview well; the ruler's text margins                                               |
+| `surface-container-low`     | `#ececec` | `#1e1e1e` | Nothing yet: a frame below the chrome, such as the toolbar stepping down from the ribbon                                                            |
+| `surface-container`         | `#f3f3f3` | `#252525` | The chrome around the canvas, via the [region tokens](#component-tokens): toolbar, ribbon, panels, status bar, formula bar, guide, scrollbar tracks |
+| `surface-container-high`    | `#f9f9f9` | `#2c2c2c` | Cards and text boxes inside a panel; the chrome floating over the canvas: floating toolbar, comment popup, annotation bar, page controls            |
+| `surface-container-highest` | `#ffffff` | `#333333` | Menus, tooltips, dialogs; the ruler's selected span and text area                                                                                   |
 
 The ladder is M3's `surface` and its five containers, ordered the way M3 orders
 them in its dark theme, in both of our themes: each rung is a height, and a
@@ -147,6 +147,7 @@ with its own app. Each has one fill token that defaults to the region's rung:
 | `--udoc-ribbon-background`           | `surface-container` | `.udoc-ribbon` and its selected tab                                                      |
 | `--udoc-panel-background`            | `surface-container` | `.udoc-left-panel` and its tab strip, `.udoc-right-panel`                                |
 | `--udoc-status-bar-background`       | `surface-container` | `.udoc-status-bar`                                                                       |
+| `--udoc-formula-bar-background`      | `surface-container` | `.udoc-formula-bar` and the refusal of a save under it                                   |
 | `--udoc-canvas-background`           | `surface`           | The canvas host and the selected sheet tab; pushed to the engine as the page-gap color   |
 | `--udoc-canvas-guide-background`     | `surface-container` | The guide bands: the ruler, a spreadsheet's row and column headers                       |
 | `--udoc-canvas-scrollbar-background` | `surface-container` | The tracks of the scrollbars that take a strip of their own, and the corner between them |
@@ -277,10 +278,11 @@ one per edge a panel docks to, and the two are kept in step.
 ## Fields are outlined
 
 A **field** is a control that holds a value: the mode switch, the font and size
-pickers, the page and zoom inputs, the page-setup controls. It is an `outline`
-border with no fill, so it looks the same on every plane and takes the control
-states unchanged. Its own states are the border darkening to
-`on-surface-variant` under the pointer and turning `primary` on focus. The border
+pickers, the page and zoom inputs, the page-setup controls, the formula bar's
+Name Box and contents. It is an `outline` border with no fill, so it looks the
+same on every plane and takes the control states unchanged. Its own states are
+the border darkening to `on-surface-variant` under the pointer, turning
+`primary` on focus, and turning `error` while its value is invalid. The border
 is the UI's one signal for a field and never groups buttons.
 
 ## Theming

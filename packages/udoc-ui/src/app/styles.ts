@@ -51,6 +51,7 @@ export const uiStyles = css`
         --udoc-ribbon-background: var(--udoc-color-surface-container);
         --udoc-panel-background: var(--udoc-color-surface-container);
         --udoc-status-bar-background: var(--udoc-color-surface-container);
+        --udoc-formula-bar-background: var(--udoc-color-surface-container);
         --udoc-canvas-background: var(--udoc-color-surface);
         --udoc-canvas-guide-background: var(--udoc-color-surface-container);
         --udoc-canvas-scrollbar-background: var(--udoc-color-surface-container);
@@ -282,7 +283,7 @@ export const uiStyles = css`
     }
 
     .udoc-ui-root .udoc-zoom-dropdown__toggle:focus-within {
-        border-color: var(--udoc-color-on-surface-variant);
+        border-color: var(--udoc-color-primary);
     }
 
     .udoc-ui-root .udoc-zoom-dropdown__input {
@@ -1723,7 +1724,7 @@ export const uiStyles = css`
 
     .udoc-ui-root .udoc-toolbar__page-input:focus {
         outline: none;
-        border-color: var(--udoc-color-on-surface-variant);
+        border-color: var(--udoc-color-primary);
     }
 
     .udoc-ui-root .udoc-toolbar__page-total {
@@ -4209,8 +4210,9 @@ export const uiStyles = css`
     /* Status bar — a thin bottom bar; the view controls dock at its right edge. */
     /* A workbook's formula bar, above the grid, as tall as the toolbar: the Name
    Box, the ✕ / ✓ of an entry being typed (greyed while there is none), and the
-   contents field. The field is a bordered one, as every field here is; the
-   refusal of a save shows under the bar. Its bottom edge drags it taller (the
+   contents field. The Name Box and the field are outlined fields, as every
+   field here is; the refusal of a save shows under the bar, and turns the
+   field's border the error color. Its bottom edge drags it taller (the
    height FormulaBar.ts sets, at most 70% of the viewport): the Name Box and
    ✕ / ✓ keep to a head row the toolbar's height, and the field grows. */
     .udoc-ui-root .udoc-formula-bar {
@@ -4223,7 +4225,7 @@ export const uiStyles = css`
         height: 41px;
         max-height: 70%;
         padding: 0 4px;
-        background: var(--udoc-status-bar-background);
+        background: var(--udoc-formula-bar-background);
         border-bottom: 1px solid var(--udoc-color-outline-variant);
         z-index: 12;
     }
@@ -4263,7 +4265,7 @@ export const uiStyles = css`
         border: 1px solid var(--udoc-color-outline);
         border-radius: 3px;
         font-size: 13px;
-        background: var(--udoc-color-surface-container-high);
+        background: transparent;
         color: var(--udoc-color-on-surface);
         overflow: hidden;
         text-overflow: ellipsis;
@@ -4284,12 +4286,18 @@ export const uiStyles = css`
         resize: none;
         overflow: hidden;
         white-space: pre;
-        background: var(--udoc-color-surface-container-high);
+        background: transparent;
         color: var(--udoc-color-on-surface);
+    }
+    .udoc-ui-root .udoc-formula-bar__input:hover {
+        border-color: var(--udoc-color-on-surface-variant);
     }
     .udoc-ui-root .udoc-formula-bar__input:focus {
         outline: none;
-        border-color: var(--udoc-color-on-surface-variant);
+        border-color: var(--udoc-color-primary);
+    }
+    .udoc-ui-root .udoc-formula-bar__input[aria-invalid="true"] {
+        border-color: var(--udoc-color-error);
     }
     /* Taller than a line, the field wraps what it holds and scrolls past it. */
     .udoc-ui-root .udoc-formula-bar--expanded .udoc-formula-bar__input {
@@ -4305,7 +4313,7 @@ export const uiStyles = css`
         padding: 4px 8px;
         font-size: 12px;
         color: var(--udoc-color-error);
-        background: var(--udoc-status-bar-background);
+        background: var(--udoc-formula-bar-background);
         border: 1px solid var(--udoc-color-outline-variant);
         border-top: none;
     }

@@ -2114,6 +2114,7 @@ input {
     --udoc-ribbon-background: var(--sw-viewer-toolbar);
     --udoc-panel-background: var(--sw-viewer-toolbar);
     --udoc-status-bar-background: var(--sw-viewer-toolbar);
+    --udoc-formula-bar-background: var(--sw-viewer-toolbar);
 }
 
 .viewer[data-background="surface-container-low"] {
