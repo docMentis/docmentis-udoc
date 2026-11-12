@@ -94,7 +94,16 @@ export function createReducer(
     tabsOf: TabSource,
     entitled: ModeEntitlement,
 ): (state: UIState, action: Action) => UIState {
-    return (state, action) => reduce(state, action, tabsOf, entitled);
+    return (state, action) => shutComments(state, reduce(state, action, tabsOf, entitled));
+}
+
+/** `next`, its Office thread closed where it shuts the comments panel — closed
+ *  or another opened in its place — as the thread is open in the panel. */
+function shutComments(prev: UIState, next: UIState): UIState {
+    if (prev.activePanel !== "comments" || next.activePanel === "comments" || next.openOfficeComment === null) {
+        return next;
+    }
+    return { ...next, openOfficeComment: null };
 }
 
 function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: ModeEntitlement): UIState {
