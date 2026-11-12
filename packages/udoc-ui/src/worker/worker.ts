@@ -3554,7 +3554,6 @@ const TEXT_KINDS: Record<TextSelectionEditType, "text"> = {
     clearParagraphProperties: "text",
     indentParagraphs: "text",
     applyParagraphStyle: "text",
-    insertCommentRange: "text",
 };
 const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     translateShapes: "shape",
@@ -3621,6 +3620,7 @@ function presentationEdit(edit: SelectionEdit): unknown {
     if (typeof edit !== "string" && "kind" in edit) {
         if (edit.kind in SLIDE_KINDS) return { slide: byKind(edit) };
         if (edit.kind in SLIDE_SECTION_KINDS) return { slideSection: byKind(edit) };
+        if (edit.kind === "insertComment") return byKind(edit);
     }
     return { common: drawingEdit(edit) };
 }
@@ -3698,6 +3698,9 @@ const WORKSHEET_KINDS: Record<WorksheetSelectionEditType, "worksheet"> = {
 function spreadsheetEdit(edit: SelectionEdit): unknown {
     if (typeof edit !== "string" && "kind" in edit && edit.kind in WORKSHEET_KINDS) {
         return { worksheet: { edit: byKind(edit) } };
+    }
+    if (typeof edit !== "string" && "kind" in edit && edit.kind === "insertComment") {
+        return byKind(edit);
     }
     throw new Error("engine worker: a spreadsheet edit is a worksheet edit");
 }

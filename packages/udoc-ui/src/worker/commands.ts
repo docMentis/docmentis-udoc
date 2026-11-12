@@ -13,7 +13,6 @@ import type {
     Annotation,
     CommentCommand,
     CommentDraft,
-    GridCellRef,
     PortableCommand,
     PresentationCommand,
     GridColor,
@@ -72,24 +71,44 @@ function worksheet(sheet: SheetId, command: WorksheetCommand): UDocCommand {
  *  and the open document's engine binds them to the right command in Rust (the id
  *  resolution the worker's old `runOnSelection` did). */
 export const Command = {
-    /** Edit the comments of slide `slide` with `command`. */
-    editSlideComment: (slide: string, command: CommentCommand): UDocCommand =>
-        presentation({ editComment: { slide, command } }),
+    /** Edit comment `id` of slide `slide` with `command`. */
+    editSlideComment: (slide: string, id: string, command: CommentCommand): UDocCommand =>
+        presentation({ editComment: { slide, id, command } }),
 
     /** Open a thread on slide `slide` at `place` with `comment`. */
     insertSlideComment: (slide: string, place: SlideCommentPlace, comment: CommentDraft): UDocCommand =>
         presentation({ insertComment: { slide, place, comment } }),
 
-    /** Edit the document's comments with `command`. */
-    editDocumentComment: (command: CommentCommand): UDocCommand => wordprocessing({ editComment: { command } }),
+    /** Reply with `comment` in the thread `thread` opens on slide `slide`. */
+    insertSlideCommentReply: (slide: string, thread: string, comment: CommentDraft): UDocCommand =>
+        presentation({ insertCommentReply: { slide, thread, comment } }),
 
-    /** Edit the comments of worksheet `sheet` with `command`. */
-    editSheetComment: (sheet: SheetId, command: CommentCommand): UDocCommand =>
-        spreadsheet({ editComment: { sheet, command } }),
+    /** Delete each comment of `ids` on slide `slide`, and every reply to it. */
+    deleteSlideComments: (slide: string, ids: string[]): UDocCommand =>
+        presentation({ deleteComments: { slide, ids } }),
 
-    /** Open a thread at `cell` of worksheet `sheet` with `comment`. */
-    insertSheetComment: (sheet: SheetId, cell: GridCellRef, comment: CommentDraft): UDocCommand =>
-        spreadsheet({ insertComment: { sheet, cell, comment } }),
+    /** Edit the document's comment `id` with `command`. */
+    editDocumentComment: (id: string, command: CommentCommand): UDocCommand =>
+        wordprocessing({ editComment: { id, command } }),
+
+    /** Reply with `comment` in the thread `thread` opens in the document. */
+    insertDocumentCommentReply: (thread: string, comment: CommentDraft): UDocCommand =>
+        wordprocessing({ insertCommentReply: { thread, comment } }),
+
+    /** Delete each of the document's comments `ids`, and every reply to it. */
+    deleteDocumentComments: (ids: string[]): UDocCommand => wordprocessing({ deleteComments: { ids } }),
+
+    /** Edit comment `id` of worksheet `sheet` with `command`. */
+    editSheetComment: (sheet: SheetId, id: string, command: CommentCommand): UDocCommand =>
+        spreadsheet({ editComment: { sheet, id, command } }),
+
+    /** Reply with `comment` in the thread `thread` opens on worksheet `sheet`. */
+    insertSheetCommentReply: (sheet: SheetId, thread: string, comment: CommentDraft): UDocCommand =>
+        spreadsheet({ insertCommentReply: { sheet, thread, comment } }),
+
+    /** Delete each comment of `ids` on worksheet `sheet`, and every reply to it. */
+    deleteSheetComments: (sheet: SheetId, ids: string[]): UDocCommand =>
+        spreadsheet({ deleteComments: { sheet, ids } }),
 
     /** Insert host-built `annotations` on top of `pageId`'s — each with no id and
      *  no appearance, which the engine mints and generates. */

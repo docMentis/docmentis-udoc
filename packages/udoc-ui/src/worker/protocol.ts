@@ -1653,8 +1653,9 @@ export type SelectionEdit =
      *  the edges given, the rest and the header and footer offsets as they
      *  stand (a ruler's margin edges). */
     | { kind: "patchSectionPageMargins"; left?: number; top?: number; right?: number; bottom?: number }
-    /** Word: open a thread with `comment` on what is selected in the body or a
-     *  cell of its tables — a no-op in a text box. */
+    /** Word, a deck, a sheet: open a thread with `comment` on what is selected —
+     *  a document's text, a slide's text, shape or slide, a sheet's active cell
+     *  — where the capabilities read grants `insertComment`. */
     | { kind: "insertComment"; comment: CommentDraft }
     /** PDF: set the box the text caret is in to `frame`, in page-local points
      *  (a ruler's margin edges), inside an `object` edit. The engine's

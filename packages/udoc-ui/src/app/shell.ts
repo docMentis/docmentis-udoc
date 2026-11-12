@@ -26,12 +26,10 @@ import type {
     CellEntryMode,
     CommentAnchor,
     CommentCommand,
-    GridCellRef,
     GridCellSelectionMove,
     ScrollAlignment,
     RevisionView,
     SheetLayoutMode,
-    SlideCommentPlace,
     SlideMasterSummary,
     TextHyperlink,
     Watermark,
@@ -1421,8 +1419,7 @@ export function mountUIShell(
             onSave: (comment, richContents) => void saveComment(comment, richContents),
             onReply: (comment, richContents) => void replyToComment(comment, richContents),
             onDelete: (comment) => void deleteComment(comment),
-            onStatus: (comment, status) =>
-                void editOfficeComment(comment, { setCommentStatus: { id: comment.id, status } }),
+            onStatus: (comment, status) => void editOfficeComment(comment, { setCommentStatus: { status } }),
             onDismiss: () => canvas.focusClipboardSink(),
             onChoose: (comment) => chooseComment(comment),
             onToggleTether: () => commentTether?.toggle(),
@@ -2866,7 +2863,7 @@ export function mountUIShell(
     // generates its appearance afresh where that shows the text, a free text's.
     function saveComment(comment: Comment, richContents: string): Promise<void> {
         if (comment.source.kind === "office") {
-            return editOfficeComment(comment, { setCommentBody: { id: comment.id, body: richContents } });
+            return editOfficeComment(comment, { setCommentBody: { body: richContents } });
         }
         const { page, annotation } = comment.source;
         const id = annotation.id;
@@ -2895,7 +2892,12 @@ export function mountUIShell(
     // Delete `comment`, which no reply answers — the thread offers only those.
     function deleteComment(comment: Comment): Promise<void> {
         if (comment.source.kind === "office") {
-            return editOfficeComment(comment, { deleteComments: { ids: [comment.id] } });
+            const ids = [comment.id];
+            return runOnOfficeComments(comment, {
+                document: () => Command.deleteDocumentComments(ids),
+                slide: (slide) => Command.deleteSlideComments(slide, ids),
+                sheet: (sheet) => Command.deleteSheetComments(sheet, ids),
+            });
         }
         const { page, annotation } = comment.source;
         const id = annotation.id;
@@ -2903,35 +2905,52 @@ export function mountUIShell(
         return commit(() => client.execute(Command.deleteAnnotations(page, [id])));
     }
 
-    // Edit the Office comment part `comment` is in with `command`: the
-    // document's, a slide's or a sheet's.
+    // Edit the Office comment `comment` with `command`.
     function editOfficeComment(comment: Comment, command: CommentCommand): Promise<void> {
+        return runOnOfficeComments(comment, {
+            document: () => Command.editDocumentComment(comment.id, command),
+            slide: (slide) => Command.editSlideComment(slide, comment.id, command),
+            sheet: (sheet) => Command.editSheetComment(sheet, comment.id, command),
+        });
+    }
+
+    // Run the command the open doc type builds on the Office comment part
+    // `comment` is in: the document's, a slide's or a sheet's.
+    function runOnOfficeComments(
+        comment: Comment,
+        build: {
+            document: () => UDocCommand;
+            slide: (slide: string) => UDocCommand;
+            sheet: (sheet: string) => UDocCommand;
+        },
+    ): Promise<void> {
         const { source } = comment;
         if (source.kind !== "office") return Promise.resolve();
         const owner = source.owner;
         switch (store.getState().docType) {
             case "wordprocessing":
-                return commit(() => client.execute(Command.editDocumentComment(command)));
+                return commit(() => client.execute(build.document()));
             case "presentation":
                 if (owner === null) return Promise.resolve();
-                return commit(() => client.execute(Command.editSlideComment(owner, command)));
+                return commit(() => client.execute(build.slide(owner)));
             case "spreadsheet":
                 if (owner === null) return Promise.resolve();
-                return commit(() => client.execute(Command.editSheetComment(owner, command)));
+                return commit(() => client.execute(build.sheet(owner)));
             default:
                 return Promise.resolve();
         }
     }
 
     // Open a thread holding `richContents`, by this user, now, its ids minted
-    // here — in a document: on the text selected; on a slide: on the text
-    // selected in a shape, else the shape selected, or the one whose text is,
-    // else on the slide selected, else on the slide shown; on a sheet: at the
-    // active cell. The thread opens in the panel.
+    // here, on what is selected where the engine grants it — a document's
+    // text; a slide's text selected in a shape, else its shape, else the
+    // slide; a sheet's active cell — and with nothing selected on a slide, on
+    // the slide shown. The thread opens in the panel.
     async function newOfficeComment(richContents: string): Promise<void> {
-        const docType = store.getState().docType;
+        const state = store.getState();
+        const docType = state.docType;
         if (docType !== "wordprocessing" && docType !== "presentation" && docType !== "spreadsheet") return;
-        const [id, story, chosen] = await Promise.all([mintId(), mintId(), selection()]);
+        const [id, story] = await Promise.all([mintId(), mintId()]);
         if (id === null || story === null) return;
         const comment = {
             id,
@@ -2940,26 +2959,15 @@ export function mountUIShell(
             created: dateTime(new Date()),
             body: richContents,
         };
-        if (docType === "wordprocessing") {
+        if (state.selectionCaps.allowed.includes("insertComment")) {
             await commit(() => client.executeOnSelection({ kind: "insertComment", comment }));
-            store.dispatch({ type: "OPEN_OFFICE_COMMENT", id });
+        } else if (docType === "presentation") {
+            const slide = await client.presentation.slideId(state.pageIndex);
+            if (slide === null) return;
+            await commit(() => client.execute(Command.insertSlideComment(slide, { slide: {} }, comment)));
+        } else {
             return;
         }
-        let command: UDocCommand;
-        if (docType === "spreadsheet") {
-            const active = activeCell(chosen);
-            if (!active) return;
-            command = Command.insertSheetComment(active.sheet, active.cell, comment);
-        } else {
-            let placed = slideCommentPlace(chosen);
-            if (!placed) {
-                const slide = await client.presentation.slideId(store.getState().pageIndex);
-                if (slide === null) return;
-                placed = { slide, place: { slide: {} } };
-            }
-            command = Command.insertSlideComment(placed.slide, placed.place, comment);
-        }
-        await commit(() => client.execute(command));
         store.dispatch({ type: "OPEN_OFFICE_COMMENT", id });
     }
 
@@ -2969,17 +2977,17 @@ export function mountUIShell(
     async function replyToOfficeComment(comment: Comment, richContents: string): Promise<void> {
         const [id, story] = await Promise.all([mintId(), mintId()]);
         if (id === null || story === null) return;
-        await editOfficeComment(comment, {
-            replyToComment: {
-                thread: comment.id,
-                comment: {
-                    id,
-                    story,
-                    author: { name: userName ?? "" },
-                    created: dateTime(new Date()),
-                    body: richContents,
-                },
-            },
+        const reply = {
+            id,
+            story,
+            author: { name: userName ?? "" },
+            created: dateTime(new Date()),
+            body: richContents,
+        };
+        await runOnOfficeComments(comment, {
+            document: () => Command.insertDocumentCommentReply(comment.id, reply),
+            slide: (slide) => Command.insertSlideCommentReply(slide, comment.id, reply),
+            sheet: (sheet) => Command.insertSheetCommentReply(sheet, comment.id, reply),
         });
     }
 
@@ -4467,43 +4475,4 @@ function isRefusableSheetEdit(edit: SelectionEdit): boolean {
             edit.kind === "deleteSheetColumns" ||
             edit.kind === "mergeSheetCells")
     );
-}
-
-/** Where a new comment on a slide stands, by what `selection` holds: the text
- *  selected in a shape, else the shape selected, or the one whose text or
- *  table is, on its slide — else the slide selected; null for anything else, a
- *  notes page's shapes among it. */
-function slideCommentPlace(selection: UDocSelection | null): { slide: string; place: SlideCommentPlace } | null {
-    if (!selection || !("presentation" in selection)) return null;
-    const chosen = selection.presentation;
-    if (chosen === "none") return null;
-    if ("shapes" in chosen && "slide" in chosen.shapes.container) {
-        const slide = chosen.shapes.container.slide;
-        const held = chosen.shapes.selection;
-        if ("shapeText" in held && "range" in held.shapeText[1]) {
-            const { anchor, focus } = held.shapeText[1].range;
-            if (anchor !== focus) {
-                const range = { start: Math.min(anchor, focus), end: Math.max(anchor, focus) };
-                return { slide, place: { text: { shape: held.shapeText[0], range } } };
-            }
-        }
-        const shape = "shapes" in held ? held.shapes[0] : "shapeText" in held ? held.shapeText[0] : held.shapeTable[0];
-        return shape === undefined ? { slide, place: { slide: {} } } : { slide, place: { shape: { shape } } };
-    }
-    if ("slides" in chosen) {
-        const slide = chosen.slides.ids[0];
-        return slide === undefined ? null : { slide, place: { slide: {} } };
-    }
-    return null;
-}
-
-/** The active cell `selection` holds on a sheet — the anchor of the cells
- *  selected or being entered — with its sheet; null for anything else. */
-function activeCell(selection: UDocSelection | null): { sheet: string; cell: GridCellRef } | null {
-    if (!selection || !("spreadsheet" in selection)) return null;
-    const chosen = selection.spreadsheet;
-    if (chosen === "none") return null;
-    if ("cells" in chosen) return { sheet: chosen.cells.sheet, cell: chosen.cells.anchor };
-    if ("entry" in chosen) return { sheet: chosen.entry.sheet, cell: chosen.entry.anchor };
-    return null;
 }
