@@ -85,7 +85,7 @@ const markup = {
     richContents: null,
     replyType: null,
     intent: null,
-    created: "D:20260101000000Z",
+    created: "2026-01-01T00:00:00Z",
     popup: null,
     inReplyTo: null,
 };
@@ -93,7 +93,7 @@ const annotation = (rect, kind, color = RED) => ({
     rect,
     contents: null,
     name: null,
-    modified: "D:20260101000000Z",
+    modified: "2026-01-01T00:00:00Z",
     flags,
     color,
     border: null,

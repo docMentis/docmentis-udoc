@@ -254,7 +254,7 @@ for (const [type, f] of Object.entries(FORMATS)) {
     if (f.remove) {
         const [route, removed] = f.removed(ids);
         const v0 = await unzip(await readFile(join(kept, "checkpoints/v0.udoc")));
-        const entry = f.format === "pdf" ? undefined : J(v0, "original_id_map.json")[removed]?.replace(/^\//, "");
+        const entry = f.format === "pdf" ? undefined : J(v0, "original_id_map.json")[removed]?.[0]?.replace(/^\//, "");
         const inTheFile = async (label, expected) => {
             if (entry === undefined) return;
             const { bytes } = await copyOf(server.base, `${id}/file.${f.format}`, `?strategy=${f.strategy}`);
