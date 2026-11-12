@@ -294,6 +294,9 @@ export const ptBR: Messages = {
     // Set Up Presentation
     "screens.label": "Telas",
     "screens.oneScreen": "Apenas uma tela está conectada.",
+    "slideShowSetup.showIn": "Apresentar em",
+    "slideShowSetup.browserWindow": "Janela do Navegador",
+    "slideShowSetup.inPlace": "Incorporada",
     "slideShowSetup.displayOn": "Exibir em",
     "slideShowSetup.setUpScreens": "Configurar Telas",
     "slideShowSetup.screensMessage":

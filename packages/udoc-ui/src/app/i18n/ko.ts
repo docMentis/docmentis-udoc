@@ -294,6 +294,9 @@ export const ko: Messages = {
     // Set Up Presentation
     "screens.label": "화면",
     "screens.oneScreen": "연결된 화면이 하나뿐입니다.",
+    "slideShowSetup.showIn": "표시 위치",
+    "slideShowSetup.browserWindow": "브라우저 창",
+    "slideShowSetup.inPlace": "페이지 내",
     "slideShowSetup.displayOn": "표시할 화면",
     "slideShowSetup.setUpScreens": "화면 설정",
     "slideShowSetup.screensMessage":

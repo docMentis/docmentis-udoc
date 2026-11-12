@@ -24,6 +24,7 @@ import type {
     PlaceTool,
     PointerMode,
     PresentationView,
+    SlideShowFill,
     ThemeMode,
     WordprocessingView,
     LayoutMode,
@@ -226,10 +227,15 @@ export type Action =
     // Stop the slide preview playing, or mark one played to its end
     | { type: "STOP_SLIDE_PREVIEW" }
     // Play the deck from slide `slide` (0-based), or from the first slide the
-    // show shows when `null`, with the presenter view as `presenterView`
-    // says, else as Set Up Presentation has it (bumps `slideShowRequest`, which
-    // the slide show plays it on)
-    | { type: "START_SLIDE_SHOW"; slide: number | null; presenterView?: boolean }
+    // show shows when `null`, covering what `fill` says and with the presenter
+    // view as `presenterView` says, each else as Set Up Presentation has it
+    // (bumps `slideShowRequest`, which the slide show plays it on)
+    | {
+          type: "START_SLIDE_SHOW";
+          slide: number | null;
+          fill?: SlideShowFill | undefined;
+          presenterView?: boolean | undefined;
+      }
     // End the slide show playing, or mark one ended
     | { type: "END_SLIDE_SHOW" }
     // The browser lets the UI place windows on each screen, or no longer does
@@ -237,9 +243,14 @@ export type Action =
     // Open the Set Up Presentation dialog (bumps `slideShowSetupSeq`)
     | { type: "OPEN_SLIDE_SHOW_SETUP" }
     // Play a slide show as Set Up Presentation chose: with the presenter view or
-    // not, full screen or in window mode, and full screen on this screen, by
-    // its key, or on the first but the UI's
-    | { type: "SET_SLIDE_SHOW_SETUP"; presenterView: boolean; fullScreen: boolean; audienceScreen: string | null }
+    // not, covering the screen, the browser window or the UI, and full screen
+    // on this screen, by its key, or on the first but the UI's
+    | {
+          type: "SET_SLIDE_SHOW_SETUP";
+          presenterView: boolean;
+          fill: SlideShowFill;
+          audienceScreen: string | null;
+      }
     // Show the current worksheet as its grid or as Page Layout view's paper —
     // the View tab's Normal and Page Layout
     | { type: "SET_SHEET_LAYOUT_MODE"; mode: SheetLayoutMode }

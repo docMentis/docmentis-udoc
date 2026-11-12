@@ -294,6 +294,9 @@ export const zhCN: Messages = {
     // Set Up Presentation
     "screens.label": "屏幕",
     "screens.oneScreen": "仅连接了一个屏幕。",
+    "slideShowSetup.showIn": "放映方式",
+    "slideShowSetup.browserWindow": "浏览器窗口",
+    "slideShowSetup.inPlace": "页面内",
     "slideShowSetup.displayOn": "显示于",
     "slideShowSetup.setUpScreens": "设置屏幕",
     "slideShowSetup.screensMessage": "允许浏览器在各屏幕上放置窗口，以选择演示的屏幕。",

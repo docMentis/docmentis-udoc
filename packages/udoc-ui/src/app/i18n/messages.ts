@@ -540,6 +540,15 @@ export interface Messages {
     "screens.label": string;
     /** Only one screen is connected. */
     "screens.oneScreen": string;
+    /** Show in — what a presentation covers: the screen, the browser window,
+     *  or the viewer's or the editor's own box */
+    "slideShowSetup.showIn": string;
+    /** Browser Window — Show in's choice of a presentation covering the
+     *  browser window the page shows in */
+    "slideShowSetup.browserWindow": string;
+    /** In Place — Show in's choice of a presentation covering the viewer or
+     *  the editor, over its own box on the page */
+    "slideShowSetup.inPlace": string;
     /** Display on — the screen a presentation that fills the screen fills */
     "slideShowSetup.displayOn": string;
     /** Set Up Screens — let the UI place windows on each of the computer's

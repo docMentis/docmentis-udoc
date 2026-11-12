@@ -294,6 +294,9 @@ export const ar: Messages = {
     // Set Up Presentation
     "screens.label": "الشاشات",
     "screens.oneScreen": "شاشة واحدة فقط متصلة.",
+    "slideShowSetup.showIn": "العرض في",
+    "slideShowSetup.browserWindow": "نافذة المتصفح",
+    "slideShowSetup.inPlace": "ضمن الصفحة",
     "slideShowSetup.displayOn": "العرض على",
     "slideShowSetup.setUpScreens": "إعداد الشاشات",
     "slideShowSetup.screensMessage": "اسمح للمتصفح بوضع النوافذ على شاشاتك لاختيار الشاشة التي يملؤها العرض التقديمي.",

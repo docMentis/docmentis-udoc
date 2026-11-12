@@ -128,6 +128,7 @@ import type {
     PresentationView,
     RibbonTabStyle,
     SheetView,
+    SlideShowFill,
     ThemeMode,
     ViewControlsPlacement,
     WordprocessingView,
@@ -405,8 +406,12 @@ export interface UIShell {
     /** Enter or leave fullscreen on the root; rejects when the browser refuses. */
     setFullscreen: (fullscreen: boolean) => Promise<void>;
     /** Play the open deck from slide `slide`, or from the first slide the
-     *  show shows when `null`, as Set Up Presentation has it. */
-    startSlideShow: (slide: number | null) => void;
+     *  show shows when `null`, as `options` says, and as Set Up Presentation
+     *  has it for what they leave out. */
+    startSlideShow: (
+        slide: number | null,
+        options: { fill?: SlideShowFill | undefined; presenterView?: boolean | undefined },
+    ) => void;
     /** End the slide show playing, if one is. */
     endSlideShow: () => void;
     /** Scroll one spread at a time, or continuously — the open document and
@@ -1127,8 +1132,9 @@ export function mountUIShell(
     const licenseNotice = createLicenseNotice(i18n);
     licenseNotice.mount(layout, store);
 
-    // A deck's slide show. On the root, as it covers the whole UI in window
-    // mode, and wherever the browser won't fill the screen with it.
+    // A deck's slide show. On the root, as it covers the whole UI where it
+    // covers the UI's box, and stays inside it, the root's styles and theme
+    // its own, where it covers the browser window.
     const slideShow = createSlideShow(i18n, client);
     slideShow.mount(layout, store);
     // Whether the screens are set up, as the browser remembers it from a
@@ -1141,7 +1147,7 @@ export function mountUIShell(
         const setup = await slideShowSetupModal.ask({
             setup: {
                 presenterView: state.usePresenterView,
-                fullScreen: state.slideShowFullScreen,
+                fill: state.slideShowFill,
                 audienceScreen: state.audienceScreen,
             },
             screens,
@@ -4505,7 +4511,8 @@ export function mountUIShell(
             if (fullscreen === (document.fullscreenElement === layout)) return Promise.resolve();
             return fullscreen ? layout.requestFullscreen() : document.exitFullscreen();
         },
-        startSlideShow: (slide) => store.dispatch({ type: "START_SLIDE_SHOW", slide }),
+        startSlideShow: (slide, { fill, presenterView }) =>
+            store.dispatch({ type: "START_SLIDE_SHOW", slide, fill, presenterView }),
         endSlideShow: () => store.dispatch({ type: "END_SLIDE_SHOW" }),
         setScrollMode: (mode) => {
             store.dispatch({ type: "SET_DEFAULT_SCROLL_MODE", mode });

@@ -1,7 +1,7 @@
 // Set Up Presentation's dialog: how the Present tab's From Beginning and
 // From Current Slide play a deck or a PDF — with the presenter view, in a window of its
-// own, or not; filling the screen, or over the UI as it stands, in window mode
-// — and Display on, the screen a show that fills the screen fills: the
+// own, or not; Show in, what the show covers: the screen, the browser window
+// or the UI's own box — and Display on, the screen a show that fills the screen fills: the
 // computer's screens drawn as they stand, each named, to choose from once its
 // Set Up Screens has let the UI place windows on each. Display on is there
 // only where the browser can place windows (Chrome's and Edge's), and greys
@@ -19,18 +19,27 @@ import { trapFocus } from "../a11y.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
 import { audienceScreen, presenterScreen, screenKey } from "../screens.js";
 import type { ScreenDetailed, ScreenDetails } from "../screens.js";
+import type { SlideShowFill } from "../state.js";
+import { createSegmentButton } from "./controls.js";
 
 /** The box the screens are drawn in, CSS px, and the gap between two. */
 const AREA_WIDTH = 400;
 const AREA_HEIGHT = 180;
 const GAP_PX = 6;
 
+/** Show in's choices, in order, each named. */
+const FILLS: readonly { value: SlideShowFill; label: MessageKey }[] = [
+    { value: "screen", label: "toolbar.fullscreen" },
+    { value: "window", label: "slideShowSetup.browserWindow" },
+    { value: "container", label: "slideShowSetup.inPlace" },
+];
+
 /** How a slide show plays, as the dialog sets it up. */
 export interface SlideShowSetup {
     /** With the presenter view, in a window of its own. */
     presenterView: boolean;
-    /** Filling the screen, else in window mode. */
-    fullScreen: boolean;
+    /** What it covers: the screen, the browser window, or the UI's own box. */
+    fill: SlideShowFill;
     /** The screen it fills, by its key — `null` for the first but the one the
      *  UI's window is on. */
     audienceScreen: string | null;
@@ -77,7 +86,25 @@ export function createSlideShowSetupModal(i18n: I18n) {
     const body = document.createElement("div");
     body.className = "udoc-slide-show-setup__body";
     const presenter = option("udoc-slide-show-setup-presenter", "presenter.label");
-    const full = option("udoc-slide-show-setup-full", "toolbar.fullscreen");
+
+    // Show in: one of its choices pressed, the one `fill` holds.
+    let fill: SlideShowFill = "screen";
+    const showIn = document.createElement("div");
+    showIn.className = "udoc-slide-show-setup__option udoc-slide-show-setup__option--choice";
+    const showInLabel = document.createElement("span");
+    showInLabel.className = "udoc-slide-show-setup__option-label";
+    showInLabel.textContent = i18n.t("slideShowSetup.showIn");
+    const fills = createSegmentButton(
+        FILLS.map(({ value, label }) => ({ value, label: i18n.t(label) })),
+        {
+            label: i18n.t("slideShowSetup.showIn"),
+            onSelect: (value) => {
+                fill = value;
+                render();
+            },
+        },
+    );
+    showIn.append(showInLabel, fills.el);
 
     // Display on: Set Up Screens until the screens are set up, then the
     // screens as they stand.
@@ -102,7 +129,7 @@ export function createSlideShowSetupModal(i18n: I18n) {
     area.style.width = `${AREA_WIDTH}px`;
     area.style.height = `${AREA_HEIGHT}px`;
     display.append(displayHeading, message, setUp, area);
-    body.append(presenter.row, full.row, display);
+    body.append(presenter.row, showIn, display);
 
     const footer = document.createElement("div");
     footer.className = "udoc-slide-show-setup__footer";
@@ -151,7 +178,8 @@ export function createSlideShowSetupModal(i18n: I18n) {
      *  each named, the one chosen marked, and what each shows — greyed while
      *  the show doesn't fill the screen. */
     function render(): void {
-        const greyed = !full.input.checked;
+        fills.select(fill);
+        const greyed = fill !== "screen";
         display.classList.toggle("udoc-slide-show-setup__display--greyed", greyed);
         display.setAttribute("aria-disabled", String(greyed));
         setUp.hidden = details !== null;
@@ -262,7 +290,6 @@ export function createSlideShowSetupModal(i18n: I18n) {
     }
 
     on(presenter.input, "change", render);
-    on(full.input, "change", render);
     on(setUp, "click", () => {
         const asked = context;
         // Asked in the press, which the browser's question needs.
@@ -275,7 +302,7 @@ export function createSlideShowSetupModal(i18n: I18n) {
         if (!context) return;
         finish({
             presenterView: presenter.input.checked,
-            fullScreen: full.input.checked,
+            fill,
             audienceScreen:
                 chosen && details && details.screens.length > 1 ? screenKey(chosen) : context.setup.audienceScreen,
         });
@@ -297,7 +324,7 @@ export function createSlideShowSetupModal(i18n: I18n) {
         answer?.(undefined);
         context = asked;
         presenter.input.checked = asked.setup.presenterView;
-        full.input.checked = asked.setup.fullScreen;
+        fill = asked.setup.fill;
         display.hidden = !asked.canPlaceWindows;
         details = asked.screens;
         refused = false;

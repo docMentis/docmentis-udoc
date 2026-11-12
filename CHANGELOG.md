@@ -21,6 +21,17 @@ listed once, by package. Its major and minor version are those of the
   when it is saved. The earlier forms still work and are deprecated:
   `saveToBytes(format, strategy)`, `requestRemoteCopy(strategy)`,
   `saveToPackage(version)` and `download(filename)`.
+- A slide show can cover the browser window. Set Up Presentation's Show in
+  chooses Fullscreen, Browser Window or In Place, in place of its Fullscreen
+  switch: Browser Window covers the browser window, over everything on the
+  page, or the iframe the page is in; In Place covers the viewer or the
+  editor, as a show with Fullscreen off did. `startSlideShow` takes its
+  options as an object, `SlideShowOptions`: `slide`, the slide it starts
+  from; `fill`, `"screen"`, `"window"` or `"container"`; and `presenterView`,
+  which opens the presenter view. `fill` and `presenterView` left out play as
+  Set Up Presentation has it. The earlier `startSlideShow(slide)` still works
+  and is deprecated. The `translations` keys `slideShowSetup.showIn`,
+  `slideShowSetup.browserWindow` and `slideShowSetup.inPlace` are new.
 
 #### Changed
 
@@ -57,6 +68,12 @@ listed once, by package. Its major and minor version are those of the
 - A Word document with tracked changes opens in Simple Markup, the final
   version with a bar beside each change, where it opened in All Markup,
   unless it was saved with markup off.
+
+- A slide show the browser won't fill the screen with covers the browser
+  window, where it covered the viewer or the editor: one started without a
+  user gesture, in an iframe that doesn't allow full screen, or with the
+  presenter view where the screens aren't set up. A show filling the screen
+  covers the browser window in black as the screen fills.
 
 ### udoc-server
 

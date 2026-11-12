@@ -9,6 +9,7 @@ export type {
     SaveOptions,
     SavePackageOptions,
     SheetInfo,
+    SlideShowOptions,
     UDocEvents,
     UDocOptions,
 } from "./base.js";
@@ -35,6 +36,7 @@ export type {
     PresentationView,
     RightPanelTab,
     SheetView,
+    SlideShowFill,
     ThemeMode,
     WordprocessingView,
 } from "./app/state.js";

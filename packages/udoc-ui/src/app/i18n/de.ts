@@ -294,6 +294,9 @@ export const de: Messages = {
     // Set Up Presentation
     "screens.label": "Bildschirme",
     "screens.oneScreen": "Es ist nur ein Bildschirm angeschlossen.",
+    "slideShowSetup.showIn": "Anzeigen in",
+    "slideShowSetup.browserWindow": "Browserfenster",
+    "slideShowSetup.inPlace": "Eingebettet",
     "slideShowSetup.displayOn": "Anzeigen auf",
     "slideShowSetup.setUpScreens": "Bildschirme einrichten",
     "slideShowSetup.screensMessage":

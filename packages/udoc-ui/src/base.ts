@@ -12,6 +12,7 @@ import type {
     PresentationView,
     RibbonTabStyle,
     SheetView,
+    SlideShowFill,
     ThemeMode,
     UIState,
     ViewControlsPlacement,
@@ -383,6 +384,23 @@ export interface DownloadOptions {
     /** The downloaded file's name. Default the name {@link UDocBase.open} was
      *  given, else `document.<format>`. */
     filename?: string;
+}
+
+/** Options for {@link UDocBase.startSlideShow}. Every field is optional; one
+ *  left out plays as the Present tab's Set Up Presentation has it. */
+export interface SlideShowOptions {
+    /** The slide it starts from, 0-based, even one hidden from the show — a
+     *  PDF's page. Default the first slide the show shows. */
+    slide?: number;
+    /**
+     * What the show covers: `"screen"`, the whole screen, as the browser's
+     * full screen; `"window"`, the browser window the page shows in, over
+     * everything on the page, or the iframe the page is in; `"container"`,
+     * the viewer or the editor, over its own box on the page.
+     */
+    fill?: SlideShowFill;
+    /** Whether the presenter view opens beside the show, in a window of its own. */
+    presenterView?: boolean;
 }
 
 /** A sheet of the open workbook, as {@link UDocBase.sheets} lists it. */
@@ -1805,33 +1823,39 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * Play the open deck as a slide show, as the Present tab's From
      * Beginning and From Current Slide do: a slide at a time, each slide's
      * transition and animations playing, stepped on by a click or a key and
-     * ended by Escape. From slide `slide`, 0-based, even one hidden from the
-     * show; from the first slide the show shows when omitted. A PDF plays
-     * alike, a page at a time, from page `slide` or its first. In place of a
-     * show playing; nothing for a document that is neither.
+     * ended by Escape, from `options`' `slide`. A PDF plays alike, a page at
+     * a time. In place of a show playing; nothing for a document that is
+     * neither.
      *
-     * It plays as the Present tab's Set Up Presentation has it. With Full
-     * Screen, as at first, it fills the screen — the one Display on chose,
-     * where the screens are set up (Chrome's and Edge's) — and leaving the
-     * full screen ends it. Without, or where the browser won't fill the
-     * screen, it plays over the UI, in window mode, a button in its corner
-     * filling the screen with it; leaving that full screen goes back to window
-     * mode. With Presenter View, off at first, the presenter view — the slide,
-     * the next one, a deck's notes and a timer — opens in a window of its
-     * own, on another screen where the screens are set up. Its Swap Screens
-     * trades the places the show and the presenter view stand in, each
-     * filling the screen or not as it did.
+     * It plays as `options` says, and as the Present tab's Set Up
+     * Presentation has it for what `options` leaves out. With `fill`
+     * `"screen"`, as at first, it fills the screen — the one Display on
+     * chose, where the screens are set up (Chrome's and Edge's) — and leaving
+     * the full screen ends it; where the browser won't fill the screen, it
+     * covers the browser window. With `"window"`, it covers the browser
+     * window, over everything on the page, or the iframe the page is in; with
+     * `"container"`, the viewer or the editor's own box. Either has a button
+     * in its corner that fills the screen with it, and leaving that full
+     * screen goes back to what it covered. With `presenterView`, off at
+     * first, the presenter view — the slide, the next one, a deck's notes and
+     * a timer — opens in a window of its own, on another screen where the
+     * screens are set up. Its Swap Screens trades the places the show and the
+     * presenter view stand in, each filling the screen or not as it did.
      *
      * The browser fills the screen, or opens that window, only in answer to a
      * user gesture, so call it from the host's own click handler; without
-     * one, the show plays in window mode. Where the screens aren't set up,
-     * the presenter view's window takes the gesture, and the show plays in
-     * window mode.
+     * one, a show that would fill the screen covers the browser window. Where
+     * the screens aren't set up, the presenter view's window takes the
+     * gesture, and the show covers the browser window.
      * `"slideShow:changed"` fires as it starts and ends, and once it ends the
      * view shows the slide it was on.
      */
-    startSlideShow(slide?: number): void {
-        this.shell.startSlideShow(slide ?? null);
+    startSlideShow(options?: SlideShowOptions): void;
+    /** @deprecated Pass the slide as {@link SlideShowOptions}' `slide`: `startSlideShow({ slide })`. */
+    startSlideShow(slide?: number): void;
+    startSlideShow(options?: SlideShowOptions | number): void {
+        const { slide, fill, presenterView } = typeof options === "number" ? { slide: options } : (options ?? {});
+        this.shell.startSlideShow(slide ?? null, { fill, presenterView });
     }
 
     /** End the slide show playing, if one is, as Escape does. */

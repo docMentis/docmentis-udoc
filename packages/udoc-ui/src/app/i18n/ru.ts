@@ -294,6 +294,9 @@ export const ru: Messages = {
     // Set Up Presentation
     "screens.label": "Экраны",
     "screens.oneScreen": "Подключен только один экран.",
+    "slideShowSetup.showIn": "Режим показа",
+    "slideShowSetup.browserWindow": "Окно браузера",
+    "slideShowSetup.inPlace": "На странице",
     "slideShowSetup.displayOn": "Показывать на",
     "slideShowSetup.setUpScreens": "Настроить экраны",
     "slideShowSetup.screensMessage":

@@ -2441,6 +2441,23 @@ export const uiStyles = css`
    window of its own, which fills the screen once the browser lets it — the
    show standing on it, or the presenter view. Black whatever the theme, as
    the engine draws around the slide and past the last. */
+    /* The frame a show covering the browser window stands in: over the whole
+   viewport, as a popover in the browser's top layer — else fixed over the
+   page, on top of what it stacks — with none of a popover's own box or
+   colors. */
+    .udoc-ui-root .udoc-ui__slide-show-frame {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        width: auto;
+        height: auto;
+        margin: 0;
+        border: 0;
+        padding: 0;
+        overflow: hidden;
+        color: inherit;
+        background: #000;
+    }
     .udoc-ui-root .udoc-ui__slide-show-stage {
         position: absolute;
         inset: 0;
@@ -5529,6 +5546,10 @@ export const uiStyles = css`
         gap: 12px;
         padding: 8px 0;
         cursor: pointer;
+    }
+    /* A setting and its choices, which take the clicks themselves. */
+    .udoc-ui-root .udoc-slide-show-setup__option--choice {
+        cursor: default;
     }
     .udoc-ui-root .udoc-slide-show-setup__option-label {
         font-size: 13px;

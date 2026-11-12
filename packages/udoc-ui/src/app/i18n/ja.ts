@@ -294,6 +294,9 @@ export const ja: Messages = {
     // Set Up Presentation
     "screens.label": "画面",
     "screens.oneScreen": "接続されている画面は 1 つだけです。",
+    "slideShowSetup.showIn": "表示方法",
+    "slideShowSetup.browserWindow": "ブラウザー ウィンドウ",
+    "slideShowSetup.inPlace": "埋め込み",
     "slideShowSetup.displayOn": "表示先",
     "slideShowSetup.setUpScreens": "画面の設定",
     "slideShowSetup.screensMessage":

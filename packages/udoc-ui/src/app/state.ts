@@ -35,6 +35,18 @@ export type LoadStatus = "empty" | "loading" | "ready" | "extension" | "error";
 export type ThemeMode = "light" | "dark" | "system";
 
 // -----------------------------------------------------------------------------
+// Slide show
+// -----------------------------------------------------------------------------
+
+/**
+ * What a slide show covers: `"screen"`, the whole screen, the browser's full
+ * screen; `"window"`, the browser window the page shows in, over everything
+ * on the page, or the iframe the page is in; `"container"`, the viewer or the
+ * editor, over its own box on the page.
+ */
+export type SlideShowFill = "screen" | "window" | "container";
+
+// -----------------------------------------------------------------------------
 // View controls placement
 // -----------------------------------------------------------------------------
 
@@ -876,10 +888,10 @@ export interface UIState {
     /**
      * Bumps on every start of a slide show, so the shell's slide show plays the
      * deck from `slide` — its index in the deck, or `null` for the first slide
-     * the show shows — with PowerPoint's presenter view in a window of its
-     * own when `presenterView` says so.
+     * the show shows — covering what `fill` says, with PowerPoint's presenter
+     * view in a window of its own when `presenterView` says so.
      */
-    slideShowRequest: { slide: number | null; presenterView: boolean; seq: number };
+    slideShowRequest: { slide: number | null; fill: SlideShowFill; presenterView: boolean; seq: number };
     /**
      * Whether a slide show plays — from its start until it ends: by Escape, by
      * a click past its last slide, by the host's `endSlideShow`, or by
@@ -894,12 +906,12 @@ export interface UIState {
      */
     usePresenterView: boolean;
     /**
-     * Whether a slide show fills the screen — the one Set Up Presentation's
-     * Display on chose, where the screens are set up — or plays over the UI
-     * as it stands, in window mode: Set Up Presentation's Full Screen, on at
-     * first. One the browser won't fill the screen with plays in window mode.
+     * What a slide show covers, as Set Up Presentation's Show in has it: the
+     * screen, at first — the one its Display on chose, where the screens are
+     * set up — the browser window, or the UI's own box. One the browser won't
+     * fill the screen with covers the browser window.
      */
-    slideShowFullScreen: boolean;
+    slideShowFill: SlideShowFill;
     /**
      * Whether the screens are set up: the browser lets the UI place windows
      * on each of the computer's screens — Set Up Presentation's Set Up
@@ -1202,10 +1214,10 @@ export const initialState: UIState = {
     refitSeq: 0,
     slidePreviewSeq: 0,
     slidePreviewing: false,
-    slideShowRequest: { slide: null, presenterView: false, seq: 0 },
+    slideShowRequest: { slide: null, fill: "screen", presenterView: false, seq: 0 },
     slideShowPlaying: false,
     usePresenterView: false,
-    slideShowFullScreen: true,
+    slideShowFill: "screen",
     screensSetUp: false,
     audienceScreen: null,
     slideShowSetupSeq: 0,

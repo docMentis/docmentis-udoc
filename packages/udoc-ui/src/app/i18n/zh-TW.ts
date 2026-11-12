@@ -294,6 +294,9 @@ export const zhTW: Messages = {
     // Set Up Presentation
     "screens.label": "螢幕",
     "screens.oneScreen": "僅連接了一個螢幕。",
+    "slideShowSetup.showIn": "放映方式",
+    "slideShowSetup.browserWindow": "瀏覽器視窗",
+    "slideShowSetup.inPlace": "頁面內",
     "slideShowSetup.displayOn": "顯示於",
     "slideShowSetup.setUpScreens": "設定螢幕",
     "slideShowSetup.screensMessage": "允許瀏覽器在各螢幕上放置視窗，以選擇簡報的螢幕。",

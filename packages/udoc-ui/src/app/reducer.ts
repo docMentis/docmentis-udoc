@@ -417,6 +417,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 ...state,
                 slideShowRequest: {
                     slide: action.slide,
+                    fill: action.fill ?? state.slideShowFill,
                     presenterView: action.presenterView ?? state.usePresenterView,
                     seq: state.slideShowRequest.seq + 1,
                 },
@@ -437,7 +438,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return {
                 ...state,
                 usePresenterView: action.presenterView,
-                slideShowFullScreen: action.fullScreen,
+                slideShowFill: action.fill,
                 audienceScreen: action.audienceScreen,
             };
 
