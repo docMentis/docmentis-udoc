@@ -727,7 +727,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return action.visible === state.showComments ? state : { ...state, showComments: action.visible };
 
         case "NEW_COMMENT":
-            return { ...state, newCommentGen: state.newCommentGen + 1 };
+            // The new thread's field takes the panel's focus from the one open.
+            return { ...state, newCommentGen: state.newCommentGen + 1, openOfficeComment: null };
 
         case "SET_REVISION_VIEW":
             return { ...state, revisionView: action.view };

@@ -1012,8 +1012,8 @@ export interface UIState {
      *  pages — each thread's marker and its text's highlight — the View tab's
      *  Comments. Kept across documents. */
     showComments: boolean;
-    /** Bumped by a toolbar's New Comment: the comments panel opens its field
-     *  for a new thread on each change it hasn't seen. */
+    /** Bumped by New Comment, a toolbar's or the comments panel's: the panel
+     *  opens its field for a new thread on each change it hasn't seen. */
     newCommentGen: number;
     /** Whether the open PDF has layers to show or hide — what the View tab's
      *  Layers button shows for. Read after the document opens. */

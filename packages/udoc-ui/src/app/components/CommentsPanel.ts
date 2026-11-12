@@ -118,9 +118,9 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
     const empty = document.createElement("div");
     empty.className = "udoc-panel-placeholder";
 
-    // New comment, and the field it opens in its place — as a toolbar's New
-    // Comment does too: Save opens the thread, Save and Cancel each put the
-    // button back.
+    // New comment, and the field it opens in its place — through the store, as
+    // a toolbar's New Comment does, which closes the thread open: Save opens
+    // the new thread, Save and Cancel each put the button back.
     const compose = document.createElement("div");
     compose.className = "udoc-comments-panel__new";
     const start = createButton({
@@ -139,13 +139,11 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         field.clear();
         compose.replaceChildren(start);
     }
-    function openField(): void {
-        compose.replaceChildren(field.el);
-        field.focus();
-    }
-    start.addEventListener("click", openField);
+    /** The store the panel is mounted on, which New Comment goes through. */
+    let mounted: Store<UIState, Action> | null = null;
+    start.addEventListener("click", () => mounted?.dispatch({ type: "NEW_COMMENT" }));
     compose.append(start);
-    /** The last toolbar New Comment the panel answered, by its count — one
+    /** The last New Comment the panel answered, by its count — a toolbar's
      *  pressed while the panel was shut is answered as it opens. */
     let newCommentGen = 0;
 
@@ -262,7 +260,7 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         setChildren(el, slice.officeEditing ? [compose, ...listing] : listing);
         if (slice.newCommentGen !== newCommentGen) {
             newCommentGen = slice.newCommentGen;
-            // Focused a frame on, once the panel the press opened shows.
+            // Focused a frame on, once a panel a toolbar's press opened shows.
             if (slice.officeEditing) {
                 compose.replaceChildren(field.el);
                 requestAnimationFrame(() => field.focus());
@@ -275,6 +273,7 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
     }
 
     function mount(container: HTMLElement, store: Store<UIState, Action>): void {
+        mounted = store;
         container.appendChild(el);
         render(selectSlice(store.getState()));
         unsubscribe = subscribeSelector(store, selectSlice, render, { equality: sliceEqual });
@@ -293,6 +292,7 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
     function destroy(): void {
         unsubscribe?.();
         unsubscribe = null;
+        mounted = null;
         el.remove();
     }
 

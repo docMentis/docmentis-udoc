@@ -3399,6 +3399,11 @@ export const uiStyles = css`
         background: var(--udoc-color-surface-container-high);
         border: 1px solid var(--udoc-color-primary);
         border-radius: 6px;
+        /* Written as a thread's comments are. */
+        font:
+            12px/1.4 system-ui,
+            sans-serif;
+        color: var(--udoc-color-on-surface);
     }
 
     /* The text a Word or PowerPoint comment thread is on
