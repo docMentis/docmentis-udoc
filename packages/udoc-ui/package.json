@@ -55,7 +55,7 @@
         "clean": "rm -rf dist"
     },
     "dependencies": {
-        "@docmentis/udoc-wasm": "0.8.22"
+        "@docmentis/udoc-wasm": "0.8.23"
     },
     "devDependencies": {
         "@videojs/hlsjs-video": "10.2.0",

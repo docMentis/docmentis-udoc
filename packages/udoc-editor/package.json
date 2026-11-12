@@ -62,7 +62,7 @@
     },
     "dependencies": {
         "@docmentis/udoc-ui": "0.8.19",
-        "@docmentis/udoc-wasm": "0.8.22"
+        "@docmentis/udoc-wasm": "0.8.23"
     },
     "devDependencies": {
         "esbuild": "^0.25.12"
