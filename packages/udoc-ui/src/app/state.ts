@@ -790,8 +790,8 @@ export interface UIState {
     searchNavAlignment: ScrollAlignment | null;
     /** Where a search match lands — the host's `searchScrollAlignment`. */
     searchScrollAlignment: ScrollAlignment;
-    /** Where a followed link or outline item, or a chosen comment, lands —
-     *  the host's `navigationScrollAlignment`. */
+    /** Where a followed link or outline item lands — the host's
+     *  `navigationScrollAlignment`. */
     navigationScrollAlignment: ScrollAlignment;
     /** Whether the search is still finding matches. */
     searchRunning: boolean;

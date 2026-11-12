@@ -3209,9 +3209,9 @@ export function mountUIShell(
         formAlternateNames = widgetAlternateNames(form);
     }
 
-    // Go to a comment chosen in the comments panel — its rect at the viewport's
-    // top-left, as a PDF destination lands — and select it. An Office thread
-    // chosen again, while it's open, closes.
+    // Go to a comment chosen in the comments panel — by the least scroll that
+    // shows it, as a search match lands, none where it shows already — and
+    // select it. An Office thread chosen again, while it's open, closes.
     function chooseComment(comment: Comment): void {
         if (store.getState().status !== "ready") return;
         if (comment.source.kind === "office") {
@@ -3226,19 +3226,19 @@ export function mountUIShell(
         const { page, annotation } = comment.source;
         const id = annotation.id;
         if (id === undefined) return;
-        client.goToRect(comment.group.order, annotation.rect, store.getState().navigationScrollAlignment);
+        client.goToRect(comment.group.order, annotation.rect, "nearest");
         setSelection({ portable: { annotations: { page, ids: [id] } } });
     }
 
     // Go to a Word, Excel or PowerPoint comment's thread `id`, standing on
-    // `at`: the view lands on its text's first line there, or the box it's
-    // on — on a sheet not shown, once the sheet is.
+    // `at`: the least scroll shows its text's first line there, or the box
+    // it's on — on a sheet not shown, once the sheet is.
     async function goToOfficeComment(id: string, at: { plane: number; page: number }): Promise<void> {
         const markup = (await client.commentMarkup(at.plane, at.page)).find((m) => markupComment(m) === id);
         const rect = markup && markupRect(markup);
         const state = store.getState();
         if (!rect || state.status !== "ready") return;
-        const alignment = state.navigationScrollAlignment;
+        const alignment = "nearest";
         if (at.plane === state.currentPlane) {
             client.goToRect(at.page, rect, alignment);
             return;

@@ -236,11 +236,10 @@ export interface UDocOptions {
      *  at the engine's own `16`. Default `16`; {@link UDocBase.setMaxZoom}
      *  changes it. */
     maxZoom?: number;
-    /** Where a followed link or outline item, or a comment chosen in the
-     *  comments panel, lands in the view: `"top"` (its top-left at the
-     *  viewport's top-left, where a PDF destination puts it), `"center"`,
-     *  `"bottom"`, or `"nearest"` (the least scroll that shows it, none when
-     *  it already shows). Default `"top"`;
+    /** Where a followed link or outline item lands in the view: `"top"` (its
+     *  top-left at the viewport's top-left, where a PDF destination puts it),
+     *  `"center"`, `"bottom"`, or `"nearest"` (the least scroll that shows it,
+     *  none when it already shows). Default `"top"`;
      *  {@link UDocBase.setNavigationScrollAlignment} changes it, and
      *  {@link UDocBase.goToDestination} takes one per call. */
     navigationScrollAlignment?: ScrollAlignment;
@@ -1087,7 +1086,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
         return this.shell.goToDestination(destination, options?.scrollAlignment);
     }
 
-    /** Set where a followed link or outline item, or a chosen comment, lands; see the `navigationScrollAlignment` option. */
+    /** Set where a followed link or outline item lands; see the `navigationScrollAlignment` option. */
     setNavigationScrollAlignment(alignment: ScrollAlignment): void {
         this.shell.setNavigationScrollAlignment(alignment);
     }
