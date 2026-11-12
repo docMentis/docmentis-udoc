@@ -1292,11 +1292,8 @@ export function mountUIShell(
             });
         }
     };
-    const unsubCommentMarkers = client.onPageViews((frame) => {
-        commentMarkerViews = frame.views;
-        askCommentMarkup();
-    });
-    // What was read is dropped on each change, and on fonts landing — each
+    // What was read is dropped on each change, on fonts landing, on a view
+    // that lays the pages out again, and on a pageless page's new width — each
     // can move text — and the pages shown asked again, the old markers
     // standing until the new land.
     const forgetCommentMarkup = (): void => {
@@ -1311,8 +1308,29 @@ export function mountUIShell(
         for (const [key, markup] of shown)
             if (commentMarkupRead.get(key)?.length === 0) commentMarkupRead.set(key, markup);
     };
+    // A word document's tracked-changes view or a sheet's Normal or Page
+    // Layout, switched, lays the pages out as the frame after it paints: read
+    // again on that frame, once the pages it shows are.
+    let commentMarkupStale = false;
+    const markCommentMarkupStale = (): void => {
+        commentMarkupStale = true;
+    };
+    const unsubCommentMarkers = client.onPageViews((frame) => {
+        commentMarkerViews = frame.views;
+        if (!commentMarkupStale) {
+            askCommentMarkup();
+            return;
+        }
+        commentMarkupStale = false;
+        readCommentMarkupAgain();
+    });
     const unsubDocumentChangedMarkers = client.onDocumentChanged(readCommentMarkupAgain);
     const unsubFontsMarkers = client.onFontsRefreshed(readCommentMarkupAgain);
+    // A pageless page flows to the pane's width: resized, it has run a frame
+    // at the new one, laid out.
+    const unsubResizedMarkers = client.onResized(() => {
+        if (showsPageless(store.getState())) readCommentMarkupAgain();
+    });
     // A document opened in place of another reads its own.
     const unsubDocumentOpenedMarkers = subscribeSelector(store, (s) => s.docGeneration, forgetCommentMarkup);
     // Shown again, the pages shown are read as they were; hidden, they go.
@@ -2728,6 +2746,7 @@ export function mountUIShell(
         const layout = await client.setSheetLayoutMode(plane, mode);
         // What has painted of the sheet so far shows its other mode.
         paintedPlane = -1;
+        markCommentMarkupStale();
         store.dispatch({
             type: "DOC_RELAYOUT",
             pageCount: layout.pageCount ?? null,
@@ -2742,6 +2761,7 @@ export function mountUIShell(
     async function showRevisionView(view: RevisionView): Promise<void> {
         const layout = await client.setRevisionView(view);
         if (layout === null) return;
+        markCommentMarkupStale();
         store.dispatch({
             type: "DOC_RELAYOUT",
             pageCount: layout.pageCount ?? null,
@@ -4316,6 +4336,7 @@ export function mountUIShell(
         unsubCommentMarkers();
         unsubDocumentChangedMarkers();
         unsubFontsMarkers();
+        unsubResizedMarkers();
         unsubDocumentOpenedMarkers();
         unsubShowComments();
         unsubOpenCommentMarkers();
