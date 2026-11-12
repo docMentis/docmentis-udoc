@@ -472,20 +472,13 @@ const PRESENTATION_TABS: readonly EditTab[] = [
     editViewTab("presentation"),
 ];
 
-/** A word document's Review tab, as edit mode has it: view mode's, then New
- *  Comment, on the text selected. */
-const WORDPROCESSING_REVIEW_TAB: EditTab = {
-    ...REVIEW_TAB,
-    commands: [...REVIEW_TAB.commands, "newComment" satisfies EditCommandId],
-};
-
 /** The wordprocessing strip: Text, then Table, then Shape for the drawings in
- *  its flow, then Review, and its View last. */
+ *  its flow, then Review, view mode's, and its View last. */
 const WORDPROCESSING_TABS: readonly EditTab[] = [
     WORDPROCESSING_TEXT_TAB,
     TABLE_TAB,
     WORDPROCESSING_SHAPE_TAB,
-    WORDPROCESSING_REVIEW_TAB,
+    REVIEW_TAB,
     editViewTab("wordprocessing"),
 ];
 

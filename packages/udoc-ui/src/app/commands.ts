@@ -1299,10 +1299,11 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         },
         enabledWhen: (c) => c.ready && OFFICE_COMMENT_DOC_TYPES.has(c.docType ?? ""),
     },
-    // Edit mode's New Comment, on a deck's Slide tab, a workbook's Cell tab
-    // and a word document's Review tab: the comments panel opens on its field
-    // for a new thread, which Save opens on what is selected — on a slide with
-    // nothing selected, the slide.
+    // New Comment, on a word document's Review tab in every mode, and in edit
+    // mode on a deck's Slide tab and a workbook's Cell tab: the comments panel
+    // opens on its field for a new thread, which Save opens on what is
+    // selected — on a slide with nothing selected, the slide. Gone, as the
+    // Annotate tab is, from a session that may not annotate.
     newComment: {
         id: "newComment",
         label: "comments.new",
@@ -1315,6 +1316,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
                 store.dispatch({ type: "OPEN_PANEL", panel: "comments" });
             },
         },
+        shownWhen: (c) => c.features.includes("annotation"),
         enabledWhen: (c) => c.ready && commentable(c.selection, c.docType, c.presentationView, c.features),
     },
     // A workbook's formula bar above its grid.

@@ -110,18 +110,22 @@ export function viewTab(docType: UDocType, edit?: { guides: readonly string[] })
 /** The id of every doc type's {@link viewTab}. */
 export const VIEW_TAB_ID = "view";
 
-/** A word document's Review tab: which version of its tracked changes shows, and
- *  which of them are shown as such. Never an edit, so a viewer's too. */
+/** A word document's Review tab: which version of its tracked changes shows,
+ *  which of them are shown as such, and New Comment, on the text selected — a
+ *  comment is an annotation, so the tab is the same in view mode and edit
+ *  mode. */
 export const REVIEW_TAB: ToolbarTab = {
     id: "review",
     label: "ribbon.review",
     icon: ICON_TAB_REVIEW,
-    commands: ["revisionView", "showMarkup"],
+    commands: ["revisionView", "showMarkup", "newComment"],
 };
 
 /** The ids of the tabs whose commands are never edits — every doc type's
- *  {@link viewTab} and {@link presentTab}, and {@link REVIEW_TAB} — so a strip
- *  with none other has nothing to undo. */
+ *  {@link viewTab} and {@link presentTab}, and {@link REVIEW_TAB}, whose New
+ *  Comment opens the Comments panel's field, where the thread is written — so a
+ *  strip with none other has nothing to undo but the comments the session may
+ *  write. */
 export const VIEWING_TAB_IDS: ReadonlySet<string> = new Set([VIEW_TAB_ID, PRESENT_TAB_ID, REVIEW_TAB.id]);
 
 /**

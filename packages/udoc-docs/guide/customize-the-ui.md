@@ -37,12 +37,12 @@ default.
 
 ## Choose what people can do
 
-| Option                     | What it does                                                                                                                                                                                     |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `enableCopy: false`        | Text can be selected, but not copied, in view mode.                                                                                                                                              |
-| `enableAnnotation: false`  | A PDF's annotations, and every document's comments, can be read but not added, changed or deleted, and the Annotate tab is gone. Your own calls, such as `addPageAnnotation`, still change them. |
-| `enableFormFilling: false` | A PDF's form shows as it is filled in, and can't be changed.                                                                                                                                     |
-| `onLinkClick`              | Receives the URL of a link people click, in place of opening it in a new tab: to confirm it first, say, or open it elsewhere.                                                                    |
+| Option                     | What it does                                                                                                                                                                                                      |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enableCopy: false`        | Text can be selected, but not copied, in view mode.                                                                                                                                                               |
+| `enableAnnotation: false`  | A PDF's annotations, and every document's comments, can be read but not added, changed or deleted, and the Annotate tab and New Comment are gone. Your own calls, such as `addPageAnnotation`, still change them. |
+| `enableFormFilling: false` | A PDF's form shows as it is filled in, and can't be changed.                                                                                                                                                      |
+| `onLinkClick`              | Receives the URL of a link people click, in place of opening it in a new tab: to confirm it first, say, or open it elsewhere.                                                                                     |
 
 The editor adds options for its modes:
 
