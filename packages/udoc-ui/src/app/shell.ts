@@ -2952,10 +2952,17 @@ export function mountUIShell(
         return done;
     }
 
-    // Delete `comment`, which no reply answers — the thread offers only those.
+    // Delete `comment` — a PDF's, which no reply answers, as the thread offers
+    // only those; a Word, Excel or PowerPoint one with the replies under it, a
+    // thread's first comment taking the thread.
     function deleteComment(comment: Comment): Promise<void> {
         if (comment.source.kind === "office") {
-            const ids = [comment.id];
+            const ids: string[] = [];
+            const gather = (c: Comment): void => {
+                ids.push(c.id);
+                for (const reply of c.replies) gather(reply);
+            };
+            gather(comment);
             return runOnOfficeComments(comment, {
                 document: () => Command.deleteDocumentComments(ids),
                 slide: (slide) => Command.deleteSlideComments(slide, ids),

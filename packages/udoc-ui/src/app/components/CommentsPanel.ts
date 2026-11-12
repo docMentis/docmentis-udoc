@@ -245,6 +245,10 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
                 listed.add(thread.id);
                 const isOpen = selected.has(thread);
                 card.el.classList.toggle("udoc-comments-panel__card--selected", isOpen);
+                card.el.classList.toggle(
+                    "udoc-comments-panel__card--settled",
+                    thread.status === "resolved" || thread.status === "closed",
+                );
                 card.view.show(
                     thread,
                     isOpen,

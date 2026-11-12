@@ -63,6 +63,8 @@ const ICONS = {
     ICON_COMMENTS: "mode_comment",
     // Its tail on the right, as `mode_comment`'s is.
     ICON_NEW_COMMENT: { symbol: "add_comment", mirrored: true },
+    // A resolved comment thread opened again.
+    ICON_REOPEN: "replay",
     ICON_FULLSCREEN: "fullscreen",
     ICON_FULLSCREEN_EXIT: "fullscreen_exit",
     ICON_DOWNLOAD: "download",

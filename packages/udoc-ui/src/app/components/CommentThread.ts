@@ -13,6 +13,12 @@
 // drops it. Delete deletes an entry no reply answers. An edit or a reply the
 // view is dropped on, or can no longer make, is dropped with it.
 //
+// A Word, Excel or PowerPoint thread is resolved and answered as a whole, its
+// replies all answering its first comment: while it is open and may be
+// written, the row of the comment heading it holds Resolve and Reply — Reopen
+// alone once it is resolved or closed — and each comment holds Edit and Delete
+// while it is active. Reply opens a field at the thread's end.
+//
 // A field is rich text: what a file's `/RC` styles shows styled, and typing
 // carries on in the style of the text at the caret. It is filled from the XHTML
 // as the engine reads it, keeping only rich text's elements and styles, so
@@ -27,6 +33,7 @@ import {
     ICON_CHECK,
     ICON_EDIT,
     ICON_LOCK,
+    ICON_REOPEN,
     ICON_REPLY,
     ICON_SUBTOOL_ELLIPSE,
     ICON_SUBTOOL_FREEHAND,
@@ -142,6 +149,15 @@ export interface CommentThreadView {
     editComment(): void;
 }
 
+/** What a Word, Excel or PowerPoint thread tells each of its entries: whether
+ *  it is settled, and for the entry heading it, the thread's settled status
+ *  and its actions — Resolve or Reopen, and Reply — to hold in its row, and
+ *  whether they show; `null` for the others. */
+interface OfficeEntry {
+    settled: boolean;
+    head: { status: "resolved" | "closed" | null; actions: HTMLElement; shown: boolean } | null;
+}
+
 /** One entry of a thread: a comment or a reply, and the field that answers it. */
 interface Entry {
     el: HTMLElement;
@@ -149,8 +165,11 @@ interface Entry {
     reply: HTMLElement;
     replying(): boolean;
     /** Show `comment`, written to where its locks allow, and answered where
-     *  the thread is `open` — neither unless `annotating`. */
-    show(comment: Comment, open: boolean, annotating: boolean, first: boolean): void;
+     *  the thread is `open` — neither unless `annotating`. In a Word, Excel or
+     *  PowerPoint thread, `office`, the thread acts as a whole: the entry is
+     *  edited and deleted while the thread is open and active, and answers
+     *  nothing itself; it heads the thread with the thread's settled status. */
+    show(comment: Comment, open: boolean, annotating: boolean, office: OfficeEntry | null): void;
     startEditing(): void;
 }
 
@@ -161,7 +180,52 @@ export function createCommentThread(i18n: I18n, callbacks: CommentThreadCallback
     list.className = "udoc-comment-thread__entries";
     const count = document.createElement("div");
     count.className = "udoc-comment-thread__count";
+    // A Word, Excel or PowerPoint thread's actions, Resolve or Reopen and
+    // Reply, which the comment heading it holds in its row; Reply opens a field
+    // at the thread's end.
+    const threadActions = document.createElement("span");
+    threadActions.className = "udoc-comment-thread__actions";
+    const settle = createButton({ icon: ICON_CHECK, label: i18n.t("comment.resolve") });
+    const answer = createButton({ icon: ICON_REPLY, label: i18n.t("comment.reply") });
+    threadActions.append(settle, answer);
     el.append(list, count);
+    /** Whether the thread's actions are live: a Word, Excel or PowerPoint
+     *  thread, open and written to — and whether it is settled, resolved or
+     *  closed. */
+    let rowShown = false;
+    let settled = false;
+    let replying = false;
+    const threadReply = createReplyField(i18n, REPLY_WORDS, {
+        save: (richContents) => {
+            if (showing) callbacks.onReply(showing, richContents);
+            stopReplying();
+        },
+        cancel: () => stopReplying(),
+    });
+    threadReply.el.style.setProperty("--udoc-comment-depth", "1");
+    function showRow(): void {
+        shown(answer, !settled && !replying);
+    }
+    function stopReplying(): void {
+        if (!replying) return;
+        replying = false;
+        threadReply.clear();
+        showRow();
+        layOut();
+        callbacks.onDismiss();
+    }
+    answer.addEventListener("click", () => {
+        if (!rowShown || settled) return;
+        replying = true;
+        showRow();
+        layOut();
+        threadReply.focus();
+    });
+    settle.addEventListener("click", () => {
+        if (!rowShown || !showing) return;
+        callbacks.onStatus?.(showing, settled ? "active" : "resolved");
+        callbacks.onDismiss();
+    });
 
     /** The entries by annotation id, kept while their annotations are shown. */
     const entries = new Map<string, Entry>();
@@ -183,6 +247,22 @@ export function createCommentThread(i18n: I18n, callbacks: CommentThreadCallback
             if (open) for (const r of comment.replies) walk(r, depth + 1);
         };
         walk(thread, 0);
+        // A Word, Excel or PowerPoint thread acts as a whole, by its first
+        // comment's status.
+        const office = thread.source.kind === "office";
+        settled = thread.status === "resolved" || thread.status === "closed";
+        rowShown = office && annotating && open && callbacks.onStatus !== undefined;
+        const settleLabel = i18n.t(settled ? "comment.reopen" : "comment.resolve");
+        settle.title = settleLabel;
+        settle.setAttribute("aria-label", settleLabel);
+        const settleIcon = settled ? ICON_REOPEN : ICON_CHECK;
+        if (settle.innerHTML !== settleIcon) settle.innerHTML = settleIcon;
+        // A reply the thread can no longer take is dropped.
+        if (replying && (!rowShown || settled)) {
+            replying = false;
+            threadReply.clear();
+        }
+        showRow();
         order = [];
         const kept = new Set<string>();
         for (const [comment, depth] of walked) {
@@ -193,7 +273,24 @@ export function createCommentThread(i18n: I18n, callbacks: CommentThreadCallback
                 entry = createEntry(i18n, callbacks, layOut);
                 entries.set(key, entry);
             }
-            entry.show(comment, open, annotating, depth === 0);
+            entry.show(
+                comment,
+                open,
+                annotating,
+                office
+                    ? {
+                          settled,
+                          head:
+                              depth === 0
+                                  ? {
+                                        status: settled ? (thread.status as "resolved" | "closed") : null,
+                                        actions: threadActions,
+                                        shown: rowShown,
+                                    }
+                                  : null,
+                      }
+                    : null,
+            );
             entry.el.classList.toggle("udoc-comment--reply", depth > 0);
             entry.el.style.setProperty("--udoc-comment-depth", String(depth));
             entry.reply.style.setProperty("--udoc-comment-depth", String(depth + 1));
@@ -212,6 +309,7 @@ export function createCommentThread(i18n: I18n, callbacks: CommentThreadCallback
      *  reorder only when the order changed. */
     function layOut(): void {
         const els = order.flatMap((entry) => (entry.replying() ? [entry.el, entry.reply] : [entry.el]));
+        if (replying) els.push(threadReply.el);
         const same = els.length === list.children.length && els.every((e, i) => list.children[i] === e);
         if (!same) list.replaceChildren(...els);
     }
@@ -308,7 +406,6 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
     lock.setAttribute("role", "img");
     lock.innerHTML = ICON_LOCK;
     const answer = createButton({ icon: ICON_REPLY, label: i18n.t("comment.reply") });
-    const settle = createButton({ icon: ICON_CHECK, label: i18n.t("comment.resolve") });
     const edit = createButton({ icon: ICON_EDIT, label: i18n.t("comment.edit") });
     const remove = createButton({ icon: ICON_DELETE, label: i18n.t("common.delete") });
     const cancel = createButton({ text: i18n.t("common.cancel"), label: i18n.t("comment.cancelEditing") });
@@ -317,7 +414,7 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
         label: i18n.t("comment.save"),
         className: "udoc-comment__primary",
     });
-    actions.append(lock, settle, answer, edit, remove, cancel, save);
+    actions.append(lock, answer, edit, remove, cancel, save);
     el.append(header, text, actions);
 
     let current: Shown | null = null;
@@ -325,8 +422,10 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
     let writable = false;
     let answerable = false;
     let deletable = false;
-    let settleable = false;
     let replying = false;
+    /** The thread's actions this entry holds, heading it, and whether they
+     *  show. */
+    let held: { actions: HTMLElement; shown: boolean } | null = null;
 
     const fillFrom = (comment: Comment): void => {
         fill(text, comment.richContents, comment.contents);
@@ -337,9 +436,10 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
         const contentEditable = editing ? "true" : "false";
         if (text.contentEditable !== contentEditable) text.contentEditable = contentEditable;
         text.dataset.placeholder = editing ? i18n.t("comment.placeholder") : "";
-        shown(actions, locked || writable || answerable || deletable || settleable || editing);
+        const holding = held !== null && held.shown && !editing;
+        shown(actions, locked || writable || answerable || deletable || holding || editing);
         shown(lock, locked);
-        shown(settle, settleable && !editing);
+        if (held) shown(held.actions, holding);
         shown(answer, answerable && !editing && !replying);
         shown(edit, writable && !editing);
         shown(remove, deletable && !editing);
@@ -403,24 +503,25 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
         callbacks.onDelete(current.comment);
         callbacks.onDismiss();
     });
-    settle.addEventListener("click", () => {
-        if (!current || !settleable) return;
-        callbacks.onStatus?.(current.comment, current.comment.status === "active" ? "resolved" : "active");
-        callbacks.onDismiss();
-    });
-
-    function show(comment: Comment, open: boolean, annotating: boolean, first: boolean): void {
+    function show(comment: Comment, open: boolean, annotating: boolean, office: OfficeEntry | null): void {
         const { position, contents } = comment.locked;
-        locked = position || contents;
-        writable = annotating && !contents;
-        answerable = annotating && open;
-        deletable = annotating && !position && comment.replies.length === 0;
-        // A thread is resolved, or opened again, at its first comment.
-        settleable = annotating && first && comment.status !== null && callbacks.onStatus !== undefined;
-        const done = comment.status === "resolved" || comment.status === "closed";
-        const settleLabel = i18n.t(done ? "comment.reopen" : "comment.resolve");
-        settle.title = settleLabel;
-        settle.setAttribute("aria-label", settleLabel);
+        // Heading a Word, Excel or PowerPoint thread, the entry holds its
+        // actions at the front of its row.
+        held = office?.head ? { actions: office.head.actions, shown: office.head.shown } : null;
+        if (held && held.actions.parentElement !== actions) lock.after(held.actions);
+        if (office) {
+            // A Word, Excel or PowerPoint comment: edited and deleted while its
+            // thread is open and active; the thread answers for it.
+            locked = false;
+            writable = annotating && open && !office.settled;
+            answerable = false;
+            deletable = writable;
+        } else {
+            locked = position || contents;
+            writable = annotating && !contents;
+            answerable = annotating && open;
+            deletable = annotating && !position && comment.replies.length === 0;
+        }
         // A reply the entry can no longer make is dropped; the thread lays out
         // the list once its entries are shown.
         if (replying && !answerable) {
@@ -435,9 +536,10 @@ function createEntry(i18n: I18n, callbacks: CommentThreadCallbacks, layOut: () =
         kind.title = kindLabel;
         author.textContent = comment.author;
         showDate(date, parseDateTime(comment.created ?? ""), i18n.locale);
-        const settled = comment.status === "resolved" || comment.status === "closed";
-        shown(status, settled);
-        status.textContent = settled ? i18n.t(STATUSES[comment.status as "resolved" | "closed"]) : "";
+        // The thread's settled status, at its head; a PDF comment has none.
+        const heads = office?.head?.status ?? null;
+        shown(status, heads !== null);
+        status.textContent = heads ? i18n.t(STATUSES[heads]) : "";
         const says = i18n.t(position && contents ? LOCKS.both : position ? LOCKS.locked : LOCKS.contents);
         lock.title = says;
         lock.setAttribute("aria-label", says);

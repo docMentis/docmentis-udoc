@@ -3302,6 +3302,11 @@ export const uiStyles = css`
         justify-content: flex-end;
         gap: 4px;
     }
+    /* A Word, Excel or PowerPoint thread's Resolve and Reply, in the row of
+   the comment heading it: laid out as that row's own buttons. */
+    .udoc-ui-root .udoc-comment-thread__actions {
+        display: contents;
+    }
     .udoc-ui-root .udoc-comment__lock {
         display: inline-flex;
         margin-right: auto;
@@ -3385,6 +3390,16 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-comments-panel__card--selected:hover {
         cursor: default;
         border-color: var(--udoc-color-primary);
+    }
+    /* A resolved or closed thread's card: on the surface a step back from an
+   open thread's card, its text and authors in the muted ink — settled, set
+   back from the threads still open. */
+    .udoc-ui-root .udoc-comments-panel__card--settled {
+        background: var(--udoc-color-surface);
+    }
+    .udoc-ui-root .udoc-comments-panel__card--settled .udoc-comment__author,
+    .udoc-ui-root .udoc-comments-panel__card--settled .udoc-comment__text {
+        color: var(--udoc-color-on-surface-variant);
     }
     /* New comment, above the groups: the button, or the field it opens in a
    card outlined as the open thread's is. */
