@@ -6,6 +6,51 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Added
+
+- Right-to-left text, such as Arabic and Hebrew, is laid out right to left in
+  Word, PowerPoint and Excel documents, as Office lays it out: mixed with
+  left-to-right text in the order the Unicode Bidirectional Algorithm gives,
+  its numerals, list numbers and punctuation where Office stands them, its
+  paragraphs aligned as each application reads a stated left or right, and a
+  right-to-left table's columns running from the right. Selection, Home and
+  End, justification, underlines and highlights follow it.
+
+#### Fixed
+
+- Saving keeps a document's comments: an edited Word document no longer loses
+  the text each comment is on, and a `"rewrite"` save of a Word, Excel or
+  PowerPoint document writes its comments, as Office 365 writes them, where it
+  wrote none. A sheet's notes, where the save writes its comments, become
+  threaded comments, as Excel's Convert to Comments makes them.
+- A saved Word, Excel or PowerPoint document keeps the data newer versions of
+  Office add to its slides, sheets, charts, diagrams, shapes, tables, text and
+  themes, though it isn't shown, where a save dropped some of it and a
+  `"rewrite"` save all of it.
+- A Word paragraph with an exact line height of zero is spaced as single lines,
+  as Word draws it, where its lines collapsed, and table rows with them.
+- A Word table's columns take the widths its cells ask for, as Word sizes them,
+  where they took the widths of the table's grid.
+- A Word run, paragraph or table cell shaded with a fill but no pattern paints
+  its fill, where it painted nothing.
+- A Word run sets its text in its complex-script font, size, bold and italic
+  where Word does, when it's marked right-to-left or complex script, and never
+  takes them from its other formatting: a right-to-left title marked bold only
+  for Latin text draws regular, as in Word, where it drew bold.
+- A picture wider than its line just after a bookmark in a Word document stays
+  on that line, where it left an empty line before it and, taller than the
+  page, an empty page.
+- Accents and other marks a font raises or lowers are drawn where it places
+  them, where they were mirrored about the baseline: an Arabic letter's dots
+  and hamza drew on the wrong side of it.
+- Arabic text in Sakkal Majalla or Simplified Arabic draws in a Naskh face, as
+  those fonts are, where it drew in a sans, and in Univers Next Arabic in a
+  sans. Latin text and empty paragraphs in these or Office's other Arabic fonts
+  are spaced as Word spaces them, where they took the Arabic stand-in's far
+  taller lines. Franklin Gothic Book takes Franklin Gothic Medium's stand-in.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -25,6 +70,16 @@ listed once, by package. Its major and minor version are those of the
   regular expression, so the panel turns one off as the other comes on. A
   pattern that isn't a regular expression shows as invalid in the panel, and
   `search` rejects with an `invalidRequest` `UDocError`.
+- The Comments panel lists a Word, Excel or PowerPoint document's comments, as
+  it does a PDF's, Excel's notes among them: each thread with its replies, their
+  authors and times, and whether it's resolved, under its page, its sheet and
+  cell, or its slide. On the document, a marker stands at each thread: beside
+  its text, which is highlighted, at the corner of the shape or slide it's on,
+  or as a flag in its cell's corner. Choosing a marker or a thread opens it,
+  and choosing it again closes it.
+- The View tab's Hide Comment Markup hides a Word, Excel or PowerPoint
+  document's comment markers and highlights, and `showCommentMarkup: false`
+  opens documents with them hidden.
 - A line joins the current search match on the document to its result in the
   Search panel, in the selection's colour, and follows both as the document and
   the results scroll. It hides while either end is out of sight, and on a
@@ -42,6 +97,13 @@ listed once, by package. Its major and minor version are those of the
   together, and it starts off, so the gaps show as before. It shows a crossed-out
   grid with no text beside it, its name in its tooltip. Its `translations` key is
   `command.gapless`, where it was `command.pageGap`.
+- A comment chosen in the Comments panel comes into view by the least scroll
+  that shows it, none where it already shows, as a search result does, where it
+  landed where `navigationScrollAlignment` put it, at the top-left by default.
+  That option now sets where a followed link or outline item lands alone.
+- An `Annotation`'s `modified` and `created` are ISO 8601 date-time strings, in
+  what the annotation calls take and their events give, where they were PDF
+  date strings.
 
 #### Fixed
 
@@ -57,6 +119,17 @@ listed once, by package. Its major and minor version are those of the
   selected for copying, it doesn't show at all.
 
 ### udoc-editor
+
+#### Added
+
+- In edit mode, the Comments panel replies to, edits, resolves, reopens and
+  deletes a Word, Excel or PowerPoint document's comments, and its New Comment
+  opens a thread: on the text selected in a Word document's body or a table
+  cell; on the text selected in a slide's shape, on the shape, or, with nothing
+  selected, on the slide; or at a sheet's active cell. New Comment also ends
+  the Slide tab and the Cell tab, and joins a Word document's Review tab, and
+  greys where the selection takes no comment. Deleting a thread's first comment
+  deletes the thread.
 
 #### Changed
 
