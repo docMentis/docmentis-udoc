@@ -29,6 +29,10 @@ listed once, by package. Its major and minor version are those of the
   wherever comments may be written. `enableAnnotation: false` leaves them to
   be read, as it does a PDF's, and takes New Comment away.
 
+- A Word document's Review tab leads with Track Changes, which starts on.
+  Turning it off shows the document with no markup, and turning it back on
+  shows all markup. Show Markup is now Markup Options, an icon.
+
 ## [0.8.20] - 2026-11-11
 
 Built on `@docmentis/udoc-wasm` 0.8.23.

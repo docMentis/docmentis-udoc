@@ -121,8 +121,9 @@ const ICONS = {
     ICON_SLIDE_MASTER_VIEW: "space_dashboard",
     ICON_PAGES_VIEW: "description",
     ICON_PAGELESS_VIEW: "subject",
+    ICON_TRACK_CHANGES: "track_changes",
     ICON_REVISION_VIEW: "difference",
-    ICON_SHOW_MARKUP: "filter_list",
+    ICON_MARKUP_OPTIONS: "tune",
     ICON_SHEET_NORMAL_VIEW: "grid_on",
 
     // Pointer modes

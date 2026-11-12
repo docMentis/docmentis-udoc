@@ -426,8 +426,9 @@ export type CommandId =
     | "notes"
     | "pagesView"
     | "pagelessView"
+    | "trackChanges"
     | "revisionView"
-    | "showMarkup"
+    | "markupOptions"
     | "sheetNormalView"
     | "sheetPageLayoutView"
     | "singleScroll"
@@ -1013,6 +1014,11 @@ export interface UIState {
     /** The view the open word document opened on, or `null` with none open. Read
      *  after the document opens. */
     openedRevisionView: RevisionView | null;
+    /** Whether the Review tab's Track Changes is on — on to start, and kept
+     *  across documents, as {@link revisionView} is. A word document's edits
+     *  aren't tracked yet, so all it changes is what its tracked changes show:
+     *  turned on, all of their markup; turned off, none. */
+    trackChanges: boolean;
     /** Whether a deck's notes pane is open under its slides, or closed to its
      *  edge — the View tab's Notes, the host's `showNotesPanel`, the splitter
      *  dragged to the edge. Kept for every doc type; only a deck has notes to
@@ -1233,6 +1239,7 @@ export const initialState: UIState = {
     wordprocessingView: null,
     revisionView: null,
     openedRevisionView: null,
+    trackChanges: true,
     notesOpen: false,
     notesHeight: null,
     formulaBarVisible: true,

@@ -12,6 +12,7 @@ import {
     planeOfView,
     planeOfWordprocessingView,
     renderZoom,
+    revisionViewOf,
     sheetLayoutModeOf,
     viewDpi,
     viewOfPlane,
@@ -735,6 +736,15 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_OPENED_REVISION_VIEW":
             return { ...state, openedRevisionView: action.view };
+
+        case "SET_TRACK_CHANGES": {
+            if (action.on === state.trackChanges) return state;
+            // Until edits are tracked, Track Changes shows the changes: all of
+            // their markup on, none off.
+            const view = revisionViewOf(state);
+            const mode = action.on ? "allMarkup" : "noMarkup";
+            return { ...state, trackChanges: action.on, revisionView: view ? { ...view, mode } : state.revisionView };
+        }
 
         case "SET_HAS_LAYERS":
             return action.hasLayers === state.hasLayers ? state : { ...state, hasLayers: action.hasLayers };

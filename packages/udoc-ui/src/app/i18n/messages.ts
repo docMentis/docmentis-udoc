@@ -205,14 +205,15 @@ export interface Messages {
     "pageLayout.coverRight": string;
     /** Cover on the Left */
     "pageLayout.coverLeft": string;
+    "command.trackChanges": string;
     "command.revisionView": string;
     "revisionView.allMarkup": string;
     "revisionView.simpleMarkup": string;
     "revisionView.noMarkup": string;
     "revisionView.original": string;
-    "command.showMarkup": string;
-    "showMarkup.insertionsAndDeletions": string;
-    "showMarkup.formatting": string;
+    "command.markupOptions": string;
+    "markupOptions.insertionsAndDeletions": string;
+    "markupOptions.formatting": string;
     /** Rotate View Left */
     "command.rotateViewLeft": string;
     /** Rotate View Right */

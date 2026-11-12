@@ -72,7 +72,8 @@ import {
     ICON_PAGES_VIEW,
     ICON_PAGELESS_VIEW,
     ICON_REVISION_VIEW,
-    ICON_SHOW_MARKUP,
+    ICON_MARKUP_OPTIONS,
+    ICON_TRACK_CHANGES,
     ICON_SHEET_NORMAL_VIEW,
     ICON_SUBTOOL_HIGHLIGHT,
     ICON_FILL,
@@ -566,7 +567,7 @@ const PAGE_LAYOUT_MENU: readonly MenuItem[] = PAGE_LAYOUTS.map(([mode, label, ic
     activeWhen: (c) => c.layoutMode === mode,
 }));
 
-/** The kinds of change the Review tab's Show Markup turns on or off. */
+/** The kinds of change the Review tab's Markup Options turns on or off. */
 export type RevisionFilter = "insertionsAndDeletions" | "formatting";
 
 /** Enabled once the open word document's view is known. */
@@ -588,12 +589,13 @@ const REVISION_VIEW_MENU: readonly MenuItem[] = REVISION_VIEW_MODES.map(([mode, 
     activeWhen: (c) => c.revisionView?.mode === mode,
 }));
 
-/** The Review tab's Show Markup: a switch per kind of change, which leave the
- *  panel open as Word's do, since one press is rarely all that's wanted. */
-const SHOW_MARKUP_MENU: readonly MenuItem[] = (
+/** The Review tab's Markup Options: a switch per kind of change, which leave
+ *  the panel open as Word's Show Markup does, since one press is rarely all
+ *  that's wanted. */
+const MARKUP_OPTIONS_MENU: readonly MenuItem[] = (
     [
-        ["insertionsAndDeletions", "showMarkup.insertionsAndDeletions"],
-        ["formatting", "showMarkup.formatting"],
+        ["insertionsAndDeletions", "markupOptions.insertionsAndDeletions"],
+        ["formatting", "markupOptions.formatting"],
     ] as const
 ).map(([filter, label]) => ({
     action: { kind: "toggleRevisionFilter", filter },
@@ -1113,8 +1115,24 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: whenReady,
     },
 
-    // Review tab — which version of a tracked document shows, its button wearing
-    // the one current, and which of its changes are shown as such.
+    // Review tab — Track Changes, on to start: until a word document's edits
+    // are tracked, it shows all of their markup on and none off.
+    trackChanges: {
+        id: "trackChanges",
+        label: "command.trackChanges",
+        icon: ICON_TRACK_CHANGES,
+        group: "revisions",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            pressed: (state) => state.trackChanges,
+            press: (store) => store.dispatch({ type: "SET_TRACK_CHANGES", on: !store.getState().trackChanges }),
+        },
+        enabledWhen: whenRevisionView,
+    },
+    // Then which version of a tracked document shows, its button wearing the
+    // one current, and Markup Options, an icon: which of its changes are shown
+    // as such.
     revisionView: {
         id: "revisionView",
         label: "command.revisionView",
@@ -1132,13 +1150,12 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         },
         enabledWhen: whenRevisionView,
     },
-    showMarkup: {
-        id: "showMarkup",
-        label: "command.showMarkup",
-        icon: ICON_SHOW_MARKUP,
+    markupOptions: {
+        id: "markupOptions",
+        label: "command.markupOptions",
+        icon: ICON_MARKUP_OPTIONS,
         group: "revisions",
-        labeled: true,
-        run: { kind: "menu", menu: SHOW_MARKUP_MENU },
+        run: { kind: "menu", menu: MARKUP_OPTIONS_MENU },
         enabledWhen: whenRevisionView,
     },
 
