@@ -285,3 +285,30 @@ clips it; over a dialog's scrim, it shows.
 
 **Workaround.** The upload dialog's preview clips its viewer, as the file's
 page and the brand settings do theirs.
+
+## An exported PDF carries its fonts whole
+
+**Needed.** Larchmere's fact sheets and commentary as PDFs, made from the Word
+documents the generator writes (`seed/generate/`), small enough to keep in the
+repo and to send a buyer.
+
+**Offered.** udoc-node's `exportToBytes("pdf")` embeds each font it uses whole,
+not the glyphs the document uses: a two-page fact sheet came to 720 KB, nearly
+all of it Carlito and Caladea, each embedded in full (`pdffonts` says embedded,
+not subset), and the commentary, two pages with an italic too, to 1 MB.
+
+**Workaround.** Word saves them as PDF instead, as Larchmere's marketing would,
+embedding only the glyphs they use: 250 to 270 KB a fact sheet.
+
+## A formula with no stored value shows empty
+
+**Needed.** Larchmere's performance workbook, generated with openpyxl, its
+figures formulas over the monthly returns, so that a reader can follow them.
+
+**Offered.** A workbook's formula cell keeps its formula and the value it last
+came to. openpyxl, like other libraries that write formulas, keeps no value,
+and udoc-node renders such a cell empty: udoc doesn't work it out. Excel
+calculates it on opening.
+
+**Workaround.** The generator works out each formula's value itself and keeps
+it beside the formula, as Excel does when it saves (`seed/generate/workbook.py`).

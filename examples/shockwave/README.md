@@ -40,6 +40,7 @@ at http://127.0.0.1:5281.
 | `SHOCKWAVE_DATA`     | `data/` | The database, and the documents udoc-server keeps.                                           |
 | `UDOC_LICENSE`       | none    | A docMentis license key for the backend's udoc-node; without one, usage is free and metered. |
 | `UDOC_DOMAIN`        | none    | The domain that license is issued for.                                                       |
+| `SHOCKWAVE_SEED`     | all     | `users` seeds Larchmere and its users alone, with no library, collections or deal room.      |
 
 To start over from the seed, stop shockwave and run `npm run shockwave:clear`
 from the repo's root (`npm run clear` here), which deletes its data.
@@ -60,6 +61,35 @@ the demo's password, `shockwave`:
 A database from before one of these users gets them the next time shockwave
 starts.
 
+## What it starts with
+
+Once the backend's up, Larchmere's people fill an empty database through the
+app's own routes, as they would by hand (`server/seedContent.ts`), in about 20
+seconds:
+
+- **Library.** Maya uploads eight files in five folders: the Global Equity pitch
+  book and the firm overview (PowerPoint), three strategies' fact sheets and the
+  quarter's market commentary (PDF), the Global Equity due diligence
+  questionnaire (Word), and the performance and fees workbook (Excel). Colin
+  approves six, which Maya publishes; he returns the infrastructure fact sheet
+  with a note, and the commentary waits for his review.
+- **Collections.** Sam arranges what's published in two, the Global Equity Pitch
+  Kit and Firm and Fixed Income, with how to use each file.
+- **Deal room.** Ryan prepares one with Paula for Calderwood County ERS's global
+  equity search, from the pitch kit, its questionnaire renamed as the RFP
+  response, and puts the pitch book and the fact sheet on its frontstage. No
+  buyer has visited: open its link to be one.
+
+Larchmere, its strategies, people, indices and figures are made up, and each
+file says so. The files are in `seed/larchmere/files/`, made by
+`seed/generate/`: Python (python-pptx, python-docx and openpyxl) writes the
+decks, the documents and the workbook from one set of figures, and Microsoft
+Word saves the fact sheets and the commentary as PDF, as Larchmere's marketing
+would. To change them, edit the generator and run
+`node seed/generate/generate.mjs` here, on a Mac with Word, and with the
+packages built. A seed stopped part way says so each time shockwave starts, until its
+data's cleared.
+
 ## How it's laid out
 
 | Path      | What                                             |
@@ -67,7 +97,7 @@ starts.
 | `server/` | The backend: Fastify, and SQLite (`node:sqlite`) |
 | `web/`    | The frontend: React, and React Router            |
 | `shared/` | The API's types, which both import               |
-| `seed/`   | The seed's files: Larchmere's logo               |
+| `seed/`   | The seed's files: Larchmere's logo, and library  |
 
 `npm run test:isolation`, here, attacks each tenant with another: the real backend,
 on data of its own, with no browser. Run it after a change to the data or the routes.

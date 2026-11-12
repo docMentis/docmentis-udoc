@@ -20,7 +20,7 @@ import { tenantRoutes } from "./routes/tenants.ts";
 import { thumbnailRoutes } from "./routes/thumbnails.ts";
 import { versionRoutes } from "./routes/versions.ts";
 import { createAccess } from "./scope.ts";
-import { seed } from "./seed.ts";
+import { seed, seedContent } from "./seed.ts";
 import { createUdoc } from "./udoc.ts";
 
 if (config.webDir && !existsSync(config.webDir)) {
@@ -71,8 +71,19 @@ console.log(
         ? `shockwave: open ${origin}`
         : `shockwave: backend at ${origin}; open the pages Vite serves, at http://localhost:${config.webPort}`,
 );
+// The seed's library imports through udoc-server, so it waits for the server.
+let stopping = false;
+seedContent(app, db).catch((error: unknown) =>
+    console.error(
+        "shockwave: seeding Larchmere's library stopped. To seed it again, stop shockwave and run " +
+            "`npm run shockwave:clear` from the repo's root.",
+        // Stopped by stopping shockwave, it needs no more said.
+        ...(stopping ? [] : [error]),
+    ),
+);
 
 async function stop(): Promise<void> {
+    stopping = true;
     await app.close();
     await udoc.close();
     db.close();

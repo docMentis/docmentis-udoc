@@ -12,6 +12,13 @@ export const config = {
     webPort: Number(process.env.SHOCKWAVE_WEB_PORT ?? 5280),
     /** The database: deleting it starts over from the seed. */
     dataDir: process.env.SHOCKWAVE_DATA ?? join(home, "data"),
+    /**
+     * What the seed gives an empty database: Larchmere and its users, and once the
+     * server's up, a library, collections and a deal room; or with
+     * `SHOCKWAVE_SEED=users`, as `npm run test:isolation` runs it, Larchmere and
+     * its users alone.
+     */
+    seed: process.env.SHOCKWAVE_SEED === "users" ? ("users" as const) : ("all" as const),
     /** The built frontend, served by `npm start`; in development Vite serves it. */
     webDir: process.argv.includes("--serve-web") ? join(home, "dist") : undefined,
 };

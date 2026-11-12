@@ -86,6 +86,19 @@ fee tables (XLSX). Larchmere is made up, and so is everything about it: its
 funds, benchmarks and figures, with no real ticker or index. Each of its
 documents says so.
 
+An empty database starts with Larchmere's content, made as its people would
+make it: once the backend's up, it signs in as each of them and calls the app's
+own routes (`server/seedContent.ts`). Maya uploads a pitch book, a firm
+overview, three fact sheets, a commentary, a due diligence questionnaire and a
+performance workbook; Colin approves most, returns one with a note and has one
+waiting; Maya publishes what's approved; Sam arranges two collections; and Ryan
+prepares a deal room with Paula and puts it on its frontstage. So every page
+and every persona's Home has something real on it, and what's seeded is what
+the app makes. A buyer's visit isn't seeded: a frontstage's activity is what its
+visitors do. The files are generated, from one set of made-up figures, by
+`seed/generate/`, and committed: Python writes the Office files, and Word saves
+the fact sheets and the commentary as PDF, as Larchmere's marketing would.
+
 Its users see the app in its brand, as a tenant's do: its logo, a square icon,
 and its name lead the header, the logo kept with the tenant and served to its
 users alone (`/api/tenants/:id/logo`). An admin replaces it in Settings, and

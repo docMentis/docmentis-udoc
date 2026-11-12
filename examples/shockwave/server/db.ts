@@ -339,6 +339,11 @@ const MIGRATIONS = [
     `
     ALTER TABLE versions ADD COLUMN review_branch TEXT;
     `,
+    // A tenant the seed makes waits, `seed_pending`, for the library, collections and
+    // deal room the seed fills it with once the server's up (`server/seed.ts`).
+    `
+    ALTER TABLE tenants ADD COLUMN seed_pending INTEGER NOT NULL DEFAULT 0;
+    `,
 ];
 
 /** SQLite's code for a `UNIQUE` constraint failing. */

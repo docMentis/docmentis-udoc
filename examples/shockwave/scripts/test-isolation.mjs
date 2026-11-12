@@ -66,7 +66,8 @@ const BASE = `http://127.0.0.1:${port}`;
 let backendOutput = "";
 const backend = spawn(process.execPath, ["--disable-warning=ExperimentalWarning", "server/main.ts"], {
     cwd: home,
-    env: { ...process.env, SHOCKWAVE_PORT: String(port), SHOCKWAVE_DATA: dataDir },
+    // Larchmere and its users alone: the test makes what it attacks.
+    env: { ...process.env, SHOCKWAVE_PORT: String(port), SHOCKWAVE_DATA: dataDir, SHOCKWAVE_SEED: "users" },
     stdio: ["ignore", "pipe", "pipe"],
 });
 backend.stdout.on("data", (chunk) => (backendOutput += chunk));
