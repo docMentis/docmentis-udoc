@@ -228,13 +228,15 @@ export type Action =
     | { type: "STOP_SLIDE_PREVIEW" }
     // Play the deck from slide `slide` (0-based), or from the first slide the
     // show shows when `null`, covering what `fill` says and with the presenter
-    // view as `presenterView` says, each else as Set Up Presentation has it
-    // (bumps `slideShowRequest`, which the slide show plays it on)
+    // view as `presenterView` says, each else as Set Up Presentation has it,
+    // and with nothing on its own screen ending it when `noExit` (bumps
+    // `slideShowRequest`, which the slide show plays it on)
     | {
           type: "START_SLIDE_SHOW";
           slide: number | null;
           fill?: SlideShowFill | undefined;
           presenterView?: boolean | undefined;
+          noExit?: boolean | undefined;
       }
     // End the slide show playing, or mark one ended
     | { type: "END_SLIDE_SHOW" }

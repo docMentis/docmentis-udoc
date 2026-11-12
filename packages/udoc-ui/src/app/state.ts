@@ -889,9 +889,16 @@ export interface UIState {
      * Bumps on every start of a slide show, so the shell's slide show plays the
      * deck from `slide` — its index in the deck, or `null` for the first slide
      * the show shows — covering what `fill` says, with PowerPoint's presenter
-     * view in a window of its own when `presenterView` says so.
+     * view in a window of its own when `presenterView` says so, and with
+     * nothing on its own screen ending it when `noExit` does.
      */
-    slideShowRequest: { slide: number | null; fill: SlideShowFill; presenterView: boolean; seq: number };
+    slideShowRequest: {
+        slide: number | null;
+        fill: SlideShowFill;
+        presenterView: boolean;
+        noExit: boolean;
+        seq: number;
+    };
     /**
      * Whether a slide show plays — from its start until it ends: by Escape, by
      * a click past its last slide, by the host's `endSlideShow`, or by
@@ -1214,7 +1221,7 @@ export const initialState: UIState = {
     refitSeq: 0,
     slidePreviewSeq: 0,
     slidePreviewing: false,
-    slideShowRequest: { slide: null, fill: "screen", presenterView: false, seq: 0 },
+    slideShowRequest: { slide: null, fill: "screen", presenterView: false, noExit: false, seq: 0 },
     slideShowPlaying: false,
     usePresenterView: false,
     slideShowFill: "screen",

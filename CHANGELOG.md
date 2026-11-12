@@ -32,6 +32,11 @@ listed once, by package. Its major and minor version are those of the
   Set Up Presentation has it. The earlier `startSlideShow(slide)` still works
   and is deprecated. The `translations` keys `slideShowSetup.showIn`,
   `slideShowSetup.browserWindow` and `slideShowSetup.inPlace` are new.
+- `SlideShowOptions.noExit` keeps the user from ending a slide show from its
+  own screen: Escape, and a click or a key past the last slide, do nothing.
+  A show that filled the screen covers the browser window once the user
+  leaves the full screen. The presenter view and `endSlideShow()` still end
+  it.
 
 #### Changed
 

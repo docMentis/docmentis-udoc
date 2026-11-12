@@ -401,6 +401,17 @@ export interface SlideShowOptions {
     fill?: SlideShowFill;
     /** Whether the presenter view opens beside the show, in a window of its own. */
     presenterView?: boolean;
+    /**
+     * Whether nothing on the show's own screen ends it: Escape, and a click
+     * or a key past its last slide, do nothing, and the black there reads
+     * "End of presentation" without "click to exit". The browser always lets
+     * Escape leave the full screen; a show that filled it then covers the
+     * browser window. The presenter view still ends it, as does
+     * {@link UDocBase.endSlideShow} — call it from a control of your own,
+     * since with `fill` `"window"` the user otherwise has no way out but
+     * leaving the page. Not one of Set Up Presentation's: default `false`.
+     */
+    noExit?: boolean;
 }
 
 /** A sheet of the open workbook, as {@link UDocBase.sheets} lists it. */
@@ -1823,12 +1834,13 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * Play the open deck as a slide show, as the Present tab's From
      * Beginning and From Current Slide do: a slide at a time, each slide's
      * transition and animations playing, stepped on by a click or a key and
-     * ended by Escape, from `options`' `slide`. A PDF plays alike, a page at
-     * a time. In place of a show playing; nothing for a document that is
-     * neither.
+     * ended by Escape — or, with `noExit`, only as that option says — from
+     * `options`' `slide`. A PDF plays alike, a page at a time. In place of a
+     * show playing; nothing for a document that is neither.
      *
      * It plays as `options` says, and as the Present tab's Set Up
-     * Presentation has it for what `options` leaves out. With `fill`
+     * Presentation has it for the `fill` and `presenterView` `options`
+     * leaves out. With `fill`
      * `"screen"`, as at first, it fills the screen — the one Display on
      * chose, where the screens are set up (Chrome's and Edge's) — and leaving
      * the full screen ends it; where the browser won't fill the screen, it
@@ -1854,8 +1866,9 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     /** @deprecated Pass the slide as {@link SlideShowOptions}' `slide`: `startSlideShow({ slide })`. */
     startSlideShow(slide?: number): void;
     startSlideShow(options?: SlideShowOptions | number): void {
-        const { slide, fill, presenterView } = typeof options === "number" ? { slide: options } : (options ?? {});
-        this.shell.startSlideShow(slide ?? null, { fill, presenterView });
+        const { slide, fill, presenterView, noExit } =
+            typeof options === "number" ? { slide: options } : (options ?? {});
+        this.shell.startSlideShow(slide ?? null, { fill, presenterView, noExit });
     }
 
     /** End the slide show playing, if one is, as Escape does. */

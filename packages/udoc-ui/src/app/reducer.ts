@@ -419,6 +419,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                     slide: action.slide,
                     fill: action.fill ?? state.slideShowFill,
                     presenterView: action.presenterView ?? state.usePresenterView,
+                    noExit: action.noExit ?? false,
                     seq: state.slideShowRequest.seq + 1,
                 },
                 slideShowPlaying: true,

@@ -407,10 +407,14 @@ export interface UIShell {
     setFullscreen: (fullscreen: boolean) => Promise<void>;
     /** Play the open deck from slide `slide`, or from the first slide the
      *  show shows when `null`, as `options` says, and as Set Up Presentation
-     *  has it for what they leave out. */
+     *  has it for the `fill` and `presenterView` they leave out. */
     startSlideShow: (
         slide: number | null,
-        options: { fill?: SlideShowFill | undefined; presenterView?: boolean | undefined },
+        options: {
+            fill?: SlideShowFill | undefined;
+            presenterView?: boolean | undefined;
+            noExit?: boolean | undefined;
+        },
     ) => void;
     /** End the slide show playing, if one is. */
     endSlideShow: () => void;
@@ -4511,8 +4515,8 @@ export function mountUIShell(
             if (fullscreen === (document.fullscreenElement === layout)) return Promise.resolve();
             return fullscreen ? layout.requestFullscreen() : document.exitFullscreen();
         },
-        startSlideShow: (slide, { fill, presenterView }) =>
-            store.dispatch({ type: "START_SLIDE_SHOW", slide, fill, presenterView }),
+        startSlideShow: (slide, { fill, presenterView, noExit }) =>
+            store.dispatch({ type: "START_SLIDE_SHOW", slide, fill, presenterView, noExit }),
         endSlideShow: () => store.dispatch({ type: "END_SLIDE_SHOW" }),
         setScrollMode: (mode) => {
             store.dispatch({ type: "SET_DEFAULT_SCROLL_MODE", mode });

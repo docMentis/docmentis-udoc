@@ -13,6 +13,11 @@
 // browser window. Leaving the full screen ends a show that filled it as it
 // started; one the button filled goes back to what it covered.
 //
+// A show the host started with no exit takes none on its own screen: Escape,
+// a step on past the black, and leaving the full screen end nothing — the
+// browser always lets Escape leave the full screen, so a show that filled it
+// then covers the browser window. The presenter view still ends it.
+//
 // Over the browser window, the stage stands in a frame the browser shows in
 // its top layer, as a popover: over the whole viewport, whatever the page
 // around the UI stacks, clips or transforms, while in the DOM it stays inside
@@ -112,6 +117,10 @@ interface Show {
     /** The place whose stage filled the screen as the show started, until it
      *  leaves the full screen: with the show on it, that ends the show. */
     filledAtStart: Place | null;
+    /** Whether nothing on the show's own screen ends it — Escape, a step on
+     *  past its last slide, leaving the full screen — but the presenter
+     *  view, the host, or another document still does. */
+    noExit: boolean;
     /** Whether the worker plays it: its start resolved. */
     started: boolean;
     /** The size last handed the show, device pixels. */
@@ -145,11 +154,17 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
     /**
      * Play the deck from slide `slide` — the first slide it shows when `null`
      * — covering what `fill` says, with the presenter view when `presenting`,
-     * in place of any show playing. Called in the press that starts it, or
-     * just after: the browser fills the screen, or opens a window, only in
-     * answer to one, for a few seconds after it.
+     * and, with `noExit`, nothing on its own screen ending it, in place of any
+     * show playing. Called in the press that starts it, or just after: the
+     * browser fills the screen, or opens a window, only in answer to one, for
+     * a few seconds after it.
      */
-    async function play(slide: number | null, presenting: boolean, fill: SlideShowFill): Promise<void> {
+    async function play(
+        slide: number | null,
+        presenting: boolean,
+        fill: SlideShowFill,
+        noExit: boolean,
+    ): Promise<void> {
         if (!store || !host) return;
         takeDown(false);
         const state = store.getState();
@@ -179,7 +194,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             own = ownPlace(PRESENTER_WINDOW, features, i18n.t("presenter.label"));
         };
         if (!audience) openOwn();
-        const current = begin(slide, place);
+        const current = begin(slide, place, noExit);
         const filled = full && (await fillScreen(current, audience, openOwn));
         // The screen not filled, the window not yet opened: opened now.
         openOwn();
@@ -280,8 +295,9 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
     }
 
     /** A show from `slide`, its surface standing on `place`'s stage: listening
-     *  to the place, and its window. */
-    function begin(slide: number | null, place: Place): Show {
+     *  to the place, and its window — with `noExit`, nothing on its own
+     *  screen ending it. */
+    function begin(slide: number | null, place: Place, noExit: boolean): Show {
         const surface = document.createElement("div");
         surface.className = "udoc-ui__slide-show";
         const canvas = document.createElement("canvas");
@@ -289,7 +305,9 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         canvas.setAttribute("aria-hidden", "true");
         const end = document.createElement("div");
         end.className = "udoc-ui__slide-show-end";
-        end.textContent = i18n.t("slideShow.end");
+        // The black past the last slide asks for the click that ends the show
+        // only where one does.
+        end.textContent = i18n.t(noExit ? "presenter.endOfShow" : "slideShow.end");
         end.hidden = true;
         const fillButton = document.createElement("button");
         fillButton.type = "button";
@@ -307,6 +325,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             presenterPlace: null,
             places: [],
             filledAtStart: null,
+            noExit,
             started: false,
             sent: { width: 0, height: 0 },
             slide: slide ?? 0,
@@ -329,14 +348,15 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
     function addPlace(current: Show, place: Place): void {
         current.places.push(place);
         const { stage, view } = place;
-        const onKey = keys(current);
+        const onKey = keys(current, place);
         const onPointerDown = (): void => stage.focus({ preventScroll: true });
         // Leaving the full screen ends a show that filled it as it started,
-        // standing on it still; else the stage is back over what it covered.
+        // standing on it still, but for one with no exit; else the stage is
+        // back over what it covered.
         const onFullscreenChange = (): void => {
             if (view.document.fullscreenElement !== stage && current.filledAtStart === place) {
                 current.filledAtStart = null;
-                if (current.place === place) {
+                if (current.place === place && !current.noExit) {
                     endShow();
                     return;
                 }
@@ -461,7 +481,7 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         slide: number | null,
     ): { canvas: HTMLCanvasElement; width: number; height: number; slide: Size } {
         const actions: PresenterActions = {
-            next: () => step(current),
+            next: () => step(current, true),
             previous: () => client.slideShowInput("previous"),
             end: endShow,
             swap: () => swap(current),
@@ -519,14 +539,19 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
         };
     }
 
-    /** Step `current` on: past the black after the last slide, out of the show. */
-    function step(current: Show): void {
-        if (current.ended) endShow();
-        else client.slideShowInput("next");
+    /** Step `current` on: past the black after the last slide, out of the
+     *  show, where it `exits` there. */
+    function step(current: Show, exits: boolean): void {
+        if (!current.ended) client.slideShowInput("next");
+        else if (exits) endShow();
     }
 
-    /** `current`'s keys, as it takes them wherever they are pressed. */
-    function keys(current: Show): (ev: KeyboardEvent) => void {
+    /** `current`'s keys, as it takes them on `place`'s stage. Those that end
+     *  it do on the presenter view's, and on the show's but for one with no
+     *  exit. */
+    function keys(current: Show, place: Place): (ev: KeyboardEvent) => void {
+        // The presenter view's place now: Swap Screens trades it.
+        const exits = (): boolean => !current.noExit || place === current.presenterPlace;
         return (ev) => {
             // The show's keys are the show's: none reaches the UI's shortcuts.
             ev.stopPropagation();
@@ -542,8 +567,9 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             if (key === "Enter" && typed !== "") {
                 const slide = Number(typed) - 1;
                 if (slide >= 0) client.slideShowInput({ goToSlide: slide });
-            } else if (key === "Escape") endShow();
-            else if (NEXT_KEYS.has(key)) step(current);
+            } else if (key === "Escape") {
+                if (exits()) endShow();
+            } else if (NEXT_KEYS.has(key)) step(current, exits());
             else if (PREVIOUS_KEYS.has(key)) client.slideShowInput("previous");
             else if (key === "Home") client.slideShowInput("firstSlide");
             else if (key === "End") client.slideShowInput("lastSlide");
@@ -574,12 +600,12 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
             const dy = ev.clientY - down.y;
             down = null;
             if (ev.pointerType !== "mouse" && Math.abs(dx) > SWIPE_PX && Math.abs(dx) > Math.abs(dy)) {
-                if (dx < 0) step(current);
+                if (dx < 0) step(current, !current.noExit);
                 else client.slideShowInput("previous");
                 return;
             }
             if (current.ended) {
-                endShow();
+                if (!current.noExit) endShow();
                 return;
             }
             const rect = canvas.getBoundingClientRect();
@@ -660,8 +686,8 @@ export function createSlideShow(i18n: I18n, client: WorkerClient) {
                 s,
                 (st) => st.slideShowRequest.seq,
                 () => {
-                    const { slide, fill, presenterView } = s.getState().slideShowRequest;
-                    void play(slide, presenterView, fill);
+                    const { slide, fill, presenterView, noExit } = s.getState().slideShowRequest;
+                    void play(slide, presenterView, fill, noExit);
                 },
                 { phase: "effect" },
             ),
