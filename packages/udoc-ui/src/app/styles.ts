@@ -3777,8 +3777,9 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-toolbar__menu-item:disabled .udoc-toolbar__menu-icon,
     .udoc-ui-root .udoc-toolbar__menu-item:disabled .udoc-toolbar__menu-caret {
     }
-    /* A divider above the item: separates the z-order moves from grouping. */
-    .udoc-ui-root .udoc-toolbar__menu-item--divider {
+    /* A divider above the item: separates the z-order moves from grouping, and
+   the More menu's panels from its other actions. */
+    .udoc-ui-root :is(.udoc-toolbar__menu-item--divider, .udoc-menu__item--divider) {
         margin-top: 5px;
         border-top: 1px solid var(--udoc-color-outline-variant);
         padding-top: 9px;

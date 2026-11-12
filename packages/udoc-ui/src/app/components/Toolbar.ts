@@ -310,11 +310,14 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
             const fsLabel = i18n.t(slice.isFullscreen ? "toolbar.exitFullscreen" : "toolbar.fullscreen");
 
             type Item = { icon: string; label: string; action: () => void };
-            const items: Item[] = [];
+            // The panels the menu opens come first, and a divider parts them
+            // from the actions below when both show.
+            const panelItems: Item[] = [];
             if (slice.rightPanelVisible && !slice.disabledPanels.has("search"))
-                items.push({ icon: ICON_SEARCH, label: i18n.t("toolbar.search"), action: onSearchClick });
+                panelItems.push({ icon: ICON_SEARCH, label: i18n.t("toolbar.search"), action: onSearchClick });
             if (slice.rightPanelVisible && !slice.disabledPanels.has("comments"))
-                items.push({ icon: ICON_COMMENTS, label: i18n.t("toolbar.comments"), action: onCommentsClick });
+                panelItems.push({ icon: ICON_COMMENTS, label: i18n.t("toolbar.comments"), action: onCommentsClick });
+            const items: Item[] = [...panelItems];
             if (slice.printButtonVisible)
                 items.push({ icon: ICON_PRINT, label: i18n.t("toolbar.print"), action: onPrintClick });
             if (slice.downloadButtonVisible)
@@ -329,8 +332,9 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
             // The developer entry, when the host shows it — opens the diagnostics dialog.
             if (slice.developerButtonVisible)
                 items.push({ icon: ICON_CODE, label: i18n.t("toolbar.developer"), action: () => devModal.open() });
-            for (const item of items) {
+            for (const [i, item] of items.entries()) {
                 const menuItem = createMenuItem({ icon: item.icon, text: item.label, role: "menuitem" });
+                if (i > 0 && i === panelItems.length) menuItem.classList.add("udoc-menu__item--divider");
                 menuItem.addEventListener("click", (e) => {
                     e.stopPropagation();
                     appMenu.close();
