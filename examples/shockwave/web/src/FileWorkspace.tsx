@@ -6,8 +6,8 @@
 // version is reviewed in a branch of its own: its reviewer comments there while it
 // waits on them, and once they decide, it shows what they wrote; until then, anyone
 // else sees the version as it was submitted.
-// Beside the card, a card of the app's own on the file, its tabs each what a feature
-// knows of it, folded to a strip with the button that unfolds it.
+// Inside the card, beside what's shown, a panel of the app's own on the file, its
+// tabs each what a feature knows of it, which the title bar's button shows or hides.
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useSearchParams } from "react-router";
@@ -154,105 +154,106 @@ export function FileWorkspace({
     return (
         <div className="page file-page">
             {breadcrumb}
-            <div className={panel ? "file-columns file-columns-panel" : "file-columns file-columns-rail"}>
-                <section className="document-card">
-                    <header className="document-title-bar">
-                        <div className="document-title">
-                            <h1>{asset.name}</h1>
-                            <p>
-                                {shown ? `Version ${shown.number}` : "Working copy"} · {about}
+            <section className="document-card">
+                <header className="document-title-bar">
+                    <div className="document-title">
+                        <h1>{asset.name}</h1>
+                        <p>
+                            {shown ? `Version ${shown.number}` : "Working copy"} · {about}
+                        </p>
+                        {connection === "interrupted" && (
+                            <p className="error" role="status">
+                                Connection lost. {kept} are kept here until it's back.
                             </p>
-                            {connection === "interrupted" && (
-                                <p className="error" role="status">
-                                    Connection lost. {kept} are kept here until it's back.
-                                </p>
-                            )}
-                            {connection === "failed" && (
-                                <p className="error" role="alert">
-                                    {kept} aren't being saved. Reload the page to try again.
-                                </p>
-                            )}
-                        </div>
-                        <div className="document-actions">
-                            {edits && !shown && (
-                                <>
-                                    <button
-                                        type="button"
-                                        className="button"
-                                        onClick={() => setParams(editing ? {} : { edit: "1" })}
-                                    >
-                                        {editing ? "Done" : "Edit"}
-                                    </button>
-                                    {/* A version saved while edits can't reach the server would lack them. */}
-                                    <button
-                                        type="button"
-                                        className="button primary"
-                                        disabled={editing && editingState !== "joined"}
-                                        onClick={() => setTask("save")}
-                                    >
-                                        Save version
-                                    </button>
-                                </>
-                            )}
-                            {edits && shown?.status === "draft" && (
-                                <button
-                                    type="button"
-                                    className="button primary"
-                                    onClick={() => setTask({ step: "submit", version: shown })}
-                                >
-                                    Submit for review
-                                </button>
-                            )}
-                            {(edits || isReviewer) && shown?.status === "submitted" && reassignable.length > 0 && (
+                        )}
+                        {connection === "failed" && (
+                            <p className="error" role="alert">
+                                {kept} aren't being saved. Reload the page to try again.
+                            </p>
+                        )}
+                    </div>
+                    <div className="document-actions">
+                        {edits && !shown && (
+                            <>
                                 <button
                                     type="button"
                                     className="button"
-                                    onClick={() => setTask({ step: "reassign", version: shown })}
+                                    onClick={() => setParams(editing ? {} : { edit: "1" })}
                                 >
-                                    Reassign
+                                    {editing ? "Done" : "Edit"}
                                 </button>
-                            )}
-                            {mayReview && shown?.status === "submitted" && (
-                                <>
-                                    <button
-                                        type="button"
-                                        className="button"
-                                        disabled={unsaved}
-                                        onClick={() => setTask({ step: "return", version: shown })}
-                                    >
-                                        Return
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="button primary"
-                                        disabled={unsaved}
-                                        onClick={() => setTask({ step: "approve", version: shown })}
-                                    >
-                                        Approve
-                                    </button>
-                                </>
-                            )}
-                            {edits && submitter && shown && shown.status !== "submitted" && !dealtWith && (
-                                <button
-                                    type="button"
-                                    className="button"
-                                    onClick={() => setTask({ step: "dismiss", version: shown })}
-                                >
-                                    Dismiss
-                                </button>
-                            )}
-                            {edits && publishes && shown?.status === "approved" && !isPublished && (
+                                {/* A version saved while edits can't reach the server would lack them. */}
                                 <button
                                     type="button"
                                     className="button primary"
-                                    onClick={() => setTask({ step: "publish", version: shown })}
+                                    disabled={editing && editingState !== "joined"}
+                                    onClick={() => setTask("save")}
                                 >
-                                    Publish
+                                    Save version
                                 </button>
-                            )}
-                            {menu && <ActionsMenu label={`Actions for ${asset.name}`} items={menu} />}
-                        </div>
-                    </header>
+                            </>
+                        )}
+                        {edits && shown?.status === "draft" && (
+                            <button
+                                type="button"
+                                className="button primary"
+                                onClick={() => setTask({ step: "submit", version: shown })}
+                            >
+                                Submit for review
+                            </button>
+                        )}
+                        {(edits || isReviewer) && shown?.status === "submitted" && reassignable.length > 0 && (
+                            <button
+                                type="button"
+                                className="button"
+                                onClick={() => setTask({ step: "reassign", version: shown })}
+                            >
+                                Reassign
+                            </button>
+                        )}
+                        {mayReview && shown?.status === "submitted" && (
+                            <>
+                                <button
+                                    type="button"
+                                    className="button"
+                                    disabled={unsaved}
+                                    onClick={() => setTask({ step: "return", version: shown })}
+                                >
+                                    Return
+                                </button>
+                                <button
+                                    type="button"
+                                    className="button primary"
+                                    disabled={unsaved}
+                                    onClick={() => setTask({ step: "approve", version: shown })}
+                                >
+                                    Approve
+                                </button>
+                            </>
+                        )}
+                        {edits && submitter && shown && shown.status !== "submitted" && !dealtWith && (
+                            <button
+                                type="button"
+                                className="button"
+                                onClick={() => setTask({ step: "dismiss", version: shown })}
+                            >
+                                Dismiss
+                            </button>
+                        )}
+                        {edits && publishes && shown?.status === "approved" && !isPublished && (
+                            <button
+                                type="button"
+                                className="button primary"
+                                onClick={() => setTask({ step: "publish", version: shown })}
+                            >
+                                Publish
+                            </button>
+                        )}
+                        {menu && <ActionsMenu label={`Actions for ${asset.name}`} items={menu} />}
+                        {panelToggle}
+                    </div>
+                </header>
+                <div className={panel ? "document-body document-body-panel" : "document-body"}>
                     <div className="document-viewer">
                         {editing ? (
                             <DocumentEditor
@@ -272,60 +273,56 @@ export function FileWorkspace({
                             />
                         )}
                     </div>
-                </section>
-                {!panel && (
-                    <aside className="document-panel" aria-label="Side panel">
-                        <div className="document-tabs">{panelToggle}</div>
-                    </aside>
-                )}
-                {panel && (
-                    <aside id="document-panel" className="document-panel" aria-label="Side panel">
-                        <div className="document-tabs">
-                            <div className="document-tablist" role="tablist">
-                                <button
-                                    type="button"
-                                    role="tab"
-                                    id="document-tab-versions"
-                                    aria-selected={tab === "versions"}
-                                    aria-controls="document-tab-panel"
-                                    onClick={() => setTab("versions")}
-                                >
-                                    Versions
-                                </button>
-                                <button
-                                    type="button"
-                                    role="tab"
-                                    id="document-tab-details"
-                                    aria-selected={tab === "details"}
-                                    aria-controls="document-tab-panel"
-                                    onClick={() => setTab("details")}
-                                >
-                                    Details
-                                </button>
+                    {panel && (
+                        <aside id="document-panel" className="document-panel" aria-label="Side panel">
+                            <div className="document-tabs">
+                                <div className="document-tablist" role="tablist">
+                                    <button
+                                        type="button"
+                                        role="tab"
+                                        id="document-tab-versions"
+                                        aria-selected={tab === "versions"}
+                                        aria-controls="document-tab-panel"
+                                        onClick={() => setTab("versions")}
+                                    >
+                                        Versions
+                                    </button>
+                                    <button
+                                        type="button"
+                                        role="tab"
+                                        id="document-tab-details"
+                                        aria-selected={tab === "details"}
+                                        aria-controls="document-tab-panel"
+                                        onClick={() => setTab("details")}
+                                    >
+                                        Details
+                                    </button>
+                                </div>
                             </div>
-                            {panelToggle}
-                        </div>
-                        <div
-                            id="document-tab-panel"
-                            className="document-tab-panel"
-                            role="tabpanel"
-                            aria-labelledby={`document-tab-${tab}`}
-                        >
-                            {tab === "versions" && (
-                                <VersionList
-                                    versions={versions}
-                                    publishedVersion={asset.publishedVersion}
-                                    publishedLabel={publishedLabelOf(asset)}
-                                    shown={shown?.number ?? null}
-                                    workingCopy={edits}
-                                    onShow={(number) => setParams(number === null ? {} : { version: String(number) })}
-                                />
-                            )}
-                            {tab === "details" && details}
-                        </div>
-                    </aside>
-                )}
-            </div>
+                            <div
+                                id="document-tab-panel"
+                                className="document-tab-panel"
+                                role="tabpanel"
+                                aria-labelledby={`document-tab-${tab}`}
+                            >
+                                {tab === "versions" && (
+                                    <VersionList
+                                        versions={versions}
+                                        publishedVersion={asset.publishedVersion}
+                                        publishedLabel={publishedLabelOf(asset)}
+                                        shown={shown?.number ?? null}
+                                        workingCopy={edits}
+                                        onShow={(number) =>
+                                            setParams(number === null ? {} : { version: String(number) })
+                                        }
+                                    />
+                                )}
+                                {tab === "details" && details}
+                            </div>
+                        </aside>
+                    )}
+                </div>
+            </section>
             {children}
             {task === "save" && (
                 <VersionDialog

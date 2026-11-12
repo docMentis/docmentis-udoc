@@ -147,38 +147,36 @@ export function FrontstageFilePage() {
                     <span>{file.name}</span>
                 </nav>
                 <ActivityNotice />
-                <div className="file-columns">
-                    <section className="document-card">
-                        <header className="document-title-bar">
-                            <div className="document-title">
-                                <h1>{file.name}</h1>
-                                <p>{file.description ?? typeLabel(file.format)}</p>
-                            </div>
-                        </header>
-                        <div className="document-viewer">
-                            <DocumentViewer
-                                packagePath={file.package}
-                                colors={stage.from.viewerColors}
-                                readsOnly
-                                comments="hidden"
-                                onOpened={({ format, ms }) => {
-                                    reading.current ??= startReading(token!, file.id, onScreen.current);
-                                    announceMoment({ kind: "document:opened", where: "file", format, ms });
-                                }}
-                                onClosed={() => {
-                                    reading.current?.stop();
-                                    reading.current = undefined;
-                                    announceMoment({ kind: "document:closed", where: "file" });
-                                }}
-                                onPages={(pages) => {
-                                    onScreen.current = pages;
-                                    reading.current?.see(pages);
-                                }}
-                                onSlideShow={(playing) => reading.current?.presenting(playing)}
-                            />
+                <section className="document-card">
+                    <header className="document-title-bar">
+                        <div className="document-title">
+                            <h1>{file.name}</h1>
+                            <p>{file.description ?? typeLabel(file.format)}</p>
                         </div>
-                    </section>
-                </div>
+                    </header>
+                    <div className="document-viewer">
+                        <DocumentViewer
+                            packagePath={file.package}
+                            colors={stage.from.viewerColors}
+                            readsOnly
+                            comments="hidden"
+                            onOpened={({ format, ms }) => {
+                                reading.current ??= startReading(token!, file.id, onScreen.current);
+                                announceMoment({ kind: "document:opened", where: "file", format, ms });
+                            }}
+                            onClosed={() => {
+                                reading.current?.stop();
+                                reading.current = undefined;
+                                announceMoment({ kind: "document:closed", where: "file" });
+                            }}
+                            onPages={(pages) => {
+                                onScreen.current = pages;
+                                reading.current?.see(pages);
+                            }}
+                            onSlideShow={(playing) => reading.current?.presenting(playing)}
+                        />
+                    </div>
+                </section>
             </div>
         </main>
     );

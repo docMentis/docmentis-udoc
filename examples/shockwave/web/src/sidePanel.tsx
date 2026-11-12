@@ -1,12 +1,12 @@
-// The side panel beside a document: open, or folded to a strip, as this browser
-// remembers.
+// The side panel beside a document, in its card: shown, or hidden, as this
+// browser remembers.
 import { useState } from "react";
 
 import { PanelRightIcon } from "./icons";
 
 const PANEL_KEY = "shockwave.file.panel";
 
-/** Whether the side panel is open: unless this browser folded it. */
+/** Whether the side panel is shown: unless this browser hid it. */
 function savedPanel(): boolean {
     try {
         return localStorage.getItem(PANEL_KEY) !== "folded";
@@ -16,9 +16,9 @@ function savedPanel(): boolean {
 }
 
 /**
- * Whether the side panel is open, `show` to open or fold it, and `toggle`, the
- * button that does, for its top right, open or folded. The panel's open form has
- * the id `document-panel`.
+ * Whether the side panel is shown, `show` to show or hide it, and `toggle`, the
+ * icon button that does, for the card's title bar. The panel has the id
+ * `document-panel`.
  */
 export function useSidePanel() {
     const [open, setOpen] = useState(savedPanel);
@@ -36,7 +36,7 @@ export function useSidePanel() {
         <button
             type="button"
             className="icon-button"
-            aria-label={open ? "Fold the side panel" : "Unfold the side panel"}
+            aria-label={open ? "Hide the side panel" : "Show the side panel"}
             aria-expanded={open}
             aria-controls="document-panel"
             onClick={() => show(!open)}

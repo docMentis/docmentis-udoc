@@ -58,17 +58,17 @@ export function CollectionFilePage() {
                 <ChevronRightIcon />
                 <Link to={collectionPath(collection.id)}>{collection.name}</Link>
             </nav>
-            <div className={panel ? "file-columns file-columns-panel" : "file-columns file-columns-rail"}>
-                <section className="document-card">
-                    <header className="document-title-bar">
-                        <div className="document-title">
-                            <h1>{file.name}</h1>
-                            <p>
-                                Version {file.version} · {typeLabel(file.format)} · Published{" "}
-                                {formatDate(file.publishedAt)}
-                            </p>
-                        </div>
-                    </header>
+            <section className="document-card">
+                <header className="document-title-bar">
+                    <div className="document-title">
+                        <h1>{file.name}</h1>
+                        <p>
+                            Version {file.version} · {typeLabel(file.format)} · Published {formatDate(file.publishedAt)}
+                        </p>
+                    </div>
+                    <div className="document-actions">{panelToggle}</div>
+                </header>
+                <div className={panel ? "document-body document-body-panel" : "document-body"}>
                     <div className="document-viewer">
                         <DocumentViewer
                             documentId={file.documentId}
@@ -80,41 +80,35 @@ export function CollectionFilePage() {
                             onClosed={() => announceMoment({ kind: "document:closed", where: "file" })}
                         />
                     </div>
-                </section>
-                {!panel && (
-                    <aside className="document-panel" aria-label="Side panel">
-                        <div className="document-tabs">{panelToggle}</div>
-                    </aside>
-                )}
-                {panel && (
-                    <aside id="document-panel" className="document-panel" aria-label="Side panel">
-                        <div className="document-tabs">
-                            <h2 className="document-panel-title">Details</h2>
-                            {panelToggle}
-                        </div>
-                        <div className="document-tab-panel">
-                            {instructions && (
+                    {panel && (
+                        <aside id="document-panel" className="document-panel" aria-label="Side panel">
+                            <div className="document-tabs">
+                                <h2 className="document-panel-title">Details</h2>
+                            </div>
+                            <div className="document-tab-panel">
+                                {instructions && (
+                                    <div className="detail">
+                                        <span>How to use it</span>
+                                        <p>{instructions}</p>
+                                    </div>
+                                )}
                                 <div className="detail">
-                                    <span>How to use it</span>
-                                    <p>{instructions}</p>
+                                    <span>Type</span>
+                                    <p>{typeLabel(file.format)}</p>
                                 </div>
-                            )}
-                            <div className="detail">
-                                <span>Type</span>
-                                <p>{typeLabel(file.format)}</p>
+                                <div className="detail">
+                                    <span>Version</span>
+                                    <p>{file.version}</p>
+                                </div>
+                                <div className="detail">
+                                    <span>Published</span>
+                                    <p>{formatDateTime(file.publishedAt)}</p>
+                                </div>
                             </div>
-                            <div className="detail">
-                                <span>Version</span>
-                                <p>{file.version}</p>
-                            </div>
-                            <div className="detail">
-                                <span>Published</span>
-                                <p>{formatDateTime(file.publishedAt)}</p>
-                            </div>
-                        </div>
-                    </aside>
-                )}
-            </div>
+                        </aside>
+                    )}
+                </div>
+            </section>
         </div>
     );
 }

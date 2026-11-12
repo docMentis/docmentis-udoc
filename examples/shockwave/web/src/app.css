@@ -1706,10 +1706,11 @@ input {
 }
 
 /* A file's page: the path to its folder, over an elevated card that is the
-   document, its title bar over the viewer, which fills the rest; and beside
-   it, as tall, an elevated card of the app's own on the file, or folded, a
-   strip. The viewer rounds its own bottom corners into the card's, so the
-   card clips nothing, and the title bar's menu opens over the viewer. */
+   document, its title bar over what's shown, which fills the rest; and beside
+   that, inside the card behind a divider, a panel of the app's own on the file,
+   which the title bar's icon button shows or hides. The viewer rounds its own
+   bottom corners into the card's, so the card clips nothing, and the title
+   bar's menu opens over the viewer. */
 .file-page {
     height: 100%;
     gap: 16px;
@@ -1719,31 +1720,30 @@ input {
     margin: 0;
 }
 
-.file-columns {
-    display: grid;
-    flex: 1;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
-    min-height: 0;
-}
-
-.file-columns-panel {
-    grid-template-columns: minmax(0, 1fr) 320px;
-}
-
-.file-columns-rail {
-    grid-template-columns: minmax(0, 1fr) 56px;
-}
-
-.document-card,
-.document-panel {
+.document-card {
     display: flex;
+    flex: 1;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
     background: var(--md-sys-color-surface-container-low);
     border-radius: var(--md-sys-shape-corner-medium);
     box-shadow: var(--md-sys-elevation-1);
+}
+
+.document-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.document-panel {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 320px;
+    min-height: 0;
+    border-left: 1px solid var(--md-sys-color-outline-variant);
 }
 
 /* The card's headline: the file's name, title-medium, over its supporting
@@ -1778,9 +1778,15 @@ input {
 
 .document-viewer {
     flex: 1;
+    min-width: 0;
     min-height: 0;
     overflow: hidden;
     border-radius: 0 0 var(--md-sys-shape-corner-medium) var(--md-sys-shape-corner-medium);
+}
+
+/* With the panel beside it, the panel takes the card's bottom right corner. */
+.document-body-panel .document-viewer {
+    border-bottom-right-radius: 0;
 }
 
 /* What the title bar offers for what's shown: Material's buttons, side by side. */
@@ -1922,22 +1928,14 @@ input {
     letter-spacing: var(--md-sys-typescale-body-small-tracking);
 }
 
-/* The side card's header: its primary tabs over their divider, and the
-   icon button that folds and unfolds it at their end. */
+/* The panel's header: its primary tabs over their divider, as high as the
+   viewer's toolbar beside it, its divider inside, so the two end on one line. */
 .document-tabs {
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    justify-content: space-between;
-    padding-right: 8px;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.file-columns-rail .document-tabs {
-    justify-content: center;
     height: 40px;
-    padding: 0;
-    border: 0;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .document-tablist {
@@ -1945,13 +1943,11 @@ input {
     align-self: stretch;
 }
 
-/* Where there's one thing to show and no tabs: its name, title-small, as high
-   as they are. */
+/* Where there's one thing to show and no tabs: its name, title-small. */
 .document-panel-title {
     padding: 0 16px;
     font: var(--md-sys-typescale-title-small);
     letter-spacing: var(--md-sys-typescale-title-small-tracking);
-    line-height: 40px;
 }
 
 .document-tab-panel {
@@ -2007,6 +2003,11 @@ input {
     height: 3px;
     border-radius: 3px 3px 0 0;
     background: var(--md-sys-color-primary);
+}
+
+/* In the panel's header, a tab fills it, down to the divider. */
+.document-tabs [role="tab"] {
+    height: 100%;
 }
 
 /* Settings: its pages as primary tabs under its title, over their divider; a
@@ -2156,6 +2157,14 @@ input {
 .viewer[data-primary="brand"] .udoc-ui-root {
     --udoc-color-primary: var(--md-sys-color-primary);
     --udoc-color-on-primary: var(--md-sys-color-on-primary);
+}
+
+/* The viewer's dividers in the app's, whatever its colors, so its toolbar's
+   meets the side panel's beside it; more contrast keeps the viewer's own. */
+@media (prefers-contrast: no-preference) {
+    .viewer .udoc-ui-root {
+        --udoc-color-outline-variant: var(--md-sys-color-outline-variant);
+    }
 }
 
 /* The viewer's colors, chosen: segmented buttons for each, a swatch each
