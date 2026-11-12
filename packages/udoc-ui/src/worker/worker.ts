@@ -261,7 +261,8 @@ let defaultZoom = 1;
 // the host's, from `setDefaultScrollMode`. `null` keeps the doc type's.
 let defaultScrollMode: ScrollMode | null = null;
 // What a word document's tracked changes show, the host's or the Review tab's,
-// from `setRevisionView`. `null` leaves each document to what it asks for.
+// from `setRevisionView`. `null` leaves each document to what it asks for (see
+// `openingRevisionView`).
 let chosenRevisionView: RevisionView | null = null;
 
 // Set if `render_frame` ever throws: the wasm session is then poisoned (an
@@ -3145,6 +3146,13 @@ function layoutOf(s: WasmSession, v: number = VIEWER): DocumentLayout {
     };
 }
 
+/** What a word document opens showing with no view chosen: what it asks for,
+ *  its markup shown simply — the final version, a bar beside what changed — as
+ *  Word opens one, where it asks for its markup shown. */
+function openingRevisionView(asked: RevisionView): RevisionView {
+    return asked.mode === "allMarkup" ? { ...asked, mode: "simpleMarkup" } : asked;
+}
+
 /** Whether `s` holds an open word document, whose tracked changes a view shows. */
 function showsRevisions(s: WasmSession | null): s is WasmSession {
     return s !== null && s.docType() === "wordprocessing" && !s.needsPassword();
@@ -3157,7 +3165,11 @@ function showsRevisions(s: WasmSession | null): s is WasmSession {
  * once `authenticate` unlocks it.
  */
 function openedLayout(s: WasmSession): DocumentLayout {
-    if (chosenRevisionView !== null && showsRevisions(s)) s.wordprocessing.setRevisionView(chosenRevisionView);
+    if (showsRevisions(s)) {
+        const asked = s.wordprocessing.revisionView();
+        const view = chosenRevisionView ?? openingRevisionView(asked);
+        if (view !== asked) s.wordprocessing.setRevisionView(view);
+    }
     const layout = layoutOf(s);
     // The doc type drives the host's default fit, and the source format is
     // what saving back means; read both off the freshly-opened session and

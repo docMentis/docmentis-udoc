@@ -488,6 +488,9 @@ export interface ToolbarTab<K extends string = MessageKey> {
     /** The feature the tab's commands need. A session not entitled to it does
      *  not see the tab. */
     feature?: Feature;
+    /** The commands the tab shows with their labels beside their icons, where
+     *  other tabs show them as icons alone — the Review tab's New Comment. */
+    labeled?: readonly string[];
 }
 
 /**
@@ -1014,7 +1017,7 @@ export interface UIState {
     /** The view the open word document opened on, or `null` with none open. Read
      *  after the document opens. */
     openedRevisionView: RevisionView | null;
-    /** Whether the Review tab's Track Changes is on — on to start, and kept
+    /** Whether the Review tab's Track Changes is on — off to start, and kept
      *  across documents, as {@link revisionView} is. A word document's edits
      *  aren't tracked yet, so all it changes is what its tracked changes show:
      *  turned on, all of their markup; turned off, none. */
@@ -1239,7 +1242,7 @@ export const initialState: UIState = {
     wordprocessingView: null,
     revisionView: null,
     openedRevisionView: null,
-    trackChanges: true,
+    trackChanges: false,
     notesOpen: false,
     notesHeight: null,
     formulaBarVisible: true,

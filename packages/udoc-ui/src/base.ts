@@ -136,9 +136,10 @@ export interface UDocOptions {
      *  for the next word document. */
     wordprocessingView?: WordprocessingView;
     /** What a word document's tracked changes show. Each opens on it. Default:
-     *  none, so each opens on what it asks for: its changes marked, unless saved
-     *  with markup off. {@link UDocBase.setRevisionView} and the Review tab choose
-     *  one from then on. */
+     *  none, so each opens on what it asks for: Simple Markup, the final version
+     *  with a bar beside each change, unless saved with markup off.
+     *  {@link UDocBase.setRevisionView} and the Review tab choose one from then
+     *  on. */
     revisionView?: RevisionView;
     /** Show a workbook's formula bar above its grid: the active cell's
      *  reference and its contents, which in edit mode it edits. Default

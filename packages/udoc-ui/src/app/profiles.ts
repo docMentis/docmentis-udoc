@@ -112,13 +112,14 @@ export const VIEW_TAB_ID = "view";
 
 /** A word document's Review tab: Track Changes, which version of its tracked
  *  changes shows, which of them are shown as such, and New Comment, on the text
- *  selected — a comment is an annotation, so the tab is the same in view mode
- *  and edit mode. */
+ *  selected, named beside its icon — a comment is an annotation, so the tab is
+ *  the same in view mode and edit mode. */
 export const REVIEW_TAB: ToolbarTab = {
     id: "review",
     label: "ribbon.review",
     icon: ICON_TAB_REVIEW,
     commands: ["trackChanges", "revisionView", "markupOptions", "newComment"],
+    labeled: ["newComment"],
 };
 
 /** The ids of the tabs whose commands are never edits — every doc type's

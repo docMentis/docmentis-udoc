@@ -1115,8 +1115,8 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: whenReady,
     },
 
-    // Review tab — Track Changes, on to start: until a word document's edits
-    // are tracked, it shows all of their markup on and none off.
+    // Review tab — Track Changes, off to start: until a word document's edits
+    // are tracked, turning it on shows all of their markup, and off none.
     trackChanges: {
         id: "trackChanges",
         label: "command.trackChanges",

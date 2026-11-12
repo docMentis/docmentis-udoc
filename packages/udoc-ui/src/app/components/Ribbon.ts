@@ -788,12 +788,12 @@ export function createRibbon(
         // A tool is either a dropdown button (opens a menu / shape picker) or a
         // plain button — both are the shared controls, tagged with the command id
         // for the per-render enablement/armed pass.
-        const cmdButton = (def: CommandDef<string>): HTMLElement => {
+        const cmdButton = (def: CommandDef<string>, labeled: boolean): HTMLElement => {
             const label = labelOf(def.label);
             if (def.run.kind === "menu") {
                 const items = def.run.menu;
                 const dd = createDropdownButton(
-                    { icon: def.icon, label, ...(def.labeled && { text: label }) },
+                    { icon: def.icon, label, ...(labeled && { text: label }) },
                     { menuLabel: label, menuRole: "menu", onOpen: () => fillMenu(dd, items) },
                 );
                 dd.trigger.dataset.command = def.id;
@@ -810,7 +810,7 @@ export function createRibbon(
             if (def.run.kind === "armPicker") {
                 const options = def.run.options;
                 const dd = createDropdownButton(
-                    { icon: def.icon, label, ...(def.labeled && { text: label }) },
+                    { icon: def.icon, label, ...(labeled && { text: label }) },
                     { menuLabel: label, menuRole: "menu", onOpen: () => fillShapes(dd, options) },
                 );
                 dd.trigger.dataset.command = def.id;
@@ -820,7 +820,7 @@ export function createRibbon(
             if (def.run.kind === "armGallery" || def.run.kind === "gallery") {
                 const run = def.run;
                 const dd = createDropdownButton(
-                    { icon: def.icon, label, ...(def.labeled && { text: label }) },
+                    { icon: def.icon, label, ...(labeled && { text: label }) },
                     { menuLabel: label, menuRole: "menu", onOpen: () => fillGallery(dd, run) },
                 );
                 dd.trigger.dataset.command = def.id;
@@ -870,11 +870,12 @@ export function createRibbon(
                 dropdowns.push(dd);
                 return dd.el;
             }
-            // Icon-only, its label in the tooltip, unless it asks to show it.
+            // Icon-only, its label in the tooltip, unless it or its tab asks to
+            // show it.
             const btn = createButton({
                 icon: def.icon,
                 label,
-                ...(def.labeled && { text: label }),
+                ...(labeled && { text: label }),
                 ...(def.shortcut && { shortcut: nameShortcut(def.shortcut, i18n) }),
             });
             btn.dataset.command = def.id;
@@ -882,7 +883,9 @@ export function createRibbon(
             return btn;
         };
 
-        const buildTools = (commands: readonly string[]) => {
+        // `labeled`: the commands the tab names beside their icons, as well as
+        // those every tab does.
+        const buildTools = (commands: readonly string[], labeled: ReadonlySet<string>) => {
             for (const dd of dropdowns) dd.destroy();
             dropdowns.length = 0;
             keptOpenMenus.clear();
@@ -926,13 +929,13 @@ export function createRibbon(
                         clusterOf = kind;
                         toolsSection.appendChild(cluster);
                     }
-                    const control = cmdButton(def);
+                    const control = cmdButton(def, def.labeled === true || labeled.has(id));
                     if (kind === "segment") control.setAttribute("role", "radio");
                     cluster.appendChild(control);
                 } else {
                     cluster = null;
                     clusterOf = null;
-                    toolsSection.appendChild(cmdButton(def));
+                    toolsSection.appendChild(cmdButton(def, def.labeled === true || labeled.has(id)));
                 }
             }
         };
@@ -980,7 +983,7 @@ export function createRibbon(
             const toolsKey = `${slice.mode}:${slice.activeTab}:${shownCommands.join(",")}`;
             if (toolsKey !== builtToolsKey) {
                 builtToolsKey = toolsKey;
-                buildTools(shownCommands);
+                buildTools(shownCommands, new Set(activeTab.labeled));
                 flow();
             }
 
