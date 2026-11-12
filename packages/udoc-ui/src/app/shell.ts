@@ -24,7 +24,7 @@ import type {
     Destination,
     CellEntryEdit,
     CellEntryMode,
-    CommentAnchor,
+    CommentMarkup,
     CommentCommand,
     GridCellSelectionMove,
     ScrollAlignment,
@@ -76,7 +76,9 @@ import { createToolbar } from "./components/Toolbar.js";
 import { createViewControls } from "./components/ViewControls.js";
 import type { OverlayOptions, OverlaySource } from "./components/OverlayManager.js";
 import { createAnnotationBar } from "./components/AnnotationBar.js";
+import { commentHighlights } from "./components/CommentHighlights.js";
 import { commentMarkers } from "./components/CommentMarkers.js";
+import { markupComment, markupRect } from "./components/commentMarkup.js";
 import { commentPopup } from "./components/CommentPopup.js";
 import { formFieldInput } from "./components/FormFieldInput.js";
 import { mediaPlayers } from "./components/MediaPlayer.js";
@@ -836,12 +838,16 @@ export function mountUIShell(
     const tethers = [searchTether, commentTether].filter((tether) => tether !== null);
 
     // Where the comment tether starts, as a client rect: the open Word, Excel
-    // or PowerPoint thread's marker, or — a PDF's comments being annotations —
+    // or PowerPoint thread's marker — or the first highlight of a thread on a
+    // slide's text, which has none — or, a PDF's comments being annotations,
     // the one annotation the annotation bar stands on.
     function openCommentRect(): DOMRect | null {
         const open = store.getState().openOfficeComment;
         if (open !== null) {
-            const marker = canvas.el.querySelector(`.udoc-comment-marker[data-comment="${CSS.escape(open)}"]`);
+            const id = CSS.escape(open);
+            const marker =
+                canvas.el.querySelector(`.udoc-comment-marker[data-comment="${id}"]`) ??
+                canvas.el.querySelector(`.udoc-comment-highlight[data-comment="${id}"]`);
             return marker?.getBoundingClientRect() ?? null;
         }
         const box = oneAnnotationBox();
@@ -1225,18 +1231,29 @@ export function mountUIShell(
     });
     canvas.setOverlay("udoc:media", mediaSource, { aboveSelection: true });
     // A marker over each Word, Excel or PowerPoint comment thread on screen,
-    // from the anchors read for each page shown; a press opens the thread in
-    // the comments panel. Each change reads the pages shown again.
-    let commentAnchorsRead = new Map<string, readonly CommentAnchor[]>();
-    let commentAnchorsGeneration = 0;
+    // and a highlight over the text it is on, from the markup read for each
+    // page shown; a press on a marker opens the thread in the comments panel.
+    // Each change reads the pages shown again; the View tab's Comments hides
+    // both.
+    let commentMarkupRead = new Map<string, readonly CommentMarkup[]>();
+    let commentMarkupGeneration = 0;
     const commentMarkersShow = (): boolean => {
         const state = store.getState();
-        return state.status === "ready" && OFFICE_COMMENT_DOC_TYPES.has(state.docType ?? "");
+        return state.status === "ready" && state.showComments && OFFICE_COMMENT_DOC_TYPES.has(state.docType ?? "");
     };
+    const commentMarkupShown = (page: number): readonly CommentMarkup[] =>
+        commentMarkupRead.get(`${store.getState().currentPlane}:${page}`) ?? [];
+    const commentHighlightsSource = commentHighlights({
+        active: commentMarkersShow,
+        markup: commentMarkupShown,
+        pageToViewport: (page) => canvas.pageToViewport(page),
+        open: () => store.getState().openOfficeComment,
+    });
+    canvas.setOverlay("udoc:comment-highlights", commentHighlightsSource);
     const commentMarkersSource = commentMarkers({
         active: commentMarkersShow,
-        cells: () => store.getState().docType === "spreadsheet",
-        anchors: (page) => commentAnchorsRead.get(`${store.getState().currentPlane}:${page}`) ?? [],
+        docType: () => store.getState().docType,
+        markup: commentMarkupShown,
         pageToViewport: (page) => canvas.pageToViewport(page),
         open: () => store.getState().openOfficeComment,
         onOpen: (id) => {
@@ -1249,41 +1266,61 @@ export function mountUIShell(
     // The pages the last frame showed, which an edit that paints no frame —
     // a comment's — asks again for.
     let commentMarkerViews: readonly PageView[] = [];
-    const askCommentAnchors = (): void => {
+    // Draw the markup read again — a new read landed, or it was shown or
+    // hidden.
+    const showCommentMarkup = (): void => {
+        canvas.setOverlay("udoc:comment-highlights", commentHighlightsSource);
+        canvas.setOverlay("udoc:comment-markers", commentMarkersSource);
+    };
+    const askCommentMarkup = (): void => {
         if (!commentMarkersShow()) return;
         const plane = store.getState().currentPlane;
         for (const { index } of commentMarkerViews) {
             const key = `${plane}:${index}`;
-            if (commentAnchorsRead.has(key)) continue;
-            commentAnchorsRead.set(key, []);
-            const generation = commentAnchorsGeneration;
-            void client.commentAnchors(plane, index).then((anchors) => {
-                if (generation !== commentAnchorsGeneration) return;
-                commentAnchorsRead.set(key, anchors);
-                canvas.setOverlay("udoc:comment-markers", commentMarkersSource);
+            if (commentMarkupRead.has(key)) continue;
+            commentMarkupRead.set(key, []);
+            const generation = commentMarkupGeneration;
+            void client.commentMarkup(plane, index).then((markup) => {
+                if (generation !== commentMarkupGeneration) return;
+                commentMarkupRead.set(key, markup);
+                showCommentMarkup();
             });
         }
     };
     const unsubCommentMarkers = client.onPageViews((frame) => {
         commentMarkerViews = frame.views;
-        askCommentAnchors();
+        askCommentMarkup();
     });
-    // What was read is dropped on each change, and the pages shown asked
-    // again — the old markers standing until the new land.
-    const forgetCommentAnchors = (): void => {
-        commentAnchorsGeneration += 1;
-        commentAnchorsRead = new Map();
+    // What was read is dropped on each change, and on fonts landing — each
+    // can move text — and the pages shown asked again, the old markers
+    // standing until the new land.
+    const forgetCommentMarkup = (): void => {
+        commentMarkupGeneration += 1;
+        commentMarkupRead = new Map();
     };
-    const unsubDocumentChangedMarkers = client.onDocumentChanged(() => {
-        const shown = commentAnchorsRead;
-        forgetCommentAnchors();
-        askCommentAnchors();
+    const readCommentMarkupAgain = (): void => {
+        const shown = commentMarkupRead;
+        forgetCommentMarkup();
+        askCommentMarkup();
         // Until the new land, the pages keep what they showed.
-        for (const [key, anchors] of shown)
-            if (commentAnchorsRead.get(key)?.length === 0) commentAnchorsRead.set(key, anchors);
-    });
+        for (const [key, markup] of shown)
+            if (commentMarkupRead.get(key)?.length === 0) commentMarkupRead.set(key, markup);
+    };
+    const unsubDocumentChangedMarkers = client.onDocumentChanged(readCommentMarkupAgain);
+    const unsubFontsMarkers = client.onFontsRefreshed(readCommentMarkupAgain);
     // A document opened in place of another reads its own.
-    const unsubDocumentOpenedMarkers = subscribeSelector(store, (s) => s.docGeneration, forgetCommentAnchors);
+    const unsubDocumentOpenedMarkers = subscribeSelector(store, (s) => s.docGeneration, forgetCommentMarkup);
+    // Shown again, the pages shown are read as they were; hidden, they go.
+    const unsubShowComments = subscribeSelector(
+        store,
+        (s) => s.showComments,
+        () => {
+            askCommentMarkup();
+            showCommentMarkup();
+        },
+    );
+    // The open thread's marker and highlight stand out as it's opened.
+    const unsubOpenCommentMarkers = subscribeSelector(store, (s) => s.openOfficeComment, showCommentMarkup);
     // Each frame asks for the media of the pages it shows that weren't asked
     // for since the document last changed. A change asks nothing itself: the
     // frame it paints does, once the layout has it.
@@ -3155,11 +3192,11 @@ export function mountUIShell(
     }
 
     // Go to a Word, Excel or PowerPoint comment's thread `id`, standing on
-    // `at`: the view lands on the first rect it stands in there — on a sheet
-    // not shown, once the sheet is.
+    // `at`: the view lands on its text's first line there, or the box it's
+    // on — on a sheet not shown, once the sheet is.
     async function goToOfficeComment(id: string, at: { plane: number; page: number }): Promise<void> {
-        const anchors = await client.commentAnchors(at.plane, at.page);
-        const rect = anchors.find((anchor) => anchor.comment === id)?.rects[0];
+        const markup = (await client.commentMarkup(at.plane, at.page)).find((m) => markupComment(m) === id);
+        const rect = markup && markupRect(markup);
         const state = store.getState();
         if (!rect || state.status !== "ready") return;
         const alignment = state.navigationScrollAlignment;
@@ -4268,7 +4305,10 @@ export function mountUIShell(
         unsubDocumentChangedMedia();
         unsubCommentMarkers();
         unsubDocumentChangedMarkers();
+        unsubFontsMarkers();
         unsubDocumentOpenedMarkers();
+        unsubShowComments();
+        unsubOpenCommentMarkers();
         unsubMediaMode();
         unsubCommentsShown();
         if (commentsPending !== null) cancelAnimationFrame(commentsPending);

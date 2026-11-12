@@ -1321,12 +1321,12 @@ export interface OfficeComment {
 }
 
 /**
- * Read where each comment thread of a Word, Excel or PowerPoint document stands
- * on page `page` of `plane`: its rects, page-local points. Replies with
- * `CommentAnchor`[] — none for any other document.
+ * Read how each comment thread of a Word, Excel or PowerPoint document shows
+ * on page `page` of `plane`, page-local points. Replies with `CommentMarkup`[]
+ * — none for any other document.
  */
-export interface CommentAnchorsRequest {
-    type: "commentAnchors";
+export interface CommentMarkupRequest {
+    type: "commentMarkup";
     plane: number;
     page: number;
 }
@@ -2301,7 +2301,7 @@ export type WorkerRequest =
     | PageCommentsRequest
     | OfficeCommentsRequest
     | SlideIdRequest
-    | CommentAnchorsRequest
+    | CommentMarkupRequest
     | PageAnnotationsRequest
     | AnnotationRequest
     | SelectionGeometryRequest

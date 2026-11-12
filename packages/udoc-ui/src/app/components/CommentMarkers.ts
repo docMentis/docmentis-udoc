@@ -1,21 +1,24 @@
-// The markers of a Word, Excel or PowerPoint document's comments: one at the
-// top-right of the first rect each thread stands in on a page on screen — a
-// text range's first line, a shape, a slide's point — which opens the thread in
-// the comments panel; a cell's a flag in its top-right corner, as Excel marks
-// one. A PDF's comments are annotations, which draw themselves on the page.
+// The markers of a Word, Excel or PowerPoint document's comments: one where
+// the engine stands each thread's marker on a page on screen, which opens the
+// thread in the comments panel — centred in a Word page's right margin beside
+// its text's first line, just right of a slide's shape beside its text's,
+// inside the top-right corner of a slide or a shape; a cell's a flag in that
+// corner, as Excel marks one. A PDF's comments are annotations, which draw
+// themselves on the page.
 
-import type { CommentAnchor } from "@docmentis/udoc-wasm";
+import type { CommentMarkup, UDocType } from "@docmentis/udoc-wasm";
 import { ICON_COMMENTS } from "../icons.js";
 import { applyPoint, type Affine } from "./affine.js";
+import { markupComment, markupMarker } from "./commentMarkup.js";
 import type { OverlaySource } from "./OverlayManager.js";
 
 export interface CommentMarkersCallbacks {
     /** Whether markers show: an Office document is open. */
     active: () => boolean;
-    /** Whether a thread stands at a cell, flagged in its corner. */
-    cells: () => boolean;
-    /** The anchors read for page `page` of the plane shown — none until read. */
-    anchors: (page: number) => readonly CommentAnchor[];
+    /** The doc type shown, which says how a marker stands at its point. */
+    docType: () => UDocType | null;
+    /** The markup read for page `page` of the plane shown — none until read. */
+    markup: (page: number) => readonly CommentMarkup[];
     pageToViewport: (page: number) => Affine | null;
     /** The thread a marker stands for, by its first comment's id, open. */
     open: () => string | null;
@@ -29,29 +32,41 @@ export function commentMarkers(callbacks: CommentMarkersCallbacks): OverlaySourc
     return (frame) => {
         if (!callbacks.active()) return [];
         const open = callbacks.open();
-        const cells = callbacks.cells();
+        const docType = callbacks.docType();
         return frame.views.flatMap((view) => {
             const m = callbacks.pageToViewport(view.index);
             if (!m) return [];
-            return callbacks.anchors(view.index).flatMap((anchor) => {
-                const rect = anchor.rects[0];
-                if (!rect) return [];
-                const corner = applyPoint(m, Math.max(rect.x0, rect.x1), Math.min(rect.y0, rect.y1));
+            return callbacks.markup(view.index).flatMap((markup) => {
+                const marker = markupMarker(markup);
+                if (!marker) return [];
+                const comment = markupComment(markup);
+                const stands = standing(markup, docType);
+                const at = applyPoint(m, marker.x, marker.y);
                 return [
                     {
-                        key: `${view.index}:${anchor.comment}`,
-                        x: corner.x,
-                        y: corner.y,
-                        create: () => createMarker(anchor.comment, callbacks),
+                        key: `${view.index}:${comment}`,
+                        x: at.x,
+                        y: at.y,
+                        create: () => createMarker(comment, callbacks),
                         update: (el: HTMLElement) => {
-                            el.classList.toggle("udoc-comment-marker--open", anchor.comment === open);
-                            el.classList.toggle("udoc-comment-marker--cell", cells);
+                            el.classList.toggle("udoc-comment-marker--open", comment === open);
+                            for (const way of STANDINGS)
+                                el.classList.toggle(`udoc-comment-marker--${way}`, way === stands);
                         },
                     },
                 ];
             });
         });
     };
+}
+
+/** How a marker stands at its point, past centred on it: inside a box's
+ *  top-right corner, a cell's as a flag, or just right of a slide's shape. */
+const STANDINGS = ["corner", "cell", "beside"] as const;
+
+function standing(markup: CommentMarkup, docType: UDocType | null): (typeof STANDINGS)[number] | null {
+    if ("box" in markup) return docType === "spreadsheet" ? "cell" : "corner";
+    return docType === "presentation" ? "beside" : null;
 }
 
 function createMarker(comment: string, callbacks: CommentMarkersCallbacks): HTMLElement {

@@ -2736,11 +2736,11 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 });
                 break;
             }
-            case "commentAnchors": {
+            case "commentMarkup": {
                 // A read of the pages composed, but for a sheet's or a
                 // slide's comments, which it loads.
                 const open = session;
-                reply(id, open ? safeRead(() => open.commentAnchors(msg.plane, msg.page), []) : []);
+                reply(id, open ? safeRead(() => open.commentMarkup(msg.plane, msg.page), []) : []);
                 break;
             }
             case "pageAnnotations": {

@@ -30,7 +30,7 @@ import type {
     AcroForm,
     ActionHideTarget,
     Annotation,
-    CommentAnchor,
+    CommentMarkup,
     CellEntryEdit,
     DelimiterGuess,
     Destination,
@@ -886,13 +886,14 @@ export class WorkerClient {
     }
 
     /**
-     * Where each comment thread of a Word, Excel or PowerPoint document stands
-     * on page `page` of `plane`: its rects, page-local points, under its first
-     * comment's id — none for any other document. What the comment markers are
-     * drawn from, and choosing a thread goes to.
+     * How each comment thread of a Word, Excel or PowerPoint document shows on
+     * page `page` of `plane`: on text, its quads and its marker, or on a box,
+     * page-local points, under its first comment's id — none for any other
+     * document. What the comment highlights and markers are drawn from, and
+     * choosing a thread goes to.
      */
-    async commentAnchors(plane: number, page: number): Promise<CommentAnchor[]> {
-        return (await this.#send({ type: "commentAnchors", plane, page })) as CommentAnchor[];
+    async commentMarkup(plane: number, page: number): Promise<CommentMarkup[]> {
+        return (await this.#send({ type: "commentMarkup", plane, page })) as CommentMarkup[];
     }
 
     /**

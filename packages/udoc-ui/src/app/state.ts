@@ -417,6 +417,7 @@ export type CommandId =
     | "gapless"
     | "layers"
     | "formattingMarks"
+    | "comments"
     | "formulaBar";
 
 /**
@@ -1006,6 +1007,10 @@ export interface UIState {
      *  paragraph end, a dot in each space, an arrow in each tab, `↵` at each
      *  line break — as Word's toggle does. Kept across documents. */
     showFormattingMarks: boolean;
+    /** Whether a Word, Excel or PowerPoint document shows its comments on the
+     *  pages — each thread's marker and its text's highlight — the View tab's
+     *  Comments. Kept across documents. */
+    showComments: boolean;
     /** Whether the open PDF has layers to show or hide — what the View tab's
      *  Layers button shows for. Read after the document opens. */
     hasLayers: boolean;
@@ -1206,6 +1211,7 @@ export const initialState: UIState = {
     notesHeight: null,
     formulaBarVisible: true,
     showFormattingMarks: false,
+    showComments: true,
     hasLayers: false,
 
     toolbarVisible: true,

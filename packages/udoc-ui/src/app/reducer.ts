@@ -714,6 +714,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 ? state
                 : { ...state, showFormattingMarks: action.visible };
 
+        case "SET_SHOW_COMMENTS":
+            return action.visible === state.showComments ? state : { ...state, showComments: action.visible };
+
         case "SET_REVISION_VIEW":
             return { ...state, revisionView: action.view };
 

@@ -71,6 +71,8 @@ export const uiStyles = css`
         --udoc-canvas-marquee-enclose-fill: rgba(22, 163, 74, 0.12);
         --udoc-canvas-search: rgba(255, 235, 59, 0.35);
         --udoc-canvas-search-active: rgba(255, 152, 0, 0.5);
+        --udoc-canvas-comment: rgba(240, 98, 146, 0.22);
+        --udoc-canvas-comment-open: rgba(233, 30, 99, 0.38);
 
         /* States — four opacities. Hover and pressed are the control's own ink
        (currentColor, resolved where the overlay is painted) and go in
@@ -119,6 +121,8 @@ export const uiStyles = css`
         --udoc-canvas-marquee-enclose-fill: rgba(74, 222, 128, 0.16);
         --udoc-canvas-search: rgba(255, 235, 59, 0.35);
         --udoc-canvas-search-active: rgba(255, 152, 0, 0.5);
+        --udoc-canvas-comment: rgba(240, 98, 146, 0.22);
+        --udoc-canvas-comment-open: rgba(233, 30, 99, 0.38);
     }
 
     .udoc-ui-root {
@@ -3393,9 +3397,31 @@ export const uiStyles = css`
         border-radius: 6px;
     }
 
+    /* The text a Word or PowerPoint comment thread is on
+   (udoc:comment-highlights): one SVG of polygons over the viewport, a quad
+   each, a light tint the text reads through; the open thread's stronger. It
+   takes no press. */
+    .udoc-ui-root .udoc-comment-highlights svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        overflow: visible;
+        pointer-events: none;
+    }
+    .udoc-ui-root .udoc-comment-highlight {
+        fill: var(--udoc-canvas-comment);
+    }
+    .udoc-ui-root .udoc-comment-highlight--open {
+        fill: var(--udoc-canvas-comment-open);
+    }
+
     /* A Word, Excel or PowerPoint comment thread's marker (udoc:comment-markers):
-   at the top-right of the first rect it stands in, a constant screen size at
-   every zoom; the open thread's filled. */
+   where the engine stands it — centred in a Word page's right margin, inside
+   a slide's or a shape's top-right corner, just right of the shape a slide's
+   text is in — a constant screen size at every zoom; the open thread's
+   filled. */
     .udoc-ui-root .udoc-comment-marker {
         position: absolute;
         transform: translate(-50%, -50%);
@@ -3419,6 +3445,14 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-comment-marker--open {
         background: var(--udoc-color-primary);
         color: var(--udoc-color-on-primary);
+    }
+    /* A box's: inside its top-right corner. */
+    .udoc-ui-root .udoc-comment-marker--corner {
+        transform: translate(-100%, 0);
+    }
+    /* A slide's text's: just right of its shape, level with its first line. */
+    .udoc-ui-root .udoc-comment-marker--beside {
+        transform: translate(4px, -50%);
     }
     /* A cell's: a flag inside its top-right corner, the icon left out. */
     .udoc-ui-root .udoc-comment-marker--cell {

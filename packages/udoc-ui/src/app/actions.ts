@@ -251,6 +251,7 @@ export type Action =
     // document's formatting marks, and whether the open PDF has layers
     | { type: "SET_FORMULA_BAR_VISIBLE"; visible: boolean }
     | { type: "SET_SHOW_FORMATTING_MARKS"; visible: boolean }
+    | { type: "SET_SHOW_COMMENTS"; visible: boolean }
     | { type: "SET_HAS_LAYERS"; hasLayers: boolean }
     // What a word document's tracked changes show: the view chosen, and the one
     // the open document opened on

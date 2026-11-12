@@ -184,6 +184,7 @@ interface RibbonSlice {
     showPageGap: boolean;
     activePanel: PanelTab | null;
     showFormattingMarks: boolean;
+    showComments: boolean;
     revisionView: RevisionView | null;
     openedRevisionView: RevisionView | null;
     formulaBarVisible: boolean;
@@ -225,6 +226,7 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.showPageGap === b.showPageGap &&
         a.activePanel === b.activePanel &&
         a.showFormattingMarks === b.showFormattingMarks &&
+        a.showComments === b.showComments &&
         a.revisionView === b.revisionView &&
         a.openedRevisionView === b.openedRevisionView &&
         a.formulaBarVisible === b.formulaBarVisible &&
@@ -257,6 +259,7 @@ function selectSlice(s: UIState): RibbonSlice {
         showPageGap: s.showPageGap,
         activePanel: s.activePanel,
         showFormattingMarks: s.showFormattingMarks,
+        showComments: s.showComments,
         revisionView: s.revisionView,
         openedRevisionView: s.openedRevisionView,
         formulaBarVisible: s.formulaBarVisible,
