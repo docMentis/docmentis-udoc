@@ -12,6 +12,15 @@ listed once, by package. Its major and minor version are those of the
 
 - `--udoc-formula-bar-background` sets the fill of a spreadsheet's formula
   bar, which `--udoc-status-bar-background` set before.
+- `saveToBytes`, `requestRemoteCopy`, `saveToPackage` and `download` take
+  their options as an object: `SaveOptions`, `SavePackageOptions` and
+  `DownloadOptions`. `saveToBytes` and `requestRemoteCopy` take the same
+  `SaveOptions`, so the server saves a copy as any format `saveToBytes`
+  saves to. Without a `format`, both save as the document's source format.
+  `SaveOptions.delimiter` sets the character a CSV's fields are split by
+  when it is saved. The earlier forms still work and are deprecated:
+  `saveToBytes(format, strategy)`, `requestRemoteCopy(strategy)`,
+  `saveToPackage(version)` and `download(filename)`.
 
 #### Changed
 
@@ -48,6 +57,22 @@ listed once, by package. Its major and minor version are those of the
 - A Word document with tracked changes opens in Simple Markup, the final
   version with a bar beside each change, where it opened in All Markup,
   unless it was saved with markup off.
+
+### udoc-node
+
+#### Added
+
+- `UDocNode.open` and `openRemote`, and `UDocSession.saveToBytes`,
+  `requestRemoteCopy` and `saveToPackage`, take their options as an object:
+  `OpenOptions`, `OpenRemoteOptions`, `SaveOptions` and `SavePackageOptions`.
+  `saveToBytes` and `requestRemoteCopy` take the same `SaveOptions`, so the
+  server saves a copy as any format `saveToBytes` saves to. Without a
+  `format`, both save as the document's source format.
+  The earlier forms still work and are deprecated:
+  `open(bytes, format, delimiter)`,
+  `openRemote(url, fetch, { withOriginal })`,
+  `saveToBytes(format, strategy, delimiter)`, `requestRemoteCopy(strategy)`
+  and `saveToPackage(version)`.
 
 ## [0.8.20] - 2026-11-11
 

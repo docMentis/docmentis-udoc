@@ -87,7 +87,11 @@ async function save({ input, password, delimiter, out, format, outDelimiter }: S
         const bytes =
             format === "udoc"
                 ? await session.saveToPackage()
-                : await session.saveToBytes(format, strategy, outDelimiter);
+                : await session.saveToBytes({
+                      format,
+                      ...(strategy !== undefined && { strategy }),
+                      ...(outDelimiter !== undefined && { delimiter: outDelimiter }),
+                  });
         await fileIo(writeFile(out, bytes));
         console.log(`Saved → ${out} (${bytes.length} bytes)`);
     } finally {
@@ -110,7 +114,11 @@ async function open(input: string, password: string | undefined, delimiter: stri
         ...licenseFromEnvironment(),
         wrapper: { name: "udoc-cli", version: WRAPPER_VERSION },
     });
-    const session = await udoc.open(bytes, signaturelessFormat(input), delimiter);
+    const format = signaturelessFormat(input);
+    const session = await udoc.open(bytes, {
+        ...(format !== undefined && { format }),
+        ...(delimiter !== undefined && { delimiter }),
+    });
     try {
         if (session.needsPassword) await unlock(session, input, password);
         return session;

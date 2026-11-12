@@ -12,7 +12,6 @@ import type {
     FileFormat,
     PageExportFormat,
     PageMode,
-    SaveStrategy,
     ComposedShapeMedia,
     LinkAnnotation,
     SearchContinuation,
@@ -168,7 +167,7 @@ import type {
     ExtensionDocumentViewer,
     ExtensionDocumentOpenRequest,
 } from "./extension-documents.js";
-import type { OpenOptions } from "../base.js";
+import type { DownloadOptions, OpenOptions, SaveOptions, SavePackageOptions } from "../base.js";
 import { uiStyles } from "./styles.js";
 import { createPageAnnotations } from "./page-annotations.js";
 import { createI18n, MESSAGE_PACKS } from "./i18n/index.js";
@@ -285,14 +284,14 @@ export interface UIShell {
     execute: (command: UDocCommand) => Promise<void>;
     /** Serialize the CRDT for sync with a peer (an opaque blob for {@link merge}). */
     snapshot: () => Promise<Uint8Array>;
-    /** Save the open document as `format`, faithfully — the bytes reopen as the same document; a `strategy` other than `"rewrite"` writes over the original; without one, the engine's for `format`. */
-    saveToBytes: (format: FileFormat, strategy?: SaveStrategy) => Promise<Uint8Array>;
+    /** Save the open document as `format`, else its source format, faithfully — the bytes reopen as the same document; a `strategy` other than `"rewrite"` writes over the original; without one, the engine's for the format; a CSV split by `delimiter`, else the one it was opened with. */
+    saveToBytes: (options?: SaveOptions) => Promise<Uint8Array>;
     /** Save the open document as a udoc package (a `.udoc` zip); a `version` makes it a checkpoint, which keeps the edit log. */
-    saveToPackage: (version?: number) => Promise<Uint8Array>;
-    /** Ask the server the open document was opened from for a copy, saved as its source format by `strategy`, else by the engine's for it. */
-    requestRemoteCopy: (strategy?: SaveStrategy) => Promise<Uint8Array>;
+    saveToPackage: (options?: SavePackageOptions) => Promise<Uint8Array>;
+    /** Ask the server the open document was opened from for a copy, saved as {@link saveToBytes} saves it. */
+    requestRemoteCopy: (options?: SaveOptions) => Promise<Uint8Array>;
     /** Save the open document as its source format and hand it to the browser as a download named `filename`, else the name it was opened under, else `document.<format>`. */
-    download: (filename?: string) => Promise<void>;
+    download: (options?: DownloadOptions) => Promise<void>;
     /** Subscribe to the downloads {@link download} hands the browser — the toolbar's too — with each one's file name; returns the unsubscribe. */
     onDownload: (listener: (filename: string) => void) => () => void;
     /** Print the pages `options` names, or open the print dialog to choose them without `options`. */
@@ -3644,19 +3643,24 @@ export function mountUIShell(
         return client.snapshot();
     }
 
-    async function saveToBytes(format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
-        return client.saveToBytes(format, strategy);
+    /** The format `call` saves as: `format` when given, else the open document's source format. */
+    function formatToSave(call: string, format: FileFormat | undefined): FileFormat {
+        const saved = format ?? store.getState().sourceFormat;
+        if (saved === null) throw new Error(`${call}: there is no open document with a source format to save as`);
+        return saved;
     }
 
-    async function saveToPackage(version?: number): Promise<Uint8Array> {
+    async function saveToBytes({ format, strategy, delimiter }: SaveOptions = {}): Promise<Uint8Array> {
+        return client.saveToBytes(formatToSave("saveToBytes", format), strategy, delimiter);
+    }
+
+    async function saveToPackage({ version }: SavePackageOptions = {}): Promise<Uint8Array> {
         return client.saveToPackage(version);
     }
 
-    async function requestRemoteCopy(strategy?: SaveStrategy): Promise<Uint8Array> {
-        const format = store.getState().sourceFormat;
-        if (format === null)
-            throw new Error("requestRemoteCopy: the open document records no source format to copy as");
-        return remoteCopy(remotePackageOf("requestRemoteCopy"), format, strategy);
+    async function requestRemoteCopy({ format, strategy, delimiter }: SaveOptions = {}): Promise<Uint8Array> {
+        const packageUrl = remotePackageOf("requestRemoteCopy");
+        return remoteCopy(packageUrl, formatToSave("requestRemoteCopy", format), { strategy, delimiter });
     }
 
     /**
@@ -3666,7 +3670,8 @@ export function mountUIShell(
      */
     async function savedCopy(format: FileFormat): Promise<Uint8Array<ArrayBuffer>> {
         // Only the server holds the original of a document opened from it.
-        const bytes = remotePackage === undefined ? await client.saveToBytes(format) : await requestRemoteCopy();
+        const bytes =
+            remotePackage === undefined ? await client.saveToBytes(format) : await requestRemoteCopy({ format });
         return bytes as Uint8Array<ArrayBuffer>;
     }
 
@@ -3676,7 +3681,7 @@ export function mountUIShell(
         return () => downloadListeners.delete(listener);
     }
 
-    async function download(filename?: string): Promise<void> {
+    async function download({ filename }: DownloadOptions = {}): Promise<void> {
         const format = store.getState().sourceFormat;
         if (format === null) throw new Error("download: there is no open document with a source format to save as");
         // Named before the save, which another open could overtake.

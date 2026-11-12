@@ -26,11 +26,17 @@ export function isCheckpointPackage(packageUrl: string): boolean {
 /**
  * Ask the server keeping the document whose package is at `packageUrl` for a
  * copy of it, saved as `format` by `strategy`, else by the engine's for
- * `format`; resolves with its bytes.
+ * `format`, a CSV split by `delimiter`; resolves with its bytes.
  */
-export async function remoteCopy(packageUrl: string, format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
-    const query = strategy === undefined ? "" : `?strategy=${encodeURIComponent(strategy)}`;
-    const response = await fetch(new URL(`file.${format}${query}`, packageUrl));
+export async function remoteCopy(
+    packageUrl: string,
+    format: FileFormat,
+    { strategy, delimiter }: { strategy?: SaveStrategy | undefined; delimiter?: string | undefined } = {},
+): Promise<Uint8Array> {
+    const url = new URL(`file.${format}`, packageUrl);
+    if (strategy !== undefined) url.searchParams.set("strategy", strategy);
+    if (delimiter !== undefined) url.searchParams.set("delimiter", delimiter);
+    const response = await fetch(url);
     if (!response.ok) throw await refusalOf(response);
     return new Uint8Array(await response.arrayBuffer());
 }

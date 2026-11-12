@@ -1,7 +1,17 @@
 // Public API shared by the docMentis packages built on this one: the class
 // each package's own extends, and the types its calls take and return.
 export { UDocBase } from "./base.js";
-export type { EventHandler, OpenOptions, RenderPageOptions, SheetInfo, UDocEvents, UDocOptions } from "./base.js";
+export type {
+    DownloadOptions,
+    EventHandler,
+    OpenOptions,
+    RenderPageOptions,
+    SaveOptions,
+    SavePackageOptions,
+    SheetInfo,
+    UDocEvents,
+    UDocOptions,
+} from "./base.js";
 export type {
     ExtensionDocument,
     ExtensionDocumentHost,

@@ -142,7 +142,7 @@ class FakeSession {
     }
     /** Whether the engine can't write over the original, as a PDF that needs a password. */
     originalLocked = false;
-    async saveToBytes(format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
+    async saveToBytes({ format, strategy }: { format: FileFormat; strategy?: SaveStrategy }): Promise<Uint8Array> {
         this.saves.push(strategy);
         if (this.docType !== "portable" || format !== "pdf") {
             throw new UDocError("invalidRequest", `can't be saved as ${format}`);
@@ -156,7 +156,7 @@ class FakeSession {
         }
         return bytesOf("%PDF");
     }
-    async saveToPackage(version?: number): Promise<Uint8Array> {
+    async saveToPackage({ version }: { version?: number } = {}): Promise<Uint8Array> {
         this.packageSaves.push(version);
         return version === undefined ? this.package : packageZip(checkpointEntries(version));
     }
@@ -230,7 +230,7 @@ class FakeUDoc {
         format: FileFormat | undefined;
         session: FakeSession;
         fetch?: (url: string) => Promise<Uint8Array>;
-        options?: { withOriginal?: boolean } | undefined;
+        withOriginal?: boolean | undefined;
     }[] = [];
     refusing = false;
     readonly #package: Uint8Array;
@@ -241,8 +241,7 @@ class FakeUDoc {
 
     async openRemote(
         url: string,
-        fetch: (url: string) => Promise<Uint8Array>,
-        options?: { withOriginal?: boolean },
+        { fetch, withOriginal }: { fetch: (url: string) => Promise<Uint8Array>; withOriginal?: boolean },
     ): Promise<UDocSession> {
         if (this.refusing) throw permitRefused();
         const description = JSON.parse(text(await fetch(url))) as {
@@ -252,11 +251,11 @@ class FakeUDoc {
         };
         const session = new FakeSession(description.docType, description.sourceFormat ?? "pdf", true, this.#package);
         if (description.baselineFrontier) await session.merge(inflateRawSync(await fetch(`${url}/crdt`)));
-        this.opened.push({ bytes: url, format: undefined, session, fetch, options });
+        this.opened.push({ bytes: url, format: undefined, session, fetch, withOriginal });
         return session as unknown as UDocSession;
     }
 
-    async open(bytes: Uint8Array, format?: FileFormat): Promise<UDocSession> {
+    async open(bytes: Uint8Array, { format }: { format?: FileFormat } = {}): Promise<UDocSession> {
         const given = text(bytes);
         if (given === "refuse" || this.refusing) throw permitRefused();
         if (!(format === "pdf" || given === "pdf" || given === "PK" || given === "locked")) {
@@ -810,7 +809,7 @@ test("a session over the store reads the original and what pairs with it, which 
     const id = await upload();
     assert.equal((await request("GET", `/documents/${id}/file.pdf?strategy=rewrite`)).status, 200);
     const opened = udoc.opened.at(-1)!;
-    assert.deepEqual(opened.options, { withOriginal: true });
+    assert.equal(opened.withOriginal, true);
 
     const read = async (route: string) => text(await opened.fetch!(`${opened.bytes}/${route}`));
     assert.equal(await read("original"), "pdf");
@@ -836,7 +835,7 @@ test("one checkpoint's copy is saved in a session of its own, closed after", asy
     const opened = udoc.opened.at(-1)!;
     assert.notEqual(opened, pooled);
     assert.ok(opened.bytes.endsWith(`/documents/${id}/checkpoints/1/package`), opened.bytes);
-    assert.deepEqual(opened.options, { withOriginal: true });
+    assert.equal(opened.withOriginal, true);
     assert.deepEqual(opened.session.saves, ["rewrite"]);
     assert.equal(opened.session.isClosed, true);
     assert.equal(pooled.session.isClosed, false, "the document's session goes on");

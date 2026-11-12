@@ -2934,7 +2934,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "saveToBytes": {
                 if (!session) throw new Error("engine worker: saveToBytes before open");
                 // Out of wasm memory into a standalone, transferable buffer.
-                const buffer = session.saveToBytes(msg.format, msg.strategy).slice().buffer;
+                const buffer = session.saveToBytes(msg.format, msg.strategy, msg.delimiter).slice().buffer;
                 reply(id, buffer, undefined, [buffer]);
                 break;
             }

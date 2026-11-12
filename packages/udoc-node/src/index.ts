@@ -1,7 +1,7 @@
 export { UDocNode } from "./node.js";
-export type { UDocNodeOptions } from "./node.js";
+export type { OpenOptions, OpenRemoteOptions, UDocNodeOptions } from "./node.js";
 // The session is a type only: `UDocNode.open` is the way to get one.
-export type { RemoteCheckpointResponse, UDocSession } from "./session.js";
+export type { RemoteCheckpointResponse, SaveOptions, SavePackageOptions, UDocSession } from "./session.js";
 // The error every failure is reported as.
 export { UDocError } from "@docmentis/udoc-wasm/error";
 export type { UDocErrorCode, UDocErrorDetail } from "@docmentis/udoc-wasm/error";

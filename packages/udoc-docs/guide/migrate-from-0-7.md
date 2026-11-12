@@ -237,8 +237,9 @@ the documents opened after it's called.
 
 ## Saving and printing
 
-- `toBytes()` is [`saveToBytes(format)`](/api/Common/classes/UDocBase#savetobytes),
-  which names the format to save as: `saveToBytes("pdf")`.
+- `toBytes()` is [`saveToBytes()`](/api/Common/classes/UDocBase#savetobytes),
+  which saves as the format the document was opened from, or as the one it
+  names: `saveToBytes({ format: "pdf" })`.
 - `download()` is as before.
 - `print()` takes a [`PrintOptions`](/api/Common/interfaces/PrintOptions), its
   pages a list of 0-based indices.

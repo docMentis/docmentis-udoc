@@ -1906,6 +1906,8 @@ export interface SaveToBytesRequest {
     format: FileFormat;
     /** How much of the file the document was opened from the saved bytes keep; absent, the engine's for `format`. */
     strategy?: SaveStrategy;
+    /** The character a CSV's fields are split by; absent, the one it was opened with, else a comma. */
+    delimiter?: string;
 }
 
 /**

@@ -157,11 +157,10 @@ async function reopen(
         if (!(await store.getDescription(id, version))) {
             throw version === undefined ? noDocument(id) : notFound(`document ${id} has no v${version}`);
         }
-        return await udoc.openRemote(
-            `${KEPT_ORIGIN}${keptPackage(id, version)}`,
-            (url) => kept(store, id, url, version),
-            { withOriginal: true },
-        );
+        return await udoc.openRemote(`${KEPT_ORIGIN}${keptPackage(id, version)}`, {
+            fetch: (url) => kept(store, id, url, version),
+            withOriginal: true,
+        });
     } catch (error) {
         if (error instanceof HttpFailure) throw error;
         const failure = UDocError.from(error);

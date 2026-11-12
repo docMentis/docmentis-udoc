@@ -57,6 +57,41 @@ export interface RemoteCheckpointResponse {
 }
 
 /**
+ * Options for {@link UDocSession.saveToBytes} and
+ * {@link UDocSession.requestRemoteCopy}. Every field is optional; each says its
+ * default.
+ */
+export interface SaveOptions {
+    /** The format to save as, one of the doc type's own: a PDF saves to
+     *  `"pdf"`, a presentation to `"pptx"` or another of PowerPoint's.
+     *  Default {@link UDocSession.sourceFormat}, the document saved back as the
+     *  format it was opened from. */
+    format?: FileFormat;
+    /** How much of the file the document was opened from, the original, the
+     *  saved bytes keep: a `"delta"` or `"incremental"` save writes over it,
+     *  which a session opened from a package or with `UDocNode.openRemote`
+     *  doesn't hold, and `"rewrite"` writes the document afresh. Default the
+     *  one keeping the most of it that the format saves by (`"incremental"`
+     *  for a PDF, `"rewrite"` for a CSV, a TSV, a PSV, a text file, a Markdown
+     *  file, an HTML file or an image, else `"delta"`), and `"rewrite"` with
+     *  nothing to keep: as another format than {@link UDocSession.sourceFormat},
+     *  or with no original held. */
+    strategy?: SaveStrategy;
+    /** The character a CSV's fields are split by, `";"`, `"|"`, …. Default
+     *  the one the document was opened with, else a comma. No other format
+     *  takes one. */
+    delimiter?: string;
+}
+
+/** Options for {@link UDocSession.saveToPackage}. Every field is optional; each says its default. */
+export interface SavePackageOptions {
+    /** Makes the package a checkpoint, baseline `v<version>`, which keeps the
+     *  edit log a reopen replays. Default none: the package is a flat
+     *  baseline — the whole document and no log. */
+    version?: number;
+}
+
+/**
  * A session: one open document, driven on a worker thread of its own, so every
  * call is asynchronous and none blocks the caller's event loop while the engine
  * composes or rasterizes. As in the engine, the session is its document —
@@ -265,42 +300,62 @@ export class UDocSession {
     }
 
     /**
-     * Save the document as `format`, faithfully — the bytes reopen as the same
-     * document. `format` is one of its doc type's own (a PDF saves to `"pdf"`, a
-     * presentation to `"pptx"`); {@link sourceFormat} is what saving it back
-     * means. `strategy` is how much of the file it was opened from, the
-     * original, the saved bytes keep: a `"delta"` or `"incremental"` save
-     * writes over it, which a session opened from a package or with
-     * `UDocNode.openRemote` doesn't hold; without it, the one keeping the most
-     * of it that `format` saves by (`"incremental"` for a PDF, `"rewrite"` for
-     * a CSV, a TSV, a PSV, a text file, a Markdown file, an HTML file or an
-     * image, else `"delta"`), and `"rewrite"` with nothing to keep: as another
-     * format than {@link sourceFormat}, or with no original held. `delimiter`
-     * is the character a CSV's fields are split by; without it, the one the
-     * document was opened with, else a comma. Rejects for a format its doc type
-     * doesn't save to, a format that never saves by `strategy`, a delimiter for
-     * a format that takes none, a `"delta"` or `"incremental"` save with no
-     * original to write over or as another format, or a save that isn't built
-     * yet.
+     * Save the document faithfully — the bytes reopen as the same document —
+     * as {@link SaveOptions} says: as its {@link sourceFormat} unless given
+     * another format, by the strategy that keeps the most of the original
+     * unless given one, and a CSV split by the delimiter it was opened with
+     * unless given one. Rejects with no format given and no source format to
+     * save as, for a format its doc type doesn't save to, a format that never
+     * saves by the strategy, a delimiter for a format that takes none, a
+     * `"delta"` or `"incremental"` save with no original to write over or as
+     * another format, or a save that isn't built yet.
      */
-    saveToBytes(format: FileFormat, strategy?: SaveStrategy, delimiter?: string): Promise<Uint8Array> {
+    saveToBytes(options?: SaveOptions): Promise<Uint8Array>;
+    /** @deprecated Pass the format, the strategy and the delimiter as {@link SaveOptions}: `saveToBytes({ format, strategy, delimiter })`. */
+    saveToBytes(format: FileFormat, strategy?: SaveStrategy, delimiter?: string): Promise<Uint8Array>;
+    async saveToBytes(
+        options?: SaveOptions | FileFormat,
+        strategy?: SaveStrategy,
+        delimiter?: string,
+    ): Promise<Uint8Array> {
+        const saved: SaveOptions =
+            typeof options === "string"
+                ? {
+                      format: options,
+                      ...(strategy !== undefined && { strategy }),
+                      ...(delimiter !== undefined && { delimiter }),
+                  }
+                : (options ?? {});
+        const format = this.#formatToSave("saveToBytes", saved.format);
         return this.#call((id) => ({
             id,
             type: "saveToBytes",
             format,
-            ...(strategy !== undefined ? { strategy } : {}),
-            ...(delimiter !== undefined ? { delimiter } : {}),
+            ...(saved.strategy !== undefined ? { strategy: saved.strategy } : {}),
+            ...(saved.delimiter !== undefined ? { delimiter: saved.delimiter } : {}),
         }));
+    }
+
+    /** The format `call` saves as: `format` when given, else the document's source format. */
+    #formatToSave(call: string, format: FileFormat | undefined): FileFormat {
+        const saved = format ?? this.sourceFormat;
+        if (saved === undefined) {
+            throw new UDocError("invalidRequest", `${call}: the document records no source format to save as`);
+        }
+        return saved;
     }
 
     /**
      * Save the document as a udoc package — the bytes of a `.udoc` zip, which
-     * `UDocNode.open` reopens. It records the source format, so a reopened package
-     * can still be saved back to it. `version` makes it a checkpoint, baseline
-     * `v<version>`, which keeps the edit log a reopen replays; without it the
-     * package is a flat baseline — the whole document and no log.
+     * `UDocNode.open` reopens — a checkpoint when {@link SavePackageOptions}
+     * gives a `version`, else a flat baseline. It records the source format,
+     * so a reopened package can still be saved back to it.
      */
-    saveToPackage(version?: number): Promise<Uint8Array> {
+    saveToPackage(options?: SavePackageOptions): Promise<Uint8Array>;
+    /** @deprecated Pass the version as {@link SavePackageOptions}' `version`: `saveToPackage({ version })`. */
+    saveToPackage(version?: number): Promise<Uint8Array>;
+    saveToPackage(options?: SavePackageOptions | number): Promise<Uint8Array> {
+        const version = typeof options === "object" && options !== null ? options.version : options;
         if (version !== undefined && (!Number.isInteger(version) || version < 0 || version > MAX_VERSION)) {
             return Promise.reject(
                 new UDocError(
@@ -313,25 +368,27 @@ export class UDocSession {
     }
 
     /**
-     * Ask the udoc server the document was opened from (`UDocNode.openRemote`)
-     * for a copy of it, saved as its {@link sourceFormat} by `strategy`, else
-     * by the engine's for it — a `"delta"` or `"incremental"` copy is the
-     * server's to save, since only it holds the original. Resolves with the
-     * copy's bytes. Asked with the global
-     * `fetch`, not the one the open was given, which only reads. Rejects for a
-     * document not opened with `UDocNode.openRemote`, or one that records no source
-     * format, and with the server's message for what it refuses.
+     * Save the document as {@link saveToBytes} does, with the same
+     * {@link SaveOptions}, but on the udoc server it was opened from
+     * (`UDocNode.openRemote`), and resolve with the bytes it sends. The server
+     * holds the original, so its copy can keep it: a `"delta"` or
+     * `"incremental"` copy, which writes over the original, is one only the
+     * server can save. Asked with the global `fetch`, not the one the open was
+     * given, which only reads. Rejects for a document not opened with
+     * `UDocNode.openRemote`, with no format given and no source format to copy
+     * as, and with the server's message for what it refuses, which is what
+     * {@link saveToBytes} refuses.
      */
-    async requestRemoteCopy(strategy?: SaveStrategy): Promise<Uint8Array> {
-        const format = this.sourceFormat;
-        if (format === undefined) {
-            throw new UDocError(
-                "invalidRequest",
-                "requestRemoteCopy: the document records no source format to copy as",
-            );
-        }
-        const query = strategy === undefined ? "" : `?strategy=${encodeURIComponent(strategy)}`;
-        const response = await fetch(this.#remote("requestRemoteCopy", `file.${format}${query}`));
+    requestRemoteCopy(options?: SaveOptions): Promise<Uint8Array>;
+    /** @deprecated Pass the strategy as {@link SaveOptions}' `strategy`: `requestRemoteCopy({ strategy })`. */
+    requestRemoteCopy(strategy?: SaveStrategy): Promise<Uint8Array>;
+    async requestRemoteCopy(options?: SaveOptions | SaveStrategy): Promise<Uint8Array> {
+        const { format, strategy, delimiter }: SaveOptions =
+            typeof options === "string" ? { strategy: options } : (options ?? {});
+        const url = this.#remote("requestRemoteCopy", `file.${this.#formatToSave("requestRemoteCopy", format)}`);
+        if (strategy !== undefined) url.searchParams.set("strategy", strategy);
+        if (delimiter !== undefined) url.searchParams.set("delimiter", delimiter);
+        const response = await fetch(url);
         if (!response.ok) throw await refusalOf(response);
         return new Uint8Array(await response.arrayBuffer());
     }

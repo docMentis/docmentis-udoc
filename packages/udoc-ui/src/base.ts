@@ -343,6 +343,48 @@ export interface OpenOptions {
     password?: string;
 }
 
+/**
+ * Options for {@link UDocBase.saveToBytes} and
+ * {@link UDocBase.requestRemoteCopy}. Every field is optional; each says its
+ * default.
+ */
+export interface SaveOptions {
+    /** The format to save as, one of the open doc type's own: a PDF saves to
+     *  `"pdf"`, a presentation to `"pptx"` or another of PowerPoint's.
+     *  Default {@link UDocBase.sourceFormat}, the document saved back as the
+     *  format it was opened from. */
+    format?: FileFormat;
+    /** How much of the file the document was opened from, the original, the
+     *  saved bytes keep: a `"delta"` or `"incremental"` save writes over it,
+     *  which a document opened from a package or with
+     *  {@link UDocBase.openRemote} doesn't hold, and `"rewrite"` writes the
+     *  document afresh. Default the one keeping the most of it that the
+     *  format saves by (`"incremental"` for a PDF, `"rewrite"` for a CSV, a
+     *  TSV, a PSV, a text file, a Markdown file, an HTML file or an image,
+     *  else `"delta"`), and `"rewrite"` with nothing to keep: as another
+     *  format than {@link UDocBase.sourceFormat}, or with no original held. */
+    strategy?: SaveStrategy;
+    /** The character a CSV's fields are split by, `";"`, `"|"`, …. Default
+     *  the one the document was opened with, else a comma. No other format
+     *  takes one. */
+    delimiter?: string;
+}
+
+/** Options for {@link UDocBase.saveToPackage}. Every field is optional; each says its default. */
+export interface SavePackageOptions {
+    /** Makes the package a checkpoint, baseline `v<version>`, which keeps the
+     *  edit log a reopen replays. Default none: the package is a flat
+     *  baseline — the whole document and no log. */
+    version?: number;
+}
+
+/** Options for {@link UDocBase.download}. Every field is optional; each says its default. */
+export interface DownloadOptions {
+    /** The downloaded file's name. Default the name {@link UDocBase.open} was
+     *  given, else `document.<format>`. */
+    filename?: string;
+}
+
 /** A sheet of the open workbook, as {@link UDocBase.sheets} lists it. */
 export interface SheetInfo {
     /** The sheet's name, as its tab shows it; `""` for one the workbook left unnamed. */
@@ -1104,53 +1146,60 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * Save the open document as `format`, faithfully — the bytes reopen as the
-     * same document. `format` is one of the open doc type's own (a PDF saves to
-     * `"pdf"`, a presentation to `"pptx"`); {@link sourceFormat} is what
-     * saving it back means. `strategy` is how much of the file it was opened
-     * from, the original, the saved bytes keep: a `"delta"` or `"incremental"`
-     * save writes over it, which a document opened from a package or with
-     * {@link openRemote} doesn't hold; without it, the one keeping the most of
-     * it that `format` saves by (`"incremental"` for a PDF, `"rewrite"` for a
-     * CSV, a TSV, a PSV, a text file, a Markdown file, an HTML file or an
-     * image, else `"delta"`), and `"rewrite"` with nothing to keep: as another
-     * format than {@link sourceFormat}, or with no original held. Rejects for a
-     * format its doc type doesn't save to, a format that never saves by
-     * `strategy`, a `"delta"` or `"incremental"` save with no original to write
-     * over or as another format, or a save that isn't built yet.
+     * Save the open document faithfully — the bytes reopen as the same
+     * document — as {@link SaveOptions} says: as its {@link sourceFormat}
+     * unless given another format, by the strategy that keeps the most of the
+     * original unless given one, and a CSV split by the delimiter it was
+     * opened with unless given one. Rejects with no format given and no source
+     * format to save as, for a format its doc type doesn't save to, a format
+     * that never saves by the strategy, a delimiter for a format that takes
+     * none, a `"delta"` or `"incremental"` save with no original to write over
+     * or as another format, or a save that isn't built yet.
      */
-    saveToBytes(format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
-        return this.shell.saveToBytes(format, strategy);
+    saveToBytes(options?: SaveOptions): Promise<Uint8Array>;
+    /** @deprecated Pass the format and the strategy as {@link SaveOptions}: `saveToBytes({ format, strategy })`. */
+    saveToBytes(format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array>;
+    saveToBytes(options?: SaveOptions | FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
+        return this.shell.saveToBytes(
+            typeof options === "string" ? { format: options, ...(strategy !== undefined && { strategy }) } : options,
+        );
     }
 
     /**
      * Save the open document as a udoc package — the bytes of a `.udoc` zip,
-     * which {@link open} reopens. It records the source format, so a reopened
-     * package can still be saved back to it. `version` makes it a checkpoint,
-     * baseline `v<version>`, which keeps the edit log a reopen replays; without
-     * it the package is a flat baseline — the whole document and no log.
+     * which {@link open} reopens — a checkpoint when {@link SavePackageOptions}
+     * gives a `version`, else a flat baseline. It records the source format,
+     * so a reopened package can still be saved back to it.
      */
-    saveToPackage(version?: number): Promise<Uint8Array> {
-        return this.shell.saveToPackage(version);
+    saveToPackage(options?: SavePackageOptions): Promise<Uint8Array>;
+    /** @deprecated Pass the version as {@link SavePackageOptions}' `version`: `saveToPackage({ version })`. */
+    saveToPackage(version?: number): Promise<Uint8Array>;
+    saveToPackage(options?: SavePackageOptions | number): Promise<Uint8Array> {
+        return this.shell.saveToPackage(typeof options === "number" ? { version: options } : (options ?? {}));
     }
 
     /**
-     * Ask the udoc server the open document was opened from
-     * ({@link openRemote}) for a copy of it, saved as its source format by
-     * `strategy`, else by the engine's for it — a `"delta"` or `"incremental"`
-     * copy is the server's to save, since only it holds the original. Resolves
-     * with the copy's bytes. Rejects for a document not opened with
-     * {@link openRemote}, or one that records no source format, and with the
-     * server's message for what it refuses.
+     * Save the open document as {@link saveToBytes} does, with the same
+     * {@link SaveOptions}, but on the udoc server it was opened from
+     * ({@link openRemote}), and resolve with the bytes it sends. The server
+     * holds the original, so its copy can keep it: a `"delta"` or
+     * `"incremental"` copy, which writes over the original, is one only the
+     * server can save. Rejects for a document not opened with
+     * {@link openRemote}, with no format given and no source format to copy
+     * as, and with the server's message for what it refuses, which is what
+     * {@link saveToBytes} refuses.
      */
-    requestRemoteCopy(strategy?: SaveStrategy): Promise<Uint8Array> {
-        return this.shell.requestRemoteCopy(strategy);
+    requestRemoteCopy(options?: SaveOptions): Promise<Uint8Array>;
+    /** @deprecated Pass the strategy as {@link SaveOptions}' `strategy`: `requestRemoteCopy({ strategy })`. */
+    requestRemoteCopy(strategy?: SaveStrategy): Promise<Uint8Array>;
+    requestRemoteCopy(options?: SaveOptions | SaveStrategy): Promise<Uint8Array> {
+        return this.shell.requestRemoteCopy(typeof options === "string" ? { strategy: options } : options);
     }
 
     /**
      * Save the open document as its source format and hand it to the browser
-     * as a download named `filename` — default the name {@link open} was given,
-     * else `document.<format>`. What the toolbar's Download does.
+     * as a download, named as {@link DownloadOptions} says. What the toolbar's
+     * Download does.
      *
      * It saves by the strategy that keeps the most of the original the format
      * can: a PDF appends its edits as a new revision, so its signatures stay
@@ -1159,8 +1208,11 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * for that copy ({@link requestRemoteCopy}). Rejects as
      * {@link saveToBytes} does.
      */
-    download(filename?: string): Promise<void> {
-        return this.shell.download(filename);
+    download(options?: DownloadOptions): Promise<void>;
+    /** @deprecated Pass the name as {@link DownloadOptions}' `filename`: `download({ filename })`. */
+    download(filename?: string): Promise<void>;
+    download(options?: DownloadOptions | string): Promise<void> {
+        return this.shell.download(typeof options === "string" ? { filename: options } : (options ?? {}));
     }
 
     /**

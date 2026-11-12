@@ -114,7 +114,7 @@ written whole; `RemotePackageLoader` on these routes, inflating each body and ap
 the log; a part or blob found beside the checkpoints when the latest hasn't it, and in
 an earlier checkpoint when neither has; `UDocSession::open_remote`; the wasm's
 `openRemote(url, fetch)` over the host's fetch; `UDocEditor.openRemote(url)`, fetching
-with a synchronous `XMLHttpRequest`; udoc-node's `UDocNode.openRemote(url, fetch?)`,
+with a synchronous `XMLHttpRequest`; udoc-node's `UDocNode.openRemote(url, { fetch })`,
 fetching on the embedder's thread for its blocked worker — with the global `fetch`, a
 part failing after 60 seconds, or with the embedder's own, which is how udoc-server
 opens a session over its store.

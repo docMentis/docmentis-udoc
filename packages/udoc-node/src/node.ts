@@ -61,6 +61,34 @@ export interface UDocNodeOptions {
     fontCacheSize?: number;
 }
 
+/** Options for {@link UDocNode.open}. Every field is optional; each says its default. */
+export interface OpenOptions {
+    /** The document's format, which skips detection. Default detected, and a
+     *  `.udoc` zip opens as a package. */
+    format?: FileFormat;
+    /** The character a CSV's fields are split by, `";"`, `"|"`, …. Default
+     *  the comma, semicolon, tab or vertical bar that splits the first records
+     *  alike, else the one that splits the first into the most fields. No
+     *  other format takes one. */
+    delimiter?: string;
+}
+
+/** Options for {@link UDocNode.openRemote}. Every field is optional; each says its default. */
+export interface OpenRemoteOptions {
+    /** What answers each URL the session fetches, with the whole body, as the
+     *  route serves it — how udoc-server opens a session over the store it
+     *  keeps, with no request to itself. Default the global `fetch`. */
+    fetch?: (url: string) => Promise<Uint8Array>;
+    /** Whether the session is the one its host keeps the original for:
+     *  `saveToBytes` can then write over that file by `"delta"` or
+     *  `"incremental"`. `fetch` also answers `…/original-id-map`,
+     *  `…/modified-part-ids` and `…/removed-part-ids`, each as the package's
+     *  JSON, or empty for none, and `…/original`, as the file, which is asked
+     *  for only when a save needs it. None of these is deflated, and no
+     *  udoc-server route serves them. Default `false`. */
+    withOriginal?: boolean;
+}
+
 /** The docMentis component this package is. */
 const WRAPPER = "udoc-node";
 
@@ -106,12 +134,9 @@ export class UDocNode {
     }
 
     /**
-     * Open a document from its bytes in a session of its own — as `format` when
-     * given, which skips detection; otherwise the format is detected, and a
-     * `.udoc` zip opens as a package. `delimiter` is the character a CSV's
-     * fields are split by; without it, the comma, semicolon, tab or vertical
-     * bar that splits the first records alike, else the one that splits the
-     * first into the most fields. No other format takes one.
+     * Open a document from its bytes in a session of its own, as
+     * {@link OpenOptions} says: its format, detected unless given, and the
+     * delimiter a CSV's fields are split by.
      *
      * Starts the session first, so this is where a license is checked and,
      * without one, where a permit is spent — on this document, whether or not
@@ -121,41 +146,44 @@ export class UDocNode {
      * A PDF that needs a password opens waiting for one: the session's
      * `needsPassword` says so, and its `authenticate` takes the password.
      */
-    open(bytes: Uint8Array, format?: FileFormat, delimiter?: string): Promise<UDocSession> {
-        return UDocSession.open(this.#init(), this.#fontCache, bytes, format, delimiter);
+    open(bytes: Uint8Array, options?: OpenOptions): Promise<UDocSession>;
+    /** @deprecated Pass the format and the delimiter as {@link OpenOptions}: `open(bytes, { format, delimiter })`. */
+    open(bytes: Uint8Array, format?: FileFormat, delimiter?: string): Promise<UDocSession>;
+    open(bytes: Uint8Array, options?: OpenOptions | FileFormat, delimiter?: string): Promise<UDocSession> {
+        const opened = typeof options === "object" && options !== null ? options : { format: options, delimiter };
+        return UDocSession.open(this.#init(), this.#fontCache, bytes, opened.format, opened.delimiter);
     }
 
     /**
      * Open the package a server keeps at `url` in a session of its own, without
      * downloading it — `url` is its package resource, udoc-server's
      * `…/documents/{id}/package`, and absolute. Each part is fetched the first
-     * time the document needs it: the open fetches the few it starts from, and a
-     * call that composes a page fetches that page's, rejecting if one can't be
-     * fetched.
+     * time the document needs it, as {@link OpenRemoteOptions} says: the open
+     * fetches the few it starts from, and a call that composes a page fetches
+     * that page's, rejecting if one can't be fetched.
      *
      * A remote open is an open: this is where a license is checked and, without
      * one, where a permit is spent. Rejects with a `UDocError`: a licensing code
      * when the engine refuses, or the engine's own when the package can't be
      * fetched or read.
-     *
-     * Each URL is fetched with the global `fetch`, unless `fetch` answers it —
-     * the whole body, as the route serves it — which is how udoc-server opens
-     * a session over the store it keeps, with no request to itself.
-     *
-     * With `withOriginal`, the session is the one its host keeps the original
-     * for: `saveToBytes` can then write over that file by `"delta"` or
-     * `"incremental"`. `fetch` also answers `…/original-id-map`,
-     * `…/modified-part-ids` and `…/removed-part-ids`, each as the package's JSON,
-     * or empty for none, and `…/original`, as the file, which is asked for only
-     * when a save needs it.
-     * None of these is deflated, and no udoc-server route serves them.
      */
+    openRemote(url: string, options?: OpenRemoteOptions): Promise<UDocSession>;
+    /** @deprecated Pass `fetch` and `withOriginal` as {@link OpenRemoteOptions}: `openRemote(url, { fetch, withOriginal })`. */
     openRemote(
         url: string,
         fetch?: (url: string) => Promise<Uint8Array>,
         options?: { withOriginal?: boolean },
+    ): Promise<UDocSession>;
+    openRemote(
+        url: string,
+        options?: OpenRemoteOptions | ((url: string) => Promise<Uint8Array>),
+        legacy?: { withOriginal?: boolean },
     ): Promise<UDocSession> {
-        return UDocSession.openRemote(this.#init(), this.#fontCache, url, fetch, options?.withOriginal);
+        const opened =
+            typeof options === "object" && options !== null
+                ? options
+                : { fetch: options, withOriginal: legacy?.withOriginal };
+        return UDocSession.openRemote(this.#init(), this.#fontCache, url, opened.fetch, opened.withOriginal);
     }
 
     /** What a session's worker starts with. */

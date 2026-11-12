@@ -1834,13 +1834,15 @@ export class WorkerClient {
      * Save the open document as `format`, faithfully — the bytes reopen as the
      * same document. A `strategy` other than `"rewrite"` writes over the
      * original the session's loader holds; without one, the engine's for
-     * `format`.
+     * `format`. A CSV's fields are split by `delimiter`; without one, the one
+     * it was opened with, else a comma.
      */
-    async saveToBytes(format: FileFormat, strategy?: SaveStrategy): Promise<Uint8Array> {
+    async saveToBytes(format: FileFormat, strategy?: SaveStrategy, delimiter?: string): Promise<Uint8Array> {
         const buffer = (await this.#send({
             type: "saveToBytes",
             format,
             ...(strategy !== undefined ? { strategy } : {}),
+            ...(delimiter !== undefined ? { delimiter } : {}),
         })) as ArrayBuffer;
         return new Uint8Array(buffer);
     }

@@ -225,7 +225,7 @@ export function documentRoutes({
                     const description = await store.getDescription(id);
                     if (!description) throw noDocument(id);
                     const version = description.baselineVersion + 1;
-                    await store.putCheckpoint(id, version, await session.saveToPackage(version));
+                    await store.putCheckpoint(id, version, await session.saveToPackage({ version }));
                     return version;
                 }),
             );
@@ -297,7 +297,10 @@ export function documentRoutes({
         delimiter: string | undefined,
         password: string | undefined,
     ): Promise<UDocSession> {
-        const session = await udoc.open(uploaded, format, delimiter);
+        const session = await udoc.open(uploaded, {
+            ...(format !== undefined && { format }),
+            ...(delimiter !== undefined && { delimiter }),
+        });
         // A package's ids were minted by whatever imported it, and it has no
         // original to keep: it is a document already imported, not one to import.
         if (session.fromPackage) {
@@ -365,13 +368,21 @@ function copyAsked(params: Params, query: URLSearchParams): (session: UDocSessio
     return async (session) => {
         if (format === "udoc") return session.saveToPackage();
         try {
-            return await session.saveToBytes(format, strategy, delimiter);
+            return await session.saveToBytes({
+                format,
+                ...(strategy !== undefined && { strategy }),
+                ...(delimiter !== undefined && { delimiter }),
+            });
         } catch (error) {
             // Asked for no strategy, the engine takes the one keeping the most of
             // the original, which it can't always write over: a PDF that needs a
             // password. A rewrite keeps nothing of it, and is still a copy.
             if (strategy !== undefined || failureOf(error).code !== "unsupported") throw error;
-            return session.saveToBytes(format, "rewrite", delimiter);
+            return session.saveToBytes({
+                format,
+                strategy: "rewrite",
+                ...(delimiter !== undefined && { delimiter }),
+            });
         }
     };
 }
