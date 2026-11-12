@@ -6,6 +6,16 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Changed
+
+- A Word, Excel or PowerPoint document's comments are written as a PDF's are,
+  wherever the user may annotate: in the viewer, and in the editor's view mode
+  as in its edit mode, the Comments panel replies to, edits, resolves, reopens
+  and deletes them, and its New Comment opens a thread.
+  `enableAnnotation: false` leaves them to be read, as it does a PDF's.
+
 ## [0.8.20] - 2026-11-11
 
 Built on `@docmentis/udoc-wasm` 0.8.23.

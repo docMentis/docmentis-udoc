@@ -19,7 +19,7 @@ import type { Comment } from "../annotations.js";
 import { commentThreads, officeThreads, threadHolding } from "../annotations.js";
 import { ICON_CHEVRON_DOWN, ICON_NEW_COMMENT } from "../icons.js";
 import type { UIState } from "../state.js";
-import { commentable, VIEW_MODE } from "../state.js";
+import { commentable } from "../state.js";
 import { createCommentThread, createReplyField } from "./CommentThread.js";
 import type { CommentThreadCallbacks, CommentThreadView, ReplyFieldWords } from "./CommentThread.js";
 import { createButton } from "./controls.js";
@@ -49,8 +49,9 @@ interface CommentsPanelSlice {
     /** Whether the session may annotate — without it, every PDF thread only
      *  reads. */
     annotating: boolean;
-    /** Whether an Office thread may be written: in an editing mode, on a
-     *  document whose comment edits are built. */
+    /** Whether an Office thread may be written: by a session that may
+     *  annotate, in any mode — a comment is an annotation, as a PDF's is — on
+     *  a document whose comment edits are built. */
     officeEditing: boolean;
     /** Bumped by a toolbar's New Comment ({@link UIState.newCommentGen}). */
     newCommentGen: number;
@@ -70,9 +71,9 @@ function selectSlice(state: UIState): CommentsPanelSlice {
             ids: selected.annotations.flatMap((a) => (a.id === undefined ? [] : [a.id])),
         },
         annotating: state.features.includes("annotation"),
-        officeEditing: state.mode !== VIEW_MODE && OFFICE_EDITED_DOC_TYPES.has(state.docType ?? ""),
+        officeEditing: state.features.includes("annotation") && OFFICE_EDITED_DOC_TYPES.has(state.docType ?? ""),
         newCommentGen: state.newCommentGen,
-        commentable: commentable(state.selectionCaps, state.docType, state.presentationView),
+        commentable: commentable(state.selectionCaps, state.docType, state.presentationView, state.features),
     };
 }
 

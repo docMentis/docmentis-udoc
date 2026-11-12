@@ -160,11 +160,13 @@ export interface UDocOptions {
      *  selection to highlight only; edit mode copies whatever this says.
      *  Default `true`. */
     enableCopy?: boolean;
-    /** Let the user annotate a PDF: the Annotate tab's tools, writing,
-     *  answering and deleting comments, and moving, resizing, restyling and
-     *  deleting an annotation. `false` still shows the document's annotations
-     *  and comments, to read, and {@link UDocBase.addPageAnnotation} and the
-     *  rest still change them. Default `true`. */
+    /** Let the user annotate a PDF and comment on any document: the Annotate
+     *  tab's tools; writing, answering, resolving and deleting comments, a
+     *  PDF's and a Word, Excel or PowerPoint document's; and moving, resizing,
+     *  restyling and deleting an annotation. `false` still shows the
+     *  document's annotations and comments, to read, and
+     *  {@link UDocBase.addPageAnnotation} and the rest still change them.
+     *  Default `true`. */
     enableAnnotation?: boolean;
     /** Let the user fill in a PDF form's fields. `false` shows them as the
      *  document has them filled in. Default `true`. */

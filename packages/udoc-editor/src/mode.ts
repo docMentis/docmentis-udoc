@@ -6,8 +6,8 @@ import type { Feature } from "@docmentis/udoc-wasm";
  * scopes which commands the toolbar offers and how the pointer behaves; it is
  * usually fixed by the host before the editor is shown.
  *
- * - `view` — reading: navigation, filling in a form, and a PDF's annotations
- *   (its Annotate tab).
+ * - `view` — reading: navigation, filling in a form, a PDF's annotations
+ *   (its Annotate tab), and a document's comments.
  * - `edit` — full content authoring (Office "select + insert" model).
  */
 export type EditorMode = "view" | "edit";
@@ -16,8 +16,8 @@ export type EditorMode = "view" | "edit";
 export const ALL_MODES: readonly EditorMode[] = ["view", "edit"];
 
 /** The feature each mode needs, or null for one every session may use. View's
- *  own edits — a form's fields, a PDF's annotations — are gated where they
- *  start, not by the mode. */
+ *  own edits — a form's fields, a PDF's annotations, a document's comments —
+ *  are gated where they start, not by the mode. */
 const MODE_FEATURES: Record<EditorMode, Feature | null> = {
     view: null,
     edit: "editing",

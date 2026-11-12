@@ -198,15 +198,21 @@ export const PAGELESS_PLANE = 1;
 /** Whether New Comment can open a thread on what is selected: a selection
  *  that takes one — a document's text, a slide's shape or the text in one, a
  *  sheet's active cell — or, on a deck's slides in Normal view with nothing
- *  selected, the slide shown. */
+ *  selected, the slide shown. Opening a thread is `annotation`'s: the
+ *  selection's capabilities say so of what is selected, and `features` of the
+ *  slide. */
 export function commentable(
     selection: SelectionCapabilities,
     docType: UDocType | null,
     presentationView: PresentationView,
+    features: readonly Feature[],
 ): boolean {
     return (
         selection.allowed.includes("insertComment") ||
-        (docType === "presentation" && presentationView === "normal" && selection.count === 0)
+        (docType === "presentation" &&
+            presentationView === "normal" &&
+            selection.count === 0 &&
+            features.includes("annotation"))
     );
 }
 

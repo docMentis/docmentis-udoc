@@ -419,7 +419,8 @@ export type SelectionEditKind =
     | "stepCellDecimals"
     | "clearCellFormats"
     | "mergeSheetCells"
-    | "unmergeSheetCells";
+    | "unmergeSheetCells"
+    | "insertComment";
 
 /** Whether `caps` allows a selection edit of any of `kinds` — no per-doc-type
  *  branch: pass every name the control's edit goes by (`deleteObjects`,
@@ -428,13 +429,15 @@ export function allowsEdit(caps: SelectionCapabilities, ...kinds: SelectionEditK
     return caps.allowed.some((kind) => (kinds as string[]).includes(kind));
 }
 
-/** The edits on an annotation selection — `annotation`'s; every other kind is
- *  `editing`'s. */
+/** The edits on an annotation selection, and opening a Word, Excel or
+ *  PowerPoint comment thread on what is selected — `annotation`'s; every other
+ *  kind is `editing`'s. */
 const ANNOTATION_EDIT_KINDS: ReadonlySet<string> = new Set<SelectionEditKind>([
     "deleteAnnotations",
     "translateAnnotations",
     "resizeAnnotations",
     "reorderAnnotations",
+    "insertComment",
 ]);
 
 /** `caps` less the edits a session entitled to `features` may not make, so

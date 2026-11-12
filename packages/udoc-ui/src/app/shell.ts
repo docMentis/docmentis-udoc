@@ -3022,7 +3022,7 @@ export function mountUIShell(
         const state = store.getState();
         const docType = state.docType;
         if (docType !== "wordprocessing" && docType !== "presentation" && docType !== "spreadsheet") return;
-        if (!commentable(state.selectionCaps, docType, state.presentationView)) return;
+        if (!commentable(state.selectionCaps, docType, state.presentationView, state.features)) return;
         const [id, story] = await Promise.all([mintId(), mintId()]);
         if (id === null || story === null) return;
         const comment = {

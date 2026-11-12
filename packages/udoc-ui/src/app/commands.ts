@@ -1,5 +1,12 @@
 import type { HistoryOp, SelectionEdit } from "../worker/protocol.js";
-import type { RevisionView, RevisionViewMode, SheetLayoutMode, StampIcon, UDocType } from "@docmentis/udoc-wasm";
+import type {
+    Feature,
+    RevisionView,
+    RevisionViewMode,
+    SheetLayoutMode,
+    StampIcon,
+    UDocType,
+} from "@docmentis/udoc-wasm";
 import { allowsEdit } from "../geometry.js";
 import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
 import { commentable, copyAllowed, PAGELESS_PLANE, panelOpenable, revisionViewOf, sheetLayoutModeOf } from "./state.js";
@@ -113,6 +120,9 @@ export interface CommandContext {
     /** Whether the selection copies and the mode lets it ({@link copyAllowed}). */
     canCopy: boolean;
     selection: SelectionCapabilities;
+    /** The features the session is entitled to — what New Comment on a slide
+     *  with nothing selected is live by ({@link commentable}). */
+    features: readonly Feature[];
     /** Whether every selected slide is hidden ({@link UIState.selectedSlidesHidden})
      *  — what Hide Slide reads checked by. */
     slidesHidden: boolean;
@@ -175,6 +185,7 @@ export function commandContext(state: UIState): CommandContext {
         canRedo: state.canRedo && state.activeCell?.entry == null,
         canCopy: state.selectionCaps.copyable && copyAllowed(state),
         selection: state.selectionCaps,
+        features: state.features,
         slidesHidden: state.selectedSlidesHidden,
         currentSlidePlays: state.currentSlidePlays,
         slidePreviewing: state.slidePreviewing,
@@ -1304,7 +1315,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
                 store.dispatch({ type: "OPEN_PANEL", panel: "comments" });
             },
         },
-        enabledWhen: (c) => c.ready && commentable(c.selection, c.docType, c.presentationView),
+        enabledWhen: (c) => c.ready && commentable(c.selection, c.docType, c.presentationView, c.features),
     },
     // A workbook's formula bar above its grid.
     formulaBar: {
