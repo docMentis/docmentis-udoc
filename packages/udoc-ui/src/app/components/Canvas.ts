@@ -2554,8 +2554,12 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         const handle = selection.handleAt(x, y);
         if (handle) return selection.resizeCursor(handle.handle, handle.place);
         if (selection.hitLocal(x, y)) {
-            // A selection that doesn't move keeps the arrow.
-            const move = selection.allows("translateObjects", "translateAnnotations", "translateShapes") ? "move" : "";
+            // A selection that doesn't move keeps the arrow — in view mode,
+            // every selection but an annotation's.
+            const moves =
+                (store?.getState()?.mode !== VIEW_MODE || annotationSelected) &&
+                selection.allows("translateObjects", "translateAnnotations", "translateShapes");
+            const move = moves ? "move" : "";
             if (selection.borderLocal(x, y)) return move;
             const fill = fillCursor(x, y) || linkCursor(x, y);
             if (fill) return fill;
@@ -2569,10 +2573,12 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
 
     /** The flavor of text gesture a select-pointer press starts in the current
      *  mode — flowing across objects and pages in view mode, confined to the
-     *  one object in edit mode (`TextSelectOptions.global`) — and so which level
-     *  of a PDF hit's path reads as text ({@link hitText}). */
+     *  one object in edit mode and in a deck in either mode
+     *  (`TextSelectOptions.global`) — and so which level of a hit's path reads
+     *  as text ({@link hitText}). */
     function pressGlobal(): boolean {
-        return store?.getState()?.mode === VIEW_MODE;
+        const st = store?.getState();
+        return st?.mode === VIEW_MODE && st.docType !== "presentation";
     }
 
     /**
@@ -3348,9 +3354,44 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             hooks.fillFormField?.(widget.page, widget.annotation);
             return;
         }
-        // View mode's select tool IS the text tool: a click drops a caret, a
-        // drag selects a flowing range across objects and pages (no object
-        // chrome). A double / triple press selects (and drags) by words /
+        // A deck in view mode picks as edit mode does — a press on a shape's
+        // text drops a caret or drags a range confined to that shape, a press
+        // on another shape picks it, Shift / Alt adds or removes it, a drag
+        // from bare slide sweeps a marquee — but moves nothing: where edit
+        // mode's drag moves the picked shapes, this one sweeps a marquee, and
+        // the pick draws no handles. A click on a link follows it, as view
+        // mode's does (see `clickFollows`).
+        if (!editable && st.docType === "presentation") {
+            const text = textIntent(x, y, ev);
+            if (touch) {
+                gesture = touchScrollGesture(
+                    ev,
+                    x,
+                    y,
+                    text
+                        ? { kind: "text", granularity: granularityFor(chainClick(x, y)), global: false }
+                        : { kind: "object", mode: selectModeFor(ev) },
+                );
+            } else if (text) {
+                gesture = textGesture(x, y, ev, false);
+            } else {
+                gesture = {
+                    kind: "marqueeSelect",
+                    startX: x,
+                    startY: y,
+                    pointerId: ev.pointerId,
+                    mode: selectModeFor(ev),
+                    linkKey: linkKeyDown(ev),
+                    moved: false,
+                };
+                updateMarquee(x, y, x, y);
+            }
+            el.setPointerCapture(ev.pointerId);
+            return;
+        }
+        // Elsewhere, view mode's select tool IS the text tool: a click drops a
+        // caret, a drag selects a flowing range across objects and pages (no
+        // object chrome). A double / triple press selects (and drags) by words /
         // paragraphs; Shift extends the current selection instead of
         // re-anchoring. Object move/resize is edit-only — an annotation press
         // took edit mode's path above — so view never reaches those. A

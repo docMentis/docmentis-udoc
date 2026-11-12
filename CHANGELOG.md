@@ -29,6 +29,18 @@ listed once, by package. Its major and minor version are those of the
   wherever comments may be written. `enableAnnotation: false` leaves them to
   be read, as it does a PDF's, and takes New Comment away.
 
+- A PowerPoint document in view mode selects as edit mode does: a press on a
+  shape's text places the caret or selects text within that shape, a press
+  on another shape picks it, and a drag from the bare slide picks the shapes
+  it sweeps. Nothing picked moves or resizes. Text is no longer selected from
+  one shape into the next. New Comment opens a thread on the selected text or
+  shape, as in edit mode.
+
+- New Comment opens a thread on text selected in a Word document in view
+  mode, including text that runs from one section into the next. A comment on
+  text that spans sections, made here or in Word, is highlighted through each
+  section.
+
 - A Word document's Review tab leads with Track Changes, which starts off.
   Turning it on shows all markup, and turning it off shows none. Show Markup
   is now Markup Options, an icon, and New Comment is named beside its icon.
