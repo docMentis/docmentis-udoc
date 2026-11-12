@@ -1887,8 +1887,12 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // Hold the first paint until the host applies this document's
                 // spacing (see `awaitingSpacing`).
                 awaitingSpacing = true;
-                if (msg.type === "open") session.open(new Uint8Array(msg.bytes), msg.format, msg.delimiter);
-                else session.openRemote(msg.url, fetchSync);
+                if (msg.type === "open") {
+                    session.open(new Uint8Array(msg.bytes), {
+                        format: msg.format ?? null,
+                        delimiter: msg.delimiter ?? null,
+                    });
+                } else session.openRemote(msg.url, fetchSync);
                 reply(id, openedLayout(session));
                 opened(session);
                 break;
@@ -2934,7 +2938,13 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             case "saveToBytes": {
                 if (!session) throw new Error("engine worker: saveToBytes before open");
                 // Out of wasm memory into a standalone, transferable buffer.
-                const buffer = session.saveToBytes(msg.format, msg.strategy, msg.delimiter).slice().buffer;
+                const buffer = session
+                    .saveToBytes({
+                        format: msg.format,
+                        strategy: msg.strategy ?? null,
+                        delimiter: msg.delimiter ?? null,
+                    })
+                    .slice().buffer;
                 reply(id, buffer, undefined, [buffer]);
                 break;
             }
@@ -2946,7 +2956,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "saveToPackage": {
                 if (!session) throw new Error("engine worker: saveToPackage before open");
-                const buffer = session.saveToPackage(msg.version).slice().buffer;
+                const buffer = session.saveToPackage({ version: msg.version ?? null }).slice().buffer;
                 reply(id, buffer, undefined, [buffer]);
                 break;
             }

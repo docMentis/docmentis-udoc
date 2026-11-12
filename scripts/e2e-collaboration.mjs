@@ -141,7 +141,7 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
         const reopened = await remote(server.base, id);
         let refused = "";
         try {
-            reopened.saveToBytes(SOURCE[type], "rewrite");
+            reopened.saveToBytes({ format: SOURCE[type], strategy: "rewrite" });
         } catch (error) {
             refused = String(error?.message ?? error).slice(0, 200);
         }

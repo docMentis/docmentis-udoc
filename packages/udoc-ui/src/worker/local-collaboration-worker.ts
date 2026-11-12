@@ -59,7 +59,7 @@ async function handle(msg: LocalServiceRequestEnvelope): Promise<void> {
             case "start": {
                 if (!fonts) throw new Error("local collaboration service: start before init");
                 session = await startSession(msg.config, fonts);
-                session.open(new Uint8Array(msg.bytes), msg.format);
+                session.open(new Uint8Array(msg.bytes), { format: msg.format ?? null });
                 documentPackage = session.saveToPackage();
                 reply(id, undefined);
                 break;

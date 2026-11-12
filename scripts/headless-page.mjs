@@ -177,7 +177,7 @@ async function pagedDocument(Class, label, { path, docType }) {
     });
     await check(`${name}: what it saves reopens`, async () => {
         const pages = ui.pageCount;
-        const saved = await ui.saveToBytes(ui.sourceFormat);
+        const saved = await ui.saveToBytes();
         await ui.open(saved, { filename });
         await ui.exportToBytes("pdf");
         expect(ui.pageCount === pages, `${ui.pageCount} pages, from ${pages}`);
@@ -301,7 +301,7 @@ async function editing() {
         expect(ui.pageCount === 3, `${ui.pageCount} pages after redo`);
     });
     await check("editor: an edit is in what it saves", async () => {
-        const saved = await ui.saveToBytes("pdf");
+        const saved = await ui.saveToBytes({ format: "pdf" });
         await ui.open(saved, { filename: "short.pdf" });
         expect(ui.pageCount === 3, `${ui.pageCount} pages reopened`);
     });

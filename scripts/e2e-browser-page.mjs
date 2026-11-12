@@ -144,7 +144,7 @@ async function readOnlyCheckpoint(label, ui, id, atV1, insert) {
         joined = false;
     }
     check(`${label}: it joins no collaboration`, !joined);
-    check(`${label}: it saves what it holds`, (await ui.saveToBytes(ui.sourceFormat)).length > 100);
+    check(`${label}: it saves what it holds`, (await ui.saveToBytes()).length > 100);
     const downloaded = new Promise((resolve) => ui.on("document:downloaded", () => resolve(true)));
     await ui.download("checkpoint");
     check(`${label}: it downloads`, await Promise.race([downloaded, sleep(5000).then(() => false)]));

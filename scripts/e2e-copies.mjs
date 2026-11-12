@@ -157,7 +157,7 @@ for (const [type, f] of Object.entries(FORMATS)) {
     const before = await shownIn(original, f.shown);
     const onTheFile = await newSession();
     onTheFile.open(original);
-    const unedited = f.format === "pdf" ? onTheFile.saveToBytes("pdf", f.strategy) : undefined;
+    const unedited = f.format === "pdf" ? onTheFile.saveToBytes({ format: "pdf", strategy: f.strategy }) : undefined;
     const store = await temporaryStore();
     let server = await serve(store.directory);
     const id = await upload(server.base, t);

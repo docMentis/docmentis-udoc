@@ -101,12 +101,19 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 // once in a stand-in and again when they landed, so they go in
                 // as bytes, before the document opens.
                 for (const bytes of await officeCompatibleFonts()) session.registerLocalFont(bytes);
-                if (request.type === "open") session.open(request.bytes, request.format, request.delimiter);
+                if (request.type === "open") {
+                    session.open(request.bytes, {
+                        format: request.format ?? null,
+                        delimiter: request.delimiter ?? null,
+                    });
+                }
                 // The session keeps the fetch: a page composed later may need a
                 // part not fetched yet.
-                else if (request.withOriginal) {
-                    session.openRemoteWithOriginal(request.url, blockingFetch(request.fetches));
-                } else session.openRemote(request.url, blockingFetch(request.fetches));
+                else {
+                    session.openRemote(request.url, blockingFetch(request.fetches), {
+                        withOriginal: request.withOriginal,
+                    });
+                }
                 return { id, ok: true, result: openedAs(session) };
             case "authenticate":
                 // Not a second open: the permit was spent on this document by
@@ -131,10 +138,14 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 return {
                     id,
                     ok: true,
-                    result: opened().saveToBytes(request.format, request.strategy, request.delimiter),
+                    result: opened().saveToBytes({
+                        format: request.format,
+                        strategy: request.strategy ?? null,
+                        delimiter: request.delimiter ?? null,
+                    }),
                 };
             case "saveToPackage":
-                return { id, ok: true, result: opened().saveToPackage(request.version) };
+                return { id, ok: true, result: opened().saveToPackage({ version: request.version ?? null }) };
             case "exportToBytes": {
                 const s = opened();
                 // Every page goes in: compose them all, their fonts filled, so
