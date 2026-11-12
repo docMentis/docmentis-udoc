@@ -58,6 +58,25 @@ listed once, by package. Its major and minor version are those of the
   version with a bar beside each change, where it opened in All Markup,
   unless it was saved with markup off.
 
+### udoc-server
+
+#### Added
+
+- `POST /documents/:id/checkpoints/:version/branch` branches a document at one
+  of its checkpoints: a new document, kept as that one stood there and edited
+  apart from it, with no session opened. `POST /documents/:id/merge` merges a
+  branch back: each edit made in it reaches the document, its editors and its
+  log, beside the document's own edits since, whether either's log was cut
+  meanwhile or not. A comment made in a branch lands on what it was made on,
+  wherever that has moved. A branch merges once.
+
+#### Changed
+
+- `DocumentStore` has more methods for a host's own store to implement:
+  `branch`, `getBranchPoint`, `deleteBranchPoint` and `shareOpaqueParts`. Its
+  `putCheckpoint` keeps a branch's opaque parts beside its checkpoints until
+  the branch is merged back.
+
 ### udoc-node
 
 #### Added

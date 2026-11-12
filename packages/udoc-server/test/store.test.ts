@@ -10,13 +10,15 @@
  * forgets what it holds of the opaque parts, and a part only an earlier one
  * holds is read from the newest that does; a cut keeps its checkpoint, notes
  * it, and replaces the log, in that order; a checkpoint is read as of its own
- * version, and one not kept reads as nothing; an id already kept is never
+ * version, and one not kept reads as nothing; a branch is the document as it
+ * stood at a checkpoint, sharing its files, keeps the opaque parts its edits
+ * brought until it is merged back, and shares them; an id already kept is never
  * overwritten; an id never becomes a path outside the directory; and a write
  * that fails leaves nothing half-written behind.
  */
 
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -357,6 +359,89 @@ test("a checkpoint is kept beside the earlier ones, once, read as the latest, an
         ["v0.udoc", "v1.udoc", "v2.udoc"],
         "nothing staged",
     );
+});
+
+test("a branch is the document as it stood at a checkpoint, sharing its files, and keeps where it was taken from", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const store = new DirectoryDocumentStore(directory);
+    await store.put("a", { original: pdf.original, checkpoint: await packageZip() });
+    await store.putCheckpoint("a", 1, await packageZip(checkpointEntries(1)));
+    await store.putCut("a", 2, await packageZip(checkpointEntries(2)), bytesOf("log cut at v2"));
+    await store.putCheckpoint("a", 3, await packageZip(checkpointEntries(3)));
+    await store.putLog("a", bytesOf("log now"));
+    await store.putOpaqueParts("a", await packageZip({ "parts/image_0-2b.json": "an edit's image" }));
+
+    await store.branch("a", 2, "b");
+    assert.deepEqual(await store.getCheckpointVersions("b"), [0, 1, 2], "none after it");
+    assert.deepEqual(await store.getCuts("b"), [2]);
+    assert.deepEqual(await store.getBranchPoint("b"), { id: "a", version: 2 });
+    assert.equal(await store.getBranchPoint("a"), undefined);
+    assert.deepEqual(await store.getDescription("b"), {
+        docType: "portable",
+        sourceFormat: "pdf",
+        baselineVersion: 2,
+        baselineFrontier: [[PEER, 7n]],
+    });
+    assert.equal(text(await store.getLog("b")), "[]", "no log of its own: the checkpoint's");
+    assert.equal(inflated(await store.getPart("b", "pages", "0-1")), "page v2");
+    assert.equal(inflated(await store.getPart("b", "soft-masks", "0-1a")), "soft mask", "read from an earlier one");
+    assert.equal(inflated(await store.getPart("b", "images", "0-2b")), "an edit's image");
+    const original = await store.getOriginal("b");
+    assert.deepEqual({ bytes: text(original?.bytes), format: original?.format }, { bytes: "pdf", format: "pdf" });
+    // The files never written over are the document's own, not copies.
+    const inode = async (id: string, path: string) => (await stat(join(directory, id, path))).ino;
+    for (const path of ["original.pdf", "checkpoints/v1.udoc", "opaque-parts/images/0-2b"]) {
+        assert.equal(await inode("b", path), await inode("a", path), path);
+    }
+
+    // Each goes on apart from the other.
+    await store.putCheckpoint("a", 4, await packageZip(checkpointEntries(4)));
+    await store.putCheckpoint("b", 3, await packageZip(checkpointEntries(3)));
+    assert.deepEqual(await store.getCheckpointVersions("a"), [0, 1, 2, 3, 4]);
+    assert.deepEqual(await store.getCheckpointVersions("b"), [0, 1, 2, 3]);
+    assert.notEqual(await inode("b", "checkpoints/v3.udoc"), await inode("a", "checkpoints/v3.udoc"));
+    await store.delete("a");
+    assert.equal(inflated(await store.getPart("b", "soft-masks", "0-1a")), "soft mask", "whole without it");
+
+    // Merged back, it no longer says where it came from.
+    await store.deleteBranchPoint("b");
+    assert.equal(await store.getBranchPoint("b"), undefined);
+
+    await store.put("c", { original: pdf.original, checkpoint: await packageZip() });
+    await assert.rejects(store.branch("c", 9, "d"), /keeps no checkpoint v9/);
+    await assert.rejects(store.branch("c", 0, "b"), "an id kept already");
+    assert.deepEqual(await store.getCheckpointVersions("b"), [0, 1, 2, 3], "and stays as it was");
+    assert.deepEqual((await readdir(directory)).sort(), ["b", "c"], "nothing staged");
+});
+
+test("a branch keeps the opaque parts its edits brought until it is merged back, and shares them", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const store = new DirectoryDocumentStore(directory);
+    await store.put("a", { original: pdf.original, checkpoint: await packageZip() });
+    await store.branch("a", 0, "b");
+    await store.putOpaqueParts(
+        "b",
+        await packageZip({ "parts/image_0-2a.json": "image part", "blobs/e7e7e7.png": "image pixels" }),
+    );
+
+    // A checkpoint of the branch holding them keeps them beside it all the same.
+    await store.putCheckpoint("b", 1, await packageZip(checkpointEntries(1)));
+    assert.deepEqual(await readdir(join(directory, "b", "opaque-parts", "images")), ["0-2a"]);
+    assert.deepEqual(await readdir(join(directory, "b", "blobs")), ["e7e7e7"]);
+
+    assert.equal(await store.getPart("a", "images", "0-2a"), undefined);
+    await store.shareOpaqueParts("b", "a");
+    // Shared again, they stay as they were.
+    await store.shareOpaqueParts("b", "a");
+    assert.equal(inflated(await store.getPart("a", "images", "0-2a")), "image part");
+    assert.equal(inflated(await store.getBlob("a", "e7e7e7")), "image pixels");
+    await assert.rejects(store.shareOpaqueParts("b", "c"), /no document "c" is kept/);
+    assert.deepEqual((await readdir(directory)).sort(), ["a", "b"]);
+
+    // Merged back, its next checkpoint forgets what it holds, as any document's does.
+    await store.deleteBranchPoint("b");
+    await store.putCheckpoint("b", 2, await packageZip(checkpointEntries(2)));
+    assert.deepEqual(await readdir(join(directory, "b", "opaque-parts", "images")), []);
 });
 
 test("an id that could name another path is refused before any file is touched", async (t) => {

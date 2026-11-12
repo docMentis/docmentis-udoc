@@ -1,7 +1,7 @@
 // The document routes: a document imported once and kept, then served from
 // what is kept — its original and its package read from the store, its pages
-// and its copies from a session over it — edited together, checkpointed, and
-// forgotten.
+// and its copies from a session over it — edited together, checkpointed,
+// branched and merged back, and forgotten.
 
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage } from "node:http";
@@ -29,8 +29,11 @@ export interface DocumentRoutesOptions {
     collaborations: Collaborations;
     /** The largest document accepted, in bytes. */
     maxUploadBytes: number;
-    /** Opens a session over one checkpoint, as it was, for what only a session can answer. */
-    openCheckpoint: (id: string, version: number) => Promise<UDocSession>;
+    /**
+     * Opens a session of its own over what is kept of a document, apart from its
+     * pooled one: as it is now, or checkpoint `version` as it was.
+     */
+    openKept: (id: string, version?: number) => Promise<UDocSession>;
 }
 
 /** The ids this server mints — `randomUUID`'s. Nothing else names a document. */
@@ -48,7 +51,7 @@ const SAVE_STRATEGIES: readonly SaveStrategy[] = ["rewrite", "delta", "increment
  * `cannotVerify`), `unreadableDocument`, `passwordRequired`,
  * `incorrectPassword`, `cannotImportPackage`, `pageNotFound`, `cannotSave`,
  * `upgradeRequired`, `notFound`, `badRequest`, `methodNotAllowed`,
- * `payloadTooLarge` or `internal`.
+ * `payloadTooLarge`, `notABranch`, `serverClosing` or `internal`.
  */
 export function documentRoutes({
     udoc,
@@ -56,10 +59,12 @@ export function documentRoutes({
     sessions,
     collaborations,
     maxUploadBytes,
-    openCheckpoint,
+    openKept,
 }: DocumentRoutesOptions): Route[] {
     /** The checkpoint each document is writing now, which its next one waits for, to take the version after. */
     const checkpointing = new Map<string, Promise<number>>();
+    /** The merge of each branch under way, which another merge of it waits for. */
+    const merging = new Map<string, Promise<void>>();
 
     return [
         route("POST", "/documents", importDocument),
@@ -80,6 +85,8 @@ export function documentRoutes({
         route("GET", "/documents/:id/checkpoints/:version/file.:format", checkpointFile, {
             params: { version: /\d+/, format: /\w+/ },
         }),
+        route("POST", "/documents/:id/checkpoints/:version/branch", branch, { params: { version: /\d+/ } }),
+        route("POST", "/documents/:id/merge", merge),
         route("GET", "/documents/:id/package", packageResource),
         route("GET", "/documents/:id/package/*route", packageResource),
         route("GET", "/documents/:id/collaboration", upgradeRequired, { upgrade: collaboration }),
@@ -200,12 +207,144 @@ export function documentRoutes({
      */
     async function checkpointFile({ params, query }: RouteRequest): Promise<Reply> {
         const save = copyAsked(params, query);
-        const session = await openCheckpoint(documentId(params), Number(params.version));
+        const session = await openKept(documentId(params), Number(params.version));
         try {
             return bytes(await save(session), "application/octet-stream");
         } finally {
             await session.close();
         }
+    }
+
+    /**
+     * Branch the document at checkpoint `version`: keep it as it stood there as a
+     * new document, `201 { id }`, edited apart from it and served, checkpointed
+     * and deleted as any other, until it is merged back ({@link merge}). Nothing
+     * is saved or opened, and no permit spent: the branch shares what is kept of
+     * the document up to that checkpoint, edit ids included, so each edit made
+     * in it since can be merged back.
+     */
+    async function branch({ params }: RouteRequest): Promise<Reply> {
+        const id = documentId(params);
+        const version = Number(params.version);
+        const versions = await store.getCheckpointVersions(id);
+        if (versions.length === 0) throw noDocument(id);
+        if (!versions.includes(version)) throw notFound(`document ${id} has no v${version}`);
+        const branched = randomUUID();
+        await store.branch(id, version, branched);
+        return json(201, { id: branched });
+    }
+
+    /**
+     * Merge the branch back into the document it was taken from, `204`: every
+     * edit made in it since its checkpoint, and merged into it by now, reaches
+     * the document as an editor's edits do — its editors and its log — each
+     * where its ids place it, beside the document's own edits since — through
+     * any cuts of either's log since the branch point. It opens a session of
+     * its own over the branch, spending a permit. The branch is then a document
+     * like any other: an edit made in it later stays in it.
+     * A document that isn't a branch, or a branch merged already, `409
+     * notABranch`; one taken from a document no longer kept, `404`.
+     */
+    async function merge({ params }: RouteRequest): Promise<Reply> {
+        const id = documentId(params);
+        // One at a time: a merge waiting on another finds the branch merged.
+        const next = (merging.get(id) ?? Promise.resolve()).catch(() => {}).then(() => mergeBranch(id));
+        merging.set(id, next);
+        const forget = () => {
+            if (merging.get(id) === next) merging.delete(id);
+        };
+        next.then(forget, forget);
+        await next;
+        return noContent();
+    }
+
+    async function mergeBranch(id: string): Promise<void> {
+        const point = await store.getBranchPoint(id);
+        if (!point) {
+            if ((await store.getCheckpointVersions(id)).length === 0) throw noDocument(id);
+            throw new HttpFailure(409, "notABranch", `document ${id} is no branch waiting to be merged back`);
+        }
+        if ((await store.getCheckpointVersions(point.id)).length === 0) {
+            throw notFound(`document ${point.id}, which ${id} was branched from, is no longer kept`);
+        }
+        // The branch's edits merged so far, kept, so a session over what is kept holds them.
+        await collaborations.kept(id);
+        // The opaque parts its edits brought, kept before the patch naming them
+        // is merged, as a client's are: a session over what is kept loads them
+        // through the store, so it holds none to send.
+        await store.shareOpaqueParts(id, point.id);
+        const branched = await openBranched(id, point.version);
+        try {
+            await collaborations.merge(point.id, async (document) => {
+                // A cut of the document's log since the branch point dropped the
+                // history the branch's edits depend on, so it refuses them; and
+                // past a cut of the branch's, its editors copied pages on that
+                // cut, as the document's never did. Either way its edits move
+                // onto the document's log as it is now, its pages copied there,
+                // as an editor's unsent edits do when it comes back from behind
+                // a cut.
+                const cuts = (await store.getCuts(point.id)).filter((cut) => cut > point.version);
+                if (cuts.length > 0 || branched.cut) {
+                    const logs = await Promise.all(cuts.map((cut) => cutLogOf(point.id, cut)));
+                    const latest = (await store.getCheckpointVersions(point.id)).at(-1)!;
+                    await branched.session.catchUp([...logs, await document.snapshot()], latest);
+                }
+                return branched.session.patchSince(await document.versionVector());
+            });
+        } finally {
+            await branched.close();
+        }
+        await store.deleteBranchPoint(id);
+    }
+
+    /**
+     * A session of its own over branch `id` holding every edit made in it since
+     * checkpoint `version`, its branch point, as edits. Opened at its head, it
+     * would hold those before a cut of its log only as the state they left; so
+     * it opens as the branch stood when it was taken — a branch of it there, which
+     * opens as an editor that opened at that checkpoint, kept until the session
+     * closes — and catches up through each cut since, whose package holds what
+     * that cut dropped, then the branch's log. `cut` says whether there was one.
+     */
+    async function openBranched(
+        id: string,
+        version: number,
+    ): Promise<{ session: UDocSession; cut: boolean; close(): Promise<void> }> {
+        const asTaken = randomUUID();
+        await store.branch(id, version, asTaken);
+        const forget = async () => void (await store.delete(asTaken));
+        let session: UDocSession;
+        try {
+            session = await openKept(asTaken);
+        } catch (error) {
+            await forget();
+            throw error;
+        }
+        const close = async () => {
+            await session.close();
+            await forget();
+        };
+        try {
+            const cuts = (await store.getCuts(id)).filter((cut) => cut > version);
+            const log = await store.getLog(id);
+            if (cuts.length > 0) {
+                const logs = await Promise.all(cuts.map((cut) => cutLogOf(id, cut)));
+                await session.catchUp([...logs, log!], cuts.at(-1)!);
+            } else if (log) {
+                await session.merge(log);
+            }
+            return { session, cut: cuts.length > 0, close };
+        } catch (error) {
+            await close();
+            throw error;
+        }
+    }
+
+    /** The log document `id`'s cut at `version` holds. */
+    async function cutLogOf(id: string, version: number): Promise<Uint8Array> {
+        const log = await store.getCheckpointLog(id, version);
+        if (!log) throw new UDocError("internal", `document ${id}'s cut at v${version} holds no log`);
+        return log;
     }
 
     /**

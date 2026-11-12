@@ -115,7 +115,7 @@ export function createUDocServer(options: UDocServerOptions): UDocServer {
             sessions,
             collaborations,
             maxUploadBytes,
-            openCheckpoint: (id, version) => reopen(udoc, store, id, version),
+            openKept: (id, version) => reopen(udoc, store, id, version),
         }),
     ];
     const upgradeRoutes = routes.filter((route) => route.upgrade !== undefined);

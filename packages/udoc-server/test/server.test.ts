@@ -175,12 +175,23 @@ class FakeSession {
         this.cutStarted = true;
         await this.cutHold;
         if (this.logCutSaves < minSavedBytes) return undefined;
-        // The cut's marker, in the log kept beside the checkpoint before it.
+        // The cut's marker, in the log kept beside the checkpoint before it. The
+        // checkpoint keeps in its own log every edit up to the marker: what the
+        // cut drops from the log.
         this.edits.add(`cut ${version}`);
         return {
-            checkpoint: await packageZip(checkpointEntries(version)),
+            checkpoint: await packageZip({
+                ...checkpointEntries(version),
+                "crdt_delta.loro": JSON.stringify([...this.edits]),
+            }),
             log: bytesOf(JSON.stringify([`cut ${version}`])),
         };
+    }
+    /** Every catch-up asked of it: the logs, as text, and the version caught up to. */
+    readonly catchUps: { logs: string[]; version: number }[] = [];
+    async catchUp(logs: Uint8Array[], version: number): Promise<void> {
+        this.catchUps.push({ logs: logs.map(text), version });
+        for (const log of logs) await this.merge(log);
     }
     async versionVector(): Promise<Uint8Array> {
         return this.snapshot();
@@ -1104,7 +1115,11 @@ test("an idle session's log is cut when that saves enough, and what led up to it
 
     assert.deepEqual(await (await request("GET", `/documents/${id}/package/cuts`)).json(), { versions: [1] });
     const led = await request("GET", `/documents/${id}/package/cuts/1/crdt`);
-    assert.equal(text(inflateRawSync(new Uint8Array(await led.arrayBuffer()))), "[]", "the checkpoint's own log");
+    assert.equal(
+        text(inflateRawSync(new Uint8Array(await led.arrayBuffer()))),
+        '["alex 1","alex 2","cut 1"]',
+        "the checkpoint's own log: what the cut dropped",
+    );
     assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/package/cuts/2/crdt`)), [404, "notFound"]);
 
     // A checkpoint takes the number after the cut's, and a reopen starts at the cut.
@@ -1158,6 +1173,123 @@ test("a client behind the log's cut is closed to catch up", async (t) => {
     const behind = await collaborator(t, base, id);
     behind.send(JOIN, '["behind"]');
     assert.deepEqual(await behind.closed, { code: 4003, reason: "this peer is behind the log's cut" });
+});
+
+/** An id this server could have minted, for a document it doesn't keep. */
+const NOT_KEPT = "00000000-0000-4000-8000-000000000000";
+
+test("a branch is taken at a checkpoint with no session opened, and merged back once, as an editor's edits are", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { udoc, base, request, upload } = await serve(t, directory);
+    const id = await upload();
+    const body = async (response: Response) => text(inflateRawSync(new Uint8Array(await response.arrayBuffer())));
+    const alex = await collaborator(t, base, id);
+    alex.send(JOIN, "[]");
+    alex.send(PATCH, '["alex 1"]');
+    await until(async () => (await kept(directory, id))["crdt_delta.loro"] === '["alex 1"]');
+    assert.deepEqual(await (await request("POST", `/documents/${id}/checkpoints`)).json(), { version: 1 });
+
+    // Taken at the checkpoint, the branch is that far of the document, and
+    // nothing is opened for it.
+    const opens = udoc.opened.length;
+    const branched = await request("POST", `/documents/${id}/checkpoints/1/branch`);
+    assert.equal(branched.status, 201);
+    const { id: branch } = (await branched.json()) as { id: string };
+    assert.notEqual(branch, id);
+    assert.equal(udoc.opened.length, opens);
+    assert.deepEqual(await (await request("GET", `/documents/${branch}/checkpoints`)).json(), { versions: [0, 1] });
+    assert.deepEqual(await (await request("GET", `/documents/${id}/checkpoints`)).json(), { versions: [0, 1] });
+
+    // A reviewer edits the branch, a picture among the edits, and checkpoints
+    // it; the document goes on being edited.
+    const robin = await collaborator(t, base, branch);
+    robin.send(JOIN, "[]");
+    robin.send(
+        OPAQUE_PARTS,
+        await packageZip({ "parts/image_0-2c.json": "image part", "blobs/c7c7c7.png": "image pixels" }),
+    );
+    robin.send(PATCH, '["robin inserts a picture"]');
+    await until(async () => (await kept(directory, branch))["crdt_delta.loro"] === '["robin inserts a picture"]');
+    assert.deepEqual(await (await request("POST", `/documents/${branch}/checkpoints`)).json(), { version: 2 });
+    alex.send(PATCH, '["alex 2"]');
+    await until(async () => (await kept(directory, id))["crdt_delta.loro"] === '["alex 1","alex 2"]');
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${id}/package/images/0-2c`)), [404, "notFound"]);
+
+    // Merged back: the picture first, then the branch's edits the document
+    // lacks, to its editors and its log, from a session of the branch's own.
+    assert.equal((await request("POST", `/documents/${branch}/merge`)).status, 204);
+    assert.equal(await body(await request("GET", `/documents/${id}/package/images/0-2c`)), "image part");
+    assert.equal(await body(await request("GET", `/documents/${id}/package/blobs/c7c7c7`)), "image pixels");
+    assert.equal((await kept(directory, id))["crdt_delta.loro"], '["alex 1","alex 2","robin inserts a picture"]');
+    await until(() => alex.received.length === 3);
+    assert.deepEqual(alex.received[2], [PATCH, '["robin inserts a picture"]']);
+    assert.equal(robin.received.length, 2, "the branch's editors get nothing of it");
+    // From a session of its own, opened as the branch stood when it was taken:
+    // a branch of it there, forgotten once the session is let go.
+    const merging = udoc.opened.at(-1)!;
+    assert.notEqual(merging.bytes, keptUrl(branch));
+    assert.equal(merging.session.isClosed, true);
+    assert.deepEqual(merging.session.catchUps, [], "no cut to come past");
+    assert.deepEqual((await readdir(directory)).sort(), [branch, id].sort());
+
+    // Once: a branch merged back is a document like any other.
+    assert.deepEqual(await errorOf(await request("POST", `/documents/${branch}/merge`)), [409, "notABranch"]);
+    assert.deepEqual(await errorOf(await request("POST", `/documents/${id}/merge`)), [409, "notABranch"]);
+    assert.equal((await kept(directory, branch))["crdt_delta.loro"], '["robin inserts a picture"]');
+
+    assert.deepEqual(await errorOf(await request("POST", `/documents/${id}/checkpoints/7/branch`)), [404, "notFound"]);
+    assert.deepEqual(await errorOf(await request("POST", `/documents/${NOT_KEPT}/checkpoints/0/branch`)), [
+        404,
+        "notFound",
+    ]);
+    assert.deepEqual(await errorOf(await request("POST", `/documents/${NOT_KEPT}/merge`)), [404, "notFound"]);
+    assert.deepEqual(await errorOf(await request("GET", `/documents/${branch}/merge`)), [405, "methodNotAllowed"]);
+});
+
+test("a merge brings a branch's edits through the cuts of its log, and of the document's, since it was taken", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const { udoc, base, request, upload } = await serve(t, directory, { sessionTimeoutMs: 20, cutMinSavedBytes: 0 });
+    const id = await upload();
+    const editing = async (document: string, edit: string) => {
+        const editor = await collaborator(t, base, document);
+        editor.send(JOIN, "[]");
+        editor.send(PATCH, JSON.stringify([edit]));
+        await until(async () => (await kept(directory, document))["crdt_delta.loro"]?.includes(edit) === true);
+        return editor;
+    };
+
+    // The document's idle session cuts its log, at v1, and the branch is taken there.
+    (await editing(id, "alex 1")).socket.close();
+    await until(async () => (await kept(directory, id))["cuts.json"] === "[1]");
+    const { id: branch } = (await (await request("POST", `/documents/${id}/checkpoints/1/branch`)).json()) as {
+        id: string;
+    };
+
+    // The branch's is cut as any document's is, at its v2, and edited past that.
+    (await editing(branch, "robin 1")).socket.close();
+    await until(async () => (await kept(directory, branch))["cuts.json"] === "[1,2]");
+    const robin = await editing(branch, "robin 2");
+
+    // The document's is cut again, at its v3, past the branch point.
+    const alex = await editing(id, "alex 2");
+    assert.deepEqual(await (await request("POST", `/documents/${id}/checkpoints`)).json(), { version: 2 });
+    alex.socket.close();
+    await until(async () => (await kept(directory, id))["cuts.json"] === "[1,3]");
+
+    // Merged: opened as the branch was taken, its edits come through its cut,
+    // as that cut's package keeps them, and its log; then through the
+    // document's cut and its log; and then merge.
+    assert.equal((await request("POST", `/documents/${branch}/merge`)).status, 204);
+    const merging = udoc.opened.find(({ session }) => session.catchUps.length > 0)!.session;
+    assert.deepEqual(merging.catchUps, [
+        { logs: ['["alex 1","cut 1","robin 1","cut 2"]', '["cut 2","robin 2"]'], version: 2 },
+        { logs: ['["cut 1","alex 2","cut 3"]', '["cut 3"]'], version: 3 },
+    ]);
+    assert.equal(merging.isClosed, true);
+    const log = JSON.parse((await kept(directory, id))["crdt_delta.loro"]!) as string[];
+    assert.ok(log.includes("robin 1") && log.includes("robin 2"), log.join(", "));
+    assert.deepEqual((await readdir(directory)).sort(), [branch, id].sort());
+    robin.socket.close();
 });
 
 test("what a client shouldn't send ends that client alone, and nothing of it is sent on or kept", async (t) => {

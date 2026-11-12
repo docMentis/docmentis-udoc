@@ -66,6 +66,10 @@ the packages here call through — is documented with the engine, not here.
   a checkpoint from a document's edit log, to bound what every open loads. A cut only
   when an idle session closes, apart from checkpoints; what the store keeps and the
   routes it adds; how an editor left open across a cut catches up; and its limits.
+- [Node Branches](node-branches.md) — a document kept as another stood at a
+  checkpoint, edited apart and merged back: what the store shares, the `branch` and
+  `merge` routes, a merge through cuts of either log, why a branch's opaque parts
+  stay beside it until then, and where a comment lands.
 
 ### Examples
 

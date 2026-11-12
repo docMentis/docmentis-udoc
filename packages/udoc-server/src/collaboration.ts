@@ -8,7 +8,7 @@ import type { UDocSession } from "@docmentis/udoc-node";
 import { WebSocketServer } from "ws";
 import type { RawData, WebSocket } from "ws";
 
-import { LICENSE_CODES, failureOf, messageOf } from "./http.ts";
+import { HttpFailure, LICENSE_CODES, failureOf, messageOf } from "./http.ts";
 import type { Upgrade } from "./http.ts";
 import type { SessionPool } from "./session-pool.ts";
 import type { DocumentStore } from "./store.ts";
@@ -84,6 +84,30 @@ export class Collaborations {
      */
     refuse(upgrade: Upgrade, error: unknown): void {
         this.#refuse(upgrade, ...closeOf(error, false));
+    }
+
+    /**
+     * Merge edits into document `id` that come from no client: `patchOf`, given
+     * the document's session, answers with them as a patch. It is merged as a
+     * client's is: sent on to every client joined, and in the kept log before
+     * this settles. The collaboration is held for the whole of it, so its
+     * session is neither closed nor cut meanwhile. The opaque parts the patch
+     * names are kept already.
+     */
+    async merge(id: string, patchOf: (session: UDocSession) => Promise<Uint8Array>): Promise<void> {
+        if (this.#closing) throw new HttpFailure(503, "serverClosing", "the server is closing");
+        const collaboration = this.#collaborationOf(id);
+        const arrival = collaboration.arrive();
+        try {
+            await collaboration.mergePatch(patchOf);
+        } finally {
+            arrival.leave();
+        }
+    }
+
+    /** Settles once every edit merged into document `id`'s collaboration so far is in its kept log. */
+    async kept(id: string): Promise<void> {
+        await this.#collaborations.get(id)?.kept();
     }
 
     /** End document `id`'s collaboration, if one is under way: the document is no longer kept. */
@@ -304,8 +328,23 @@ class Collaboration {
         }
     }
 
-    /** Send `payload` as `kind` to every joined client but `from`. */
-    #sendOn(from: WebSocket, kind: number, payload: Uint8Array): void {
+    /** Merge the patch `patchOf` answers with, from no client (see {@link Collaborations.merge}). */
+    async mergePatch(patchOf: (session: UDocSession) => Promise<Uint8Array>): Promise<void> {
+        const session = await this.session;
+        const patch = await patchOf(session);
+        await session.merge(patch);
+        this.#sendOn(undefined, PATCH, patch);
+        this.#keepLog();
+        await this.#logKept();
+    }
+
+    /** Settles once every merge so far is in the kept log. */
+    kept(): Promise<void> {
+        return this.#logKept();
+    }
+
+    /** Send `payload` as `kind` to every joined client but `from`, if it came from one. */
+    #sendOn(from: WebSocket | undefined, kind: number, payload: Uint8Array): void {
         for (const client of this.#joined) if (client !== from) send(client, kind, payload);
     }
 

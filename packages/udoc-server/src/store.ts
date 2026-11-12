@@ -25,10 +25,17 @@
 // carries, is kept beside the checkpoints by its route — written once, since
 // an opaque part never changes and a blob's key is its content — until a
 // checkpoint holds it.
+//
+// A branch is a document kept as another stood at one of its checkpoints
+// (docs/design/node-branches.md): that one's original, its checkpoints up to
+// there and the opaque parts beside them, which never change, so a branch
+// shares their files, and no log of its own, so the checkpoint's own is its
+// log. Until it is merged back, it also keeps where it was taken from.
 
 import { randomUUID } from "node:crypto";
-import { link, mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { constants } from "node:fs";
+import { copyFile, link, mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import { dirname, join, relative } from "node:path";
 import { buffer } from "node:stream/consumers";
 import { promisify } from "node:util";
 import { deflateRaw } from "node:zlib";
@@ -85,6 +92,14 @@ export const KINDS = /[a-z0-9]+(?:-[a-z0-9]+)*/;
 export const PART_ID = /[0-9a-f]+-[0-9a-f]+/;
 export const BLOB_KEY = /[0-9a-f]+/;
 
+/** Where a branch was taken from (see {@link DocumentStore.branch}). */
+export interface BranchPoint {
+    /** The document it was taken from. */
+    id: string;
+    /** The version of that document's checkpoint it was taken at. */
+    version: number;
+}
+
 /** Where the server keeps each document, by id. */
 export interface DocumentStore {
     /** Keep a new document as `id`. Refused when `id` is already kept. */
@@ -96,8 +111,10 @@ export interface DocumentStore {
     /**
      * Keep `checkpoint`, the udoc package of document `id`'s checkpoint
      * `version`, beside the earlier ones, as its latest; then forget each
-     * opaque part and blob kept beside them that it holds. Refused when no
-     * checkpoint is kept as `id`, or `version` is kept already.
+     * opaque part and blob kept beside them that it holds — unless `id` is a
+     * branch not yet merged back, which keeps them for the merge to bring along
+     * ({@link shareOpaqueParts}). Refused when no checkpoint is kept as `id`, or
+     * `version` is kept already.
      */
     putCheckpoint(id: string, version: number, checkpoint: Uint8Array): Promise<void>;
     /** The versions of document `id`'s checkpoints, oldest first; none when it has none. */
@@ -133,6 +150,13 @@ export interface DocumentStore {
      * kept as `id`.
      */
     putOpaqueParts(id: string, parts: Uint8Array): Promise<void>;
+    /**
+     * Keep every opaque part and blob kept beside document `from`'s checkpoints
+     * beside document `to`'s too, as {@link putOpaqueParts} keeps a client's.
+     * What `to` keeps already stays as it was. Refused when nothing is kept as
+     * `to`.
+     */
+    shareOpaqueParts(from: string, to: string): Promise<void>;
     /**
      * Document `id`'s edit log, or `undefined` when it has none: the one kept,
      * or, for a document checkpointed before any edit was kept, its latest
@@ -175,6 +199,19 @@ export interface DocumentStore {
      * each, whatever an earlier checkpoint holds.
      */
     getRemovedPartIds(id: string, version?: number): Promise<Uint8Array | undefined>;
+    /**
+     * Keep document `id` as it stood at checkpoint `version` as a new document,
+     * `branchId`: `id`'s original, its checkpoints up to `version` and the cuts
+     * among them, and the opaque parts and blobs kept beside them; no edit log, so
+     * {@link getLog} answers that checkpoint's own. It keeps `{ id, version }` as
+     * its {@link getBranchPoint}. Refused when `id` keeps no checkpoint `version`,
+     * or `branchId` is kept already.
+     */
+    branch(id: string, version: number, branchId: string): Promise<void>;
+    /** Where document `id` was branched from, until {@link deleteBranchPoint}; `undefined` for any other document. */
+    getBranchPoint(id: string): Promise<BranchPoint | undefined>;
+    /** Forget where document `id` was branched from, once it is merged back. */
+    deleteBranchPoint(id: string): Promise<void>;
     /** Forget document `id`; answers whether anything was kept. */
     delete(id: string): Promise<boolean>;
 }
@@ -186,13 +223,15 @@ const FILE_SAFE_ID = /^[A-Za-z0-9_-]+$/;
  * A document's original is `original.<format>`; its checkpoints are
  * `checkpoints/v<version>.udoc`, the latest the highest; its edit log, once it
  * has one, is `crdt_delta.loro`, the name a package's own entry for it has; the
- * checkpoints it was cut at are listed in `cuts.json`.
+ * checkpoints it was cut at are listed in `cuts.json`; a branch not yet merged
+ * back keeps where it was taken from in `branch-point.json`.
  */
 const ORIGINAL = "original";
 const CHECKPOINTS_DIR = "checkpoints";
 const CHECKPOINT_FILE = /^v(\d+)\.udoc$/;
 const LOG_FILE = "crdt_delta.loro";
 const CUTS_FILE = "cuts.json";
+const BRANCH_POINT_FILE = "branch-point.json";
 const ORIGINAL_ID_MAP_FILE = "original_id_map.json";
 const MODIFIED_PART_IDS_FILE = "modified_part_ids.json";
 const REMOVED_PART_IDS_FILE = "removed_part_ids.json";
@@ -288,6 +327,8 @@ export class DirectoryDocumentStore implements DocumentStore {
         } finally {
             await rm(staged, { force: true });
         }
+        // A branch's are what its merge brings to the document it came from.
+        if (await this.getBranchPoint(id)) return;
         // What it holds is served from it now. Forgotten only after it is in
         // place, so a crash between leaves an opaque part kept twice, never
         // one kept nowhere.
@@ -434,6 +475,27 @@ export class DirectoryDocumentStore implements DocumentStore {
         }
     }
 
+    async shareOpaqueParts(from: string, to: string): Promise<void> {
+        const source = this.#path(from);
+        const path = this.#path(to);
+        // Nothing here creates the document's directory, so a document
+        // forgotten meanwhile stays forgotten.
+        try {
+            await stat(path);
+        } catch (error) {
+            if (isNotFound(error)) throw new UDocError("notFound", `no document ${JSON.stringify(to)} is kept`);
+            throw error;
+        }
+        for (const route of await keptBeside(source)) {
+            const kept = join(path, route);
+            await mkdir(dirname(kept), { recursive: true });
+            // A route names its content, so one kept already is the same bytes.
+            await share(join(source, route), kept).catch((error: unknown) => {
+                if (codeOf(error) !== "EEXIST" && !isNotFound(error)) throw error;
+            });
+        }
+    }
+
     /** The file kept at `route` beside document `id`'s checkpoints, or `undefined` when there is none. */
     async #readKept(id: string, route: string): Promise<Uint8Array | undefined> {
         try {
@@ -573,6 +635,57 @@ export class DirectoryDocumentStore implements DocumentStore {
             : this.#readEntry(this.#checkpointPath(id, version), name);
     }
 
+    async branch(id: string, version: number, branchId: string): Promise<void> {
+        const from = this.#path(id);
+        const path = this.#path(branchId);
+        const checkpoints = (await this.#checkpointFiles(id)).filter((checkpoint) => checkpoint.version <= version);
+        if (checkpoints[0]?.version !== version) {
+            throw new Error(`document ${JSON.stringify(id)} keeps no checkpoint v${version}`);
+        }
+        const original = (await readdir(from)).find(
+            (name) => name.startsWith(`${ORIGINAL}.`) && isFileFormat(name.slice(ORIGINAL.length + 1)),
+        );
+        if (original === undefined) throw new Error(`document ${id} is kept without its original`);
+        const cuts = (await this.getCuts(id)).filter((cut) => cut <= version);
+        // Staged aside and renamed into place, as a new document is.
+        const staged = `${path}.${randomUUID()}.partial`;
+        try {
+            await mkdir(join(staged, CHECKPOINTS_DIR), { recursive: true });
+            await share(join(from, original), join(staged, original));
+            for (const { version: kept, path: checkpoint } of checkpoints) {
+                await share(checkpoint, join(staged, CHECKPOINTS_DIR, `v${kept}.udoc`));
+            }
+            for (const route of await keptBeside(from)) {
+                await mkdir(dirname(join(staged, route)), { recursive: true });
+                // One a checkpoint since took in is gone: the branch's edits
+                // reach none written after its checkpoint.
+                await share(join(from, route), join(staged, route)).catch((error: unknown) => {
+                    if (!isNotFound(error)) throw error;
+                });
+            }
+            if (cuts.length > 0) await writeFile(join(staged, CUTS_FILE), JSON.stringify(cuts));
+            const point: BranchPoint = { id, version };
+            await writeFile(join(staged, BRANCH_POINT_FILE), JSON.stringify(point));
+            await rename(staged, path);
+        } catch (error) {
+            await rm(staged, { recursive: true, force: true });
+            throw error;
+        }
+    }
+
+    async getBranchPoint(id: string): Promise<BranchPoint | undefined> {
+        try {
+            return JSON.parse(await readFile(join(this.#path(id), BRANCH_POINT_FILE), "utf8")) as BranchPoint;
+        } catch (error) {
+            if (isNotFound(error)) return undefined;
+            throw error;
+        }
+    }
+
+    async deleteBranchPoint(id: string): Promise<void> {
+        await rm(join(this.#path(id), BRANCH_POINT_FILE), { force: true });
+    }
+
     /** Keep `bytes` as the file `name` of document `id`, in place of any kept. */
     async #replace(id: string, name: string, bytes: Uint8Array): Promise<void> {
         const path = join(this.#path(id), name);
@@ -652,6 +765,46 @@ function keptRouteOf(entry: string): string | undefined {
     const blob = BLOB_ENTRY.exec(entry);
     if (blob) return join(BLOBS_DIR, blob[1]!);
     return undefined;
+}
+
+/**
+ * The routes of the opaque parts and blobs kept beside the checkpoints in the
+ * document directory `path`. A file being staged has a dot in its name, which
+ * no part id or blob key has.
+ */
+async function keptBeside(path: string): Promise<string[]> {
+    const routes: string[] = [];
+    for (const directory of [OPAQUE_PARTS_DIR, BLOBS_DIR]) {
+        let entries;
+        try {
+            entries = await readdir(join(path, directory), { recursive: true, withFileTypes: true });
+        } catch (error) {
+            if (isNotFound(error)) continue;
+            throw error;
+        }
+        for (const entry of entries) {
+            if (entry.isFile() && !entry.name.includes("."))
+                routes.push(relative(path, join(entry.parentPath, entry.name)));
+        }
+    }
+    return routes;
+}
+
+/** The errors a hard link fails with where the file system has none to make. */
+const NO_HARD_LINK = new Set(["EXDEV", "EPERM", "ENOTSUP", "EMLINK", "EOPNOTSUPP"]);
+
+/**
+ * Keep the file at `from` at `to` as well: a hard link, since nothing kept is
+ * written over in place — a file is replaced by a rename, or removed — or a copy
+ * where the file system makes no link.
+ */
+async function share(from: string, to: string): Promise<void> {
+    try {
+        await link(from, to);
+    } catch (error) {
+        if (!NO_HARD_LINK.has(codeOf(error) as string)) throw error;
+        await copyFile(from, to, constants.COPYFILE_EXCL);
+    }
 }
 
 /** `entry` of `zip`, deflated: as the zip keeps it when it keeps it deflated, else deflated now. */

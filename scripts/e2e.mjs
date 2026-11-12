@@ -8,7 +8,8 @@
 //   scripts/e2e-collaboration.mjs   no log cut: editors, checkpoints, undo, restarts
 //   scripts/e2e-log-cut.mjs         the server's own cuts, and editors back from behind them
 //   scripts/e2e-copies.mjs          the server's copies: what each keeps of the original
-//   scripts/e2e-browser.mjs         those cuts with the real editor, in headless Chrome
+//   scripts/e2e-branches.mjs        branches: comments made in one, merged back past the document's edits
+//   scripts/e2e-browser.mjs         the log cuts with the real editor, in headless Chrome
 //
 // usage: npm run e2e -- [suite] [document type], after a build. It runs on the
 // packages as `npm run build` left them, and on the engine they link or pin. Run
@@ -17,7 +18,7 @@ import { spawn } from "node:child_process";
 import { join } from "node:path";
 import { root } from "./packages.mjs";
 
-const SUITES = ["collaboration", "log-cut", "copies", "browser"];
+const SUITES = ["collaboration", "log-cut", "copies", "branches", "browser"];
 
 /** A suite with no result by then has stalled, which its own waits should rule out long before. */
 const TIMEOUT_MS = 20 * 60_000;
