@@ -1,13 +1,15 @@
-// Clients editing a kept document together (docs/design/node-collaboration.md):
-// a collaboration is the document's pooled session, held open while any client
-// is connected; each client's edits are merged into it, sent on to every other
-// client, and kept in the store as the document's edit log. The engine does
+// Clients editing a branch of a kept document together
+// (docs/design/node-collaboration.md): a collaboration is the branch's pooled
+// session, held open while any client is connected; each client's edits are
+// merged into it, sent on to every other client, and kept in the store as the
+// branch's edit log. The engine does
 // the merging, and the server only carries its bytes, over a WebSocket.
 
 import type { UDocSession } from "@docmentis/udoc-node";
 import { WebSocketServer } from "ws";
 import type { RawData, WebSocket } from "ws";
 
+import { branchKey } from "./branch.ts";
 import { HttpFailure, LICENSE_CODES, failureOf, messageOf } from "./http.ts";
 import type { Upgrade } from "./http.ts";
 import type { SessionPool } from "./session-pool.ts";
@@ -39,7 +41,7 @@ const CLOSE_CANNOT_OPEN = 4002;
 /** The client is behind the document's log cut: it catches up, and joins again. */
 const CLOSE_BEHIND_CUT = 4003;
 
-/** The collaboration on each document being edited now, and the clients arriving at them. */
+/** The collaboration on each branch being edited now, and the clients arriving at them. */
 export class Collaborations {
     readonly #store: DocumentStore;
     readonly #sessions: SessionPool;
@@ -55,16 +57,16 @@ export class Collaborations {
     }
 
     /**
-     * Take `upgrade` into document `id`'s collaboration, once its session is
-     * open. What refuses it — the server closing, a session that can't be
+     * Take `upgrade` into the collaboration of branch `branch` of document
+     * `id`, once its session is open. What refuses it — the server closing, a session that can't be
      * opened — takes the upgrade and closes it with the code saying why.
      */
-    async join(id: string, upgrade: Upgrade): Promise<void> {
+    async join(id: string, branch: string, upgrade: Upgrade): Promise<void> {
         if (this.#closing) {
             this.#refuse(upgrade, CLOSE_SERVER_CLOSING, "the server is closing");
             return;
         }
-        const collaboration = this.#collaborationOf(id);
+        const collaboration = this.#collaborationOf(id, branch);
         const arrival = collaboration.arrive();
         // A client that goes before it is admitted leaves nothing held.
         upgrade.socket.once("close", () => arrival.leave());
@@ -87,16 +89,16 @@ export class Collaborations {
     }
 
     /**
-     * Merge edits into document `id` that come from no client: `patchOf`, given
-     * the document's session, answers with them as a patch. It is merged as a
+     * Merge edits into branch `branch` of document `id` that come from no
+     * client: `patchOf`, given the branch's session, answers with them as a patch. It is merged as a
      * client's is: sent on to every client joined, and in the kept log before
      * this settles. The collaboration is held for the whole of it, so its
      * session is neither closed nor cut meanwhile. The opaque parts the patch
      * names are kept already.
      */
-    async merge(id: string, patchOf: (session: UDocSession) => Promise<Uint8Array>): Promise<void> {
+    async merge(id: string, branch: string, patchOf: (session: UDocSession) => Promise<Uint8Array>): Promise<void> {
         if (this.#closing) throw new HttpFailure(503, "serverClosing", "the server is closing");
-        const collaboration = this.#collaborationOf(id);
+        const collaboration = this.#collaborationOf(id, branch);
         const arrival = collaboration.arrive();
         try {
             await collaboration.mergePatch(patchOf);
@@ -105,14 +107,14 @@ export class Collaborations {
         }
     }
 
-    /** Settles once every edit merged into document `id`'s collaboration so far is in its kept log. */
-    async kept(id: string): Promise<void> {
-        await this.#collaborations.get(id)?.kept();
+    /** Settles once every edit merged into the collaboration of branch `branch` of document `id` so far is in its kept log. */
+    async kept(id: string, branch: string): Promise<void> {
+        await this.#collaborations.get(branchKey(id, branch))?.kept();
     }
 
-    /** End document `id`'s collaboration, if one is under way: the document is no longer kept. */
-    end(id: string): void {
-        this.#collaborations.get(id)?.end(CLOSE_NO_DOCUMENT, "the document was deleted");
+    /** End the collaboration of branch `branch` of document `id`, if one is under way: it is no longer kept, for `reason`. */
+    end(id: string, branch: string, reason: string): void {
+        this.#collaborations.get(branchKey(id, branch))?.end(CLOSE_NO_DOCUMENT, reason);
     }
 
     /** Refuse every client arriving from now on, and end every collaboration once its log is kept. */
@@ -124,14 +126,15 @@ export class Collaborations {
         this.#sockets.close();
     }
 
-    /** Document `id`'s collaboration: the one under way, or a new one. */
-    #collaborationOf(id: string): Collaboration {
-        let collaboration = this.#collaborations.get(id);
+    /** The collaboration of branch `branch` of document `id`: the one under way, or a new one. */
+    #collaborationOf(id: string, branch: string): Collaboration {
+        const key = branchKey(id, branch);
+        let collaboration = this.#collaborations.get(key);
         if (!collaboration || collaboration.ended) {
-            collaboration = new Collaboration(id, this.#store, this.#sessions, (ended) => {
-                if (this.#collaborations.get(id) === ended) this.#collaborations.delete(id);
+            collaboration = new Collaboration(id, branch, this.#store, this.#sessions, (ended) => {
+                if (this.#collaborations.get(key) === ended) this.#collaborations.delete(key);
             });
-            this.#collaborations.set(id, collaboration);
+            this.#collaborations.set(key, collaboration);
         }
         return collaboration;
     }
@@ -151,11 +154,11 @@ interface Arrival {
 }
 
 /**
- * Document `id`'s collaboration: the clients editing it together over its
- * pooled session, which it holds busy — so neither idled out nor evicted — for
- * as long as any client is connected or arriving. A client's edits are merged
- * into the session, sent on to every other client, and kept as the document's
- * edit log; its presence is merged and sent on, and never kept.
+ * A branch's collaboration: the clients editing it together over its pooled
+ * session, which it holds busy — so neither idled out nor evicted — for as long
+ * as any client is connected or arriving. A client's edits are merged into the
+ * session, sent on to every other client, and kept as the branch's edit log;
+ * its presence is merged and sent on, and never kept.
  *
  * The log is the session's whole editing state, written after every merge —
  * one write at a time, the next taking in everything merged meanwhile — and
@@ -167,6 +170,7 @@ class Collaboration {
     /** Settles once the collaboration is over and its log is kept. */
     readonly done: Promise<void>;
     readonly #id: string;
+    readonly #branch: string;
     readonly #store: DocumentStore;
     readonly #onEnd: (collaboration: Collaboration) => void;
     /** Every connected client; the joined ones are those edits are sent on to. */
@@ -181,18 +185,20 @@ class Collaboration {
 
     constructor(
         id: string,
+        branch: string,
         store: DocumentStore,
         sessions: SessionPool,
         onEnd: (collaboration: Collaboration) => void,
     ) {
         this.#id = id;
+        this.#branch = branch;
         this.#store = store;
         this.#onEnd = onEnd;
         this.done = new Promise((resolve) => (this.#finish = resolve));
         this.session = new Promise((resolve, reject) => {
             // The collaboration is one long use of the pooled session.
             sessions
-                .use(id, (session) => {
+                .use(branchKey(id, branch), (session) => {
                     resolve(session);
                     // However it goes — closed, or its engine gone — the
                     // clients can't go on with it.
@@ -370,11 +376,13 @@ class Collaboration {
         while (this.#logBehind) {
             this.#logBehind = false;
             try {
-                await this.#store.putLog(this.#id, await session.snapshot());
+                await this.#store.putLog(this.#id, this.#branch, await session.snapshot());
             } catch (error) {
                 // A document deleted meanwhile has nothing to keep it for.
                 if (!this.#ended) {
-                    console.error(`udoc-server: document ${this.#id}'s edits could not be kept: ${messageOf(error)}`);
+                    console.error(
+                        `udoc-server: document ${this.#id}'s edits on ${this.#branch} could not be kept: ${messageOf(error)}`,
+                    );
                 }
             }
         }

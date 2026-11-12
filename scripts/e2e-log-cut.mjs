@@ -11,6 +11,7 @@ import {
     checkpointHolds,
     checkpointVersions,
     converge,
+    cutsOf,
     descriptionOf,
     differ,
     finish,
@@ -32,15 +33,6 @@ import {
 const CUTS_AT_ONCE = { sessionTimeoutMs: 400, cutMinSavedBytes: 0 };
 
 const only = process.argv[2];
-
-/** The versions the document's log was cut at, as the store keeps them. */
-async function cutsOf(kept) {
-    try {
-        return JSON.parse(await readFile(join(kept, "cuts.json"), "utf8"));
-    } catch {
-        return [];
-    }
-}
 
 /** Check the log comes to be cut `count` times. */
 async function cutComes(kept, count, label) {
@@ -94,7 +86,7 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
     let server = await serve(store.directory, CUTS_AT_ONCE);
     const id = await upload(server.base, t);
     const kept = join(store.directory, id);
-    const ids = t.ids(await unzip(await readFile(join(kept, "checkpoints/v0.udoc"))));
+    const ids = t.ids(await unzip(await readFile(join(kept, "versions/v0.udoc"))));
 
     const asUploaded = await modelOf((await remote(server.base, id)).saveToPackage());
 
@@ -273,7 +265,7 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
     check("restarted: the same model", restarted.length === 0, restarted.join(", "));
     const { baselineVersion } = await descriptionOf(server.base, id);
     const alone = await newSession();
-    alone.open(await readFile(join(kept, `checkpoints/v${baselineVersion}.udoc`)));
+    alone.open(await readFile(join(kept, `versions/v${baselineVersion}.udoc`)));
     const aloneParts = differ(beforeSecond, await modelOf(alone.saveToPackage()));
     check("the latest package opened alone: the same model", aloneParts.length === 0, aloneParts.join(", "));
     await server.close();

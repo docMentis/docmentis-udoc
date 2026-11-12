@@ -20,7 +20,7 @@ import type { DatabaseSync } from "node:sqlite";
 import type { Duplex } from "node:stream";
 
 import { UDocNode } from "@docmentis/udoc-node";
-import { DirectoryDocumentStore, createUDocServer } from "@docmentis/udoc-server";
+import { DirectoryDocumentStore, MAIN_BRANCH, createUDocServer } from "@docmentis/udoc-server";
 import type { UDocServer } from "@docmentis/udoc-server";
 
 import { managesLibrary, readsLibrary } from "../shared/api.ts";
@@ -300,7 +300,7 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
                 async importDocument(bytes) {
                     const answer = await ask(tenantId, "POST", "/documents", bytes);
                     const { id } = (await answer.json()) as { id: string };
-                    const description = await tenantUdoc(tenantId).store.getDescription(id);
+                    const description = await tenantUdoc(tenantId).store.getDescription(id, { branch: MAIN_BRANCH });
                     return { id, format: description?.sourceFormat ?? "unknown" };
                 },
 

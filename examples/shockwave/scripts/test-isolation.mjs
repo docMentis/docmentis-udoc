@@ -1031,14 +1031,15 @@ console.log("8. The source");
 // ── 9. The wall under the gate ──────────────────────────────────────────────────
 
 console.log("9. The wall under the gate");
-const { DirectoryDocumentStore } = await import("@docmentis/udoc-server");
+const { DirectoryDocumentStore, MAIN_BRANCH } = await import("@docmentis/udoc-server");
+const MAIN = { branch: MAIN_BRANCH };
 const storeA = new DirectoryDocumentStore(join(dataDir, "udoc", tenantA));
 const storeB = new DirectoryDocumentStore(join(dataDir, "udoc", tenantB));
 {
-    check("Larchmere's store has its document", (await storeA.getDescription(A.deck.documentId)) !== undefined);
-    check("and not Northwind's", (await storeA.getDescription(B.deck.documentId)) === undefined);
-    check("Northwind's store has its document", (await storeB.getDescription(B.deck.documentId)) !== undefined);
-    check("and not Larchmere's", (await storeB.getDescription(A.deck.documentId)) === undefined);
+    check("Larchmere's store has its document", (await storeA.getDescription(A.deck.documentId, MAIN)) !== undefined);
+    check("and not Northwind's", (await storeA.getDescription(B.deck.documentId, MAIN)) === undefined);
+    check("Northwind's store has its document", (await storeB.getDescription(B.deck.documentId, MAIN)) !== undefined);
+    check("and not Larchmere's", (await storeB.getDescription(A.deck.documentId, MAIN)) === undefined);
     const top = readdirSync(join(dataDir, "udoc"));
     check(
         "the documents' folder holds tenants' folders, and nothing else",
@@ -1429,8 +1430,8 @@ console.log("11. Northwind holds rows with Larchmere's very ids");
     await sameAsBefore("after Northwind changed those ids");
     check(
         "Larchmere's documents are all there",
-        (await storeA.getDescription(A.deck.documentId)) !== undefined &&
-            (await storeA.getDescription(A.copy.documentId)) !== undefined,
+        (await storeA.getDescription(A.deck.documentId, MAIN)) !== undefined &&
+            (await storeA.getDescription(A.copy.documentId, MAIN)) !== undefined,
     );
 
     const secondMark = "NORTHWIND-CLONE-AGAIN";

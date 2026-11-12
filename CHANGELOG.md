@@ -62,20 +62,31 @@ listed once, by package. Its major and minor version are those of the
 
 #### Added
 
-- `POST /documents/:id/checkpoints/:version/branch` branches a document at one
-  of its checkpoints: a new document, kept as that one stood there and edited
-  apart from it, with no session opened. `POST /documents/:id/merge` merges a
-  branch back: each edit made in it reaches the document, its editors and its
-  log, beside the document's own edits since, whether either's log was cut
-  meanwhile or not. A comment made in a branch lands on what it was made on,
-  wherever that has moved. A branch merges once.
+- A kept document has branches, and each branch versions. Importing makes
+  `main` and its first version; `POST /documents/:id/versions/:version/branches`
+  starts a branch at any version, of any branch; and
+  `POST /documents/:id/branches/:branch/merge?from=` merges one branch into
+  another: each edit the target lacks reaches it, its editors and its log,
+  beside its own edits, whether either's log was cut meanwhile or not. A
+  comment made in a branch lands on what it was made on, wherever that has
+  moved. A merge that moved the source's edits onto the target's log isn't
+  repeated.
+- `/documents/:id/branches/:branch/…` serves a branch as `/documents/:id/…`
+  serves `main`: its package, collaboration, copies, pages and checkpoints.
+  `GET /documents/:id/branches` lists a document's branches, and `DELETE` on
+  one forgets it. `GET /documents/:id/versions` lists every branch's versions,
+  numbered across the document, and `/documents/:id/versions/:version/…`
+  serves one as `/documents/:id/checkpoints/:version/…` does.
 
 #### Changed
 
-- `DocumentStore` has more methods for a host's own store to implement:
-  `branch`, `getBranchPoint`, `deleteBranchPoint` and `shareOpaqueParts`. Its
-  `putCheckpoint` keeps a branch's opaque parts beside its checkpoints until
-  the branch is merged back.
+- `DocumentStore` keeps branches and versions. Its reads take a branch or a
+  version (`At`); it keeps versions (`getVersions`, `putVersion`,
+  `getVersionLog`), branches (`getBranches`, `putBranch`, `deleteBranch`) and
+  merges (`getMerge`, `putMerge`), in place of `getCheckpoint`,
+  `putCheckpoint`, `getCheckpointVersions`, `getCheckpointLog` and `getCuts`.
+  Each branch keeps its own edit log; an opaque part is kept for the document,
+  every branch's.
 
 ### udoc-node
 

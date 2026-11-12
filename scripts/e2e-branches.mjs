@@ -1,16 +1,16 @@
 // Branches on every document type with comments (scripts/e2e.mjs): a document
 // branched at a checkpoint between others, a reviewer commenting in the branch
 // while the document goes on being edited — what was commented on moved, and a
-// commented passage, shape or row deleted — and the branch merged back: with no
-// cut, past a cut of the document's log, of the branch's, and of both, each
-// document cut before the branch was taken too. docs/design/node-branches.md says
-// what should happen.
-import { readdir, readFile } from "node:fs/promises";
+// commented passage, shape or row deleted — and the branch merged into main: with
+// no cut, past a cut of main's log, of the branch's, and of both, main cut before
+// the branch starts too. docs/design/node-branches.md says what should happen.
+import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { DOCUMENTS, png, run } from "./e2e-documents.mjs";
 import {
     check,
     converge,
+    cutsOf,
     differ,
     finish,
     modelOf,
@@ -353,38 +353,24 @@ function pageNote(s, page, contents) {
     return contents;
 }
 
-/** The checkpoints a document keeps, as the server lists them. */
-async function versionsOf(base, id) {
-    return (await (await fetch(`${base}/documents/${id}/checkpoints`)).json()).versions;
-}
-
-/** The versions document `id`'s log was cut at, as the store keeps them. */
-async function cutsOf(store, id) {
-    try {
-        return JSON.parse(await readFile(join(store, id, "cuts.json"), "utf8"));
-    } catch {
-        return [];
-    }
-}
-
-/** Wait for document `id`'s cuts to be as `done` wants them, and check they came to be. */
-async function cutComes(store, id, done, label) {
-    let cuts = await cutsOf(store, id);
+/** Wait for the cuts of branch `branch` of the document kept at `kept` to be as `done` wants them, and check they came to be. */
+async function cutComes(kept, branch, done, label) {
+    let cuts = await cutsOf(kept, branch);
     for (let i = 0; i < 100 && !done(cuts); i++) {
         await sleep(100);
-        cuts = await cutsOf(store, id);
+        cuts = await cutsOf(kept, branch);
     }
     check(label, done(cuts), JSON.stringify(cuts));
 }
 
 const post = (base, path) => fetch(`${base}${path}`, { method: "POST" });
 
-/** Which logs are cut after the branch point: the document's, the branch's. */
+/** Which lines are cut after the merge base: main's, the branch's. */
 const VARIANTS = [
-    { name: "no cut", document: false, branch: false },
-    { name: "the document's log cut since", document: true, branch: false },
-    { name: "the branch's log cut", document: false, branch: true },
-    { name: "both logs cut", document: true, branch: true },
+    { name: "no cut", main: false, branch: false },
+    { name: "main's log cut since", main: true, branch: false },
+    { name: "the branch's log cut", main: false, branch: true },
+    { name: "both logs cut", main: true, branch: true },
 ];
 
 for (const [type, review] of Object.entries(REVIEWS)) {
@@ -392,108 +378,101 @@ for (const [type, review] of Object.entries(REVIEWS)) {
     const t = DOCUMENTS[type];
     for (const variant of VARIANTS) {
         console.log(`\n[e2e] === ${type} (${t.file}), ${variant.name}`);
-        const cutting = variant.document || variant.branch;
+        const cutting = variant.main || variant.branch;
         const store = await temporaryStore();
         const server = await serve(store.directory, cutting ? CUTS_AT_ONCE : {});
         const { base } = server;
         const id = await upload(base, t);
+        const kept = join(store.directory, id);
         const ids = t.ids(await unzip(await served(base, id)));
 
-        // The document's history: an edit, a cut where there are cuts, the
-        // checkpoint branched at, another edit and another checkpoint, so the
-        // branch is taken between two.
+        // main's history: an edit, a cut where there are cuts, the version the
+        // branch starts at, another edit and another version, so the branch
+        // starts between two.
         let a = new Peer(base, id, await remote(base, id));
         await a.joined;
         t.first(a.session, ids);
         a.send();
-        await onServer("the document takes its first edits", base, id, await modelOf(a.session.saveToPackage()));
+        await onServer("main takes its first edits", base, id, await modelOf(a.session.saveToPackage()));
         if (cutting) {
             await a.close();
-            await cutComes(
-                store.directory,
-                id,
-                (cuts) => cuts.length > 0,
-                "the document's log is cut before the branch point",
-            );
+            await cutComes(kept, "main", (cuts) => cuts.length > 0, "main's log is cut before the branch starts");
             a = new Peer(base, id, await remote(base, id));
             await a.joined;
         }
         const at = (await (await post(base, `/documents/${id}/checkpoints`)).json()).version;
-        const atCheckpoint = await modelOf((await remote(base, id, at)).saveToPackage());
+        const atVersion = await modelOf((await remote(base, id, at)).saveToPackage());
         t.two(a.session, ids, 3);
         a.send();
-        await onServer("and more after the checkpoint", base, id, await modelOf(a.session.saveToPackage()));
+        await onServer("and more after that version", base, id, await modelOf(a.session.saveToPackage()));
         await post(base, `/documents/${id}/checkpoints`);
 
-        const branched = await post(base, `/documents/${id}/checkpoints/${at}/branch`);
-        const { id: branch } = await branched.json();
-        check("the document branches at that checkpoint", branched.status === 201 && typeof branch === "string");
+        const started = await post(base, `/documents/${id}/versions/${at}/branches`);
+        const { branch } = await started.json();
+        check("a branch starts at that version", started.status === 201 && typeof branch === "string");
+        const { branches } = await (await fetch(`${base}/documents/${id}/branches`)).json();
         check(
-            "the branch keeps the checkpoints and cuts up to it",
-            JSON.stringify(await versionsOf(base, branch)) ===
-                JSON.stringify((await versionsOf(base, id)).filter((v) => v <= at)) &&
-                JSON.stringify(await cutsOf(store.directory, branch)) ===
-                    JSON.stringify((await cutsOf(store.directory, id)).filter((v) => v <= at)),
+            "the document lists it, with where it starts",
+            branches.some((kept) => kept.branch === branch && kept.base === at),
+            JSON.stringify(branches),
         );
-        const opened = differ(atCheckpoint, await modelOf((await remote(base, branch)).saveToPackage()));
-        check("the branch opens as the document stood at that checkpoint", opened.length === 0, opened.join(", "));
+        // A branch's routes are the document's beneath `branches/:branch`.
+        const onBranch = `${id}/branches/${branch}`;
+        const opened = differ(atVersion, await modelOf((await remote(base, onBranch)).saveToPackage()));
+        check("the branch opens as the document stood at that version", opened.length === 0, opened.join(", "));
 
         // The reviewer comments in the branch, once before a cut of its log, where
-        // there is one, and once after; the document goes on being edited.
-        let reviewer = new Peer(base, branch, await remote(base, branch));
+        // there is one, and once after; main goes on being edited.
+        let reviewer = new Peer(base, onBranch, await remote(base, onBranch));
         const marketer = new Peer(base, id, await remote(base, id));
         await Promise.all([reviewer.joined, marketer.joined]);
         const comments = [review.comments[0].make(reviewer.session, ids)];
         reviewer.send();
-        await onServer("the branch takes a comment", base, branch, await modelOf(reviewer.session.saveToPackage()));
+        await onServer("the branch takes a comment", base, onBranch, await modelOf(reviewer.session.saveToPackage()));
         if (variant.branch) {
             await reviewer.close();
-            await cutComes(store.directory, branch, (cuts) => cuts.some((cut) => cut > at), "the branch's log is cut");
-            reviewer = new Peer(base, branch, await remote(base, branch));
+            await cutComes(kept, branch, (cuts) => cuts.length > 0, "the branch's log is cut");
+            reviewer = new Peer(base, onBranch, await remote(base, onBranch));
             await reviewer.joined;
         }
         comments.push(review.comments[1].make(reviewer.session, ids));
         reviewer.send();
         const reviewed = await modelOf(reviewer.session.saveToPackage());
-        await onServer("and another", base, branch, reviewed);
-        const placesIn = (document) =>
-            Promise.all(review.comments.map(({ body }, i) => review.place(base, document, comments[i], body)));
-        const asReviewed = await placesIn(branch);
+        await onServer("and another", base, onBranch, reviewed);
+        const placesIn = (path) =>
+            Promise.all(review.comments.map(({ body }, i) => review.place(base, path, comments[i], body)));
+        const asReviewed = await placesIn(onBranch);
         check(
             "each comment stands where the reviewer made it",
             asReviewed.every((place) => place !== null),
         );
         review.meanwhile(marketer.session, ids);
         marketer.send();
-        await onServer(
-            "the document takes its own edits meanwhile",
-            base,
-            id,
-            await modelOf(marketer.session.saveToPackage()),
-        );
+        await onServer("main takes its own edits meanwhile", base, id, await modelOf(marketer.session.saveToPackage()));
         await converge("the editors already joined get them", a.session, marketer.session);
 
         let live = marketer;
-        if (variant.document) {
-            // Nobody connected: the document's idle session cuts its log.
+        if (variant.main) {
+            // Nobody connected: main's idle session cuts its log.
             await Promise.all([a.close(), marketer.close()]);
             await cutComes(
-                store.directory,
-                id,
+                kept,
+                "main",
                 (cuts) => cuts.some((cut) => cut > at),
-                "the document's log is cut past the branch point",
+                "main's log is cut past the branch's start",
             );
             live = new Peer(base, id, await remote(base, id));
             await live.joined;
         }
         check(
             "the logs are cut as the case says",
-            (await cutsOf(store.directory, id)).some((cut) => cut > at) === variant.document &&
-                (await cutsOf(store.directory, branch)).some((cut) => cut > at) === variant.branch,
+            (await cutsOf(kept, "main")).some((cut) => cut > at) === variant.main &&
+                (await cutsOf(kept, branch)).length > 0 === variant.branch,
         );
 
-        const merged = await post(base, `/documents/${branch}/merge`);
-        check("the branch merges back", merged.status === 204, merged.status === 204 ? "" : await merged.text());
+        const merge = () => post(base, `/documents/${id}/branches/main/merge?from=${branch}`);
+        const merged = await merge();
+        check("the branch merges into main", merged.status === 204, merged.status === 204 ? "" : await merged.text());
         const now = await placesIn(id);
         review.comments.forEach(({ body, deleted }, i) => {
             const detail = `${JSON.stringify(asReviewed[i])} in the branch, ${JSON.stringify(now[i])} merged`;
@@ -512,7 +491,7 @@ for (const [type, review] of Object.entries(REVIEWS)) {
         });
         if (review.extra) check("the picture the reviewer added comes along", await review.extra(base, id));
         const mergedModel = await modelOf(await served(base, id));
-        await converge("an editor joined to the document gets the merge", live.session, await remote(base, id));
+        await converge("an editor joined to main gets the merge", live.session, await remote(base, id));
         check(
             "and stays connected, refusing nothing",
             live.connected && live.errors.length === 0,
@@ -520,26 +499,34 @@ for (const [type, review] of Object.entries(REVIEWS)) {
         );
         const fresh = differ(mergedModel, await modelOf((await remote(base, id)).saveToPackage()));
         check("a fresh open holds what the server does", fresh.length === 0, fresh.join(", "));
-        await live.close();
 
-        const again = await post(base, `/documents/${branch}/merge`);
-        check(
-            "a branch merges once",
-            again.status === 409 && (await again.json()).error === "notABranch",
-            String(again.status),
-        );
-        const branchNow = differ(reviewed, await modelOf(await served(base, branch)));
+        // Merged again: with nothing moved, the CRDT skips what main holds; once
+        // moved, main holds the edits under ids of their own, so it is refused.
+        const again = await merge();
+        if (cutting) {
+            check(
+                "moved, a branch merges no more",
+                again.status === 409 && (await again.json()).error === "cannotMergeAgain",
+                String(again.status),
+            );
+        } else {
+            const unchanged = differ(mergedModel, await modelOf(await served(base, id)));
+            check(
+                "merged again, nothing changes",
+                again.status === 204 && unchanged.length === 0,
+                unchanged.join(", "),
+            );
+        }
+        await live.close();
+        const branchNow = differ(reviewed, await modelOf(await served(base, onBranch)));
         check("the branch is left as it was", branchNow.length === 0, branchNow.join(", "));
-        check(
-            "and nothing else is kept",
-            JSON.stringify((await readdir(store.directory)).sort()) === JSON.stringify([id, branch].sort()),
-        );
+        check("and nothing else is kept", JSON.stringify(await readdir(store.directory)) === JSON.stringify([id]));
         const { version } = await (await post(base, `/documents/${id}/checkpoints`)).json();
         const alone = differ(mergedModel, await modelOf((await remote(base, id, version)).saveToPackage()));
-        check("a checkpoint after the merge holds it, opened on its own", alone.length === 0, alone.join(", "));
+        check("a version after the merge holds it, opened on its own", alone.length === 0, alone.join(", "));
 
         await reviewer.close();
-        if (!variant.document) await a.close();
+        if (!variant.main) await a.close();
         await server.close();
         await store.remove();
     }

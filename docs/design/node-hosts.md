@@ -84,40 +84,41 @@ permit unless `UDOC_LICENSE` is set.
 `udoc-server` imports a document once and keeps it; every session after that is opened
 over what it kept.
 
-**What is kept.** Its original and its checkpoints, and more once it is edited. Its
-original is the upload, byte for byte, in the format it was imported as. Each
-checkpoint is a udoc package, a baseline. `v0` is what the upload
-became: the upload is opened — the one open that mints the document's ids — and saved
-as a flat baseline. Each checkpoint after it saves the document's session as the next
-baseline (Core Save — Checkpoint), and a later session
-reopens the latest, ids and all (Core Editor — Bootstrap).
+**What is kept.** Its original, its branches and its versions, and more once it is
+edited ([Node Branches](node-branches.md)). Its original is the upload, byte for
+byte, in the format it was imported as. Each version is a checkpoint, a udoc package,
+a baseline. `v0`, on `main`, the branch an import makes, is what the upload became:
+the upload is opened — the one open that mints the document's ids — and saved as a
+flat baseline. Each version after it saves a branch's session as that branch's next
+baseline (Core Save — Checkpoint), and a later session reopens a branch's latest, ids
+and all (Core Editor — Bootstrap).
 A udoc package is not an upload: its ids were minted by whatever imported it and it
 has no original, so the server refuses a session the engine reports opened from one.
-Only the open can tell, so the refusal has already spent a permit. Its edit log is
-every edit made since the import: a package's own `crdt` entity, which opening
-applies, but kept apart from the checkpoints, since it is written on every edit and a
-checkpoint once ([Node Collaboration](node-collaboration.md#the-edit-log)). And the
-opaque parts its edits name — an inserted picture's image, whose content the log does
-not carry — each part and blob kept beside the checkpoints, written once, until a
-checkpoint holds it (Core Editor Opaque Part). A part
-only an earlier checkpoint holds is read from the newest that does: a later one holds
-it only if something showed it then, and an undo can show it again.
+Only the open can tell, so the refusal has already spent a permit. Each branch's edit
+log is every edit made on it: a package's own `crdt` entity, which opening applies,
+but kept apart from the versions, since it is written on every edit and a version once
+([Node Collaboration](node-collaboration.md#the-edit-log)). And the opaque parts edits
+name — an inserted picture's image, whose content the log does not carry — each part
+and blob kept for the document, every branch's, written once (Core Editor Opaque
+Part). A part a version doesn't hold is read from the newest in its ancestry that
+does: a later one holds it only if something showed it then, and an undo can show it
+again.
 
 A `DocumentStore` keeps each by id; `DirectoryDocumentStore` gives each document a
-directory in `--data-dir`, holding `original.<format>` and `checkpoints/v0.udoc`,
-written aside and renamed into place together — so a document is kept whole or not at
-all, and an id already kept is never overwritten. Each later checkpoint is
-`checkpoints/v<n>.udoc`, written aside and linked into place, so a version is kept
-once; the highest is the latest. Once the document is edited it also holds
-`crdt_delta.loro`, replaced whole on each write, and `opaque-parts/<kinds>/<partId>` and
-`blobs/<key>`, each deflated; and `cuts.json` once its log has been
-[cut](node-log-cut.md). An id reaches the store only once the server has checked
-it is one it could have minted, so no id is ever a path.
+directory in `--data-dir`, holding `original.<format>`, `versions/v0.udoc` with its
+record, and `branches/main/`, written aside and renamed into place together — so a
+document is kept whole or not at all, and an id already kept is never overwritten.
+Each later version is `versions/v<n>.udoc`, its record written first and its package
+linked into place, so a version is kept once. A branch's edit log is
+`branches/<branch>/crdt_delta.loro`, replaced whole on each write; the opaque parts are
+`opaque-parts/<kinds>/<partId>` and `blobs/<key>`, each deflated; and a version a log
+was [cut](node-log-cut.md) at says so in its record. An id reaches the store only once
+the server has checked it is one it could have minted, so no id is ever a path.
 
-**A session is a cache over it.** A request opens its document's session from the store
-when none is open, and every request arriving meanwhile shares that open, so a document
+**A session is a cache over it.** A request opens its branch's session from the store
+when none is open, and every request arriving meanwhile shares that open, so a branch
 opens once. It opens over the store, part by part as a browser streams it — `openRemote`
-with a fetch the store answers, over the latest checkpoint — so it loads the opaque
+with a fetch the store answers, over the branch's head — so it loads the opaque
 parts an edit added, and the original too, only while a save that writes over it runs. The session an upload was imported in
 is closed once the document is kept: opened from the upload's bytes, it could load none. The session stays open while requests keep coming, and closes after the
 session timeout (`--session-timeout`, default 5 minutes) or — past the session pool's
@@ -137,23 +138,24 @@ serves both, and an unknown key or a value out of range is an error naming the f
 and the key, never a silent default. The license stays in the environment, so the file
 can be committed or baked into an image.
 
-| request                                                                                               | answer                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /documents?format=` (the bytes)                                                                 | `201 { id }`, the document kept · a license refusal `503` with its code · unreadable `422`, `malformed` or `unsupported` · a udoc package `422 cannotImportPackage` · too large `413` · a `format` that isn't one `400`                                                                                                                                                                                                          |
-| `GET /documents/:id/original`                                                                         | the upload, byte for byte — read from the store, with no session opened                                                                                                                                                                                                                                                                                                                                                          |
-| `GET /documents/:id/layout/page-count`                                                                | `{ pageCount }` — a resource of its own, because the first ask composes the whole document                                                                                                                                                                                                                                                                                                                                       |
-| `GET /documents/:id/layout/pages/:index.:format?scale=`                                               | the composed page as a PNG, at `?scale=` pixels per point, or an SVG, sized in points, which takes none · no such page `404 notFound` · a scale for an SVG `400 invalidRequest`                                                                                                                                                                                                                                                  |
-| `GET /documents/:id/layout/pages.pdf`                                                                 | the document exported as a PDF of its laid-out pages: a rendering, fixed and one-way, not the faithful copy `file.pdf` saves of a PDF · a spreadsheet, whose sheets have no print pages yet, `422 unsupported`                                                                                                                                                                                                                   |
-| `GET /documents/:id/package` · `…/package/:kinds/:partId` · `…/package/blobs/:key` · `…/package/crdt` | the latest checkpoint's description, one part — its, an opaque part an edit brought, or an earlier checkpoint's — one blob, the edit log — read from the store, with no session opened ([Node Streaming](node-streaming.md))                                                                                                                                                                                                     |
-| `GET /documents/:id/collaboration`, upgraded to a WebSocket                                           | edit the document with every other client connected to it ([Node Collaboration](node-collaboration.md)) · a refusal takes the upgrade and closes it with a code · without the upgrade `426 upgradeRequired`                                                                                                                                                                                                                      |
-| `GET /documents/:id/file.:format?strategy=`                                                           | a copy saved in the document's session as `format` — one of its own (`pdf`, `pptx`, …) by `strategy`, `rewrite`, `delta` or `incremental`, if absent the one keeping the most of the original it can, or `udoc` for a package, which takes none (Core Save — Copy) · a format or strategy it can't be saved by `400 invalidRequest`, or a save not built `422 unsupported` · a strategy that isn't one, or one for `udoc`, `400` |
-| `POST /documents/:id/checkpoints`                                                                     | `201 { version }`, the session saved as the next baseline and kept as the latest, no session reopened (Core Save — Checkpoint) · checkpoints of one document taken in turn                                                                                                                                                                                                                                                       |
-| `GET /documents/:id/checkpoints`                                                                      | `{ versions }`, the checkpoints kept, oldest first. A log cut uses up a number, so they can have gaps                                                                                                                                                                                                                                                                                                                            |
-| `GET /documents/:id/checkpoints/:version/package`, and each route under it but `crdt` and `cuts`      | one checkpoint as it was: its description, with no `baselineFrontier`, then its parts, read from it or an earlier checkpoint, with no session opened. `openRemote` on this opens it read-only                                                                                                                                                                                                                                    |
-| `GET /documents/:id/checkpoints/:version/file.:format?strategy=`                                      | a copy of that checkpoint, as `file.:format` saves one, in a session of its own, closed after, spending a permit like any open                                                                                                                                                                                                                                                                                                   |
-| `POST /documents/:id/checkpoints/:version/branch`                                                     | `201 { id }`, a new document kept as this one stood at that checkpoint, sharing what is kept of it, with no session opened ([Node Branches](node-branches.md))                                                                                                                                                                                                                                                                   |
-| `POST /documents/:id/merge`                                                                           | `204`, branch `:id`'s edits merged into the document it was taken from, as an editor's are · not a branch, or merged already, `409 notABranch`                                                                                                                                                                                                                                                                                   |
-| `DELETE /documents/:id`                                                                               | `204`, what was kept forgotten, its collaboration ended and its session closed                                                                                                                                                                                                                                                                                                                                                   |
+| request                                                                                                                                   | answer                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /documents?format=` (the bytes)                                                                                                     | `201 { id }`, the document kept · a license refusal `503` with its code · unreadable `422`, `malformed` or `unsupported` · a udoc package `422 cannotImportPackage` · too large `413` · a `format` that isn't one `400`                                                                                                                                                                                                          |
+| `GET /documents/:id/original`                                                                                                             | the upload, byte for byte — read from the store, with no session opened                                                                                                                                                                                                                                                                                                                                                          |
+| `GET /documents/:id/layout/page-count`                                                                                                    | `{ pageCount }` — a resource of its own, because the first ask composes the whole document                                                                                                                                                                                                                                                                                                                                       |
+| `GET /documents/:id/layout/pages/:index.:format?scale=`                                                                                   | the composed page as a PNG, at `?scale=` pixels per point, or an SVG, sized in points, which takes none · no such page `404 notFound` · a scale for an SVG `400 invalidRequest`                                                                                                                                                                                                                                                  |
+| `GET /documents/:id/layout/pages.pdf`                                                                                                     | the document exported as a PDF of its laid-out pages: a rendering, fixed and one-way, not the faithful copy `file.pdf` saves of a PDF · a spreadsheet, whose sheets have no print pages yet, `422 unsupported`                                                                                                                                                                                                                   |
+| `GET /documents/:id/package` · `…/package/:kinds/:partId` · `…/package/blobs/:key` · `…/package/crdt`                                     | `main`'s head's description, one part — its, an opaque part an edit brought, or one in its ancestry — one blob, its edit log — read from the store, with no session opened ([Node Streaming](node-streaming.md))                                                                                                                                                                                                                 |
+| `GET /documents/:id/collaboration`, upgraded to a WebSocket                                                                               | edit the document with every other client connected to it ([Node Collaboration](node-collaboration.md)) · a refusal takes the upgrade and closes it with a code · without the upgrade `426 upgradeRequired`                                                                                                                                                                                                                      |
+| `GET /documents/:id/file.:format?strategy=`                                                                                               | a copy saved in the document's session as `format` — one of its own (`pdf`, `pptx`, …) by `strategy`, `rewrite`, `delta` or `incremental`, if absent the one keeping the most of the original it can, or `udoc` for a package, which takes none (Core Save — Copy) · a format or strategy it can't be saved by `400 invalidRequest`, or a save not built `422 unsupported` · a strategy that isn't one, or one for `udoc`, `400` |
+| `POST /documents/:id/checkpoints`                                                                                                         | `201 { version }`, `main`'s session saved as the document's next version, kept as `main`'s head, no session reopened (Core Save — Checkpoint) · versions of one document taken in turn, whichever branch                                                                                                                                                                                                                         |
+| `GET /documents/:id/checkpoints`                                                                                                          | `{ versions }`, `main`'s, oldest first. Versions are numbered across the document, and a log cut uses one up, so they have gaps                                                                                                                                                                                                                                                                                                  |
+| `GET /documents/:id/versions/:version/package`, and each route under it but `crdt` and `cuts`; `…/checkpoints/:version/…` too             | one version as it was: its description, with no `baselineFrontier`, then its parts, read from it or its ancestry, with no session opened. `openRemote` on this opens it read-only                                                                                                                                                                                                                                                |
+| `GET /documents/:id/versions/:version/file.:format?strategy=`                                                                             | a copy of that version, as `file.:format` saves one, in a session of its own, closed after, spending a permit like any open                                                                                                                                                                                                                                                                                                      |
+| `GET /documents/:id/branches` · `POST …/versions/:version/branches` · `DELETE …/branches/:branch` · `POST …/branches/:branch/merge?from=` | the document's branches; one started at a version, its id minted; one forgotten, its versions kept; one merged into another ([Node Branches](node-branches.md))                                                                                                                                                                                                                                                                  |
+| `/documents/:id/branches/:branch/…`                                                                                                       | each of `main`'s routes above, for that branch: its package, collaboration, copies, pages and versions                                                                                                                                                                                                                                                                                                                           |
+| `GET /documents/:id/versions`                                                                                                             | `{ versions: [{ version, branch, parent? }] }`, every branch's, oldest first                                                                                                                                                                                                                                                                                                                                                     |
+| `DELETE /documents/:id`                                                                                                                   | `204`, what was kept forgotten, every branch's collaboration ended and its session closed                                                                                                                                                                                                                                                                                                                                        |
 
 The server doesn't listen: it answers the requests and upgrades its host hands it.
 `handleRequest` and `handleUpgrade` take one whose path, beneath the `basePath`
@@ -169,8 +171,8 @@ once composed. Pages count from 0 here and from 1 in the CLI: `udoc-node`'s rang
 error says only how many pages there are, and each host words the address in its own
 numbering.
 
-Streaming and co-editing hang on the same two pieces. Streaming a document's parts
-reads the store — the latest checkpoint's entries — and needs no session at all.
+Streaming and co-editing hang on the same two pieces. Streaming a branch's parts
+reads the store — its head's entries — and needs no session at all.
 Co-editing it is a collaboration: its pooled session, held busy while any client is connected, so
 neither idled out nor evicted. A session opened on an edited document merges its log,
 so the layout and the saves show the edits.
@@ -196,8 +198,8 @@ a family downloads none of it;
 SVG, `udoc export` writes the document as a PDF of its pages, and `udoc save` writes
 it in the format its output's extension names;
 `udoc-server`, listening on loopback by default or embedded in a host's own Node
-server beneath a base path, keeps each upload as its original
-and its checkpoints, a directory per document; serves the original and the package
+server beneath a base path, keeps each upload as its original, its branches and
+their versions, a directory per document; serves the original and each package
 part by part from the store ([Node Streaming](node-streaming.md)); serves counts,
 pages as PNGs or SVGs, the document exported as a PDF, copies and checkpoints from a
 pool of sessions over what it keeps; and lets

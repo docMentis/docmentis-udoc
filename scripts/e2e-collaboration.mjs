@@ -37,7 +37,7 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
     let server = await serve(store.directory);
     const id = await upload(server.base, t);
     const kept = join(store.directory, id);
-    const ids = t.ids(await unzip(await readFile(join(kept, "checkpoints/v0.udoc"))));
+    const ids = t.ids(await unzip(await readFile(join(kept, "versions/v0.udoc"))));
 
     const asUploaded = await modelOf((await remote(server.base, id)).saveToPackage());
 
@@ -104,7 +104,7 @@ for (const [type, t] of Object.entries(DOCUMENTS)) {
     const v2 = await fetch(`${server.base}/documents/${id}/checkpoints`, { method: "POST" });
     check("checkpoint v2", v2.status === 201);
     const alone = await newSession();
-    alone.open(await readFile(join(kept, "checkpoints/v2.udoc")));
+    alone.open(await readFile(join(kept, "versions/v2.udoc")));
     const aloneParts = differ(undone, await modelOf(alone.saveToPackage()));
     check("the package opened alone: the same model", aloneParts.length === 0, aloneParts.join(", "));
     await server.close();

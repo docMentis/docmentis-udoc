@@ -2,17 +2,18 @@
 // opened over what it keeps.
 //
 // A document is imported once — the upload opened, its ids minted — and kept in
-// a `DocumentStore` as its original, the upload as it arrived, and its
-// checkpoints, the udoc packages a later session reopens the latest of: `v0`
-// from the import, then one more each time it is checkpointed. What is kept is
-// the document; a session is a cache over it, one per document on a thread of
-// its own (see `@docmentis/udoc-node`): opened when a request needs it, kept
-// while requests keep coming, closed once idle or once too many are open, and
-// reopened from the store the next time. That is what lets a document outlive
-// the process, and what bounds how much the process holds. Streaming a
-// document's parts reads the store alone. Co-editing it is a collaboration: the
-// clients editing it together over its pooled session, held open while any is
-// connected, and every edit kept in the store as the document's edit log.
+// a `DocumentStore` as its original, the upload as it arrived, its branches and
+// their versions, the udoc packages a later session reopens a branch's latest
+// of: `v0` from the import, on `main`, then one more each time a branch is
+// checkpointed (docs/design/node-branches.md). What is kept is the document; a
+// session is a cache over one branch of it, on a thread of its own (see
+// `@docmentis/udoc-node`): opened when a request needs it, kept while requests
+// keep coming, closed once idle or once too many are open, and reopened from
+// the store the next time. That is what lets a document outlive the process,
+// and what bounds how much the process holds. Streaming a branch's parts reads
+// the store alone. Co-editing it is a collaboration: the clients editing it
+// together over its pooled session, held open while any is connected, and
+// every edit kept in the store as the branch's edit log.
 //
 // Each piece is a file of its own: the store (`store.ts`), the session pool
 // over it (`session-pool.ts`), the collaborations over the pool
@@ -30,6 +31,7 @@ import type { Duplex } from "node:stream";
 import { UDocError } from "@docmentis/udoc-node";
 import type { UDocNode, UDocSession } from "@docmentis/udoc-node";
 
+import { VersionNumbers, branchOfKey } from "./branch.ts";
 import { Collaborations } from "./collaboration.ts";
 import { documentRoutes, noDocument } from "./document.ts";
 import { HttpFailure, LICENSE_CODES, notFound } from "./http.ts";
@@ -38,7 +40,7 @@ import { readPackage } from "./package.ts";
 import { answerRequest, answerUpgrade, has, targetOf } from "./route.ts";
 import type { Route } from "./route.ts";
 import { SessionPool } from "./session-pool.ts";
-import type { DocumentStore } from "./store.ts";
+import type { At, DocumentStore } from "./store.ts";
 
 export interface UDocServerOptions {
     /** Opens each document. The embedder builds it, so the license — and
@@ -100,11 +102,16 @@ const KEPT_ORIGIN = "udoc-server://kept";
 export function createUDocServer(options: UDocServerOptions): UDocServer {
     const { udoc, store, basePath = "" } = options;
     const maxUploadBytes = options.maxUploadBytes ?? DEFAULT_MAX_UPLOAD_BYTES;
+    const numbers = new VersionNumbers(store);
+    // A pooled session is one branch's, by its key.
     const sessions = new SessionPool(
-        (id) => reopen(udoc, store, id),
+        (key) => {
+            const { id, branch } = branchOfKey(key);
+            return reopen(udoc, store, id, { branch });
+        },
         options.sessionTimeoutMs ?? DEFAULT_SESSION_TIMEOUT_MS,
         options.sessionPool ?? DEFAULT_SESSION_POOL,
-        logCutter(store, options.cutMinSavedBytes ?? DEFAULT_CUT_MIN_SAVED_BYTES),
+        logCutter(store, numbers, options.cutMinSavedBytes ?? DEFAULT_CUT_MIN_SAVED_BYTES),
     );
     const collaborations = new Collaborations(store, sessions, maxUploadBytes);
     /** Every route the server answers: each family's, in turn. */
@@ -115,7 +122,8 @@ export function createUDocServer(options: UDocServerOptions): UDocServer {
             sessions,
             collaborations,
             maxUploadBytes,
-            openKept: (id, version) => reopen(udoc, store, id, version),
+            numbers,
+            openKept: (id, at) => reopen(udoc, store, id, at),
         }),
     ];
     const upgradeRoutes = routes.filter((route) => route.upgrade !== undefined);
@@ -141,24 +149,28 @@ export function createUDocServer(options: UDocServerOptions): UDocServer {
 }
 
 /**
- * Open document `id` again from what is kept of it in `store`: its package,
- * over the store — the latest checkpoint's parts and blobs read as the
- * document needs them, the way a browser streams it, and the edit log applied
- * by the open. With `version`, checkpoint `version` as it was, with no log. Either
- * way the original is kept behind it, for a save that writes over it to read.
+ * Open document `id` again from what is kept of it in `store`, at `at`: a
+ * branch's package, over the store — its head's parts and blobs read as the
+ * document needs them, the way a browser streams it, and its edit log applied by
+ * the open; or one version as it was, with no log, or, `withLog`, with its own.
+ * Either way the original is kept behind it, for a save that writes over it to
+ * read.
  */
 async function reopen(
     udoc: Pick<UDocNode, "openRemote">,
     store: DocumentStore,
     id: string,
-    version?: number,
+    at: At,
 ): Promise<UDocSession> {
     try {
-        if (!(await store.getDescription(id, version))) {
-            throw version === undefined ? noDocument(id) : notFound(`document ${id} has no v${version}`);
+        if (!(await store.getDescription(id, at))) {
+            if ((await store.getVersions(id)).length === 0) throw noDocument(id);
+            throw notFound(
+                "branch" in at ? `document ${id} has no branch ${at.branch}` : `document ${id} has no v${at.version}`,
+            );
         }
-        return await udoc.openRemote(`${KEPT_ORIGIN}${keptPackage(id, version)}`, {
-            fetch: (url) => kept(store, id, url, version),
+        return await udoc.openRemote(`${KEPT_ORIGIN}${keptPackage(id, at)}`, {
+            fetch: (url) => kept(store, id, url, at),
             withOriginal: true,
         });
     } catch (error) {
@@ -171,9 +183,10 @@ async function reopen(
     }
 }
 
-/** The path of document `id`'s package, or checkpoint `version`'s. */
-function keptPackage(id: string, version?: number): string {
-    return `/documents/${id}/${version === undefined ? "package" : `checkpoints/${version}/package`}`;
+/** The path a session over document `id` at `at` reads its package beneath: one of its own, which no route serves. */
+function keptPackage(id: string, at: At): string {
+    if ("branch" in at) return `/documents/${id}/branches/${at.branch}/package`;
+    return `/documents/${id}/versions/${at.version}/${at.withLog ? "opened/" : ""}package`;
 }
 
 /**
@@ -182,8 +195,8 @@ function keptPackage(id: string, version?: number): string {
  * to write over the original, as the engine's `with_original` loader asks for it:
  * the original, and the three records that pair with it, empty for none.
  */
-async function kept(store: DocumentStore, id: string, url: string, version?: number): Promise<Uint8Array> {
-    const base = keptPackage(id, version);
+async function kept(store: DocumentStore, id: string, url: string, at: At): Promise<Uint8Array> {
+    const base = keptPackage(id, at);
     const { pathname, searchParams } = new URL(url);
     if (pathname !== base && !pathname.startsWith(`${base}/`)) throw notFound();
     const route = pathname.slice(base.length);
@@ -192,8 +205,8 @@ async function kept(store: DocumentStore, id: string, url: string, version?: num
         if (!original) throw noDocument(id);
         return original.bytes;
     }
-    if (route === "/original-id-map") return (await store.getOriginalIdMap(id, version)) ?? new Uint8Array();
-    if (route === "/modified-part-ids") return (await store.getModifiedPartIds(id, version)) ?? new Uint8Array();
-    if (route === "/removed-part-ids") return (await store.getRemovedPartIds(id, version)) ?? new Uint8Array();
-    return (await readPackage(store, id, route, searchParams, version)).body;
+    if (route === "/original-id-map") return (await store.getOriginalIdMap(id, at)) ?? new Uint8Array();
+    if (route === "/modified-part-ids") return (await store.getModifiedPartIds(id, at)) ?? new Uint8Array();
+    if (route === "/removed-part-ids") return (await store.getRemovedPartIds(id, at)) ?? new Uint8Array();
+    return (await readPackage(store, id, route, searchParams, at)).body;
 }

@@ -1,10 +1,11 @@
 # Node Collaboration
 
-Clients editing a document the server keeps, together. A **collaboration** is the
-document's pooled session held open while any client is connected
+Clients editing a branch of a document the server keeps, together
+([Node Branches](node-branches.md)). A **collaboration** is the branch's pooled session
+held open while any client is connected
 ([Node Hosts — The server keeps documents](node-hosts.md#the-server-keeps-documents)):
 each client's edits are merged into it, sent on to every other client, and kept as
-the document's edit log. The engine does the merging — the sync surface of
+the branch's edit log. The engine does the merging — the sync surface of
 Core Editor (`versionVector`, `patchSince`, `merge`, `mergePresence`) — and the
 server only carries its bytes.
 
@@ -12,11 +13,11 @@ server only carries its bytes.
 
 In concept the log is the package's own `crdt` entity
 (Core Package — Baseline, log, and replay):
-opening a package applies it, and a plain save drops it. The server stores it apart,
-as `crdt_delta.loro` beside the checkpoints, because the log is written on every edit and
-a checkpoint once. It holds every edit since the import, or since its last
-[cut](node-log-cut.md), so it replays over the frontier of any checkpoint since then, and a
-checkpoint leaves it as it is.
+opening a package applies it, and a plain save drops it. The server stores each
+branch's apart, as `crdt_delta.loro` beside the versions, because the log is written on
+every edit and a version once. It holds every edit since the branch's base, or since its
+last [cut](node-log-cut.md), so it replays over the frontier of any version of the branch
+since then, and a checkpoint leaves it as it is.
 
 - **Written** by the collaboration: after a merge, the session's whole editing state
   replaces the kept log, one write at a time — a merge landing during a write is

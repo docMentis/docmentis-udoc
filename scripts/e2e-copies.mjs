@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { DOCUMENTS, run } from "./e2e-documents.mjs";
 import {
     check,
+    cutsOf,
     finish,
     newSession,
     onServer,
@@ -162,7 +163,7 @@ for (const [type, f] of Object.entries(FORMATS)) {
     let server = await serve(store.directory);
     const id = await upload(server.base, t);
     const kept = join(store.directory, id);
-    const ids = t.ids(await unzip(await readFile(join(kept, "checkpoints/v0.udoc"))));
+    const ids = t.ids(await unzip(await readFile(join(kept, "versions/v0.udoc"))));
 
     /** Check the copy at `path`, by `query`, kept the original and holds `edits` edits. */
     async function copyHolds(label, path, query, edits) {
@@ -239,12 +240,12 @@ for (const [type, f] of Object.entries(FORMATS)) {
     await server.close();
     server = await serve(store.directory, { sessionTimeoutMs: 400, cutMinSavedBytes: 0 });
     await fetch(`${server.base}/documents/${id}/layout/page-count`);
-    let cuts = "";
-    for (let i = 0; i < 120 && !cuts; i++) {
+    let cuts = [];
+    for (let i = 0; i < 120 && cuts.length === 0; i++) {
         await sleep(100);
-        cuts = await readFile(join(kept, "cuts.json"), "utf8").catch(() => "");
+        cuts = await cutsOf(kept);
     }
-    check("the log is cut", cuts !== "", cuts);
+    check("the log is cut", cuts.length > 0, JSON.stringify(cuts));
     await both("over the log's cut", "", 2);
     await both("of the cut's checkpoint", "checkpoints/2/", 2);
 
@@ -253,7 +254,7 @@ for (const [type, f] of Object.entries(FORMATS)) {
     // earlier one still holds it. An undo brings it back.
     if (f.remove) {
         const [route, removed] = f.removed(ids);
-        const v0 = await unzip(await readFile(join(kept, "checkpoints/v0.udoc")));
+        const v0 = await unzip(await readFile(join(kept, "versions/v0.udoc")));
         const entry = f.format === "pdf" ? undefined : J(v0, "original_id_map.json")[removed]?.[0]?.replace(/^\//, "");
         const inTheFile = async (label, expected) => {
             if (entry === undefined) return;
@@ -292,7 +293,7 @@ for (const [type, f] of Object.entries(FORMATS)) {
         server = await serve(store.directory);
         await both("with a part removed, over its checkpoint", "", 1);
         await inTheFile("with a part removed, over its checkpoint", false);
-        const checkpoint = await unzip(await readFile(join(kept, `checkpoints/v${version}.udoc`)));
+        const checkpoint = await unzip(await readFile(join(kept, `versions/v${version}.udoc`)));
         const record = Object.values(J(checkpoint, "removed_part_ids.json")).flat();
         check("its checkpoint records it", record.includes(removed), record);
         check("its checkpoint holds no part of it", named(checkpoint, new RegExp(`_${removed}\\.json$`)).length === 0);

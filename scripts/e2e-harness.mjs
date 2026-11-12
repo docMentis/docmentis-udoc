@@ -3,7 +3,7 @@
 // over its WebSocket as udoc-ui's do.
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Worker } from "node:worker_threads";
@@ -80,6 +80,28 @@ export async function serve(directory, options = {}) {
 export async function temporaryStore() {
     const directory = await mkdtemp(join(tmpdir(), "udoc-e2e-"));
     return { directory, remove: () => rm(directory, { recursive: true, force: true }) };
+}
+
+/**
+ * The versions branch `branch`'s log was cut at, oldest first, as the version
+ * records in `kept`, a document's directory in the store, say.
+ */
+export async function cutsOf(kept, branch = "main") {
+    const versions = join(kept, "versions");
+    let names;
+    try {
+        names = await readdir(versions);
+    } catch {
+        return [];
+    }
+    const cuts = [];
+    for (const name of names) {
+        const version = /^v(\d+)\.json$/.exec(name)?.[1];
+        if (version === undefined) continue;
+        const record = JSON.parse(await readFile(join(versions, name), "utf8"));
+        if (record.branch === branch && record.cut) cuts.push(Number(version));
+    }
+    return cuts.sort((a, b) => a - b);
 }
 
 /** Upload document `t`, from scripts/e2e-documents.mjs, resolving with its id. */

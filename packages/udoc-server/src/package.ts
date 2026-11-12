@@ -1,10 +1,11 @@
 // The package routes (docs/design/node-streaming.md): a kept document opened
-// part by part. What a client streaming it fetches under
-// `/documents/:id/package`, and what a session this server opens over its
-// store reads — both answered here, from the store, with no session opened.
+// part by part. What a client streaming a branch fetches under
+// `/documents/:id/package` (`main`) or `/documents/:id/branches/:branch/package`,
+// and what a session this server opens over its store reads — both answered
+// here, from the store, with no session opened.
 //
-// One checkpoint is served the same way, under
-// `/documents/:id/checkpoints/:version/package`: the document as it was at that
+// One version is served the same way, under
+// `/documents/:id/versions/:version/package`: the document as it was at that
 // version, with no log, for a client to read and never to change.
 //
 // Each body but the description is sent deflated — raw DEFLATE, which the
@@ -18,18 +19,18 @@ import type { Reply } from "./http.ts";
 import { match, route } from "./route.ts";
 import type { Params, Route } from "./route.ts";
 import { BLOB_KEY, KINDS, PART_ID } from "./store.ts";
-import type { DocumentStore } from "./store.ts";
+import type { At, DocumentStore } from "./store.ts";
 
 /**
  * What answers a package route: document `id`'s resource in `store`, by its
- * route's `params` and `query`; as of checkpoint `version` when one is given.
+ * route's `params` and `query`, read at `at`.
  */
 type PackageHandler = (
     store: DocumentStore,
     id: string,
     params: Params,
     query: URLSearchParams,
-    version: number | undefined,
+    at: At,
 ) => Promise<Reply>;
 
 /** The routes of one part or one blob: what a batch names. */
@@ -48,9 +49,17 @@ const PACKAGE_ROUTES: Route<PackageHandler>[] = [
     ...ENTRY_ROUTES,
 ];
 
-/** Every route under one checkpoint's `…/package`: it has no log to read, and is no cut's. */
-const CHECKPOINT_ROUTES: Route<PackageHandler>[] = [
+/** Every route under one version's `…/package`: it has no log to read, and is no cut's. */
+const VERSION_ROUTES: Route<PackageHandler>[] = [
     route("GET", "", description),
+    route("GET", "batch", batch),
+    ...ENTRY_ROUTES,
+];
+
+/** Every route under one version's package with its own log, as an editor that opened it reads it. */
+const OPENED_VERSION_ROUTES: Route<PackageHandler>[] = [
+    route("GET", "", description),
+    route("GET", "crdt", log),
     route("GET", "batch", batch),
     ...ENTRY_ROUTES,
 ];
@@ -65,60 +74,82 @@ const OCTETS = "application/octet-stream";
 
 const deflate = promisify(deflateRaw);
 
-/**
- * Document `id`'s resource at `path` under `…/package` in `store`, as its route
- * answers it; under checkpoint `version`'s own `…/package` when one is given.
- */
+/** Document `id`'s resource at `path` under the `…/package` of what is at `at` in `store`, as its route answers it. */
 export async function readPackage(
     store: DocumentStore,
     id: string,
     path: string,
     query: URLSearchParams,
-    version?: number,
+    at: At,
 ): Promise<Reply> {
-    const [{ handle }, params] = match(version === undefined ? PACKAGE_ROUTES : CHECKPOINT_ROUTES, "GET", path);
-    return handle(store, id, params, query, version);
+    const table = "branch" in at ? PACKAGE_ROUTES : at.withLog ? OPENED_VERSION_ROUTES : VERSION_ROUTES;
+    const [{ handle }, params] = match(table, "GET", path);
+    return handle(store, id, params, query, at);
+}
+
+/** What is at `at`, for a message saying it isn't there. */
+function named(id: string, at: At): string {
+    return "branch" in at ? `document ${id}'s branch ${at.branch}` : `document ${id}'s v${at.version}`;
 }
 
 /**
  * The package's description, `{ docType, sourceFormat?, sourceDelimiter?,
- * baselineVersion, baselineFrontier? }`: the latest checkpoint's, with `baselineFrontier`
- * present exactly when there is an edit log; or checkpoint `version`'s, with none.
+ * baselineVersion, baselineFrontier? }`: a branch's head's, with
+ * `baselineFrontier` present exactly when the branch has an edit log; or one
+ * version's, with none, or, as it was opened, with its own.
  */
 async function description(
     store: DocumentStore,
     id: string,
     _params: Params,
     _query: URLSearchParams,
-    version: number | undefined,
+    at: At,
 ): Promise<Reply> {
-    const description = await store.getDescription(id, version);
-    if (!description) {
-        throw notFound(version === undefined ? `document ${id} has no package` : `document ${id} has no v${version}`);
-    }
+    const description = await store.getDescription(id, at);
+    if (!description) throw notFound(`${named(id, at)} has no package`);
     return json(200, description, bigintsWhole);
 }
 
-/** The edit log, once the document has been edited. */
-async function log(store: DocumentStore, id: string): Promise<Reply> {
-    const log = await store.getLog(id);
-    if (!log) throw notFound(`document ${id} has no edit log`);
+/** The branch's edit log, once it has been edited; or the one a version opened with its log holds. */
+async function log(store: DocumentStore, id: string, _params: Params, _query: URLSearchParams, at: At): Promise<Reply> {
+    const log = "branch" in at ? await store.getLog(id, at.branch) : await store.getVersionLog(id, at.version);
+    if (!log) throw notFound(`${named(id, at)} has no edit log`);
     // Kept whole, not in the package's zip, so deflated here.
     return bytes(await deflate(log), OCTETS);
 }
 
-/** The versions of the checkpoints the edit log was cut at, `{ versions }`: what an editor behind a cut catches up through. */
-async function cuts(store: DocumentStore, id: string): Promise<Reply> {
-    if (!(await store.getDescription(id))) throw notFound(`document ${id} has no package`);
-    return json(200, { versions: await store.getCuts(id) });
+/** The versions the branch's edit log was cut at, `{ versions }`: what an editor behind a cut catches up through. */
+async function cuts(
+    store: DocumentStore,
+    id: string,
+    _params: Params,
+    _query: URLSearchParams,
+    at: At,
+): Promise<Reply> {
+    if (!(await store.getDescription(id, at))) throw notFound(`${named(id, at)} has no package`);
+    return json(200, { versions: await cutsOf(store, id, at) });
 }
 
-/** The edit log checkpoint `version` holds, the log was cut at it: what led up to that cut. */
-async function cutLog(store: DocumentStore, id: string, { version }: Params): Promise<Reply> {
+/** The edit log of the version the branch's log was cut at: what led up to that cut. */
+async function cutLog(
+    store: DocumentStore,
+    id: string,
+    { version }: Params,
+    _query: URLSearchParams,
+    at: At,
+): Promise<Reply> {
     const cut = Number(version);
-    const log = (await store.getCuts(id)).includes(cut) ? await store.getCheckpointLog(id, cut) : undefined;
-    if (!log) throw notFound(`document ${id}'s log wasn't cut at version ${version}`);
+    const log = (await cutsOf(store, id, at)).includes(cut) ? await store.getVersionLog(id, cut) : undefined;
+    if (!log) throw notFound(`${named(id, at)}'s log wasn't cut at version ${version}`);
     return bytes(await deflate(log), OCTETS);
+}
+
+/** The versions the log of the branch at `at` was cut at, oldest first. */
+async function cutsOf(store: DocumentStore, id: string, at: At): Promise<number[]> {
+    if (!("branch" in at)) return [];
+    return (await store.getVersions(id))
+        .filter(({ branch, cut }) => branch === at.branch && cut)
+        .map(({ version }) => version);
 }
 
 /** One blob, by its key. What is served there never changes: a blob's key is its content. */
@@ -127,27 +158,27 @@ async function blob(
     id: string,
     { key }: Params,
     _query: URLSearchParams,
-    version: number | undefined,
+    at: At,
 ): Promise<Reply> {
-    const body = await store.getBlob(id, key!, version);
+    const body = await store.getBlob(id, key!, at);
     if (!body) throw notFound(`document ${id}'s package has no blob ${key}`);
     return bytes(body, OCTETS, { "cache-control": "private, max-age=31536000, immutable" });
 }
 
 /**
  * One part, as its JSON, by its kind in kebab-case and plural and its id's
- * key: the latest checkpoint's, or an opaque part an edit brought, kept beside
- * it (docs/design/core-editor-opaque-part.md), or, held by neither, an earlier
- * checkpoint's.
+ * key: the head's, or an opaque part an edit brought, kept for the document
+ * (docs/design/core-editor-opaque-part.md), or, held by neither, the newest in
+ * its ancestry's.
  */
 async function part(
     store: DocumentStore,
     id: string,
     { kinds, partId }: Params,
     _query: URLSearchParams,
-    version: number | undefined,
+    at: At,
 ): Promise<Reply> {
-    const body = await store.getPart(id, kinds!, partId!, version);
+    const body = await store.getPart(id, kinds!, partId!, at);
     if (!body) throw notFound(`document ${id}'s package has no ${kinds} part ${partId}`);
     return bytes(body, OCTETS);
 }
@@ -163,7 +194,7 @@ async function batch(
     id: string,
     _params: Params,
     query: URLSearchParams,
-    version: number | undefined,
+    at: At,
 ): Promise<Reply> {
     const routes = query.getAll("p");
     if (routes.length > BATCH_LIMIT) {
@@ -184,7 +215,7 @@ async function batch(
         const [{ handle }, params] = entry;
         const length = Buffer.alloc(4);
         try {
-            const { body } = await handle(store, id, params, new URLSearchParams(), version);
+            const { body } = await handle(store, id, params, new URLSearchParams(), at);
             length.writeUInt32BE(body.byteLength);
             entries.push(length, body);
         } catch (error) {
