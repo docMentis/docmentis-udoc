@@ -1256,7 +1256,12 @@ export function mountUIShell(
         markup: commentMarkupShown,
         pageToViewport: (page) => canvas.pageToViewport(page),
         open: () => store.getState().openOfficeComment,
+        // Pressed again, the open thread's marker closes it.
         onOpen: (id) => {
+            if (store.getState().openOfficeComment === id) {
+                store.dispatch({ type: "OPEN_OFFICE_COMMENT", id: null });
+                return;
+            }
             store.dispatch({ type: "OPEN_OFFICE_COMMENT", id });
             store.dispatch({ type: "OPEN_PANEL", panel: "comments" });
         },
@@ -3176,10 +3181,15 @@ export function mountUIShell(
     }
 
     // Go to a comment chosen in the comments panel — its rect at the viewport's
-    // top-left, as a PDF destination lands — and select it.
+    // top-left, as a PDF destination lands — and select it. An Office thread
+    // chosen again, while it's open, closes.
     function chooseComment(comment: Comment): void {
         if (store.getState().status !== "ready") return;
         if (comment.source.kind === "office") {
+            if (store.getState().openOfficeComment === comment.id) {
+                store.dispatch({ type: "OPEN_OFFICE_COMMENT", id: null });
+                return;
+            }
             store.dispatch({ type: "OPEN_OFFICE_COMMENT", id: comment.id });
             void goToOfficeComment(comment.id, comment.source.at);
             return;

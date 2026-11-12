@@ -17,7 +17,7 @@ import type { CommentGroup, OfficeComment, PageComments } from "../../worker/pro
 import type { Action } from "../actions.js";
 import type { Comment } from "../annotations.js";
 import { commentThreads, officeThreads, threadHolding } from "../annotations.js";
-import { ICON_CHEVRON_DOWN } from "../icons.js";
+import { ICON_CHEVRON_DOWN, ICON_NEW_COMMENT } from "../icons.js";
 import type { UIState } from "../state.js";
 import { VIEW_MODE } from "../state.js";
 import { createCommentThread, createReplyField } from "./CommentThread.js";
@@ -29,7 +29,8 @@ export interface CommentsPanelCallbacks extends CommentThreadCallbacks {
     /** Go to `comment` and select it. */
     onChoose: (comment: Comment) => void;
     /** Hide the line from the open comment to its card, or show it again: the
-     *  selected card chosen again. */
+     *  selected card of a PDF's comment chosen again. An Office thread's,
+     *  chosen again, closes it instead. */
     onToggleTether: () => void;
     /** Open a thread whose first comment holds `richContents` (XHTML), on
      *  what the document has selected. */
@@ -117,7 +118,11 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
     // Save and Cancel each put the button back.
     const compose = document.createElement("div");
     compose.className = "udoc-comments-panel__new";
-    const start = createButton({ text: i18n.t("comments.new"), label: i18n.t("comments.new") });
+    const start = createButton({
+        icon: ICON_NEW_COMMENT,
+        text: i18n.t("comments.new"),
+        label: i18n.t("comments.new"),
+    });
     const field = createReplyField(i18n, NEW_COMMENT_WORDS, {
         save: (richContents) => {
             closeField();
@@ -166,7 +171,11 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         card.el.addEventListener("click", (ev) => {
             const target = ev.target as HTMLElement;
             if (target.closest("button, [contenteditable='true']")) return;
-            if (card.el.classList.contains("udoc-comments-panel__card--selected")) callbacks.onToggleTether();
+            if (
+                card.thread.source.kind !== "office" &&
+                card.el.classList.contains("udoc-comments-panel__card--selected")
+            )
+                callbacks.onToggleTether();
             callbacks.onChoose(card.thread);
         });
         cards.set(key, card);

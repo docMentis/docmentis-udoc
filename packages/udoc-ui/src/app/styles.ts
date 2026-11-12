@@ -71,8 +71,10 @@ export const uiStyles = css`
         --udoc-canvas-marquee-enclose-fill: rgba(22, 163, 74, 0.12);
         --udoc-canvas-search: rgba(255, 235, 59, 0.35);
         --udoc-canvas-search-active: rgba(255, 152, 0, 0.5);
-        --udoc-canvas-comment: rgba(240, 98, 146, 0.22);
-        --udoc-canvas-comment-open: rgba(233, 30, 99, 0.38);
+        --udoc-canvas-comment: rgba(99, 102, 241, 0.1);
+        --udoc-canvas-comment-open: rgba(99, 102, 241, 0.2);
+        --udoc-canvas-comment-marker: #a5b4fc;
+        --udoc-canvas-comment-marker-open: #6366f1;
 
         /* States — four opacities. Hover and pressed are the control's own ink
        (currentColor, resolved where the overlay is painted) and go in
@@ -121,8 +123,10 @@ export const uiStyles = css`
         --udoc-canvas-marquee-enclose-fill: rgba(74, 222, 128, 0.16);
         --udoc-canvas-search: rgba(255, 235, 59, 0.35);
         --udoc-canvas-search-active: rgba(255, 152, 0, 0.5);
-        --udoc-canvas-comment: rgba(240, 98, 146, 0.22);
-        --udoc-canvas-comment-open: rgba(233, 30, 99, 0.38);
+        --udoc-canvas-comment: rgba(99, 102, 241, 0.1);
+        --udoc-canvas-comment-open: rgba(99, 102, 241, 0.2);
+        --udoc-canvas-comment-marker: #a5b4fc;
+        --udoc-canvas-comment-marker-open: #6366f1;
     }
 
     .udoc-ui-root {
@@ -3399,7 +3403,8 @@ export const uiStyles = css`
 
     /* The text a Word or PowerPoint comment thread is on
    (udoc:comment-highlights): one SVG of polygons over the viewport, a quad
-   each, a light tint the text reads through; the open thread's stronger. It
+   each, a light tint the text reads through, bracketed by an edge at its
+   left and right in the marker's colour; the open thread's stronger. It
    takes no press. */
     .udoc-ui-root .udoc-comment-highlights svg {
         position: absolute;
@@ -3416,25 +3421,30 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-comment-highlight--open {
         fill: var(--udoc-canvas-comment-open);
     }
+    .udoc-ui-root .udoc-comment-highlight-edge {
+        stroke: var(--udoc-canvas-comment-marker);
+        stroke-width: 2px;
+    }
+    .udoc-ui-root .udoc-comment-highlight-edge--open {
+        stroke: var(--udoc-canvas-comment-marker-open);
+    }
 
     /* A Word, Excel or PowerPoint comment thread's marker (udoc:comment-markers):
    where the engine stands it — centred in a Word page's right margin, inside
    a slide's or a shape's top-right corner, just right of the shape a slide's
-   text is in — a constant screen size at every zoom; the open thread's
-   filled. */
+   text is in — the icon alone, a constant screen size at every zoom, in the
+   page's colours whatever the theme — the comments' indigo, the open
+   thread's darker. */
     .udoc-ui-root .udoc-comment-marker {
         position: absolute;
         transform: translate(-50%, -50%);
         display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        padding: 3px;
-        border: 1px solid var(--udoc-color-primary);
-        border-radius: 6px;
-        background: var(--udoc-color-surface);
-        color: var(--udoc-color-primary);
+        width: var(--udoc-btn-glyph);
+        height: var(--udoc-btn-glyph);
+        padding: 0;
+        border: none;
+        background: none;
+        color: var(--udoc-canvas-comment-marker);
         cursor: pointer;
         pointer-events: auto;
     }
@@ -3443,8 +3453,7 @@ export const uiStyles = css`
         height: 100%;
     }
     .udoc-ui-root .udoc-comment-marker--open {
-        background: var(--udoc-color-primary);
-        color: var(--udoc-color-on-primary);
+        color: var(--udoc-canvas-comment-marker-open);
     }
     /* A box's: inside its top-right corner. */
     .udoc-ui-root .udoc-comment-marker--corner {
@@ -3462,7 +3471,10 @@ export const uiStyles = css`
         padding: 0;
         border: none;
         border-radius: 0;
-        background: linear-gradient(45deg, transparent 50%, var(--udoc-color-primary) 50%);
+        background: linear-gradient(45deg, transparent 50%, var(--udoc-canvas-comment-marker) 50%);
+    }
+    .udoc-ui-root .udoc-comment-marker--cell.udoc-comment-marker--open {
+        background: linear-gradient(45deg, transparent 50%, var(--udoc-canvas-comment-marker-open) 50%);
     }
     .udoc-ui-root .udoc-comment-marker--cell svg {
         display: none;

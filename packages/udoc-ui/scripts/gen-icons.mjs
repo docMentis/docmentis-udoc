@@ -39,8 +39,9 @@ const MDI_COMMIT = "9e04201d4557e729822fb57f62a316c3dea1d4a8"; // v7.4.47, 2023-
 // ---------------------------------------------------------------------------
 
 /**
- * Exported constant -> Material Symbol name, or `{ mdi }` naming a Material
- * Design Icon instead, as its library spells it (`table-row-remove`).
+ * Exported constant -> Material Symbol name, `{ symbol, mirrored: true }` for
+ * a symbol flipped left to right, or `{ mdi }` naming a Material Design Icon
+ * instead, as its library spells it (`table-row-remove`).
  */
 const ICONS = {
     // Ribbon tabs — on the strip, in its icon style
@@ -59,7 +60,9 @@ const ICONS = {
     ICON_SIDE_PANEL_CLOSE: "left_panel_close",
     ICON_CODE: "code",
     ICON_SEARCH: "search",
-    ICON_COMMENTS: "comment",
+    ICON_COMMENTS: "mode_comment",
+    // Its tail on the right, as `mode_comment`'s is.
+    ICON_NEW_COMMENT: { symbol: "add_comment", mirrored: true },
     ICON_FULLSCREEN: "fullscreen",
     ICON_FULLSCREEN_EXIT: "fullscreen_exit",
     ICON_DOWNLOAD: "download",
@@ -225,12 +228,15 @@ async function fetchOk(url) {
 // Google's file is `<svg xmlns=… height=… viewBox=… width=…>…</svg>`, and
 // Pictogrammers' `<svg xmlns=… id=… viewBox=…>…</svg>`. Inline in HTML it needs
 // no namespace or id, and CSS sets its size, so only the viewBox and the drawing
-// survive; `currentColor` lets the button's color tint it.
-async function fetchSvg(url) {
+// survive; `currentColor` lets the button's color tint it. A mirrored one's
+// drawing is flipped about the viewBox's vertical centre line.
+async function fetchSvg(url, mirrored) {
     const svg = (await (await fetchOk(url)).text()).trim();
     const match = /^<svg\b[^>]*\bviewBox="([^"]+)"[^>]*>([\s\S]*)<\/svg>$/.exec(svg);
     if (!match) throw new Error(`${url}: unexpected SVG shape`);
-    return `<svg viewBox="${match[1]}" fill="currentColor">${match[2]}</svg>`;
+    const [x, , width] = match[1].split(/\s+/).map(Number);
+    const drawing = mirrored ? `<g transform="matrix(-1 0 0 1 ${2 * x + width} 0)">${match[2]}</g>` : match[2];
+    return `<svg viewBox="${match[1]}" fill="currentColor">${drawing}</svg>`;
 }
 
 // Stop on a Material Design Icon the library has no such name for, or that
@@ -250,20 +256,30 @@ async function checkMdi(names) {
 const entries = Object.entries(ICONS).map(([constant, icon]) =>
     typeof icon === "string"
         ? { constant, url: symbolUrl(icon), doc: `\`${icon}\`` }
-        : {
-              constant,
-              mdi: icon.mdi,
-              url: mdiUrl(`svg/${icon.mdi}.svg`),
-              doc: `Material Design Icons' \`${icon.mdi}\``,
-          },
+        : icon.symbol
+          ? { constant, url: symbolUrl(icon.symbol), mirrored: true, doc: `\`${icon.symbol}\`, mirrored` }
+          : {
+                constant,
+                mdi: icon.mdi,
+                url: mdiUrl(`svg/${icon.mdi}.svg`),
+                doc: `Material Design Icons' \`${icon.mdi}\``,
+            },
 );
 const mdiNames = [...new Set(entries.filter((entry) => entry.mdi).map((entry) => entry.mdi))];
 await checkMdi(mdiNames);
 const urls = [...new Set(entries.map((entry) => entry.url))];
-const svgs = new Map(await Promise.all(urls.map(async (url) => [url, await fetchSvg(url)])));
+const svgs = new Map(await Promise.all(urls.map(async (url) => [url, await fetchSvg(url, false)])));
+const mirroredSvgs = new Map(
+    await Promise.all(
+        entries.filter((entry) => entry.mirrored).map(async (entry) => [entry.url, await fetchSvg(entry.url, true)]),
+    ),
+);
 
 const rows = entries
-    .map(({ constant, url, doc }) => `/** ${doc} */\nexport const ${constant} = \`${svgs.get(url)}\`;`)
+    .map(
+        ({ constant, url, mirrored, doc }) =>
+            `/** ${doc} */\nexport const ${constant} = \`${(mirrored ? mirroredSvgs : svgs).get(url)}\`;`,
+    )
     .join("\n\n");
 
 // The header names Material Design Icons only once ICONS takes one.
