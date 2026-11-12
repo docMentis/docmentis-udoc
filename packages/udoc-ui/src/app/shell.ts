@@ -105,6 +105,7 @@ import {
     LEFT_PANEL_TABS,
     RIGHT_PANEL_TABS,
     VIEW_MODE,
+    commentable,
     initialState,
     planeOfView,
     planeOfWordprocessingView,
@@ -3012,6 +3013,7 @@ export function mountUIShell(
         const state = store.getState();
         const docType = state.docType;
         if (docType !== "wordprocessing" && docType !== "presentation" && docType !== "spreadsheet") return;
+        if (!commentable(state.selectionCaps, docType, state.presentationView)) return;
         const [id, story] = await Promise.all([mintId(), mintId()]);
         if (id === null || story === null) return;
         const comment = {
@@ -3023,12 +3025,10 @@ export function mountUIShell(
         };
         if (state.selectionCaps.allowed.includes("insertComment")) {
             await commit(() => client.executeOnSelection({ kind: "insertComment", comment }));
-        } else if (docType === "presentation") {
+        } else {
             const slide = await client.presentation.slideId(state.pageIndex);
             if (slide === null) return;
             await commit(() => client.execute(Command.insertSlideComment(slide, { slide: {} }, comment)));
-        } else {
-            return;
         }
         store.dispatch({ type: "OPEN_OFFICE_COMMENT", id });
     }

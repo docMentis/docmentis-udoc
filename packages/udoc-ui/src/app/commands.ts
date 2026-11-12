@@ -2,7 +2,7 @@ import type { HistoryOp, SelectionEdit } from "../worker/protocol.js";
 import type { RevisionView, RevisionViewMode, SheetLayoutMode, StampIcon, UDocType } from "@docmentis/udoc-wasm";
 import { allowsEdit } from "../geometry.js";
 import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
-import { copyAllowed, PAGELESS_PLANE, panelOpenable, revisionViewOf, sheetLayoutModeOf } from "./state.js";
+import { commentable, copyAllowed, PAGELESS_PLANE, panelOpenable, revisionViewOf, sheetLayoutModeOf } from "./state.js";
 import type {
     AnnotationTool,
     CommandId,
@@ -1305,10 +1305,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
                 store.dispatch({ type: "OPEN_PANEL", panel: "comments" });
             },
         },
-        enabledWhen: (c) =>
-            c.ready &&
-            (c.selection.allowed.includes("insertComment") ||
-                (c.docType === "presentation" && c.presentationView === "normal")),
+        enabledWhen: (c) => c.ready && commentable(c.selection, c.docType, c.presentationView),
     },
     // A workbook's formula bar above its grid.
     formulaBar: {

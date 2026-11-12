@@ -195,6 +195,21 @@ export function thumbnailPlane(state: Pick<UIState, "planeKinds" | "currentPlane
  *  breaks. Its pages are plane 0. */
 export const PAGELESS_PLANE = 1;
 
+/** Whether New Comment can open a thread on what is selected: a selection
+ *  that takes one — a document's text, a slide's shape or the text in one, a
+ *  sheet's active cell — or, on a deck's slides in Normal view with nothing
+ *  selected, the slide shown. */
+export function commentable(
+    selection: SelectionCapabilities,
+    docType: UDocType | null,
+    presentationView: PresentationView,
+): boolean {
+    return (
+        selection.allowed.includes("insertComment") ||
+        (docType === "presentation" && presentationView === "normal" && selection.count === 0)
+    );
+}
+
 /** Whether `state` shows a word document pageless. */
 export function showsPageless(state: { docType: UDocType | null; currentPlane: number }): boolean {
     return state.docType === "wordprocessing" && state.currentPlane === PAGELESS_PLANE;

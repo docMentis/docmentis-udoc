@@ -19,7 +19,7 @@ import type { Comment } from "../annotations.js";
 import { commentThreads, officeThreads, threadHolding } from "../annotations.js";
 import { ICON_CHEVRON_DOWN, ICON_NEW_COMMENT } from "../icons.js";
 import type { UIState } from "../state.js";
-import { VIEW_MODE } from "../state.js";
+import { commentable, VIEW_MODE } from "../state.js";
 import { createCommentThread, createReplyField } from "./CommentThread.js";
 import type { CommentThreadCallbacks, CommentThreadView, ReplyFieldWords } from "./CommentThread.js";
 import { createButton } from "./controls.js";
@@ -54,6 +54,8 @@ interface CommentsPanelSlice {
     officeEditing: boolean;
     /** Bumped by a toolbar's New Comment ({@link UIState.newCommentGen}). */
     newCommentGen: number;
+    /** Whether New Comment can open a thread on what is selected. */
+    commentable: boolean;
 }
 
 function selectSlice(state: UIState): CommentsPanelSlice {
@@ -70,6 +72,7 @@ function selectSlice(state: UIState): CommentsPanelSlice {
         annotating: state.features.includes("annotation"),
         officeEditing: state.mode !== VIEW_MODE && OFFICE_EDITED_DOC_TYPES.has(state.docType ?? ""),
         newCommentGen: state.newCommentGen,
+        commentable: commentable(state.selectionCaps, state.docType, state.presentationView),
     };
 }
 
@@ -82,6 +85,7 @@ function sliceEqual(a: CommentsPanelSlice, b: CommentsPanelSlice): boolean {
         a.annotating === b.annotating &&
         a.officeEditing === b.officeEditing &&
         a.newCommentGen === b.newCommentGen &&
+        a.commentable === b.commentable &&
         a.selected?.page === b.selected?.page &&
         (a.selected?.ids.join() ?? "") === (b.selected?.ids.join() ?? "")
     );
@@ -258,6 +262,8 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         empty.textContent = i18n.t(slice.allRead ? "comments.empty" : "comments.loading");
         const listing = shownGroups.length > 0 ? shownGroups : [empty];
         setChildren(el, slice.officeEditing ? [compose, ...listing] : listing);
+        // Greyed while what is selected takes no comment.
+        start.disabled = !slice.commentable;
         if (slice.newCommentGen !== newCommentGen) {
             newCommentGen = slice.newCommentGen;
             // Focused a frame on, once a panel a toolbar's press opened shows.
