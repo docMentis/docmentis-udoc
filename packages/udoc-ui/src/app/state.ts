@@ -432,7 +432,7 @@ export type CommandId =
     | "gapless"
     | "layers"
     | "formattingMarks"
-    | "comments"
+    | "hideCommentMarkup"
     | "newComment"
     | "formulaBar";
 
@@ -1024,8 +1024,9 @@ export interface UIState {
      *  line break — as Word's toggle does. Kept across documents. */
     showFormattingMarks: boolean;
     /** Whether a Word, Excel or PowerPoint document shows its comments on the
-     *  pages — each thread's marker and its text's highlight — the View tab's
-     *  Comments. Kept across documents. */
+     *  pages — each thread's marker and its text's highlight — the host's
+     *  `showCommentMarkup`, then the View tab's Hide Comment Markup, reversed.
+     *  Kept across documents. */
     showComments: boolean;
     /** Bumped by New Comment, a toolbar's or the comments panel's: the panel
      *  opens its field for a new thread on each change it hasn't seen. */

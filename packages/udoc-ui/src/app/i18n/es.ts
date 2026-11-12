@@ -122,6 +122,7 @@ export const es: Messages = {
     "command.rotateViewRight": "Girar vista a la derecha",
     "command.gapless": "Sin espacio",
     "command.formattingMarks": "Marcas de formato",
+    "command.hideCommentMarkup": "Ocultar marcas de comentarios",
     "command.formulaBar": "Barra de fórmulas",
     "formulaBar.label": "Barra de fórmulas",
     "formulaBar.nameBox": "Cuadro de nombres",

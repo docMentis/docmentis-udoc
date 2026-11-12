@@ -122,6 +122,7 @@ export const zhTW: Messages = {
     "command.rotateViewRight": "向右旋轉檢視",
     "command.gapless": "無間距",
     "command.formattingMarks": "編輯標記",
+    "command.hideCommentMarkup": "隱藏註解標記",
     "command.formulaBar": "資料編輯列",
     "formulaBar.label": "資料編輯列",
     "formulaBar.nameBox": "名稱方塊",

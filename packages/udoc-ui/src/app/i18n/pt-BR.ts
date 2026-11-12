@@ -122,6 +122,7 @@ export const ptBR: Messages = {
     "command.rotateViewRight": "Girar Exibição para a Direita",
     "command.gapless": "Sem espaço",
     "command.formattingMarks": "Marcas de Formatação",
+    "command.hideCommentMarkup": "Ocultar Marcações de Comentários",
     "command.formulaBar": "Barra de Fórmulas",
     "formulaBar.label": "Barra de fórmulas",
     "formulaBar.nameBox": "Caixa de Nome",

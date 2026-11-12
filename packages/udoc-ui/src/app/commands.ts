@@ -88,7 +88,7 @@ import {
     ICON_VIEW_GAPLESS,
     ICON_LAYERS,
     ICON_FORMATTING_MARKS,
-    ICON_COMMENTS,
+    ICON_HIDE_COMMENTS,
     ICON_NEW_COMMENT,
     ICON_FORMULA_BAR,
 } from "./icons.js";
@@ -1274,17 +1274,16 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         shortcut: { key: "8", shift: true },
         enabledWhen: (c) => c.ready && c.docType === "wordprocessing",
     },
-    // A Word, Excel or PowerPoint document's comments on its pages: each
-    // thread's marker and its text's highlight.
-    comments: {
-        id: "comments",
-        label: "rightPanel.comments",
-        icon: ICON_COMMENTS,
+    // A Word, Excel or PowerPoint document's comments on its pages — each
+    // thread's marker and its text's highlight — hidden while pressed.
+    hideCommentMarkup: {
+        id: "hideCommentMarkup",
+        label: "command.hideCommentMarkup",
+        icon: ICON_HIDE_COMMENTS,
         group: "show",
-        labeled: true,
         run: {
             kind: "toggle",
-            pressed: (state) => state.showComments,
+            pressed: (state) => !state.showComments,
             press: (store) => store.dispatch({ type: "SET_SHOW_COMMENTS", visible: !store.getState().showComments }),
         },
         enabledWhen: (c) => c.ready && OFFICE_COMMENT_DOC_TYPES.has(c.docType ?? ""),

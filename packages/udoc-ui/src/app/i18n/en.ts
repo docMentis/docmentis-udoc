@@ -123,6 +123,7 @@ export const en: Messages = {
     "command.rotateViewRight": "Rotate View Right",
     "command.gapless": "Gapless",
     "command.formattingMarks": "Formatting Marks",
+    "command.hideCommentMarkup": "Hide Comment Markup",
     "command.formulaBar": "Formula Bar",
     "formulaBar.label": "Formula bar",
     "formulaBar.nameBox": "Name Box",

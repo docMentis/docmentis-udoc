@@ -65,6 +65,8 @@ const ICONS = {
     ICON_NEW_COMMENT: { symbol: "add_comment", mirrored: true },
     // A resolved comment thread opened again.
     ICON_REOPEN: "replay",
+    // The comments' markup on the pages, hidden.
+    ICON_HIDE_COMMENTS: "comments_disabled",
     ICON_FULLSCREEN: "fullscreen",
     ICON_FULLSCREEN_EXIT: "fullscreen_exit",
     ICON_DOWNLOAD: "download",

@@ -122,6 +122,7 @@ export const ja: Messages = {
     "command.rotateViewRight": "表示を右に回転",
     "command.gapless": "間隔なし",
     "command.formattingMarks": "編集記号",
+    "command.hideCommentMarkup": "コメントのマークアップを非表示",
     "command.formulaBar": "数式バー",
     "formulaBar.label": "数式バー",
     "formulaBar.nameBox": "名前ボックス",

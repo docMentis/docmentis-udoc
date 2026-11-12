@@ -122,6 +122,7 @@ export const ru: Messages = {
     "command.rotateViewRight": "Повернуть вид вправо",
     "command.gapless": "Без интервала",
     "command.formattingMarks": "Знаки форматирования",
+    "command.hideCommentMarkup": "Скрыть пометки комментариев",
     "command.formulaBar": "Строка формул",
     "formulaBar.label": "Строка формул",
     "formulaBar.nameBox": "Поле имени",

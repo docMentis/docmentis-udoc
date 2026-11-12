@@ -122,6 +122,7 @@ export const fr: Messages = {
     "command.rotateViewRight": "Faire pivoter l’affichage vers la droite",
     "command.gapless": "Sans espacement",
     "command.formattingMarks": "Marques de mise en forme",
+    "command.hideCommentMarkup": "Masquer les marques de commentaires",
     "command.formulaBar": "Barre de formule",
     "formulaBar.label": "Barre de formule",
     "formulaBar.nameBox": "Zone Nom",

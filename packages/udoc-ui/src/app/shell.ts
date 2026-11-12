@@ -477,6 +477,7 @@ export interface UIShellOptions {
     showSearchTether?: boolean;
     showCommentsPanel?: boolean;
     showCommentTether?: boolean;
+    showCommentMarkup?: boolean;
     showThemeButton?: boolean;
     showFullscreenButton?: boolean;
     showPrintButton?: boolean;
@@ -684,6 +685,7 @@ export function mountUIShell(
         wordprocessingView: shellOptions.wordprocessingView ?? initialState.wordprocessingView,
         revisionView: shellOptions.revisionView ?? initialState.revisionView,
         formulaBarVisible: shellOptions.showFormulaBar ?? initialState.formulaBarVisible,
+        showComments: shellOptions.showCommentMarkup ?? initialState.showComments,
         disabledPanels: hostDisabledPanels,
         hostDisabledPanels,
         themeSwitchingDisabled: shellOptions.showThemeButton === false,

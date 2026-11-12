@@ -71,14 +71,14 @@ const VIEW_COMMANDS: Readonly<Record<UDocType, { pages: readonly CommandId[]; sh
     portable: { pages: [...SCROLL, ...PORTABLE_ARRANGEMENT], shows: ["layers"] },
     wordprocessing: {
         pages: ["pagesView", "pagelessView", ...SCROLL, ...ARRANGEMENT],
-        shows: ["formattingMarks", "comments"],
+        shows: ["formattingMarks", "hideCommentMarkup"],
     },
     presentation: {
         pages: ["normalView", "notesPageView", "slideMasterView", ...SCROLL],
-        shows: ["notes", "comments"],
+        shows: ["notes", "hideCommentMarkup"],
     },
     image: { pages: [...SCROLL, "gapless"], shows: [] },
-    spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar", "comments"] },
+    spreadsheet: { pages: ["sheetNormalView", "sheetPageLayoutView"], shows: ["formulaBar", "hideCommentMarkup"] },
 };
 
 /** The views only edit mode's View tab offers: a deck's Slide Master, where
@@ -94,7 +94,7 @@ const EDIT_VIEWS: ReadonlySet<string> = new Set<CommandId>(["slideMasterView"]);
  * pair up, the turn they're shown at, the gaps between them, `edit`'s `guides`
  * (an extension's, edit mode's ruler), then what shows beside the document —
  * a PDF's layers, a deck's notes, a word document's formatting marks, a
- * workbook's formula bar, and an Office document's comments.
+ * workbook's formula bar, and Hide Comment Markup for an Office document.
  */
 export function viewTab(docType: UDocType, edit?: { guides: readonly string[] }): ToolbarTab {
     const { pages, shows } = VIEW_COMMANDS[docType];

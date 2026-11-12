@@ -221,6 +221,7 @@ export interface Messages {
     "command.gapless": string;
     /** Formatting Marks */
     "command.formattingMarks": string;
+    "command.hideCommentMarkup": string;
     /** Formula Bar */
     "command.formulaBar": string;
 

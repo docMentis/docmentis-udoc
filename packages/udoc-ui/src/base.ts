@@ -97,6 +97,10 @@ export interface UDocOptions {
      *  Comments panel with a line, which follows both as they scroll. Default
      *  `true`. */
     showCommentTether?: boolean;
+    /** Show a Word, Excel or PowerPoint document's comments on its pages —
+     *  each thread's marker and the highlight of the text it is on. Default
+     *  `true`; the View tab's Hide Comment Markup changes it. */
+    showCommentMarkup?: boolean;
     /** Cover the document area while a document opens — the docMentis wordmark
      *  and how far the open has got — once it has taken 300ms; the toolbar
      *  stays as it is. `false` is honored

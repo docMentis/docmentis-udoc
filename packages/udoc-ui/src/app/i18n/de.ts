@@ -122,6 +122,7 @@ export const de: Messages = {
     "command.rotateViewRight": "Ansicht nach rechts drehen",
     "command.gapless": "Ohne Abstand",
     "command.formattingMarks": "Formatierungszeichen",
+    "command.hideCommentMarkup": "Kommentarmarkierungen ausblenden",
     "command.formulaBar": "Bearbeitungsleiste",
     "formulaBar.label": "Bearbeitungsleiste",
     "formulaBar.nameBox": "Namenfeld",

@@ -122,6 +122,7 @@ export const ar: Messages = {
     "command.rotateViewRight": "تدوير العرض إلى اليمين",
     "command.gapless": "بدون مسافة",
     "command.formattingMarks": "علامات التنسيق",
+    "command.hideCommentMarkup": "إخفاء علامات التعليقات",
     "command.formulaBar": "شريط الصيغة",
     "formulaBar.label": "شريط الصيغة",
     "formulaBar.nameBox": "مربع الاسم",

@@ -122,6 +122,7 @@ export const zhCN: Messages = {
     "command.rotateViewRight": "向右旋转视图",
     "command.gapless": "无间距",
     "command.formattingMarks": "格式标记",
+    "command.hideCommentMarkup": "隐藏批注标记",
     "command.formulaBar": "编辑栏",
     "formulaBar.label": "编辑栏",
     "formulaBar.nameBox": "名称框",
