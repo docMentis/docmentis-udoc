@@ -121,6 +121,10 @@ listed once, by package. Its major and minor version are those of the
 
 #### Fixed
 
+- After New Comment, the Comments panel opened on its field for a new
+  comment each time it was opened again, whether that comment was saved,
+  cancelled or left open as the panel closed. It now opens on New Comment
+  again.
 - The view follows the text caret: an arrow key, Home or End that moves it out
   of view, or typing or deleting that carries it there, scrolls the view just
   far enough to show it, where the caret could leave the view behind. A

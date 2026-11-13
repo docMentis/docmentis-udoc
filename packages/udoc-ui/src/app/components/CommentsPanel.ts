@@ -116,7 +116,15 @@ const NEW_COMMENT_WORDS: ReplyFieldWords = { field: "comments.new", save: "commo
  *  commands are built. */
 const OFFICE_EDITED_DOC_TYPES: ReadonlySet<string> = new Set(["wordprocessing", "presentation", "spreadsheet"]);
 
-export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallbacks) {
+/** The last New Comment a Comments panel answered, by its count
+ *  ({@link UIState.newCommentGen}) — kept by what builds the panels, as each
+ *  showing of the tab builds one, so a press answered once isn't answered
+ *  again by the next. */
+export interface NewCommentsAnswered {
+    gen: number;
+}
+
+export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallbacks, answered: NewCommentsAnswered) {
     const el = document.createElement("div");
     el.className = "udoc-comments-panel";
     el.setAttribute("aria-label", i18n.t("rightPanel.comments"));
@@ -148,9 +156,6 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
     let mounted: Store<UIState, Action> | null = null;
     start.addEventListener("click", () => mounted?.dispatch({ type: "NEW_COMMENT" }));
     compose.append(start);
-    /** The last New Comment the panel answered, by its count — a toolbar's
-     *  pressed while the panel was shut is answered as it opens. */
-    let newCommentGen = 0;
 
     /** The cards by their comment's id, kept while it is listed so an edit in
      *  progress stays. */
@@ -269,8 +274,10 @@ export function createCommentsPanel(i18n: I18n, callbacks: CommentsPanelCallback
         setChildren(el, slice.officeEditing ? [compose, ...listing] : listing);
         // Greyed while what is selected takes no comment.
         start.disabled = !slice.commentable;
-        if (slice.newCommentGen !== newCommentGen) {
-            newCommentGen = slice.newCommentGen;
+        // A toolbar's New Comment pressed while the panel was shut is answered
+        // as it opens.
+        if (slice.newCommentGen !== answered.gen) {
+            answered.gen = slice.newCommentGen;
             // Focused a frame on, once a panel a toolbar's press opened shows.
             if (slice.officeEditing) {
                 compose.replaceChildren(field.el);

@@ -5,7 +5,7 @@ import type { UIState, RightPanelTab } from "../state.js";
 import { RIGHT_PANEL_TABS, isLeftPanelTab } from "../state.js";
 import { ICON_CLEAR } from "../icons.js";
 import { createCommentsPanel } from "./CommentsPanel.js";
-import type { CommentsPanelCallbacks, CommentsPanelComponent } from "./CommentsPanel.js";
+import type { CommentsPanelCallbacks, CommentsPanelComponent, NewCommentsAnswered } from "./CommentsPanel.js";
 import { createRevisionsPanel } from "./RevisionsPanel.js";
 import type { RevisionsPanelCallbacks, RevisionsPanelComponent } from "./RevisionsPanel.js";
 import { createSearchPanel } from "./SearchPanel.js";
@@ -75,6 +75,9 @@ export function createRightPanel(
     let shownTab: RightPanelTab | null = null;
     /** The Comments tab's live panel, mounted only while that tab is active. */
     let commentsPanel: CommentsPanelComponent | null = null;
+    /** The last New Comment the Comments tab answered, kept across the panels
+     *  it builds. */
+    const newCommentsAnswered: NewCommentsAnswered = { gen: 0 };
     /** The Search tab's live panel, mounted only while that tab is active. */
     let searchPanel: SearchPanelComponent | null = null;
     /** The Revisions tab's live panel, mounted only while that tab is active. */
@@ -101,7 +104,7 @@ export function createRightPanel(
             content.setAttribute("aria-label", label);
             title.textContent = label;
             if (slice.activeTab === "comments" && storeRef) {
-                commentsPanel = createCommentsPanel(i18n, comments);
+                commentsPanel = createCommentsPanel(i18n, comments, newCommentsAnswered);
                 commentsPanel.mount(content, storeRef);
             } else if (slice.activeTab === "search" && storeRef) {
                 searchPanel = createSearchPanel(i18n, search);
