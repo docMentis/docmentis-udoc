@@ -67,6 +67,8 @@ export const ru: EditMessages = {
     "command.ruler": "Линейка",
     "command.acceptRevisions": "Принять",
     "command.rejectRevisions": "Отклонить",
+    "review.acceptAndNext": "Принять и перейти к следующему",
+    "review.rejectAndNext": "Отклонить и перейти к следующему",
     "review.acceptThisChange": "Принять это исправление",
     "review.acceptAllShown": "Принять все отображаемые исправления",
     "review.acceptAll": "Принять все исправления",

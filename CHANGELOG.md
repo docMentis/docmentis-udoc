@@ -52,8 +52,10 @@ listed once, by package. Its major and minor version are those of the
   `translations` keys `rightPanel.revisions`, `toolbar.revisions`, those
   under `revisions.`, `command.previousRevisionGroup` and
   `command.nextRevisionGroup` are new.
-- In udoc-editor, the Review tab's Accept and Reject settle the change the
-  selection touches, every change the view shows, or every change, as one
+- In udoc-editor, the Review tab's Accept and Reject are split buttons.
+  Pressed, each settles the change the selection touches and selects the
+  next, as Word's Accept and Move to Next does; its menu settles that change
+  alone, every change the view shows, or every change. Each settle is one
   undo step, and each card of the Revisions tab offers both on its change.
 - udoc-editor has a review mode, beside view and edit mode, which records
   each edit to a Word document as a tracked change under the name

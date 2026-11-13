@@ -1,15 +1,26 @@
 // A word document's Review tab's Accept and Reject, edit mode's — a viewer shows
-// tracked changes and never settles them. Each is a menu, as Word's Changes
-// group gives it: the change the selection touches, every change the revision
-// view shows, or every change. The Revisions panel's cards offer the two on
-// their own change.
-import { allowsTextEdit } from "@docmentis/udoc-ui/internal";
-import type { CommandContext, CommandDef, MenuItem, RevisionAction } from "@docmentis/udoc-ui/internal";
+// tracked changes and never settles them. Each is a split button, as Word's
+// Changes group gives it: pressed, it settles the change the selection touches
+// and moves on to the next; its menu settles that change alone, every change
+// the revision view shows, or every change. The Revisions panel's cards offer
+// the two on their own change.
+import { allowsTextEdit, buildMenuInto, commandContext, createSplitButton } from "@docmentis/udoc-ui/internal";
+import type {
+    CommandContext,
+    CommandDef,
+    MenuItem,
+    RevisionAction,
+    RibbonControl,
+    RibbonControlEnv,
+    UIState,
+} from "@docmentis/udoc-ui/internal";
 import type { UDocCommand } from "@docmentis/udoc-wasm";
 import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
 import { ICON_ACCEPT_REVISIONS, ICON_REJECT_REVISIONS } from "./icons.js";
-import { editAction } from "./menu-action.js";
+import { editAction, runEditMenuAction } from "./menu-action.js";
+import type { EditMenuAction } from "./menu-action.js";
+import type { EditTools } from "./tools.js";
 
 /** The Review tab's commands edit mode adds. */
 type ReviewCommandId = "acceptRevisions" | "rejectRevisions";
@@ -84,24 +95,67 @@ function settleMenu(accept: boolean): readonly MenuItem<MessageKey>[] {
           ];
 }
 
-/** The Review tab's Accept and Reject, each named beside its icon. */
-export const REVIEW_COMMANDS: Readonly<Record<ReviewCommandId, CommandDef<MessageKey>>> = {
-    acceptRevisions: {
-        id: "acceptRevisions",
-        label: "command.acceptRevisions",
-        icon: ICON_ACCEPT_REVISIONS,
+/** Settle the change the selection touches — accepted where `accept`, else
+ *  rejected — then move the selection to the next, as Word's Accept and Move
+ *  to Next does. */
+async function settleAndMoveOn(host: EditHost, accept: boolean): Promise<void> {
+    await settleRevisions(host, accept, "selection");
+    host.store.dispatch({ type: "MOVE_TO_REVISION_GROUP", forward: true });
+}
+
+/**
+ * Accept's or Reject's split button, for command `id`: the main part, named
+ * beside its icon, settles the change the selection touches and moves on, live
+ * where the selection touches one; the caret opens {@link settleMenu}.
+ */
+function settleControl(env: RibbonControlEnv, tools: EditTools, id: ReviewCommandId): RibbonControl {
+    const { host, i18n } = tools;
+    const accept = id === "acceptRevisions";
+    const split = createSplitButton({
+        mainLabel: i18n.t(accept ? "review.acceptAndNext" : "review.rejectAndNext"),
+        mainIcon: accept ? ICON_ACCEPT_REVISIONS : ICON_REJECT_REVISIONS,
+        mainText: env.label,
+        caretLabel: env.label,
+        menuLabel: env.label,
+        onOpen: () =>
+            buildMenuInto(split.menu, settleMenu(accept), {
+                i18n,
+                context: () => commandContext(host.store.getState()),
+                action: (action) => {
+                    if (action.kind === "extension") runEditMenuAction(tools, action.action as EditMenuAction);
+                },
+                close: () => split.controller.close(),
+            }),
+    });
+    split.main.dataset.command = id;
+    split.caret.dataset.command = id;
+    split.main.addEventListener("click", () => void settleAndMoveOn(host, accept));
+    return {
+        el: split.el,
+        // After the ribbon's pass, which greys both parts as the command says.
+        sync: (state: UIState) => {
+            const c = commandContext(state);
+            split.main.disabled = !(whenTracked(c) && allowsTextEdit(c.selection, id));
+        },
+        close: () => split.controller.close(),
+        destroy: () => split.destroy(),
+    };
+}
+
+/** The Review tab's Accept and Reject, split buttons named beside their icons,
+ *  over the edit tools `tools` gives once edit mode is mounted. */
+export function reviewCommands(tools: () => EditTools): Readonly<Record<ReviewCommandId, CommandDef<MessageKey>>> {
+    const command = (id: ReviewCommandId, label: MessageKey, icon: string): CommandDef<MessageKey> => ({
+        id,
+        label,
+        icon,
         group: "changes",
         labeled: true,
-        run: { kind: "menu", menu: settleMenu(true) },
+        run: { kind: "control", create: (env) => settleControl(env, tools(), id) },
         enabledWhen: whenTracked,
-    },
-    rejectRevisions: {
-        id: "rejectRevisions",
-        label: "command.rejectRevisions",
-        icon: ICON_REJECT_REVISIONS,
-        group: "changes",
-        labeled: true,
-        run: { kind: "menu", menu: settleMenu(false) },
-        enabledWhen: whenTracked,
-    },
-};
+    });
+    return {
+        acceptRevisions: command("acceptRevisions", "command.acceptRevisions", ICON_ACCEPT_REVISIONS),
+        rejectRevisions: command("rejectRevisions", "command.rejectRevisions", ICON_REJECT_REVISIONS),
+    };
+}

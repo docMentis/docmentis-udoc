@@ -67,6 +67,8 @@ export const de: EditMessages = {
     "command.ruler": "Lineal",
     "command.acceptRevisions": "Annehmen",
     "command.rejectRevisions": "Ablehnen",
+    "review.acceptAndNext": "Annehmen und zur nächsten wechseln",
+    "review.rejectAndNext": "Ablehnen und zur nächsten wechseln",
     "review.acceptThisChange": "Diese Änderung annehmen",
     "review.acceptAllShown": "Alle angezeigten Änderungen annehmen",
     "review.acceptAll": "Alle Änderungen annehmen",

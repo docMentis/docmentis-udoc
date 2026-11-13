@@ -67,6 +67,8 @@ export const zhCN: EditMessages = {
     "command.ruler": "标尺",
     "command.acceptRevisions": "接受",
     "command.rejectRevisions": "拒绝",
+    "review.acceptAndNext": "接受并移到下一处",
+    "review.rejectAndNext": "拒绝并移到下一处",
     "review.acceptThisChange": "接受此修订",
     "review.acceptAllShown": "接受所有显示的修订",
     "review.acceptAll": "接受所有修订",

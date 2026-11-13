@@ -203,6 +203,8 @@ export interface SplitButton {
 export function createSplitButton(opts: {
     mainLabel: string;
     mainIcon?: string;
+    /** The main button's name beside its icon, where it shows one. */
+    mainText?: string;
     caretLabel: string;
     menuLabel?: string;
     menuRole?: string;
@@ -215,6 +217,7 @@ export function createSplitButton(opts: {
 
     const mainContent: TriggerContent = { label: opts.mainLabel, className: "udoc-split__main" };
     if (opts.mainIcon) mainContent.icon = opts.mainIcon;
+    if (opts.mainText) mainContent.text = opts.mainText;
     const main = createButton(mainContent);
 
     const caret = createButton({ icon: ICON_CHEVRON_DOWN, label: opts.caretLabel, className: "udoc-split__caret" });

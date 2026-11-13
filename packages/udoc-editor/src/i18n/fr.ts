@@ -67,6 +67,8 @@ export const fr: EditMessages = {
     "command.ruler": "Règle",
     "command.acceptRevisions": "Accepter",
     "command.rejectRevisions": "Refuser",
+    "review.acceptAndNext": "Accepter et passer à la suivante",
+    "review.rejectAndNext": "Refuser et passer à la suivante",
     "review.acceptThisChange": "Accepter cette modification",
     "review.acceptAllShown": "Accepter toutes les modifications affichées",
     "review.acceptAll": "Accepter toutes les modifications",
