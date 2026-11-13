@@ -3770,6 +3770,71 @@ export const uiStyles = css`
     }
 
     /* =========================================================================
+   Revisions panel (the right panel's Revisions tab): a word document's
+   tracked changes, a row each, as the search panel lists its results
+   ========================================================================= */
+    .udoc-ui-root .udoc-revisions-panel {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        font-size: 13px;
+    }
+    .udoc-ui-root .udoc-revisions-panel__summary {
+        padding: 8px 12px 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--udoc-color-on-surface-variant);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .udoc-ui-root .udoc-revisions-panel__list {
+        flex: 1;
+        overflow-y: auto;
+    }
+    .udoc-ui-root .udoc-revisions-panel__row {
+        display: block;
+        width: 100%;
+        padding: 6px 12px;
+        border: none;
+        border-left: 3px solid transparent;
+        background: transparent;
+        font: inherit;
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--udoc-color-on-surface);
+        text-align: start;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-revisions-panel__row:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root .udoc-revisions-panel__head {
+        display: flex;
+        gap: 6px;
+        align-items: baseline;
+        min-width: 0;
+    }
+    .udoc-ui-root .udoc-revisions-panel__kind {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .udoc-ui-root .udoc-revisions-panel__author {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--udoc-color-on-surface-variant);
+    }
+    .udoc-ui-root .udoc-revisions-panel__date {
+        font-size: 11px;
+        color: var(--udoc-color-on-surface-variant);
+    }
+    .udoc-ui-root .udoc-revisions-panel__text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* =========================================================================
    Mode / command toolbar
    Top bar zones: left = panel toggle + mode switch + editing cluster;
    center = view-state; right = app menu. The editing cluster holds the

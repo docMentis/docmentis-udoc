@@ -2240,6 +2240,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 );
                 break;
             }
+            case "revisionGroups": {
+                // None with no open / non-word doc.
+                reply(
+                    id,
+                    safeRead(() => session?.wordprocessing.revisions() ?? [], []),
+                );
+                break;
+            }
             case "renderThumbnail": {
                 if (!session) throw new Error("engine worker: renderThumbnail before open");
                 // A one-off preview, now — a slide layout's, a page to print.
@@ -2882,13 +2890,18 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, layout);
                 break;
             }
-            case "moveToRevisionGroup": {
-                if (!session) throw new Error("engine worker: moveToRevisionGroup before open");
+            case "moveToRevisionGroup":
+            case "selectRevisionGroup": {
+                if (!session) throw new Error(`engine worker: ${msg.type} before open`);
                 // Presence, not an edit, as the table widenings are: the
-                // selection moved onto the next or previous tracked change,
-                // its geometry answered for the host to bring into view.
+                // selection moved onto the next or previous tracked change, or
+                // the one a review pane picked, its geometry answered for the
+                // host to bring into view.
                 const before = session.viewState(VIEWER)[5] ?? -1;
-                const geometry = session.wordprocessing.moveToRevisionGroup(VIEWER, msg.forward);
+                const geometry =
+                    msg.type === "moveToRevisionGroup"
+                        ? session.wordprocessing.moveToRevisionGroup(VIEWER, msg.forward)
+                        : session.wordprocessing.selectRevisionGroup(VIEWER, msg.ids);
                 emitSelection(true, geometry);
                 refreshChrome(session, before);
                 reply(id, geometry);

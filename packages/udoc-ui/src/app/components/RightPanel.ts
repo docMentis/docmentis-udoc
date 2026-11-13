@@ -6,6 +6,8 @@ import { RIGHT_PANEL_TABS, isLeftPanelTab } from "../state.js";
 import { ICON_CLEAR } from "../icons.js";
 import { createCommentsPanel } from "./CommentsPanel.js";
 import type { CommentsPanelCallbacks, CommentsPanelComponent } from "./CommentsPanel.js";
+import { createRevisionsPanel } from "./RevisionsPanel.js";
+import type { RevisionsPanelCallbacks, RevisionsPanelComponent } from "./RevisionsPanel.js";
 import { createSearchPanel } from "./SearchPanel.js";
 import type { SearchPanelCallbacks, SearchPanelComponent } from "./SearchPanel.js";
 import { createButton } from "./controls.js";
@@ -14,6 +16,7 @@ import type { I18n, MessageKey } from "../i18n/index.js";
 const TAB_LABEL: Record<RightPanelTab, MessageKey> = {
     search: "rightPanel.search",
     comments: "rightPanel.comments",
+    revisions: "rightPanel.revisions",
 };
 
 interface RightPanelSlice {
@@ -26,12 +29,18 @@ interface RightPanelSlice {
 }
 
 /**
- * The right side panel (search / comments). A port of the previous udoc-viewer's
- * panel, under a header naming the tab shown, with the panel's close button.
- * Search finds text in the document ({@link createSearchPanel}); Comments lists
- * the document's comment threads ({@link createCommentsPanel}).
+ * The right side panel (search / comments / revisions). A port of the previous
+ * udoc-viewer's panel, under a header naming the tab shown, with the panel's
+ * close button. Search finds text in the document ({@link createSearchPanel});
+ * Comments lists the document's comment threads ({@link createCommentsPanel});
+ * Revisions a word document's tracked changes ({@link createRevisionsPanel}).
  */
-export function createRightPanel(i18n: I18n, comments: CommentsPanelCallbacks, search: SearchPanelCallbacks) {
+export function createRightPanel(
+    i18n: I18n,
+    comments: CommentsPanelCallbacks,
+    search: SearchPanelCallbacks,
+    revisions: RevisionsPanelCallbacks,
+) {
     const el = document.createElement("div");
     el.className = "udoc-right-panel";
 
@@ -68,6 +77,8 @@ export function createRightPanel(i18n: I18n, comments: CommentsPanelCallbacks, s
     let commentsPanel: CommentsPanelComponent | null = null;
     /** The Search tab's live panel, mounted only while that tab is active. */
     let searchPanel: SearchPanelComponent | null = null;
+    /** The Revisions tab's live panel, mounted only while that tab is active. */
+    let revisionsPanel: RevisionsPanelComponent | null = null;
 
     function applyState(slice: RightPanelSlice): void {
         el.style.display = !slice.panelVisible || slice.allDisabled ? "none" : "";
@@ -81,6 +92,8 @@ export function createRightPanel(i18n: I18n, comments: CommentsPanelCallbacks, s
         commentsPanel = null;
         searchPanel?.destroy();
         searchPanel = null;
+        revisionsPanel?.destroy();
+        revisionsPanel = null;
         content.innerHTML = "";
         if (slice.activeTab) {
             content.setAttribute("data-tab", slice.activeTab);
@@ -93,6 +106,9 @@ export function createRightPanel(i18n: I18n, comments: CommentsPanelCallbacks, s
             } else if (slice.activeTab === "search" && storeRef) {
                 searchPanel = createSearchPanel(i18n, search);
                 searchPanel.mount(content, storeRef);
+            } else if (slice.activeTab === "revisions" && storeRef) {
+                revisionsPanel = createRevisionsPanel(i18n, revisions);
+                revisionsPanel.mount(content, storeRef);
             }
         } else {
             content.removeAttribute("data-tab");
@@ -168,6 +184,8 @@ export function createRightPanel(i18n: I18n, comments: CommentsPanelCallbacks, s
         commentsPanel = null;
         searchPanel?.destroy();
         searchPanel = null;
+        revisionsPanel?.destroy();
+        revisionsPanel = null;
         if (unsubRender) unsubRender();
         for (const off of unsubEvents) off();
         storeRef = null;

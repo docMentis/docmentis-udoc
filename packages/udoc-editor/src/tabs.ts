@@ -486,6 +486,7 @@ const WORDPROCESSING_REVIEW_TAB: EditTab = {
         "trackChanges",
         "revisionView",
         "markupOptions",
+        "revisions",
         "previousRevisionGroup",
         "nextRevisionGroup",
         "acceptRevisions",

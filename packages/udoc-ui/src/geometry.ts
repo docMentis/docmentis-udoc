@@ -511,6 +511,36 @@ export function allowsTableEdit(caps: SelectionCapabilities, kind: TableEditKind
     return caps.allowed.includes(kind);
 }
 
+/**
+ * Where `geometry` starts: the page-local box around its first highlighted
+ * piece, else around its caret through the caret's `local → page` transform,
+ * and the page it is on — what a step to a found change brings into view. Null
+ * with neither.
+ */
+export function selectionStart(
+    geometry: SelectionGeometry,
+): { page: number; rect: { x0: number; y0: number; x1: number; y1: number } } | null {
+    const quad = geometry.text[0];
+    if (quad) return { page: quad.page, rect: pointsBounds(quad.points) };
+    const caret = geometry.caret;
+    if (!caret) return null;
+    const t = caret.transform;
+    const { x0, y0, x1, y1 } = caret.rect;
+    const onPage = (x: number, y: number) => ({
+        x: t.scaleX * x + t.skewX * y + t.translateX,
+        y: t.skewY * x + t.scaleY * y + t.translateY,
+    });
+    const corners = [onPage(x0, y0), onPage(x1, y0), onPage(x0, y1), onPage(x1, y1)];
+    return { page: caret.page, rect: pointsBounds(corners) };
+}
+
+/** The axis-aligned box around `points`. */
+function pointsBounds(points: readonly { x: number; y: number }[]): { x0: number; y0: number; x1: number; y1: number } {
+    const xs = points.map((p) => p.x);
+    const ys = points.map((p) => p.y);
+    return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+
 /** The empty selection's capabilities — nothing is possible (no selection / no
  *  document). The reducer's initial value and the worker's no-document fallback. */
 export const EMPTY_SELECTION_CAPABILITIES: SelectionCapabilities = {

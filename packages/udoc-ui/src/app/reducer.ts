@@ -121,6 +121,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 allCommentsRead: false,
                 officeComments: null,
                 openOfficeComment: null,
+                revisionGroups: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -266,6 +267,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 allCommentsRead: false,
                 officeComments: null,
                 openOfficeComment: null,
+                revisionGroups: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -819,6 +821,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_OFFICE_COMMENTS":
             return { ...state, officeComments: action.comments };
+
+        case "SET_REVISION_GROUPS":
+            return { ...state, revisionGroups: action.groups };
 
         case "OPEN_OFFICE_COMMENT":
             return { ...state, openOfficeComment: action.id };

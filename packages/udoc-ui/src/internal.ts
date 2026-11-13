@@ -59,6 +59,7 @@ export {
     EMPTY_SELECTION_PAINT,
     EMPTY_SELECTION_TEXT_FORMAT,
     selectionPaint,
+    selectionStart,
     selectionTextFormat,
     sheetCellFormat,
     sheetCellMerged,

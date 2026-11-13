@@ -59,6 +59,8 @@ export interface Messages {
     "toolbar.search": string;
     /** Comments */
     "toolbar.comments": string;
+    /** Revisions */
+    "toolbar.revisions": string;
     /** Print */
     "toolbar.print": string;
     /** Download */
@@ -652,10 +654,40 @@ export interface Messages {
     "rightPanel.search": string;
     /** Comments */
     "rightPanel.comments": string;
+    /** Revisions */
+    "rightPanel.revisions": string;
     /** Resize panel */
     "rightPanel.resizeHandle": string;
     /** Close Panel */
     "rightPanel.close": string;
+
+    // Revisions panel
+    /** Changes: {count} */
+    "revisions.count": string;
+    /** No tracked changes */
+    "revisions.none": string;
+    /** Inserted */
+    "revisions.insertion": string;
+    /** Deleted */
+    "revisions.deletion": string;
+    /** Moved */
+    "revisions.move": string;
+    /** Formatted */
+    "revisions.formatting": string;
+    /** Formatted paragraph */
+    "revisions.paragraphFormatting": string;
+    /** Inserted row */
+    "revisions.rowInsertion": string;
+    /** Deleted row */
+    "revisions.rowDeletion": string;
+    /** Inserted cell */
+    "revisions.cellInsertion": string;
+    /** Deleted cell */
+    "revisions.cellDeletion": string;
+    /** Merged cells */
+    "revisions.cellMerge": string;
+    /** Formatted table */
+    "revisions.tableFormatting": string;
 
     // Search panel
     /** Search in document */

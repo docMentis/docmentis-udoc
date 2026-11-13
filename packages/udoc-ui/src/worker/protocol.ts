@@ -1103,6 +1103,15 @@ export interface WordprocessingOutlineRequest {
 }
 
 /**
+ * Read a word document's tracked changes as a review pane lists them — one
+ * `RevisionGroup` per change, in reading order. Replies with none when the
+ * document has none (or no word document is open).
+ */
+export interface RevisionGroupsRequest {
+    type: "revisionGroups";
+}
+
+/**
  * Read the portable document's font list — every font it has, loaded on first
  * read. Replies with the `FontInfoList`; one with no fonts when no PDF is open.
  */
@@ -1895,6 +1904,17 @@ export interface MoveToRevisionGroupRequest {
 }
 
 /**
+ * Select the tracked change whose records are `ids` — a review pane's row, the
+ * `ids` of one of {@link RevisionGroupsRequest}'s groups — as Next lands on one.
+ * Presence, not an edit: replies with the selection's geometry, moved or not,
+ * for the host to bring into view, and re-posts the selection.
+ */
+export interface SelectRevisionGroupRequest {
+    type: "selectRevisionGroup";
+    ids: string[];
+}
+
+/**
  * Execute one arbitrary, doc-type-tagged {@link import("@docmentis/udoc-wasm").UDocCommand}
  * directly — the generic write seam beneath the typed verbs above, exposed for
  * a host that builds its own commands rather than calling a named method. The
@@ -2306,6 +2326,7 @@ export type WorkerRequest =
     | PageModeRequest
     | OutlineRequest
     | WordprocessingOutlineRequest
+    | RevisionGroupsRequest
     | SearchRequest
     | SearchMatchSelectionRequest
     | FontInfoListRequest
@@ -2343,6 +2364,7 @@ export type WorkerRequest =
     | ExecuteOnSelectionRequest
     | MoveToCellRequest
     | MoveToRevisionGroupRequest
+    | SelectRevisionGroupRequest
     | SnapshotRequest
     | SaveToBytesRequest
     | OriginalBytesRequest

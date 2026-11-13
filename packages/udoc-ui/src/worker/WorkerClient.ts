@@ -58,6 +58,7 @@ import type {
     SearchContinuation,
     SearchMatchLocation,
     SearchOptions,
+    RevisionGroup,
     RevisionView,
     SheetLayoutMode,
     SlideMasterSummary,
@@ -1630,6 +1631,24 @@ export class WorkerClient {
          */
         outline: (): Promise<WordprocessingOutline> =>
             this.#send({ type: "wordprocessingOutline" }) as Promise<WordprocessingOutline>,
+
+        /**
+         * The document's tracked changes as a review pane lists them, as they
+         * stand now — one group per change, in reading order, with the ids
+         * settling it takes. An edit changes them, so read them again after
+         * one. A pure read.
+         */
+        revisions: (): Promise<RevisionGroup[]> => this.#send({ type: "revisionGroups" }) as Promise<RevisionGroup[]>,
+
+        /**
+         * Select the tracked change whose records are `ids` — one of
+         * {@link revisions}' groups — as Next lands on one. Presence, not an
+         * edit: resolves with the selection's geometry, moved or not, which the
+         * caller brings into view; the selection follows via
+         * {@link onSelection} too.
+         */
+        selectRevisionGroup: (ids: readonly string[]): Promise<SelectionGeometry> =>
+            this.#send({ type: "selectRevisionGroup", ids: [...ids] }) as Promise<SelectionGeometry>,
 
         /**
          * Follow an outline item: the worker lays the document out as far as

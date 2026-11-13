@@ -2,6 +2,7 @@ import type {
     Feature,
     FileFormat,
     PresentationPlaneKind,
+    RevisionGroup,
     RevisionView,
     SearchMatch,
     SheetLayoutMode,
@@ -302,6 +303,8 @@ export type Action =
     | { type: "SET_COMMENTS"; comments: ReadonlyMap<string, PageComments>; everyPage: boolean }
     // A Word, Excel or PowerPoint document's comments, read
     | { type: "SET_OFFICE_COMMENTS"; comments: readonly OfficeComment[] }
+    // A word document's tracked changes, read for the revisions panel
+    | { type: "SET_REVISION_GROUPS"; groups: readonly RevisionGroup[] }
     // Open an Office comment thread — its marker's, or the panel's choice — or
     // none
     | { type: "OPEN_OFFICE_COMMENT"; id: string | null }

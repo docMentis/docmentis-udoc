@@ -9,6 +9,7 @@ import type {
     Feature,
     FileFormat,
     PresentationPlaneKind,
+    RevisionGroup,
     RevisionView,
     SearchMatch,
     SheetLayoutMode,
@@ -134,7 +135,7 @@ export const DEFAULT_ZOOM_STEPS = [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 
 /** Tabs that live in the left side panel. */
 export type LeftPanelTab = "thumbnail" | "outline" | "layers" | "attachments";
 /** Tabs that live in the right side panel. */
-export type RightPanelTab = "search" | "comments";
+export type RightPanelTab = "search" | "comments" | "revisions";
 /** A side panel's tab, left or right. */
 export type PanelTab = LeftPanelTab | RightPanelTab;
 
@@ -311,7 +312,7 @@ export function showsPaper(state: Parameters<typeof sheetLayoutModeOf>[0]): bool
 export const LEFT_PANEL_TABS: readonly LeftPanelTab[] = ["thumbnail", "outline", "layers", "attachments"];
 
 /** Canonical order of the right panel's tabs. */
-export const RIGHT_PANEL_TABS: readonly RightPanelTab[] = ["search", "comments"];
+export const RIGHT_PANEL_TABS: readonly RightPanelTab[] = ["search", "comments", "revisions"];
 
 const LEFT_TABS_SET: ReadonlySet<PanelTab> = new Set(LEFT_PANEL_TABS);
 export function isLeftPanelTab(tab: PanelTab): tab is LeftPanelTab {
@@ -441,6 +442,7 @@ export type CommandId =
     | "trackChanges"
     | "revisionView"
     | "markupOptions"
+    | "revisions"
     | "sheetNormalView"
     | "sheetPageLayoutView"
     | "singleScroll"
@@ -779,6 +781,12 @@ export interface UIState {
      * panel is open and again whenever the document changes; null until read.
      */
     officeComments: readonly OfficeComment[] | null;
+    /**
+     * A word document's tracked changes as the revisions panel lists them, read
+     * while that panel is open and again whenever the document changes; null
+     * until read.
+     */
+    revisionGroups: readonly RevisionGroup[] | null;
     /** The Office comment thread open in the comments panel and on its marker,
      *  by its first comment's id; null for none. */
     openOfficeComment: string | null;
@@ -1191,6 +1199,7 @@ export const initialState: UIState = {
     allCommentsRead: false,
     officeComments: null,
     openOfficeComment: null,
+    revisionGroups: null,
 
     searchQuery: "",
     searchCaseSensitive: false,

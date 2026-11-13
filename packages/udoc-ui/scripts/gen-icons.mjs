@@ -124,6 +124,7 @@ const ICONS = {
     ICON_TRACK_CHANGES: "edit_document",
     ICON_REVISION_VIEW: "difference",
     ICON_MARKUP_OPTIONS: "tune",
+    ICON_REVISIONS: "list_alt",
     ICON_SHEET_NORMAL_VIEW: "grid_on",
 
     // Pointer modes

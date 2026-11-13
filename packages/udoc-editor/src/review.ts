@@ -3,9 +3,9 @@
 // Accept and Reject are each a menu, as Word's Changes group gives it: the
 // change the selection touches, every change the revision view shows, or every
 // change.
-import { allowsTextEdit, applyPoint, commandContext, fromComponents } from "@docmentis/udoc-ui/internal";
+import { allowsTextEdit, commandContext, selectionStart } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, MenuItem } from "@docmentis/udoc-ui/internal";
-import type { Point, Rect, SelectionGeometry, UDocCommand } from "@docmentis/udoc-wasm";
+import type { UDocCommand } from "@docmentis/udoc-wasm";
 import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
 import {
@@ -56,31 +56,6 @@ async function moveToRevisionGroup(host: EditHost, forward: boolean): Promise<vo
     }
     const landing = selectionStart(await host.client.moveToRevisionGroup(forward));
     if (landing) host.client.goToRect(landing.page, landing.rect, "nearest");
-}
-
-/** Where a selection starts: its first highlighted piece's page-local box, else
- *  its caret's, and the page it is on; null with neither. */
-function selectionStart(geometry: SelectionGeometry): { page: number; rect: Rect } | null {
-    const quad = geometry.text[0];
-    if (quad) return { page: quad.page, rect: bounds(quad.points) };
-    const caret = geometry.caret;
-    if (!caret) return null;
-    const transform = fromComponents(caret.transform);
-    const { x0, y0, x1, y1 } = caret.rect;
-    const corners = [
-        applyPoint(transform, x0, y0),
-        applyPoint(transform, x1, y0),
-        applyPoint(transform, x0, y1),
-        applyPoint(transform, x1, y1),
-    ];
-    return { page: caret.page, rect: bounds(corners) };
-}
-
-/** The axis-aligned box around `points`. */
-function bounds(points: readonly Point[]): Rect {
-    const xs = points.map((p) => p.x);
-    const ys = points.map((p) => p.y);
-    return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
 }
 
 /** Accept's or Reject's menu: the change the selection touches, live where the

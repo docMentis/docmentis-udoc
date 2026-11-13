@@ -17,6 +17,7 @@ import {
     ICON_MENU,
     ICON_SEARCH,
     ICON_COMMENTS,
+    ICON_REVISIONS,
     ICON_FULLSCREEN,
     ICON_FULLSCREEN_EXIT,
     ICON_THEME_LIGHT,
@@ -271,6 +272,7 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
         // --- App menu (collapsed global actions) ---
         const onSearchClick = () => store.dispatch({ type: "TOGGLE_PANEL", panel: "search" });
         const onCommentsClick = () => store.dispatch({ type: "TOGGLE_PANEL", panel: "comments" });
+        const onRevisionsClick = () => store.dispatch({ type: "TOGGLE_PANEL", panel: "revisions" });
         const onThemeClick = () => {
             const t = store.getState().theme;
             const next: ThemeMode = t === "light" ? "dark" : t === "dark" ? "system" : "light";
@@ -317,6 +319,8 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
                 panelItems.push({ icon: ICON_SEARCH, label: i18n.t("toolbar.search"), action: onSearchClick });
             if (slice.rightPanelVisible && !slice.disabledPanels.has("comments"))
                 panelItems.push({ icon: ICON_COMMENTS, label: i18n.t("toolbar.comments"), action: onCommentsClick });
+            if (slice.rightPanelVisible && !slice.disabledPanels.has("revisions"))
+                panelItems.push({ icon: ICON_REVISIONS, label: i18n.t("toolbar.revisions"), action: onRevisionsClick });
             const items: Item[] = [...panelItems];
             if (slice.printButtonVisible)
                 items.push({ icon: ICON_PRINT, label: i18n.t("toolbar.print"), action: onPrintClick });

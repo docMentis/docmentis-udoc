@@ -73,6 +73,7 @@ import {
     ICON_PAGELESS_VIEW,
     ICON_REVISION_VIEW,
     ICON_MARKUP_OPTIONS,
+    ICON_REVISIONS,
     ICON_TRACK_CHANGES,
     ICON_SHEET_NORMAL_VIEW,
     ICON_SUBTOOL_HIGHLIGHT,
@@ -170,6 +171,9 @@ export interface CommandContext {
     /** Whether the open PDF's layers can be shown: it has some, and its Layers
      *  panel can be opened — the View tab's Layers shows for them. */
     layersPanel: boolean;
+    /** Whether the open word document's Revisions panel can be opened — the
+     *  Review tab's Revisions shows for it. */
+    revisionsPanel: boolean;
     /** What the Annotate tab's Format controls act on and show — the armed
      *  annotation tool's style, else the selected annotations' — or null when
      *  there is neither. A control is live when its entry is present. */
@@ -212,6 +216,7 @@ export function commandContext(state: UIState): CommandContext {
         sheetLayoutMode: sheetLayoutModeOf(state),
         cellEntry: state.activeCell?.entry != null,
         layersPanel: state.hasLayers && panelOpenable(state, "layers"),
+        revisionsPanel: state.docType === "wordprocessing" && panelOpenable(state, "revisions"),
         annotation: annotationFormat(state),
     };
 }
@@ -1156,6 +1161,22 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         icon: ICON_MARKUP_OPTIONS,
         group: "revisions",
         run: { kind: "menu", menu: MARKUP_OPTIONS_MENU },
+        enabledWhen: whenRevisionView,
+    },
+    // And the right panel's Revisions tab, listing the changes, which it
+    // shows or hides as the View tab's Layers does its tab.
+    revisions: {
+        id: "revisions",
+        label: "rightPanel.revisions",
+        icon: ICON_REVISIONS,
+        group: "revisions",
+        labeled: true,
+        run: {
+            kind: "toggle",
+            pressed: (state) => state.activePanel === "revisions",
+            press: (store) => store.dispatch({ type: "TOGGLE_PANEL", panel: "revisions" }),
+        },
+        shownWhen: (c) => c.revisionsPanel,
         enabledWhen: whenRevisionView,
     },
 

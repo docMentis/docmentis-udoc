@@ -27,13 +27,14 @@ import type {
     CommentCommand,
     GridCellSelectionMove,
     ScrollAlignment,
+    RevisionGroup,
     RevisionView,
     SheetLayoutMode,
     SlideMasterSummary,
     TextHyperlink,
     Watermark,
 } from "@docmentis/udoc-wasm";
-import { allowsEdit, allowsTableEdit, allowsTextEdit, cssPxPerPt } from "../geometry.js";
+import { allowsEdit, allowsTableEdit, allowsTextEdit, cssPxPerPt, selectionStart } from "../geometry.js";
 import type {
     ContentPadding,
     DocumentLayout,
@@ -668,6 +669,8 @@ export function mountUIShell(
         attachments: false,
         search: shellOptions.showSearchPanel,
         comments: shellOptions.showCommentsPanel,
+        // No host option yet: shown wherever the doc type offers it.
+        revisions: undefined,
     };
     const hostDisabledPanels: ReadonlySet<PanelTab> = new Set(
         [...LEFT_PANEL_TABS, ...RIGHT_PANEL_TABS].filter((tab) => shownPanels[tab] === false),
@@ -1502,6 +1505,9 @@ export function mountUIShell(
             search: (query, options) => void search(query, options).catch(() => undefined),
             clear: () => clearSearch(),
             toggleTether: () => searchTether?.toggle(),
+        },
+        {
+            onChoose: (group) => void chooseRevisionGroup(group),
         },
     );
     rightPanel.mount(rightPanelSlot, store);
@@ -3462,6 +3468,43 @@ export function mountUIShell(
         { equality: shallowEqual },
     );
 
+    // The Revisions panel's list: read as the panel opens, and again whenever
+    // the document changes while it is open. The latest read wins, and changes
+    // in one frame are read once.
+    let revisionsGeneration = 0;
+    let revisionsPending: number | null = null;
+    function refreshRevisionGroups(): void {
+        const state = store.getState();
+        if (state.status !== "ready" || state.docType !== "wordprocessing" || state.activePanel !== "revisions") return;
+        if (revisionsPending !== null) cancelAnimationFrame(revisionsPending);
+        revisionsPending = requestAnimationFrame(() => {
+            revisionsPending = null;
+            const generation = ++revisionsGeneration;
+            void client.wordprocessing
+                .revisions()
+                .then((groups) => {
+                    if (generation === revisionsGeneration) store.dispatch({ type: "SET_REVISION_GROUPS", groups });
+                })
+                .catch(() => {
+                    // Worker gone or document closed — nothing to show.
+                });
+        });
+    }
+    const unsubRevisionsChanged = client.onDocumentChanged(refreshRevisionGroups);
+    const unsubRevisionsShown = subscribeSelector(
+        store,
+        (s) => ({ status: s.status, generation: s.docGeneration, panel: s.activePanel === "revisions" }),
+        refreshRevisionGroups,
+        { equality: shallowEqual },
+    );
+
+    // Select a change the Revisions panel lists and bring it into view with
+    // the least scroll, as Next lands on one.
+    async function chooseRevisionGroup(group: RevisionGroup): Promise<void> {
+        const landing = selectionStart(await client.wordprocessing.selectRevisionGroup(group.ids));
+        if (landing) client.goToRect(landing.page, landing.rect, "nearest");
+    }
+
     // Mark the selected text with `tool`: read the selection's final geometry —
     // the read waits on the last select, as the streamed reports don't — and
     // insert one markup per page its text runs cross, over their quads. Whether
@@ -4367,6 +4410,9 @@ export function mountUIShell(
         unsubMediaMode();
         unsubCommentsShown();
         if (commentsPending !== null) cancelAnimationFrame(commentsPending);
+        unsubRevisionsChanged();
+        unsubRevisionsShown();
+        if (revisionsPending !== null) cancelAnimationFrame(revisionsPending);
         unsubSearchEdited();
         unsubSlideSectionsEdited();
         unsubSlideSectionsOpened();

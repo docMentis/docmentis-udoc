@@ -118,7 +118,7 @@ export const REVIEW_TAB: ToolbarTab = {
     id: "review",
     label: "ribbon.review",
     icon: ICON_TAB_REVIEW,
-    commands: ["trackChanges", "revisionView", "markupOptions", "newComment"],
+    commands: ["trackChanges", "revisionView", "markupOptions", "revisions", "newComment"],
     labeled: ["newComment"],
 };
 
@@ -161,7 +161,8 @@ export interface DocProfile {
      * The right panel's tabs this doc type offers — a subset of
      * {@link RIGHT_PANEL_TABS}, treated as {@link leftPanels} is. Comments are a
      * PDF's annotations, so only the portable type offers them; an image, with
-     * no text to search, offers none.
+     * no text to search, offers none. Revisions lists a word document's tracked
+     * changes, so only the word type offers it.
      */
     rightPanels: readonly RightPanelTab[];
     /**
@@ -310,7 +311,7 @@ export const PORTABLE_PROFILE: DocProfile = {
     viewTabs: [ANNOTATE_TAB, presentTab("portable"), viewTab("portable")],
     sheetTabs: false,
     leftPanels: LEFT_PANEL_TABS,
-    rightPanels: RIGHT_PANEL_TABS,
+    rightPanels: ["search", "comments"],
     // A caret in a text object accepts typing / backspace / delete — the
     // portable text model edits in place (v0: within one line; arrow-key caret
     // movement and Enter/line-splitting are still deferred, see TODO.md).
@@ -338,7 +339,7 @@ export const PRESENTATION_PROFILE: DocProfile = {
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],
-    rightPanels: RIGHT_PANEL_TABS,
+    rightPanels: ["search", "comments"],
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
@@ -369,7 +370,7 @@ export const SPREADSHEET_PROFILE: DocProfile = {
     // the bottom sheet-tab bar (`sheetTabs`). With every tab omitted the left
     // panel and its toolbar side panel button drop out entirely.
     leftPanels: [],
-    rightPanels: RIGHT_PANEL_TABS,
+    rightPanels: ["search", "comments"],
     textEditing: false,
     pagedViewControls: false,
     pageArrangement: false,
