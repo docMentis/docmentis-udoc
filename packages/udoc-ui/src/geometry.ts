@@ -522,16 +522,23 @@ export function selectionStart(
 ): { page: number; rect: { x0: number; y0: number; x1: number; y1: number } } | null {
     const quad = geometry.text[0];
     if (quad) return { page: quad.page, rect: pointsBounds(quad.points) };
-    const caret = geometry.caret;
-    if (!caret) return null;
-    const t = caret.transform;
-    const { x0, y0, x1, y1 } = caret.rect;
+    return geometry.caret ? boxOnPage(geometry.caret) : null;
+}
+
+/** The page-local box around `box`, through its `local → page` transform, and
+ *  the page it is on. */
+export function boxOnPage(box: SelectionBox): {
+    page: number;
+    rect: { x0: number; y0: number; x1: number; y1: number };
+} {
+    const t = box.transform;
+    const { x0, y0, x1, y1 } = box.rect;
     const onPage = (x: number, y: number) => ({
         x: t.scaleX * x + t.skewX * y + t.translateX,
         y: t.skewY * x + t.scaleY * y + t.translateY,
     });
     const corners = [onPage(x0, y0), onPage(x1, y0), onPage(x0, y1), onPage(x1, y1)];
-    return { page: caret.page, rect: pointsBounds(corners) };
+    return { page: box.page, rect: pointsBounds(corners) };
 }
 
 /** The axis-aligned box around `points`. */

@@ -12,7 +12,7 @@ import type {
     WidgetAnnotation,
     WordprocessingHit,
 } from "@docmentis/udoc-wasm";
-import { cssPxPerPt, selectionStart } from "../../geometry.js";
+import { boxOnPage, cssPxPerPt } from "../../geometry.js";
 import type {
     HeaderBands,
     PageView,
@@ -886,14 +886,16 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
 
     /**
      * Bring the local caret into view after a key moved it or typed at it —
-     * the least scroll that shows it, and none while it shows on the frame
-     * last painted. A range has no caret and is left where it is; so is a
-     * workbook's, whose grid follows its active cell.
+     * or, for a range Shift extended, its live end — the least scroll that
+     * shows it, and none while it shows. A workbook's is left where it is: its
+     * grid follows its active cell.
      */
     function followCaret(geometry: SelectionGeometry | null): void {
         const st = store?.getState();
-        if (!st || st.docType === "spreadsheet" || !geometry?.caret) return;
-        const shown = selection.caretViewportRect();
+        const live = geometry?.caret ?? geometry?.focus;
+        if (!st || st.docType === "spreadsheet" || !live) return;
+        // A caret shown on the frame last painted asks nothing of the worker.
+        const shown = geometry?.caret ? selection.caretViewportRect() : null;
         if (
             shown &&
             shown.x >= 0 &&
@@ -903,8 +905,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         ) {
             return;
         }
-        const at = selectionStart(geometry);
-        if (at) client.goToRect(at.page, at.rect, "nearest");
+        const at = boxOnPage(live);
+        client.goToRect(at.page, at.rect, "nearest");
     }
 
     // The HTML overlay layer: a sibling above the canvas (and below the
