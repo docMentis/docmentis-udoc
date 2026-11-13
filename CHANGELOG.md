@@ -6,6 +6,16 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Fixed
+
+- Text a PDF both fills and outlines, as Word's PDFs draw bold, is outlined
+  at the width the PDF sets, where small text came out heavy, its letters
+  filled in.
+- A picture turned on its side in a line of a Word document takes the room
+  of its turned shape in the line, as Word lays it out.
+
 ### udoc-viewer and udoc-editor
 
 #### Added
@@ -72,8 +82,15 @@ listed once, by package. Its major and minor version are those of the
   elsewhere, Ctrl with an arrow steps by word or paragraph, and Ctrl with
   Home or End goes to the text's start or end. Shift extends the selection,
   and every move follows the text's order, right to left included.
+- In udoc-editor, the arrow keys reach all of a Word document's text, as
+  Word's do: they go on into a table, from each cell to the next and out the
+  other side, and from one section into the next. A selection Shift extends
+  stays in its section.
 
 #### Changed
+
+- The toolbar's More menu draws a divider between the panels it opens,
+  Search and Comments, and its other actions.
 
 - A spreadsheet's formula bar draws its Name Box and contents as the other
   fields are drawn: outlined, with no fill of their own. The contents field's
@@ -136,6 +153,16 @@ listed once, by package. Its major and minor version are those of the
   of view, or typing or deleting that carries it there, scrolls the view just
   far enough to show it, where the caret could leave the view behind. A
   selection Shift extends is followed at the end it grows from.
+- Up and Down reach the line above or below across a page or column break
+  and past tall spacing or a picture, and hold their place across a run of
+  shorter lines, where the caret could stay put or land at the start of the
+  section. Left and Right no longer stop inside an emoji, between a letter
+  and its accent, or between the halves of a flag. At a line that wraps
+  inside a word, End and a click past its text leave the caret at that
+  line's end, where it showed at the start of the next.
+- In udoc-editor, Delete removes a picture selected in a Word document's
+  text, where it did nothing, and a picture turned there is saved with the
+  room Word gives a turned picture.
 
 ### udoc-server
 
