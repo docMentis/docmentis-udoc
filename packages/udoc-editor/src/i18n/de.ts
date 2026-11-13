@@ -5,6 +5,7 @@ export const de: EditMessages = {
     // Modes
     "mode.view": "Anzeigen",
     "mode.edit": "Bearbeiten",
+    "mode.review": "Überprüfen",
 
     // Mode switcher
     "modeSwitch.label": "Editormodus",

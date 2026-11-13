@@ -111,7 +111,6 @@ export const ru: Messages = {
     "pageLayout.twoPages": "Две страницы",
     "pageLayout.coverRight": "Обложка справа",
     "pageLayout.coverLeft": "Обложка слева",
-    "command.trackChanges": "Исправления",
     "command.revisionView": "Отобразить для проверки",
     "revisionView.allMarkup": "Все исправления",
     "revisionView.simpleMarkup": "Исправления",

@@ -76,7 +76,6 @@ import {
     ICON_REVISIONS,
     ICON_PREVIOUS_REVISION_GROUP,
     ICON_NEXT_REVISION_GROUP,
-    ICON_TRACK_CHANGES,
     ICON_SHEET_NORMAL_VIEW,
     ICON_SUBTOOL_HIGHLIGHT,
     ICON_FILL,
@@ -1122,24 +1121,9 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         enabledWhen: whenReady,
     },
 
-    // Review tab — Track Changes, off to start: until a word document's edits
-    // are tracked, turning it on shows all of their markup, and off none.
-    trackChanges: {
-        id: "trackChanges",
-        label: "command.trackChanges",
-        icon: ICON_TRACK_CHANGES,
-        group: "revisions",
-        labeled: true,
-        run: {
-            kind: "toggle",
-            pressed: (state) => state.trackChanges,
-            press: (store) => store.dispatch({ type: "SET_TRACK_CHANGES", on: !store.getState().trackChanges }),
-        },
-        enabledWhen: whenRevisionView,
-    },
-    // Then which version of a tracked document shows, its button wearing the
-    // one current, and Markup Options, an icon: which of its changes are shown
-    // as such.
+    // Review tab — which version of a tracked document shows, its button
+    // wearing the one current, and Markup Options, an icon: which of its
+    // changes are shown as such.
     revisionView: {
         id: "revisionView",
         label: "command.revisionView",

@@ -5,6 +5,7 @@ export const ja: EditMessages = {
     // Modes
     "mode.view": "表示",
     "mode.edit": "編集",
+    "mode.review": "校閲",
 
     // Mode switcher
     "modeSwitch.label": "エディターモード",

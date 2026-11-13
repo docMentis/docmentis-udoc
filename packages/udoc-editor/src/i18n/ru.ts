@@ -5,6 +5,7 @@ export const ru: EditMessages = {
     // Modes
     "mode.view": "Просмотр",
     "mode.edit": "Редактирование",
+    "mode.review": "Рецензирование",
 
     // Mode switcher
     "modeSwitch.label": "Режим редактора",

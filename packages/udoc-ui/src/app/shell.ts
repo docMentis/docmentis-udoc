@@ -119,7 +119,7 @@ import {
     viewOfPlane,
 } from "./state.js";
 import { arrangementFor, profileFor } from "./profiles.js";
-import type { ModeEntitlement, TabSource } from "./profiles.js";
+import type { ModeFor, TabSource } from "./profiles.js";
 import type {
     AnnotationTool,
     UIState,
@@ -661,7 +661,7 @@ export function mountUIShell(
     ownForm.appendChild(layout);
     root?.appendChild(ownForm);
 
-    // The mode the shell opens in: view, or the extension's when it says so.
+    // The mode the shell opens in: view, or one of the extension's when it says so.
     const startMode = extension?.initialMode ?? VIEW_MODE;
     const shownPanels: Record<PanelTab, boolean | undefined> = {
         thumbnail: shellOptions.showThumbnailPanel,
@@ -680,10 +680,21 @@ export function mountUIShell(
     // extension's in the extension's own.
     const tabsOf: TabSource = (docType, mode) =>
         mode === VIEW_MODE ? profileFor(docType).viewTabs : (extension?.tabs(docType) ?? []);
-    // A session may be in view mode whatever it is entitled to, and in the
-    // extension's as that mode's feature says.
-    const entitled: ModeEntitlement = (mode, features) =>
-        mode === VIEW_MODE || (mode === extension?.mode.id && features.includes(extension.mode.feature));
+    // A session may be in view mode whatever it is entitled to, and in one of
+    // the extension's as that mode's feature and doc types say; else the mode
+    // gives way to the one it names, and at last to view.
+    const modeFor: ModeFor = (mode, features, docType) => {
+        const passed = new Set<string>();
+        for (let id: string | undefined = mode; id !== undefined && !passed.has(id); ) {
+            const own = extension?.modes.find((m) => m.id === id);
+            if (!own) break;
+            const open = docType === null || own.docTypes === undefined || own.docTypes.includes(docType);
+            if (open && features.includes(own.feature)) return id;
+            passed.add(id);
+            id = own.otherwise;
+        }
+        return VIEW_MODE;
+    };
     const startState: UIState = {
         ...initialState,
         mode: startMode,
@@ -726,7 +737,7 @@ export function mountUIShell(
         searchScrollAlignment: shellOptions.searchScrollAlignment ?? initialState.searchScrollAlignment,
     };
 
-    const store = createStore<UIState, Action>(createReducer(tabsOf, entitled), startState, { batched: true });
+    const store = createStore<UIState, Action>(createReducer(tabsOf, modeFor), startState, { batched: true });
     // The host's starting panel, opened as `openPanel` opens one — not when it,
     // or its side, is hidden — and before the chrome mounts, so it doesn't
     // slide in.
@@ -1567,7 +1578,7 @@ export function mountUIShell(
         {
             onChoose: (group) => void chooseRevisionGroup(group),
             // Edit mode's buttons, the extension's: a viewer settles nothing.
-            actions: (state) => (extension && state.mode === extension.mode.id ? extension.revisionActions(state) : []),
+            actions: (state) => (extension && state.mode !== VIEW_MODE ? extension.revisionActions(state) : []),
         },
     );
     rightPanel.mount(rightPanelSlot, store);

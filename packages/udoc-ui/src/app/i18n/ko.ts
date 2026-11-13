@@ -111,7 +111,6 @@ export const ko: Messages = {
     "pageLayout.twoPages": "두 페이지",
     "pageLayout.coverRight": "표지 오른쪽",
     "pageLayout.coverLeft": "표지 왼쪽",
-    "command.trackChanges": "변경 내용 추적",
     "command.revisionView": "검토할 내용 표시",
     "revisionView.allMarkup": "모든 변경 내용",
     "revisionView.simpleMarkup": "간단한 변경 내용",

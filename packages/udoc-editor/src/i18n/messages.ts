@@ -11,6 +11,8 @@ export interface Messages extends UIMessages {
     "mode.view": string;
     /** Edit */
     "mode.edit": string;
+    /** Review */
+    "mode.review": string;
 
     // Mode switcher
     /** Editor Mode */

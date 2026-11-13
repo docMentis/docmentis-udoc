@@ -111,7 +111,6 @@ export const zhCN: Messages = {
     "pageLayout.twoPages": "双页",
     "pageLayout.coverRight": "封面居右",
     "pageLayout.coverLeft": "封面居左",
-    "command.trackChanges": "修订",
     "command.revisionView": "显示以供审阅",
     "revisionView.allMarkup": "所有标记",
     "revisionView.simpleMarkup": "简单标记",

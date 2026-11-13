@@ -14,6 +14,7 @@ import type { Action, BandCanvas, BandStrip, CommandDef, GuideBand, Store, UISta
 import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
 import { ICON_RULER } from "./icons.js";
+import { editsDocument } from "./mode.js";
 import { createRulerControls } from "./ruler-controls.js";
 import type { RulerControl, RulerControls, RulerDrop, RulerPlacement } from "./ruler-controls.js";
 import { rulerEdit, rulerMovable } from "./ruler-edits.js";
@@ -310,10 +311,12 @@ export function createRuler(host: () => EditHost | null): Ruler {
     };
 }
 
-/** Whether the ruler shows in `state`: a ruled doc type in edit mode, with the
- *  preference on. */
+/** Whether the ruler shows in `state`: a ruled doc type in edit or review
+ *  mode, with the preference on. */
 export function rulerShown(state: UIState): boolean {
-    return editState(state).showRuler && state.mode === "edit" && state.docType !== null && RULED.has(state.docType);
+    return (
+        editState(state).showRuler && editsDocument(state.mode) && state.docType !== null && RULED.has(state.docType)
+    );
 }
 
 /** Show or hide the ruler in `store` — a user preference, kept across documents. */

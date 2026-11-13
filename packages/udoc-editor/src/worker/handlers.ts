@@ -29,6 +29,17 @@ export const EDIT_HANDLERS: EditHandlers = {
             worker.scheduleFrame();
         },
     },
+    setTrackRevisions: {
+        handle(request, worker) {
+            // The session's own editor records, so each document opens with it
+            // off and is sent it once open. What the selection may do changes
+            // with it: an edit that can't be recorded isn't offered.
+            const session = worker.session;
+            if (!session || session.docType() !== "wordprocessing" || session.needsPassword()) return;
+            session.wordprocessing.setTrackRevisions(request.on);
+            worker.selectionChanged();
+        },
+    },
     themePalette: {
         // The document's resolved theme palette — a slide's for a deck, the
         // single document theme for a word doc — a pure read. `null` when no

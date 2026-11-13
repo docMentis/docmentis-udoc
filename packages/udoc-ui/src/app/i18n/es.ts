@@ -111,7 +111,6 @@ export const es: Messages = {
     "pageLayout.twoPages": "Dos páginas",
     "pageLayout.coverRight": "Portada a la derecha",
     "pageLayout.coverLeft": "Portada a la izquierda",
-    "command.trackChanges": "Control de cambios",
     "command.revisionView": "Mostrar para revisión",
     "revisionView.allMarkup": "Todas las marcas",
     "revisionView.simpleMarkup": "Marcado simple",

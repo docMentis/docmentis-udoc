@@ -111,7 +111,6 @@ export const de: Messages = {
     "pageLayout.twoPages": "Zwei Seiten",
     "pageLayout.coverRight": "Deckblatt rechts",
     "pageLayout.coverLeft": "Deckblatt links",
-    "command.trackChanges": "Änderungen nachverfolgen",
     "command.revisionView": "Zur Überprüfung anzeigen",
     "revisionView.allMarkup": "Alle Markups",
     "revisionView.simpleMarkup": "Einfaches Markup",

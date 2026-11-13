@@ -5,6 +5,7 @@ export const ar: EditMessages = {
     // Modes
     "mode.view": "عرض",
     "mode.edit": "تحرير",
+    "mode.review": "مراجعة",
 
     // Mode switcher
     "modeSwitch.label": "وضع المحرر",

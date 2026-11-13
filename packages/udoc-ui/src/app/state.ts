@@ -337,11 +337,11 @@ export function panelOpenable(state: UIState, panel: PanelTab): boolean {
 
 /** The mode every session may be in: reading — navigation, filling in a form,
  *  and a PDF's annotations (its Annotate tab). An extension may add its own
- *  (`UIExtension.mode`). */
+ *  (`UIExtension.modes`). */
 export const VIEW_MODE = "view";
 
 /** Whether `state` lets a copy reach the system clipboard: always in an
- *  extension's mode, and in view mode where the host leaves copy on
+ *  extension's modes, and in view mode where the host leaves copy on
  *  ({@link UIState.copyEnabled}). */
 export function copyAllowed(state: UIState): boolean {
     return state.mode !== VIEW_MODE || state.copyEnabled;
@@ -444,7 +444,6 @@ export type CommandId =
     | "notes"
     | "pagesView"
     | "pagelessView"
-    | "trackChanges"
     | "revisionView"
     | "markupOptions"
     | "revisions"
@@ -1060,11 +1059,6 @@ export interface UIState {
     /** The view the open word document opened on, or `null` with none open. Read
      *  after the document opens. */
     openedRevisionView: RevisionView | null;
-    /** Whether the Review tab's Track Changes is on — off to start, and kept
-     *  across documents, as {@link revisionView} is. A word document's edits
-     *  aren't tracked yet, so all it changes is what its tracked changes show:
-     *  turned on, all of their markup; turned off, none. */
-    trackChanges: boolean;
     /** Whether a deck's notes pane is open under its slides, or closed to its
      *  edge — the View tab's Notes, the host's `showNotesPanel`, the splitter
      *  dragged to the edge. Kept for every doc type; only a deck has notes to
@@ -1122,8 +1116,8 @@ export interface UIState {
      *  (`entitlements().features`): what the UI may offer. Empty until a
      *  document opens. */
     features: readonly Feature[];
-    /** The mode — {@link VIEW_MODE}, or the extension's own
-     *  (`UIExtension.mode`). Scopes the toolbar's command set + pointer. */
+    /** The mode — {@link VIEW_MODE}, or one of the extension's own
+     *  (`UIExtension.modes`). Scopes the toolbar's command set + pointer. */
     mode: string;
     /** The active tab in the top-bar tab strip, or null while the ribbon is
      *  folded (and in modes with no tabs). */
@@ -1288,7 +1282,6 @@ export const initialState: UIState = {
     wordprocessingView: null,
     revisionView: null,
     openedRevisionView: null,
-    trackChanges: false,
     notesOpen: false,
     notesHeight: null,
     formulaBarVisible: true,

@@ -5,6 +5,7 @@ export const ko: EditMessages = {
     // Modes
     "mode.view": "보기",
     "mode.edit": "편집",
+    "mode.review": "검토",
 
     // Mode switcher
     "modeSwitch.label": "편집기 모드",

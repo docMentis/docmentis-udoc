@@ -279,9 +279,6 @@ export type Action =
     // the open document opened on
     | { type: "SET_REVISION_VIEW"; view: RevisionView }
     | { type: "SET_OPENED_REVISION_VIEW"; view: RevisionView }
-    // The Review tab's Track Changes, turned on or off — and with it, what a
-    // word document's tracked changes show
-    | { type: "SET_TRACK_CHANGES"; on: boolean }
     | { type: "ENABLE_PANEL_TRANSITIONS" }
     // Theme & fullscreen
     | { type: "SET_THEME"; theme: ThemeMode }

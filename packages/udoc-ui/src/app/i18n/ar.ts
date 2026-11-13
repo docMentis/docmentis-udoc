@@ -111,7 +111,6 @@ export const ar: Messages = {
     "pageLayout.twoPages": "صفحتان",
     "pageLayout.coverRight": "غلاف يمين",
     "pageLayout.coverLeft": "غلاف يسار",
-    "command.trackChanges": "تعقب التغييرات",
     "command.revisionView": "عرض للمراجعة",
     "revisionView.allMarkup": "كل العلامات",
     "revisionView.simpleMarkup": "علامات بسيطة",

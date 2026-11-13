@@ -1136,6 +1136,8 @@ export interface EngineWorker {
      * the layout to reply with.
      */
     committed(session: WasmSession): DocumentLayout;
+    /** Re-post the selection — after a setting changed what may be done to it. */
+    selectionChanged(): void;
     /** Repaint on the next frame — after a setting changed what is drawn. */
     scheduleFrame(): void;
 }
@@ -1177,6 +1179,7 @@ const engineWorker: EngineWorker = {
         startComposeAhead(s);
         return layout;
     },
+    selectionChanged: () => emitSelection(false),
     scheduleFrame,
 };
 

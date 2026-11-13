@@ -481,7 +481,6 @@ const PRESENTATION_TABS: readonly EditTab[] = [
 const WORDPROCESSING_REVIEW_TAB: EditTab = {
     ...REVIEW_TAB,
     commands: [
-        "trackChanges",
         "revisionView",
         "markupOptions",
         "revisions",

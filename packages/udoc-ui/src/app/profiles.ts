@@ -110,16 +110,15 @@ export function viewTab(docType: UDocType, edit?: { guides: readonly string[] })
 /** The id of every doc type's {@link viewTab}. */
 export const VIEW_TAB_ID = "view";
 
-/** A word document's Review tab: Track Changes, which version of its tracked
- *  changes shows, which of them are shown as such, and New Comment, on the text
- *  selected, named beside its icon — a comment is an annotation, so the tab is
- *  the same in view mode and edit mode. */
+/** A word document's Review tab: which version of its tracked changes shows,
+ *  which of them are shown as such, and New Comment, on the text selected,
+ *  named beside its icon — a comment is an annotation, so the tab is the same
+ *  in view mode and edit mode. */
 export const REVIEW_TAB: ToolbarTab = {
     id: "review",
     label: "ribbon.review",
     icon: ICON_TAB_REVIEW,
     commands: [
-        "trackChanges",
         "revisionView",
         "markupOptions",
         "revisions",
@@ -463,9 +462,11 @@ export function arrangementFor(state: UIState): {
  *  extension's in its own mode. */
 export type TabSource = (docType: UDocType | null, mode: string) => readonly ToolbarTab<string>[];
 
-/** Whether a session entitled to `features` may be in `mode` — view mode
- *  always, an extension's as its feature says. */
-export type ModeEntitlement = (mode: string, features: readonly Feature[]) => boolean;
+/** The mode a session entitled to `features` is in when it asks for `mode`
+ *  with a document of `docType` open, or none: `mode` where it may be in it —
+ *  view mode always, an extension's as its feature and doc types say — else
+ *  the mode `mode` gives way to. */
+export type ModeFor = (mode: string, features: readonly Feature[], docType: UDocType | null) => string;
 
 /** `tabs` less the tabs whose feature a session entitled to `features` lacks. */
 export function tabsFor(

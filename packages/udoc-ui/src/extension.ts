@@ -22,17 +22,30 @@ export interface PageSpacing {
 }
 
 /**
+ * A mode of an extension's own beside view mode: one its `tabs` are shown in,
+ * where the canvas edits the document.
+ */
+export interface ExtensionMode {
+    /** Its id, `UIState.mode` while the shell is in it. */
+    readonly id: string;
+    /** The feature a session needs to be in it. */
+    readonly feature: Feature;
+    /** The doc types a document must be of for the shell to be in it, or every
+     *  one where absent. With none open, the shell may be in it. */
+    readonly docTypes?: readonly UDocType[];
+    /** The mode it gives way to where the shell may not be in it — another of
+     *  the extension's, which may give way in turn — or view mode where absent. */
+    readonly otherwise?: string;
+}
+
+/**
  * An extension of the shell: the shell mounts it once its own chrome is built,
  * and asks it wherever the extension may decide in the shell's place.
  */
 export interface UIExtension {
-    /**
-     * The extension's own mode beside view mode — the one its `tabs` are
-     * shown in, where the canvas edits the document — named by `id`, and the
-     * feature a session needs to be in it.
-     */
-    readonly mode: { readonly id: string; readonly feature: Feature };
-    /** The mode the shell opens in: view, or the extension's. */
+    /** The extension's own modes beside view mode. */
+    readonly modes: readonly ExtensionMode[];
+    /** The mode the shell opens in: view, or one of the extension's. */
     readonly initialMode: string;
     /** CSS of the extension's own chrome, laid after the shell's. */
     readonly styles: string;
@@ -45,7 +58,7 @@ export interface UIExtension {
     /** The extension's own state at start: `UIState.extension`. */
     readonly initialState: unknown;
     /**
-     * The tab strip a document of `docType` shows in the extension's mode —
+     * The tab strip a document of `docType` shows in the extension's modes —
      * in order, folded until a selection opens its tab or one is picked —
      * naming the shell's commands or the extension's {@link commands}.
      */
@@ -68,7 +81,7 @@ export interface UIExtension {
     /**
      * The buttons each card of the Revisions panel offers on its change in
      * `state` — edit mode's Accept and Reject — or none. Asked only in the
-     * extension's mode, as the panel draws its cards.
+     * extension's modes, as the panel draws its cards.
      */
     revisionActions(state: UIState): readonly RevisionAction[];
     /**

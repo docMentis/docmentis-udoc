@@ -111,7 +111,6 @@ export const ja: Messages = {
     "pageLayout.twoPages": "見開きページ",
     "pageLayout.coverRight": "表紙を右に表示",
     "pageLayout.coverLeft": "表紙を左に表示",
-    "command.trackChanges": "変更履歴の記録",
     "command.revisionView": "変更内容の表示",
     "revisionView.allMarkup": "すべての変更履歴/コメント",
     "revisionView.simpleMarkup": "シンプルな変更履歴/コメント",

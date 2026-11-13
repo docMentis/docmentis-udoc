@@ -5,6 +5,7 @@ export const zhTW: EditMessages = {
     // Modes
     "mode.view": "檢視",
     "mode.edit": "編輯",
+    "mode.review": "校閱",
 
     // Mode switcher
     "modeSwitch.label": "編輯器模式",

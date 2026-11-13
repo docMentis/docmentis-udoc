@@ -17,9 +17,11 @@ export interface UDocEditorOptions extends UDocOptions {
     /** Strings that replace the built-in ones, by key — the host's own wording,
      *  or a language the editor doesn't ship. Default none. */
     translations?: Partial<Messages>;
-    /** The mode the editor opens in. Default `"edit"`. */
+    /** The mode the editor opens in. Default `"edit"`. A document `"review"`
+     *  isn't open to opens in `"edit"` where it's allowed, else in `"view"`. */
     initialMode?: EditorMode;
-    /** The modes the user may switch between. Default every mode. */
+    /** The modes the user may switch between. Default every mode. The switcher
+     *  offers `"review"` only with a Word document open, or none. */
     allowedModes?: readonly EditorMode[];
     /** Show the mode switcher. Default `true` when more than one mode is allowed. */
     showModeSwitch?: boolean;
@@ -55,7 +57,7 @@ export class UDocEditor extends UDocBase<UDocEditorEvents> {
         this.#editMode = editMode;
         this.#unsubscribeMode = subscribeSelector(
             shell.store,
-            // The shell's mode is view or edit mode's own.
+            // The shell's mode is view, or edit or review mode, the editor's own.
             (s) => s.mode as EditorMode,
             (mode, previousMode) => this.emit("mode:changed", { mode, previousMode }),
         );
@@ -137,7 +139,8 @@ export class UDocEditor extends UDocBase<UDocEditorEvents> {
 
     /**
      * Switch the editor mode. Ignored if `mode` isn't in the configured
-     * `allowedModes`. Drives the toolbar's command set and pointer behavior.
+     * `allowedModes`, and for `"review"` with a document open that isn't a
+     * Word document. Drives the toolbar's command set and pointer behavior.
      */
     setMode(mode: EditorMode): void {
         this.#editMode.setMode(mode);

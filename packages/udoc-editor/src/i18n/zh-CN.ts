@@ -5,6 +5,7 @@ export const zhCN: EditMessages = {
     // Modes
     "mode.view": "查看",
     "mode.edit": "编辑",
+    "mode.review": "审阅",
 
     // Mode switcher
     "modeSwitch.label": "编辑器模式",

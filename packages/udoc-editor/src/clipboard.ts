@@ -18,6 +18,7 @@
 import type { UDocFragment } from "@docmentis/udoc-wasm";
 import { allowsEdit, fragmentFromHtml, parseFragment, UDOC_FRAGMENT_FORMAT } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
+import { editsDocument } from "./mode.js";
 
 /** Edit mode's clipboard verbs, for a menu row — a keyboard cut or paste rides
  *  the native event on the sink instead, and a copy is the shell's. */
@@ -34,7 +35,7 @@ export function createClipboard(host: EditHost): Clipboard {
 
     function isEditReady(): boolean {
         const st = host.store.getState();
-        return st.status === "ready" && st.mode === "edit";
+        return st.status === "ready" && editsDocument(st.mode);
     }
 
     // The native `cut`: copy, then delete — but only when the selection is

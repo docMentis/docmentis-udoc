@@ -23,7 +23,7 @@ import { mountPageResize, pageCommands } from "./page-commands.js";
 import type { PageResize } from "./page-commands.js";
 import { mountPageControls, PAGE_CONTROLS_SPACING, pageControlsShown } from "./page-controls.js";
 import { selectionLine } from "./paint.js";
-import { ALL_MODES, EDIT_MODE } from "./mode.js";
+import { ALL_MODES, editsDocument, extensionModes } from "./mode.js";
 import type { EditorMode } from "./mode.js";
 import { editState, INITIAL_EDIT_STATE, updateEditState } from "./state.js";
 import { REVIEW_COMMANDS, revisionActions } from "./review.js";
@@ -175,9 +175,10 @@ function mountDocumentState(host: EditHost): () => void {
     };
 }
 
-/** Whether the engine draws edit mode's authoring view in `s`. */
+/** Whether the engine draws edit mode's authoring view in `s`: in edit mode
+ *  and in review mode. */
 function editing(s: UIState): boolean {
-    return s.mode === "edit";
+    return editsDocument(s.mode);
 }
 
 /**
@@ -201,6 +202,24 @@ function mountEditingView(host: EditHost): () => void {
     };
     show(editing(store.getState()));
     return subscribeSelector(store, editing, show);
+}
+
+/**
+ * Keep the open word document's edits recorded as tracked changes while in
+ * review mode, and not otherwise. Each document opens with recording off, so
+ * it is sent for each one open, and again as the mode changes. Returns the
+ * teardown.
+ */
+function mountTrackRevisions(host: EditHost): () => void {
+    const { store, edit } = host;
+    // The open word document and the mode, or null with none open.
+    const open = (s: UIState): string | null =>
+        s.status === "ready" && s.docType === "wordprocessing" ? `${s.docGeneration}:${s.mode}` : null;
+    const send = (key: string | null): void => {
+        if (key !== null) edit.setTrackRevisions(store.getState().mode === "review");
+    };
+    send(open(store.getState()));
+    return subscribeSelector(store, open, send);
 }
 
 /** Edit mode, as `options` configure it. */
@@ -228,7 +247,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
     return {
         styles: editorStyles,
         messages: MESSAGE_PACKS,
-        mode: EDIT_MODE,
+        modes: extensionModes(allowedModes),
         initialMode,
         initialState: {
             ...INITIAL_EDIT_STATE,
@@ -299,6 +318,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             paintOptionsModal.mount(mounted.root);
             const unmountDocumentState = mountDocumentState(mounted);
             const unmountEditingView = mountEditingView(mounted);
+            const unmountTrackRevisions = mountTrackRevisions(mounted);
             const unmountRuler = ruler.mount(mounted);
             const unmountPageControls = showPageControls ? mountPageControls(mounted, i18n) : null;
             slideLayouts = mountSlideLayouts(mounted, i18n);
@@ -316,6 +336,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
                 slideLayouts = null;
                 unmountPageControls?.();
                 unmountRuler();
+                unmountTrackRevisions();
                 unmountEditingView();
                 unmountDocumentState();
                 tools?.clipboard.destroy();

@@ -207,7 +207,6 @@ export interface Messages {
     "pageLayout.coverRight": string;
     /** Cover on the Left */
     "pageLayout.coverLeft": string;
-    "command.trackChanges": string;
     "command.revisionView": string;
     "revisionView.allMarkup": string;
     "revisionView.simpleMarkup": string;

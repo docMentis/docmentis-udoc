@@ -5,6 +5,7 @@ export const ptBR: EditMessages = {
     // Modes
     "mode.view": "Visualização",
     "mode.edit": "Edição",
+    "mode.review": "Revisão",
 
     // Mode switcher
     "modeSwitch.label": "Modo do Editor",

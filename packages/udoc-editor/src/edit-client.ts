@@ -60,6 +60,15 @@ export class EditClient {
     }
 
     /**
+     * Record the open word document's edits as tracked changes, or stop —
+     * review mode's. The open document's alone: each opens with it off. A
+     * no-op for any other doc type. Latest-wins, fire-and-forget.
+     */
+    setTrackRevisions(on: boolean): void {
+        this.#post({ type: "setTrackRevisions", on });
+    }
+
+    /**
      * Read the current slide's resolved theme color palette — the mapped scheme
      * slots the color picker shows as "Theme Colors". Resolves to `null` for a
      * doc type without a theme (only presentations carry one). Re-pull on open

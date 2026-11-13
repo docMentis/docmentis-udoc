@@ -6,20 +6,18 @@ import {
     NO_FIT,
     PAGELESS_PLANE,
     RIGHT_PANEL_TABS,
-    VIEW_MODE,
     initialState,
     panelOpenable,
     planeOfView,
     planeOfWordprocessingView,
     renderZoom,
-    revisionViewOf,
     sheetLayoutModeOf,
     viewDpi,
     viewOfPlane,
 } from "./state.js";
 import { profileDisabledPanels, profileFor, tabsFor } from "./profiles.js";
 import { selectionOpensTab } from "./selection-tab.js";
-import type { ModeEntitlement, TabSource } from "./profiles.js";
+import type { ModeFor, TabSource } from "./profiles.js";
 import { visibleSpan } from "./components/Scrollbar.js";
 import { defaultScrollModeForDocType } from "../worker/protocol.js";
 
@@ -90,12 +88,9 @@ function openingTab(tabs: readonly ToolbarTab<string>[]): string | null {
 }
 
 /** The shell's reducer, whose modes show the tab strips `tabsOf` gives, a
- *  session entitled to them as `entitled` says. */
-export function createReducer(
-    tabsOf: TabSource,
-    entitled: ModeEntitlement,
-): (state: UIState, action: Action) => UIState {
-    return (state, action) => shutComments(state, reduce(state, action, tabsOf, entitled));
+ *  session in the mode `modeFor` says. */
+export function createReducer(tabsOf: TabSource, modeFor: ModeFor): (state: UIState, action: Action) => UIState {
+    return (state, action) => shutComments(state, reduce(state, action, tabsOf, modeFor));
 }
 
 /** `next`, its Office thread closed where it shuts the comments panel — closed
@@ -107,7 +102,7 @@ function shutComments(prev: UIState, next: UIState): UIState {
     return { ...next, openOfficeComment: null };
 }
 
-function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: ModeEntitlement): UIState {
+function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: ModeFor): UIState {
     switch (action.type) {
         case "__INIT__":
             return state;
@@ -155,9 +150,10 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 ...profileDisabledPanels(action.docType ?? null),
                 ...state.hostDisabledPanels,
             ]);
-            // A mode the new session is not entitled to gives way to view,
-            // which every session may use.
-            const mode = entitled(state.mode, action.features) ? state.mode : VIEW_MODE;
+            // A mode the new session may not be in, for its entitlement or its
+            // doc type, gives way to another: at last to view, which every
+            // session may use.
+            const mode = modeFor(state.mode, action.features, action.docType ?? null);
             // Reset the view camera for the new document — scroll, page, and
             // zoom all return to defaults so nothing leaks from the previously
             // open document. `openSource` follows up with SET_FIT to adopt the
@@ -743,15 +739,6 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
         case "SET_OPENED_REVISION_VIEW":
             return { ...state, openedRevisionView: action.view };
 
-        case "SET_TRACK_CHANGES": {
-            if (action.on === state.trackChanges) return state;
-            // Until edits are tracked, Track Changes shows the changes: all of
-            // their markup on, none off.
-            const view = revisionViewOf(state);
-            const mode = action.on ? "allMarkup" : "noMarkup";
-            return { ...state, trackChanges: action.on, revisionView: view ? { ...view, mode } : state.revisionView };
-        }
-
         case "SET_HAS_LAYERS":
             return action.hasLayers === state.hasLayers ? state : { ...state, hasLayers: action.hasLayers };
 
@@ -767,7 +754,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
             return { ...state, isFullscreen: action.isFullscreen };
 
         case "SET_MODE": {
-            if (action.mode === state.mode || !entitled(action.mode, state.features)) return state;
+            if (action.mode === state.mode || modeFor(action.mode, state.features, state.docType) !== action.mode) {
+                return state;
+            }
             // Each mode lands in select, its strip on the tab it asks to, else folded.
             return {
                 ...state,

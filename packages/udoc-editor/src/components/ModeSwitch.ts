@@ -1,7 +1,8 @@
 import { createDropdownButton, createMenuItem, subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { Action, DropdownButton, Feature, Store, UIState } from "@docmentis/udoc-ui/internal";
+import type { UDocType } from "@docmentis/udoc-wasm";
 import type { I18n, MessageKey } from "../i18n/index.js";
-import { modeEntitled } from "../mode.js";
+import { modeEntitled, modeOpen } from "../mode.js";
 import type { EditorMode } from "../mode.js";
 import { editState } from "../state.js";
 
@@ -9,12 +10,14 @@ import { editState } from "../state.js";
 const MODE_LABELS: Record<EditorMode, MessageKey> = {
     view: "mode.view",
     edit: "mode.edit",
+    review: "mode.review",
 };
 
 interface ModeSwitchSlice {
     mode: EditorMode;
     allowedModes: readonly EditorMode[];
     features: readonly Feature[];
+    docType: UDocType | null;
     showModeSwitch: boolean;
 }
 
@@ -23,19 +26,20 @@ function sliceEqual(a: ModeSwitchSlice, b: ModeSwitchSlice): boolean {
         a.mode === b.mode &&
         a.allowedModes === b.allowedModes &&
         a.features === b.features &&
+        a.docType === b.docType &&
         a.showModeSwitch === b.showModeSwitch
     );
 }
 
 function selectSlice(s: UIState): ModeSwitchSlice {
     const { allowedModes, showModeSwitch } = editState(s);
-    return { mode: s.mode as EditorMode, allowedModes, features: s.features, showModeSwitch };
+    return { mode: s.mode as EditorMode, allowedModes, features: s.features, docType: s.docType, showModeSwitch };
 }
 
 /** The modes the switcher offers: the host's, less those the session is not
- *  entitled to. */
+ *  entitled to and those the open document's type isn't open to. */
 function offeredModes(slice: ModeSwitchSlice): readonly EditorMode[] {
-    return slice.allowedModes.filter((mode) => modeEntitled(mode, slice.features));
+    return slice.allowedModes.filter((mode) => modeEntitled(mode, slice.features) && modeOpen(mode, slice.docType));
 }
 
 /**

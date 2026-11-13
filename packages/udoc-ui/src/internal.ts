@@ -5,7 +5,7 @@
 export { createAs } from "./base.js";
 export type { WorkerClient, Wrapper } from "./worker/WorkerClient.js";
 export type { UIShell, UIShellOptions } from "./app/shell.js";
-export type { PageSpacing, RevisionAction, UIExtension, UIShellHost } from "./extension.js";
+export type { ExtensionMode, PageSpacing, RevisionAction, UIExtension, UIShellHost } from "./extension.js";
 export { fragmentFromHtml, parseFragment, UDOC_FRAGMENT_FORMAT } from "./app/clipboard.js";
 export type { ClipboardCopy } from "./app/clipboard.js";
 export type { UIState } from "./app/state.js";

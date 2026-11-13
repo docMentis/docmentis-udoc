@@ -112,7 +112,6 @@ export const en: Messages = {
     "pageLayout.twoPages": "Two Pages",
     "pageLayout.coverRight": "Cover on the Right",
     "pageLayout.coverLeft": "Cover on the Left",
-    "command.trackChanges": "Track Changes",
     "command.revisionView": "Display for Review",
     "revisionView.allMarkup": "All Markup",
     "revisionView.simpleMarkup": "Simple Markup",

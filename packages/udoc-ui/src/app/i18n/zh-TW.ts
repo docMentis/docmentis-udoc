@@ -111,7 +111,6 @@ export const zhTW: Messages = {
     "pageLayout.twoPages": "雙頁",
     "pageLayout.coverRight": "封面居右",
     "pageLayout.coverLeft": "封面居左",
-    "command.trackChanges": "追蹤修訂",
     "command.revisionView": "顯示以供檢閱",
     "revisionView.allMarkup": "所有標記",
     "revisionView.simpleMarkup": "簡易標記",

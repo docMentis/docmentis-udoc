@@ -55,6 +55,13 @@ listed once, by package. Its major and minor version are those of the
 - In udoc-editor, the Review tab's Accept and Reject settle the change the
   selection touches, every change the view shows, or every change, as one
   undo step, and each card of the Revisions tab offers both on its change.
+- udoc-editor has a review mode, beside view and edit mode, which records
+  each edit to a Word document as a tracked change under the name
+  `setUserInfo` gives, or "Author" without one. An edit that can't be
+  recorded, such as moving a picture or merging cells, isn't offered. Only a
+  Word document opens in review mode: another opens in edit mode where
+  `allowedModes` has it, else in view mode. `EditorMode` takes `"review"`,
+  and the `translations` key `mode.review` is new.
 - The text caret moves by word, by paragraph, and to the start or end of the
   text it is in: on a Mac, Option with an arrow steps by word or paragraph,
   and Cmd with an arrow goes to the line's or the text's start or end;
@@ -90,9 +97,8 @@ listed once, by package. Its major and minor version are those of the
   text that spans sections, made here or in Word, is highlighted through each
   section.
 
-- A Word document's Review tab leads with Track Changes, which starts off.
-  Turning it on shows all markup, and turning it off shows none. Show Markup
-  is now Markup Options, an icon, and New Comment is named beside its icon.
+- On a Word document's Review tab, Show Markup is now Markup Options, an
+  icon, and New Comment is named beside its icon.
 
 - A Word document with tracked changes opens in Simple Markup, the final
   version with a bar beside each change, where it opened in All Markup,

@@ -111,7 +111,6 @@ export const ptBR: Messages = {
     "pageLayout.twoPages": "Duas Páginas",
     "pageLayout.coverRight": "Capa à Direita",
     "pageLayout.coverLeft": "Capa à Esquerda",
-    "command.trackChanges": "Controlar Alterações",
     "command.revisionView": "Exibir para Revisão",
     "revisionView.allMarkup": "Todas as Marcações",
     "revisionView.simpleMarkup": "Marcação Simples",

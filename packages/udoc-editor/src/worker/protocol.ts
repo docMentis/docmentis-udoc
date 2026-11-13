@@ -27,6 +27,17 @@ export interface SetPlaceholderPromptsRequest {
 }
 
 /**
+ * Record the open word document's edits as tracked changes, or stop — review
+ * mode's. Not an edit, and the open document's alone: each document opens with
+ * it off, so it is sent again for each. A no-op for any other doc type.
+ * Latest-wins, fire-and-forget.
+ */
+export interface SetTrackRevisionsRequest {
+    type: "setTrackRevisions";
+    on: boolean;
+}
+
+/**
  * Read the current slide's resolved theme color palette — the mapped scheme
  * slots the color picker shows as "Theme Colors" — a pure read. Replies with a
  * `ThemePalette`, or `null` for a doc type
@@ -261,6 +272,7 @@ export interface ShapePreviewRequest {
 export type EditRequest =
     | SetOverflowVisibleRequest
     | SetPlaceholderPromptsRequest
+    | SetTrackRevisionsRequest
     | ThemePaletteRequest
     | FontFamilySummariesRequest
     | ParagraphStyleSummariesRequest
