@@ -66,6 +66,8 @@ export const ar: EditMessages = {
     "command.ruler": "المسطرة",
     "command.acceptRevisions": "قبول",
     "command.rejectRevisions": "رفض",
+    "command.previousRevisionGroup": "السابق",
+    "command.nextRevisionGroup": "التالي",
     "review.acceptThisChange": "قبول هذا التغيير",
     "review.acceptAllShown": "قبول كافة التغييرات المعروضة",
     "review.acceptAll": "قبول كافة التغييرات",

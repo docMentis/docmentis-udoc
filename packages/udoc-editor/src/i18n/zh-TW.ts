@@ -66,6 +66,8 @@ export const zhTW: EditMessages = {
     "command.ruler": "尺規",
     "command.acceptRevisions": "接受",
     "command.rejectRevisions": "拒絕",
+    "command.previousRevisionGroup": "上一個",
+    "command.nextRevisionGroup": "下一個",
     "review.acceptThisChange": "接受此修訂",
     "review.acceptAllShown": "接受所有顯示的修訂",
     "review.acceptAll": "接受所有修訂",

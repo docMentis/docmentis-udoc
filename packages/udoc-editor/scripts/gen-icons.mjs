@@ -75,6 +75,8 @@ const ICONS = {
     // A word document's Review tab
     ICON_ACCEPT_REVISIONS: "check",
     ICON_REJECT_REVISIONS: "close",
+    ICON_PREVIOUS_REVISION_GROUP: "keyboard_arrow_up",
+    ICON_NEXT_REVISION_GROUP: "keyboard_arrow_down",
 
     // A deck's Slide tab
     ICON_CHANGE_LAYOUT: "team_dashboard",

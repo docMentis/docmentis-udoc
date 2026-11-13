@@ -1084,6 +1084,17 @@ export class WorkerClient {
     }
 
     /**
+     * Move the selection to the tracked change after it — or to the one
+     * before, unless `forward` — round past the document's end: a word
+     * document's Review tab's Next and Previous. Presence, not an edit:
+     * resolves with the selection's geometry, moved or not, which the caller
+     * brings into view; the selection follows via {@link onSelection} too.
+     */
+    async moveToRevisionGroup(forward: boolean): Promise<SelectionGeometry> {
+        return (await this.#send({ type: "moveToRevisionGroup", forward })) as SelectionGeometry;
+    }
+
+    /**
      * Set a **text** selection from a pointer gesture between two points (CSS px,
      * canvas-relative): `anchor` where the press began, `focus` its live end
      * (equal for a plain click). `options` ({@link TextSelectOptions} —

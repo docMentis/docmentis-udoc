@@ -66,6 +66,8 @@ export const ko: EditMessages = {
     "command.ruler": "눈금자",
     "command.acceptRevisions": "적용",
     "command.rejectRevisions": "거부",
+    "command.previousRevisionGroup": "이전",
+    "command.nextRevisionGroup": "다음",
     "review.acceptThisChange": "이 변경 내용 적용",
     "review.acceptAllShown": "표시된 모든 변경 내용 적용",
     "review.acceptAll": "모든 변경 내용 적용",

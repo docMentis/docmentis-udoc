@@ -2882,6 +2882,18 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, layout);
                 break;
             }
+            case "moveToRevisionGroup": {
+                if (!session) throw new Error("engine worker: moveToRevisionGroup before open");
+                // Presence, not an edit, as the table widenings are: the
+                // selection moved onto the next or previous tracked change,
+                // its geometry answered for the host to bring into view.
+                const before = session.viewState(VIEWER)[5] ?? -1;
+                const geometry = session.wordprocessing.moveToRevisionGroup(VIEWER, msg.forward);
+                emitSelection(true, geometry);
+                refreshChrome(session, before);
+                reply(id, geometry);
+                break;
+            }
             case "executeOnSelection": {
                 if (typeof msg.edit === "object" && "kind" in msg.edit && msg.edit.kind === "commitCellEntry") {
                     cellEntries++;

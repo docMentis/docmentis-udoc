@@ -109,7 +109,9 @@ export type EditCommandId =
     | "cropCancel"
     | "cropApply"
     | "acceptRevisions"
-    | "rejectRevisions";
+    | "rejectRevisions"
+    | "previousRevisionGroup"
+    | "nextRevisionGroup";
 
 /** A tab of edit mode's. */
 type EditTab = ToolbarTab<MessageKey>;
@@ -475,10 +477,23 @@ const PRESENTATION_TABS: readonly EditTab[] = [
 ];
 
 /** A word document's Review tab in edit mode: view mode's, with Accept and
- *  Reject after its markup controls, where Word's Changes group stands. */
+ *  Reject, then Previous and Next, after its markup controls, where Word's
+ *  Changes group stands. A caret or a range in text keeps it open, ahead of
+ *  Text, so stepping through the changes stays on it. */
 const WORDPROCESSING_REVIEW_TAB: EditTab = {
     ...REVIEW_TAB,
-    commands: ["trackChanges", "revisionView", "markupOptions", "acceptRevisions", "rejectRevisions", "newComment"],
+    commands: [
+        "trackChanges",
+        "revisionView",
+        "markupOptions",
+        "acceptRevisions",
+        "rejectRevisions",
+        "previousRevisionGroup",
+        "nextRevisionGroup",
+        "newComment",
+    ],
+    opensFor: inText,
+    staysOpen: true,
 };
 
 /** The wordprocessing strip: Text, then Table, then Shape for the drawings in

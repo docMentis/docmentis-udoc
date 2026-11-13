@@ -1882,6 +1882,19 @@ export interface MoveToCellRequest {
 }
 
 /**
+ * Move the selection to the tracked change after it — or to the one before,
+ * unless `forward` — round past the document's end: a word document's Review
+ * tab's Next and Previous. The change's text comes out selected, or a caret at
+ * its paragraph's start. Presence, not an edit: replies with the selection's
+ * geometry, moved or not, for the host to bring into view, and re-posts the
+ * selection.
+ */
+export interface MoveToRevisionGroupRequest {
+    type: "moveToRevisionGroup";
+    forward: boolean;
+}
+
+/**
  * Execute one arbitrary, doc-type-tagged {@link import("@docmentis/udoc-wasm").UDocCommand}
  * directly — the generic write seam beneath the typed verbs above, exposed for
  * a host that builds its own commands rather than calling a named method. The
@@ -2329,6 +2342,7 @@ export type WorkerRequest =
     | ExecuteRequest
     | ExecuteOnSelectionRequest
     | MoveToCellRequest
+    | MoveToRevisionGroupRequest
     | SnapshotRequest
     | SaveToBytesRequest
     | OriginalBytesRequest

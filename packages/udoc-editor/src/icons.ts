@@ -56,6 +56,12 @@ export const ICON_ACCEPT_REVISIONS = `<svg viewBox="0 -960 960 960" fill="curren
 /** `close` */
 export const ICON_REJECT_REVISIONS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>`;
 
+/** `keyboard_arrow_up` */
+export const ICON_PREVIOUS_REVISION_GROUP = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M480-525 291-336l-51-51 240-240 240 240-51 51-189-189Z"/></svg>`;
+
+/** `keyboard_arrow_down` */
+export const ICON_NEXT_REVISION_GROUP = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M480-333 240-573l51-51 189 189 189-189 51 51-240 240Z"/></svg>`;
+
 /** `team_dashboard` */
 export const ICON_CHANGE_LAYOUT = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm192-72v-240H216v240h192Zm72 0h264v-240H480v240ZM216-528h528v-216H216v216Z"/></svg>`;
 
