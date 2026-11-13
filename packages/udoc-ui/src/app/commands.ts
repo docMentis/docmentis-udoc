@@ -74,6 +74,8 @@ import {
     ICON_REVISION_VIEW,
     ICON_MARKUP_OPTIONS,
     ICON_REVISIONS,
+    ICON_PREVIOUS_REVISION_GROUP,
+    ICON_NEXT_REVISION_GROUP,
     ICON_TRACK_CHANGES,
     ICON_SHEET_NORMAL_VIEW,
     ICON_SUBTOOL_HIGHLIGHT,
@@ -1177,6 +1179,24 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             press: (store) => store.dispatch({ type: "TOGGLE_PANEL", panel: "revisions" }),
         },
         shownWhen: (c) => c.revisionsPanel,
+        enabledWhen: whenRevisionView,
+    },
+    // Then Previous and Next, by their arrows alone: on to the tracked change
+    // before the selection or after it.
+    previousRevisionGroup: {
+        id: "previousRevisionGroup",
+        label: "command.previousRevisionGroup",
+        icon: ICON_PREVIOUS_REVISION_GROUP,
+        group: "changes",
+        run: { kind: "action", press: (store) => store.dispatch({ type: "MOVE_TO_REVISION_GROUP", forward: false }) },
+        enabledWhen: whenRevisionView,
+    },
+    nextRevisionGroup: {
+        id: "nextRevisionGroup",
+        label: "command.nextRevisionGroup",
+        icon: ICON_NEXT_REVISION_GROUP,
+        group: "changes",
+        run: { kind: "action", press: (store) => store.dispatch({ type: "MOVE_TO_REVISION_GROUP", forward: true }) },
         enabledWhen: whenRevisionView,
     },
 

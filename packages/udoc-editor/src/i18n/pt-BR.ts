@@ -66,8 +66,6 @@ export const ptBR: EditMessages = {
     "command.ruler": "Régua",
     "command.acceptRevisions": "Aceitar",
     "command.rejectRevisions": "Rejeitar",
-    "command.previousRevisionGroup": "Anterior",
-    "command.nextRevisionGroup": "Próximo",
     "review.acceptThisChange": "Aceitar Esta Alteração",
     "review.acceptAllShown": "Aceitar Todas as Alterações Mostradas",
     "review.acceptAll": "Aceitar Todas as Alterações",

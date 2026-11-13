@@ -122,6 +122,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 officeComments: null,
                 openOfficeComment: null,
                 revisionGroups: null,
+                selectionRevisionIds: [],
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -268,6 +269,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
                 officeComments: null,
                 openOfficeComment: null,
                 revisionGroups: null,
+                selectionRevisionIds: [],
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -824,6 +826,16 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, entitled: Mod
 
         case "SET_REVISION_GROUPS":
             return { ...state, revisionGroups: action.groups };
+
+        case "SET_SELECTION_REVISION_IDS":
+            return { ...state, selectionRevisionIds: action.ids };
+
+        case "MOVE_TO_REVISION_GROUP":
+            if (state.status !== "ready" || state.docType !== "wordprocessing") return state;
+            return {
+                ...state,
+                revisionGroupMove: { forward: action.forward, seq: state.revisionGroupMove.seq + 1 },
+            };
 
         case "OPEN_OFFICE_COMMENT":
             return { ...state, openOfficeComment: action.id };

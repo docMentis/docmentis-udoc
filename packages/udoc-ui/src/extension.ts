@@ -1,6 +1,6 @@
 // What a package built on udoc-ui adds to the shell, handed to `createAs`. A
 // package that hands none gets the shell as it is.
-import type { Feature, ShapePreview, UDocType } from "@docmentis/udoc-wasm";
+import type { Feature, RevisionGroup, ShapePreview, UDocType } from "@docmentis/udoc-wasm";
 import type { Store } from "./framework/index.js";
 import type { Action } from "./app/actions.js";
 import type { ClipboardCopy } from "./app/clipboard.js";
@@ -66,6 +66,12 @@ export interface UIExtension {
      */
     contextMenuItems(state: UIState, inTable: boolean): readonly MenuItem<string>[] | null;
     /**
+     * The buttons each card of the Revisions panel offers on its change in
+     * `state` — edit mode's Accept and Reject — or none. Asked only in the
+     * extension's mode, as the panel draws its cards.
+     */
+    revisionActions(state: UIState): readonly RevisionAction[];
+    /**
      * The band the extension draws around the content pane in `state` — edit
      * mode's ruler — or null for none. Read from state alone, so the band is
      * reserved before a frame paints; the same object for the same band, as the
@@ -115,6 +121,14 @@ export interface UIExtension {
     spacing(state: UIState): PageSpacing | null;
     /** Mount the extension into the shell `host` lends it; returns its teardown. */
     mount(host: UIShellHost): () => void;
+}
+
+/** A button a Revisions panel card offers on its change: its icon, its label —
+ *  a key of the extension's messages — and what pressing it does. */
+export interface RevisionAction {
+    readonly icon: string;
+    readonly label: string;
+    run(group: RevisionGroup): void;
 }
 
 /** What the shell lends the extension it mounts. */

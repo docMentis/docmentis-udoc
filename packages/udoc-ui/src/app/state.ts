@@ -443,6 +443,8 @@ export type CommandId =
     | "revisionView"
     | "markupOptions"
     | "revisions"
+    | "previousRevisionGroup"
+    | "nextRevisionGroup"
     | "sheetNormalView"
     | "sheetPageLayoutView"
     | "singleScroll"
@@ -787,6 +789,9 @@ export interface UIState {
      * until read.
      */
     revisionGroups: readonly RevisionGroup[] | null;
+    /** The ids of the records of the tracked changes the selection touches,
+     *  read while the Revisions panel is open, which marks their cards. */
+    selectionRevisionIds: readonly string[];
     /** The Office comment thread open in the comments panel and on its marker,
      *  by its first comment's id; null for none. */
     openOfficeComment: string | null;
@@ -907,6 +912,12 @@ export interface UIState {
         noExit: boolean;
         seq: number;
     };
+    /**
+     * Bumps on every press of the Review tab's Next or Previous, so the shell
+     * moves the selection to the tracked change after it, or the one before
+     * unless `forward`.
+     */
+    revisionGroupMove: { forward: boolean; seq: number };
     /**
      * Whether a slide show plays — from its start until it ends: by Escape, by
      * a click past its last slide, by the host's `endSlideShow`, or by
@@ -1200,6 +1211,7 @@ export const initialState: UIState = {
     officeComments: null,
     openOfficeComment: null,
     revisionGroups: null,
+    selectionRevisionIds: [],
 
     searchQuery: "",
     searchCaseSensitive: false,
@@ -1231,6 +1243,7 @@ export const initialState: UIState = {
     slidePreviewSeq: 0,
     slidePreviewing: false,
     slideShowRequest: { slide: null, fill: "screen", presenterView: false, noExit: false, seq: 0 },
+    revisionGroupMove: { forward: true, seq: 0 },
     slideShowPlaying: false,
     usePresenterView: false,
     slideShowFill: "screen",

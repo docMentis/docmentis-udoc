@@ -344,7 +344,7 @@ let dateTicker: ReturnType<typeof setInterval> | null = null;
  *  keep it read again as time passes: a date is the one thing on a thread that
  *  changes with nothing else changing, so no `show` would ever come to move it
  *  on. */
-function showDate(date: HTMLElement, when: Date | null, locale: string): void {
+export function showDate(date: HTMLElement, when: Date | null, locale: string): void {
     date.lang = locale;
     date.textContent = when ? ago(when, new Date(), locale) : "";
     date.title = when ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(when) : "";

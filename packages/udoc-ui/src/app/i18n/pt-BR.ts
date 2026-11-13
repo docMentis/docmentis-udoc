@@ -120,6 +120,8 @@ export const ptBR: Messages = {
     "command.markupOptions": "Opções de Marcação",
     "markupOptions.insertionsAndDeletions": "Inserções e Exclusões",
     "markupOptions.formatting": "Formatação",
+    "command.previousRevisionGroup": "Anterior",
+    "command.nextRevisionGroup": "Próximo",
     "command.rotateViewLeft": "Girar Exibição para a Esquerda",
     "command.rotateViewRight": "Girar Exibição para a Direita",
     "command.gapless": "Sem espaço",

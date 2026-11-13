@@ -98,6 +98,9 @@ export interface UDocOptions {
      *  Comments panel with a line, which follows both as they scroll. Default
      *  `true`. */
     showCommentTether?: boolean;
+    /** Show the Revisions panel, a word document's tracked changes. Default
+     *  `true`. */
+    showRevisionsPanel?: boolean;
     /** Show a Word, Excel or PowerPoint document's comments on its pages —
      *  each thread's marker and the highlight of the text it is on. Default
      *  `true`; the View tab's Hide Comment Markup changes it. */

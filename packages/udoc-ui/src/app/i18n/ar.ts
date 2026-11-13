@@ -120,6 +120,8 @@ export const ar: Messages = {
     "command.markupOptions": "خيارات العلامات",
     "markupOptions.insertionsAndDeletions": "عمليات الإدراج والحذف",
     "markupOptions.formatting": "التنسيق",
+    "command.previousRevisionGroup": "السابق",
+    "command.nextRevisionGroup": "التالي",
     "command.rotateViewLeft": "تدوير العرض إلى اليسار",
     "command.rotateViewRight": "تدوير العرض إلى اليمين",
     "command.gapless": "بدون مسافة",

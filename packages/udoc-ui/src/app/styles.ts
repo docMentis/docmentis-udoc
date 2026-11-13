@@ -3394,19 +3394,26 @@ export const uiStyles = css`
         margin-left: auto;
         font-weight: 400;
     }
-    .udoc-ui-root .udoc-comments-panel__card {
+    .udoc-ui-root .udoc-comments-panel__card,
+    .udoc-ui-root .udoc-revisions-panel__card {
         padding: 8px;
         background: var(--udoc-color-surface-container-high);
         border: 1px solid var(--udoc-color-outline-variant);
         border-radius: 6px;
         cursor: pointer;
     }
-    .udoc-ui-root .udoc-comments-panel__card:hover {
+    .udoc-ui-root .udoc-comments-panel__card:hover,
+    .udoc-ui-root .udoc-revisions-panel__card:hover {
         border-color: var(--udoc-color-outline);
     }
     .udoc-ui-root .udoc-comments-panel__card--selected,
     .udoc-ui-root .udoc-comments-panel__card--selected:hover {
         cursor: default;
+        border-color: var(--udoc-color-primary);
+    }
+    /* A change's card stays a press to select it, marked or not. */
+    .udoc-ui-root .udoc-revisions-panel__card--selected,
+    .udoc-ui-root .udoc-revisions-panel__card--selected:hover {
         border-color: var(--udoc-color-primary);
     }
     /* A resolved or closed thread's card: on the surface a step back from an
@@ -3771,67 +3778,49 @@ export const uiStyles = css`
 
     /* =========================================================================
    Revisions panel (the right panel's Revisions tab): a word document's
-   tracked changes, a row each, as the search panel lists its results
+   tracked changes, a card each, laid out as the Comments panel's cards are —
+   which share their rules, and the entry inside them
    ========================================================================= */
     .udoc-ui-root .udoc-revisions-panel {
         display: flex;
         flex-direction: column;
-        height: 100%;
-        font-size: 13px;
+        gap: 6px;
+        padding: 8px;
     }
     .udoc-ui-root .udoc-revisions-panel__summary {
-        padding: 8px 12px 4px;
-        font-size: 11px;
-        font-weight: 600;
+        padding: 2px;
+        font:
+            600 12px/1.4 system-ui,
+            sans-serif;
         color: var(--udoc-color-on-surface-variant);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
-    .udoc-ui-root .udoc-revisions-panel__list {
-        flex: 1;
-        overflow-y: auto;
-    }
-    .udoc-ui-root .udoc-revisions-panel__row {
-        display: block;
-        width: 100%;
-        padding: 6px 12px;
-        border: none;
-        border-left: 3px solid transparent;
-        background: transparent;
-        font: inherit;
-        font-size: 12px;
-        line-height: 1.4;
-        color: var(--udoc-color-on-surface);
-        text-align: start;
-        cursor: pointer;
-    }
-    .udoc-ui-root .udoc-revisions-panel__row:hover {
-        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
-    }
-    .udoc-ui-root .udoc-revisions-panel__head {
+    .udoc-ui-root .udoc-revisions-panel__cards {
         display: flex;
+        flex-direction: column;
         gap: 6px;
-        align-items: baseline;
-        min-width: 0;
     }
+    /* A card's type, as a comment thread's. */
+    .udoc-ui-root .udoc-revisions-panel__card {
+        font:
+            12px/1.4 system-ui,
+            sans-serif;
+        color: var(--udoc-color-on-surface);
+    }
+    /* Its kind, heading its card as a comment's kind heads its entry. */
     .udoc-ui-root .udoc-revisions-panel__kind {
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    .udoc-ui-root .udoc-revisions-panel__author {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        color: var(--udoc-color-on-surface-variant);
-    }
-    .udoc-ui-root .udoc-revisions-panel__date {
+        flex: none;
         font-size: 11px;
         color: var(--udoc-color-on-surface-variant);
     }
+    /* The text it is on, cut at three lines. */
     .udoc-ui-root .udoc-revisions-panel__text {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 3;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        padding: 0 4px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
     }
 
     /* =========================================================================

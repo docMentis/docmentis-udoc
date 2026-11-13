@@ -1085,17 +1085,6 @@ export class WorkerClient {
     }
 
     /**
-     * Move the selection to the tracked change after it — or to the one
-     * before, unless `forward` — round past the document's end: a word
-     * document's Review tab's Next and Previous. Presence, not an edit:
-     * resolves with the selection's geometry, moved or not, which the caller
-     * brings into view; the selection follows via {@link onSelection} too.
-     */
-    async moveToRevisionGroup(forward: boolean): Promise<SelectionGeometry> {
-        return (await this.#send({ type: "moveToRevisionGroup", forward })) as SelectionGeometry;
-    }
-
-    /**
      * Set a **text** selection from a pointer gesture between two points (CSS px,
      * canvas-relative): `anchor` where the press began, `focus` its live end
      * (equal for a plain click). `options` ({@link TextSelectOptions} —
@@ -1641,6 +1630,14 @@ export class WorkerClient {
         revisions: (): Promise<RevisionGroup[]> => this.#send({ type: "revisionGroups" }) as Promise<RevisionGroup[]>,
 
         /**
+         * The ids of the records of the tracked changes the selection touches
+         * — what Accept This Change settles — by which a review pane marks the
+         * groups of {@link revisions} holding them. A pure read.
+         */
+        selectionRevisionIds: (): Promise<string[]> =>
+            this.#send({ type: "selectionRevisionIds" }) as Promise<string[]>,
+
+        /**
          * Select the tracked change whose records are `ids` — one of
          * {@link revisions}' groups — as Next lands on one. Presence, not an
          * edit: resolves with the selection's geometry, moved or not, which the
@@ -1649,6 +1646,16 @@ export class WorkerClient {
          */
         selectRevisionGroup: (ids: readonly string[]): Promise<SelectionGeometry> =>
             this.#send({ type: "selectRevisionGroup", ids: [...ids] }) as Promise<SelectionGeometry>,
+
+        /**
+         * Move the selection to the tracked change after it — or to the one
+         * before, unless `forward` — round past the document's end: the Review
+         * tab's Next and Previous. Presence, not an edit: resolves with the
+         * selection's geometry, moved or not, which the caller brings into
+         * view; the selection follows via {@link onSelection} too.
+         */
+        moveToRevisionGroup: (forward: boolean): Promise<SelectionGeometry> =>
+            this.#send({ type: "moveToRevisionGroup", forward }) as Promise<SelectionGeometry>,
 
         /**
          * Follow an outline item: the worker lays the document out as far as

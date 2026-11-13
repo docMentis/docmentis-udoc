@@ -120,6 +120,8 @@ export const ko: Messages = {
     "command.markupOptions": "변경 내용 표시 옵션",
     "markupOptions.insertionsAndDeletions": "삽입 및 삭제",
     "markupOptions.formatting": "서식",
+    "command.previousRevisionGroup": "이전",
+    "command.nextRevisionGroup": "다음",
     "command.rotateViewLeft": "보기 왼쪽으로 회전",
     "command.rotateViewRight": "보기 오른쪽으로 회전",
     "command.gapless": "간격 없음",

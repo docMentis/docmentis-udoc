@@ -37,6 +37,22 @@ listed once, by package. Its major and minor version are those of the
   A show that filled the screen covers the browser window once the user
   leaves the full screen. The presenter view and `endSlideShow()` still end
   it.
+- A Word document's Review tab steps through its tracked changes: Next and
+  Previous select the change after the selection or before it, round past
+  either end, and bring it into view. In Simple Markup they pass by a
+  deletion it hides; from No Markup or Original they turn to All Markup
+  first, as Word's do.
+- A Word document's tracked changes are listed in the right panel's
+  Revisions tab, opened by Revisions on the Review tab or in the toolbar's
+  menu: a card per change, as the Comments tab's, with its kind, author,
+  date and text, those the selection touches marked. Choosing a card
+  selects its change. `showRevisionsPanel: false` hides the tab. The
+  `translations` keys `rightPanel.revisions`, `toolbar.revisions`, those
+  under `revisions.`, `command.previousRevisionGroup` and
+  `command.nextRevisionGroup` are new.
+- In udoc-editor, the Review tab's Accept and Reject settle the change the
+  selection touches, every change the view shows, or every change, as one
+  undo step, and each card of the Revisions tab offers both on its change.
 
 #### Changed
 

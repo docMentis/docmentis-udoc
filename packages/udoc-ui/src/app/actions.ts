@@ -305,6 +305,12 @@ export type Action =
     | { type: "SET_OFFICE_COMMENTS"; comments: readonly OfficeComment[] }
     // A word document's tracked changes, read for the revisions panel
     | { type: "SET_REVISION_GROUPS"; groups: readonly RevisionGroup[] }
+    // The records of the changes the selection touches, read for the
+    // revisions panel's marked cards
+    | { type: "SET_SELECTION_REVISION_IDS"; ids: readonly string[] }
+    // The Review tab's Next, or Previous unless `forward` (bumps
+    // `revisionGroupMove`, which the shell moves the selection on)
+    | { type: "MOVE_TO_REVISION_GROUP"; forward: boolean }
     // Open an Office comment thread — its marker's, or the panel's choice — or
     // none
     | { type: "OPEN_OFFICE_COMMENT"; id: string | null }

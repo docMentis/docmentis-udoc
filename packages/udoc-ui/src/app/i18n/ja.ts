@@ -120,6 +120,8 @@ export const ja: Messages = {
     "command.markupOptions": "変更履歴の表示オプション",
     "markupOptions.insertionsAndDeletions": "挿入と削除",
     "markupOptions.formatting": "書式設定",
+    "command.previousRevisionGroup": "前へ",
+    "command.nextRevisionGroup": "次へ",
     "command.rotateViewLeft": "表示を左に回転",
     "command.rotateViewRight": "表示を右に回転",
     "command.gapless": "間隔なし",

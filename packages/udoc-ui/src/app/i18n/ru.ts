@@ -120,6 +120,8 @@ export const ru: Messages = {
     "command.markupOptions": "Параметры исправлений",
     "markupOptions.insertionsAndDeletions": "Вставки и удаления",
     "markupOptions.formatting": "Форматирование",
+    "command.previousRevisionGroup": "Назад",
+    "command.nextRevisionGroup": "Далее",
     "command.rotateViewLeft": "Повернуть вид влево",
     "command.rotateViewRight": "Повернуть вид вправо",
     "command.gapless": "Без интервала",

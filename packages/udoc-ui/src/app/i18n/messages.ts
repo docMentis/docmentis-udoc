@@ -216,6 +216,10 @@ export interface Messages {
     "command.markupOptions": string;
     "markupOptions.insertionsAndDeletions": string;
     "markupOptions.formatting": string;
+    /** Previous */
+    "command.previousRevisionGroup": string;
+    /** Next */
+    "command.nextRevisionGroup": string;
     /** Rotate View Left */
     "command.rotateViewLeft": string;
     /** Rotate View Right */

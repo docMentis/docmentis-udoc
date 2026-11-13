@@ -125,6 +125,8 @@ const ICONS = {
     ICON_REVISION_VIEW: "difference",
     ICON_MARKUP_OPTIONS: "tune",
     ICON_REVISIONS: "list_alt",
+    ICON_PREVIOUS_REVISION_GROUP: "arrow_upward",
+    ICON_NEXT_REVISION_GROUP: "arrow_downward",
     ICON_SHEET_NORMAL_VIEW: "grid_on",
 
     // Pointer modes

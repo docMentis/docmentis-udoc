@@ -486,6 +486,7 @@ export interface UIShellOptions {
     showSearchTether?: boolean;
     showCommentsPanel?: boolean;
     showCommentTether?: boolean;
+    showRevisionsPanel?: boolean;
     showCommentMarkup?: boolean;
     showThemeButton?: boolean;
     showFullscreenButton?: boolean;
@@ -669,8 +670,7 @@ export function mountUIShell(
         attachments: false,
         search: shellOptions.showSearchPanel,
         comments: shellOptions.showCommentsPanel,
-        // No host option yet: shown wherever the doc type offers it.
-        revisions: undefined,
+        revisions: shellOptions.showRevisionsPanel,
     };
     const hostDisabledPanels: ReadonlySet<PanelTab> = new Set(
         [...LEFT_PANEL_TABS, ...RIGHT_PANEL_TABS].filter((tab) => shownPanels[tab] === false),
@@ -1508,6 +1508,8 @@ export function mountUIShell(
         },
         {
             onChoose: (group) => void chooseRevisionGroup(group),
+            // Edit mode's buttons, the extension's: a viewer settles nothing.
+            actions: (state) => (extension && state.mode === extension.mode.id ? extension.revisionActions(state) : []),
         },
     );
     rightPanel.mount(rightPanelSlot, store);
@@ -3494,9 +3496,40 @@ export function mountUIShell(
     const unsubRevisionsShown = subscribeSelector(
         store,
         (s) => ({ status: s.status, generation: s.docGeneration, panel: s.activePanel === "revisions" }),
-        refreshRevisionGroups,
+        () => {
+            refreshRevisionGroups();
+            refreshSelectionRevisionIds();
+        },
         { equality: shallowEqual },
     );
+
+    // The changes the selection touches, whose cards the Revisions panel
+    // marks: read as the panel opens and on every selection report while it
+    // is open — an edit's echo among them. The latest read wins, and reports
+    // in one frame are read once.
+    let selectionRevisionsGeneration = 0;
+    let selectionRevisionsPending: number | null = null;
+    function refreshSelectionRevisionIds(): void {
+        const state = store.getState();
+        if (state.status !== "ready" || state.docType !== "wordprocessing" || state.activePanel !== "revisions") return;
+        if (selectionRevisionsPending !== null) cancelAnimationFrame(selectionRevisionsPending);
+        selectionRevisionsPending = requestAnimationFrame(() => {
+            selectionRevisionsPending = null;
+            const generation = ++selectionRevisionsGeneration;
+            void client.wordprocessing
+                .selectionRevisionIds()
+                .then((ids) => {
+                    if (generation !== selectionRevisionsGeneration) return;
+                    const before = store.getState().selectionRevisionIds;
+                    if (ids.length === before.length && ids.every((id, i) => id === before[i])) return;
+                    store.dispatch({ type: "SET_SELECTION_REVISION_IDS", ids });
+                })
+                .catch(() => {
+                    // Worker gone or document closed — nothing to mark.
+                });
+        });
+    }
+    const unsubSelectionRevisions = client.onSelection(refreshSelectionRevisionIds);
 
     // Select a change the Revisions panel lists and bring it into view with
     // the least scroll, as Next lands on one.
@@ -3504,6 +3537,25 @@ export function mountUIShell(
         const landing = selectionStart(await client.wordprocessing.selectRevisionGroup(group.ids));
         if (landing) client.goToRect(landing.page, landing.rect, "nearest");
     }
+
+    // The Review tab's Next and Previous: move the selection to the tracked
+    // change after it or before it, and bring it into view with the least
+    // scroll. As Word's, they show the changes they step through: No Markup
+    // and Original turn to All Markup, and Simple Markup stays, the engine
+    // passing by the deletions it hides.
+    async function moveToRevisionGroup(forward: boolean): Promise<void> {
+        const view = revisionViewOf(store.getState());
+        if (view && (view.mode === "noMarkup" || view.mode === "original")) {
+            store.dispatch({ type: "SET_REVISION_VIEW", view: { ...view, mode: "allMarkup" } });
+        }
+        const landing = selectionStart(await client.wordprocessing.moveToRevisionGroup(forward));
+        if (landing) client.goToRect(landing.page, landing.rect, "nearest");
+    }
+    const unsubRevisionGroupMove = subscribeSelector(
+        store,
+        (s) => s.revisionGroupMove.seq,
+        () => void moveToRevisionGroup(store.getState().revisionGroupMove.forward),
+    );
 
     // Mark the selected text with `tool`: read the selection's final geometry —
     // the read waits on the last select, as the streamed reports don't — and
@@ -4412,6 +4464,9 @@ export function mountUIShell(
         if (commentsPending !== null) cancelAnimationFrame(commentsPending);
         unsubRevisionsChanged();
         unsubRevisionsShown();
+        unsubRevisionGroupMove();
+        unsubSelectionRevisions();
+        if (selectionRevisionsPending !== null) cancelAnimationFrame(selectionRevisionsPending);
         if (revisionsPending !== null) cancelAnimationFrame(revisionsPending);
         unsubSearchEdited();
         unsubSlideSectionsEdited();

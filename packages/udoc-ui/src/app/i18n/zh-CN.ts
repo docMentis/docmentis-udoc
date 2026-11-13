@@ -120,6 +120,8 @@ export const zhCN: Messages = {
     "command.markupOptions": "标记选项",
     "markupOptions.insertionsAndDeletions": "插入和删除",
     "markupOptions.formatting": "格式设置",
+    "command.previousRevisionGroup": "上一处",
+    "command.nextRevisionGroup": "下一处",
     "command.rotateViewLeft": "向左旋转视图",
     "command.rotateViewRight": "向右旋转视图",
     "command.gapless": "无间距",

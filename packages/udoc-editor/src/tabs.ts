@@ -109,9 +109,7 @@ export type EditCommandId =
     | "cropCancel"
     | "cropApply"
     | "acceptRevisions"
-    | "rejectRevisions"
-    | "previousRevisionGroup"
-    | "nextRevisionGroup";
+    | "rejectRevisions";
 
 /** A tab of edit mode's. */
 type EditTab = ToolbarTab<MessageKey>;

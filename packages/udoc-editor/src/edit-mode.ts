@@ -26,7 +26,7 @@ import { selectionLine } from "./paint.js";
 import { ALL_MODES, EDIT_MODE } from "./mode.js";
 import type { EditorMode } from "./mode.js";
 import { editState, INITIAL_EDIT_STATE, updateEditState } from "./state.js";
-import { reviewCommands } from "./review.js";
+import { REVIEW_COMMANDS, revisionActions } from "./review.js";
 import { createRuler, RULER_COMMAND, rulerShown, setShowRuler } from "./ruler.js";
 import { selectionRuler } from "./ruler-edits.js";
 import { changeLayoutCommand, deleteSlideCommand, mountSlideLayouts, newSlideCommand } from "./slide-commands.js";
@@ -242,7 +242,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             ...arrangeCommands(() => tools?.arrange ?? null),
             ...tableCommands(mountedTools, () => tableProperties?.open()),
             ...cellCommands(mountedTools),
-            ...reviewCommands(mountedTools),
+            ...REVIEW_COMMANDS,
             ruler: RULER_COMMAND,
             createSlide: newSlideCommand(() => void slideLayouts?.newSlide()),
             deleteSlide: deleteSlideCommand(() => host),
@@ -277,6 +277,8 @@ export function editMode(options: UDocEditorOptions): EditMode {
             if (inTable) return TABLE_CONTEXT_MENU;
             return state.docType === "spreadsheet" ? GRID_CONTEXT_MENU : CONTEXT_MENU;
         },
+        revisionActions: (state) =>
+            host && editing(state) && state.docType === "wordprocessing" ? revisionActions(host) : [],
         guideBand: (state) => (rulerShown(state) ? ruler : null),
         placedShape,
         placePreview: (tool, page, p0, p1) =>

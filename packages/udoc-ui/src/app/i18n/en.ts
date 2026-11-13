@@ -121,6 +121,8 @@ export const en: Messages = {
     "command.markupOptions": "Markup Options",
     "markupOptions.insertionsAndDeletions": "Insertions and Deletions",
     "markupOptions.formatting": "Formatting",
+    "command.previousRevisionGroup": "Previous",
+    "command.nextRevisionGroup": "Next",
     "command.rotateViewLeft": "Rotate View Left",
     "command.rotateViewRight": "Rotate View Right",
     "command.gapless": "Gapless",

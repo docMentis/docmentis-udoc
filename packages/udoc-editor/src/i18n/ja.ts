@@ -66,8 +66,6 @@ export const ja: EditMessages = {
     "command.ruler": "ルーラー",
     "command.acceptRevisions": "承諾",
     "command.rejectRevisions": "元に戻す",
-    "command.previousRevisionGroup": "前へ",
-    "command.nextRevisionGroup": "次へ",
     "review.acceptThisChange": "この変更を承諾",
     "review.acceptAllShown": "表示されているすべての変更を承諾",
     "review.acceptAll": "すべての変更を承諾",

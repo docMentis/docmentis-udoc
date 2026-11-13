@@ -1,24 +1,18 @@
 // A word document's Review tab's Accept and Reject, edit mode's — a viewer shows
-// tracked changes and never settles them — and Previous and Next beside them.
-// Accept and Reject are each a menu, as Word's Changes group gives it: the
-// change the selection touches, every change the revision view shows, or every
-// change.
-import { allowsTextEdit, commandContext, selectionStart } from "@docmentis/udoc-ui/internal";
-import type { CommandContext, CommandDef, MenuItem } from "@docmentis/udoc-ui/internal";
+// tracked changes and never settles them. Each is a menu, as Word's Changes
+// group gives it: the change the selection touches, every change the revision
+// view shows, or every change. The Revisions panel's cards offer the two on
+// their own change.
+import { allowsTextEdit } from "@docmentis/udoc-ui/internal";
+import type { CommandContext, CommandDef, MenuItem, RevisionAction } from "@docmentis/udoc-ui/internal";
 import type { UDocCommand } from "@docmentis/udoc-wasm";
 import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
-import {
-    ICON_ACCEPT_REVISIONS,
-    ICON_NEXT_REVISION_GROUP,
-    ICON_PREVIOUS_REVISION_GROUP,
-    ICON_REJECT_REVISIONS,
-} from "./icons.js";
+import { ICON_ACCEPT_REVISIONS, ICON_REJECT_REVISIONS } from "./icons.js";
 import { editAction } from "./menu-action.js";
-import type { EditTools } from "./tools.js";
 
 /** The Review tab's commands edit mode adds. */
-type ReviewCommandId = "acceptRevisions" | "rejectRevisions" | "previousRevisionGroup" | "nextRevisionGroup";
+type ReviewCommandId = "acceptRevisions" | "rejectRevisions";
 
 /** Which tracked changes a settle takes: those the selection touches, every one
  *  the revision view shows, or every one. */
@@ -44,18 +38,29 @@ export function settleRevisions(host: EditHost, accept: boolean, scope: Revision
     return host.commit(() => host.client.execute(command));
 }
 
-/** Move the selection to the tracked change after it — or to the one before,
- *  unless `forward` — and bring it into view with the least scroll. As Word's
- *  Next and Previous, it shows the changes it steps through: No Markup and
- *  Original turn to All Markup, and Simple Markup stays, the engine passing by
- *  the deletions it hides. */
-async function moveToRevisionGroup(host: EditHost, forward: boolean): Promise<void> {
-    const mode = commandContext(host.store.getState()).revisionView?.mode;
-    if (mode === "noMarkup" || mode === "original") {
-        host.runMenuAction({ kind: "setRevisionViewMode", mode: "allMarkup" });
-    }
-    const landing = selectionStart(await host.client.moveToRevisionGroup(forward));
-    if (landing) host.client.goToRect(landing.page, landing.rect, "nearest");
+/** Settle the tracked change whose records are `ids` — accepted where `accept`,
+ *  else rejected — as one undo step. */
+function settleRevisionGroup(host: EditHost, accept: boolean, ids: readonly string[]): Promise<void> {
+    const command: UDocCommand = {
+        wordprocessing: accept ? { acceptRevisions: { ids: [...ids] } } : { rejectRevisions: { ids: [...ids] } },
+    };
+    return host.commit(() => host.client.execute(command));
+}
+
+/** A Revisions panel card's Accept and Reject, on its change alone. */
+export function revisionActions(host: EditHost): readonly RevisionAction[] {
+    return [
+        {
+            icon: ICON_ACCEPT_REVISIONS,
+            label: "command.acceptRevisions",
+            run: (group) => void settleRevisionGroup(host, true, group.ids),
+        },
+        {
+            icon: ICON_REJECT_REVISIONS,
+            label: "command.rejectRevisions",
+            run: (group) => void settleRevisionGroup(host, false, group.ids),
+        },
+    ];
 }
 
 /** Accept's or Reject's menu: the change the selection touches, live where the
@@ -79,44 +84,24 @@ function settleMenu(accept: boolean): readonly MenuItem<MessageKey>[] {
           ];
 }
 
-/** The Review tab's Accept and Reject, each named beside its icon, and Previous
- *  and Next, by their icons alone — over the {@link EditTools} once edit mode
- *  is mounted. */
-export function reviewCommands(tools: () => EditTools): Readonly<Record<ReviewCommandId, CommandDef<MessageKey>>> {
-    return {
-        acceptRevisions: {
-            id: "acceptRevisions",
-            label: "command.acceptRevisions",
-            icon: ICON_ACCEPT_REVISIONS,
-            group: "changes",
-            labeled: true,
-            run: { kind: "menu", menu: settleMenu(true) },
-            enabledWhen: whenTracked,
-        },
-        rejectRevisions: {
-            id: "rejectRevisions",
-            label: "command.rejectRevisions",
-            icon: ICON_REJECT_REVISIONS,
-            group: "changes",
-            labeled: true,
-            run: { kind: "menu", menu: settleMenu(false) },
-            enabledWhen: whenTracked,
-        },
-        previousRevisionGroup: {
-            id: "previousRevisionGroup",
-            label: "command.previousRevisionGroup",
-            icon: ICON_PREVIOUS_REVISION_GROUP,
-            group: "changes",
-            run: { kind: "action", press: () => void moveToRevisionGroup(tools().host, false) },
-            enabledWhen: whenTracked,
-        },
-        nextRevisionGroup: {
-            id: "nextRevisionGroup",
-            label: "command.nextRevisionGroup",
-            icon: ICON_NEXT_REVISION_GROUP,
-            group: "changes",
-            run: { kind: "action", press: () => void moveToRevisionGroup(tools().host, true) },
-            enabledWhen: whenTracked,
-        },
-    };
-}
+/** The Review tab's Accept and Reject, each named beside its icon. */
+export const REVIEW_COMMANDS: Readonly<Record<ReviewCommandId, CommandDef<MessageKey>>> = {
+    acceptRevisions: {
+        id: "acceptRevisions",
+        label: "command.acceptRevisions",
+        icon: ICON_ACCEPT_REVISIONS,
+        group: "changes",
+        labeled: true,
+        run: { kind: "menu", menu: settleMenu(true) },
+        enabledWhen: whenTracked,
+    },
+    rejectRevisions: {
+        id: "rejectRevisions",
+        label: "command.rejectRevisions",
+        icon: ICON_REJECT_REVISIONS,
+        group: "changes",
+        labeled: true,
+        run: { kind: "menu", menu: settleMenu(false) },
+        enabledWhen: whenTracked,
+    },
+};

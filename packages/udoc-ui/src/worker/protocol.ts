@@ -1112,6 +1112,15 @@ export interface RevisionGroupsRequest {
 }
 
 /**
+ * Read the ids of the records of the tracked changes the selection touches —
+ * what Accept This Change settles — by which the Revisions panel marks the
+ * cards holding them. Replies with none outside a word document's text.
+ */
+export interface SelectionRevisionIdsRequest {
+    type: "selectionRevisionIds";
+}
+
+/**
  * Read the portable document's font list — every font it has, loaded on first
  * read. Replies with the `FontInfoList`; one with no fonts when no PDF is open.
  */
@@ -2327,6 +2336,7 @@ export type WorkerRequest =
     | OutlineRequest
     | WordprocessingOutlineRequest
     | RevisionGroupsRequest
+    | SelectionRevisionIdsRequest
     | SearchRequest
     | SearchMatchSelectionRequest
     | FontInfoListRequest

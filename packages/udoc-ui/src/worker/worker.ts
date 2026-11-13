@@ -2248,6 +2248,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 );
                 break;
             }
+            case "selectionRevisionIds": {
+                // None with no open / non-word doc.
+                reply(
+                    id,
+                    safeRead(() => session?.wordprocessing.selectionRevisionIds() ?? [], []),
+                );
+                break;
+            }
             case "renderThumbnail": {
                 if (!session) throw new Error("engine worker: renderThumbnail before open");
                 // A one-off preview, now — a slide layout's, a page to print.

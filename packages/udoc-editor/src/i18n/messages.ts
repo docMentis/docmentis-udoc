@@ -122,10 +122,6 @@ export interface Messages extends UIMessages {
     "command.acceptRevisions": string;
     /** Reject */
     "command.rejectRevisions": string;
-    /** Previous */
-    "command.previousRevisionGroup": string;
-    /** Next */
-    "command.nextRevisionGroup": string;
     /** Accept This Change */
     "review.acceptThisChange": string;
     /** Accept All Changes Shown */

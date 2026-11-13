@@ -118,7 +118,15 @@ export const REVIEW_TAB: ToolbarTab = {
     id: "review",
     label: "ribbon.review",
     icon: ICON_TAB_REVIEW,
-    commands: ["trackChanges", "revisionView", "markupOptions", "revisions", "newComment"],
+    commands: [
+        "trackChanges",
+        "revisionView",
+        "markupOptions",
+        "revisions",
+        "previousRevisionGroup",
+        "nextRevisionGroup",
+        "newComment",
+    ],
     labeled: ["newComment"],
 };
 

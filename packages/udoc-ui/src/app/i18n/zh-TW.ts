@@ -120,6 +120,8 @@ export const zhTW: Messages = {
     "command.markupOptions": "標記選項",
     "markupOptions.insertionsAndDeletions": "插入和刪除",
     "markupOptions.formatting": "格式設定",
+    "command.previousRevisionGroup": "上一個",
+    "command.nextRevisionGroup": "下一個",
     "command.rotateViewLeft": "向左旋轉檢視",
     "command.rotateViewRight": "向右旋轉檢視",
     "command.gapless": "無間距",

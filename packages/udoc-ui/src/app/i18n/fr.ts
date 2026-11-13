@@ -120,6 +120,8 @@ export const fr: Messages = {
     "command.markupOptions": "Options des marques",
     "markupOptions.insertionsAndDeletions": "Insertions et suppressions",
     "markupOptions.formatting": "Mise en forme",
+    "command.previousRevisionGroup": "Précédent",
+    "command.nextRevisionGroup": "Suivant",
     "command.rotateViewLeft": "Faire pivoter l’affichage vers la gauche",
     "command.rotateViewRight": "Faire pivoter l’affichage vers la droite",
     "command.gapless": "Sans espacement",
