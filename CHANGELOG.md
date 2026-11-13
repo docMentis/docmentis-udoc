@@ -98,6 +98,12 @@ listed once, by package. Its major and minor version are those of the
   presenter view where the screens aren't set up. A show filling the screen
   covers the browser window in black as the screen fills.
 
+#### Fixed
+
+- The view follows the text caret: an arrow key, Home or End that moves it out
+  of view, or typing or deleting that carries it there, scrolls the view just
+  far enough to show it, where the caret could leave the view behind.
+
 ### udoc-server
 
 #### Added

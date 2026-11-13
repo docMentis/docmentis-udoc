@@ -12,13 +12,14 @@ import type {
     WidgetAnnotation,
     WordprocessingHit,
 } from "@docmentis/udoc-wasm";
-import { cssPxPerPt } from "../../geometry.js";
+import { cssPxPerPt, selectionStart } from "../../geometry.js";
 import type {
     HeaderBands,
     PageView,
     PageViewsFrame,
     PeerPointer,
     Rect,
+    SelectionGeometry,
     SelectMode,
     TextGranularity,
     Viewport,
@@ -353,12 +354,14 @@ export interface CanvasHooks {
      * Insert typed / pasted text at the live text caret — the hidden text
      * input's keystrokes and IME commits. Routed through the shell like
      * {@link commitTranslate} so a text edit travels the same edit path
-     * (relayout, compose-ahead, the `onEdit` sync cue).
+     * (relayout, compose-ahead, the `onEdit` sync cue). Settles once the edit
+     * has landed, its selection reported — where the canvas brings the caret
+     * into view.
      */
-    insertText?: (text: string) => void;
+    insertText?: (text: string) => Promise<void> | void;
     /** Delete at the live text caret (Backspace / Delete) — routed through the
      *  shell like {@link insertText}. */
-    deleteText?: (forward: boolean) => void;
+    deleteText?: (forward: boolean) => Promise<void> | void;
     /** A key on a workbook's grid — its arrows, Enter, Tab, Escape, F2 —
      *  taken before the hidden text input edits with it; answers whether the
      *  grid took it. */
@@ -830,10 +833,22 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     // copyable, so native clipboard events land on it (the shell wires them);
     // keystrokes and IME commits edit text only while a caret is live. Edits route through the shell (the same path as a drag
     // commit); the caret-move keys are presence and go to the worker directly.
+    // A key that moves the caret or types at it brings the caret into view.
+    // A move is presence, answered by the selection report it marks
+    // `localChanged`, which is where the follow waits for it; an edit's report
+    // lands before the edit settles, so the follow runs then.
+    let followingMove = false;
+    let localGeometry: SelectionGeometry | null = null;
+    const followEdit = (edit: Promise<void> | void): void => {
+        if (edit) void edit.then(() => followCaret(localGeometry));
+    };
     const textInput = createHiddenTextInput(i18n, {
-        insertText: (text) => hooks.insertText?.(text),
-        deleteText: (forward) => hooks.deleteText?.(forward),
-        moveCaret: (movement, extend) => client.moveTextCaret(movement, extend),
+        insertText: (text) => followEdit(hooks.insertText?.(text)),
+        deleteText: (forward) => followEdit(hooks.deleteText?.(forward)),
+        moveCaret: (movement, extend) => {
+            followingMove = true;
+            client.moveTextCaret(movement, extend);
+        },
         key: (ev) => (store?.getState().docType === "spreadsheet" ? hooks.cellKey?.(ev) : hooks.textKey?.(ev)) ?? false,
         beginTyping: (text) => hooks.beginCellEntry?.(text),
     });
@@ -866,6 +881,29 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         const editable = st.mode !== VIEW_MODE || annotationSelected;
         const cell = st.docType === "spreadsheet" ? st.activeCell : null;
         return editable && editingText && (profileFor(st.docType).textEditing === true || cell?.entry != null);
+    }
+
+    /**
+     * Bring the local caret into view after a key moved it or typed at it —
+     * the least scroll that shows it, and none while it shows on the frame
+     * last painted. A range has no caret and is left where it is; so is a
+     * workbook's, whose grid follows its active cell.
+     */
+    function followCaret(geometry: SelectionGeometry | null): void {
+        const st = store?.getState();
+        if (!st || st.docType === "spreadsheet" || !geometry?.caret) return;
+        const shown = selection.caretViewportRect();
+        if (
+            shown &&
+            shown.x >= 0 &&
+            shown.x <= visibleSpan(st, "x") &&
+            shown.y >= 0 &&
+            shown.y + shown.height <= visibleSpan(st, "y")
+        ) {
+            return;
+        }
+        const at = selectionStart(geometry);
+        if (at) client.goToRect(at.page, at.rect, "nearest");
     }
 
     // The HTML overlay layer: a sibling above the canvas (and below the
@@ -2079,6 +2117,11 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             const resetDrag = committingEdit;
             committingEdit = false;
             selection.setState(state, resetDrag);
+            localGeometry = state.local;
+            if (followingMove && state.localChanged) {
+                followingMove = false;
+                followCaret(state.local);
+            }
             // Tint the selected column / row headers on the guide band. A cell
             // selection repaints no engine pixels (no new frame), so the band
             // learns of the selection here rather than through the per-frame guide.

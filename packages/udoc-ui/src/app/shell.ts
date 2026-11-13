@@ -961,15 +961,15 @@ export function mountUIShell(
         annotationHover: (annotation, clientX, clientY) => pageAnnotations.hover(annotation, clientX, clientY),
         annotationClick: (annotation, clientX, clientY) => pageAnnotations.click(annotation, clientX, clientY),
         insertText: (text) => {
-            if (store.getState().docType !== "spreadsheet") void insertSelectionText(text);
-            else if (typingCell()) editCellEntry({ text: { edit: { insertText: { text } } } });
+            if (store.getState().docType !== "spreadsheet") return insertSelectionText(text);
+            if (typingCell()) editCellEntry({ text: { edit: { insertText: { text } } } });
             else beginCellEntry("enter", text);
         },
         deleteText: (forward) => {
             // A workbook's grid takes Backspace and Delete as keys where no cell
             // is typed into (see `cellKey`).
-            if (store.getState().docType !== "spreadsheet") void deleteSelectionText(forward);
-            else if (typingCell()) editCellEntry({ text: { edit: { deleteText: { forward } } } });
+            if (store.getState().docType !== "spreadsheet") return deleteSelectionText(forward);
+            if (typingCell()) editCellEntry({ text: { edit: { deleteText: { forward } } } });
         },
         cellKey: (ev) => cellKey(ev),
         textKey: (ev) => textKey(ev),
