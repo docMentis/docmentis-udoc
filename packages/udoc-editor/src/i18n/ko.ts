@@ -64,6 +64,14 @@ export const ko: EditMessages = {
 
     // Commands
     "command.ruler": "눈금자",
+    "command.acceptRevisions": "적용",
+    "command.rejectRevisions": "거부",
+    "review.acceptThisChange": "이 변경 내용 적용",
+    "review.acceptAllShown": "표시된 모든 변경 내용 적용",
+    "review.acceptAll": "모든 변경 내용 적용",
+    "review.rejectThisChange": "이 변경 내용 거부",
+    "review.rejectAllShown": "표시된 모든 변경 내용 거부",
+    "review.rejectAll": "모든 변경 내용 거부",
     "command.createSlide": "새 슬라이드",
     "command.insertImage": "그림",
     "command.insertTable": "표",

@@ -64,6 +64,14 @@ export const ptBR: EditMessages = {
 
     // Commands
     "command.ruler": "Régua",
+    "command.acceptRevisions": "Aceitar",
+    "command.rejectRevisions": "Rejeitar",
+    "review.acceptThisChange": "Aceitar Esta Alteração",
+    "review.acceptAllShown": "Aceitar Todas as Alterações Mostradas",
+    "review.acceptAll": "Aceitar Todas as Alterações",
+    "review.rejectThisChange": "Rejeitar Esta Alteração",
+    "review.rejectAllShown": "Rejeitar Todas as Alterações Mostradas",
+    "review.rejectAll": "Rejeitar Todas as Alterações",
     "command.createSlide": "Novo Slide",
     "command.insertImage": "Imagem",
     "command.insertTable": "Tabela",

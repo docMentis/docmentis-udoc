@@ -3576,6 +3576,8 @@ const TEXT_KINDS: Record<TextSelectionEditType, "text"> = {
     clearParagraphProperties: "text",
     indentParagraphs: "text",
     applyParagraphStyle: "text",
+    acceptRevisions: "text",
+    rejectRevisions: "text",
 };
 const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     translateShapes: "shape",

@@ -118,6 +118,22 @@ export interface Messages extends UIMessages {
     // Commands
     /** Ruler */
     "command.ruler": string;
+    /** Accept */
+    "command.acceptRevisions": string;
+    /** Reject */
+    "command.rejectRevisions": string;
+    /** Accept This Change */
+    "review.acceptThisChange": string;
+    /** Accept All Changes Shown */
+    "review.acceptAllShown": string;
+    /** Accept All Changes */
+    "review.acceptAll": string;
+    /** Reject This Change */
+    "review.rejectThisChange": string;
+    /** Reject All Changes Shown */
+    "review.rejectAllShown": string;
+    /** Reject All Changes */
+    "review.rejectAll": string;
     /** New Slide */
     "command.createSlide": string;
     /** Image */

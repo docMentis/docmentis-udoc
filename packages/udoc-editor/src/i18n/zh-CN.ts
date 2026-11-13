@@ -64,6 +64,14 @@ export const zhCN: EditMessages = {
 
     // Commands
     "command.ruler": "标尺",
+    "command.acceptRevisions": "接受",
+    "command.rejectRevisions": "拒绝",
+    "review.acceptThisChange": "接受此修订",
+    "review.acceptAllShown": "接受所有显示的修订",
+    "review.acceptAll": "接受所有修订",
+    "review.rejectThisChange": "拒绝此修订",
+    "review.rejectAllShown": "拒绝所有显示的修订",
+    "review.rejectAll": "拒绝所有修订",
     "command.createSlide": "新建幻灯片",
     "command.insertImage": "图片",
     "command.insertTable": "表格",

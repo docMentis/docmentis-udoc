@@ -64,6 +64,14 @@ export const ja: EditMessages = {
 
     // Commands
     "command.ruler": "ルーラー",
+    "command.acceptRevisions": "承諾",
+    "command.rejectRevisions": "元に戻す",
+    "review.acceptThisChange": "この変更を承諾",
+    "review.acceptAllShown": "表示されているすべての変更を承諾",
+    "review.acceptAll": "すべての変更を承諾",
+    "review.rejectThisChange": "この変更を元に戻す",
+    "review.rejectAllShown": "表示されているすべての変更を元に戻す",
+    "review.rejectAll": "すべての変更を元に戻す",
     "command.createSlide": "新しいスライド",
     "command.insertImage": "画像",
     "command.insertTable": "表",

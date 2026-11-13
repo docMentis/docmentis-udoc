@@ -64,6 +64,14 @@ export const zhTW: EditMessages = {
 
     // Commands
     "command.ruler": "尺規",
+    "command.acceptRevisions": "接受",
+    "command.rejectRevisions": "拒絕",
+    "review.acceptThisChange": "接受此修訂",
+    "review.acceptAllShown": "接受所有顯示的修訂",
+    "review.acceptAll": "接受所有修訂",
+    "review.rejectThisChange": "拒絕此修訂",
+    "review.rejectAllShown": "拒絕所有顯示的修訂",
+    "review.rejectAll": "拒絕所有修訂",
     "command.createSlide": "新投影片",
     "command.insertImage": "圖片",
     "command.insertTable": "表格",

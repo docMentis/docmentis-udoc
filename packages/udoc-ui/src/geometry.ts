@@ -465,7 +465,9 @@ export type TextEditKind =
     | "patchParagraphProperties"
     | "clearParagraphProperties"
     | "indentParagraphs"
-    | "applyParagraphStyle";
+    | "applyParagraphStyle"
+    | "acceptRevisions"
+    | "rejectRevisions";
 
 /**
  * Whether `caps` allows the text edit `kind` — the text cousin of

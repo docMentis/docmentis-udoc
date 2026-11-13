@@ -64,6 +64,14 @@ export const ar: EditMessages = {
 
     // Commands
     "command.ruler": "المسطرة",
+    "command.acceptRevisions": "قبول",
+    "command.rejectRevisions": "رفض",
+    "review.acceptThisChange": "قبول هذا التغيير",
+    "review.acceptAllShown": "قبول كافة التغييرات المعروضة",
+    "review.acceptAll": "قبول كافة التغييرات",
+    "review.rejectThisChange": "رفض هذا التغيير",
+    "review.rejectAllShown": "رفض كافة التغييرات المعروضة",
+    "review.rejectAll": "رفض كافة التغييرات",
     "command.createSlide": "شريحة جديدة",
     "command.insertImage": "صورة",
     "command.insertTable": "جدول",

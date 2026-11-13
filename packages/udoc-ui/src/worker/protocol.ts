@@ -1842,6 +1842,12 @@ export type SelectionEdit =
      *  document's style list), clearing their direct formatting as Word does;
      *  `null` names none. */
     | { kind: "applyParagraphStyle"; style: string | null }
+    /** Word: accept the tracked changes the text selection touches — each
+     *  widened to its group, or the one beside a caret — where the
+     *  capabilities read grants `acceptRevisions`. */
+    | { kind: "acceptRevisions" }
+    /** Word: reject them, likewise. */
+    | { kind: "rejectRevisions" }
     /** Table: a structural edit on the table the selection sits in — insert or
      *  delete a row or column, merge or split the selected block. The tsify type
      *  itself, already in its wire form (`{ insertRows: { before, count } }`,

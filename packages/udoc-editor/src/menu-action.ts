@@ -4,6 +4,8 @@ import type { TableLook, TableSelectionEdit } from "@docmentis/udoc-wasm";
 import type { AlignEdge, EditAxis, MenuAction, TextParagraphAlign, ZOrder } from "@docmentis/udoc-ui/internal";
 import type { ClipboardOp } from "./context-menu.js";
 import type { CropAspect } from "./crop-box.js";
+import { settleRevisions } from "./review.js";
+import type { RevisionScope } from "./review.js";
 import { editState, updateEditState } from "./state.js";
 import type { TableSelectScope } from "./table.js";
 import { deleteTable, toggleTableLook } from "./table-format.js";
@@ -20,7 +22,8 @@ import type { EditTools } from "./tools.js";
  * `tableEdit` its rows over a table, as the Table tab's are, with `deleteTable`
  * the table itself and `toggleTableLook` one of its Style Options;
  * `tableProperties` opens the Table Properties dialog, which edit mode holds.
- * `cropAspect` is crop mode's Aspect Ratio dropdown.
+ * `cropAspect` is crop mode's Aspect Ratio dropdown. `settleRevisions` is the
+ * Review tab's Accept and Reject menus' rows.
  *
  * The first five are the paragraph menus' rows. `indent` carries a *step*, not
  * a measure: an indent is relative per paragraph — a selection spanning two
@@ -48,7 +51,8 @@ export type EditMenuAction =
     | { kind: "deleteTable" }
     | { kind: "toggleTableLook"; flag: keyof TableLook }
     | { kind: "tableProperties" }
-    | { kind: "cropAspect"; aspect: CropAspect };
+    | { kind: "cropAspect"; aspect: CropAspect }
+    | { kind: "settleRevisions"; accept: boolean; scope: RevisionScope };
 
 /** `action` as a shell {@link MenuAction}: carried as the extension's own. */
 export function editAction(action: EditMenuAction): MenuAction {
@@ -147,6 +151,9 @@ export function runEditMenuAction(tools: EditTools, action: EditMenuAction): voi
             break;
         case "cropAspect":
             crop.setAspect(action.aspect);
+            break;
+        case "settleRevisions":
+            void settleRevisions(host, action.accept, action.scope);
             break;
     }
 }

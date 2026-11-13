@@ -50,6 +50,12 @@ export const ICON_CLEAR_FORMAT = `<svg viewBox="0 -960 960 960" fill="currentCol
 /** `straighten` */
 export const ICON_RULER = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M168-240q-29.7 0-50.85-21.15Q96-282.3 96-312v-336q0-29.7 21.15-50.85Q138.3-720 168-720h624q29.7 0 50.85 21.15Q864-677.7 864-648v336q0 29.7-21.15 50.85Q821.7-240 792-240H168Zm0-72h624v-336H672v168h-72v-168h-84v168h-72v-168h-84v168h-72v-168H168v336Zm120-168h72-72Zm156 0h72-72Zm156 0h72-72Zm-120 0Z"/></svg>`;
 
+/** `check` */
+export const ICON_ACCEPT_REVISIONS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M389-267 195-460l51-52 143 143 325-324 51 51-376 375Z"/></svg>`;
+
+/** `close` */
+export const ICON_REJECT_REVISIONS = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="m291-240-51-51 189-189-189-189 51-51 189 189 189-189 51 51-189 189 189 189-51 51-189-189-189 189Z"/></svg>`;
+
 /** `team_dashboard` */
 export const ICON_CHANGE_LAYOUT = `<svg viewBox="0 -960 960 960" fill="currentColor"><path d="M216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm192-72v-240H216v240h192Zm72 0h264v-240H480v240ZM216-528h528v-216H216v216Z"/></svg>`;
 

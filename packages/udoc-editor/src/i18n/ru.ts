@@ -64,6 +64,14 @@ export const ru: EditMessages = {
 
     // Commands
     "command.ruler": "Линейка",
+    "command.acceptRevisions": "Принять",
+    "command.rejectRevisions": "Отклонить",
+    "review.acceptThisChange": "Принять это исправление",
+    "review.acceptAllShown": "Принять все отображаемые исправления",
+    "review.acceptAll": "Принять все исправления",
+    "review.rejectThisChange": "Отклонить это исправление",
+    "review.rejectAllShown": "Отклонить все отображаемые исправления",
+    "review.rejectAll": "Отклонить все исправления",
     "command.createSlide": "Создать слайд",
     "command.insertImage": "Изображение",
     "command.insertTable": "Таблица",

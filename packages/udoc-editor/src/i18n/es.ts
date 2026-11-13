@@ -64,6 +64,14 @@ export const es: EditMessages = {
 
     // Commands
     "command.ruler": "Regla",
+    "command.acceptRevisions": "Aceptar",
+    "command.rejectRevisions": "Rechazar",
+    "review.acceptThisChange": "Aceptar este cambio",
+    "review.acceptAllShown": "Aceptar todos los cambios mostrados",
+    "review.acceptAll": "Aceptar todos los cambios",
+    "review.rejectThisChange": "Rechazar este cambio",
+    "review.rejectAllShown": "Rechazar todos los cambios mostrados",
+    "review.rejectAll": "Rechazar todos los cambios",
     "command.createSlide": "Nueva diapositiva",
     "command.insertImage": "Imagen",
     "command.insertTable": "Tabla",

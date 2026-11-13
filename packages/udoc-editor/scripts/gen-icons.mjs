@@ -72,6 +72,10 @@ const ICONS = {
     // View tab
     ICON_RULER: "straighten",
 
+    // A word document's Review tab
+    ICON_ACCEPT_REVISIONS: "check",
+    ICON_REJECT_REVISIONS: "close",
+
     // A deck's Slide tab
     ICON_CHANGE_LAYOUT: "team_dashboard",
     ICON_INSERT_IMAGE: { mdi: "image-plus-outline" },

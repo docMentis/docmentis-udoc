@@ -107,7 +107,9 @@ export type EditCommandId =
     | "cropAspect"
     | "cropReset"
     | "cropCancel"
-    | "cropApply";
+    | "cropApply"
+    | "acceptRevisions"
+    | "rejectRevisions";
 
 /** A tab of edit mode's. */
 type EditTab = ToolbarTab<MessageKey>;
@@ -472,13 +474,20 @@ const PRESENTATION_TABS: readonly EditTab[] = [
     editViewTab("presentation"),
 ];
 
+/** A word document's Review tab in edit mode: view mode's, with Accept and
+ *  Reject after its markup controls, where Word's Changes group stands. */
+const WORDPROCESSING_REVIEW_TAB: EditTab = {
+    ...REVIEW_TAB,
+    commands: ["trackChanges", "revisionView", "markupOptions", "acceptRevisions", "rejectRevisions", "newComment"],
+};
+
 /** The wordprocessing strip: Text, then Table, then Shape for the drawings in
- *  its flow, then Review, view mode's, and its View last. */
+ *  its flow, then Review, and its View last. */
 const WORDPROCESSING_TABS: readonly EditTab[] = [
     WORDPROCESSING_TEXT_TAB,
     TABLE_TAB,
     WORDPROCESSING_SHAPE_TAB,
-    REVIEW_TAB,
+    WORDPROCESSING_REVIEW_TAB,
     editViewTab("wordprocessing"),
 ];
 

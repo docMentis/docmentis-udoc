@@ -64,6 +64,14 @@ export const de: EditMessages = {
 
     // Commands
     "command.ruler": "Lineal",
+    "command.acceptRevisions": "Annehmen",
+    "command.rejectRevisions": "Ablehnen",
+    "review.acceptThisChange": "Diese Änderung annehmen",
+    "review.acceptAllShown": "Alle angezeigten Änderungen annehmen",
+    "review.acceptAll": "Alle Änderungen annehmen",
+    "review.rejectThisChange": "Diese Änderung ablehnen",
+    "review.rejectAllShown": "Alle angezeigten Änderungen ablehnen",
+    "review.rejectAll": "Alle Änderungen ablehnen",
     "command.createSlide": "Neue Folie",
     "command.insertImage": "Bild",
     "command.insertTable": "Tabelle",
