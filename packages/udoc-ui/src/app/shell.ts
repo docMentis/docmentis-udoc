@@ -68,7 +68,7 @@ import type { CellKeyAction } from "./cell-keys.js";
 import { tabKeyAction } from "./tab-keys.js";
 import { createRightPanel } from "./components/RightPanel.js";
 import { createTether } from "./components/Tether.js";
-import { boxCorners } from "./components/affine.js";
+import { applyPoint, boxCorners } from "./components/affine.js";
 import { createStatusBar } from "./components/StatusBar.js";
 import { createSheetTabs } from "./components/SheetTabs.js";
 import { createRibbon } from "./components/Ribbon.js";
@@ -487,6 +487,7 @@ export interface UIShellOptions {
     showCommentsPanel?: boolean;
     showCommentTether?: boolean;
     showRevisionsPanel?: boolean;
+    showRevisionTether?: boolean;
     showCommentMarkup?: boolean;
     showThemeButton?: boolean;
     showFullscreenButton?: boolean;
@@ -849,7 +850,61 @@ export function mountUIShell(
                   },
               )
             : null;
-    const tethers = [searchTether, commentTether].filter((tether) => tether !== null);
+    const revisionTether =
+        (shellOptions.showRevisionTether ?? true)
+            ? createTether(
+                  {
+                      from: () => revisionMarkerRect(),
+                      to: () => rightPanel.revisionsSelectedCard(),
+                  },
+                  {
+                      kind: "revision",
+                      watch: (s) => ({
+                          selected: s.selectionRevisionIds,
+                          groups: s.revisionGroups,
+                          panel: s.activePanel,
+                      }),
+                      // The changes the selection is in.
+                      current: (s) => s.selectionRevisionIds.join() || null,
+                  },
+              )
+            : null;
+    const tethers = [searchTether, commentTether, revisionTether].filter((tether) => tether !== null);
+
+    // Where the revision tether starts: the marker, in the page's right margin,
+    // of the first change the selection is in, as the Revisions panel lists
+    // them — read again as the changes or the selection's change.
+    let revisionMarker: { page: number; at: { x: number; y: number } } | null = null;
+    let revisionMarkerGeneration = 0;
+    function revisionMarkerRect(): { rect: DOMRect; area: DOMRect } | null {
+        const m = revisionMarker && canvas.pageToViewport(revisionMarker.page);
+        if (!revisionMarker || !m) return null;
+        const point = applyPoint(m, revisionMarker.at.x, revisionMarker.at.y);
+        const area = canvas.documentArea();
+        return { rect: new DOMRect(area.left + point.x, area.top + point.y, 0, 0), area };
+    }
+    async function readRevisionMarker(): Promise<void> {
+        const generation = ++revisionMarkerGeneration;
+        const state = store.getState();
+        const ids = new Set(state.selectionRevisionIds);
+        const listed =
+            state.activePanel === "revisions"
+                ? state.revisionGroups?.find(({ group }) => group.ids.some((id) => ids.has(id)))
+                : undefined;
+        const page = listed?.page ?? null;
+        const markup = listed && page !== null ? await client.wordprocessing.revisionMarkup(0, page) : [];
+        if (generation !== revisionMarkerGeneration) return;
+        const key = listed?.group.ids.join();
+        const found = markup.find((m) => m.ids.join() === key);
+        revisionMarker = found && page !== null ? { page, at: found.marker } : null;
+        revisionTether?.schedule();
+    }
+    const unsubRevisionMarker = subscribeSelector(
+        store,
+        (s) => ({ selected: s.selectionRevisionIds, groups: s.revisionGroups, panel: s.activePanel }),
+        () => void readRevisionMarker().catch(() => undefined),
+        { equality: shallowEqual },
+    );
 
     // Where the comment tether starts, as a client rect: the open Word, Excel
     // or PowerPoint thread's marker — or the first highlight of a thread on a
@@ -3484,8 +3539,10 @@ export function mountUIShell(
             const generation = ++revisionsGeneration;
             void client.wordprocessing
                 .revisions()
-                .then((groups) => {
-                    if (generation === revisionsGeneration) store.dispatch({ type: "SET_REVISION_GROUPS", groups });
+                .then(({ groups, layout }) => {
+                    if (generation !== revisionsGeneration) return;
+                    takeLayout(layout);
+                    store.dispatch({ type: "SET_REVISION_GROUPS", groups });
                 })
                 .catch(() => {
                     // Worker gone or document closed — nothing to show.
@@ -4465,6 +4522,7 @@ export function mountUIShell(
         unsubRevisionsChanged();
         unsubRevisionsShown();
         unsubRevisionGroupMove();
+        unsubRevisionMarker();
         unsubSelectionRevisions();
         if (selectionRevisionsPending !== null) cancelAnimationFrame(selectionRevisionsPending);
         if (revisionsPending !== null) cancelAnimationFrame(revisionsPending);

@@ -3359,12 +3359,14 @@ export const uiStyles = css`
         gap: 12px;
         padding: 8px;
     }
-    .udoc-ui-root .udoc-comments-panel__page {
+    .udoc-ui-root .udoc-comments-panel__page,
+    .udoc-ui-root .udoc-revisions-panel__page {
         display: flex;
         flex-direction: column;
         gap: 6px;
     }
-    .udoc-ui-root .udoc-comments-panel__page-header {
+    .udoc-ui-root .udoc-comments-panel__page-header,
+    .udoc-ui-root .udoc-revisions-panel__page-header {
         display: flex;
         align-items: center;
         gap: 4px;
@@ -3379,18 +3381,22 @@ export const uiStyles = css`
         border-radius: 4px;
         cursor: pointer;
     }
-    .udoc-ui-root .udoc-comments-panel__page-header:hover {
+    .udoc-ui-root .udoc-comments-panel__page-header:hover,
+    .udoc-ui-root .udoc-revisions-panel__page-header:hover {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
-    .udoc-ui-root .udoc-comments-panel__page-header svg {
+    .udoc-ui-root .udoc-comments-panel__page-header svg,
+    .udoc-ui-root .udoc-revisions-panel__page-header svg {
         width: var(--udoc-caret);
         height: var(--udoc-caret);
         transition: transform 0.15s ease;
     }
-    .udoc-ui-root .udoc-comments-panel__page--collapsed .udoc-comments-panel__page-header svg {
+    .udoc-ui-root .udoc-comments-panel__page--collapsed .udoc-comments-panel__page-header svg,
+    .udoc-ui-root .udoc-revisions-panel__page--collapsed .udoc-revisions-panel__page-header svg {
         transform: rotate(-90deg);
     }
-    .udoc-ui-root .udoc-comments-panel__count {
+    .udoc-ui-root .udoc-comments-panel__count,
+    .udoc-ui-root .udoc-revisions-panel__count {
         margin-left: auto;
         font-weight: 400;
     }
@@ -3784,7 +3790,7 @@ export const uiStyles = css`
     .udoc-ui-root .udoc-revisions-panel {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 12px;
         padding: 8px;
     }
     .udoc-ui-root .udoc-revisions-panel__summary {
@@ -3798,6 +3804,10 @@ export const uiStyles = css`
         display: flex;
         flex-direction: column;
         gap: 6px;
+    }
+    /* A folded page's cards. */
+    .udoc-ui-root .udoc-revisions-panel__page--collapsed .udoc-revisions-panel__cards {
+        display: none;
     }
     /* A card's type, as a comment thread's. */
     .udoc-ui-root .udoc-revisions-panel__card {

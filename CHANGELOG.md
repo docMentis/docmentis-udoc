@@ -44,9 +44,11 @@ listed once, by package. Its major and minor version are those of the
   first, as Word's do.
 - A Word document's tracked changes are listed in the right panel's
   Revisions tab, opened by Revisions on the Review tab or in the toolbar's
-  menu: a card per change, as the Comments tab's, with its kind, author,
-  date and text, those the selection touches marked. Choosing a card
-  selects its change. `showRevisionsPanel: false` hides the tab. The
+  menu: a card per change under the page it is on, as the Comments tab's,
+  with its kind, author, date and text, those the selection touches marked
+  and joined by a line to a marker beside the change on its page. Choosing a
+  card selects its change. `showRevisionsPanel: false` hides the tab, and
+  `showRevisionTether: false` the line. The
   `translations` keys `rightPanel.revisions`, `toolbar.revisions`, those
   under `revisions.`, `command.previousRevisionGroup` and
   `command.nextRevisionGroup` are new.

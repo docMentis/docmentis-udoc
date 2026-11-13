@@ -51,6 +51,8 @@ import type {
     SearchContinuation,
     SearchMatchLocation,
     SearchOptions,
+    RevisionGroup,
+    RevisionMarkup,
     RevisionView,
     SheetLayoutMode,
     SlideShowInput,
@@ -1104,12 +1106,42 @@ export interface WordprocessingOutlineRequest {
 
 /**
  * Read a word document's tracked changes as a review pane lists them — one
- * `RevisionGroup` per change, in reading order. Replies with none when the
- * document has none (or no word document is open).
+ * `RevisionGroup` per change, in reading order, each with the page it is on —
+ * in a {@link RevisionGroupsReply}. None when the document has none (or no word
+ * document is open).
  */
 export interface RevisionGroupsRequest {
     type: "revisionGroups";
 }
+
+/** A {@link RevisionGroupsRequest}'s answer: the changes, and the layout after
+ *  them — a change's page lays the document out as far as it. */
+export interface RevisionGroupsReply {
+    groups: ListedRevisionGroup[];
+    layout: DocumentLayout;
+}
+
+/** A tracked change as the Revisions panel lists it: the change, and the page
+ *  it opens on, on the first plane — what its card is grouped under; null
+ *  where it stands on none. */
+export interface ListedRevisionGroup {
+    group: RevisionGroup;
+    page: number | null;
+}
+
+/**
+ * Read each tracked change's markup on page `page` of `plane` — the line boxes
+ * of the text it is on and the marker its card's tether lands on, page-local —
+ * of the pages composed. A pure read; none outside a word document.
+ */
+export interface RevisionMarkupRequest {
+    type: "revisionMarkup";
+    plane: number;
+    page: number;
+}
+
+/** A {@link RevisionMarkupRequest}'s answer. */
+export type RevisionMarkupReply = RevisionMarkup[];
 
 /**
  * Read the ids of the records of the tracked changes the selection touches —
@@ -2336,6 +2368,7 @@ export type WorkerRequest =
     | OutlineRequest
     | WordprocessingOutlineRequest
     | RevisionGroupsRequest
+    | RevisionMarkupRequest
     | SelectionRevisionIdsRequest
     | SearchRequest
     | SearchMatchSelectionRequest

@@ -58,7 +58,7 @@ import type {
     SearchContinuation,
     SearchMatchLocation,
     SearchOptions,
-    RevisionGroup,
+    RevisionMarkup,
     RevisionView,
     SheetLayoutMode,
     SlideMasterSummary,
@@ -76,6 +76,7 @@ import type {
     PageViewsReport,
     ResizeAck,
     OfficeCommentsReply,
+    RevisionGroupsReply,
     SearchReply,
     SelectedAnnotations,
     SelectionEdit,
@@ -1624,10 +1625,20 @@ export class WorkerClient {
         /**
          * The document's tracked changes as a review pane lists them, as they
          * stand now — one group per change, in reading order, with the ids
-         * settling it takes. An edit changes them, so read them again after
-         * one. A pure read.
+         * settling it takes and the page it opens on — and the layout after
+         * them: a change's page lays the document out as far as it. An edit
+         * changes them, so read them again after one.
          */
-        revisions: (): Promise<RevisionGroup[]> => this.#send({ type: "revisionGroups" }) as Promise<RevisionGroup[]>,
+        revisions: (): Promise<RevisionGroupsReply> =>
+            this.#send({ type: "revisionGroups" }) as Promise<RevisionGroupsReply>,
+
+        /**
+         * Each tracked change's markup on page `page` of `plane`, page-local, of
+         * the pages composed: the line boxes of the text it is on and the
+         * marker its card's tether lands on, by its records' ids. A pure read.
+         */
+        revisionMarkup: (plane: number, page: number): Promise<RevisionMarkup[]> =>
+            this.#send({ type: "revisionMarkup", plane, page }) as Promise<RevisionMarkup[]>,
 
         /**
          * The ids of the records of the tracked changes the selection touches

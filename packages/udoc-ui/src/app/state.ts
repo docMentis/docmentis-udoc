@@ -1,7 +1,13 @@
 import { EMPTY_SELECTION_CAPABILITIES } from "../geometry.js";
 import type { Peer, Scrollbars, SelectionCapabilities, Size } from "../geometry.js";
 import { defaultDpiForDocType } from "../worker/protocol.js";
-import type { OfficeComment, PageComments, SelectedAnnotations, SlideSectionRun } from "../worker/protocol.js";
+import type {
+    ListedRevisionGroup,
+    OfficeComment,
+    PageComments,
+    SelectedAnnotations,
+    SlideSectionRun,
+} from "../worker/protocol.js";
 import type { AnnotationStyles } from "./annotations.js";
 import type { MessageKey } from "./i18n/index.js";
 import type {
@@ -9,7 +15,6 @@ import type {
     Feature,
     FileFormat,
     PresentationPlaneKind,
-    RevisionGroup,
     RevisionView,
     SearchMatch,
     SheetLayoutMode,
@@ -788,7 +793,7 @@ export interface UIState {
      * while that panel is open and again whenever the document changes; null
      * until read.
      */
-    revisionGroups: readonly RevisionGroup[] | null;
+    revisionGroups: readonly ListedRevisionGroup[] | null;
     /** The ids of the records of the tracked changes the selection touches,
      *  read while the Revisions panel is open, which marks their cards. */
     selectionRevisionIds: readonly string[];

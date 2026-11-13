@@ -2,7 +2,6 @@ import type {
     Feature,
     FileFormat,
     PresentationPlaneKind,
-    RevisionGroup,
     RevisionView,
     SearchMatch,
     SheetLayoutMode,
@@ -13,7 +12,13 @@ import type {
     UDocSearchScope,
     UDocType,
 } from "@docmentis/udoc-wasm";
-import type { OfficeComment, PageComments, SelectedAnnotations, SlideSectionRun } from "../worker/protocol.js";
+import type {
+    ListedRevisionGroup,
+    OfficeComment,
+    PageComments,
+    SelectedAnnotations,
+    SlideSectionRun,
+} from "../worker/protocol.js";
 import type { AnnotationStyle } from "./annotations.js";
 import type { Peer, Scrollbars, SelectionCapabilities, Size } from "../geometry.js";
 import type {
@@ -304,7 +309,7 @@ export type Action =
     // A Word, Excel or PowerPoint document's comments, read
     | { type: "SET_OFFICE_COMMENTS"; comments: readonly OfficeComment[] }
     // A word document's tracked changes, read for the revisions panel
-    | { type: "SET_REVISION_GROUPS"; groups: readonly RevisionGroup[] }
+    | { type: "SET_REVISION_GROUPS"; groups: readonly ListedRevisionGroup[] }
     // The records of the changes the selection touches, read for the
     // revisions panel's marked cards
     | { type: "SET_SELECTION_REVISION_IDS"; ids: readonly string[] }

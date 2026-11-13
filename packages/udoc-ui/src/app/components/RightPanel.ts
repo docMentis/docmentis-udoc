@@ -207,7 +207,15 @@ export function createRightPanel(
         return card ? { ...card, clip: content.getBoundingClientRect() } : null;
     }
 
-    return { el, mount, searchActiveResult, commentsSelectedCard, destroy };
+    /** The marked change's card in the Revisions tab, where the revision
+     *  tether lands, and the tab's content it scrolls in, as client rects — or
+     *  null when the tab isn't showing one. */
+    function revisionsSelectedCard(): { rect: DOMRect; y: number; clip: DOMRect } | null {
+        const card = revisionsPanel?.selectedCard();
+        return card ? { ...card, clip: content.getBoundingClientRect() } : null;
+    }
+
+    return { el, mount, searchActiveResult, commentsSelectedCard, revisionsSelectedCard, destroy };
 }
 
 function selectRightPanel(state: UIState): RightPanelSlice {

@@ -33,6 +33,7 @@ import type {
     ExtensionRequest,
     FormWidget,
     HistoryOp,
+    ListedRevisionGroup,
     MediaFile,
     OfficeComment,
     PageAnnotations,
@@ -2241,10 +2242,21 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 break;
             }
             case "revisionGroups": {
-                // None with no open / non-word doc.
+                // A read that lays the document out as far as its changes'
+                // pages, with the layout after it, as `officeComments` is.
+                reply(id, {
+                    groups: session ? listedRevisionGroups(session) : [],
+                    layout: session
+                        ? layoutOf(session)
+                        : { firstUncomposedPage: 0, scrollSize: { width: 0, height: 0 } },
+                });
+                break;
+            }
+            case "revisionMarkup": {
+                // A read of the pages composed; none with no open / non-word doc.
                 reply(
                     id,
-                    safeRead(() => session?.wordprocessing.revisions() ?? [], []),
+                    safeRead(() => session?.wordprocessing.revisionMarkup(msg.plane, msg.page) ?? [], []),
                 );
                 break;
             }
@@ -3454,6 +3466,16 @@ function pageComments(s: WasmSession, pages: string[]): PageComments[] {
         });
     }
     return comments;
+}
+
+/** The tracked changes of the word document `s` holds, each with the page it
+ *  opens on — the document laid out as far as it. None for any other. */
+function listedRevisionGroups(s: WasmSession): ListedRevisionGroup[] {
+    if (s.docType() !== "wordprocessing") return [];
+    return safeRead(() => s.wordprocessing.revisions(), []).map((group) => ({
+        group,
+        page: safeRead(() => s.wordprocessing.revisionPage(0, group.ids), undefined) ?? null,
+    }));
 }
 
 /** The comments of the Word, Excel or PowerPoint document `s` holds, each with

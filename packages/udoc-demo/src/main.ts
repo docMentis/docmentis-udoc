@@ -89,6 +89,7 @@ const OPTION_GROUPS: OptionGroup[] = [
             { kind: "toggle", id: "showCommentTether", label: "Comment Tether", default: true },
             { kind: "toggle", id: "showCommentMarkup", label: "Comment Markup", default: true },
             { kind: "toggle", id: "showRevisionsPanel", label: "Revisions Panel", default: true },
+            { kind: "toggle", id: "showRevisionTether", label: "Revision Tether", default: true },
         ],
     },
     {

@@ -1,17 +1,19 @@
 // The right panel's Revisions tab: a word document's tracked changes, as Word
-// lists them beside the page — a card per change, in reading order, laid out
-// as the Comments tab's cards are: who made it and when, what kind of change it
-// is, and the text it is on, under the buttons edit mode offers on it (Accept
-// and Reject). Choosing a card selects that change and brings it into view, as
-// Next lands on one; the cards of the changes the selection touches are
-// marked, as the selected comment's card is.
+// lists them beside the page — grouped by page and a card per change, in
+// reading order, laid out as the Comments tab's groups and cards are: who made
+// it and when, what kind of change it is, and the text it is on, under the
+// buttons edit mode offers on it (Accept and Reject). Choosing a card selects
+// that change and brings it into view, as Next lands on one; the cards of the
+// changes the selection touches are marked, as the selected comment's card is.
 
 import type { Store } from "../../framework/index.js";
 import { subscribeSelector } from "../../framework/index.js";
 import type { RevisionGroup, RevisionGroupKind } from "@docmentis/udoc-wasm";
 import type { RevisionAction } from "../../extension.js";
+import type { ListedRevisionGroup } from "../../worker/protocol.js";
 import type { Action } from "../actions.js";
 import { parseDateTime } from "../annotations.js";
+import { ICON_CHEVRON_DOWN } from "../icons.js";
 import type { UIState } from "../state.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
 import { showDate } from "./CommentThread.js";
@@ -41,7 +43,7 @@ const KIND_LABEL: Record<RevisionGroupKind, MessageKey> = {
 };
 
 interface RevisionsPanelSlice {
-    groups: readonly RevisionGroup[] | null;
+    groups: readonly ListedRevisionGroup[] | null;
     selected: readonly string[];
     mode: string;
 }
@@ -61,13 +63,17 @@ export function createRevisionsPanel(i18n: I18n, callbacks: RevisionsPanelCallba
     el.className = "udoc-revisions-panel";
     el.setAttribute("aria-label", i18n.t("rightPanel.revisions"));
     let cards: Card[] = [];
+    /** The pages whose group is folded, by page — `null` for the changes on
+     *  none. */
+    const collapsed = new Set<number | null>();
     /** The card last scrolled to as marked, so it is scrolled into view once. */
     let revealed: Card | null = null;
     let last: RevisionsPanelSlice | null = null;
     let unsubscribe: (() => void) | null = null;
 
-    /** Lay out a card per change, with the buttons `actions` offers. */
-    function renderCards(groups: readonly RevisionGroup[] | null, actions: readonly RevisionAction[]): void {
+    /** Lay out a group per page and a card per change in it, with the buttons
+     *  `actions` offers. */
+    function renderCards(groups: readonly ListedRevisionGroup[] | null, actions: readonly RevisionAction[]): void {
         cards = [];
         revealed = null;
         if (groups === null) {
@@ -84,12 +90,52 @@ export function createRevisionsPanel(i18n: I18n, callbacks: RevisionsPanelCallba
         const summary = document.createElement("div");
         summary.className = "udoc-revisions-panel__summary";
         summary.textContent = i18n.t("revisions.count", { count: groups.length });
-        const list = document.createElement("div");
-        list.className = "udoc-revisions-panel__cards";
-        list.setAttribute("role", "list");
-        cards = groups.map((group) => ({ el: card(group, actions), group }));
-        list.append(...cards.map((c) => c.el));
-        el.replaceChildren(summary, list);
+        const pages = new Map<number | null, ListedRevisionGroup[]>();
+        for (const listed of groups) {
+            const on = pages.get(listed.page);
+            if (on) on.push(listed);
+            else pages.set(listed.page, [listed]);
+        }
+        const sections: HTMLElement[] = [];
+        for (const [page, listed] of pages) {
+            const section = document.createElement("div");
+            section.className = "udoc-revisions-panel__page";
+            const list = document.createElement("div");
+            list.className = "udoc-revisions-panel__cards";
+            list.setAttribute("role", "list");
+            const pageCards = listed.map(({ group }) => ({ el: card(group, actions), group }));
+            cards.push(...pageCards);
+            list.append(...pageCards.map((c) => c.el));
+            if (page !== null) section.append(pageHeader(page, listed.length, section));
+            section.append(list);
+            section.classList.toggle("udoc-revisions-panel__page--collapsed", collapsed.has(page));
+            sections.push(section);
+        }
+        el.replaceChildren(summary, ...sections);
+    }
+
+    /** Page `page`'s header — its number and how many changes stand on it —
+     *  folding `section`, as a comment page's does. */
+    function pageHeader(page: number, count: number, section: HTMLElement): HTMLElement {
+        const header = document.createElement("button");
+        header.type = "button";
+        header.className = "udoc-revisions-panel__page-header";
+        header.innerHTML = ICON_CHEVRON_DOWN;
+        const label = document.createElement("span");
+        label.textContent = i18n.t("comments.page", { page: page + 1 });
+        const counted = document.createElement("span");
+        counted.className = "udoc-revisions-panel__count";
+        counted.textContent = String(count);
+        header.append(label, counted);
+        header.setAttribute("aria-expanded", String(!collapsed.has(page)));
+        header.addEventListener("click", () => {
+            if (collapsed.has(page)) collapsed.delete(page);
+            else collapsed.add(page);
+            const folded = collapsed.has(page);
+            section.classList.toggle("udoc-revisions-panel__page--collapsed", folded);
+            header.setAttribute("aria-expanded", String(!folded));
+        });
+        return header;
     }
 
     /** `group`'s card: its author and date over its kind and its text, then
@@ -174,13 +220,23 @@ export function createRevisionsPanel(i18n: I18n, callbacks: RevisionsPanelCallba
         });
     }
 
+    /** The marked card — the first change the selection is in — and the
+     *  height the tether lands on it at, its header's middle, as client
+     *  rects; null with none marked. */
+    function selectedCard(): { rect: DOMRect; y: number } | null {
+        const marked = el.querySelector(".udoc-revisions-panel__card--selected");
+        if (!marked) return null;
+        const header = (marked.querySelector(".udoc-comment__header") ?? marked).getBoundingClientRect();
+        return { rect: marked.getBoundingClientRect(), y: header.top + header.height / 2 };
+    }
+
     function destroy(): void {
         unsubscribe?.();
         unsubscribe = null;
         el.remove();
     }
 
-    return { el, mount, destroy };
+    return { el, mount, selectedCard, destroy };
 }
 
 export type RevisionsPanelComponent = ReturnType<typeof createRevisionsPanel>;
