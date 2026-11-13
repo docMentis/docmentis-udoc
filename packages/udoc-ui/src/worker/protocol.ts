@@ -1131,8 +1131,8 @@ export interface ListedRevisionGroup {
 
 /**
  * Read each tracked change's markup on page `page` of `plane` — the line boxes
- * of the text it is on and the marker its card's tether lands on, page-local —
- * of the pages composed. A pure read; none outside a word document.
+ * of the text it is on, page-local, where its card's tether lands — of the
+ * pages composed. A pure read; none outside a word document.
  */
 export interface RevisionMarkupRequest {
     type: "revisionMarkup";

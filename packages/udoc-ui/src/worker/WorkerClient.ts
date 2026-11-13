@@ -1634,8 +1634,8 @@ export class WorkerClient {
 
         /**
          * Each tracked change's markup on page `page` of `plane`, page-local, of
-         * the pages composed: the line boxes of the text it is on and the
-         * marker its card's tether lands on, by its records' ids. A pure read.
+         * the pages composed: the line boxes of the text it is on, where its
+         * card's tether lands, by its records' ids. A pure read.
          */
         revisionMarkup: (plane: number, page: number): Promise<RevisionMarkup[]> =>
             this.#send({ type: "revisionMarkup", plane, page }) as Promise<RevisionMarkup[]>,

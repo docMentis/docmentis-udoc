@@ -854,7 +854,7 @@ export function mountUIShell(
         (shellOptions.showRevisionTether ?? true)
             ? createTether(
                   {
-                      from: () => revisionMarkerRect(),
+                      from: () => revisionStartRect(),
                       to: () => rightPanel.revisionsSelectedCard(),
                   },
                   {
@@ -871,20 +871,21 @@ export function mountUIShell(
             : null;
     const tethers = [searchTether, commentTether, revisionTether].filter((tether) => tether !== null);
 
-    // Where the revision tether starts: the marker, in the page's right margin,
-    // of the first change the selection is in, as the Revisions panel lists
-    // them — read again as the changes or the selection's change.
-    let revisionMarker: { page: number; at: { x: number; y: number } } | null = null;
-    let revisionMarkerGeneration = 0;
-    function revisionMarkerRect(): { rect: DOMRect; area: DOMRect } | null {
-        const m = revisionMarker && canvas.pageToViewport(revisionMarker.page);
-        if (!revisionMarker || !m) return null;
-        const point = applyPoint(m, revisionMarker.at.x, revisionMarker.at.y);
+    // Where the revision tether starts: the top-left corner of the text of
+    // the first change the selection is in, as the Revisions panel lists them
+    // — its first line box's — read again as the changes or the selection's
+    // change. A change wears no marker of its own, as a comment does.
+    let revisionStart: { page: number; at: { x: number; y: number } } | null = null;
+    let revisionStartGeneration = 0;
+    function revisionStartRect(): { rect: DOMRect; area: DOMRect } | null {
+        const m = revisionStart && canvas.pageToViewport(revisionStart.page);
+        if (!revisionStart || !m) return null;
+        const point = applyPoint(m, revisionStart.at.x, revisionStart.at.y);
         const area = canvas.documentArea();
         return { rect: new DOMRect(area.left + point.x, area.top + point.y, 0, 0), area };
     }
-    async function readRevisionMarker(): Promise<void> {
-        const generation = ++revisionMarkerGeneration;
+    async function readRevisionStart(): Promise<void> {
+        const generation = ++revisionStartGeneration;
         const state = store.getState();
         const ids = new Set(state.selectionRevisionIds);
         const listed =
@@ -893,16 +894,18 @@ export function mountUIShell(
                 : undefined;
         const page = listed?.page ?? null;
         const markup = listed && page !== null ? await client.wordprocessing.revisionMarkup(0, page) : [];
-        if (generation !== revisionMarkerGeneration) return;
+        if (generation !== revisionStartGeneration) return;
         const key = listed?.group.ids.join();
-        const found = markup.find((m) => m.ids.join() === key);
-        revisionMarker = found && page !== null ? { page, at: found.marker } : null;
+        // The first line box's corners run top-left, top-right, bottom-right,
+        // bottom-left.
+        const corner = markup.find((m) => m.ids.join() === key)?.quads[0]?.points[0];
+        revisionStart = corner && page !== null ? { page, at: corner } : null;
         revisionTether?.schedule();
     }
-    const unsubRevisionMarker = subscribeSelector(
+    const unsubRevisionStart = subscribeSelector(
         store,
         (s) => ({ selected: s.selectionRevisionIds, groups: s.revisionGroups, panel: s.activePanel }),
-        () => void readRevisionMarker().catch(() => undefined),
+        () => void readRevisionStart().catch(() => undefined),
         { equality: shallowEqual },
     );
 
@@ -3589,10 +3592,27 @@ export function mountUIShell(
     const unsubSelectionRevisions = client.onSelection(refreshSelectionRevisionIds);
 
     // Select a change the Revisions panel lists and bring it into view with
-    // the least scroll, as Next lands on one.
+    // the least scroll, as Next lands on one — or, where the view hides all
+    // of it and the selection on it draws nothing, a deletion in Simple
+    // Markup, where its markup stands on its page.
     async function chooseRevisionGroup(group: RevisionGroup): Promise<void> {
-        const landing = selectionStart(await client.wordprocessing.selectRevisionGroup(group.ids));
+        const landing =
+            selectionStart(await client.wordprocessing.selectRevisionGroup(group.ids)) ??
+            (await revisionLanding(group));
         if (landing) client.goToRect(landing.page, landing.rect, "nearest");
+    }
+
+    // The box around the first of `group`'s markup on the page its card is
+    // listed under; null where it has none there.
+    async function revisionLanding(
+        group: RevisionGroup,
+    ): Promise<{ page: number; rect: { x0: number; y0: number; x1: number; y1: number } } | null> {
+        const key = group.ids.join();
+        const page = store.getState().revisionGroups?.find((listed) => listed.group.ids.join() === key)?.page;
+        if (page === undefined || page === null) return null;
+        const markup = await client.wordprocessing.revisionMarkup(0, page);
+        const quad = markup.find((m) => m.ids.join() === key)?.quads[0];
+        return quad ? { page: quad.page, rect: quadBounds(quad) } : null;
     }
 
     // The Review tab's Next and Previous: move the selection to the tracked
@@ -4522,7 +4542,7 @@ export function mountUIShell(
         unsubRevisionsChanged();
         unsubRevisionsShown();
         unsubRevisionGroupMove();
-        unsubRevisionMarker();
+        unsubRevisionStart();
         unsubSelectionRevisions();
         if (selectionRevisionsPending !== null) cancelAnimationFrame(selectionRevisionsPending);
         if (revisionsPending !== null) cancelAnimationFrame(revisionsPending);
