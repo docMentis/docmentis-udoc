@@ -5,6 +5,8 @@
 // buttons edit mode offers on it (Accept and Reject). Choosing a card selects
 // that change and brings it into view, as Next lands on one; the cards of the
 // changes the selection touches are marked, as the selected comment's card is.
+// Choosing again the card of the one change the selection touches clears the
+// selection, as choosing an open thread's card again closes it.
 
 import type { Store } from "../../framework/index.js";
 import { subscribeSelector } from "../../framework/index.js";
@@ -22,6 +24,9 @@ import { createButton } from "./controls.js";
 export interface RevisionsPanelCallbacks {
     /** Select `group` and bring it into view. */
     onChoose: (group: RevisionGroup) => void;
+    /** Clear the selection: the card of the one change it touches chosen
+     *  again. */
+    onDeselect: () => void;
     /** The buttons each card offers on its change in `state` — edit mode's
      *  Accept and Reject — or none. */
     actions: (state: UIState) => readonly RevisionAction[];
@@ -180,7 +185,12 @@ export function createRevisionsPanel(i18n: I18n, callbacks: RevisionsPanelCallba
             entry.append(row);
         }
         item.append(entry);
-        const choose = () => callbacks.onChoose(group);
+        // Chosen again, the change the selection alone touches lets it go.
+        const choose = () => {
+            const selected = last?.selected ?? [];
+            if (selected.length > 0 && selected.every((id) => group.ids.includes(id))) callbacks.onDeselect();
+            else callbacks.onChoose(group);
+        };
         item.addEventListener("click", choose);
         item.addEventListener("keydown", (ev) => {
             if (ev.target !== item || (ev.key !== "Enter" && ev.key !== " ")) return;

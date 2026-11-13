@@ -47,7 +47,8 @@ listed once, by package. Its major and minor version are those of the
   menu: a card per change under the page it is on, as the Comments tab's,
   with its kind, author, date and text, those the selection touches marked
   and joined by a line to the start of its text. Choosing a
-  card selects its change. `showRevisionsPanel: false` hides the tab, and
+  card selects its change, and choosing the selected card again clears the
+  selection. `showRevisionsPanel: false` hides the tab, and
   `showRevisionTether: false` the line. The
   `translations` keys `rightPanel.revisions`, `toolbar.revisions`, those
   under `revisions.`, `command.previousRevisionGroup` and

@@ -1595,6 +1595,7 @@ export function mountUIShell(
         },
         {
             onChoose: (group) => void chooseRevisionGroup(group),
+            onDeselect: () => clearSelection(),
             // Edit mode's buttons, the extension's: a viewer settles nothing.
             actions: (state) => (extension && state.mode !== VIEW_MODE ? extension.revisionActions(state) : []),
         },
