@@ -13,10 +13,18 @@ export interface Messages extends UIMessages {
     "mode.edit": string;
     /** Review */
     "mode.review": string;
+    /** Read and comment */
+    "mode.viewDescription": string;
+    /** Edit the document directly */
+    "mode.editDescription": string;
+    /** Track every change you make */
+    "mode.reviewDescription": string;
 
     // Mode switcher
     /** Editor Mode */
     "modeSwitch.label": string;
+    /** Editor Mode: {mode} */
+    "modeSwitch.current": string;
 
     // Page controls
     /** Page {page} controls */

@@ -6,9 +6,13 @@ export const ru: EditMessages = {
     "mode.view": "Просмотр",
     "mode.edit": "Редактирование",
     "mode.review": "Рецензирование",
+    "mode.viewDescription": "Чтение и комментирование",
+    "mode.editDescription": "Редактирование документа напрямую",
+    "mode.reviewDescription": "Отслеживание всех ваших изменений",
 
     // Mode switcher
     "modeSwitch.label": "Режим редактора",
+    "modeSwitch.current": "Режим редактора: {mode}",
 
     // Page controls
     "pageControls.label": "Элементы управления страницей {page}",

@@ -126,14 +126,24 @@ export function alignMenuToBounds(trigger: HTMLElement, panel: HTMLElement): voi
     if (overflowsRight) panel.classList.add("udoc-menu--end");
 }
 
-/** Build a standard menu item: `[icon] label`, the label alone for no icon. */
-export function createMenuItem(opts: { icon?: string | undefined; text: string; role?: string }): HTMLButtonElement {
+/** Build a standard menu item: `[icon] label`, the label alone for no icon,
+ *  and a line under the label saying more where `description` does. */
+export function createMenuItem(opts: {
+    icon?: string | undefined;
+    text: string;
+    description?: string;
+    role?: string;
+}): HTMLButtonElement {
     const item = document.createElement("button");
     item.type = "button";
     item.className = "udoc-menu__item";
     if (opts.role) item.setAttribute("role", opts.role);
     const icon = opts.icon ? `<span class="udoc-menu__item-icon">${opts.icon}</span>` : "";
-    item.innerHTML = `${icon}<span class="udoc-menu__item-label">${opts.text}</span>`;
+    const label = `<span class="udoc-menu__item-label">${opts.text}</span>`;
+    item.innerHTML = opts.description
+        ? `${icon}<span class="udoc-menu__item-text">${label}` +
+          `<span class="udoc-menu__item-description">${opts.description}</span></span>`
+        : `${icon}${label}`;
     return item;
 }
 

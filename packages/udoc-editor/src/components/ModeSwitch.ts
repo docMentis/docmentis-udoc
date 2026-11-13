@@ -2,15 +2,16 @@ import { createDropdownButton, createMenuItem, subscribeSelector } from "@docmen
 import type { Action, DropdownButton, Feature, Store, UIState } from "@docmentis/udoc-ui/internal";
 import type { UDocType } from "@docmentis/udoc-wasm";
 import type { I18n, MessageKey } from "../i18n/index.js";
+import { ICON_MODE_EDIT, ICON_MODE_REVIEW, ICON_MODE_VIEW } from "../icons.js";
 import { modeEntitled, modeOpen } from "../mode.js";
 import type { EditorMode } from "../mode.js";
 import { editState } from "../state.js";
 
-/** Human labels for each mode. */
-const MODE_LABELS: Record<EditorMode, MessageKey> = {
-    view: "mode.view",
-    edit: "mode.edit",
-    review: "mode.review",
+/** Each mode as the switch shows it: its icon, its name, and what it's for. */
+const MODES: Record<EditorMode, { icon: string; label: MessageKey; description: MessageKey }> = {
+    view: { icon: ICON_MODE_VIEW, label: "mode.view", description: "mode.viewDescription" },
+    edit: { icon: ICON_MODE_EDIT, label: "mode.edit", description: "mode.editDescription" },
+    review: { icon: ICON_MODE_REVIEW, label: "mode.review", description: "mode.reviewDescription" },
 };
 
 interface ModeSwitchSlice {
@@ -71,12 +72,25 @@ export function createModeSwitch(i18n: I18n) {
 
     function buildDropdown(slice: ModeSwitchSlice): void {
         clearDropdown();
+        // The current mode's icon, named in the tooltip — one width whatever
+        // the mode, so switching doesn't move the tab strip beside it.
+        const current = MODES[slice.mode];
         dropdown = createDropdownButton(
-            { text: i18n.t(MODE_LABELS[slice.mode]), label: i18n.t("modeSwitch.label"), field: true },
+            {
+                icon: current.icon,
+                label: i18n.t("modeSwitch.current", { mode: i18n.t(current.label) }),
+                field: true,
+            },
             { menuLabel: i18n.t("modeSwitch.label"), menuRole: "listbox" },
         );
         for (const mode of offeredModes(slice)) {
-            const item = createMenuItem({ text: i18n.t(MODE_LABELS[mode]), role: "option" });
+            const { icon, label, description } = MODES[mode];
+            const item = createMenuItem({
+                icon,
+                text: i18n.t(label),
+                description: i18n.t(description),
+                role: "option",
+            });
             const active = mode === slice.mode;
             item.classList.toggle("udoc-menu__item--selected", active);
             item.setAttribute("aria-selected", String(active));

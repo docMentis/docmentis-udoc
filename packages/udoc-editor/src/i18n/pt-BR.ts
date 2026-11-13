@@ -6,9 +6,13 @@ export const ptBR: EditMessages = {
     "mode.view": "Visualização",
     "mode.edit": "Edição",
     "mode.review": "Revisão",
+    "mode.viewDescription": "Ler e comentar",
+    "mode.editDescription": "Editar o documento diretamente",
+    "mode.reviewDescription": "Controlar cada alteração que você fizer",
 
     // Mode switcher
     "modeSwitch.label": "Modo do Editor",
+    "modeSwitch.current": "Modo do Editor: {mode}",
 
     // Page controls
     "pageControls.label": "Controles da página {page}",

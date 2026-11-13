@@ -6,9 +6,13 @@ export const zhCN: EditMessages = {
     "mode.view": "查看",
     "mode.edit": "编辑",
     "mode.review": "审阅",
+    "mode.viewDescription": "阅读和批注",
+    "mode.editDescription": "直接编辑文档",
+    "mode.reviewDescription": "记录您的每一处更改",
 
     // Mode switcher
     "modeSwitch.label": "编辑器模式",
+    "modeSwitch.current": "编辑器模式：{mode}",
 
     // Page controls
     "pageControls.label": "第 {page} 页控件",

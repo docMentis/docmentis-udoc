@@ -6,9 +6,13 @@ export const zhTW: EditMessages = {
     "mode.view": "檢視",
     "mode.edit": "編輯",
     "mode.review": "校閱",
+    "mode.viewDescription": "閱讀及註解",
+    "mode.editDescription": "直接編輯文件",
+    "mode.reviewDescription": "追蹤您的每一項變更",
 
     // Mode switcher
     "modeSwitch.label": "編輯器模式",
+    "modeSwitch.current": "編輯器模式：{mode}",
 
     // Page controls
     "pageControls.label": "第 {page} 頁控制項",

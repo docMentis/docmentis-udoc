@@ -72,6 +72,11 @@ const ICONS = {
     // View tab
     ICON_RULER: "straighten",
 
+    // The mode switch: each mode, the switch wearing the current one's
+    ICON_MODE_VIEW: "visibility",
+    ICON_MODE_EDIT: "edit",
+    ICON_MODE_REVIEW: "edit_document",
+
     // A word document's Review tab
     ICON_ACCEPT_REVISIONS: "check",
     ICON_REJECT_REVISIONS: "close",

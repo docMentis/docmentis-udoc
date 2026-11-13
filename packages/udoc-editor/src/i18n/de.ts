@@ -6,9 +6,13 @@ export const de: EditMessages = {
     "mode.view": "Anzeigen",
     "mode.edit": "Bearbeiten",
     "mode.review": "Überprüfen",
+    "mode.viewDescription": "Lesen und kommentieren",
+    "mode.editDescription": "Das Dokument direkt bearbeiten",
+    "mode.reviewDescription": "Jede Ihrer Änderungen nachverfolgen",
 
     // Mode switcher
     "modeSwitch.label": "Editormodus",
+    "modeSwitch.current": "Editormodus: {mode}",
 
     // Page controls
     "pageControls.label": "Steuerelemente für Seite {page}",

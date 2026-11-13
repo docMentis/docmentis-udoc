@@ -7,9 +7,13 @@ export const en: EditMessages = {
     "mode.view": "View",
     "mode.edit": "Edit",
     "mode.review": "Review",
+    "mode.viewDescription": "Read and comment",
+    "mode.editDescription": "Edit the document directly",
+    "mode.reviewDescription": "Track every change you make",
 
     // Mode switcher
     "modeSwitch.label": "Editor Mode",
+    "modeSwitch.current": "Editor Mode: {mode}",
 
     // Page controls
     "pageControls.label": "Page {page} controls",

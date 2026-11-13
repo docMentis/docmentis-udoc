@@ -6,9 +6,13 @@ export const ar: EditMessages = {
     "mode.view": "عرض",
     "mode.edit": "تحرير",
     "mode.review": "مراجعة",
+    "mode.viewDescription": "القراءة والتعليق",
+    "mode.editDescription": "تحرير المستند مباشرةً",
+    "mode.reviewDescription": "تعقب كل تغيير تجريه",
 
     // Mode switcher
     "modeSwitch.label": "وضع المحرر",
+    "modeSwitch.current": "وضع المحرر: {mode}",
 
     // Page controls
     "pageControls.label": "عناصر التحكم في الصفحة {page}",

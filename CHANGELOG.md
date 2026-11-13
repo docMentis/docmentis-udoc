@@ -101,6 +101,12 @@ listed once, by package. Its major and minor version are those of the
   text that spans sections, made here or in Word, is highlighted through each
   section.
 
+- udoc-editor's mode switch shows the current mode's icon, named in its
+  tooltip, where it showed the mode's name, so the tabs beside it stay put
+  as the mode changes. Its menu says what each mode is for under its name.
+  The `translations` keys `modeSwitch.current`, `mode.viewDescription`,
+  `mode.editDescription` and `mode.reviewDescription` are new.
+
 - On a Word document's Review tab, Show Markup is now Markup Options, an
   icon, and New Comment is named beside its icon.
 

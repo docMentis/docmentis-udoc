@@ -1686,6 +1686,20 @@ export const uiStyles = css`
         width: var(--udoc-btn-glyph);
         height: var(--udoc-btn-glyph);
     }
+    /* A row's label over a line saying more, in the secondary text colour, as
+   a card's date and a change's kind are. The icon stays level with the label. */
+    .udoc-ui-root .udoc-menu__item:has(.udoc-menu__item-text) {
+        align-items: flex-start;
+    }
+    .udoc-ui-root .udoc-menu__item-text {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .udoc-ui-root .udoc-menu__item-description {
+        font-size: 11px;
+        color: var(--udoc-color-on-surface-variant);
+    }
 
     /* Toolbar center section (inline controls when floating toolbar is hidden) */
     .udoc-ui-root .udoc-toolbar__center {

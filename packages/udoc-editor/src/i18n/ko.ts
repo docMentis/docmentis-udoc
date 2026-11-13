@@ -6,9 +6,13 @@ export const ko: EditMessages = {
     "mode.view": "보기",
     "mode.edit": "편집",
     "mode.review": "검토",
+    "mode.viewDescription": "읽기 및 메모",
+    "mode.editDescription": "문서를 직접 편집",
+    "mode.reviewDescription": "모든 변경 내용 추적",
 
     // Mode switcher
     "modeSwitch.label": "편집기 모드",
+    "modeSwitch.current": "편집기 모드: {mode}",
 
     // Page controls
     "pageControls.label": "{page}페이지 컨트롤",

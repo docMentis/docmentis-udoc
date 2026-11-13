@@ -6,9 +6,13 @@ export const ja: EditMessages = {
     "mode.view": "表示",
     "mode.edit": "編集",
     "mode.review": "校閲",
+    "mode.viewDescription": "閲覧とコメント",
+    "mode.editDescription": "文書を直接編集",
+    "mode.reviewDescription": "すべての変更を記録",
 
     // Mode switcher
     "modeSwitch.label": "エディターモード",
+    "modeSwitch.current": "エディターモード: {mode}",
 
     // Page controls
     "pageControls.label": "{page}ページの操作",
