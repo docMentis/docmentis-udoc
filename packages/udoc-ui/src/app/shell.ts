@@ -814,16 +814,19 @@ export function mountUIShell(
     });
 
     // The tethers, each unless the host leaves it out: the line from the
-    // current search match to its result in the Search tab, and from the open
-    // comment to its card in the Comments tab. Their ends are read when they're
+    // current search match to its result in the Search tab, from the open
+    // comment to its card in the Comments tab, and from the change the
+    // selection is in to its card in the Revisions tab. A match's and a
+    // change's start at the top-left corner of their text, a comment's at the
+    // middle of its marker's right edge. Their ends are read when they're
     // drawn, a frame on, once the canvas and the panel below exist.
     const searchTether =
         (shellOptions.showSearchTether ?? true)
             ? createTether(
                   {
                       from: () => {
-                          const rect = canvas.searchHighlight();
-                          return rect && { rect, area: canvas.documentArea() };
+                          const highlight = canvas.searchHighlight();
+                          return highlight && { ...highlight, area: canvas.documentArea() };
                       },
                       to: () => rightPanel.searchActiveResult(),
                   },
@@ -840,7 +843,8 @@ export function mountUIShell(
                   {
                       from: () => {
                           const rect = openCommentRect();
-                          return rect && { rect, area: canvas.documentArea() };
+                          const start = rect && { x: rect.right, y: rect.top + rect.height / 2 };
+                          return rect && start && { rect, start, area: canvas.documentArea() };
                       },
                       to: () => rightPanel.commentsSelectedCard(),
                   },
@@ -865,7 +869,7 @@ export function mountUIShell(
         (shellOptions.showRevisionTether ?? true)
             ? createTether(
                   {
-                      from: () => revisionStartRect(),
+                      from: () => revisionTetherFrom(),
                       to: () => rightPanel.revisionsSelectedCard(),
                   },
                   {
@@ -884,16 +888,30 @@ export function mountUIShell(
 
     // Where the revision tether starts: the top-left corner of the text of
     // the first change the selection is in, as the Revisions panel lists them
-    // — its first line box's — read again as the changes or the selection's
-    // change. A change wears no marker of its own, as a comment does.
-    let revisionStart: { page: number; at: { x: number; y: number } } | null = null;
+    // — its first line box's, which the line shows while any of it does — read
+    // again as the changes or the selection's change. A change wears no marker
+    // of its own, as a comment does.
+    let revisionStart: { page: number; corners: readonly { x: number; y: number }[] } | null = null;
     let revisionStartGeneration = 0;
-    function revisionStartRect(): { rect: DOMRect; area: DOMRect } | null {
+    function revisionTetherFrom(): {
+        rect: DOMRect;
+        start: { x: number; y: number };
+        area: DOMRect;
+    } | null {
         const m = revisionStart && canvas.pageToViewport(revisionStart.page);
         if (!revisionStart || !m) return null;
-        const point = applyPoint(m, revisionStart.at.x, revisionStart.at.y);
         const area = canvas.documentArea();
-        return { rect: new DOMRect(area.left + point.x, area.top + point.y, 0, 0), area };
+        const corners = revisionStart.corners.map((p) => {
+            const v = applyPoint(m, p.x, p.y);
+            return { x: area.left + v.x, y: area.top + v.y };
+        });
+        const start = corners[0];
+        if (!start) return null;
+        const xs = corners.map((c) => c.x);
+        const ys = corners.map((c) => c.y);
+        const left = Math.min(...xs);
+        const top = Math.min(...ys);
+        return { rect: new DOMRect(left, top, Math.max(...xs) - left, Math.max(...ys) - top), start, area };
     }
     async function readRevisionStart(): Promise<void> {
         const generation = ++revisionStartGeneration;
@@ -909,8 +927,8 @@ export function mountUIShell(
         const key = listed?.group.ids.join();
         // The first line box's corners run top-left, top-right, bottom-right,
         // bottom-left.
-        const corner = markup.find((m) => m.ids.join() === key)?.quads[0]?.points[0];
-        revisionStart = corner && page !== null ? { page, at: corner } : null;
+        const corners = markup.find((m) => m.ids.join() === key)?.quads[0]?.points;
+        revisionStart = corners && corners.length > 0 && page !== null ? { page, corners } : null;
         revisionTether?.schedule();
     }
     const unsubRevisionStart = subscribeSelector(

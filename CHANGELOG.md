@@ -102,6 +102,12 @@ listed once, by package. Its major and minor version are those of the
 - On a Word document's Review tab, Show Markup is now Markup Options, an
   icon, and New Comment is named beside its icon.
 
+- The line from the current search match to its result in the Search tab
+  starts at the top-left corner of the match, as a tracked change's line
+  does. The search, comment and tracked change lines show as long as any of
+  what they start from is in view, starting at the view's edge where it is
+  cut off, as at the top of the view.
+
 - A Word document with tracked changes opens in Simple Markup, the final
   version with a bar beside each change, where it opened in All Markup,
   unless it was saved with markup off.

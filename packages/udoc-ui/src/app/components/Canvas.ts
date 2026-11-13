@@ -4296,9 +4296,21 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
          *  it isn't on screen — for an overlay anchored to a point on the page. */
         pageToViewport: (page: number) => selection.pageToViewport(page),
         /** The current search match's first highlight drawn, as a client rect,
-         *  or null when none of the match is drawn. It may lie outside the
+         *  and its first corner — the top-left of its text — as a client point;
+         *  null when none of the match is drawn. It may lie outside the
          *  {@link documentArea}, on a page drawn but scrolled out of sight. */
-        searchHighlight: (): DOMRect | null => search.activeHighlight()?.getBoundingClientRect() ?? null,
+        searchHighlight: (): { rect: DOMRect; start: DOMPoint } | null => {
+            const highlight = search.activeHighlight();
+            if (!highlight) return null;
+            const rect = highlight.getBoundingClientRect();
+            const corner = highlight.points.length > 0 ? highlight.points.getItem(0) : null;
+            const toClient = highlight.getScreenCTM();
+            const start =
+                corner && toClient
+                    ? new DOMPoint(corner.x, corner.y).matrixTransform(toClient)
+                    : new DOMPoint(rect.left, rect.top);
+            return { rect, start };
+        },
         /** The document area — where the pages show, between the guide bands
          *  — as a client rect. */
         documentArea: (): DOMRect => searchHost.getBoundingClientRect(),

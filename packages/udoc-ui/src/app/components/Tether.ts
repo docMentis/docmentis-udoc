@@ -2,17 +2,20 @@
 // for it in the right panel, so the eye goes from one to the other — the
 // current search match to its result, the open comment to its card.
 //
-// It runs dashed from the middle of the right edge of the thing on the
-// document, across to halfway to the entry, up or down there to the entry's
-// height, and on into the entry's left edge. One layer over the whole body
-// draws it, across the document area and the panel both, and takes no press.
-// It follows the document each painted frame, the panel's scroll and resizing
-// and the state it watches; it hides while the middle of either end is
-// scrolled out of sight, while the panel's tab doesn't show the entry, and
-// while the panel lies over the document rather than beside it, as a narrow
-// layout's drawer does. Choosing the panel's entry again, while it's the one
-// the line stands for, hides the line, and once more shows it; another entry
-// chosen shows it again.
+// It runs dashed from where it starts on the thing on the document — the
+// top-left corner of a search match's or a change's text, the middle of a
+// comment marker's right edge — across to halfway to the entry, up or down
+// there to the entry's height, and on into the entry's left edge. One layer
+// over the whole body draws it, across the document area and the panel both,
+// and takes no press. It follows the document each painted frame, the panel's
+// scroll and resizing and the state it watches. It shows while any of the thing
+// is in the document area, starting at the area's edge where its start is
+// scrolled past it, and hides while the thing is wholly out of it, while the
+// middle of the entry is scrolled out of sight, while the panel's tab doesn't
+// show the entry, and while the panel lies over the document rather than beside
+// it, as a narrow layout's drawer does. Choosing the panel's entry again, while
+// it's the one the line stands for, hides the line, and once more shows it;
+// another entry chosen shows it again.
 
 import type { Store } from "../../framework/index.js";
 import { shallowEqual, subscribeSelector } from "../../framework/index.js";
@@ -25,9 +28,9 @@ const BEND_RADIUS_PX = 12;
 
 /** Where a tether runs between, read as client rects when it's drawn. */
 export interface TetherEnds {
-    /** The thing on the document, and the document area it shows in; null
-     *  when there's none to start from. */
-    from: () => { rect: DOMRect; area: DOMRect } | null;
+    /** The thing on the document, where on it the line starts, and the
+     *  document area it shows in; null when there's none to start from. */
+    from: () => { rect: DOMRect; start: { x: number; y: number }; area: DOMRect } | null;
     /** The entry in the panel, the height the line lands on it at, and the
      *  box it scrolls in; null when the panel isn't showing one. */
     to: () => { rect: DOMRect; y: number; clip: DOMRect } | null;
@@ -62,23 +65,25 @@ export function createTether(ends: TetherEnds, options: TetherOptions) {
     /** The line's path in the layer's own coordinates, or null when it hides. */
     function route(): string | null {
         if (hidden) return null;
-        const start = ends.from();
-        if (!start) return null;
+        const from = ends.from();
+        if (!from) return null;
         const end = ends.to();
         if (!end) return null;
-        const { rect, area } = start;
+        const { rect, start, area } = from;
         if (area.width <= 0 || area.height <= 0 || end.rect.width <= 0 || end.rect.height <= 0) return null;
-        const sy = rect.top + rect.height / 2;
         const ey = end.y;
-        // The middle of either end scrolled out of sight.
+        // The thing wholly out of the document area, or the middle of the
+        // entry scrolled out of sight.
         if (rect.right <= area.left || rect.left >= area.right) return null;
-        if (sy < area.top || sy > area.bottom || ey < end.clip.top || ey > end.clip.bottom) return null;
+        if (rect.bottom <= area.top || rect.top >= area.bottom) return null;
+        if (ey < end.clip.top || ey > end.clip.bottom) return null;
         // The panel over the document, not beside it.
         if (end.rect.left < area.right - 1) return null;
 
-        // From the thing's right end, or the document area's edge where it
-        // runs past it; the vertical run halfway to the entry.
-        const sx = Math.min(rect.right, area.right);
+        // From the thing's start, or the document area's edge where it's
+        // scrolled past it; the vertical run halfway to the entry.
+        const sx = Math.min(Math.max(start.x, area.left), area.right);
+        const sy = Math.min(Math.max(start.y, area.top), area.bottom);
         const ex = end.rect.left;
         const gx = (sx + ex) / 2;
         const dy = ey - sy;
