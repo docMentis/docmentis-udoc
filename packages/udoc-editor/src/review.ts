@@ -104,8 +104,9 @@ function settleMenu(accept: boolean): readonly MenuItem<MessageKey>[] {
           ];
 }
 
-/** The Review tab's Accept and Reject, then Previous and Next, over the
- *  {@link EditTools} once edit mode is mounted; each named beside its icon. */
+/** The Review tab's Accept and Reject, each named beside its icon, and Previous
+ *  and Next, by their icons alone — over the {@link EditTools} once edit mode
+ *  is mounted. */
 export function reviewCommands(tools: () => EditTools): Readonly<Record<ReviewCommandId, CommandDef<MessageKey>>> {
     return {
         acceptRevisions: {
@@ -131,7 +132,6 @@ export function reviewCommands(tools: () => EditTools): Readonly<Record<ReviewCo
             label: "command.previousRevisionGroup",
             icon: ICON_PREVIOUS_REVISION_GROUP,
             group: "changes",
-            labeled: true,
             run: { kind: "action", press: () => void moveToRevisionGroup(tools().host, false) },
             enabledWhen: whenTracked,
         },
@@ -140,7 +140,6 @@ export function reviewCommands(tools: () => EditTools): Readonly<Record<ReviewCo
             label: "command.nextRevisionGroup",
             icon: ICON_NEXT_REVISION_GROUP,
             group: "changes",
-            labeled: true,
             run: { kind: "action", press: () => void moveToRevisionGroup(tools().host, true) },
             enabledWhen: whenTracked,
         },

@@ -476,8 +476,8 @@ const PRESENTATION_TABS: readonly EditTab[] = [
     editViewTab("presentation"),
 ];
 
-/** A word document's Review tab in edit mode: view mode's, with Accept and
- *  Reject, then Previous and Next, after its markup controls, where Word's
+/** A word document's Review tab in edit mode: view mode's, with Previous and
+ *  Next, then Accept and Reject, after its markup controls, where Word's
  *  Changes group stands. A caret or a range in text keeps it open, ahead of
  *  Text, so stepping through the changes stays on it. */
 const WORDPROCESSING_REVIEW_TAB: EditTab = {
@@ -486,10 +486,10 @@ const WORDPROCESSING_REVIEW_TAB: EditTab = {
         "trackChanges",
         "revisionView",
         "markupOptions",
-        "acceptRevisions",
-        "rejectRevisions",
         "previousRevisionGroup",
         "nextRevisionGroup",
+        "acceptRevisions",
+        "rejectRevisions",
         "newComment",
     ],
     opensFor: inText,
