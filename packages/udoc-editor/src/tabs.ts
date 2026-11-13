@@ -504,6 +504,17 @@ const WORDPROCESSING_TABS: readonly EditTab[] = [
     editViewTab("wordprocessing"),
 ];
 
+/** The wordprocessing strip in review mode: edit mode's, opening on its Review
+ *  tab, where the changes recorded are stepped through and settled, rather
+ *  than on Text. */
+const WORDPROCESSING_REVIEW_MODE_TABS: readonly EditTab[] = [
+    TEXT_TAB,
+    TABLE_TAB,
+    WORDPROCESSING_SHAPE_TAB,
+    { ...WORDPROCESSING_REVIEW_TAB, opensOnEntry: true },
+    editViewTab("wordprocessing"),
+];
+
 /** The image strip: its own Image, then the Text, Table and Shape tabs of what
  *  is drawn over its pages — a deck's, as they are a slide's shapes and tables —
  *  and its View last. Table goes ahead of Shape, as on a deck. */
@@ -512,8 +523,9 @@ const IMAGE_TABS: readonly EditTab[] = [IMAGE_TAB, PRESENTATION_TEXT_TAB, TABLE_
 /** The spreadsheet strip: its Cell tab, and its View. */
 const SPREADSHEET_TABS: readonly EditTab[] = [CELL_TAB, editViewTab("spreadsheet")];
 
-/** Edit mode's tab strip for a document of `docType`. */
-export function editTabs(docType: UDocType | null): readonly EditTab[] {
+/** The tab strip of a document of `docType` in `mode`, edit or review mode. */
+export function editTabs(docType: UDocType | null, mode: string): readonly EditTab[] {
+    if (mode === "review" && docType === "wordprocessing") return WORDPROCESSING_REVIEW_MODE_TABS;
     switch (docType) {
         case "portable":
             return PORTABLE_TABS;

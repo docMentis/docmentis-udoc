@@ -58,11 +58,12 @@ export interface UIExtension {
     /** The extension's own state at start: `UIState.extension`. */
     readonly initialState: unknown;
     /**
-     * The tab strip a document of `docType` shows in the extension's modes —
-     * in order, folded until a selection opens its tab or one is picked —
-     * naming the shell's commands or the extension's {@link commands}.
+     * The tab strip a document of `docType` shows in the extension's mode
+     * `mode` — in order, folded until a selection opens its tab or one is
+     * picked, or on the tab that opens on entry — naming the shell's commands
+     * or the extension's {@link commands}.
      */
-    tabs(docType: UDocType | null): readonly ToolbarTab<string>[];
+    tabs(docType: UDocType | null, mode: string): readonly ToolbarTab<string>[];
     /** The commands its tabs name beyond the shell's catalog, by id. */
     readonly commands: Readonly<Record<string, CommandDef<string>>>;
     /** A key pressed in the shell: the extension acts on its own keys, and

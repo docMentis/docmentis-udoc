@@ -679,7 +679,7 @@ export function mountUIShell(
     // The tab strip a doc type shows in a mode: its profile's in view mode, the
     // extension's in the extension's own.
     const tabsOf: TabSource = (docType, mode) =>
-        mode === VIEW_MODE ? profileFor(docType).viewTabs : (extension?.tabs(docType) ?? []);
+        mode === VIEW_MODE ? profileFor(docType).viewTabs : (extension?.tabs(docType, mode) ?? []);
     // A session may be in view mode whatever it is entitled to, and in one of
     // the extension's as that mode's feature and doc types say; else the mode
     // gives way to the one it names, and at last to view.

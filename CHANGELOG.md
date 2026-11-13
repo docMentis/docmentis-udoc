@@ -61,7 +61,8 @@ listed once, by package. Its major and minor version are those of the
 - udoc-editor has a review mode, beside view and edit mode, which records
   each edit to a Word document as a tracked change under the name
   `setUserInfo` gives, or "Author" without one. An edit that can't be
-  recorded, such as moving a picture or merging cells, isn't offered. Only a
+  recorded, such as moving a picture or merging cells, isn't offered. Review
+  mode opens on the Review tab. Only a
   Word document opens in review mode: another opens in edit mode where
   `allowedModes` has it, else in view mode. `EditorMode` takes `"review"`,
   and the `translations` key `mode.review` is new.
