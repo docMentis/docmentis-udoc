@@ -1,5 +1,7 @@
 import type { TextCaretMove } from "../../geometry.js";
+import { caretKeyMove } from "../caret-keys.js";
 import type { I18n } from "../i18n/index.js";
+import { MAC } from "./controls.js";
 
 /** The edits and moves the hidden field routes out — insert/delete travel the
  *  shell's edit path (relayout + sync broadcast), the caret move is presence
@@ -16,16 +18,6 @@ export interface HiddenTextInputHooks {
      *  an entry in it. */
     beginTyping?: (text: string) => void;
 }
-
-/** Keyboard → caret-move vocabulary (arrows, Home/End). */
-const CARET_MOVES: Record<string, TextCaretMove> = {
-    ArrowLeft: "left",
-    ArrowRight: "right",
-    ArrowUp: "up",
-    ArrowDown: "down",
-    Home: "lineStart",
-    End: "lineEnd",
-};
 
 /**
  * The hidden field that is the UI's **keyboard and clipboard sink** — the
@@ -98,17 +90,19 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
             ev.stopPropagation();
             return;
         }
-        if (ev.metaKey || ev.ctrlKey) return; // shortcuts (undo, zoom) + native clipboard events
-        // No caret: a pure sink. Consume nothing — every key bubbles to the
-        // document-level object shortcuts (Delete, arrows, Escape).
-        if (!editingText) return;
-        const move = CARET_MOVES[ev.key];
+        // A caret move first: the word, paragraph and story moves take a
+        // modifier (see `caret-keys`). No caret: a pure sink, which consumes
+        // nothing — every key bubbles to the document-level object shortcuts
+        // (Delete, arrows, Escape).
+        const move = editingText ? caretKeyMove(ev, MAC) : null;
         if (move) {
             hooks.moveCaret(move, ev.shiftKey);
             ev.preventDefault();
             ev.stopPropagation();
             return;
         }
+        if (ev.metaKey || ev.ctrlKey) return; // shortcuts (undo, zoom) + native clipboard events
+        if (!editingText) return;
         if (ev.key === "Backspace" || ev.key === "Delete") {
             hooks.deleteText(ev.key === "Delete");
             ev.preventDefault();

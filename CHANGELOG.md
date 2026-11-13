@@ -55,6 +55,12 @@ listed once, by package. Its major and minor version are those of the
 - In udoc-editor, the Review tab's Accept and Reject settle the change the
   selection touches, every change the view shows, or every change, as one
   undo step, and each card of the Revisions tab offers both on its change.
+- The text caret moves by word, by paragraph, and to the start or end of the
+  text it is in: on a Mac, Option with an arrow steps by word or paragraph,
+  and Cmd with an arrow goes to the line's or the text's start or end;
+  elsewhere, Ctrl with an arrow steps by word or paragraph, and Ctrl with
+  Home or End goes to the text's start or end. Shift extends the selection,
+  and every move follows the text's order, right to left included.
 
 #### Changed
 
