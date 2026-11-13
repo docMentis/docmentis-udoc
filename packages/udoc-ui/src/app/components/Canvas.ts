@@ -835,9 +835,10 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
     // commit); the caret-move keys are presence and go to the worker directly.
     // A key that moves the caret or types at it brings the caret into view.
     // A move is presence, answered by the selection report it marks
-    // `localChanged`, which is where the follow waits for it; an edit's report
-    // lands before the edit settles, so the follow runs then.
-    let followingMove = false;
+    // `localChanged`, which is where the follow waits for it — counted, as a
+    // held key sends moves faster than their reports come back; an edit's
+    // report lands before the edit settles, so the follow runs then.
+    let unansweredMoves = 0;
     let localGeometry: SelectionGeometry | null = null;
     const followEdit = (edit: Promise<void> | void): void => {
         if (edit) void edit.then(() => followCaret(localGeometry));
@@ -846,7 +847,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         insertText: (text) => followEdit(hooks.insertText?.(text)),
         deleteText: (forward) => followEdit(hooks.deleteText?.(forward)),
         moveCaret: (movement, extend) => {
-            followingMove = true;
+            unansweredMoves++;
             client.moveTextCaret(movement, extend);
         },
         key: (ev) => (store?.getState().docType === "spreadsheet" ? hooks.cellKey?.(ev) : hooks.textKey?.(ev)) ?? false,
@@ -2118,8 +2119,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             committingEdit = false;
             selection.setState(state, resetDrag);
             localGeometry = state.local;
-            if (followingMove && state.localChanged) {
-                followingMove = false;
+            if (unansweredMoves > 0 && state.localChanged) {
+                unansweredMoves--;
                 followCaret(state.local);
             }
             // Tint the selected column / row headers on the guide band. A cell
