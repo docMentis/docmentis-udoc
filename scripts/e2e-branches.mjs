@@ -299,16 +299,16 @@ const REVIEWS = {
         /** One row further down. */
         moved: (before, after) => before !== null && after === before.replace(/\d+$/, (row) => String(Number(row) + 1)),
     },
-    // No note on a page the document deletes: what only a deleted page reached
-    // is kept by some sessions' saves and left out by others', with no branch,
-    // so no two models compare.
     portable: {
         comments: [
             { body: "moves", make: (s, ids) => pageNote(s, ids.usable[2], "moves") },
-            { body: "moves too", make: (s, ids) => pageNote(s, ids.usable[3], "moves too") },
+            { body: "doomed", deleted: true, make: (s, ids) => pageNote(s, ids.usable[3], "doomed") },
         ],
-        meanwhile(s) {
+        meanwhile(s, ids) {
             run(s, "insert a page before", { portable: { editPage: { command: { insertPage: { index: 0 } } } } });
+            run(s, "delete the doomed note's page", {
+                portable: { editPage: { command: { deletePages: { ids: [ids.usable[3]] } } } },
+            });
         },
         /** The page the note, found by its contents, is on, and its place among the pages. */
         async place(base, id, contents) {
