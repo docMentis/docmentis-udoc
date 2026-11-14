@@ -2,8 +2,8 @@
 
 What building shockwave found the udoc packages lacking, or doing other than
 it needed, through their public API: one entry each, with what was needed,
-what the API offers, and the workaround, if any. An entry stays until a
-release fixes it, and then says which.
+what the API offers, and the workaround, if any. An entry stays once it's
+fixed, and then says which commit fixed it.
 
 ## udoc-server is driven only over HTTP
 
@@ -72,11 +72,12 @@ cookies, at `localhost`, it mustn't touch.
 **Offered.** The browser packages send the page's `window.location.hostname`
 as its domain (udoc-ui's `sessionConfigOf`), which keeps an IPv6 address's
 brackets, `[::1]`; the permit comes back issued for `::1`, without them; and
-the engine compares the two as they are, so every open there fails: "Cannot
+the engine compared the two as they were, so every open there failed: "Cannot
 verify free usage: permit issued for '::1', not '[::1]'". A page at a host
-name opens as it should.
+name opened as it should.
 
-**Workaround.** None in shockwave: a second instance is tested at
+**Workaround.** None needed since the engine's `dc84f673d`, which compares a
+page's host without its brackets. Before it, a second instance was tested at
 `shockwave.localhost` instead, a name, whose cookies are its own too.
 
 ## A background changed on the fly isn't painted until the theme changes
@@ -175,20 +176,21 @@ hadn't sent.
 **Offered.** After a cut, a page's first edit copies the page into the log,
 under ids every editor on that cut writes alike, so two first edits there
 are one. Made on two different cuts, one page's copies have those ids with
-other dependencies, and `catchUp` refuses a log holding the other one,
-`malformed`, "Every op id should be unique", before it moves the editor's own
-edits onto that log, which would copy the page again. So a merge fails with
+other dependencies, and `catchUp` refused a log holding the other one,
+`malformed`, "Every op id should be unique", before it moved the editor's own
+edits onto that log, which would copy the page again. So a merge failed with
 `422` when the reviewer first edited a slide after the branch's log was cut,
 and the working copy's editors first edited it on theirs. With no branch at
-all, an editor behind a cut, holding an unsent first edit on a slide, can't
-come back once someone has first edited that slide on the cut log. Seen on a
+all, an editor behind a cut, holding an unsent first edit on a slide, couldn't
+come back once someone had first edited that slide on the cut log. Seen on a
 deck, with the engine built from its checkout on 2026-11-12. The Word
 document, workbook and PDF runs of `npm run e2e -- branches` didn't meet it,
 since there the two sides never first edited one page on two cuts.
 
-**Workaround.** None. Nothing is lost: a merge refuses before anything reaches
-the working copy, and the branch can be merged once the engine takes such a
-log.
+**Workaround.** None needed since the engine's `623a35f98`: `catchUp` takes
+the log's copy of such a page in place of the editor's own, then moves the
+editor's edits onto it. `npm run e2e -- branches` merges the deck whichever
+logs are cut.
 
 ## What only a deleted PDF page used is kept by some saves and not others
 
@@ -196,15 +198,17 @@ log.
 page the working copy deleted meanwhile, merged, and the document then
 comparing equal however it is opened or saved.
 
-**Offered.** Sessions disagree about the parts only a deleted page used. An
-editor that deleted the page saves without its image, while the server's save
-of the same document keeps it. A note added to the page while another editor
-deleted it is kept by the server's save of the whole document, but left out of
+**Offered.** Sessions disagreed about the parts only a deleted page used. An
+editor that deleted the page saved without its image, while the server's save
+of the same document kept it. A note added to the page while another editor
+deleted it was kept by the server's save of the whole document, but left out of
 a fresh open and of a checkpoint opened on its own. Seen with two live editors
-and no branch or cut, so it isn't theirs.
+and no branch or cut, so it wasn't theirs.
 
-**Workaround.** None. `npm run e2e -- branches` leaves a note on a deleted page
-out, since no two models would compare.
+**Workaround.** None needed since the engine's `b6cce3636`: a PDF's save writes
+only the parts the document reaches, so every save leaves out what only a
+deleted page used. `npm run e2e -- branches` puts a note on a page the working
+copy deletes, and the document compares equal however it's opened.
 
 ## A comment on what was deleted lands differently in each format
 
@@ -215,7 +219,7 @@ meanwhile, shown to whoever picks the comments up.
 two live editors. A Word comment stays where its text was, its range empty. A
 deck's goes on naming the shape it was on, which is gone. A workbook's model
 keeps it, but a workbook saved from it leaves it out. A PDF note is on no page,
-though some saves keep it (above). What the Comments panel shows for the deck's
+and every save leaves it out (above). What the Comments panel shows for the deck's
 and the workbook's isn't looked into yet.
 
 **Workaround.** None yet.
