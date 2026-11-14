@@ -1898,6 +1898,17 @@ export type SelectionEdit =
     | { kind: "acceptRevisions" }
     /** Word: reject them, likewise. */
     | { kind: "rejectRevisions" }
+    /** Word: move the drawing picked whole, dragged from `from` to `to` —
+     *  points on page `page` (0-based) of the view, in page points: one in the
+     *  line to the text at `to`, a floating one by the drag, its anchor
+     *  following its top edge — where the capabilities read grants
+     *  `moveDrawing`. */
+    | { kind: "moveDrawing"; page: number; from: { x: number; y: number }; to: { x: number; y: number } }
+    /** Word: move the anchor of the floating drawing picked whole onto the
+     *  paragraph at `to` — a point on page `page`, in page points — the drawing
+     *  staying where it stands, where the capabilities read grants
+     *  `moveDrawingAnchor`. */
+    | { kind: "moveDrawingAnchor"; page: number; to: { x: number; y: number } }
     /** Table: a structural edit on the table the selection sits in — insert or
      *  delete a row or column, merge or split the selected block. The tsify type
      *  itself, already in its wire form (`{ insertRows: { before, count } }`,

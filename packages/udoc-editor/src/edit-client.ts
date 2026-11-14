@@ -221,28 +221,34 @@ export class EditClient {
     }
 
     /**
-     * Where the anchor of the floating drawing selected in a word document would
-     * stand if it were dropped at CSS-px point `(x, y)` of the viewport: beside
-     * the paragraph nearest the point, a box on its page, as
-     * {@link moveObjectAnchor} would put it. What a live drag of the anchor
-     * draws, with nothing written until it ends. Cheap enough to call per
-     * pointer-move; the caller coalesces it latest-wins. Resolves `null` where
-     * the selection is not one floating drawing picked whole, its anchor is
-     * locked, or the point lands on no paragraph.
+     * Where the drawing selected in a word document would land if it were
+     * dragged from `from` to `to` — points on page `page` (0-based), in page
+     * points — as the `moveDrawing` selection edit would move it: a box on its
+     * page marking the caret it lands at for a drawing in the line, or the
+     * anchor it takes for a floating one. What a live drag draws, with nothing
+     * written until it ends. Cheap enough to call per pointer-move; the caller
+     * coalesces it latest-wins. Resolves `null` where the selection picks no
+     * drawing whole, or nothing there takes it.
      */
-    objectAnchorPreview(x: number, y: number): Promise<SelectionBox | null> {
-        return this.#request({ type: "objectAnchorPreview", x, y });
+    moveDrawingPreview(
+        page: number,
+        from: { x: number; y: number },
+        to: { x: number; y: number },
+    ): Promise<SelectionBox | null> {
+        return this.#request({ type: "moveDrawingPreview", page, from, to });
     }
 
     /**
-     * Move the anchor of the floating drawing selected in a word document onto
-     * the paragraph nearest CSS-px point `(x, y)` of the viewport — to that
-     * paragraph's start, as Word does — keeping the drawing where it stands on
-     * the page. A committing edit (one undo step), so it resolves with the
-     * document's new layout; the drawing stays selected.
+     * Where the anchor of the floating drawing selected in a word document would
+     * stand if it were dropped at `to` — a point on page `page` (0-based), in
+     * page points — as the `moveDrawingAnchor` selection edit would put it:
+     * beside the paragraph nearest the point, a box on its page. What a live drag
+     * of the anchor draws; called latest-wins, like {@link moveDrawingPreview}.
+     * Resolves `null` where the selection is not one floating drawing picked
+     * whole, its anchor is locked, or the point lands on no paragraph.
      */
-    moveObjectAnchor(x: number, y: number): Promise<DocumentLayout> {
-        return this.#request({ type: "moveObjectAnchor", x, y });
+    moveDrawingAnchorPreview(page: number, to: { x: number; y: number }): Promise<SelectionBox | null> {
+        return this.#request({ type: "moveDrawingAnchorPreview", page, to });
     }
 
     /** The id of the deck's slide at `index` (0-based), or `null` past the last

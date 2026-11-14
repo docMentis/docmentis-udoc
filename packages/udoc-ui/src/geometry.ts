@@ -407,6 +407,8 @@ export type SelectionEditKind =
     | "setShapeGeometry"
     | "resizeTextBox"
     | "patchSectionPageMargins"
+    | "moveDrawing"
+    | "moveDrawingAnchor"
     | "insertSheetRows"
     | "insertSheetColumns"
     | "deleteSheetRows"

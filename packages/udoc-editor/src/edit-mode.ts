@@ -304,6 +304,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             host && tools ? placePreview(host, tools.paintMemory, tool, page, p0, p1) : null,
         selectionChrome: grips.chrome,
         pressCanvas: (x, y, _ev, canvas) => grips.press(x, y, canvas),
+        pressSelection: (x, y, _ev, canvas) => grips.drag(x, y, canvas),
         canvasCursor: (x, y) => grips.cursor(x, y),
         place: (tool, page, p0, p1) =>
             host && tools ? place(host, tools.paintMemory, tool, page, p0, p1) : Promise.resolve(),

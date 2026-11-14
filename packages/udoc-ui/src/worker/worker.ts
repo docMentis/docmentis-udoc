@@ -2943,7 +2943,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // edit with the open doc type for the typed boundary (see
                 // {@link taggedSelectionEdit}). A delete edit additionally clears
                 // the now-dangling selection.
-                session.executeOnSelection(taggedSelectionEdit(msg.edit, session.docType()));
+                session.executeOnSelection(VIEWER, taggedSelectionEdit(msg.edit, session.docType()));
                 const layout = layoutOf(session);
                 const kind = typeof msg.edit === "object" && "kind" in msg.edit ? msg.edit.kind : undefined;
                 if (kind === "deleteObjects" || kind === "deleteAnnotations" || kind === "deleteShapes") {
@@ -3636,6 +3636,8 @@ const TEXT_KINDS: Record<TextSelectionEditType, "text"> = {
     applyParagraphStyle: "text",
     acceptRevisions: "text",
     rejectRevisions: "text",
+    moveDrawing: "text",
+    moveDrawingAnchor: "text",
 };
 const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     translateShapes: "shape",

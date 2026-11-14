@@ -6,7 +6,7 @@ shell does on its own is all a viewer does. Each member exists for a piece of
 edit mode: its mode and its tab strips, the page controls and the mode switch,
 the formatting marks, a deck's Slide tab, an image's Image tab, a PDF's Page tab, the Text,
 Shape and Object tabs' tools, the context menu and the clipboard, the ruler, shape placement,
-and the rotation and geometry grips.
+the rotation and geometry grips, and a word document's drawing drags.
 
 ## What the shell lends
 
@@ -49,6 +49,9 @@ Where the extension decides in the shell's place, the shell asks it:
 - `pressCanvas` / `canvasCursor` — a select-pointer press offered ahead of the
   canvas's own routing, returning the `CanvasGesture` the extension runs on
   the captured pointer, and the resting cursor over its chrome.
+- `pressSelection` — a plain press on the selection's body, off any text in
+  it, offered ahead of the canvas's move or text gesture: edit mode's drag of a
+  word document's drawing, through its text or across the page.
 
 ## Modes
 

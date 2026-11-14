@@ -954,6 +954,18 @@ export const editorStyles = css`
         width: 100%;
         height: 100%;
     }
+    /* Where a drawing in a word document's line would drop, mid-drag: a caret
+       down the line it lands in (grips.ts), turned with the page. */
+    .udoc-ui-root .udoc-ui__drop-caret {
+        position: absolute;
+        top: 0;
+        left: -1px;
+        width: 2px;
+        background: var(--udoc-canvas-selection);
+        transform-origin: 1px 0;
+        pointer-events: none;
+        will-change: transform;
+    }
 
     /* The ruler's controls (ruler-controls.ts), in the layers over its strips:
    each margin's edge, and the indent markers and tab stops of the paragraph a

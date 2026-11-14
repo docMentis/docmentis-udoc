@@ -123,6 +123,14 @@ export interface UIExtension {
      * and the gesture it starts, or null to leave the press to the canvas.
      */
     pressCanvas(x: number, y: number, ev: PointerEvent, canvas: CanvasGestureHost): CanvasGesture | null;
+    /**
+     * A plain select-pointer press at canvas-local `(x, y)` (CSS px) on the
+     * selection's body, off any text in it — past its resize handles and the
+     * extension's own chrome — offered ahead of the canvas's move or text
+     * gesture, and the gesture it starts, or null to leave the press to the
+     * canvas: edit mode's drag of a word document's drawing.
+     */
+    pressSelection(x: number, y: number, ev: PointerEvent, canvas: CanvasGestureHost): CanvasGesture | null;
     /** The resting cursor over the extension's chrome at `(x, y)`, or null for
      *  the canvas's own. */
     canvasCursor(x: number, y: number): string | null;

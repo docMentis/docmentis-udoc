@@ -1012,6 +1012,7 @@ export function mountUIShell(
         guideBand: (state) => extension?.guideBand(state) ?? null,
         ...(extension && { selectionChrome: extension.selectionChrome }),
         pressCanvas: (x, y, ev, host) => extension?.pressCanvas(x, y, ev, host) ?? null,
+        pressSelection: (x, y, ev, host) => extension?.pressSelection(x, y, ev, host) ?? null,
         canvasCursor: (x, y) => extension?.canvasCursor(x, y) ?? null,
         pointerMove: (x, y) => sharePointer({ x, y }),
         pointerLeave: () => sharePointer(null),

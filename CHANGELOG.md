@@ -6,6 +6,16 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-editor
+
+#### Added
+
+- A picture or shape in a Word document moves when dragged, as in Word. One
+  in the line goes to the place in the text where it is dropped, with a caret
+  showing where it will land. A floating one follows the pointer, and its
+  anchor goes to the paragraph its top edge is dropped in, unless the anchor
+  is locked.
+
 ## [0.8.21] - 2026-11-13
 
 Built on `@docmentis/udoc-wasm` 0.8.24.

@@ -347,6 +347,10 @@ export interface CanvasHooks {
      *  canvas's own routing, and the gesture it starts — see
      *  `UIExtension.pressCanvas`. */
     pressCanvas?: (x: number, y: number, ev: PointerEvent, canvas: CanvasGestureHost) => CanvasGesture | null;
+    /** A plain press on the selection's body, off any text in it, that the
+     *  shell's extension takes ahead of the canvas's own move or text gesture —
+     *  see `UIExtension.pressSelection`. */
+    pressSelection?: (x: number, y: number, ev: PointerEvent, canvas: CanvasGestureHost) => CanvasGesture | null;
     /** The resting cursor the shell's extension shows at `(x, y)`, or null —
      *  see `UIExtension.canvasCursor`. */
     canvasCursor?: (x: number, y: number) => string | null;
@@ -2604,7 +2608,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             // every selection but an annotation's.
             const moves =
                 (store?.getState()?.mode !== VIEW_MODE || annotationSelected) &&
-                selection.allows("translateObjects", "translateAnnotations", "translateShapes");
+                selection.allows("translateObjects", "translateAnnotations", "translateShapes", "moveDrawing");
             const move = moves ? "move" : "";
             if (selection.borderLocal(x, y)) return move;
             const fill = fillCursor(x, y) || linkCursor(x, y);
@@ -2612,7 +2616,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             // A text markup over the open text: a click picks it.
             if (inObjectText && hitTextMarkup(hitAt(x, y))) return "";
             if (inObjectText || hitText(hitAt(x, y), pressGlobal())) return "text";
-            return store?.getState()?.docType === "wordprocessing" ? "" : move;
+            // A word document's body is text, but for a drawing that drags.
+            return store?.getState()?.docType === "wordprocessing" && !selection.allows("moveDrawing") ? "" : move;
         }
         return fillCursor(x, y) || linkCursor(x, y) || (hitText(hitAt(x, y), pressGlobal()) ? "text" : "");
     }
@@ -3530,6 +3535,19 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // {@link selectHoverCursor} — they must agree.
         if (!handle && selection.hitLocal(x, y)) {
             const border = selection.borderLocal(x, y);
+            // A plain press off any text in it is offered to the extension
+            // first — a word document's drawing, which drags through its text
+            // or across the page as Word's does.
+            const onText = !border && (inObjectText || hitText(hitAt(x, y), pressGlobal()));
+            const extension =
+                !onText && selectModeFor(ev) === "replace" && !linkKeyDown(ev)
+                    ? hooks.pressSelection?.(x, y, ev, gestureHost)
+                    : null;
+            if (extension) {
+                gesture = { kind: "extension", pointerId: ev.pointerId, gesture: extension };
+                el.setPointerCapture(ev.pointerId);
+                return;
+            }
             if (textIntent(x, y, ev) && !border) {
                 gesture =
                     hitTextMarkup(hitAt(x, y)) && selectModeFor(ev) === "replace"

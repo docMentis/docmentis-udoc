@@ -4,7 +4,10 @@
 // document's floating drawing's anchor, in the margin. udoc-ui's
 // selection layer draws them
 // beside its resize handles (`SelectionChrome`), and the canvas hands a press on
-// one to the gesture this runs (`UIExtension.pressCanvas`).
+// one to the gesture this runs (`UIExtension.pressCanvas`). A word document's
+// drawing is dragged by its body here too (`UIExtension.pressSelection`): through
+// its text, a caret marking where it lands, or across the page, its anchor
+// following.
 import { allowsEdit, applyPoint, DRAG_THRESHOLD, fromComponents, invert } from "@docmentis/udoc-ui/internal";
 import type {
     Affine,
@@ -39,6 +42,9 @@ const ROTATE_GAP = 18;
 const ANCHOR_MIN = 16;
 /** How far past the anchor grip a press still takes it (CSS px). */
 const ANCHOR_HIT = 3;
+
+/** The identity map — a page's own space, projected as is. */
+const IDENTITY: Affine = [1, 0, 0, 1, 0, 0];
 
 /** Rotation-snap increment (radians) the Shift modifier locks to — 15°, the
  *  step PowerPoint/Figma/Illustrator use for constrained rotation. */
@@ -157,6 +163,9 @@ export interface Grips {
     press(x: number, y: number, canvas: CanvasGestureHost): CanvasGesture | null;
     /** The resting cursor over a grip at `(x, y)`, or null off every grip. */
     cursor(x: number, y: number): string | null;
+    /** The drag a plain press at canvas-local `(x, y)` on the selection's body
+     *  starts — a word document's drawing picked whole — or null. */
+    drag(x: number, y: number, canvas: CanvasGestureHost): CanvasGesture | null;
 }
 
 /** The grips, editing through `tools` — null until edit mode is mounted. */
@@ -198,6 +207,15 @@ export function createGrips(tools: () => EditTools | null): Grips {
      * {@link handlePreview} is for a geometry grip.
      */
     let anchorPreview: SelectionBox | null = null;
+    /**
+     * Where a live drag of a drawing in the line would drop it, as the engine
+     * reports it: the caret it lands at, drawn until the moved geometry
+     * arrives. A drawing in the line goes to the text under the pointer, not
+     * where its box would land, so this and not the box is what shows.
+     */
+    let dropCaret: SelectionBox | null = null;
+    /** The element {@link dropCaret} is drawn with, while there is one. */
+    let dropCaretEl: HTMLElement | null = null;
 
     /** The adjust handles in `f`, or none when the engine reports no
      *  reshapeable geometry (a multi-shape selection, a doc type with none).
@@ -286,6 +304,37 @@ export function createGrips(tools: () => EditTools | null): Grips {
         if (!square) return false;
         const half = square.size / 2 + ANCHOR_HIT;
         return Math.abs(x - square.x) <= half && Math.abs(y - square.y) <= half;
+    }
+
+    /** Where canvas-local `(x, y)` (CSS px) lands on page `page`, in page
+     *  points — what a drag's edits are placed by — or null with that page off
+     *  screen. A point past the page's edge stays in its space. */
+    function pagePoint(f: ChromeFrame, page: number, x: number, y: number): { x: number; y: number } | null {
+        const lv = f.project(page, IDENTITY);
+        const back = lv ? invert(lv) : null;
+        return back ? applyPoint(back, x, y) : null;
+    }
+
+    /** Draw {@link dropCaret} for `f`, or take it down with none to show: a
+     *  line down the caret's box, as the line it lands in stands. */
+    function renderDropCaret(f: ChromeFrame, group: HTMLElement): void {
+        const lv = dropCaret ? f.project(dropCaret.page, fromComponents(dropCaret.transform)) : null;
+        if (!dropCaret || !lv) {
+            dropCaretEl?.remove();
+            dropCaretEl = null;
+            return;
+        }
+        if (!dropCaretEl) {
+            dropCaretEl = document.createElement("div");
+            dropCaretEl.className = "udoc-ui__drop-caret";
+        }
+        if (dropCaretEl.parentElement !== group) group.appendChild(dropCaretEl);
+        const top = applyPoint(lv, dropCaret.rect.x0, dropCaret.rect.y0);
+        const bottom = applyPoint(lv, dropCaret.rect.x0, dropCaret.rect.y1);
+        const length = Math.hypot(bottom.x - top.x, bottom.y - top.y);
+        const turn = Math.atan2(bottom.y - top.y, bottom.x - top.x) - Math.PI / 2;
+        dropCaretEl.style.height = `${length}px`;
+        dropCaretEl.style.transform = `translate(${top.x}px, ${top.y}px) rotate(${turn}rad)`;
     }
 
     /** Draw the anchor grip for `f`, or take it down with no anchor to show. */
@@ -400,6 +449,7 @@ export function createGrips(tools: () => EditTools | null): Grips {
             }
             trim(usedRot, usedAdjust);
             renderAnchor(f, group);
+            renderDropCaret(f, group);
         },
         reach(f): KeepOutRect | null {
             if (f.boxes.length === 0) return null;
@@ -431,6 +481,7 @@ export function createGrips(tools: () => EditTools | null): Grips {
         reset() {
             handlePreview = null;
             anchorPreview = null;
+            dropCaret = null;
         },
     };
 
@@ -598,35 +649,39 @@ export function createGrips(tools: () => EditTools | null): Grips {
      * A drag of the anchor grip pressed at `(x, y)`: the anchor snaps beside the
      * paragraph under the pointer as the engine picks it, and the release moves
      * the drawing's anchor there — the drawing itself staying where it stands.
+     * Placed in the space of the page the drawing is on; null with that page
+     * off screen.
      */
-    function anchorGesture(x: number, y: number, canvas: CanvasGestureHost): CanvasGesture {
+    function anchorGesture(x: number, y: number, canvas: CanvasGestureHost): CanvasGesture | null {
+        const page = frame?.boxes[0]?.place.page;
+        if (page === undefined) return null;
         let moved = false;
         // Whether the drag is still on — a probe answering after release draws
         // nothing.
         let live = true;
         // The drag probe, coalesced latest-wins: one query in flight, the newest
-        // pointer chased on completion.
+        // point chased on completion.
         let probeSeq = 0;
         let probeBusy = false;
         let probeLatest: { x: number; y: number } | null = null;
 
-        /** Ask where an anchor dropped at canvas-local `(px, py)` would stand,
-         *  and draw it there. A point on no paragraph keeps the last answer. */
-        const probe = (px: number, py: number): void => {
+        /** Ask where an anchor dropped at page point `to` would stand, and draw
+         *  it there. A point on no paragraph keeps the last answer. */
+        const probe = (to: { x: number; y: number }): void => {
             const edit = tools()?.host.edit;
             if (!edit) return;
-            probeLatest = { x: px, y: py };
+            probeLatest = to;
             if (probeBusy) return;
             probeBusy = true;
             const seq = ++probeSeq;
-            void edit.objectAnchorPreview(px, py).then((at) => {
+            void edit.moveDrawingAnchorPreview(page, to).then((at) => {
                 probeBusy = false;
                 if (seq === probeSeq && live && at) {
                     anchorPreview = at;
                     canvas.refreshChrome();
                 }
                 const next = probeLatest;
-                if (next && (next.x !== px || next.y !== py) && live) probe(next.x, next.y);
+                if (next && next !== to && live) probe(next);
             });
         };
         // Drop the preview: the anchor returns to where the drawing has it.
@@ -640,19 +695,99 @@ export function createGrips(tools: () => EditTools | null): Grips {
                     if (Math.hypot(px - x, py - y) < DRAG_THRESHOLD) return;
                     moved = true;
                 }
-                probe(px, py);
+                const to = frame ? pagePoint(frame, page, px, py) : null;
+                if (to) probe(to);
             },
             up(px, py) {
                 live = false;
                 const host = tools()?.host;
-                if (!moved || !host) {
+                const to = moved && frame ? pagePoint(frame, page, px, py) : null;
+                if (!to || !host) {
                     unpreview();
                     return;
                 }
                 // Hold the previewed anchor until the moved geometry arrives, so
                 // it settles where it was dropped instead of flashing back.
                 canvas.committing();
-                void host.commit(() => host.edit.moveObjectAnchor(px, py));
+                void host.commit(() => host.client.executeOnSelection({ kind: "moveDrawingAnchor", page, to }));
+            },
+            cancel() {
+                live = false;
+                unpreview();
+            },
+        };
+    }
+
+    /**
+     * A drag of the body of the drawing selected in a word document, pressed at
+     * `(x, y)`, as Word drags one. A floating drawing's box follows the pointer
+     * and its anchor shows where it goes — beside the paragraph its top edge
+     * lands in; a drawing in the line shows the caret it lands at, in the text
+     * under the pointer. The release moves it there. Placed in the space of the
+     * page the drawing is on; null with that page off screen.
+     */
+    function drawingGesture(x: number, y: number, canvas: CanvasGestureHost): CanvasGesture | null {
+        const f = frame;
+        const page = f?.boxes[0]?.place.page;
+        if (!f || page === undefined) return null;
+        const from = pagePoint(f, page, x, y);
+        if (!from) return null;
+        const floating = f.state.local.objectAnchor != null;
+        let moved = false;
+        let live = true;
+        let probeSeq = 0;
+        let probeBusy = false;
+        let probeLatest: { x: number; y: number } | null = null;
+
+        /** Ask where a drop at page point `to` would land the drawing, and mark
+         *  it: its anchor where it floats, else the caret. */
+        const probe = (to: { x: number; y: number }): void => {
+            const edit = tools()?.host.edit;
+            if (!edit) return;
+            probeLatest = to;
+            if (probeBusy) return;
+            probeBusy = true;
+            const seq = ++probeSeq;
+            void edit.moveDrawingPreview(page, from, to).then((at) => {
+                probeBusy = false;
+                if (seq === probeSeq && live) {
+                    if (floating) anchorPreview = at;
+                    else dropCaret = at;
+                    canvas.refreshChrome();
+                }
+                const next = probeLatest;
+                if (next && next !== to && live) probe(next);
+            });
+        };
+        const unpreview = (): void => {
+            canvas.preview(null);
+            anchorPreview = null;
+            dropCaret = null;
+            canvas.refreshChrome();
+        };
+        return {
+            move(px, py) {
+                if (!moved) {
+                    if (Math.hypot(px - x, py - y) < DRAG_THRESHOLD) return;
+                    moved = true;
+                }
+                const to = frame ? pagePoint(frame, page, px, py) : null;
+                if (!to) return;
+                // A floating drawing's box rides the pointer, as the canvas
+                // moves any other; one in the line stays put until it drops.
+                if (floating) canvas.preview({ kind: "affine", m: [1, 0, 0, 1, to.x - from.x, to.y - from.y] });
+                probe(to);
+            },
+            up(px, py) {
+                live = false;
+                const host = tools()?.host;
+                const to = moved && frame ? pagePoint(frame, page, px, py) : null;
+                if (!to || !host) {
+                    unpreview();
+                    return;
+                }
+                canvas.committing();
+                void host.commit(() => host.client.executeOnSelection({ kind: "moveDrawing", page, from, to }));
             },
             cancel() {
                 live = false;
@@ -675,6 +810,10 @@ export function createGrips(tools: () => EditTools | null): Grips {
             if (anchorAt(x, y)) return "move";
             const seed = rotateHitTest(x, y);
             return seed ? rotateCursorForAngle(seed.baseAngle) : null;
+        },
+        drag(x, y, canvas) {
+            if (!frame || !allowsEdit(frame.state.capabilities, "moveDrawing")) return null;
+            return drawingGesture(x, y, canvas);
         },
     };
 }
