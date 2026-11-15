@@ -153,6 +153,15 @@ export interface RevisionAction {
     run(group: RevisionGroup): void;
 }
 
+/** A document shown in place of the shell's own, which the toolbar's Download
+ *  and Print act on while it's shown. */
+export interface DocumentStandIn {
+    /** Download the document shown. */
+    download(): Promise<void>;
+    /** Print the document shown. */
+    print(): Promise<void>;
+}
+
 /** What the shell lends the extension it mounts. */
 export interface UIShellHost {
     /** The shell's root element, which a dialog of the extension's mounts in. */
@@ -187,6 +196,13 @@ export interface UIShellHost {
      *  into the cell being typed into, or beginning an entry in the selected
      *  one. */
     insertSelectionText(text: string): Promise<void>;
+    /** Hand the toolbar's Download and Print to `standIn`, a document shown in
+     *  place of the shell's own, as a template's preview is; `null` hands them
+     *  back. */
+    setStandIn(standIn: DocumentStandIn | null): void;
+    /** The name of the open document's file, as it was opened; none for bytes
+     *  opened without one. */
+    filename(): string | undefined;
     /**
      * The canvas's hidden text input, focused for all of edit mode and, in
      * view mode, while the selection is copyable — where the native `copy` /

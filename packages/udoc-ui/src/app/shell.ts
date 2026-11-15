@@ -52,7 +52,7 @@ import type {
 } from "../geometry.js";
 import { createStore, shallowEqual, subscribeSelector } from "../framework/index.js";
 import type { Store } from "../framework/index.js";
-import type { PageSpacing, UIExtension } from "../extension.js";
+import type { DocumentStandIn, PageSpacing, UIExtension } from "../extension.js";
 import type { Action } from "./actions.js";
 import { CONTEXT_MENU, commandContext, sheetTabMenu } from "./commands.js";
 import { reorderTo } from "./page-order.js";
@@ -4647,12 +4647,21 @@ export function mountUIShell(
         onAnnotationStyle: (change) => void restyleAnnotations(change),
         onMarkup: (tool) => void markupCommand(tool),
     });
+    // The document the toolbar's Download and Print act on in place of the
+    // shell's own while the extension shows it — a template's preview.
+    let standIn: DocumentStandIn | null = null;
     toolbar.setCallbacks({
         onHistory: (op) => void history(op),
         onPauseCollaboration: pauseCollaboration,
         onResumeCollaboration: resumeCollaboration,
-        onDownload: () => void download().catch((error: unknown) => console.error("udoc: the download failed", error)),
-        onPrint: () => void print().catch((error: unknown) => console.error("udoc: printing failed", error)),
+        onDownload: () =>
+            void (standIn ? standIn.download() : download()).catch((error: unknown) =>
+                console.error("udoc: the download failed", error),
+            ),
+        onPrint: () =>
+            void (standIn ? standIn.print() : print()).catch((error: unknown) =>
+                console.error("udoc: printing failed", error),
+            ),
     });
 
     // The copy half of the clipboard, in view mode as in edit — a viewer copies
@@ -4679,6 +4688,10 @@ export function mountUIShell(
         deleteSelection,
         runMenuAction,
         insertSelectionText,
+        setStandIn: (next) => {
+            standIn = next;
+        },
+        filename: () => sourceFilename,
         clipboardSink: canvas.clipboardSink,
         focusClipboardSink: canvas.focusClipboardSink,
         clipboard,
