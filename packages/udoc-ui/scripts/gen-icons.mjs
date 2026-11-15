@@ -52,6 +52,7 @@ const ICONS = {
 
     // Chrome
     ICON_CLEAR: "close",
+    ICON_ADD: "add",
     ICON_CHECK: "check",
     ICON_MORE: "more_horiz",
     ICON_MORE_VERT: "more_vert",

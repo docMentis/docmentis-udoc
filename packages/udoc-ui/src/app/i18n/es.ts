@@ -389,6 +389,11 @@ export const es: Messages = {
     "data.add": "Agregar",
     "data.remove": "Quitar",
     "data.error.conflictingType": "Se usa como otro tipo en otro lugar",
+    "data.places.one": "Usado en {count} lugar",
+    "data.places.other": "Usado en {count} lugares",
+    "data.items.one": "{count} elemento",
+    "data.items.other": "{count} elementos",
+    "data.other": "Otro…",
 
     // Search panel
     "search.placeholder": "Buscar en el documento",

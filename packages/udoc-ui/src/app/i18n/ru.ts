@@ -389,6 +389,15 @@ export const ru: Messages = {
     "data.add": "Добавить",
     "data.remove": "Удалить",
     "data.error.conflictingType": "В другом месте используется как другой тип",
+    "data.places.one": "Используется в {count} месте",
+    "data.places.few": "Используется в {count} местах",
+    "data.places.many": "Используется в {count} местах",
+    "data.places.other": "Используется в {count} местах",
+    "data.items.one": "{count} элемент",
+    "data.items.few": "{count} элемента",
+    "data.items.many": "{count} элементов",
+    "data.items.other": "{count} элемента",
+    "data.other": "Другое…",
 
     // Search panel
     "search.placeholder": "Поиск в документе",

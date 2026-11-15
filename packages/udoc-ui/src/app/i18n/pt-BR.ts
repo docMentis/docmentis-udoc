@@ -389,6 +389,11 @@ export const ptBR: Messages = {
     "data.add": "Adicionar",
     "data.remove": "Remover",
     "data.error.conflictingType": "Usado como outro tipo em outro lugar",
+    "data.places.one": "Usado em {count} lugar",
+    "data.places.other": "Usado em {count} lugares",
+    "data.items.one": "{count} item",
+    "data.items.other": "{count} itens",
+    "data.other": "Outro…",
 
     // Search panel
     "search.placeholder": "Pesquisar no documento",

@@ -389,6 +389,9 @@ export const ja: Messages = {
     "data.add": "追加",
     "data.remove": "削除",
     "data.error.conflictingType": "別の場所で別の型として使われています",
+    "data.places.other": "{count} か所で使用",
+    "data.items.other": "{count} 件",
+    "data.other": "その他…",
 
     // Search panel
     "search.placeholder": "文書内を検索",

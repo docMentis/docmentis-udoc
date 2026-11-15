@@ -727,6 +727,24 @@ export interface Messages {
     "data.remove": string;
     /** Used as another type elsewhere — a binding that implies another type than an earlier one at its path */
     "data.error.conflictingType": string;
+    "data.places.zero"?: string;
+    /** Used in {count} place — a name's count of the places that bind it, as its tooltip says it */
+    "data.places.one"?: string;
+    "data.places.two"?: string;
+    "data.places.few"?: string;
+    "data.places.many"?: string;
+    /** Used in {count} places */
+    "data.places.other": string;
+    "data.items.zero"?: string;
+    /** {count} item — how many items an array holds in the sample data */
+    "data.items.one"?: string;
+    "data.items.two"?: string;
+    "data.items.few"?: string;
+    "data.items.many"?: string;
+    /** {count} items */
+    "data.items.other": string;
+    /** Other… — a choice's value that is none of its options' */
+    "data.other": string;
 
     // Search panel
     /** Search in document */

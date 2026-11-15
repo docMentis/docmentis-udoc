@@ -387,6 +387,9 @@ export const zhCN: Messages = {
     "data.add": "添加",
     "data.remove": "删除",
     "data.error.conflictingType": "在别处被用作其他类型",
+    "data.places.other": "在 {count} 处使用",
+    "data.items.other": "{count} 项",
+    "data.other": "其他…",
 
     // Search panel
     "search.placeholder": "在文档中搜索",

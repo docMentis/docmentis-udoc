@@ -3889,66 +3889,134 @@ export const uiStyles = css`
     }
 
     /* =========================================================================
-   Data panel (the right panel's Data tab): the deck's role, then a template's
-   schema as a form of its sample data — each name in the code face with how
-   many places bind it, beside its field, nested names indented — then the
-   tags that are wrong
+   Data panel (the right panel's Data tab): the deck's role as a chip, then a
+   template's schema as a tree of its sample data — one grid, the names in a
+   column as wide as the widest needs and the values beside them, each group
+   folding under a guide line — then the tags that are wrong
    ========================================================================= */
     .udoc-ui-root .udoc-data-panel {
+        --udoc-data-indent: 16px;
+        --udoc-data-tint: color-mix(in srgb, var(--udoc-color-on-surface) 8%, transparent);
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        padding: 8px;
+        gap: 12px;
+        padding: 12px 8px 16px;
         font:
             12px/1.4 system-ui,
             sans-serif;
         color: var(--udoc-color-on-surface);
     }
-    /* The deck's role: a template, an instance, or a plain deck. */
+    /* The deck's role: a template's in the accent, an instance's or a plain
+       deck's muted. */
     .udoc-ui-root .udoc-data-panel__role {
-        padding: 0 4px;
+        display: inline-flex;
+        align-items: center;
+        align-self: flex-start;
+        gap: 6px;
+        height: 22px;
+        margin-left: 4px;
+        padding: 0 10px 0 8px;
+        font-size: 11px;
         font-weight: 600;
         color: var(--udoc-color-on-surface-variant);
+        background: var(--udoc-data-tint);
+        border-radius: 11px;
     }
-    .udoc-ui-root .udoc-data-panel__body,
-    .udoc-ui-root .udoc-data-panel__form,
-    .udoc-ui-root .udoc-data-panel__nested,
-    .udoc-ui-root .udoc-data-panel__items,
-    .udoc-ui-root .udoc-data-panel__errors {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+    .udoc-ui-root .udoc-data-panel__role::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        background: currentColor;
+        border-radius: 50%;
+    }
+    .udoc-ui-root .udoc-data-panel__role[data-role="template"] {
+        color: var(--udoc-color-primary);
+        background: color-mix(in srgb, var(--udoc-color-primary) 12%, transparent);
+    }
+    .udoc-ui-root .udoc-data-panel__role[hidden] {
+        display: none;
     }
     .udoc-ui-root .udoc-data-panel__body {
-        gap: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
     }
-    /* A nested name, or an array's items, under the name holding it. */
-    .udoc-ui-root .udoc-data-panel__nested,
-    .udoc-ui-root .udoc-data-panel__items {
-        margin-left: 12px;
-        padding-left: 8px;
-        border-left: 1px solid var(--udoc-color-outline-variant);
+    /* The tree: the names' column as wide as the widest name needs, up to a
+       bit over half, where a longer one wraps; the values' the rest — a
+       group's too, its count of items and its buttons. */
+    .udoc-ui-root .udoc-data-panel__form {
+        display: grid;
+        grid-template-columns: fit-content(55%) minmax(0, 1fr);
+        column-gap: 8px;
     }
-    .udoc-ui-root .udoc-data-panel__field-head {
+    .udoc-ui-root .udoc-data-panel__row {
+        display: contents;
+    }
+    /* A row's label, its fold or the room for one and its name, set in by
+       its depth, over a guide line for each group it is in, falling from
+       that group's fold. It stays level with its value's first line, as by a
+       choice's menu with another value's text under it. */
+    .udoc-ui-root .udoc-data-panel__label {
+        --udoc-data-inset: calc(var(--udoc-data-depth, 0) * var(--udoc-data-indent));
         display: flex;
         align-items: center;
-        gap: 8px;
-        min-height: 28px;
-    }
-    /* A name in the code face, wrapped anywhere: a name has no spaces. */
-    .udoc-ui-root .udoc-data-panel__name,
-    .udoc-ui-root .udoc-data-panel__text {
+        gap: 4px;
+        align-self: start;
         min-width: 0;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        overflow-wrap: anywhere;
+        min-height: 30px;
+        padding-left: var(--udoc-data-inset);
+        background: repeating-linear-gradient(
+                to right,
+                transparent 0 7px,
+                var(--udoc-color-outline-variant) 7px 8px,
+                transparent 8px var(--udoc-data-indent)
+            )
+            0 0 / var(--udoc-data-inset) 100% no-repeat;
     }
-    /* A name that binds places, chosen, selects the next of them; a wrong
-       tag, chosen, selects it. */
-    .udoc-ui-root .udoc-data-panel__name--places,
-    .udoc-ui-root .udoc-data-panel__error {
-        display: inline-flex;
-        align-items: baseline;
+    /* A row's buttons, at the end of its value. */
+    .udoc-ui-root .udoc-data-panel__tools {
+        display: flex;
+        gap: 2px;
+        margin-left: auto;
+    }
+    .udoc-ui-root .udoc-data-panel__spacer,
+    .udoc-ui-root .udoc-data-panel__fold {
+        flex: none;
+        width: 16px;
+        height: 16px;
+    }
+    .udoc-ui-root .udoc-data-panel__fold {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        color: var(--udoc-color-on-surface-variant);
+        background: none;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-data-panel__fold svg {
+        width: var(--udoc-caret);
+        height: var(--udoc-caret);
+        transition: transform 0.15s ease;
+    }
+    .udoc-ui-root .udoc-data-panel__fold[aria-expanded="false"] svg {
+        transform: rotate(-90deg);
+    }
+    .udoc-ui-root .udoc-data-panel__fold:hover {
+        color: var(--udoc-color-on-surface);
+    }
+    /* A name, set bold, wrapped anywhere where its column is too narrow — a
+       name has no spaces — then how many places bind it, where it's two or
+       more; one that binds places is a button choosing them. */
+    .udoc-ui-root .udoc-data-panel__name {
+        display: flex;
+        flex: 0 1 auto;
+        align-items: center;
         gap: 6px;
+        min-width: 0;
+        min-height: 24px;
         padding: 2px 4px;
         font: inherit;
         color: inherit;
@@ -3956,85 +4024,234 @@ export const uiStyles = css`
         background: none;
         border: none;
         border-radius: 4px;
-        outline: none;
-        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-data-panel__name-text {
+        min-width: 0;
+        font-weight: 600;
+        overflow-wrap: anywhere;
     }
     .udoc-ui-root .udoc-data-panel__name--places {
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        cursor: pointer;
     }
     .udoc-ui-root .udoc-data-panel__name--places:hover,
     .udoc-ui-root .udoc-data-panel__error:hover {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
     .udoc-ui-root .udoc-data-panel__name--places:focus-visible,
+    .udoc-ui-root .udoc-data-panel__fold:focus-visible,
+    .udoc-ui-root .udoc-data-panel__icon-button:focus-visible,
     .udoc-ui-root .udoc-data-panel__error:focus-visible {
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: -2px;
     }
-    .udoc-ui-root .udoc-data-panel__count,
-    .udoc-ui-root .udoc-data-panel__item-label {
+    .udoc-ui-root .udoc-data-panel__count {
+        flex: none;
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
         color: var(--udoc-color-on-surface-variant);
     }
-    /* A value's field, taking the rest of the row. */
+    /* How many tags are wrong, after the heading over them. */
+    .udoc-ui-root .udoc-data-panel__error-count {
+        min-width: 16px;
+        height: 16px;
+        padding: 0 5px;
+        font-size: 10px;
+        line-height: 16px;
+        text-align: center;
+        color: var(--udoc-color-error);
+        background: color-mix(in srgb, var(--udoc-color-error) 14%, transparent);
+        border-radius: 8px;
+    }
+    /* An array's count of items, in its values' column, where an input
+       starts. */
+    .udoc-ui-root .udoc-data-panel__meta {
+        flex: none;
+        font-size: 11px;
+        color: var(--udoc-color-on-surface-variant);
+    }
+    /* An item's number, heading its row or its group. */
+    .udoc-ui-root .udoc-data-panel__index {
+        padding: 0 4px;
+        font-size: 11px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--udoc-color-on-surface-variant);
+    }
+    /* The value, in its column. */
     .udoc-ui-root .udoc-data-panel__value {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        min-height: 30px;
+    }
+    /* A choice written as another value: its menu, the text under it. */
+    .udoc-ui-root .udoc-data-panel__value--stacked {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 3px 0;
+    }
+    .udoc-ui-root .udoc-data-panel__value--stacked > .udoc-data-panel__select,
+    .udoc-ui-root .udoc-data-panel__value--stacked > .udoc-data-panel__input {
+        flex: none;
+    }
+    .udoc-ui-root .udoc-data-panel__input,
+    .udoc-ui-root .udoc-data-panel__select select {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+        height: 26px;
+        padding: 0 8px;
+        font: inherit;
+        color: var(--udoc-color-on-surface);
+        background: var(--udoc-color-surface-container-highest);
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 4px;
+        outline: none;
+        transition: border-color 0.1s ease;
+    }
+    .udoc-ui-root .udoc-data-panel__input::placeholder {
+        color: var(--udoc-color-on-surface-variant);
+        opacity: 0.7;
+    }
+    .udoc-ui-root .udoc-data-panel__input:hover:not(:disabled),
+    .udoc-ui-root .udoc-data-panel__select select:hover:not(:disabled) {
+        border-color: var(--udoc-color-outline);
+    }
+    .udoc-ui-root .udoc-data-panel__input:focus,
+    .udoc-ui-root .udoc-data-panel__select select:focus {
+        border-color: var(--udoc-color-primary);
+        box-shadow: inset 0 0 0 1px var(--udoc-color-primary);
+    }
+    .udoc-ui-root .udoc-data-panel__input:disabled,
+    .udoc-ui-root .udoc-data-panel__select select:disabled {
+        color: var(--udoc-color-on-surface-variant);
+        background: transparent;
+    }
+    /* A choice's menu, drawn as an input with the menu's chevron. */
+    .udoc-ui-root .udoc-data-panel__select {
+        position: relative;
         display: flex;
         flex: 1;
         min-width: 0;
     }
-    .udoc-ui-root .udoc-data-panel__input[type="text"] {
-        flex: 1;
-        min-width: 0;
+    .udoc-ui-root .udoc-data-panel__select select {
+        appearance: none;
+        -webkit-appearance: none;
+        padding-right: 24px;
+        text-overflow: ellipsis;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-data-panel__select select:disabled {
+        cursor: default;
+    }
+    .udoc-ui-root .udoc-data-panel__chevron {
+        position: absolute;
+        top: 50%;
+        right: 6px;
+        display: flex;
+        color: var(--udoc-color-on-surface-variant);
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+    .udoc-ui-root .udoc-data-panel__chevron svg {
+        width: var(--udoc-caret);
+        height: var(--udoc-caret);
+    }
+    /* A bool's switch, a size down from a dialog's. */
+    .udoc-ui-root .udoc-data-panel__switch {
+        width: 28px;
+        height: 16px;
+        border-radius: 8px;
+    }
+    .udoc-ui-root .udoc-data-panel__switch::after {
+        width: 12px;
+        height: 12px;
+    }
+    .udoc-ui-root .udoc-data-panel__switch:checked::after {
+        transform: translateX(12px);
+    }
+    .udoc-ui-root .udoc-data-panel__switch:disabled {
+        cursor: default;
+        opacity: var(--udoc-state-disabled-opacity, 0.38);
+    }
+    /* Add an item, at the end of an array's head; take one out, at the end of
+       its row or its head. */
+    .udoc-ui-root .udoc-data-panel__icon-button {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
         height: 24px;
-        padding: 0 6px;
-        font: inherit;
-        color: var(--udoc-color-on-surface);
-        background: var(--udoc-color-surface);
-        border: 1px solid var(--udoc-color-outline-variant);
-        border-radius: 4px;
-    }
-    .udoc-ui-root .udoc-data-panel__input[type="text"]:focus {
-        outline: 2px solid var(--udoc-color-primary);
-        outline-offset: -1px;
-    }
-    .udoc-ui-root .udoc-data-panel__input:disabled {
-        opacity: 0.6;
-    }
-    /* Add an item, after an array's name; take one out, ending its row. */
-    .udoc-ui-root .udoc-data-panel__add,
-    .udoc-ui-root .udoc-data-panel__remove {
-        padding: 2px 8px;
-        font: inherit;
-        color: var(--udoc-color-primary);
+        padding: 0;
+        color: var(--udoc-color-on-surface-variant);
         background: none;
         border: none;
         border-radius: 4px;
         cursor: pointer;
     }
-    .udoc-ui-root .udoc-data-panel__remove {
-        margin-left: auto;
-        color: var(--udoc-color-on-surface-variant);
+    .udoc-ui-root .udoc-data-panel__icon-button svg {
+        width: var(--udoc-btn-glyph);
+        height: var(--udoc-btn-glyph);
     }
-    .udoc-ui-root .udoc-data-panel__add:hover:not(:disabled),
-    .udoc-ui-root .udoc-data-panel__remove:hover:not(:disabled) {
+    .udoc-ui-root .udoc-data-panel__icon-button:hover:not(:disabled) {
+        color: var(--udoc-color-on-surface);
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
-    .udoc-ui-root .udoc-data-panel__add:disabled,
-    .udoc-ui-root .udoc-data-panel__remove:disabled {
-        opacity: 0.5;
-        cursor: default;
+    .udoc-ui-root .udoc-data-panel__icon-button--remove:hover:not(:disabled) {
+        color: var(--udoc-color-error);
     }
-    /* The heading over the tags that are wrong, and what is wrong with each,
-       wrapping under its tag where it must. */
+    .udoc-ui-root .udoc-data-panel__icon-button:disabled {
+        cursor: default;
+        opacity: var(--udoc-state-disabled-opacity, 0.38);
+    }
+    /* The tags that are wrong, under a rule: a card each, its tag as written
+       in the code face, cut at one line, what is wrong under it. */
+    .udoc-ui-root .udoc-data-panel__errors {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-top: 12px;
+        border-top: 1px solid var(--udoc-color-outline-variant);
+    }
     .udoc-ui-root .udoc-data-panel__heading {
+        display: flex;
+        align-items: center;
+        gap: 6px;
         padding: 0 4px;
         font-weight: 600;
         color: var(--udoc-color-error);
     }
+    .udoc-ui-root .udoc-data-panel__error-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
     .udoc-ui-root .udoc-data-panel__error {
-        flex-wrap: wrap;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
         width: 100%;
+        padding: 6px 8px;
+        font: inherit;
+        color: inherit;
+        text-align: left;
+        background: color-mix(in srgb, var(--udoc-color-error) 7%, transparent);
+        border: none;
+        border-left: 3px solid var(--udoc-color-error);
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-data-panel__tag {
+        overflow: hidden;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 11px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .udoc-ui-root .udoc-data-panel__message {
+        font-size: 11px;
         color: var(--udoc-color-error);
     }
 

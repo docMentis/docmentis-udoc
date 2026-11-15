@@ -390,6 +390,11 @@ export const en: Messages = {
     "data.add": "Add",
     "data.remove": "Remove",
     "data.error.conflictingType": "Used as another type elsewhere",
+    "data.places.one": "Used in {count} place",
+    "data.places.other": "Used in {count} places",
+    "data.items.one": "{count} item",
+    "data.items.other": "{count} items",
+    "data.other": "Other…",
 
     // Search panel
     "search.placeholder": "Search in document",

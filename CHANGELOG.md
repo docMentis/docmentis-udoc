@@ -13,12 +13,14 @@ listed once, by package. Its major and minor version are those of the
 - A PowerPoint deck offers a Data panel, `"data"` among the panels
   `openPanel` takes: whether the deck is a template, an instance filled from
   one or a plain deck, then, for a template, every name its bindings make
-  the data hold, nested as the data nests them — `funds` › `name` — each with
-  how many places bind it, which chosen selects the next, and a field for its
-  sample data: text, a choice's text with its values offered, a checkbox for a
-  bool, and an array's items, added and removed. In edit mode the sample data
-  is kept in the template, one undo step per field. Last come the tags that
-  are wrong, each with what is wrong with it.
+  the data hold, as a tree that nests them as the data does — `funds` ›
+  `name` — each object and array folding. Beside each name, in one column
+  at every depth, is its sample data: text, a choice picked from its values
+  or written as another, a switch for a bool, and an array's items, added
+  and removed. A name chosen selects the next place that binds it; where
+  two or more do, their count follows the name. In edit mode the sample
+  data is kept in the template, one undo step per value. Last come the tags
+  that are wrong, each with what is wrong with it.
 
 ### udoc-editor
 
