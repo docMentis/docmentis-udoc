@@ -31,7 +31,7 @@ import type {
 import type { Store } from "../../framework/index.js";
 import { subscribeSelector } from "../../framework/index.js";
 import type { Action } from "../actions.js";
-import { blankItem, boundPath, sampleAt, withItem, withSample, withoutItem } from "../data-bindings.js";
+import { blankItem, boundPath, sampleAt, titleOf, withItem, withSample, withoutItem } from "../data-bindings.js";
 import type { SamplePath } from "../data-bindings.js";
 import { VIEW_MODE } from "../state.js";
 import type { UIState } from "../state.js";
@@ -240,6 +240,8 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         }
         input.type = "text";
         input.value = typeof value === "string" || typeof value === "number" ? String(value) : "";
+        // What a preview fills in where the sample data gives nothing.
+        if (typeof node === "object" && "text" in node) input.placeholder = node.text.values[0] ?? titleOf(path);
         if (typeof node === "object" && "text" in node && node.text.values.length > 0) {
             const options = document.createElement("datalist");
             options.id = `udoc-data-values-${pathKey(path).replace(/\W+/g, "-")}`;

@@ -6,9 +6,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { BindingData } from "@docmentis/udoc-wasm";
+import type { BindingData, BindingSchema } from "@docmentis/udoc-wasm";
 
-import { blankItem, boundPath, sampleAt, withItem, withoutItem, withSample } from "../../src/app/data-bindings.ts";
+import {
+    blankItem,
+    boundPath,
+    completedSample,
+    madeUpSample,
+    sampleAt,
+    titleOf,
+    withItem,
+    withoutItem,
+    withSample,
+} from "../../src/app/data-bindings.ts";
 
 const data: BindingData = { customer: { name: "Acme" }, funds: [{ name: "Alpha" }, { name: "Beta" }] };
 
@@ -41,6 +51,34 @@ test("a value's bound path names every item alike", () => {
     assert.equal(boundPath(["funds", 2, "name"]), "funds[].name");
     assert.equal(boundPath(["rows", 0, 1]), "rows[][]");
     assert.equal(boundPath(["funds"]), "funds");
+});
+
+test("a made-up sample is each path's title, a choice's first value, true and three items", () => {
+    assert.equal(titleOf(["customer", "name"]), "Customer Name");
+    assert.equal(titleOf(["funds", 2, "paysDividend"]), "Funds Pays Dividend");
+    assert.equal(titleOf(["first_name"]), "First Name");
+    const schema: BindingSchema = {
+        object: {
+            properties: {
+                customer: { object: { properties: { name: { text: { values: [] } } } } },
+                rating: { text: { values: ["low", "high"] } },
+                vip: "bool",
+                managers: { array: { item: { text: { values: [] } } } },
+            },
+        },
+    };
+    assert.deepEqual(madeUpSample(schema), {
+        customer: { name: "Customer Name" },
+        rating: "low",
+        vip: true,
+        managers: ["Managers", "Managers", "Managers"],
+    });
+    assert.deepEqual(completedSample({ customer: { name: "Ada" }, managers: ["Bo"] }, schema), {
+        customer: { name: "Ada" },
+        rating: "low",
+        vip: true,
+        managers: ["Bo"],
+    });
 });
 
 test("a new item is blank as its kind is", () => {
