@@ -41,6 +41,18 @@ export function withoutItem(data: BindingData | undefined, path: SamplePath, ind
     );
 }
 
+/** The path, as the engine resolves a binding's, that the value at `path` in
+ *  the data is bound by: its names joined by `.`, `[]` for each item —
+ *  `funds[].name` for any fund's name. Every item of an array is bound alike. */
+export function boundPath(path: SamplePath): string {
+    let text = "";
+    for (const step of path) {
+        if (typeof step === "number") text += "[]";
+        else text += text === "" ? step : `.${step}`;
+    }
+    return text;
+}
+
 /** A new item of an array whose items `item` describes: an empty object,
  *  empty text, false or an empty array, as it holds. */
 export function blankItem(item: BindingSchema | undefined): BindingValue {

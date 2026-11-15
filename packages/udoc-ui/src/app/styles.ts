@@ -3942,7 +3942,9 @@ export const uiStyles = css`
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         overflow-wrap: anywhere;
     }
-    /* A wrong tag: chosen, it selects it. */
+    /* A name that binds places, chosen, selects the next of them; a wrong
+       tag, chosen, selects it. */
+    .udoc-ui-root .udoc-data-panel__name--places,
     .udoc-ui-root .udoc-data-panel__error {
         display: inline-flex;
         align-items: baseline;
@@ -3957,13 +3959,19 @@ export const uiStyles = css`
         outline: none;
         cursor: pointer;
     }
+    .udoc-ui-root .udoc-data-panel__name--places {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .udoc-ui-root .udoc-data-panel__name--places:hover,
     .udoc-ui-root .udoc-data-panel__error:hover {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
+    .udoc-ui-root .udoc-data-panel__name--places:focus-visible,
     .udoc-ui-root .udoc-data-panel__error:focus-visible {
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: -2px;
     }
+    .udoc-ui-root .udoc-data-panel__count,
     .udoc-ui-root .udoc-data-panel__item-label {
         color: var(--udoc-color-on-surface-variant);
     }

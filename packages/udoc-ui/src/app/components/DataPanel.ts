@@ -7,7 +7,11 @@
 // For a template, the schema its bindings make, as a form of its sample data:
 // each name the data must hold, nested as the data nests it, with a field for
 // the value its bindings imply — text, a choice's text with its options' values
-// offered, a bool as a checkbox, an array as its items, each added and removed.
+// offered, a bool as a checkbox, an array as its items, each added and removed
+// — and a count of the places that bind it, which, chosen, selects the next of
+// them and brings its slide into view, round to the first again after the last.
+// A name inside an array's items stands for every item's: its places are all
+// the places bound by its path, `funds[].name`, whichever item is shown.
 // Last, the tags that are wrong, each as written with what is wrong with it. A
 // plain deck shows a note in their place, and an instance nothing.
 //
@@ -27,7 +31,7 @@ import type {
 import type { Store } from "../../framework/index.js";
 import { subscribeSelector } from "../../framework/index.js";
 import type { Action } from "../actions.js";
-import { blankItem, sampleAt, withItem, withSample, withoutItem } from "../data-bindings.js";
+import { blankItem, boundPath, sampleAt, withItem, withSample, withoutItem } from "../data-bindings.js";
 import type { SamplePath } from "../data-bindings.js";
 import { VIEW_MODE } from "../state.js";
 import type { UIState } from "../state.js";
@@ -171,12 +175,29 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         return Object.entries(properties).map(([name, schema]) => fieldRow(name, schema, [...path, name], slice));
     }
 
-    /** A name, as the data holds it. */
-    function nameLabel(name: string): HTMLElement {
-        const label = document.createElement("span");
-        label.className = "udoc-data-panel__name";
-        label.textContent = name;
-        return label;
+    /** The name of the value at `path`, which chooses the places that bind
+     *  it, with how many there are — plain text where none do, as for an
+     *  object, which no binding binds itself. */
+    function nameButton(name: string, path: SamplePath, slice: DataPanelSlice): HTMLElement {
+        const bound = boundPath(path);
+        const places = (slice.bindings?.places ?? []).filter((place) => place.path === bound);
+        if (places.length === 0) {
+            const label = document.createElement("span");
+            label.className = "udoc-data-panel__name";
+            label.textContent = name;
+            return label;
+        }
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "udoc-data-panel__name udoc-data-panel__name--places";
+        const text = document.createElement("span");
+        text.textContent = name;
+        const count = document.createElement("span");
+        count.className = "udoc-data-panel__count";
+        count.textContent = String(places.length);
+        button.append(text, count);
+        button.addEventListener("click", () => callbacks.onChoose(bound, places));
+        return button;
     }
 
     /** The row of the field `name`, holding `node`, at `path` in the data. */
@@ -185,7 +206,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         row.className = "udoc-data-panel__field";
         const head = document.createElement("div");
         head.className = "udoc-data-panel__field-head";
-        head.append(nameLabel(name));
+        head.append(nameButton(name, path, slice));
         row.append(head);
         if (node !== "bool" && "object" in node) {
             const nested = document.createElement("div");

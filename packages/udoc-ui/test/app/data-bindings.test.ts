@@ -8,7 +8,7 @@ import { test } from "node:test";
 
 import type { BindingData } from "@docmentis/udoc-wasm";
 
-import { blankItem, sampleAt, withItem, withoutItem, withSample } from "../../src/app/data-bindings.ts";
+import { blankItem, boundPath, sampleAt, withItem, withoutItem, withSample } from "../../src/app/data-bindings.ts";
 
 const data: BindingData = { customer: { name: "Acme" }, funds: [{ name: "Alpha" }, { name: "Beta" }] };
 
@@ -34,6 +34,13 @@ test("an item is added after the others, and taken out by its index", () => {
     const removed = withoutItem(added, ["funds"], 0);
     assert.deepEqual(sampleAt(removed, ["funds"]), [{ name: "Beta" }, { name: "Gamma" }]);
     assert.deepEqual(sampleAt(withItem(undefined, ["managers"], ""), ["managers"]), [""]);
+});
+
+test("a value's bound path names every item alike", () => {
+    assert.equal(boundPath(["customer", "name"]), "customer.name");
+    assert.equal(boundPath(["funds", 2, "name"]), "funds[].name");
+    assert.equal(boundPath(["rows", 0, 1]), "rows[][]");
+    assert.equal(boundPath(["funds"]), "funds");
 });
 
 test("a new item is blank as its kind is", () => {
