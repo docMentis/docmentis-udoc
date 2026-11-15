@@ -354,6 +354,7 @@ export const zhCN: Messages = {
     "rightPanel.search": "搜索",
     "rightPanel.comments": "批注",
     "rightPanel.revisions": "修订",
+    "rightPanel.data": "数据",
     "rightPanel.resizeHandle": "调整面板大小",
     "rightPanel.close": "关闭面板",
     "revisions.count": "修订：{count}",
@@ -369,6 +370,10 @@ export const zhCN: Messages = {
     "revisions.cellDeletion": "删除单元格",
     "revisions.cellMerge": "合并单元格",
     "revisions.tableFormatting": "表格格式已更改",
+    "data.none": "还没有变量",
+    "data.template": "模板",
+    "data.instance": "实例",
+    "data.plain": "普通文档",
 
     // Search panel
     "search.placeholder": "在文档中搜索",

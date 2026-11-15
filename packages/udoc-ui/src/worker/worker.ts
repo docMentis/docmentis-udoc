@@ -59,6 +59,7 @@ import initEngine, {
     validateWatermarks,
 } from "@docmentis/udoc-wasm";
 import type {
+    Automation,
     CanvasText,
     FontLocation,
     PresentationPlaneKind,
@@ -2861,6 +2862,12 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, session ? slideSections(session) : []);
                 break;
             }
+            case "automation": {
+                // A read that loads the deck's automation part on first use.
+                // None for a plain deck, or with no open / non-presentation doc.
+                reply(id, session ? automation(session) : null);
+                break;
+            }
             case "sheetIdByIndex": {
                 // A pure read: one sheet's id. Undefined past the last sheet, or
                 // with no open / non-spreadsheet doc.
@@ -3422,6 +3429,12 @@ function slideSections(s: WasmSession): SlideSectionRun[] {
         list.sections,
         safeRead(() => s.presentation.model.root.slideIds(), []),
     );
+}
+
+/** The open deck's automation part — null for a plain deck, which has none,
+ *  or any other document. */
+function automation(s: WasmSession): Automation | null {
+    return safeRead(() => s.presentation.model.automation.dump(), null);
 }
 
 /** The media file `media` names, its bytes copied out of wasm memory into a

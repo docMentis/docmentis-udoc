@@ -5,6 +5,8 @@ import type { UIState, RightPanelTab } from "../state.js";
 import { RIGHT_PANEL_TABS, isLeftPanelTab } from "../state.js";
 import { ICON_CLEAR } from "../icons.js";
 import { createCommentsPanel } from "./CommentsPanel.js";
+import { createDataPanel } from "./DataPanel.js";
+import type { DataPanelCallbacks, DataPanelComponent } from "./DataPanel.js";
 import type { CommentsPanelCallbacks, CommentsPanelComponent, NewCommentsAnswered } from "./CommentsPanel.js";
 import { createRevisionsPanel } from "./RevisionsPanel.js";
 import type { RevisionsPanelCallbacks, RevisionsPanelComponent } from "./RevisionsPanel.js";
@@ -17,6 +19,7 @@ const TAB_LABEL: Record<RightPanelTab, MessageKey> = {
     search: "rightPanel.search",
     comments: "rightPanel.comments",
     revisions: "rightPanel.revisions",
+    data: "rightPanel.data",
 };
 
 interface RightPanelSlice {
@@ -29,17 +32,20 @@ interface RightPanelSlice {
 }
 
 /**
- * The right side panel (search / comments / revisions). A port of the previous
- * udoc-viewer's panel, under a header naming the tab shown, with the panel's
- * close button. Search finds text in the document ({@link createSearchPanel});
- * Comments lists the document's comment threads ({@link createCommentsPanel});
- * Revisions a word document's tracked changes ({@link createRevisionsPanel}).
+ * The right side panel (search / comments / revisions / data). A port of the
+ * previous udoc-viewer's panel, under a header naming the tab shown, with the
+ * panel's close button. Search finds text in the document
+ * ({@link createSearchPanel}); Comments lists the document's comment threads
+ * ({@link createCommentsPanel}); Revisions a word document's tracked changes
+ * ({@link createRevisionsPanel}); Data the tags a deck's text holds
+ * ({@link createDataPanel}).
  */
 export function createRightPanel(
     i18n: I18n,
     comments: CommentsPanelCallbacks,
     search: SearchPanelCallbacks,
     revisions: RevisionsPanelCallbacks,
+    data: DataPanelCallbacks,
 ) {
     const el = document.createElement("div");
     el.className = "udoc-right-panel";
@@ -82,6 +88,8 @@ export function createRightPanel(
     let searchPanel: SearchPanelComponent | null = null;
     /** The Revisions tab's live panel, mounted only while that tab is active. */
     let revisionsPanel: RevisionsPanelComponent | null = null;
+    /** The Data tab's live panel, mounted only while that tab is active. */
+    let dataPanel: DataPanelComponent | null = null;
 
     function applyState(slice: RightPanelSlice): void {
         el.style.display = !slice.panelVisible || slice.allDisabled ? "none" : "";
@@ -97,6 +105,8 @@ export function createRightPanel(
         searchPanel = null;
         revisionsPanel?.destroy();
         revisionsPanel = null;
+        dataPanel?.destroy();
+        dataPanel = null;
         content.innerHTML = "";
         if (slice.activeTab) {
             content.setAttribute("data-tab", slice.activeTab);
@@ -112,6 +122,9 @@ export function createRightPanel(
             } else if (slice.activeTab === "revisions" && storeRef) {
                 revisionsPanel = createRevisionsPanel(i18n, revisions);
                 revisionsPanel.mount(content, storeRef);
+            } else if (slice.activeTab === "data" && storeRef) {
+                dataPanel = createDataPanel(i18n, data);
+                dataPanel.mount(content, storeRef);
             }
         } else {
             content.removeAttribute("data-tab");
@@ -189,6 +202,8 @@ export function createRightPanel(
         searchPanel = null;
         revisionsPanel?.destroy();
         revisionsPanel = null;
+        dataPanel?.destroy();
+        dataPanel = null;
         if (unsubRender) unsubRender();
         for (const off of unsubEvents) off();
         storeRef = null;

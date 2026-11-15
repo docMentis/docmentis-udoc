@@ -356,6 +356,7 @@ export const ru: Messages = {
     "rightPanel.search": "Поиск",
     "rightPanel.comments": "Комментарии",
     "rightPanel.revisions": "Исправления",
+    "rightPanel.data": "Данные",
     "rightPanel.resizeHandle": "Изменить размер панели",
     "rightPanel.close": "Закрыть панель",
     "revisions.count": "Исправления: {count}",
@@ -371,6 +372,10 @@ export const ru: Messages = {
     "revisions.cellDeletion": "Удалена ячейка",
     "revisions.cellMerge": "Объединены ячейки",
     "revisions.tableFormatting": "Изменено форматирование таблицы",
+    "data.none": "Переменных пока нет",
+    "data.template": "Шаблон",
+    "data.instance": "Экземпляр",
+    "data.plain": "Обычный документ",
 
     // Search panel
     "search.placeholder": "Поиск в документе",

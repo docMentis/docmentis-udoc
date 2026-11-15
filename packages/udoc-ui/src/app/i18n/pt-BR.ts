@@ -356,6 +356,7 @@ export const ptBR: Messages = {
     "rightPanel.search": "Pesquisar",
     "rightPanel.comments": "Comentários",
     "rightPanel.revisions": "Revisões",
+    "rightPanel.data": "Dados",
     "rightPanel.resizeHandle": "Redimensionar painel",
     "rightPanel.close": "Fechar Painel",
     "revisions.count": "Alterações: {count}",
@@ -371,6 +372,10 @@ export const ptBR: Messages = {
     "revisions.cellDeletion": "Célula excluída",
     "revisions.cellMerge": "Células mescladas",
     "revisions.tableFormatting": "Tabela formatada",
+    "data.none": "Nenhuma variável ainda",
+    "data.template": "Modelo",
+    "data.instance": "Instância",
+    "data.plain": "Documento comum",
 
     // Search panel
     "search.placeholder": "Pesquisar no documento",

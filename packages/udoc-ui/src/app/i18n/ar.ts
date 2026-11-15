@@ -354,6 +354,7 @@ export const ar: Messages = {
     "rightPanel.search": "بحث",
     "rightPanel.comments": "تعليقات",
     "rightPanel.revisions": "المراجعات",
+    "rightPanel.data": "البيانات",
     "rightPanel.resizeHandle": "تغيير حجم اللوحة",
     "rightPanel.close": "إغلاق اللوحة",
     "revisions.count": "التغييرات: {count}",
@@ -369,6 +370,10 @@ export const ar: Messages = {
     "revisions.cellDeletion": "خلية محذوفة",
     "revisions.cellMerge": "خلايا مدمجة",
     "revisions.tableFormatting": "جدول منسق",
+    "data.none": "لا توجد متغيرات بعد",
+    "data.template": "قالب",
+    "data.instance": "نسخة",
+    "data.plain": "مستند عادي",
 
     // Search panel
     "search.placeholder": "البحث في المستند",

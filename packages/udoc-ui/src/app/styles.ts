@@ -3889,6 +3889,65 @@ export const uiStyles = css`
     }
 
     /* =========================================================================
+   Data panel (the right panel's Data tab): the tags a deck's text holds, a
+   row each — what its braces hold, in the code face, and how many times it
+   is written
+   ========================================================================= */
+    .udoc-ui-root .udoc-data-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+    }
+    /* The deck's role: a template, an instance, or a plain deck. */
+    .udoc-ui-root .udoc-data-panel__role {
+        padding: 0 8px;
+        font:
+            600 12px/1.4 system-ui,
+            sans-serif;
+        color: var(--udoc-color-on-surface-variant);
+    }
+    .udoc-ui-root .udoc-data-panel__tags {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .udoc-ui-root .udoc-data-panel__tag {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        width: 100%;
+        padding: 6px 8px;
+        font:
+            12px/1.4 system-ui,
+            sans-serif;
+        color: var(--udoc-color-on-surface);
+        text-align: left;
+        background: none;
+        border: none;
+        border-radius: 4px;
+        outline: none;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-data-panel__tag:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root .udoc-data-panel__tag:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: -2px;
+    }
+    /* What the tag's braces hold, wrapped anywhere: a path has no spaces. */
+    .udoc-ui-root .udoc-data-panel__text {
+        min-width: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        overflow-wrap: anywhere;
+    }
+    .udoc-ui-root .udoc-data-panel__count {
+        margin-left: auto;
+        color: var(--udoc-color-on-surface-variant);
+    }
+
+    /* =========================================================================
    Mode / command toolbar
    Top bar zones: left = panel toggle + mode switch + editing cluster;
    center = view-state; right = app menu. The editing cluster holds the

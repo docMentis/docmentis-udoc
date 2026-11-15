@@ -68,6 +68,8 @@ import { cellKeyAction } from "./cell-keys.js";
 import type { CellKeyAction } from "./cell-keys.js";
 import { tabKeyAction } from "./tab-keys.js";
 import { createRightPanel } from "./components/RightPanel.js";
+import { DATA_TAG_PATTERN, DATA_TAG_SEARCH, groupDataTags } from "./data-tags.js";
+import type { DataTag } from "./data-tags.js";
 import { createTether } from "./components/Tether.js";
 import { applyPoint, boxCorners } from "./components/affine.js";
 import { createStatusBar } from "./components/StatusBar.js";
@@ -675,6 +677,9 @@ export function mountUIShell(
         search: shellOptions.showSearchPanel,
         comments: shellOptions.showCommentsPanel,
         revisions: shellOptions.showRevisionsPanel,
+        // No option hides it yet: it is the automation's, still being built,
+        // and only a deck offers it.
+        data: undefined,
     };
     const hostDisabledPanels: ReadonlySet<PanelTab> = new Set(
         [...LEFT_PANEL_TABS, ...RIGHT_PANEL_TABS].filter((tab) => shownPanels[tab] === false),
@@ -1610,6 +1615,7 @@ export function mountUIShell(
             // Edit mode's buttons, the extension's: a viewer settles nothing.
             actions: (state) => (extension && state.mode !== VIEW_MODE ? extension.revisionActions(state) : []),
         },
+        { onChoose: (tag) => void chooseDataTag(tag) },
     );
     rightPanel.mount(rightPanelSlot, store);
     for (const tether of tethers) tether.mount(bodySlot, rightPanelSlot, store);
@@ -3653,6 +3659,73 @@ export function mountUIShell(
     }
     const unsubSelectionRevisions = client.onSelection(refreshSelectionRevisionIds);
 
+    // The Data panel's tags: the deck's text searched for them as the panel
+    // opens, and again whenever the document changes while it is open — a
+    // search of the shell's own, apart from the Search panel's, whose query and
+    // matches it leaves as they are — and the deck's automation part beside
+    // them, which says whether it is a template. The latest read wins, and
+    // changes in one frame are read once.
+    let dataTagsGeneration = 0;
+    let dataTagsPending: number | null = null;
+    function refreshDataTags(): void {
+        const state = store.getState();
+        if (state.status !== "ready" || state.activePanel !== "data") return;
+        if (dataTagsPending !== null) cancelAnimationFrame(dataTagsPending);
+        dataTagsPending = requestAnimationFrame(() => {
+            dataTagsPending = null;
+            const generation = ++dataTagsGeneration;
+            void (async () => {
+                const matches: SearchMatch[] = [];
+                let from: SearchContinuation | null = null;
+                for (;;) {
+                    const { batch, layout } = await client.search(DATA_TAG_PATTERN, DATA_TAG_SEARCH, null, from);
+                    if (generation !== dataTagsGeneration) return;
+                    // A search lays out the pages its matches are drawn on.
+                    takeLayout(layout);
+                    matches.push(...batch.matches);
+                    if (batch.next === null) break;
+                    from = batch.next;
+                }
+                const automation = await client.presentation.automation();
+                if (generation !== dataTagsGeneration) return;
+                store.dispatch({ type: "SET_DATA_TAGS", tags: groupDataTags(matches), automation });
+            })().catch(() => {
+                // Worker gone or document closed — nothing to show.
+            });
+        });
+    }
+    const unsubDataTagsChanged = client.onDocumentChanged(refreshDataTags);
+    const unsubDataTagsShown = subscribeSelector(
+        store,
+        (s) => ({ status: s.status, generation: s.docGeneration, panel: s.activePanel === "data" }),
+        refreshDataTags,
+        { equality: shallowEqual },
+    );
+
+    // Which place of each tag the Data panel chose last, by the tag: choosing
+    // it again goes on to the next, round to the first after the last. Kept
+    // while the tags are read again after an edit, and dropped with the
+    // document.
+    const dataTagChosen = new Map<string, number>();
+    const unsubDataTagsOpened = subscribeSelector(
+        store,
+        (s) => s.docGeneration,
+        () => dataTagChosen.clear(),
+    );
+
+    // Select the next place a tag the Data panel lists is written, and bring
+    // it into view with the least scroll.
+    async function chooseDataTag(tag: DataTag): Promise<void> {
+        if (tag.matches.length === 0) return;
+        const index = ((dataTagChosen.get(tag.tag) ?? -1) + 1) % tag.matches.length;
+        dataTagChosen.set(tag.tag, index);
+        const match = tag.matches[index]!;
+        const selection = await client.searchMatchSelection(match.location);
+        if (selection) setSelection(selection);
+        const quad = match.quads[0];
+        if (quad) client.goToRect(quad.page, quadBounds(quad), "nearest");
+    }
+
     // Select a change the Revisions panel lists and bring it into view with
     // the least scroll, as Next lands on one — or, where the view hides all
     // of it and the selection on it draws nothing, a deletion in Simple
@@ -4626,6 +4699,10 @@ export function mountUIShell(
         if (commentsPending !== null) cancelAnimationFrame(commentsPending);
         unsubRevisionsChanged();
         unsubRevisionsShown();
+        unsubDataTagsChanged();
+        unsubDataTagsShown();
+        unsubDataTagsOpened();
+        if (dataTagsPending !== null) cancelAnimationFrame(dataTagsPending);
         unsubRevisionGroupMove();
         unsubRevisionStart();
         unsubSelectionRevisions();

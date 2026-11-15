@@ -95,3 +95,23 @@ test("a selection out of none opens its tab, though none was for the same one", 
 test("a selection no tab holds for leaves the tab where it is", () => {
     assert.equal(selectionOpensTab(TABS, PICKED_FRAME, allowing(), "shape"), null);
 });
+
+/** A deck's strip with its Automation tab after the others: it holds for
+ *  whatever they hold for, and stays open. */
+const onStrip = (caps: SelectionCapabilities) => TABS.some((t) => t.opensFor?.(caps) ?? false);
+const WITH_AUTOMATION = [...TABS, tab("automation", { opensFor: onStrip, staysOpen: true })];
+
+test("a tab after the others, holding where they hold, opens for no selection", () => {
+    assert.equal(selectionTab(WITH_AUTOMATION, CARET_IN_BODY, null), "text");
+    assert.equal(selectionTab(WITH_AUTOMATION, PICKED_FRAME, "text"), "shape");
+    assert.equal(selectionOpensTab(WITH_AUTOMATION, CARET_IN_BODY, PICKED_FRAME, "shape"), "shape");
+});
+
+test("picked, it keeps the ribbon over every selection the others open for", () => {
+    for (const caps of [CARET_IN_CELL, BLOCK_OF_CELLS, PICKED_FRAME, CARET_IN_BODY]) {
+        assert.equal(selectionTab(WITH_AUTOMATION, caps, "automation"), "automation");
+    }
+    // From text to a shape, and to a selection none holds for, it is left where it is.
+    assert.equal(selectionOpensTab(WITH_AUTOMATION, CARET_IN_BODY, PICKED_FRAME, "automation"), null);
+    assert.equal(selectionOpensTab(WITH_AUTOMATION, PICKED_FRAME, allowing(), "automation"), null);
+});

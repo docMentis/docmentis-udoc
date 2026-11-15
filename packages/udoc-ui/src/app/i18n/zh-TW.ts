@@ -354,6 +354,7 @@ export const zhTW: Messages = {
     "rightPanel.search": "搜尋",
     "rightPanel.comments": "註解",
     "rightPanel.revisions": "修訂",
+    "rightPanel.data": "資料",
     "rightPanel.resizeHandle": "調整面板大小",
     "rightPanel.close": "關閉面板",
     "revisions.count": "修訂：{count}",
@@ -369,6 +370,10 @@ export const zhTW: Messages = {
     "revisions.cellDeletion": "刪除儲存格",
     "revisions.cellMerge": "合併儲存格",
     "revisions.tableFormatting": "表格格式已變更",
+    "data.none": "尚無變數",
+    "data.template": "範本",
+    "data.instance": "實例",
+    "data.plain": "一般文件",
 
     // Search panel
     "search.placeholder": "在文件中搜尋",

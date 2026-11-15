@@ -356,6 +356,7 @@ export const ja: Messages = {
     "rightPanel.search": "検索",
     "rightPanel.comments": "コメント",
     "rightPanel.revisions": "変更履歴",
+    "rightPanel.data": "データ",
     "rightPanel.resizeHandle": "パネルのサイズ変更",
     "rightPanel.close": "パネルを閉じる",
     "revisions.count": "変更: {count}",
@@ -371,6 +372,10 @@ export const ja: Messages = {
     "revisions.cellDeletion": "セルの削除",
     "revisions.cellMerge": "セルの結合",
     "revisions.tableFormatting": "表の書式変更",
+    "data.none": "変数はまだありません",
+    "data.template": "テンプレート",
+    "data.instance": "インスタンス",
+    "data.plain": "通常のドキュメント",
 
     // Search panel
     "search.placeholder": "文書内を検索",

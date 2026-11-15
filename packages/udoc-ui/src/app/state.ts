@@ -9,8 +9,10 @@ import type {
     SlideSectionRun,
 } from "../worker/protocol.js";
 import type { AnnotationStyles } from "./annotations.js";
+import type { DataTag } from "./data-tags.js";
 import type { MessageKey } from "./i18n/index.js";
 import type {
+    Automation,
     CellEntryMode,
     Feature,
     FileFormat,
@@ -139,8 +141,9 @@ export const DEFAULT_ZOOM_STEPS = [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4, 
 
 /** Tabs that live in the left side panel. */
 export type LeftPanelTab = "thumbnail" | "outline" | "layers" | "attachments";
-/** Tabs that live in the right side panel. */
-export type RightPanelTab = "search" | "comments" | "revisions";
+/** Tabs that live in the right side panel. `data` lists the tags a deck's
+ *  text holds — `{{customer.name}}` — for the automation that fills it. */
+export type RightPanelTab = "search" | "comments" | "revisions" | "data";
 /** A side panel's tab, left or right. */
 export type PanelTab = LeftPanelTab | RightPanelTab;
 
@@ -317,7 +320,7 @@ export function showsPaper(state: Parameters<typeof sheetLayoutModeOf>[0]): bool
 export const LEFT_PANEL_TABS: readonly LeftPanelTab[] = ["thumbnail", "outline", "layers", "attachments"];
 
 /** Canonical order of the right panel's tabs. */
-export const RIGHT_PANEL_TABS: readonly RightPanelTab[] = ["search", "comments", "revisions"];
+export const RIGHT_PANEL_TABS: readonly RightPanelTab[] = ["search", "comments", "revisions", "data"];
 
 const LEFT_TABS_SET: ReadonlySet<PanelTab> = new Set(LEFT_PANEL_TABS);
 export function isLeftPanelTab(tab: PanelTab): tab is LeftPanelTab {
@@ -793,6 +796,18 @@ export interface UIState {
      * until read.
      */
     revisionGroups: readonly ListedRevisionGroup[] | null;
+    /**
+     * The tags a deck's text holds, as the Data panel lists them, read while
+     * that panel is open and again whenever the document changes; null until
+     * read.
+     */
+    dataTags: readonly DataTag[] | null;
+    /**
+     * The deck's automation part, read with {@link dataTags}: whether the deck
+     * is a template or an instance filled from one. Null for a plain deck,
+     * which has none, and until read.
+     */
+    dataAutomation: Automation | null;
     /** The ids of the records of the tracked changes the selection touches,
      *  read while the Revisions panel is open, which marks their cards. */
     selectionRevisionIds: readonly string[];
@@ -1211,6 +1226,8 @@ export const initialState: UIState = {
     openOfficeComment: null,
     revisionGroups: null,
     selectionRevisionIds: [],
+    dataTags: null,
+    dataAutomation: null,
 
     searchQuery: "",
     searchCaseSensitive: false,

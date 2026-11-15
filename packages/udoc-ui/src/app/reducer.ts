@@ -118,6 +118,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
                 openOfficeComment: null,
                 revisionGroups: null,
                 selectionRevisionIds: [],
+                dataTags: null,
+                dataAutomation: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -266,6 +268,8 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
                 openOfficeComment: null,
                 revisionGroups: null,
                 selectionRevisionIds: [],
+                dataTags: null,
+                dataAutomation: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -815,6 +819,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
 
         case "SET_REVISION_GROUPS":
             return { ...state, revisionGroups: action.groups };
+
+        case "SET_DATA_TAGS":
+            return { ...state, dataTags: action.tags, dataAutomation: action.automation };
 
         case "SET_SELECTION_REVISION_IDS":
             return { ...state, selectionRevisionIds: action.ids };

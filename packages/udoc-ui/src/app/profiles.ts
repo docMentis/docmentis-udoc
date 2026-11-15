@@ -169,7 +169,8 @@ export interface DocProfile {
      * {@link RIGHT_PANEL_TABS}, treated as {@link leftPanels} is. Comments are a
      * PDF's annotations, so only the portable type offers them; an image, with
      * no text to search, offers none. Revisions lists a word document's tracked
-     * changes, so only the word type offers it.
+     * changes, so only the word type offers it; Data the tags a deck's text
+     * holds, for the automation that fills it, which only a deck has yet.
      */
     rightPanels: readonly RightPanelTab[];
     /**
@@ -346,7 +347,8 @@ export const PRESENTATION_PROFILE: DocProfile = {
     sheetTabs: false,
     // The outline, layers and attachments read PDF parts.
     leftPanels: ["thumbnail"],
-    rightPanels: ["search", "comments"],
+    // Data lists the tags its text holds, for the automation that fills it.
+    rightPanels: ["search", "comments", "data"],
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: false,
@@ -407,7 +409,7 @@ export const WORDPROCESSING_PROFILE: DocProfile = {
     sheetTabs: false,
     // The layers and attachments read PDF parts.
     leftPanels: ["thumbnail", "outline"],
-    rightPanels: RIGHT_PANEL_TABS,
+    rightPanels: ["search", "comments", "revisions"],
     textEditing: true,
     pagedViewControls: true,
     pageArrangement: true,

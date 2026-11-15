@@ -657,6 +657,8 @@ export interface Messages {
     "rightPanel.comments": string;
     /** Revisions */
     "rightPanel.revisions": string;
+    /** Data */
+    "rightPanel.data": string;
     /** Resize panel */
     "rightPanel.resizeHandle": string;
     /** Close Panel */
@@ -689,6 +691,16 @@ export interface Messages {
     "revisions.cellMerge": string;
     /** Formatted table */
     "revisions.tableFormatting": string;
+
+    // Data panel
+    /** No variables yet */
+    "data.none": string;
+    /** Template — the deck's role, when its braces are read as tags */
+    "data.template": string;
+    /** Instance — the deck's role, when a fill made it from a template */
+    "data.instance": string;
+    /** Plain document — the deck's role, when it is neither */
+    "data.plain": string;
 
     // Search panel
     /** Search in document */

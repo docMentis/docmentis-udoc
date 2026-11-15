@@ -6,6 +6,16 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Added
+
+- A PowerPoint deck offers a Data panel, `"data"` among the panels
+  `openPanel` takes: whether the deck is a template, an instance filled from
+  one or a plain deck, then the tags its text holds, such as
+  `{{customer.name}}`, each once with how many times it is written. Choosing
+  one selects the next place it is written.
+
 ### udoc-editor
 
 #### Added

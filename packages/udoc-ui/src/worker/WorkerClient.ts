@@ -30,6 +30,7 @@ import type {
     AcroForm,
     ActionHideTarget,
     Annotation,
+    Automation,
     CommentMarkup,
     CellEntryEdit,
     DelimiterGuess,
@@ -1615,6 +1616,14 @@ export class WorkerClient {
          */
         slideSections: (): Promise<SlideSectionRun[]> =>
             this.#send({ type: "slideSections" }) as Promise<SlideSectionRun[]>,
+
+        /**
+         * The open deck's automation part — whether it is a template or an
+         * instance filled from one — or `null` for a plain deck, which has
+         * none, and for any other document. A read: what the Data panel names
+         * the deck by.
+         */
+        automation: (): Promise<Automation | null> => this.#send({ type: "automation" }) as Promise<Automation | null>,
     };
 
     /**

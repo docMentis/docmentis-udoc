@@ -1513,6 +1513,15 @@ export interface SlideSectionsRequest {
 }
 
 /**
+ * Read the open deck's automation part — whether the deck is a template or an
+ * instance filled from one. Replies with the {@link Automation}, or `null` for
+ * a plain deck, which has none, and for any other document.
+ */
+export interface AutomationRequest {
+    type: "automation";
+}
+
+/**
  * A deck's section as the thumbnails group its slides: its id and name, and
  * the run of the slide order it holds — `count` slides from index `start`. An
  * empty section's `start` is where the section before it ends.
@@ -2427,6 +2436,7 @@ export type WorkerRequest =
     | SlideCountRequest
     | SlideLayoutIdRequest
     | SlideSectionsRequest
+    | AutomationRequest
     | SheetIdByIndexRequest
     | SetSelectionRequest
     | SelectionReadRequest

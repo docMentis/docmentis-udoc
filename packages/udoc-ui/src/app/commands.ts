@@ -175,6 +175,9 @@ export interface CommandContext {
     /** Whether the open word document's Revisions panel can be opened — the
      *  Review tab's Revisions shows for it. */
     revisionsPanel: boolean;
+    /** Whether the open deck's Data panel can be opened — edit mode's
+     *  Automation tab's Data shows for it. */
+    dataPanel: boolean;
     /** What the Annotate tab's Format controls act on and show — the armed
      *  annotation tool's style, else the selected annotations' — or null when
      *  there is neither. A control is live when its entry is present. */
@@ -218,6 +221,7 @@ export function commandContext(state: UIState): CommandContext {
         cellEntry: state.activeCell?.entry != null,
         layersPanel: state.hasLayers && panelOpenable(state, "layers"),
         revisionsPanel: state.docType === "wordprocessing" && panelOpenable(state, "revisions"),
+        dataPanel: state.docType === "presentation" && panelOpenable(state, "data"),
         annotation: annotationFormat(state),
     };
 }

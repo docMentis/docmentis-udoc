@@ -356,6 +356,7 @@ export const fr: Messages = {
     "rightPanel.search": "Rechercher",
     "rightPanel.comments": "Commentaires",
     "rightPanel.revisions": "Révisions",
+    "rightPanel.data": "Données",
     "rightPanel.resizeHandle": "Redimensionner le panneau",
     "rightPanel.close": "Fermer le panneau",
     "revisions.count": "Modifications : {count}",
@@ -371,6 +372,10 @@ export const fr: Messages = {
     "revisions.cellDeletion": "Cellule supprimée",
     "revisions.cellMerge": "Cellules fusionnées",
     "revisions.tableFormatting": "Tableau mis en forme",
+    "data.none": "Aucune variable pour l'instant",
+    "data.template": "Modèle",
+    "data.instance": "Instance",
+    "data.plain": "Document simple",
 
     // Search panel
     "search.placeholder": "Rechercher dans le document",

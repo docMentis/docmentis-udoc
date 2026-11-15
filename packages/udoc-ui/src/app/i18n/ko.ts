@@ -356,6 +356,7 @@ export const ko: Messages = {
     "rightPanel.search": "검색",
     "rightPanel.comments": "메모",
     "rightPanel.revisions": "수정 내용",
+    "rightPanel.data": "데이터",
     "rightPanel.resizeHandle": "패널 크기 조정",
     "rightPanel.close": "패널 닫기",
     "revisions.count": "변경 내용: {count}",
@@ -371,6 +372,10 @@ export const ko: Messages = {
     "revisions.cellDeletion": "셀 삭제",
     "revisions.cellMerge": "셀 병합",
     "revisions.tableFormatting": "표 서식 변경",
+    "data.none": "아직 변수가 없습니다",
+    "data.template": "템플릿",
+    "data.instance": "인스턴스",
+    "data.plain": "일반 문서",
 
     // Search panel
     "search.placeholder": "문서에서 검색",

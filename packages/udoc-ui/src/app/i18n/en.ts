@@ -357,6 +357,7 @@ export const en: Messages = {
     "rightPanel.search": "Search",
     "rightPanel.comments": "Comments",
     "rightPanel.revisions": "Revisions",
+    "rightPanel.data": "Data",
     "rightPanel.resizeHandle": "Resize panel",
     "rightPanel.close": "Close Panel",
     "revisions.count": "Changes: {count}",
@@ -372,6 +373,10 @@ export const en: Messages = {
     "revisions.cellDeletion": "Deleted cell",
     "revisions.cellMerge": "Merged cells",
     "revisions.tableFormatting": "Formatted table",
+    "data.none": "No variables yet",
+    "data.template": "Template",
+    "data.instance": "Instance",
+    "data.plain": "Plain document",
 
     // Search panel
     "search.placeholder": "Search in document",
