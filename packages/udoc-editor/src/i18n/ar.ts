@@ -114,6 +114,7 @@ export const ar: EditMessages = {
     "command.insertRepeat": "تكرار",
     "command.insertCondition": "شرط",
     "command.insertChoice": "اختيار",
+    "command.preview": "معاينة",
     "command.shapeFillColor": "تعبئة",
     "command.shapeStrokeColor": "خط",
     "command.objectFillColor": "تعبئة",

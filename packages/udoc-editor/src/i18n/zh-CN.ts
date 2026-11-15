@@ -114,6 +114,7 @@ export const zhCN: EditMessages = {
     "command.insertRepeat": "重复",
     "command.insertCondition": "条件",
     "command.insertChoice": "选择",
+    "command.preview": "预览",
     "command.shapeFillColor": "填充",
     "command.shapeStrokeColor": "线条",
     "command.objectFillColor": "填充",

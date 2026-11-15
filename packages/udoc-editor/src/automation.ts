@@ -3,14 +3,17 @@
 // Variable, Repeat, Condition and Choice, which each write a binding at the
 // caret — a variable's tag, or a pair's tags with nothing between them, a
 // choice's with an option and its otherwise — with the path in its braces
-// selected, for the author to type the value's path over; and Data, which shows
-// or hides the right panel's Data tab, what the deck's text binds. All but
-// Template are a template's alone: in a plain deck braces are only text, and an
+// selected, for the author to type the value's path over; Data, which shows or
+// hides the right panel's Data tab, what the deck's text binds; and Preview,
+// which shows the template filled with its sample data in place of it, or the
+// template again (automation-preview.ts). All but Template are a template's
+// alone: in a plain deck braces are only text, and an
 // instance is filled, not written. A tag is the text itself — the engine reads
 // braces wherever they are written — so each writes what typing would.
 import { allowsTextEdit } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef } from "@docmentis/udoc-ui/internal";
 import type { Automation } from "@docmentis/udoc-wasm";
+import type { AutomationPreview } from "./automation-preview.js";
 import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
 import {
@@ -19,8 +22,10 @@ import {
     ICON_INSERT_CONDITION,
     ICON_INSERT_REPEAT,
     ICON_INSERT_VARIABLE,
+    ICON_PREVIEW,
     ICON_TEMPLATE,
 } from "./icons.js";
+import { editState } from "./state.js";
 
 /** A binding's tags as the tab writes them: the text before the path, the path
  *  the author types over, and the text after it. */
@@ -106,7 +111,10 @@ function insertCommand(
 }
 
 /** The Automation tab's commands, over the shell `host` lends once mounted. */
-export function automationCommands(host: () => EditHost | null): Readonly<Record<string, CommandDef<MessageKey>>> {
+export function automationCommands(
+    host: () => EditHost | null,
+    preview: AutomationPreview,
+): Readonly<Record<string, CommandDef<MessageKey>>> {
     return {
         // Template, named beside its icon: pressed for a template, and live for
         // a plain deck and a template — an instance stays what it is.
@@ -158,6 +166,24 @@ export function automationCommands(host: () => EditHost | null): Readonly<Record
                 press: (store) => store.dispatch({ type: "TOGGLE_PANEL", panel: "data" }),
             },
             shownWhen: (c) => c.dataPanel,
+            enabledWhen: template,
+        },
+        // Last Preview, pressed while the template's preview is shown or on its
+        // way.
+        preview: {
+            id: "preview",
+            label: "command.preview",
+            icon: ICON_PREVIEW,
+            group: "preview",
+            labeled: true,
+            run: {
+                kind: "toggle",
+                pressed: (state) => editState(state).automationPreview,
+                press: () => {
+                    const mounted = host();
+                    if (mounted) preview.toggle(mounted);
+                },
+            },
             enabledWhen: template,
         },
     };

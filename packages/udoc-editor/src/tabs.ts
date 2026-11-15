@@ -123,7 +123,8 @@ export type EditCommandId =
     | "insertRepeat"
     | "insertCondition"
     | "insertChoice"
-    | "dataPanel";
+    | "dataPanel"
+    | "preview";
 
 /** A tab of edit mode's. */
 type EditTab = ToolbarTab<MessageKey>;
@@ -449,6 +450,7 @@ const PRESENTATION_AUTOMATION_TAB: EditTab = {
         "insertCondition",
         "insertChoice",
         "dataPanel",
+        "preview",
     ] satisfies EditCommandId[],
     opensFor: onDeck,
     staysOpen: true,

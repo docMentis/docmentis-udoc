@@ -114,6 +114,7 @@ export const ru: EditMessages = {
     "command.insertRepeat": "Повтор",
     "command.insertCondition": "Условие",
     "command.insertChoice": "Выбор",
+    "command.preview": "Предпросмотр",
     "command.shapeFillColor": "Заливка",
     "command.shapeStrokeColor": "Контур",
     "command.objectFillColor": "Заливка",

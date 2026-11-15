@@ -1158,4 +1158,19 @@ export const editorStyles = css`
     .udoc-ui-root .udoc-ui__ruler-control--fixed path {
         pointer-events: none;
     }
+
+    /* A template's preview, over the document's body in place of the template:
+       the preview's own document UI fills it. */
+    .udoc-ui-root .udoc-automation-preview {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: flex;
+        background: var(--udoc-color-surface);
+    }
+    .udoc-ui-root .udoc-automation-preview > * {
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+    }
 `;

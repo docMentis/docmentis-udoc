@@ -114,6 +114,7 @@ export const zhTW: EditMessages = {
     "command.insertRepeat": "重複",
     "command.insertCondition": "條件",
     "command.insertChoice": "選擇",
+    "command.preview": "預覽",
     "command.shapeFillColor": "填滿",
     "command.shapeStrokeColor": "線條",
     "command.objectFillColor": "填滿",

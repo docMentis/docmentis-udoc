@@ -218,6 +218,8 @@ export interface Messages extends UIMessages {
     "command.insertCondition": string;
     /** Choice */
     "command.insertChoice": string;
+    /** Preview */
+    "command.preview": string;
     /** Fill */
     "command.shapeFillColor": string;
     /** Line */

@@ -52,7 +52,11 @@ listed once, by package. Its major and minor version are those of the
   over; Repeat, Condition and Choice write a pair's tags the same way,
   `{{#item in items}}{{/item}}`, `{{#if flag}}{{/if}}` and
   `{{#choose value}}{{:when "a"}}{{:otherwise}}{{/choose}}`, their path
-  selected; and Data shows or hides the Data panel. Picked, the tab stays open as
+  selected; Data shows or hides the Data panel; and Preview shows the
+  template filled with its sample data, read-only in place of it, until it's
+  turned off. A preview fills in every value the sample data lacks: text with
+  its path in title case (`customer.name` reads "Customer Name"), a choice with
+  its first option's value, a bool `true`, and an array with three items. Picked, the tab stays open as
   the selection moves.
 - Increase Font Size and Decrease Font Size, beside the size field in word
   documents, decks, workbooks and the text on images, step the selection to

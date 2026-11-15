@@ -114,6 +114,7 @@ export const ko: EditMessages = {
     "command.insertRepeat": "반복",
     "command.insertCondition": "조건",
     "command.insertChoice": "선택",
+    "command.preview": "미리 보기",
     "command.shapeFillColor": "채우기",
     "command.shapeStrokeColor": "윤곽선",
     "command.objectFillColor": "채우기",

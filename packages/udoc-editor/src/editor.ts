@@ -1,16 +1,14 @@
 import { UDocBase } from "@docmentis/udoc-ui";
 import type { LocalCollaborationServiceOptions, UDocEvents, UDocOptions } from "@docmentis/udoc-ui";
 import { createAs, startLocalCollaborationService, subscribeSelector } from "@docmentis/udoc-ui/internal";
-import type { UIShell, Wrapper } from "@docmentis/udoc-ui/internal";
+import type { UIShell } from "@docmentis/udoc-ui/internal";
 import { editMode } from "./edit-mode.js";
 import type { EditMode } from "./edit-mode.js";
 import type { Messages } from "./i18n/index.js";
 import type { EditorMode } from "./mode.js";
 import { WRAPPER_VERSION } from "./version.js";
 import { startRenderWorker } from "./worker/worker-source.js";
-
-/** This package, as the wrapper it reports to the engine. */
-const EDITOR_WRAPPER: Wrapper = { name: "udoc-editor", version: WRAPPER_VERSION };
+import { EDITOR_WRAPPER } from "./wrapper.js";
 
 /** Options for {@link UDocEditor.create}: the common ones, and edit mode's. Every field is optional; each says its default. */
 export interface UDocEditorOptions extends UDocOptions {

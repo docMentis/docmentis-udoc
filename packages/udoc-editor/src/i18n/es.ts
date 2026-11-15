@@ -114,6 +114,7 @@ export const es: EditMessages = {
     "command.insertRepeat": "Repetición",
     "command.insertCondition": "Condición",
     "command.insertChoice": "Elección",
+    "command.preview": "Vista previa",
     "command.shapeFillColor": "Relleno",
     "command.shapeStrokeColor": "Línea",
     "command.objectFillColor": "Relleno",

@@ -138,6 +138,10 @@ export interface EditState {
      *  selection's own bounds (the "Align to page" toggle). Sticky across menu
      *  opens so the chosen reference persists. */
     alignToPage: boolean;
+
+    /** Whether a template's preview is shown — filled with its sample data, in
+     *  place of it — or on its way. */
+    automationPreview: boolean;
 }
 
 /** Edit mode's state at start. */
@@ -157,6 +161,7 @@ export const INITIAL_EDIT_STATE: EditState = {
     allowedModes: ALL_MODES,
     showModeSwitch: true,
     alignToPage: false,
+    automationPreview: false,
 };
 
 /** Edit mode's state in `state`. */

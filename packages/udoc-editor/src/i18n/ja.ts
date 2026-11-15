@@ -114,6 +114,7 @@ export const ja: EditMessages = {
     "command.insertRepeat": "繰り返し",
     "command.insertCondition": "条件",
     "command.insertChoice": "選択",
+    "command.preview": "プレビュー",
     "command.shapeFillColor": "塗りつぶし",
     "command.shapeStrokeColor": "枠線",
     "command.objectFillColor": "塗りつぶし",

@@ -114,6 +114,7 @@ export const ptBR: EditMessages = {
     "command.insertRepeat": "Repetição",
     "command.insertCondition": "Condição",
     "command.insertChoice": "Escolha",
+    "command.preview": "Visualizar",
     "command.shapeFillColor": "Preenchimento",
     "command.shapeStrokeColor": "Contorno",
     "command.objectFillColor": "Preenchimento",
