@@ -386,6 +386,9 @@ export const es: Messages = {
     "data.error.unmatchedClose": "No cierra la última etiqueta abierta",
     "data.error.misplacedOption": "Fuera de una elección o después de su otherwise",
     "data.error.splitPair": "No está colocada como su etiqueta de apertura",
+    "data.add": "Agregar",
+    "data.remove": "Quitar",
+    "data.error.conflictingType": "Se usa como otro tipo en otro lugar",
 
     // Search panel
     "search.placeholder": "Buscar en el documento",

@@ -60,12 +60,13 @@ import initEngine, {
 } from "@docmentis/udoc-wasm";
 import type {
     Automation,
+    BindingCatalog,
     CanvasText,
-    SlideTag,
     FontLocation,
-    PresentationPlaneKind,
     GoogleFontFamily,
     PageImage,
+    PresentationBindingPlace,
+    PresentationPlaneKind,
     RevisionView,
     SheetLayoutMode,
     SheetState,
@@ -2869,10 +2870,10 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, session ? automation(session) : null);
                 break;
             }
-            case "automationTags": {
+            case "automationBindings": {
                 // A read that loads every slide, laying none out. None with no
                 // open / non-presentation doc.
-                reply(id, session ? automationTags(session) : []);
+                reply(id, session ? automationBindings(session) : null);
                 break;
             }
             case "sheetIdByIndex": {
@@ -3444,9 +3445,9 @@ function automation(s: WasmSession): Automation | null {
     return safeRead(() => s.presentation.model.automation.dump(), null);
 }
 
-/** The tags the open deck's slides hold — none for any other document. */
-function automationTags(s: WasmSession): SlideTag[] {
-    return safeRead(() => s.presentation.model.automation.tags(), []);
+/** The bindings the open deck's slides write — null for any other document. */
+function automationBindings(s: WasmSession): BindingCatalog<PresentationBindingPlace> | null {
+    return safeRead(() => s.presentation.model.automation.bindings(), null);
 }
 
 /** The media file `media` names, its bytes copied out of wasm memory into a

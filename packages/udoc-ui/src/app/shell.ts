@@ -18,7 +18,8 @@ import type {
     SearchMatch,
     SearchOptions,
     SearchQuad,
-    SlideTag,
+    PresentationBindingPlace,
+    AutomationData,
     UrlFont,
     UDocSearchScope,
     Destination,
@@ -69,7 +70,6 @@ import { cellKeyAction } from "./cell-keys.js";
 import type { CellKeyAction } from "./cell-keys.js";
 import { tabKeyAction } from "./tab-keys.js";
 import { createRightPanel } from "./components/RightPanel.js";
-import { groupDataTags } from "./data-tags.js";
 import { createTether } from "./components/Tether.js";
 import { applyPoint, boxCorners } from "./components/affine.js";
 import { createStatusBar } from "./components/StatusBar.js";
@@ -1615,7 +1615,10 @@ export function mountUIShell(
             // Edit mode's buttons, the extension's: a viewer settles nothing.
             actions: (state) => (extension && state.mode !== VIEW_MODE ? extension.revisionActions(state) : []),
         },
-        { onChoose: (key, tags) => void chooseDataTag(key, tags) },
+        {
+            onChoose: (key, places) => void chooseDataPlace(key, places),
+            onSampleData: setSampleData,
+        },
     );
     rightPanel.mount(rightPanelSlot, store);
     for (const tether of tethers) tether.mount(bodySlot, rightPanelSlot, store);
@@ -3686,58 +3689,65 @@ export function mountUIShell(
         { equality: shallowEqual },
     );
 
-    // The Data panel's tags, as the engine reads them out of the deck's text:
-    // read as the panel opens, and again whenever the document changes while
-    // it is open. The latest read wins, and changes in one frame are read
-    // once.
-    let dataTagsGeneration = 0;
-    let dataTagsPending: number | null = null;
-    function refreshDataTags(): void {
+    // The Data panel's bindings, as the engine reads them out of the deck's
+    // text: read as the panel opens, and again whenever the document changes
+    // while it is open. The latest read wins, and changes in one frame are
+    // read once.
+    let dataBindingsGeneration = 0;
+    let dataBindingsPending: number | null = null;
+    function refreshDataBindings(): void {
         const state = store.getState();
         if (state.status !== "ready" || state.activePanel !== "data") return;
-        if (dataTagsPending !== null) cancelAnimationFrame(dataTagsPending);
-        dataTagsPending = requestAnimationFrame(() => {
-            dataTagsPending = null;
-            const generation = ++dataTagsGeneration;
+        if (dataBindingsPending !== null) cancelAnimationFrame(dataBindingsPending);
+        dataBindingsPending = requestAnimationFrame(() => {
+            dataBindingsPending = null;
+            const generation = ++dataBindingsGeneration;
             void client.presentation
-                .automationTags()
-                .then((tags) => {
-                    if (generation !== dataTagsGeneration) return;
-                    store.dispatch({ type: "SET_DATA_TAGS", tags: groupDataTags(tags) });
+                .automationBindings()
+                .then((bindings) => {
+                    if (generation !== dataBindingsGeneration) return;
+                    store.dispatch({ type: "SET_DATA_BINDINGS", bindings });
                 })
                 .catch(() => {
                     // Worker gone or document closed — nothing to show.
                 });
         });
     }
-    const unsubDataTagsChanged = client.onDocumentChanged(refreshDataTags);
-    const unsubDataTagsShown = subscribeSelector(
+    const unsubDataBindingsChanged = client.onDocumentChanged(refreshDataBindings);
+    const unsubDataBindingsShown = subscribeSelector(
         store,
         (s) => ({ status: s.status, generation: s.docGeneration, panel: s.activePanel === "data" }),
-        refreshDataTags,
+        refreshDataBindings,
         { equality: shallowEqual },
     );
 
-    // Which tag of each row the Data panel chose last, by the row: choosing it
-    // again goes on to the next, round to the first after the last. Kept while
-    // the tags are read again after an edit, and dropped with the document.
-    const dataTagChosen = new Map<string, number>();
-    const unsubDataTagsOpened = subscribeSelector(
+    // Which place of each row the Data panel chose last, by the row: choosing
+    // it again goes on to the next, round to the first after the last. Kept
+    // while the bindings are read again after an edit, and dropped with the
+    // document.
+    const dataPlaceChosen = new Map<string, number>();
+    const unsubDataBindingsOpened = subscribeSelector(
         store,
         (s) => s.docGeneration,
-        () => dataTagChosen.clear(),
+        () => dataPlaceChosen.clear(),
     );
 
-    // Select the next of the tags a Data panel row `key` stands for, and bring
-    // its slide into view.
-    async function chooseDataTag(key: string, tags: readonly SlideTag[]): Promise<void> {
-        if (tags.length === 0) return;
-        const index = ((dataTagChosen.get(key) ?? -1) + 1) % tags.length;
-        dataTagChosen.set(key, index);
-        const tag = tags[index]!;
-        client.goToPage(tag.slide);
-        const selection = await client.searchMatchSelection(tag.location);
+    // Select the next of the places a Data panel row `key` stands for, and
+    // bring its slide into view.
+    async function chooseDataPlace(key: string, places: readonly PresentationBindingPlace[]): Promise<void> {
+        if (places.length === 0) return;
+        const index = ((dataPlaceChosen.get(key) ?? -1) + 1) % places.length;
+        dataPlaceChosen.set(key, index);
+        const place = places[index]!;
+        client.goToPage(place.slide);
+        const selection = await client.searchMatchSelection(place.location);
         if (selection) setSelection(selection);
+    }
+
+    // Give the template the sample data the Data panel's form now holds, one
+    // undo step.
+    function setSampleData(data: AutomationData): void {
+        void commit(() => client.execute({ automation: { setSampleData: { data } } }));
     }
 
     // Select a change the Revisions panel lists and bring it into view with
@@ -4715,10 +4725,10 @@ export function mountUIShell(
         unsubRevisionsShown();
         unsubAutomationChanged();
         unsubAutomationOpened();
-        unsubDataTagsChanged();
-        unsubDataTagsShown();
-        unsubDataTagsOpened();
-        if (dataTagsPending !== null) cancelAnimationFrame(dataTagsPending);
+        unsubDataBindingsChanged();
+        unsubDataBindingsShown();
+        unsubDataBindingsOpened();
+        if (dataBindingsPending !== null) cancelAnimationFrame(dataBindingsPending);
         unsubRevisionGroupMove();
         unsubRevisionStart();
         unsubSelectionRevisions();

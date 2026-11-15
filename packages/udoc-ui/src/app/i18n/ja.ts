@@ -386,6 +386,9 @@ export const ja: Messages = {
     "data.error.unmatchedClose": "最後に開いたタグを閉じていません",
     "data.error.misplacedOption": "選択の外、または otherwise の後にあります",
     "data.error.splitPair": "開始タグと同じ位置に置かれていません",
+    "data.add": "追加",
+    "data.remove": "削除",
+    "data.error.conflictingType": "別の場所で別の型として使われています",
 
     // Search panel
     "search.placeholder": "文書内を検索",

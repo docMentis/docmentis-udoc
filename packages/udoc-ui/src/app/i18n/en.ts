@@ -387,6 +387,9 @@ export const en: Messages = {
     "data.error.unmatchedClose": "Doesn't close the last tag opened",
     "data.error.misplacedOption": "Outside a choice, or after its otherwise",
     "data.error.splitPair": "Not placed like its opening tag",
+    "data.add": "Add",
+    "data.remove": "Remove",
+    "data.error.conflictingType": "Used as another type elsewhere",
 
     // Search panel
     "search.placeholder": "Search in document",

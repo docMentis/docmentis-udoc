@@ -384,6 +384,9 @@ export const zhTW: Messages = {
     "data.error.unmatchedClose": "未關閉最後開啟的標記",
     "data.error.misplacedOption": "在選擇之外，或在其 otherwise 之後",
     "data.error.splitPair": "位置與其開始標記不一致",
+    "data.add": "新增",
+    "data.remove": "移除",
+    "data.error.conflictingType": "在別處被用作其他類型",
 
     // Search panel
     "search.placeholder": "在文件中搜尋",

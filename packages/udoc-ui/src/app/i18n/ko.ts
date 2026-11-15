@@ -386,6 +386,9 @@ export const ko: Messages = {
     "data.error.unmatchedClose": "마지막으로 연 태그를 닫지 않습니다",
     "data.error.misplacedOption": "선택 밖이나 otherwise 뒤에 있습니다",
     "data.error.splitPair": "여는 태그와 같은 방식으로 놓이지 않았습니다",
+    "data.add": "추가",
+    "data.remove": "제거",
+    "data.error.conflictingType": "다른 곳에서 다른 형식으로 사용됩니다",
 
     // Search panel
     "search.placeholder": "문서에서 검색",

@@ -3889,39 +3889,67 @@ export const uiStyles = css`
     }
 
     /* =========================================================================
-   Data panel (the right panel's Data tab): the tags a deck's text holds, a
-   row each — what its braces hold, in the code face, and how many times it
-   is written
+   Data panel (the right panel's Data tab): the deck's role, then a template's
+   schema as a form of its sample data — each name in the code face with how
+   many places bind it, beside its field, nested names indented — then the
+   tags that are wrong
    ========================================================================= */
     .udoc-ui-root .udoc-data-panel {
         display: flex;
         flex-direction: column;
         gap: 8px;
         padding: 8px;
-    }
-    /* The deck's role: a template, an instance, or a plain deck. */
-    .udoc-ui-root .udoc-data-panel__role {
-        padding: 0 8px;
-        font:
-            600 12px/1.4 system-ui,
-            sans-serif;
-        color: var(--udoc-color-on-surface-variant);
-    }
-    .udoc-ui-root .udoc-data-panel__tags {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-    .udoc-ui-root .udoc-data-panel__tag {
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        width: 100%;
-        padding: 6px 8px;
         font:
             12px/1.4 system-ui,
             sans-serif;
         color: var(--udoc-color-on-surface);
+    }
+    /* The deck's role: a template, an instance, or a plain deck. */
+    .udoc-ui-root .udoc-data-panel__role {
+        padding: 0 4px;
+        font-weight: 600;
+        color: var(--udoc-color-on-surface-variant);
+    }
+    .udoc-ui-root .udoc-data-panel__body,
+    .udoc-ui-root .udoc-data-panel__form,
+    .udoc-ui-root .udoc-data-panel__nested,
+    .udoc-ui-root .udoc-data-panel__items,
+    .udoc-ui-root .udoc-data-panel__errors {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .udoc-ui-root .udoc-data-panel__body {
+        gap: 8px;
+    }
+    /* A nested name, or an array's items, under the name holding it. */
+    .udoc-ui-root .udoc-data-panel__nested,
+    .udoc-ui-root .udoc-data-panel__items {
+        margin-left: 12px;
+        padding-left: 8px;
+        border-left: 1px solid var(--udoc-color-outline-variant);
+    }
+    .udoc-ui-root .udoc-data-panel__field-head {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 28px;
+    }
+    /* A name in the code face, wrapped anywhere: a name has no spaces. */
+    .udoc-ui-root .udoc-data-panel__name,
+    .udoc-ui-root .udoc-data-panel__text {
+        min-width: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        overflow-wrap: anywhere;
+    }
+    /* A wrong tag: chosen, it selects it. */
+    .udoc-ui-root .udoc-data-panel__error {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 6px;
+        padding: 2px 4px;
+        font: inherit;
+        color: inherit;
         text-align: left;
         background: none;
         border: none;
@@ -3929,41 +3957,76 @@ export const uiStyles = css`
         outline: none;
         cursor: pointer;
     }
-    .udoc-ui-root .udoc-data-panel__tag:hover {
+    .udoc-ui-root .udoc-data-panel__error:hover {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
-    .udoc-ui-root .udoc-data-panel__tag:focus-visible {
+    .udoc-ui-root .udoc-data-panel__error:focus-visible {
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: -2px;
     }
-    /* What the tag's braces hold, wrapped anywhere: a path has no spaces. */
-    .udoc-ui-root .udoc-data-panel__text {
-        min-width: 0;
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        overflow-wrap: anywhere;
+    .udoc-ui-root .udoc-data-panel__item-label {
+        color: var(--udoc-color-on-surface-variant);
     }
-    .udoc-ui-root .udoc-data-panel__count {
+    /* A value's field, taking the rest of the row. */
+    .udoc-ui-root .udoc-data-panel__value {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+    }
+    .udoc-ui-root .udoc-data-panel__input[type="text"] {
+        flex: 1;
+        min-width: 0;
+        height: 24px;
+        padding: 0 6px;
+        font: inherit;
+        color: var(--udoc-color-on-surface);
+        background: var(--udoc-color-surface);
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 4px;
+    }
+    .udoc-ui-root .udoc-data-panel__input[type="text"]:focus {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: -1px;
+    }
+    .udoc-ui-root .udoc-data-panel__input:disabled {
+        opacity: 0.6;
+    }
+    /* Add an item, after an array's name; take one out, ending its row. */
+    .udoc-ui-root .udoc-data-panel__add,
+    .udoc-ui-root .udoc-data-panel__remove {
+        padding: 2px 8px;
+        font: inherit;
+        color: var(--udoc-color-primary);
+        background: none;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-data-panel__remove {
         margin-left: auto;
         color: var(--udoc-color-on-surface-variant);
     }
-    .udoc-ui-root .udoc-data-panel__body {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+    .udoc-ui-root .udoc-data-panel__add:hover:not(:disabled),
+    .udoc-ui-root .udoc-data-panel__remove:hover:not(:disabled) {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
-    /* The heading over the tags that are wrong. */
+    .udoc-ui-root .udoc-data-panel__add:disabled,
+    .udoc-ui-root .udoc-data-panel__remove:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+    /* The heading over the tags that are wrong, and what is wrong with each,
+       wrapping under its tag where it must. */
     .udoc-ui-root .udoc-data-panel__heading {
-        padding: 0 8px;
-        font:
-            600 12px/1.4 system-ui,
-            sans-serif;
+        padding: 0 4px;
+        font-weight: 600;
         color: var(--udoc-color-error);
     }
-    /* What is wrong with a tag, beside it, wrapping under it where it must. */
-    .udoc-ui-root .udoc-data-panel__tag--error {
+    .udoc-ui-root .udoc-data-panel__error {
         flex-wrap: wrap;
+        width: 100%;
     }
-    .udoc-ui-root .udoc-data-panel__tag--error .udoc-data-panel__count {
+    .udoc-ui-root .udoc-data-panel__message {
         color: var(--udoc-color-error);
     }
 

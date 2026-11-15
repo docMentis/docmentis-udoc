@@ -9,13 +9,14 @@ import type {
     SlideSectionRun,
 } from "../worker/protocol.js";
 import type { AnnotationStyles } from "./annotations.js";
-import type { DataTags } from "./data-tags.js";
 import type { MessageKey } from "./i18n/index.js";
 import type {
     Automation,
+    BindingCatalog,
     CellEntryMode,
     Feature,
     FileFormat,
+    PresentationBindingPlace,
     PresentationPlaneKind,
     RevisionView,
     SearchMatch,
@@ -797,11 +798,11 @@ export interface UIState {
      */
     revisionGroups: readonly ListedRevisionGroup[] | null;
     /**
-     * The tags a deck's text holds, as the Data panel lists them — each
-     * binding once, and the tags that are wrong apart — read while that panel
-     * is open and again whenever the document changes; null until read.
+     * The bindings a deck's text writes, as the Data panel shows them — the
+     * schema they make and the places that bind it — read while that panel is
+     * open and again whenever the document changes; null until read.
      */
-    dataTags: DataTags | null;
+    dataBindings: BindingCatalog<PresentationBindingPlace> | null;
     /**
      * The open deck's automation part, read as it opens and again on each
      * edit: whether the deck is a template or an instance filled from one.
@@ -1227,7 +1228,7 @@ export const initialState: UIState = {
     openOfficeComment: null,
     revisionGroups: null,
     selectionRevisionIds: [],
-    dataTags: null,
+    dataBindings: null,
     automation: null,
 
     searchQuery: "",

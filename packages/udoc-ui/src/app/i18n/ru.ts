@@ -386,6 +386,9 @@ export const ru: Messages = {
     "data.error.unmatchedClose": "Не закрывает последний открытый тег",
     "data.error.misplacedOption": "Вне выбора или после его otherwise",
     "data.error.splitPair": "Расположен не так, как открывающий тег",
+    "data.add": "Добавить",
+    "data.remove": "Удалить",
+    "data.error.conflictingType": "В другом месте используется как другой тип",
 
     // Search panel
     "search.placeholder": "Поиск в документе",

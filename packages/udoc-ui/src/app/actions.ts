@@ -1,7 +1,9 @@
 import type {
     Automation,
+    BindingCatalog,
     Feature,
     FileFormat,
+    PresentationBindingPlace,
     PresentationPlaneKind,
     RevisionView,
     SearchMatch,
@@ -21,7 +23,6 @@ import type {
     SlideSectionRun,
 } from "../worker/protocol.js";
 import type { AnnotationStyle } from "./annotations.js";
-import type { DataTags } from "./data-tags.js";
 import type { Peer, Scrollbars, SelectionCapabilities, Size } from "../geometry.js";
 import type {
     ActiveCell,
@@ -309,8 +310,8 @@ export type Action =
     | { type: "SET_OFFICE_COMMENTS"; comments: readonly OfficeComment[] }
     // A word document's tracked changes, read for the revisions panel
     | { type: "SET_REVISION_GROUPS"; groups: readonly ListedRevisionGroup[] }
-    // The tags a deck's text holds, read for the Data panel
-    | { type: "SET_DATA_TAGS"; tags: DataTags }
+    // The bindings a deck's text writes, read for the Data panel
+    | { type: "SET_DATA_BINDINGS"; bindings: BindingCatalog<PresentationBindingPlace> | null }
     // The open deck's automation part, read as it opens and on each edit
     | { type: "SET_AUTOMATION"; automation: Automation | null }
     // The records of the changes the selection touches, read for the

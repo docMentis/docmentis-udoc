@@ -1522,12 +1522,12 @@ export interface AutomationRequest {
 }
 
 /**
- * Read the tags the open deck's slides hold, each as the engine reads it: as
- * written, what it says, what is wrong with it, and where it is. Replies with a
- * {@link SlideTag}`[]`, empty for any other document.
+ * Read the bindings the open deck's slides write: the schema they make, and the
+ * places that bind it, each with what is wrong with it and where it is. Replies
+ * with the {@link BindingCatalog}, or `null` for any other document.
  */
-export interface AutomationTagsRequest {
-    type: "automationTags";
+export interface AutomationBindingsRequest {
+    type: "automationBindings";
 }
 
 /**
@@ -2446,7 +2446,7 @@ export type WorkerRequest =
     | SlideLayoutIdRequest
     | SlideSectionsRequest
     | AutomationRequest
-    | AutomationTagsRequest
+    | AutomationBindingsRequest
     | SheetIdByIndexRequest
     | SetSelectionRequest
     | SelectionReadRequest

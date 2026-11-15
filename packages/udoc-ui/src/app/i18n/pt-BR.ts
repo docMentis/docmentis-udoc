@@ -386,6 +386,9 @@ export const ptBR: Messages = {
     "data.error.unmatchedClose": "Não fecha a última tag aberta",
     "data.error.misplacedOption": "Fora de uma escolha ou depois do seu otherwise",
     "data.error.splitPair": "Não está posicionada como a tag de abertura",
+    "data.add": "Adicionar",
+    "data.remove": "Remover",
+    "data.error.conflictingType": "Usado como outro tipo em outro lugar",
 
     // Search panel
     "search.placeholder": "Pesquisar no documento",

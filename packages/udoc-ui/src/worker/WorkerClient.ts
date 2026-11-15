@@ -31,40 +31,41 @@ import type {
     ActionHideTarget,
     Annotation,
     Automation,
-    CommentMarkup,
+    BindingCatalog,
     CellEntryEdit,
+    CommentMarkup,
+    ComposedShapeMedia,
     DelimiterGuess,
     Destination,
     DestinationView,
     Entitlements,
-    Feature,
-    FontInfoList,
-    OptionalContentProperties,
-    Outline,
-    PageMode,
-    SessionConfig,
     ExportFormat,
+    Feature,
     FileFormat,
-    PageExportFormat,
-    SaveStrategy,
+    FontInfoList,
     GoogleFontFamily,
     GridCellSelectionMove,
-    ComposedShapeMedia,
     ImagePageInfo,
+    OptionalContentProperties,
+    Outline,
+    PageExportFormat,
+    PageMode,
+    PresentationBindingPlace,
+    RevisionMarkup,
+    RevisionView,
+    SaveStrategy,
+    SearchContinuation,
+    SearchMatchLocation,
+    SearchOptions,
+    SessionConfig,
+    SheetLayoutMode,
+    SlideMasterSummary,
+    SlideShowInput,
     UDocCommand,
     UDocFragment,
     UDocHit,
     UDocSearchScope,
     UDocSelection,
-    SearchContinuation,
-    SearchMatchLocation,
-    SearchOptions,
-    RevisionMarkup,
-    RevisionView,
-    SheetLayoutMode,
-    SlideMasterSummary,
-    SlideShowInput,
-    SlideTag,
     UrlFont,
     Watermark,
     WordprocessingOutline,
@@ -1627,12 +1628,15 @@ export class WorkerClient {
         automation: (): Promise<Automation | null> => this.#send({ type: "automation" }) as Promise<Automation | null>,
 
         /**
-         * The tags the open deck's slides hold, each as the engine reads it: as
-         * written, what it says, what is wrong with it, and where it is, which
-         * {@link searchMatchSelection} selects. None for any other document. A
-         * read that loads every slide, laying none out.
+         * The bindings the open deck's slides write: the schema they make —
+         * each name the data must hold, nested, with the type its bindings
+         * imply — and the places that bind it, each with what is wrong with it
+         * and where it is, which {@link searchMatchSelection} selects. `null`
+         * for any other document. A read that loads every slide, laying none
+         * out.
          */
-        automationTags: (): Promise<SlideTag[]> => this.#send({ type: "automationTags" }) as Promise<SlideTag[]>,
+        automationBindings: (): Promise<BindingCatalog<PresentationBindingPlace> | null> =>
+            this.#send({ type: "automationBindings" }) as Promise<BindingCatalog<PresentationBindingPlace> | null>,
     };
 
     /**

@@ -384,6 +384,9 @@ export const ar: Messages = {
     "data.error.unmatchedClose": "لا تغلق آخر علامة فُتحت",
     "data.error.misplacedOption": "خارج اختيار أو بعد otherwise الخاص به",
     "data.error.splitPair": "ليست موضوعة مثل علامة الفتح الخاصة بها",
+    "data.add": "إضافة",
+    "data.remove": "إزالة",
+    "data.error.conflictingType": "مستخدم بنوع آخر في مكان آخر",
 
     // Search panel
     "search.placeholder": "البحث في المستند",

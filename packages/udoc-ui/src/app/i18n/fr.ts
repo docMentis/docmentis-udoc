@@ -386,6 +386,9 @@ export const fr: Messages = {
     "data.error.unmatchedClose": "Ne ferme pas la dernière balise ouverte",
     "data.error.misplacedOption": "Hors d'un choix, ou après son otherwise",
     "data.error.splitPair": "Pas placée comme sa balise d'ouverture",
+    "data.add": "Ajouter",
+    "data.remove": "Supprimer",
+    "data.error.conflictingType": "Utilisé ailleurs comme un autre type",
 
     // Search panel
     "search.placeholder": "Rechercher dans le document",

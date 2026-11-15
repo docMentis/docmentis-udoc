@@ -721,6 +721,12 @@ export interface Messages {
     "data.error.misplacedOption": string;
     /** Not placed like its opening tag — alone in its paragraph or sharing it, unlike the tag that opened the pair */
     "data.error.splitPair": string;
+    /** Add — adds an item to an array in the sample data */
+    "data.add": string;
+    /** Remove — takes an item out of an array in the sample data */
+    "data.remove": string;
+    /** Used as another type elsewhere — a binding that implies another type than an earlier one at its path */
+    "data.error.conflictingType": string;
 
     // Search panel
     /** Search in document */

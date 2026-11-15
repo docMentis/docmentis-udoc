@@ -386,6 +386,9 @@ export const de: Messages = {
     "data.error.unmatchedClose": "Schließt nicht das zuletzt geöffnete Tag",
     "data.error.misplacedOption": "Außerhalb einer Auswahl oder nach deren otherwise",
     "data.error.splitPair": "Nicht wie sein öffnendes Tag platziert",
+    "data.add": "Hinzufügen",
+    "data.remove": "Entfernen",
+    "data.error.conflictingType": "An anderer Stelle als anderer Typ verwendet",
 
     // Search panel
     "search.placeholder": "Im Dokument suchen",

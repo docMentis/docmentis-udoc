@@ -384,6 +384,9 @@ export const zhCN: Messages = {
     "data.error.unmatchedClose": "未闭合最后打开的标记",
     "data.error.misplacedOption": "在选择之外，或在其 otherwise 之后",
     "data.error.splitPair": "位置与其开始标记不一致",
+    "data.add": "添加",
+    "data.remove": "删除",
+    "data.error.conflictingType": "在别处被用作其他类型",
 
     // Search panel
     "search.placeholder": "在文档中搜索",
