@@ -97,6 +97,7 @@ const ICONS = {
     ICON_INSERT_CONDITION: "filter_alt",
     ICON_INSERT_CHOICE: "alt_route",
     ICON_PREVIEW: "preview",
+    ICON_GENERATE: "file_export",
     ICON_DATA_PANEL: "database",
 
     // An image's Home tab

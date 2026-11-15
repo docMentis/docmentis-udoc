@@ -4,9 +4,11 @@
 // caret — a variable's tag, or a pair's tags with nothing between them, a
 // choice's with an option and its otherwise — with the path in its braces
 // selected, for the author to type the value's path over; Data, which shows or
-// hides the right panel's Data tab, what the deck's text binds; and Preview,
-// which shows the template filled with its sample data in place of it, or the
-// template again (automation-preview.ts). All but Template are a template's
+// hides the right panel's Data tab, what the deck's text binds; Preview, which
+// shows the template filled with its sample data in place of it, or the
+// template again (automation-preview.ts); and Generate, which fills a copy of
+// the template with the data the author gives and downloads it
+// (automation-generate.ts). All but Template are a template's
 // alone: in a plain deck braces are only text, and an
 // instance is filled, not written. A tag is the text itself — the engine reads
 // braces wherever they are written — so each writes what typing would.
@@ -18,6 +20,7 @@ import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_DATA_PANEL,
+    ICON_GENERATE,
     ICON_INSERT_CHOICE,
     ICON_INSERT_CONDITION,
     ICON_INSERT_REPEAT,
@@ -114,6 +117,7 @@ function insertCommand(
 export function automationCommands(
     host: () => EditHost | null,
     preview: AutomationPreview,
+    generate: () => void,
 ): Readonly<Record<string, CommandDef<MessageKey>>> {
     return {
         // Template, named beside its icon: pressed for a template, and live for
@@ -169,12 +173,12 @@ export function automationCommands(
             enabledWhen: template,
         },
         // Last Preview, pressed while the template's preview is shown or on its
-        // way.
+        // way, and Generate, which opens the Generate dialog.
         preview: {
             id: "preview",
             label: "command.preview",
             icon: ICON_PREVIEW,
-            group: "preview",
+            group: "output",
             labeled: true,
             run: {
                 kind: "toggle",
@@ -184,6 +188,15 @@ export function automationCommands(
                     if (mounted) preview.toggle(mounted);
                 },
             },
+            enabledWhen: template,
+        },
+        generate: {
+            id: "generate",
+            label: "command.generate",
+            icon: ICON_GENERATE,
+            group: "output",
+            labeled: true,
+            run: { kind: "action", press: generate },
             enabledWhen: template,
         },
     };

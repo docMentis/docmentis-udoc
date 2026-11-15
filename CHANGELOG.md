@@ -56,7 +56,14 @@ listed once, by package. Its major and minor version are those of the
   template filled with its sample data, read-only in place of it, until it's
   turned off. A preview fills in every value the sample data lacks: text with
   its path in title case (`customer.name` reads "Customer Name"), a choice with
-  its first option's value, a bool `true`, and an array with three items. Picked, the tab stays open as
+  its first option's value, a bool `true`, and an array with three items.
+  While the preview is shown, the toolbar's Download and Print act on it.
+  Generate opens a dialog with the data to fill the template with, as JSON —
+  its sample data at first, or a file opened — and downloads a filled copy,
+  "Deck (generated).pptx", an instance of the template.
+- `UDocEditor.generateToBytes(data, options?)` fills a copy of the open
+  template with `data` and resolves with the instance's bytes, the template
+  left as it is. Picked, the tab stays open as
   the selection moves.
 - Increase Font Size and Decrease Font Size, beside the size field in word
   documents, decks, workbooks and the text on images, step the selection to

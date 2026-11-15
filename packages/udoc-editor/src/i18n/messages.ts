@@ -220,6 +220,16 @@ export interface Messages extends UIMessages {
     "command.insertChoice": string;
     /** Preview */
     "command.preview": string;
+    /** Generate */
+    "command.generate": string;
+    /** The data to fill the template with, as JSON. */
+    "generate.hint": string;
+    /** Open File… */
+    "generate.openFile": string;
+    /** This isn't a JSON object. */
+    "generate.invalid": string;
+    /** The document couldn't be generated. */
+    "generate.failed": string;
     /** Fill */
     "command.shapeFillColor": string;
     /** Line */

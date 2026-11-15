@@ -233,6 +233,35 @@ export const editorStyles = css`
         box-sizing: border-box;
     }
 
+    /* The Generate dialog's: wider, for the data it shows as JSON. */
+    .udoc-ui-root .udoc-page-modal__dialog--wide {
+        width: min(560px, calc(100% - 32px));
+    }
+
+    .udoc-ui-root .udoc-page-modal__json {
+        display: block;
+        width: 100%;
+        min-height: 260px;
+        padding: 8px;
+        border: 1px solid var(--udoc-color-outline);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--udoc-color-on-surface);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        box-sizing: border-box;
+        resize: vertical;
+    }
+
+    .udoc-ui-root .udoc-page-modal__error {
+        min-height: 18px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--udoc-color-error);
+    }
+
+    .udoc-ui-root .udoc-page-modal__json:focus,
     .udoc-ui-root .udoc-page-modal__input:focus,
     .udoc-ui-root .udoc-page-modal__select:focus {
         outline: none;

@@ -3,7 +3,9 @@
 // edit mode's page controls.
 export * from "@docmentis/udoc-ui";
 export { UDocEditor } from "./editor.js";
-export type { UDocEditorEvents, UDocEditorOptions } from "./editor.js";
+export type { GenerateOptions, UDocEditorEvents, UDocEditorOptions } from "./editor.js";
+// The data a template is filled with, as `generateToBytes` takes it.
+export type { BindingData, BindingValue } from "@docmentis/udoc-wasm";
 export type { EditorMode } from "./mode.js";
 // The chrome's words — udoc-ui's and edit mode's: `Messages` keys the
 // `translations` option, and `createI18n` builds the `i18n` a host hands

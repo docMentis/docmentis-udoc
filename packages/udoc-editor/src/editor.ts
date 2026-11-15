@@ -1,5 +1,7 @@
-import { UDocBase } from "@docmentis/udoc-ui";
-import type { LocalCollaborationServiceOptions, UDocEvents, UDocOptions } from "@docmentis/udoc-ui";
+import { UDocBase, UDocError } from "@docmentis/udoc-ui";
+import type { FileFormat, LocalCollaborationServiceOptions, UDocEvents, UDocOptions } from "@docmentis/udoc-ui";
+import type { BindingData } from "@docmentis/udoc-wasm";
+import { filledCopy, instanceFormat } from "./automation-copy.js";
 import { createAs, startLocalCollaborationService, subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { UIShell } from "@docmentis/udoc-ui/internal";
 import { editMode } from "./edit-mode.js";
@@ -39,6 +41,14 @@ export interface UDocEditorEvents extends UDocEvents {
     "mode:changed": { mode: EditorMode; previousMode: EditorMode };
 }
 
+/** Options for {@link UDocEditor.generateToBytes}. */
+export interface GenerateOptions {
+    /** The format to save the instance as, one of the template's doc type's own.
+     *  Default the template's own format, a PowerPoint template's (`"potx"`,
+     *  `"potm"`) as a presentation's (`"pptx"`, `"pptm"`). */
+    format?: FileFormat;
+}
+
 /**
  * The document editor — construct it with {@link UDocEditor.create} and drive
  * it with `open` / `close` / `destroy`.
@@ -49,10 +59,12 @@ export class UDocEditor extends UDocBase<UDocEditorEvents> {
 
     readonly #unsubscribeMode: () => void;
     readonly #editMode: EditMode;
+    readonly #options: UDocEditorOptions;
 
-    private constructor(shell: UIShell, editMode: EditMode) {
+    private constructor(shell: UIShell, editMode: EditMode, options: UDocEditorOptions) {
         super(shell);
         this.#editMode = editMode;
+        this.#options = options;
         this.#unsubscribeMode = subscribeSelector(
             shell.store,
             // The shell's mode is view, or edit or review mode, the editor's own.
@@ -78,7 +90,7 @@ export class UDocEditor extends UDocBase<UDocEditorEvents> {
             EDITOR_WRAPPER,
             startRenderWorker,
             () => editMode(options),
-            (shell, mode) => new UDocEditor(shell, mode),
+            (shell, mode) => new UDocEditor(shell, mode, options),
         );
     }
 
@@ -104,6 +116,32 @@ export class UDocEditor extends UDocBase<UDocEditorEvents> {
         options: LocalCollaborationServiceOptions = {},
     ): Promise<string> {
         return startLocalCollaborationService(bytes, options, EDITOR_WRAPPER);
+    }
+
+    /**
+     * Generate an instance of the open template, filled with `data` —
+     * `{ customer: { name: "Acme" } }` — and resolve with its bytes: as
+     * `options.format`, else as the template's own format, a PowerPoint
+     * template's as a presentation's. The template stays as it is: it is saved as
+     * it is now, opened headless with a worker of its own, and filled there, each
+     * binding its text writes taking its value from `data`. The instance names
+     * the template it came from, and carries none of its history.
+     *
+     * Rejects with an `invalidRequest` `UDocError` when the open document isn't
+     * a template.
+     */
+    async generateToBytes(data: BindingData, options: GenerateOptions = {}): Promise<Uint8Array> {
+        const state = this.shell.getState();
+        if (state.automation === null || !("template" in state.automation.role)) {
+            throw new UDocError("invalidRequest", "generateToBytes: the open document isn't a template");
+        }
+        const source = (state.sourceFormat as FileFormat | null) ?? "pptx";
+        const copy = await filledCopy(await this.shell.saveToBytes({ format: source }), null, this.#options, data);
+        try {
+            return await copy.saveToBytes({ format: options.format ?? instanceFormat(source) });
+        } finally {
+            copy.destroy();
+        }
     }
 
     /**
