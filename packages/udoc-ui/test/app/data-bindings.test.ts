@@ -6,11 +6,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { AutomationData } from "@docmentis/udoc-wasm";
+import type { BindingData } from "@docmentis/udoc-wasm";
 
 import { blankItem, sampleAt, withItem, withoutItem, withSample } from "../../src/app/data-bindings.ts";
 
-const data: AutomationData = { customer: { name: "Acme" }, funds: [{ name: "Alpha" }, { name: "Beta" }] };
+const data: BindingData = { customer: { name: "Acme" }, funds: [{ name: "Alpha" }, { name: "Beta" }] };
 
 test("a value is read at its place, or undefined where there is none", () => {
     assert.equal(sampleAt(data, ["customer", "name"]), "Acme");

@@ -19,7 +19,7 @@ import type {
     SearchOptions,
     SearchQuad,
     PresentationBindingPlace,
-    AutomationData,
+    BindingData,
     UrlFont,
     UDocSearchScope,
     Destination,
@@ -3746,7 +3746,7 @@ export function mountUIShell(
 
     // Give the template the sample data the Data panel's form now holds, one
     // undo step.
-    function setSampleData(data: AutomationData): void {
+    function setSampleData(data: BindingData): void {
         void commit(() => client.execute({ automation: { setSampleData: { data } } }));
     }
 

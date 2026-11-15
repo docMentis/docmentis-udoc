@@ -18,8 +18,8 @@
 
 import type {
     Automation,
-    AutomationData,
     BindingCatalog,
+    BindingData,
     BindingError,
     BindingSchema,
     PresentationBindingPlace,
@@ -37,7 +37,7 @@ export interface DataPanelCallbacks {
     /** Select the next of `places`, a row's, `key` naming the row. */
     onChoose: (key: string, places: readonly PresentationBindingPlace[]) => void;
     /** Give the template `data` as its sample data. */
-    onSampleData: (data: AutomationData) => void;
+    onSampleData: (data: BindingData) => void;
 }
 
 /** What the panel draws from. */
