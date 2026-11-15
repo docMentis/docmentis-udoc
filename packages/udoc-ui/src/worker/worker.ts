@@ -3774,6 +3774,7 @@ const WORKSHEET_KINDS: Record<WorksheetSelectionEditType, "worksheet"> = {
     patchCellAlignment: "worksheet",
     setCellNumberFormat: "worksheet",
     stepCellDecimals: "worksheet",
+    stepCellIndent: "worksheet",
     clearCellFormats: "worksheet",
     mergeSheetCells: "worksheet",
     unmergeSheetCells: "worksheet",

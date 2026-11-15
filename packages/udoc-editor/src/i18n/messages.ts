@@ -450,6 +450,76 @@ export interface Messages extends UIMessages {
     "cell.decreaseDecimal": string;
     /** Clear Formats */
     "cell.clearFormats": string;
+    /** Orientation */
+    "cell.orientation": string;
+    /** Angle Counterclockwise */
+    "cell.angleCounterclockwise": string;
+    /** Angle Clockwise */
+    "cell.angleClockwise": string;
+    /** Vertical Text */
+    "cell.verticalText": string;
+    /** Rotate Text Up */
+    "cell.rotateTextUp": string;
+    /** Rotate Text Down */
+    "cell.rotateTextDown": string;
+    /** Format Cell Alignment */
+    "cell.formatAlignment": string;
+
+    // The Format Cell Alignment dialog
+    /** Text alignment */
+    "cellAlignment.textAlignment": string;
+    /** Horizontal */
+    "cellAlignment.horizontal": string;
+    /** Indent */
+    "cellAlignment.indent": string;
+    /** Vertical */
+    "cellAlignment.vertical": string;
+    /** Justify distributed */
+    "cellAlignment.justifyDistributed": string;
+    /** Text control */
+    "cellAlignment.textControl": string;
+    /** Wrap text */
+    "cellAlignment.wrapText": string;
+    /** Shrink to fit */
+    "cellAlignment.shrinkToFit": string;
+    /** Text direction */
+    "cellAlignment.textDirection": string;
+    /** Degrees */
+    "cellAlignment.degrees": string;
+    /** Vertical text */
+    "cellAlignment.verticalText": string;
+    /** General */
+    "cellAlignment.general": string;
+    /** Left (Indent) */
+    "cellAlignment.left": string;
+    /** Center */
+    "cellAlignment.center": string;
+    /** Right (Indent) */
+    "cellAlignment.right": string;
+    /** Fill */
+    "cellAlignment.fill": string;
+    /** Justify */
+    "cellAlignment.justify": string;
+    /** Center Across Selection */
+    "cellAlignment.centerAcross": string;
+    /** Distributed (Indent) */
+    "cellAlignment.distributed": string;
+    /** Top */
+    "cellAlignment.top": string;
+    /** Center */
+    "cellAlignment.middle": string;
+    /** Bottom */
+    "cellAlignment.bottom": string;
+    /** Justify */
+    "cellAlignment.verticalJustify": string;
+    /** Distributed */
+    "cellAlignment.verticalDistributed": string;
+    /** Context */
+    "cellAlignment.context": string;
+    /** Left-to-Right */
+    "cellAlignment.leftToRight": string;
+    /** Right-to-Left */
+    "cellAlignment.rightToLeft": string;
 
     // The Table tab's dropdowns, whose buttons show only an icon
     /** Select Row */

@@ -181,6 +181,9 @@ const ICONS = {
     ICON_TEXT_ROTATE_90: "text_rotation_down",
     ICON_TEXT_ROTATE_270: "text_rotate_up",
     ICON_TEXT_STACKED: "text_rotate_vertical",
+    // A worksheet cell's Orientation, its angles beside the turns above
+    ICON_TEXT_ANGLE_UP: "text_rotation_angleup",
+    ICON_TEXT_ANGLE_DOWN: "text_rotation_angledown",
 
     // A word document's floating drawing, selected: its anchor, and the lock
     // on one that stays in its paragraph

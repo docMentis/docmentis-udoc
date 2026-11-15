@@ -1,14 +1,13 @@
 // The Cell tab's own commands: a workbook's cells formatted as Excel's Home tab
-// formats them — their fill and borders, where their text sits, how their
-// values show, their merges, and Clear Formats. The tab's font controls are the
-// Text tab's, which edit the selected cells' font in a workbook
-// (`text-format.ts`).
+// formats them — their fill and borders, where their text sits and how it
+// turns, their indents, how their values show, their merges, and Clear Formats.
+// The tab's font controls are the Text tab's, which edit the selected cells'
+// font in a workbook (`text-format.ts`).
 import type {
     GridBorderProperties,
     GridBorderStyle,
+    GridCellAlignment,
     GridCellFormatProperties,
-    GridHorizontalAlignment,
-    GridVerticalAlignment,
 } from "@docmentis/udoc-wasm";
 import {
     allowsEdit,
@@ -45,14 +44,23 @@ import {
     ICON_CLEAR_FORMAT,
     ICON_DECIMAL_DECREASE,
     ICON_DECIMAL_INCREASE,
+    ICON_INDENT_DECREASE,
+    ICON_INDENT_INCREASE,
     ICON_MERGE_CELLS,
     ICON_NUMBER_FORMAT,
     ICON_PARAGRAPH_CENTER,
     ICON_PARAGRAPH_LEFT,
     ICON_PARAGRAPH_RIGHT,
+    ICON_TEXT_ANGLE_DOWN,
+    ICON_TEXT_ANGLE_UP,
+    ICON_TEXT_ROTATE_270,
+    ICON_TEXT_ROTATE_90,
+    ICON_TEXT_STACKED,
     ICON_UNMERGE_CELLS,
     ICON_WRAP_TEXT,
 } from "./icons.js";
+import { STACKED_TEXT } from "./cell-alignment-edits.js";
+import { editAction } from "./menu-action.js";
 import { paintToGridColor } from "./paint.js";
 import { editState, editStateOf } from "./state.js";
 import { ICON_CELL_ALIGN_BOTTOM, ICON_CELL_ALIGN_CENTER, ICON_CELL_ALIGN_TOP } from "./table.js";
@@ -72,6 +80,12 @@ function cellFormatIn(state: UIState): GridCellFormatProperties | null {
 function cellFormatOf(c: CommandContext): GridCellFormatProperties | null {
     return sheetCellFormat(editStateOf(c).selectionProperties);
 }
+
+/** Where the Alignment dropdown's rows set a cell's text across. */
+export type CellAcross = "left" | "center" | "right";
+
+/** Where the Alignment dropdown's rows set a cell's text down. */
+export type CellDown = "top" | "center" | "bottom";
 
 /** Live where the selection takes a cell edit of `kind`. */
 const whenCellEdit =
@@ -160,30 +174,75 @@ function layCellBorder(host: UIShellHost): LayBorder {
         void runCellEdit(host, { kind: "patchSheetCellBorders", edges, line: pen ? cellBorderLine(pen) : null });
 }
 
+/**
+ * Set the selected cells' text `across`, as Excel's Align Left, Center and
+ * Align Right buttons do: pressed again where the active cell is already so,
+ * back to General. Left and Right keep each cell's indent; Center and General,
+ * which take none, clear it.
+ */
+export function alignCellsAcross(host: UIShellHost, across: CellAcross): Promise<void> {
+    const pressed = cellFormatIn(host.store.getState())?.horizontal === across;
+    const alignment: GridCellAlignment = pressed
+        ? { horizontal: "general", indent: 0 }
+        : across === "center"
+          ? { horizontal: across, indent: 0 }
+          : { horizontal: across };
+    return runCellEdit(host, { kind: "patchCellAlignment", alignment });
+}
+
+/** Set the selected cells' text `down`, as Excel's Top, Middle and Bottom Align
+ *  buttons do: pressed again where the active cell is already so, back to
+ *  Bottom, a cell's default. */
+export function alignCellsDown(host: UIShellHost, down: CellDown): Promise<void> {
+    const pressed = cellFormatIn(host.store.getState())?.vertical === down;
+    const vertical = pressed ? "bottom" : down;
+    return runCellEdit(host, { kind: "patchCellAlignment", alignment: { vertical } });
+}
+
+/** Turn the selected cells' text to `rotation`, an `@textRotation`, as Excel's
+ *  Orientation rows do: chosen again where the active cell is already so,
+ *  level. */
+export function turnCellText(host: UIShellHost, rotation: number): Promise<void> {
+    const chosen = cellFormatIn(host.store.getState())?.textRotation === rotation;
+    const textRotation = chosen ? 0 : rotation;
+    return runCellEdit(host, { kind: "patchCellAlignment", alignment: { textRotation } });
+}
+
+/** Live where the selection takes an alignment. */
+const whenAlign = whenCellEdit("patchCellAlignment");
+
+/** Format Cell Alignment: the dialog with every alignment a cell takes. */
+const FORMAT_ALIGNMENT_ROW: MenuItem<MessageKey> = {
+    action: editAction({ kind: "formatCellAlignment" }),
+    label: "cell.formatAlignment",
+    enabledWhen: whenAlign,
+    separatorBefore: true,
+};
+
 /** A vertical alignment row, marked where the active cell's text sits so. */
-function verticalRow(vertical: GridVerticalAlignment, label: MessageKey, icon: string): MenuItem<MessageKey> {
+function verticalRow(down: CellDown, label: MessageKey, icon: string): MenuItem<MessageKey> {
     return {
-        action: cellEditAction({ kind: "patchCellAlignment", alignment: { vertical } }),
+        action: editAction({ kind: "cellAlignDown", down }),
         label,
         icon,
-        enabledWhen: whenCellEdit("patchCellAlignment"),
-        activeWhen: (c) => cellFormatOf(c)?.vertical === vertical,
+        enabledWhen: whenAlign,
+        activeWhen: (c) => cellFormatOf(c)?.vertical === down,
     };
 }
 
 /** A horizontal alignment row, marked where the active cell's text sits so. */
-function horizontalRow(horizontal: GridHorizontalAlignment, label: MessageKey, icon: string): MenuItem<MessageKey> {
+function horizontalRow(across: CellAcross, label: MessageKey, icon: string): MenuItem<MessageKey> {
     return {
-        action: cellEditAction({ kind: "patchCellAlignment", alignment: { horizontal } }),
+        action: editAction({ kind: "cellAlignAcross", across }),
         label,
         icon,
-        enabledWhen: whenCellEdit("patchCellAlignment"),
-        activeWhen: (c) => cellFormatOf(c)?.horizontal === horizontal,
+        enabledWhen: whenAlign,
+        activeWhen: (c) => cellFormatOf(c)?.horizontal === across,
     };
 }
 
 /** The Alignment dropdown: where the cells' text sits, top to bottom, then
- *  across — Excel's six alignment buttons. */
+ *  across — Excel's six alignment buttons — and the dialog with the rest. */
 export const CELL_ALIGN_MENU: readonly MenuItem<MessageKey>[] = [
     verticalRow("top", "cell.alignTop", ICON_CELL_ALIGN_TOP),
     verticalRow("center", "cell.alignMiddle", ICON_CELL_ALIGN_CENTER),
@@ -191,6 +250,33 @@ export const CELL_ALIGN_MENU: readonly MenuItem<MessageKey>[] = [
     { ...horizontalRow("left", "paragraph.alignLeft", ICON_PARAGRAPH_LEFT), separatorBefore: true },
     horizontalRow("center", "paragraph.center", ICON_PARAGRAPH_CENTER),
     horizontalRow("right", "paragraph.alignRight", ICON_PARAGRAPH_RIGHT),
+    FORMAT_ALIGNMENT_ROW,
+];
+
+/** The Orientation dropdown's turns, Excel's, each by its `@textRotation`:
+ *  45 degrees up, 45 down, stacked, 90 up and 90 down. */
+const ORIENTATIONS: readonly (readonly [rotation: number, label: MessageKey, icon: string])[] = [
+    [45, "cell.angleCounterclockwise", ICON_TEXT_ANGLE_UP],
+    [135, "cell.angleClockwise", ICON_TEXT_ANGLE_DOWN],
+    [STACKED_TEXT, "cell.verticalText", ICON_TEXT_STACKED],
+    [90, "cell.rotateTextUp", ICON_TEXT_ROTATE_270],
+    [180, "cell.rotateTextDown", ICON_TEXT_ROTATE_90],
+];
+
+/** The Orientation dropdown, Excel's: the turns, the active cell's marked, and
+ *  Format Cell Alignment. As Excel's, the angles are greyed while the active
+ *  cell is indented, which only stacked text goes with. */
+export const CELL_ORIENTATION_MENU: readonly MenuItem<MessageKey>[] = [
+    ...ORIENTATIONS.map(
+        ([rotation, label, icon]): MenuItem<MessageKey> => ({
+            action: editAction({ kind: "cellTurn", rotation }),
+            label,
+            icon,
+            enabledWhen: (c) => whenAlign(c) && (rotation === STACKED_TEXT || (cellFormatOf(c)?.indent ?? 0) === 0),
+            activeWhen: (c) => cellFormatOf(c)?.textRotation === rotation,
+        }),
+    ),
+    FORMAT_ALIGNMENT_ROW,
 ];
 
 /** Live where the selection takes a merge: a block of cells. */
@@ -301,8 +387,9 @@ function numberFormatName(state: UIState): MessageKey {
 /**
  * The Cell tab's commands, over the {@link EditTools} once edit mode is
  * mounted: Fill Color, then Border Color and Border, which share a pen of
- * their own; the Alignment dropdown, Wrap Text and Merge & Center; the Number Format
- * dropdown and the decimal steps; and Clear Formats.
+ * their own; the Alignment and Orientation dropdowns, the indent steps, Wrap
+ * Text and Merge & Center; the Number Format dropdown and the decimal steps;
+ * and Clear Formats.
  */
 export function cellCommands(tools: () => EditTools): Readonly<Record<string, Def>> {
     const border = createBorderState();
@@ -359,8 +446,24 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
             icon: ICON_PARAGRAPH_LEFT,
             group: "cellAlignment",
             run: { kind: "menu", menu: CELL_ALIGN_MENU },
-            enabledWhen: whenCellEdit("patchCellAlignment"),
+            enabledWhen: whenAlign,
         },
+        cellOrientation: {
+            id: "cellOrientation",
+            label: "cell.orientation",
+            icon: ICON_TEXT_ANGLE_UP,
+            group: "cellAlignment",
+            run: { kind: "menu", menu: CELL_ORIENTATION_MENU },
+            enabledWhen: whenAlign,
+        },
+        cellIndentDown: action("cellIndentDown", "paragraph.decreaseIndent", ICON_INDENT_DECREASE, "cellAlignment", {
+            kind: "stepCellIndent",
+            increase: false,
+        }),
+        cellIndentUp: action("cellIndentUp", "paragraph.increaseIndent", ICON_INDENT_INCREASE, "cellAlignment", {
+            kind: "stepCellIndent",
+            increase: true,
+        }),
         cellWrap: {
             id: "cellWrap",
             label: "cell.wrapText",
@@ -374,7 +477,7 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
                     void runCellEdit(tools().host, { kind: "patchCellAlignment", alignment: { wrapText } });
                 },
             },
-            enabledWhen: whenCellEdit("patchCellAlignment"),
+            enabledWhen: whenAlign,
         },
         cellMerge: {
             id: "cellMerge",

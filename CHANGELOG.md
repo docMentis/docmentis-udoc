@@ -18,6 +18,19 @@ listed once, by package. Its major and minor version are those of the
 - A picture, shape or chart over a worksheet's cells is selected when
   clicked, instead of the cell under it, and Shift-click adds or removes
   others, as on a slide. Clicking a cell selects cells again.
+- The Cell tab sets every alignment Excel sets on a worksheet's cells. It
+  adds Excel's Orientation menu and its Increase and Decrease Indent buttons,
+  which step each selected cell's own indent and set its alignment as Excel
+  does. Format Cell Alignment, at the foot of the Alignment and Orientation
+  menus, opens a dialog with the rest: General, Fill, Justify, Center Across
+  Selection and Distributed across; Justify and Distributed down; the indent;
+  Justify distributed; Shrink to fit; the text direction; and the angle in
+  degrees or stacked. Choosing an alignment the active cell already has turns
+  it off, as a second press of Excel's buttons does. The `translations` keys
+  under `cellAlignment.`, and `cell.orientation`,
+  `cell.angleCounterclockwise`, `cell.angleClockwise`, `cell.verticalText`,
+  `cell.rotateTextUp`, `cell.rotateTextDown` and `cell.formatAlignment`, are
+  new.
 
 ## [0.8.21] - 2026-11-13
 

@@ -77,6 +77,9 @@ export type EditCommandId =
     | "cellBorderColor"
     | "cellBorder"
     | "cellAlign"
+    | "cellOrientation"
+    | "cellIndentDown"
+    | "cellIndentUp"
     | "cellWrap"
     | "cellMerge"
     | "cellNumberFormat"
@@ -408,8 +411,9 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
  * The spreadsheet Cell tab — the selected cells formatted as Excel's Home tab
  * formats them: the Text tab's font fields, Bold, Italic, Underline and
  * Strikethrough, and Text Color, with Fill Color beside it; Border Color and
- * Border; the Alignment dropdown, Wrap Text and Merge & Center; the Number
- * Format dropdown and the two decimal steps; Clear Formats; and New Comment, on
+ * Border; the Alignment and Orientation dropdowns, the two indent steps, Wrap
+ * Text and Merge & Center; the Number Format dropdown and the two decimal
+ * steps; Clear Formats; and New Comment, on
  * the active cell. A workbook's strip opens on it, and a selection of cells
  * opens it.
  */
@@ -429,6 +433,9 @@ const CELL_TAB: EditTab = {
         "cellBorderColor",
         "cellBorder",
         "cellAlign",
+        "cellOrientation",
+        "cellIndentDown",
+        "cellIndentUp",
         "cellWrap",
         "cellMerge",
         "cellNumberFormat",

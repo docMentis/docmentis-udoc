@@ -332,6 +332,25 @@ export const editorStyles = css`
         accent-color: var(--udoc-color-primary);
     }
 
+    /* The Format Cell Alignment dialog's groups, and its fields the other
+   choices leave without effect. */
+    .udoc-ui-root .udoc-page-modal__group {
+        margin-top: 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--udoc-color-on-surface);
+    }
+
+    .udoc-ui-root .udoc-page-modal__group:first-child {
+        margin-top: 0;
+    }
+
+    .udoc-ui-root .udoc-page-modal__input:disabled,
+    .udoc-ui-root .udoc-page-modal__check:has(input:disabled) {
+        opacity: 0.38;
+        cursor: default;
+    }
+
     .udoc-ui-root .udoc-page-modal__hint {
         margin: 12px 0 10px;
         font-size: 12px;

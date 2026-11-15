@@ -1844,6 +1844,9 @@ export type SelectionEdit =
     /** Spreadsheet: Excel's Increase Decimal, or with `increase` false
      *  Decrease Decimal, from the active cell's format. */
     | { kind: "stepCellDecimals"; increase: boolean }
+    /** Spreadsheet: Excel's Increase Indent, or with `increase` false
+     *  Decrease Indent — each selected cell's own indent one step. */
+    | { kind: "stepCellIndent"; increase: boolean }
     /** Spreadsheet: Excel's Clear Formats over the selection. */
     | { kind: "clearCellFormats" }
     /** Spreadsheet: Excel's Merge Cells over the selected block — `across`

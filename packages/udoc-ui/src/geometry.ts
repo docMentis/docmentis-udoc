@@ -419,6 +419,7 @@ export type SelectionEditKind =
     | "patchCellAlignment"
     | "setCellNumberFormat"
     | "stepCellDecimals"
+    | "stepCellIndent"
     | "clearCellFormats"
     | "mergeSheetCells"
     | "unmergeSheetCells"

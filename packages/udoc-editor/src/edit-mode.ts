@@ -35,6 +35,8 @@ import { editorStyles } from "./styles.js";
 import { tableCommands } from "./table.js";
 import { mountTableProperties } from "./table-properties.js";
 import type { TableProperties } from "./table-properties.js";
+import { mountCellAlignment } from "./cell-alignment.js";
+import type { CellAlignment } from "./cell-alignment.js";
 import { editTabs } from "./tabs.js";
 import { createEditTools } from "./tools.js";
 import type { EditTools } from "./tools.js";
@@ -237,6 +239,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
     let slideLayouts: SlideLayouts | null = null;
     let imageSize: ImageSize | null = null;
     let tableProperties: TableProperties | null = null;
+    let cellAlignment: CellAlignment | null = null;
     let pageResize: PageResize | null = null;
     const grips = createGrips(() => tools);
     const ruler = createRuler(() => host);
@@ -287,6 +290,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
         menuAction(action) {
             const edit = action as EditMenuAction;
             if (edit.kind === "tableProperties") tableProperties?.open();
+            else if (edit.kind === "formatCellAlignment") cellAlignment?.open();
             else if (tools) runEditMenuAction(tools, edit);
         },
         // Edit mode's acts on the selection, a table's rows added over one and a
@@ -325,12 +329,15 @@ export function editMode(options: UDocEditorOptions): EditMode {
             slideLayouts = mountSlideLayouts(mounted, i18n);
             imageSize = mountImageSize(mounted, i18n);
             tableProperties = mountTableProperties(mounted, i18n);
+            cellAlignment = mountCellAlignment(mounted, i18n);
             pageResize = mountPageResize(mounted, i18n);
             return () => {
                 pageResize?.destroy();
                 pageResize = null;
                 tableProperties?.destroy();
                 tableProperties = null;
+                cellAlignment?.destroy();
+                cellAlignment = null;
                 imageSize?.destroy();
                 imageSize = null;
                 slideLayouts?.destroy();

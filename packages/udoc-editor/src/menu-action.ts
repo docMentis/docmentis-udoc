@@ -2,6 +2,8 @@
 // back to edit mode (`UIExtension.menuAction`).
 import type { TableLook, TableSelectionEdit } from "@docmentis/udoc-wasm";
 import type { AlignEdge, EditAxis, MenuAction, TextParagraphAlign, ZOrder } from "@docmentis/udoc-ui/internal";
+import { alignCellsAcross, alignCellsDown, turnCellText } from "./cell-format.js";
+import type { CellAcross, CellDown } from "./cell-format.js";
 import type { ClipboardOp } from "./context-menu.js";
 import type { CropAspect } from "./crop-box.js";
 import { settleRevisions } from "./review.js";
@@ -22,6 +24,10 @@ import type { EditTools } from "./tools.js";
  * `tableEdit` its rows over a table, as the Table tab's are, with `deleteTable`
  * the table itself and `toggleTableLook` one of its Style Options;
  * `tableProperties` opens the Table Properties dialog, which edit mode holds.
+ * `cellAlignAcross` / `cellAlignDown` are the Cell tab's Alignment rows and
+ * `cellTurn` its Orientation rows, which read the active cell when run, as a
+ * second press of one of Excel's buttons takes it back; `formatCellAlignment`
+ * opens the Format Cell Alignment dialog, which edit mode holds.
  * `cropAspect` is crop mode's Aspect Ratio dropdown. `settleRevisions` is the
  * Review tab's Accept and Reject menus' rows.
  *
@@ -51,6 +57,10 @@ export type EditMenuAction =
     | { kind: "deleteTable" }
     | { kind: "toggleTableLook"; flag: keyof TableLook }
     | { kind: "tableProperties" }
+    | { kind: "cellAlignAcross"; across: CellAcross }
+    | { kind: "cellAlignDown"; down: CellDown }
+    | { kind: "cellTurn"; rotation: number }
+    | { kind: "formatCellAlignment" }
     | { kind: "cropAspect"; aspect: CropAspect }
     | { kind: "settleRevisions"; accept: boolean; scope: RevisionScope };
 
@@ -146,8 +156,19 @@ export function runEditMenuAction(tools: EditTools, action: EditMenuAction): voi
         case "toggleTableLook":
             void toggleTableLook(host, action.flag);
             break;
+        case "cellAlignAcross":
+            void alignCellsAcross(host, action.across);
+            break;
+        case "cellAlignDown":
+            void alignCellsDown(host, action.down);
+            break;
+        case "cellTurn":
+            void turnCellText(host, action.rotation);
+            break;
         case "tableProperties":
-            // The dialog is edit mode's, which opens it before this is reached.
+        case "formatCellAlignment":
+            // The dialogs are edit mode's, which opens them before this is
+            // reached.
             break;
         case "cropAspect":
             crop.setAspect(action.aspect);
