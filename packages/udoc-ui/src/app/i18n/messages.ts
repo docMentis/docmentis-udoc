@@ -701,6 +701,26 @@ export interface Messages {
     "data.instance": string;
     /** Plain document — the deck's role, when it is neither */
     "data.plain": string;
+    /** Its braces are only text until it is a template. — a plain deck's note in the list's place */
+    "data.plainNote": string;
+    /** Errors — the heading over the tags that are wrong */
+    "data.errors": string;
+    /** No closing }} — a tag's braces never closed in its paragraph */
+    "data.error.unclosedTag": string;
+    /** A quote isn't closed */
+    "data.error.unclosedQuote": string;
+    /** Nothing between the braces */
+    "data.error.empty": string;
+    /** Can't read this tag — something the syntax doesn't allow */
+    "data.error.unexpected": string;
+    /** Never closed — an opening tag no closing tag closes */
+    "data.error.unclosedPair": string;
+    /** Doesn't close the last tag opened */
+    "data.error.unmatchedClose": string;
+    /** Outside a choice, or after its otherwise — a misplaced option */
+    "data.error.misplacedOption": string;
+    /** Not placed like its opening tag — alone in its paragraph or sharing it, unlike the tag that opened the pair */
+    "data.error.splitPair": string;
 
     // Search panel
     /** Search in document */

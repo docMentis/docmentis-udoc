@@ -1,43 +1,59 @@
-// The tags written in a document's text — `{{customer.name}}`, `{{#fund in
-// funds}}` — as the right panel's Data tab lists them: found by a search of the
-// text, and gathered by what is written inside their braces.
-import type { SearchMatch, SearchOptions } from "@docmentis/udoc-wasm";
+// The tags written in a deck's text, as the right panel's Data tab lists them:
+// read by the engine (`presentation.model.automation.tags`), then gathered by
+// what each binds — a variable by its path, a repeat, a condition or a choice by
+// its opening tag — with the tags that are wrong apart.
+import type { SlideTag } from "@docmentis/udoc-wasm";
 
-/** What the text is searched for: two braces, then anything but a brace or a
- *  quote, or text in quotes — which may hold braces, as `{{"{{"}}` does — then
- *  two braces again. */
-export const DATA_TAG_PATTERN = '\\{\\{(?:[^{}"]|"[^"]*")*\\}\\}';
-
-/** How {@link DATA_TAG_PATTERN} is searched for: as a regular expression, over
- *  the text as it is written. */
-export const DATA_TAG_SEARCH: SearchOptions = { caseSensitive: true, fuzzy: false, regex: true };
-
-/** One tag the text holds, and every place it is written. */
-export interface DataTag {
-    /** What is written inside its braces, without the spaces around it:
-     *  `customer.name` for `{{ customer.name }}`. */
-    tag: string;
-    /** The matches it is written at, in the order the search found them. */
-    matches: readonly SearchMatch[];
+/** One binding the text holds — a variable, or a pair's opening tag — and every
+ *  tag that writes it. */
+export interface DataEntry {
+    /** How the panel names it: a variable's path, `customer.name`, or a pair's
+     *  opening tag inside its braces, `#fund in funds`, `#if not fund.closed`,
+     *  `#choose fund.rating`. */
+    name: string;
+    /** The tags that write it, in the order the text holds them. */
+    tags: readonly SlideTag[];
 }
 
-/** What `match` holds inside its braces, without the spaces around it. */
-export function tagText(match: SearchMatch): string {
-    return match.context[1].slice(2, -2).trim();
+/** The text's tags as the Data panel lists them. */
+export interface DataTags {
+    /** Each binding once, in the order the text first holds it. */
+    entries: readonly DataEntry[];
+    /** Each tag that is wrong, as written or where it stands, in order. */
+    errors: readonly SlideTag[];
 }
 
 /**
- * The tags `matches` are of, each once, in the order the text first holds them,
- * each with its matches in the order they came. Two matches are of one tag when
- * what is written inside their braces is the same but for the spaces around it.
+ * What the panel names `tag` by — or null for a tag it doesn't list: a pair's
+ * closing tag or an option, which belong to the pair they're in, and a literal,
+ * which binds nothing.
  */
-export function groupDataTags(matches: readonly SearchMatch[]): DataTag[] {
-    const byTag = new Map<string, SearchMatch[]>();
-    for (const match of matches) {
-        const tag = tagText(match);
-        const at = byTag.get(tag);
-        if (at) at.push(match);
-        else byTag.set(tag, [match]);
+export function entryName(tag: SlideTag): string | null {
+    const read = tag.tag;
+    // `otherwise`, the one tag that says nothing more, crosses as a string.
+    if (!read || typeof read !== "object") return null;
+    if ("variable" in read) return read.variable.path;
+    if ("repeat" in read) return `#${read.repeat.item} in ${read.repeat.path}`;
+    if ("condition" in read) return `#if ${read.condition.not ? "not " : ""}${read.condition.path}`;
+    if ("choice" in read) return `#choose ${read.choice.path}`;
+    return null;
+}
+
+/** `tags`, as the engine reads them, gathered for the panel: each binding once
+ *  with the tags that write it, and the tags that are wrong apart. */
+export function groupDataTags(tags: readonly SlideTag[]): DataTags {
+    const byName = new Map<string, SlideTag[]>();
+    const errors: SlideTag[] = [];
+    for (const tag of tags) {
+        if (tag.error) {
+            errors.push(tag);
+            continue;
+        }
+        const name = entryName(tag);
+        if (name === null) continue;
+        const at = byName.get(name);
+        if (at) at.push(tag);
+        else byName.set(name, [tag]);
     }
-    return [...byTag].map(([tag, at]) => ({ tag, matches: at }));
+    return { entries: [...byName].map(([name, at]) => ({ name, tags: at })), errors };
 }

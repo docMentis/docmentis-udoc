@@ -9,7 +9,7 @@ import type {
     SlideSectionRun,
 } from "../worker/protocol.js";
 import type { AnnotationStyles } from "./annotations.js";
-import type { DataTag } from "./data-tags.js";
+import type { DataTags } from "./data-tags.js";
 import type { MessageKey } from "./i18n/index.js";
 import type {
     Automation,
@@ -797,17 +797,18 @@ export interface UIState {
      */
     revisionGroups: readonly ListedRevisionGroup[] | null;
     /**
-     * The tags a deck's text holds, as the Data panel lists them, read while
-     * that panel is open and again whenever the document changes; null until
+     * The tags a deck's text holds, as the Data panel lists them — each
+     * binding once, and the tags that are wrong apart — read while that panel
+     * is open and again whenever the document changes; null until read.
+     */
+    dataTags: DataTags | null;
+    /**
+     * The open deck's automation part, read as it opens and again on each
+     * edit: whether the deck is a template or an instance filled from one.
+     * Null for a plain deck, which has none, any other document, and until
      * read.
      */
-    dataTags: readonly DataTag[] | null;
-    /**
-     * The deck's automation part, read with {@link dataTags}: whether the deck
-     * is a template or an instance filled from one. Null for a plain deck,
-     * which has none, and until read.
-     */
-    dataAutomation: Automation | null;
+    automation: Automation | null;
     /** The ids of the records of the tracked changes the selection touches,
      *  read while the Revisions panel is open, which marks their cards. */
     selectionRevisionIds: readonly string[];
@@ -1227,7 +1228,7 @@ export const initialState: UIState = {
     revisionGroups: null,
     selectionRevisionIds: [],
     dataTags: null,
-    dataAutomation: null,
+    automation: null,
 
     searchQuery: "",
     searchCaseSensitive: false,

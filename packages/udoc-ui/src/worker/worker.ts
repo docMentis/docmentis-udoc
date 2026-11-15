@@ -61,6 +61,7 @@ import initEngine, {
 import type {
     Automation,
     CanvasText,
+    SlideTag,
     FontLocation,
     PresentationPlaneKind,
     GoogleFontFamily,
@@ -2868,6 +2869,12 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, session ? automation(session) : null);
                 break;
             }
+            case "automationTags": {
+                // A read that loads every slide, laying none out. None with no
+                // open / non-presentation doc.
+                reply(id, session ? automationTags(session) : []);
+                break;
+            }
             case "sheetIdByIndex": {
                 // A pure read: one sheet's id. Undefined past the last sheet, or
                 // with no open / non-spreadsheet doc.
@@ -3435,6 +3442,11 @@ function slideSections(s: WasmSession): SlideSectionRun[] {
  *  or any other document. */
 function automation(s: WasmSession): Automation | null {
     return safeRead(() => s.presentation.model.automation.dump(), null);
+}
+
+/** The tags the open deck's slides hold — none for any other document. */
+function automationTags(s: WasmSession): SlideTag[] {
+    return safeRead(() => s.presentation.model.automation.tags(), []);
 }
 
 /** The media file `media` names, its bytes copied out of wasm memory into a

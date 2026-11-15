@@ -376,6 +376,16 @@ export const ptBR: Messages = {
     "data.template": "Modelo",
     "data.instance": "Instância",
     "data.plain": "Documento comum",
+    "data.plainNote": "Suas chaves são apenas texto até que seja um modelo.",
+    "data.errors": "Erros",
+    "data.error.unclosedTag": "Falta o }} de fechamento",
+    "data.error.unclosedQuote": "Aspas não fechadas",
+    "data.error.empty": "Nada entre as chaves",
+    "data.error.unexpected": "Não é possível ler esta tag",
+    "data.error.unclosedPair": "Nunca fechada",
+    "data.error.unmatchedClose": "Não fecha a última tag aberta",
+    "data.error.misplacedOption": "Fora de uma escolha ou depois do seu otherwise",
+    "data.error.splitPair": "Não está posicionada como a tag de abertura",
 
     // Search panel
     "search.placeholder": "Pesquisar no documento",

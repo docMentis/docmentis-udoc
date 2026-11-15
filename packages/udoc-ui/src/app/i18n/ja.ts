@@ -376,6 +376,16 @@ export const ja: Messages = {
     "data.template": "テンプレート",
     "data.instance": "インスタンス",
     "data.plain": "通常のドキュメント",
+    "data.plainNote": "テンプレートになるまで、波かっこはただのテキストです。",
+    "data.errors": "エラー",
+    "data.error.unclosedTag": "閉じる }} がありません",
+    "data.error.unclosedQuote": "引用符が閉じられていません",
+    "data.error.empty": "波かっこの間に何もありません",
+    "data.error.unexpected": "このタグは読み取れません",
+    "data.error.unclosedPair": "閉じられていません",
+    "data.error.unmatchedClose": "最後に開いたタグを閉じていません",
+    "data.error.misplacedOption": "選択の外、または otherwise の後にあります",
+    "data.error.splitPair": "開始タグと同じ位置に置かれていません",
 
     // Search panel
     "search.placeholder": "文書内を検索",

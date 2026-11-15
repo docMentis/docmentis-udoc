@@ -64,6 +64,7 @@ import type {
     SheetLayoutMode,
     SlideMasterSummary,
     SlideShowInput,
+    SlideTag,
     UrlFont,
     Watermark,
     WordprocessingOutline,
@@ -1624,6 +1625,14 @@ export class WorkerClient {
          * the deck by.
          */
         automation: (): Promise<Automation | null> => this.#send({ type: "automation" }) as Promise<Automation | null>,
+
+        /**
+         * The tags the open deck's slides hold, each as the engine reads it: as
+         * written, what it says, what is wrong with it, and where it is, which
+         * {@link searchMatchSelection} selects. None for any other document. A
+         * read that loads every slide, laying none out.
+         */
+        automationTags: (): Promise<SlideTag[]> => this.#send({ type: "automationTags" }) as Promise<SlideTag[]>,
     };
 
     /**

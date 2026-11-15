@@ -1,5 +1,6 @@
 import type { HistoryOp, SelectionEdit } from "../worker/protocol.js";
 import type {
+    Automation,
     Feature,
     RevisionView,
     RevisionViewMode,
@@ -178,6 +179,10 @@ export interface CommandContext {
     /** Whether the open deck's Data panel can be opened — edit mode's
      *  Automation tab's Data shows for it. */
     dataPanel: boolean;
+    /** The open deck's automation part — a template's or an instance's — or
+     *  null for a plain deck and any other document: what the Automation tab's
+     *  Make Template reads. */
+    automation: Automation | null;
     /** What the Annotate tab's Format controls act on and show — the armed
      *  annotation tool's style, else the selected annotations' — or null when
      *  there is neither. A control is live when its entry is present. */
@@ -222,6 +227,7 @@ export function commandContext(state: UIState): CommandContext {
         layersPanel: state.hasLayers && panelOpenable(state, "layers"),
         revisionsPanel: state.docType === "wordprocessing" && panelOpenable(state, "revisions"),
         dataPanel: state.docType === "presentation" && panelOpenable(state, "data"),
+        automation: state.automation,
         annotation: annotationFormat(state),
     };
 }

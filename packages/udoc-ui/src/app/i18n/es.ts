@@ -376,6 +376,16 @@ export const es: Messages = {
     "data.template": "Plantilla",
     "data.instance": "Instancia",
     "data.plain": "Documento normal",
+    "data.plainNote": "Sus llaves son solo texto hasta que sea una plantilla.",
+    "data.errors": "Errores",
+    "data.error.unclosedTag": "Falta el }} de cierre",
+    "data.error.unclosedQuote": "Unas comillas no están cerradas",
+    "data.error.empty": "No hay nada entre las llaves",
+    "data.error.unexpected": "No se puede leer esta etiqueta",
+    "data.error.unclosedPair": "Nunca se cierra",
+    "data.error.unmatchedClose": "No cierra la última etiqueta abierta",
+    "data.error.misplacedOption": "Fuera de una elección o después de su otherwise",
+    "data.error.splitPair": "No está colocada como su etiqueta de apertura",
 
     // Search panel
     "search.placeholder": "Buscar en el documento",

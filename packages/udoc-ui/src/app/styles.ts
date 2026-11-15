@@ -3946,6 +3946,26 @@ export const uiStyles = css`
         margin-left: auto;
         color: var(--udoc-color-on-surface-variant);
     }
+    .udoc-ui-root .udoc-data-panel__body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    /* The heading over the tags that are wrong. */
+    .udoc-ui-root .udoc-data-panel__heading {
+        padding: 0 8px;
+        font:
+            600 12px/1.4 system-ui,
+            sans-serif;
+        color: var(--udoc-color-error);
+    }
+    /* What is wrong with a tag, beside it, wrapping under it where it must. */
+    .udoc-ui-root .udoc-data-panel__tag--error {
+        flex-wrap: wrap;
+    }
+    .udoc-ui-root .udoc-data-panel__tag--error .udoc-data-panel__count {
+        color: var(--udoc-color-error);
+    }
 
     /* =========================================================================
    Mode / command toolbar

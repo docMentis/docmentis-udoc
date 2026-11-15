@@ -376,6 +376,16 @@ export const fr: Messages = {
     "data.template": "Modèle",
     "data.instance": "Instance",
     "data.plain": "Document simple",
+    "data.plainNote": "Ses accolades ne sont que du texte tant qu'il n'est pas un modèle.",
+    "data.errors": "Erreurs",
+    "data.error.unclosedTag": "Il manque le }} de fermeture",
+    "data.error.unclosedQuote": "Des guillemets ne sont pas fermés",
+    "data.error.empty": "Rien entre les accolades",
+    "data.error.unexpected": "Impossible de lire cette balise",
+    "data.error.unclosedPair": "Jamais fermée",
+    "data.error.unmatchedClose": "Ne ferme pas la dernière balise ouverte",
+    "data.error.misplacedOption": "Hors d'un choix, ou après son otherwise",
+    "data.error.splitPair": "Pas placée comme sa balise d'ouverture",
 
     // Search panel
     "search.placeholder": "Rechercher dans le document",

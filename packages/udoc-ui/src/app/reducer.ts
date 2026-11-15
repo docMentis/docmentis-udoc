@@ -119,7 +119,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
                 revisionGroups: null,
                 selectionRevisionIds: [],
                 dataTags: null,
-                dataAutomation: null,
+                automation: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -269,7 +269,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
                 revisionGroups: null,
                 selectionRevisionIds: [],
                 dataTags: null,
-                dataAutomation: null,
+                automation: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
                 searchRunning: false,
@@ -821,7 +821,10 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
             return { ...state, revisionGroups: action.groups };
 
         case "SET_DATA_TAGS":
-            return { ...state, dataTags: action.tags, dataAutomation: action.automation };
+            return { ...state, dataTags: action.tags };
+
+        case "SET_AUTOMATION":
+            return { ...state, automation: action.automation };
 
         case "SET_SELECTION_REVISION_IDS":
             return { ...state, selectionRevisionIds: action.ids };

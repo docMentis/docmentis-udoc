@@ -1,5 +1,5 @@
 import { createMenuController, subscribeSelector } from "../../framework/index.js";
-import type { AnnotationLineEnding, Feature, RevisionView, UDocType } from "@docmentis/udoc-wasm";
+import type { AnnotationLineEnding, Automation, Feature, RevisionView, UDocType } from "@docmentis/udoc-wasm";
 import type { Store } from "../../framework/index.js";
 import type { HistoryOp } from "../../worker/protocol.js";
 import type { Action } from "../actions.js";
@@ -193,6 +193,9 @@ interface RibbonSlice {
      *  live by, with whether the slide shown plays anything. */
     slidePreviewing: boolean;
     currentSlidePlays: boolean;
+    /** The open deck's automation part, which the Automation tab's Template
+     *  reads pressed by and its other controls are live by. */
+    automation: Automation | null;
 }
 
 /** The color a display paints its bar with — a solid or theme color's own hex;
@@ -232,7 +235,8 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.formulaBarVisible === b.formulaBarVisible &&
         a.layersPanel === b.layersPanel &&
         a.slidePreviewing === b.slidePreviewing &&
-        a.currentSlidePlays === b.currentSlidePlays
+        a.currentSlidePlays === b.currentSlidePlays &&
+        a.automation === b.automation
     );
 }
 
@@ -266,6 +270,7 @@ function selectSlice(s: UIState): RibbonSlice {
         layersPanel: s.hasLayers && panelOpenable(s, "layers"),
         slidePreviewing: s.slidePreviewing,
         currentSlidePlays: s.currentSlidePlays,
+        automation: s.automation,
     };
 }
 

@@ -1522,6 +1522,15 @@ export interface AutomationRequest {
 }
 
 /**
+ * Read the tags the open deck's slides hold, each as the engine reads it: as
+ * written, what it says, what is wrong with it, and where it is. Replies with a
+ * {@link SlideTag}`[]`, empty for any other document.
+ */
+export interface AutomationTagsRequest {
+    type: "automationTags";
+}
+
+/**
  * A deck's section as the thumbnails group its slides: its id and name, and
  * the run of the slide order it holds — `count` slides from index `start`. An
  * empty section's `start` is where the section before it ends.
@@ -2437,6 +2446,7 @@ export type WorkerRequest =
     | SlideLayoutIdRequest
     | SlideSectionsRequest
     | AutomationRequest
+    | AutomationTagsRequest
     | SheetIdByIndexRequest
     | SetSelectionRequest
     | SelectionReadRequest

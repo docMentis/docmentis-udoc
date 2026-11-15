@@ -1,56 +1,57 @@
 /**
- * The tags the Data panel lists: each once, by what its braces hold, with every
- * place it is written, in the order the text first holds it.
+ * The tags the Data panel lists: each binding once, by what it binds, with every
+ * tag that writes it, in the order the text first holds it; the tags that are
+ * wrong apart.
  */
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import type { SearchMatch } from "@docmentis/udoc-wasm";
+import type { SlideTag, Tag, TagError } from "@docmentis/udoc-wasm";
 
-import { DATA_TAG_PATTERN, groupDataTags, tagText } from "../../src/app/data-tags.ts";
+import { entryName, groupDataTags } from "../../src/app/data-tags.ts";
 
-/** A match of `text` on page `page`. */
-const match = (text: string, page = 0): SearchMatch =>
-    ({ location: {}, plane: 0, page, quads: [], context: ["", text, ""] }) as unknown as SearchMatch;
-
-test("a tag is what its braces hold, without the spaces around it", () => {
-    assert.equal(tagText(match("{{customer.name}}")), "customer.name");
-    assert.equal(tagText(match("{{ customer.name }}")), "customer.name");
-    assert.equal(tagText(match('{{#fund in funds join ", "}}')), '#fund in funds join ", "');
-    assert.equal(tagText(match("{{}}")), "");
+/** A tag on slide `slide` that reads as `tag`, or is wrong with `error`. */
+const at = (text: string, tag?: Tag, error?: TagError, slide = 0): SlideTag => ({
+    text,
+    ...(tag === undefined ? {} : { tag }),
+    ...(error === undefined ? {} : { error }),
+    slide,
+    location: { start: [slide, 0, 0], end: [slide, 0, text.length] },
 });
 
-test("the tags are listed once each, in the order the text first holds them", () => {
-    const a = match("{{customer.name}}", 0);
-    const b = match("{{fund.name}}", 0);
-    const c = match("{{ customer.name }}", 2);
-    const tags = groupDataTags([a, b, c]);
+const variable = (path: string): Tag => ({ variable: { path } });
+
+test("a binding is named by what it binds", () => {
+    assert.equal(entryName(at("{{customer.name}}", variable("customer.name"))), "customer.name");
+    assert.equal(entryName(at("{{#fund in funds}}", { repeat: { item: "fund", path: "funds" } })), "#fund in funds");
+    assert.equal(entryName(at("{{#if not a.b}}", { condition: { not: true, path: "a.b" } })), "#if not a.b");
+    assert.equal(entryName(at("{{#choose r}}", { choice: { path: "r" } })), "#choose r");
+});
+
+test("a closing tag, an option and a literal are no binding of their own", () => {
+    assert.equal(entryName(at("{{/if}}", { close: { name: "if" } })), null);
+    assert.equal(entryName(at("{{:otherwise}}", "otherwise")), null);
+    assert.equal(entryName(at('{{"{{"}}', { literal: { text: "{{" } })), null);
+});
+
+test("each binding is listed once, in the order the text first holds it", () => {
+    const a = at("{{customer.name}}", variable("customer.name"));
+    const b = at("{{fund.name}}", variable("fund.name"));
+    const c = at("{{ customer.name }}", variable("customer.name"), undefined, 2);
+    const { entries, errors } = groupDataTags([a, b, c]);
     assert.deepEqual(
-        tags.map((t) => t.tag),
+        entries.map((e) => e.name),
         ["customer.name", "fund.name"],
     );
-    assert.deepEqual(tags[0]!.matches, [a, c]);
-    assert.deepEqual(tags[1]!.matches, [b]);
+    assert.deepEqual(entries[0]!.tags, [a, c]);
+    assert.deepEqual(errors, []);
 });
 
-test("no matches list no tags", () => {
-    assert.deepEqual(groupDataTags([]), []);
-});
-
-test("the pattern finds each tag whole, braces in its quotes and all", () => {
-    const pattern = new RegExp(DATA_TAG_PATTERN, "g");
-    const found = (text: string) => [...text.matchAll(pattern)].map((m) => m[0]);
-    assert.deepEqual(found("Dear {{customer.name}}, welcome."), ["{{customer.name}}"]);
-    assert.deepEqual(found("{{a}} and {{ b }}"), ["{{a}}", "{{ b }}"]);
-    assert.deepEqual(found('{{customer.title or "Client"}}'), ['{{customer.title or "Client"}}']);
-    assert.deepEqual(found('{{"{{"}}'), ['{{"{{"}}']);
-});
-
-test("the pattern finds no tag in braces left open, or quotes", () => {
-    const pattern = new RegExp(DATA_TAG_PATTERN, "g");
-    const found = (text: string) => [...text.matchAll(pattern)].map((m) => m[0]);
-    assert.deepEqual(found("{{a} and {b}}"), []);
-    assert.deepEqual(found('{{"}}'), []);
-    assert.deepEqual(found("{{cust"), []);
+test("a tag that is wrong is listed apart, even one that reads", () => {
+    const open = at("{{#if a}}", { condition: { not: false, path: "a" } }, "unclosedPair");
+    const broken = at("{{cust", undefined, "unclosedTag");
+    const { entries, errors } = groupDataTags([open, broken]);
+    assert.deepEqual(entries, []);
+    assert.deepEqual(errors, [open, broken]);
 });

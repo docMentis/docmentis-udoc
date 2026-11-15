@@ -374,6 +374,16 @@ export const zhCN: Messages = {
     "data.template": "模板",
     "data.instance": "实例",
     "data.plain": "普通文档",
+    "data.plainNote": "在成为模板之前，其中的大括号只是文本。",
+    "data.errors": "错误",
+    "data.error.unclosedTag": "缺少结尾的 }}",
+    "data.error.unclosedQuote": "引号未闭合",
+    "data.error.empty": "大括号之间没有内容",
+    "data.error.unexpected": "无法读取此标记",
+    "data.error.unclosedPair": "从未闭合",
+    "data.error.unmatchedClose": "未闭合最后打开的标记",
+    "data.error.misplacedOption": "在选择之外，或在其 otherwise 之后",
+    "data.error.splitPair": "位置与其开始标记不一致",
 
     // Search panel
     "search.placeholder": "在文档中搜索",

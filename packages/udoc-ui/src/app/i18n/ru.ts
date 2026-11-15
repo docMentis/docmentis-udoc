@@ -376,6 +376,16 @@ export const ru: Messages = {
     "data.template": "Шаблон",
     "data.instance": "Экземпляр",
     "data.plain": "Обычный документ",
+    "data.plainNote": "Пока это не шаблон, фигурные скобки — просто текст.",
+    "data.errors": "Ошибки",
+    "data.error.unclosedTag": "Нет закрывающих }}",
+    "data.error.unclosedQuote": "Кавычки не закрыты",
+    "data.error.empty": "Между скобками ничего нет",
+    "data.error.unexpected": "Не удаётся прочитать этот тег",
+    "data.error.unclosedPair": "Не закрыт",
+    "data.error.unmatchedClose": "Не закрывает последний открытый тег",
+    "data.error.misplacedOption": "Вне выбора или после его otherwise",
+    "data.error.splitPair": "Расположен не так, как открывающий тег",
 
     // Search panel
     "search.placeholder": "Поиск в документе",

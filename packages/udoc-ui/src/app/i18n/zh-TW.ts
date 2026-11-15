@@ -374,6 +374,16 @@ export const zhTW: Messages = {
     "data.template": "範本",
     "data.instance": "實例",
     "data.plain": "一般文件",
+    "data.plainNote": "在成為範本之前，其中的大括號只是文字。",
+    "data.errors": "錯誤",
+    "data.error.unclosedTag": "缺少結尾的 }}",
+    "data.error.unclosedQuote": "引號未關閉",
+    "data.error.empty": "大括號之間沒有內容",
+    "data.error.unexpected": "無法讀取此標記",
+    "data.error.unclosedPair": "從未關閉",
+    "data.error.unmatchedClose": "未關閉最後開啟的標記",
+    "data.error.misplacedOption": "在選擇之外，或在其 otherwise 之後",
+    "data.error.splitPair": "位置與其開始標記不一致",
 
     // Search panel
     "search.placeholder": "在文件中搜尋",

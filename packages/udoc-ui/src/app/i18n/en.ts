@@ -377,6 +377,16 @@ export const en: Messages = {
     "data.template": "Template",
     "data.instance": "Instance",
     "data.plain": "Plain document",
+    "data.plainNote": "Its braces are only text until it is a template.",
+    "data.errors": "Errors",
+    "data.error.unclosedTag": "No closing }}",
+    "data.error.unclosedQuote": "A quote isn't closed",
+    "data.error.empty": "Nothing between the braces",
+    "data.error.unexpected": "Can't read this tag",
+    "data.error.unclosedPair": "Never closed",
+    "data.error.unmatchedClose": "Doesn't close the last tag opened",
+    "data.error.misplacedOption": "Outside a choice, or after its otherwise",
+    "data.error.splitPair": "Not placed like its opening tag",
 
     // Search panel
     "search.placeholder": "Search in document",

@@ -376,6 +376,16 @@ export const de: Messages = {
     "data.template": "Vorlage",
     "data.instance": "Instanz",
     "data.plain": "Einfaches Dokument",
+    "data.plainNote": "Seine Klammern sind nur Text, bis es eine Vorlage ist.",
+    "data.errors": "Fehler",
+    "data.error.unclosedTag": "Kein schließendes }}",
+    "data.error.unclosedQuote": "Ein Anführungszeichen ist nicht geschlossen",
+    "data.error.empty": "Nichts zwischen den Klammern",
+    "data.error.unexpected": "Dieses Tag ist nicht lesbar",
+    "data.error.unclosedPair": "Nie geschlossen",
+    "data.error.unmatchedClose": "Schließt nicht das zuletzt geöffnete Tag",
+    "data.error.misplacedOption": "Außerhalb einer Auswahl oder nach deren otherwise",
+    "data.error.splitPair": "Nicht wie sein öffnendes Tag platziert",
 
     // Search panel
     "search.placeholder": "Im Dokument suchen",

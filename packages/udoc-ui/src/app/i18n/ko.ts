@@ -376,6 +376,16 @@ export const ko: Messages = {
     "data.template": "템플릿",
     "data.instance": "인스턴스",
     "data.plain": "일반 문서",
+    "data.plainNote": "템플릿이 되기 전까지 중괄호는 텍스트일 뿐입니다.",
+    "data.errors": "오류",
+    "data.error.unclosedTag": "닫는 }}가 없습니다",
+    "data.error.unclosedQuote": "따옴표가 닫히지 않았습니다",
+    "data.error.empty": "중괄호 사이에 아무것도 없습니다",
+    "data.error.unexpected": "이 태그를 읽을 수 없습니다",
+    "data.error.unclosedPair": "닫히지 않았습니다",
+    "data.error.unmatchedClose": "마지막으로 연 태그를 닫지 않습니다",
+    "data.error.misplacedOption": "선택 밖이나 otherwise 뒤에 있습니다",
+    "data.error.splitPair": "여는 태그와 같은 방식으로 놓이지 않았습니다",
 
     // Search panel
     "search.placeholder": "문서에서 검색",

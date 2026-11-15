@@ -374,6 +374,16 @@ export const ar: Messages = {
     "data.template": "قالب",
     "data.instance": "نسخة",
     "data.plain": "مستند عادي",
+    "data.plainNote": "أقواسه نص فقط حتى يصبح قالبًا.",
+    "data.errors": "أخطاء",
+    "data.error.unclosedTag": "لا يوجد }} للإغلاق",
+    "data.error.unclosedQuote": "علامة اقتباس غير مغلقة",
+    "data.error.empty": "لا شيء بين الأقواس",
+    "data.error.unexpected": "تعذّرت قراءة هذه العلامة",
+    "data.error.unclosedPair": "لم تُغلق أبدًا",
+    "data.error.unmatchedClose": "لا تغلق آخر علامة فُتحت",
+    "data.error.misplacedOption": "خارج اختيار أو بعد otherwise الخاص به",
+    "data.error.splitPair": "ليست موضوعة مثل علامة الفتح الخاصة بها",
 
     // Search panel
     "search.placeholder": "البحث في المستند",

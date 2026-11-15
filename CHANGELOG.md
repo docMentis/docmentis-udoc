@@ -12,9 +12,11 @@ listed once, by package. Its major and minor version are those of the
 
 - A PowerPoint deck offers a Data panel, `"data"` among the panels
   `openPanel` takes: whether the deck is a template, an instance filled from
-  one or a plain deck, then the tags its text holds, such as
-  `{{customer.name}}`, each once with how many times it is written. Choosing
-  one selects the next place it is written.
+  one or a plain deck, then, for a template, what its text binds — each
+  variable by its path, each repeat, condition and choice by its opening tag,
+  such as `#fund in funds` — with how many tags write it, and last the tags
+  that are wrong, each with what is wrong with it. Choosing a row selects the
+  next tag it stands for.
 
 ### udoc-editor
 
