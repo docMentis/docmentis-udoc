@@ -3902,7 +3902,7 @@ function reply(id: number | undefined, result: unknown, error?: unknown, transfe
 function widenedSheetSelection(selection: UDocSelection | undefined, to: "rows" | "columns"): UDocSelection | null {
     if (selection === undefined || !("spreadsheet" in selection)) return null;
     const sheetSelection = selection.spreadsheet;
-    if (typeof sheetSelection === "string") return null;
+    if (typeof sheetSelection === "string" || "drawingAnchors" in sheetSelection) return null;
     if ("cells" in sheetSelection || "entry" in sheetSelection) {
         const { sheet, anchor, focus } = "cells" in sheetSelection ? sheetSelection.cells : sheetSelection.entry;
         return {

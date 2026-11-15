@@ -174,7 +174,19 @@ function shapeHitText(shapeHit: ShapeHit, global: boolean): boolean {
  *  starts / extends a cell block (no marquee band; the range fill is the
  *  feedback). False for every other hit, including `"none"`. */
 function hitCell(hit: UDocHit): boolean {
-    return hit !== "none" && "spreadsheet" in hit && hit.spreadsheet !== "cellEntry";
+    return hit !== "none" && "spreadsheet" in hit && typeof hit.spreadsheet === "object" && "cell" in hit.spreadsheet;
+}
+
+/** Whether a picked {@link UDocHit} landed on an object of a worksheet's
+ *  drawing — a picture, shape or chart over the cells, which a press picks as
+ *  an object rather than the cell under it. */
+function hitDrawingAnchor(hit: UDocHit): boolean {
+    return (
+        hit !== "none" &&
+        "spreadsheet" in hit &&
+        typeof hit.spreadsheet === "object" &&
+        "drawingAnchor" in hit.spreadsheet
+    );
 }
 
 /** Whether a picked {@link UDocHit} landed on the text being typed into a
@@ -3446,10 +3458,10 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // paragraphs; Shift extends the current selection instead of
         // re-anchoring. Object move/resize is edit-only — an annotation press
         // took edit mode's path above — so view never reaches those. A
-        // spreadsheet has no flow text (and its domain is
-        // fixed — no floating objects yet), so a grid press selects a cell
-        // block instead; the hover probe that classifies the other doc types is
-        // edit-only, so this reads the doc type directly. A click on a link
+        // spreadsheet has no flow text, and view mode picks none of its
+        // drawing's objects, so a grid press selects a cell block instead; the
+        // hover probe that classifies the other doc types is edit-only, so
+        // this reads the doc type directly. A click on a link
         // follows it and a link-key click picks it (see `resolveClick`).
         if (!editable) {
             const hit = hitAt(x, y);
@@ -3579,10 +3591,10 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         // domain — the decision the old unified `select` made in Rust now lives
         // here, so the *rendering* follows it too. Single-domain doc types route
         // by type (they have nothing else under the point): a spreadsheet press is
-        // always a cell block, a word-processor press always a text caret / range —
-        // so a press on a blank docx page never rubber-bands an (object) marquee it
-        // has no objects for. Multi-domain doc types (PDF, slides) route on the
-        // cached hover hit — cell / text / object:
+        // a cell block but on an object of its drawing, a word-processor press
+        // always a text caret / range — so a press on a blank docx page never
+        // rubber-bands an (object) marquee it has no objects for. Multi-domain doc
+        // types (PDF, slides) route on the cached hover hit — cell / text / object:
         //
         //   - a grid cell → a cell-select drag (the range fill is the feedback,
         //     no marquee band);
@@ -3597,15 +3609,16 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         //   - an object or bare page → a marquee select (a drag sweeps a
         //     rectangle, a bare click picks / clears the point).
         const hit = hitAt(x, y);
+        // A press on a workbook's grid is a cell's, but on an object over it.
+        const onCells = (st.docType === "spreadsheet" && !hitDrawingAnchor(hit)) || hitCell(hit);
         // A finger on bare canvas scrolls (drag) or picks (tap); the pick it
         // captures is the very gesture the mouse would have taken here.
         if (touch) {
-            const tap: TapAction =
-                st.docType === "spreadsheet" || hitCell(hit)
-                    ? { kind: "cell" }
-                    : textIntent(x, y, ev)
-                      ? { kind: "text", granularity: granularityFor(chainClick(x, y)), global: false }
-                      : { kind: "object", mode: selectModeFor(ev) };
+            const tap: TapAction = onCells
+                ? { kind: "cell" }
+                : textIntent(x, y, ev)
+                  ? { kind: "text", granularity: granularityFor(chainClick(x, y)), global: false }
+                  : { kind: "object", mode: selectModeFor(ev) };
             gesture = touchScrollGesture(ev, x, y, tap);
             el.setPointerCapture(ev.pointerId);
             return;
@@ -3619,12 +3632,12 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             return;
         }
         if (st.docType === "spreadsheet" && st.activeCell?.entry != null) hooks.commitCellEntry?.();
-        if (st.docType === "spreadsheet" && !ev.shiftKey && chainClick(x, y) === 2) {
+        if (st.docType === "spreadsheet" && onCells && !ev.shiftKey && chainClick(x, y) === 2) {
             client.editCellEntry({ begin: { mode: "edit" } });
             client.selectText({ x, y }, { x, y }, {});
             return;
         }
-        if (st.docType === "spreadsheet" || hitCell(hit)) {
+        if (onCells) {
             gesture = {
                 kind: "cellSelect",
                 startX: x,

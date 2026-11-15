@@ -15,6 +15,9 @@ listed once, by package. Its major and minor version are those of the
   showing where it will land. A floating one follows the pointer, and its
   anchor goes to the paragraph its top edge is dropped in, unless the anchor
   is locked.
+- A picture, shape or chart over a worksheet's cells is selected when
+  clicked, instead of the cell under it, and Shift-click adds or removes
+  others, as on a slide. Clicking a cell selects cells again.
 
 ## [0.8.21] - 2026-11-13
 
