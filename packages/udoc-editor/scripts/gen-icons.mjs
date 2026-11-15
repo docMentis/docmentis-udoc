@@ -93,6 +93,9 @@ const ICONS = {
     // A deck's Automation tab
     ICON_TEMPLATE: "post_add",
     ICON_INSERT_VARIABLE: "variable_insert",
+    ICON_INSERT_REPEAT: "repeat",
+    ICON_INSERT_CONDITION: "filter_alt",
+    ICON_INSERT_CHOICE: "alt_route",
     ICON_DATA_PANEL: "database",
 
     // An image's Home tab

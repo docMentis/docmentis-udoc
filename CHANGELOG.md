@@ -49,7 +49,10 @@ listed once, by package. Its major and minor version are those of the
 - A PowerPoint deck's edit mode has an Automation tab, after the Shape tab:
   Template turns a plain deck into a template and back, and on a template
   Variable writes `{{var}}` at the caret with `var` selected, to type a path
-  over, and Data shows or hides the Data panel. Picked, the tab stays open as
+  over; Repeat, Condition and Choice write a pair's tags the same way,
+  `{{#item in items}}{{/item}}`, `{{#if flag}}{{/if}}` and
+  `{{#choose value}}{{:when "a"}}{{:otherwise}}{{/choose}}`, their path
+  selected; and Data shows or hides the Data panel. Picked, the tab stays open as
   the selection moves.
 - Increase Font Size and Decrease Font Size, beside the size field in word
   documents, decks, workbooks and the text on images, step the selection to

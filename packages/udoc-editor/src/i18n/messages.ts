@@ -212,6 +212,12 @@ export interface Messages extends UIMessages {
     "command.template": string;
     /** Variable */
     "command.insertVariable": string;
+    /** Repeat */
+    "command.insertRepeat": string;
+    /** Condition */
+    "command.insertCondition": string;
+    /** Choice */
+    "command.insertChoice": string;
     /** Fill */
     "command.shapeFillColor": string;
     /** Line */

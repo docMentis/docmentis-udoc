@@ -120,6 +120,9 @@ export type EditCommandId =
     | "rejectRevisions"
     | "template"
     | "insertVariable"
+    | "insertRepeat"
+    | "insertCondition"
+    | "insertChoice"
     | "dataPanel";
 
 /** A tab of edit mode's. */
@@ -439,7 +442,14 @@ const PRESENTATION_AUTOMATION_TAB: EditTab = {
     id: "automation",
     label: "ribbon.automation",
     icon: ICON_TAB_AUTOMATION,
-    commands: ["template", "insertVariable", "dataPanel"] satisfies EditCommandId[],
+    commands: [
+        "template",
+        "insertVariable",
+        "insertRepeat",
+        "insertCondition",
+        "insertChoice",
+        "dataPanel",
+    ] satisfies EditCommandId[],
     opensFor: onDeck,
     staysOpen: true,
 };
