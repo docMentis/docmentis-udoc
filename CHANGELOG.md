@@ -45,6 +45,7 @@ listed once, by package. Its major and minor version are those of the
   formulas naming them follow them, also onto another sheet. Escape, a copy
   or an edit cancels the cut. Cut copied only.
 - A PowerPoint deck's edit mode has an Automation tab, after the Shape tab:
+  Template turns a plain deck into a template and back, and on a template
   Variable writes `{{var}}` at the caret with `var` selected, to type a path
   over, and Data shows or hides the Data panel. Picked, the tab stays open as
   the selection moves.

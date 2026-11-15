@@ -109,6 +109,7 @@ export const ja: EditMessages = {
     "command.lineSpacing": "行と段落の間隔",
     "command.bulletList": "箇条書き",
     "command.numberList": "段落番号",
+    "command.template": "テンプレート",
     "command.insertVariable": "変数",
     "command.shapeFillColor": "塗りつぶし",
     "command.shapeStrokeColor": "枠線",
@@ -565,4 +566,5 @@ export const ja: EditMessages = {
 
     // Data panel
     "data.none": "変数はまだありません。「自動化」タブから挿入してください。",
+    "data.plainNote": "タグを読み取るには、[自動化] タブで [テンプレート] をオンにします。",
 };

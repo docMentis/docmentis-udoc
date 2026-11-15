@@ -110,6 +110,7 @@ export const en: EditMessages = {
     "command.lineSpacing": "Line & Paragraph Spacing",
     "command.bulletList": "Bulleted List",
     "command.numberList": "Numbered List",
+    "command.template": "Template",
     "command.insertVariable": "Variable",
     "command.shapeFillColor": "Fill",
     "command.shapeStrokeColor": "Line",
@@ -563,4 +564,5 @@ export const en: EditMessages = {
 
     // Data panel
     "data.none": "No variables yet. Insert one from the Automation tab.",
+    "data.plainNote": "Turn on Template in the Automation tab to read its tags.",
 };

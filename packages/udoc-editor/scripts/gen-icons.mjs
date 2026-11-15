@@ -91,6 +91,7 @@ const ICONS = {
     ICON_CHANGE_SHAPE: "shape_line",
 
     // A deck's Automation tab
+    ICON_TEMPLATE: "post_add",
     ICON_INSERT_VARIABLE: "variable_insert",
     ICON_DATA_PANEL: "database",
 

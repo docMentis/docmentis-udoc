@@ -118,6 +118,7 @@ export type EditCommandId =
     | "cropApply"
     | "acceptRevisions"
     | "rejectRevisions"
+    | "template"
     | "insertVariable"
     | "dataPanel";
 
@@ -425,9 +426,11 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
 };
 
 /**
- * The presentation Automation tab — what fills the deck from data: Variable, a
- * variable's tag written at the caret, then Data, the panel listing the tags
- * the text holds, both named beside their icons. Picked, it stays open over
+ * The presentation Automation tab — what fills the deck from data: Template,
+ * the toggle that makes a plain deck a template and a template plain again,
+ * then Variable, a variable's tag written at the caret, and Data, the panel
+ * listing what the text binds, both a template's alone, each named beside its
+ * icon. Picked, it stays open over
  * every selection the deck's own tabs open for, as a template is written by
  * selecting text and shapes on it; a tab ahead of it holds for each of those,
  * so no selection opens it.
@@ -436,7 +439,7 @@ const PRESENTATION_AUTOMATION_TAB: EditTab = {
     id: "automation",
     label: "ribbon.automation",
     icon: ICON_TAB_AUTOMATION,
-    commands: ["insertVariable", "dataPanel"] satisfies EditCommandId[],
+    commands: ["template", "insertVariable", "dataPanel"] satisfies EditCommandId[],
     opensFor: onDeck,
     staysOpen: true,
 };

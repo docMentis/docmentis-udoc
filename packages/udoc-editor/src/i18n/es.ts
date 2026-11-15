@@ -109,6 +109,7 @@ export const es: EditMessages = {
     "command.lineSpacing": "Espaciado entre líneas y párrafos",
     "command.bulletList": "Lista con viñetas",
     "command.numberList": "Lista numerada",
+    "command.template": "Plantilla",
     "command.insertVariable": "Variable",
     "command.shapeFillColor": "Relleno",
     "command.shapeStrokeColor": "Línea",
@@ -564,4 +565,5 @@ export const es: EditMessages = {
 
     // Data panel
     "data.none": "Aún no hay variables. Inserte una desde la pestaña «Automatización».",
+    "data.plainNote": "Activa Plantilla en la pestaña Automatización para leer sus etiquetas.",
 };

@@ -208,6 +208,8 @@ export interface Messages extends UIMessages {
     "command.bulletList": string;
     /** Numbered List */
     "command.numberList": string;
+    /** Template */
+    "command.template": string;
     /** Variable */
     "command.insertVariable": string;
     /** Fill */
@@ -1078,4 +1080,5 @@ export interface Messages extends UIMessages {
 /** The strings edit mode adds, and udoc-ui's it words its own way — the
  *  toolbar's label, and the empty Data panel's, which points to the Automation
  *  tab edit mode has: the shape of each of the editor's language packs. */
-export type EditMessages = Omit<Messages, keyof UIMessages> & Pick<UIMessages, "toolbar.label" | "data.none">;
+export type EditMessages = Omit<Messages, keyof UIMessages> &
+    Pick<UIMessages, "toolbar.label" | "data.none" | "data.plainNote">;

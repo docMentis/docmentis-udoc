@@ -109,6 +109,7 @@ export const zhCN: EditMessages = {
     "command.lineSpacing": "行和段落间距",
     "command.bulletList": "项目符号",
     "command.numberList": "编号",
+    "command.template": "模板",
     "command.insertVariable": "变量",
     "command.shapeFillColor": "填充",
     "command.shapeStrokeColor": "线条",
@@ -562,4 +563,5 @@ export const zhCN: EditMessages = {
 
     // Data panel
     "data.none": "还没有变量。请从“自动化”选项卡插入一个。",
+    "data.plainNote": "在“自动化”选项卡中打开“模板”以读取其标记。",
 };

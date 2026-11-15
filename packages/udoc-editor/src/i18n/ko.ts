@@ -109,6 +109,7 @@ export const ko: EditMessages = {
     "command.lineSpacing": "줄 및 단락 간격",
     "command.bulletList": "글머리 기호",
     "command.numberList": "번호 매기기",
+    "command.template": "템플릿",
     "command.insertVariable": "변수",
     "command.shapeFillColor": "채우기",
     "command.shapeStrokeColor": "윤곽선",
@@ -562,4 +563,5 @@ export const ko: EditMessages = {
 
     // Data panel
     "data.none": "아직 변수가 없습니다. “자동화” 탭에서 삽입하세요.",
+    "data.plainNote": "태그를 읽으려면 자동화 탭에서 템플릿을 켜세요.",
 };

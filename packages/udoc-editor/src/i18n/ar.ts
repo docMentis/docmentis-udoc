@@ -109,6 +109,7 @@ export const ar: EditMessages = {
     "command.lineSpacing": "تباعد الأسطر والفقرات",
     "command.bulletList": "تعداد نقطي",
     "command.numberList": "تعداد رقمي",
+    "command.template": "قالب",
     "command.insertVariable": "متغير",
     "command.shapeFillColor": "تعبئة",
     "command.shapeStrokeColor": "خط",
@@ -562,4 +563,5 @@ export const ar: EditMessages = {
 
     // Data panel
     "data.none": "لا توجد متغيرات بعد. أدرج متغيرًا من علامة التبويب «الأتمتة».",
+    "data.plainNote": "شغّل «قالب» في علامة التبويب «الأتمتة» لقراءة علاماته.",
 };

@@ -109,6 +109,7 @@ export const fr: EditMessages = {
     "command.lineSpacing": "Interligne et espacement de paragraphe",
     "command.bulletList": "Liste à puces",
     "command.numberList": "Liste numérotée",
+    "command.template": "Modèle",
     "command.insertVariable": "Variable",
     "command.shapeFillColor": "Remplissage",
     "command.shapeStrokeColor": "Contour",
@@ -566,4 +567,5 @@ export const fr: EditMessages = {
 
     // Data panel
     "data.none": "Aucune variable pour l'instant. Insérez-en une depuis l'onglet Automatisation.",
+    "data.plainNote": "Activez Modèle dans l'onglet Automatisation pour lire ses balises.",
 };

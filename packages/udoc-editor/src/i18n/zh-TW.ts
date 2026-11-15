@@ -109,6 +109,7 @@ export const zhTW: EditMessages = {
     "command.lineSpacing": "行距與段落間距",
     "command.bulletList": "項目符號清單",
     "command.numberList": "編號清單",
+    "command.template": "範本",
     "command.insertVariable": "變數",
     "command.shapeFillColor": "填滿",
     "command.shapeStrokeColor": "線條",
@@ -562,4 +563,5 @@ export const zhTW: EditMessages = {
 
     // Data panel
     "data.none": "尚無變數。請從「自動化」索引標籤插入一個。",
+    "data.plainNote": "在「自動化」索引標籤中開啟「範本」以讀取其標記。",
 };

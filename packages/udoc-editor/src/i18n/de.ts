@@ -109,6 +109,7 @@ export const de: EditMessages = {
     "command.lineSpacing": "Zeilen- und Absatzabstand",
     "command.bulletList": "Aufzählungszeichen",
     "command.numberList": "Nummerierung",
+    "command.template": "Vorlage",
     "command.insertVariable": "Variable",
     "command.shapeFillColor": "Füllung",
     "command.shapeStrokeColor": "Linie",
@@ -566,4 +567,5 @@ export const de: EditMessages = {
 
     // Data panel
     "data.none": "Noch keine Variablen. Fügen Sie eine über die Registerkarte „Automatisierung“ ein.",
+    "data.plainNote": "Aktivieren Sie „Vorlage“ auf der Registerkarte „Automatisierung“, um seine Tags zu lesen.",
 };

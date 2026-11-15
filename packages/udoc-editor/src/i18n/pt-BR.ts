@@ -109,6 +109,7 @@ export const ptBR: EditMessages = {
     "command.lineSpacing": "Espaçamento de Linha e Parágrafo",
     "command.bulletList": "Lista com Marcadores",
     "command.numberList": "Lista Numerada",
+    "command.template": "Modelo",
     "command.insertVariable": "Variável",
     "command.shapeFillColor": "Preenchimento",
     "command.shapeStrokeColor": "Contorno",
@@ -562,4 +563,5 @@ export const ptBR: EditMessages = {
 
     // Data panel
     "data.none": "Nenhuma variável ainda. Insira uma na guia “Automação”.",
+    "data.plainNote": "Ative Modelo na guia Automação para ler suas tags.",
 };

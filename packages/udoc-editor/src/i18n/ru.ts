@@ -109,6 +109,7 @@ export const ru: EditMessages = {
     "command.lineSpacing": "Интервал между строками и абзацами",
     "command.bulletList": "Маркированный список",
     "command.numberList": "Нумерованный список",
+    "command.template": "Шаблон",
     "command.insertVariable": "Переменная",
     "command.shapeFillColor": "Заливка",
     "command.shapeStrokeColor": "Контур",
@@ -563,4 +564,5 @@ export const ru: EditMessages = {
 
     // Data panel
     "data.none": "Переменных пока нет. Вставьте переменную на вкладке «Автоматизация».",
+    "data.plainNote": "Включите «Шаблон» на вкладке «Автоматизация», чтобы прочитать его теги.",
 };
