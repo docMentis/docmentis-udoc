@@ -66,6 +66,7 @@ export const ru: EditMessages = {
     "ribbon.table": "Таблица",
     "ribbon.object": "Объект",
     "ribbon.cell": "Ячейка",
+    "ribbon.automation": "Автоматизация",
 
     // Commands
     "command.ruler": "Линейка",
@@ -108,6 +109,7 @@ export const ru: EditMessages = {
     "command.lineSpacing": "Интервал между строками и абзацами",
     "command.bulletList": "Маркированный список",
     "command.numberList": "Нумерованный список",
+    "command.insertVariable": "Переменная",
     "command.shapeFillColor": "Заливка",
     "command.shapeStrokeColor": "Контур",
     "command.objectFillColor": "Заливка",
@@ -558,4 +560,7 @@ export const ru: EditMessages = {
 
     // Toolbar
     "toolbar.label": "Панель инструментов редактора",
+
+    // Data panel
+    "data.none": "Переменных пока нет. Вставьте переменную на вкладке «Автоматизация».",
 };

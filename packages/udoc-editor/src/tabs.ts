@@ -2,7 +2,8 @@
 // catalog's, or the editor's own (see `commands.ts`); the order is the render
 // order. A strip opens folded, a PDF's on its Page tab, a deck's on its Slide tab,
 // an image's on its Image tab, a word document's on its Text tab and a workbook's on
-// its Cell tab, and a selection opens the tab it is for.
+// its Cell tab, and a selection opens the tab it is for — but a deck's Automation
+// tab, which no selection opens and none closes.
 import type { UDocType } from "@docmentis/udoc-ui";
 import {
     allowsEdit,
@@ -16,6 +17,7 @@ import {
 import type { CommandId, SelectionCapabilities, ToolbarTab } from "@docmentis/udoc-ui/internal";
 import type { MessageKey } from "./i18n/index.js";
 import {
+    ICON_TAB_AUTOMATION,
     ICON_TAB_CELL,
     ICON_TAB_IMAGE,
     ICON_TAB_OBJECT,
@@ -115,7 +117,9 @@ export type EditCommandId =
     | "cropCancel"
     | "cropApply"
     | "acceptRevisions"
-    | "rejectRevisions";
+    | "rejectRevisions"
+    | "insertVariable"
+    | "dataPanel";
 
 /** A tab of edit mode's. */
 type EditTab = ToolbarTab<MessageKey>;
@@ -164,6 +168,12 @@ function pagesOrNothing(caps: SelectionCapabilities): boolean {
  *  nothing. */
 function slidesOrNothing(caps: SelectionCapabilities): boolean {
     return caps.count === 0 || allowsEdit(caps, "deleteSlides", "deleteSlideSections");
+}
+
+/** Whether `caps` is a selection one of a deck's own tabs opens for: its slides,
+ *  sections or nothing, text, a table's cells, or picked shapes. */
+function onDeck(caps: SelectionCapabilities): boolean {
+    return slidesOrNothing(caps) || inText(caps) || inTable(caps) || pickedShapes(caps);
 }
 
 /**
@@ -415,6 +425,23 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
 };
 
 /**
+ * The presentation Automation tab — what fills the deck from data: Variable, a
+ * variable's tag written at the caret, then Data, the panel listing the tags
+ * the text holds, both named beside their icons. Picked, it stays open over
+ * every selection the deck's own tabs open for, as a template is written by
+ * selecting text and shapes on it; a tab ahead of it holds for each of those,
+ * so no selection opens it.
+ */
+const PRESENTATION_AUTOMATION_TAB: EditTab = {
+    id: "automation",
+    label: "ribbon.automation",
+    icon: ICON_TAB_AUTOMATION,
+    commands: ["insertVariable", "dataPanel"] satisfies EditCommandId[],
+    opensFor: onDeck,
+    staysOpen: true,
+};
+
+/**
  * The spreadsheet Cell tab — the selected cells themselves as Excel's Home tab
  * formats them: Fill Color, Border Color and Border; Merge & Center; the Number
  * Format dropdown and the two decimal steps; Clear Formats; and New Comment, on
@@ -496,14 +523,17 @@ const PORTABLE_TABS: readonly EditTab[] = [
 ];
 
 /** The presentation strip: its own Slide, then Text (character formatting),
- *  Table and Shape (free-floating graphics), then Present, and its View last.
- *  Table goes ahead of Shape as Text does: a block of cells also reports the
- *  edits of the frame around them, and the first tab holding for it opens. */
+ *  Table and Shape (free-floating graphics), then Automation, then Present,
+ *  and its View last. Table goes ahead of Shape as Text does: a block of cells
+ *  also reports the edits of the frame around them, and the first tab holding
+ *  for it opens. Automation comes after them all, so one of them always holds
+ *  first. */
 const PRESENTATION_TABS: readonly EditTab[] = [
     PRESENTATION_SLIDE_TAB,
     PRESENTATION_TEXT_TAB,
     TABLE_TAB,
     SHAPE_TAB,
+    PRESENTATION_AUTOMATION_TAB,
     presentTab("presentation"),
     editViewTab("presentation"),
 ];

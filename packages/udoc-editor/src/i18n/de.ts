@@ -66,6 +66,7 @@ export const de: EditMessages = {
     "ribbon.table": "Tabelle",
     "ribbon.object": "Objekt",
     "ribbon.cell": "Zelle",
+    "ribbon.automation": "Automatisierung",
 
     // Commands
     "command.ruler": "Lineal",
@@ -108,6 +109,7 @@ export const de: EditMessages = {
     "command.lineSpacing": "Zeilen- und Absatzabstand",
     "command.bulletList": "Aufzählungszeichen",
     "command.numberList": "Nummerierung",
+    "command.insertVariable": "Variable",
     "command.shapeFillColor": "Füllung",
     "command.shapeStrokeColor": "Linie",
     "command.objectFillColor": "Füllung",
@@ -561,4 +563,7 @@ export const de: EditMessages = {
 
     // Toolbar
     "toolbar.label": "Editor-Symbolleiste",
+
+    // Data panel
+    "data.none": "Noch keine Variablen. Fügen Sie eine über die Registerkarte „Automatisierung“ ein.",
 };

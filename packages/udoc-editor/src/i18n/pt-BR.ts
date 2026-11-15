@@ -66,6 +66,7 @@ export const ptBR: EditMessages = {
     "ribbon.table": "Tabela",
     "ribbon.object": "Objeto",
     "ribbon.cell": "Célula",
+    "ribbon.automation": "Automação",
 
     // Commands
     "command.ruler": "Régua",
@@ -108,6 +109,7 @@ export const ptBR: EditMessages = {
     "command.lineSpacing": "Espaçamento de Linha e Parágrafo",
     "command.bulletList": "Lista com Marcadores",
     "command.numberList": "Lista Numerada",
+    "command.insertVariable": "Variável",
     "command.shapeFillColor": "Preenchimento",
     "command.shapeStrokeColor": "Contorno",
     "command.objectFillColor": "Preenchimento",
@@ -557,4 +559,7 @@ export const ptBR: EditMessages = {
 
     // Toolbar
     "toolbar.label": "Barra de ferramentas do editor",
+
+    // Data panel
+    "data.none": "Nenhuma variável ainda. Insira uma na guia “Automação”.",
 };

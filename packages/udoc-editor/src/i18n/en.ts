@@ -67,6 +67,7 @@ export const en: EditMessages = {
     "ribbon.table": "Table",
     "ribbon.object": "Object",
     "ribbon.cell": "Cell",
+    "ribbon.automation": "Automation",
 
     // Commands
     "command.ruler": "Ruler",
@@ -109,6 +110,7 @@ export const en: EditMessages = {
     "command.lineSpacing": "Line & Paragraph Spacing",
     "command.bulletList": "Bulleted List",
     "command.numberList": "Numbered List",
+    "command.insertVariable": "Variable",
     "command.shapeFillColor": "Fill",
     "command.shapeStrokeColor": "Line",
     "command.objectFillColor": "Fill",
@@ -558,4 +560,7 @@ export const en: EditMessages = {
 
     // Toolbar
     "toolbar.label": "Editor toolbar",
+
+    // Data panel
+    "data.none": "No variables yet. Insert one from the Automation tab.",
 };

@@ -66,6 +66,7 @@ export const ja: EditMessages = {
     "ribbon.table": "表",
     "ribbon.object": "オブジェクト",
     "ribbon.cell": "セル",
+    "ribbon.automation": "自動化",
 
     // Commands
     "command.ruler": "ルーラー",
@@ -108,6 +109,7 @@ export const ja: EditMessages = {
     "command.lineSpacing": "行と段落の間隔",
     "command.bulletList": "箇条書き",
     "command.numberList": "段落番号",
+    "command.insertVariable": "変数",
     "command.shapeFillColor": "塗りつぶし",
     "command.shapeStrokeColor": "枠線",
     "command.objectFillColor": "塗りつぶし",
@@ -560,4 +562,7 @@ export const ja: EditMessages = {
 
     // Toolbar
     "toolbar.label": "エディターツールバー",
+
+    // Data panel
+    "data.none": "変数はまだありません。「自動化」タブから挿入してください。",
 };

@@ -42,6 +42,10 @@ listed once, by package. Its major and minor version are those of the
   of them moves them, as Excel does: the cells they leave are emptied, and
   formulas naming them follow them, also onto another sheet. Escape, a copy
   or an edit cancels the cut. Cut copied only.
+- A PowerPoint deck's edit mode has an Automation tab, after the Shape tab:
+  Variable writes `{{var}}` at the caret with `var` selected, to type a path
+  over, and Data shows or hides the Data panel. Picked, the tab stays open as
+  the selection moves.
 - Increase Font Size and Decrease Font Size, beside the size field in word
   documents, decks, workbooks and the text on images, step the selection to
   the next or previous size in the size field's list, which now lists more

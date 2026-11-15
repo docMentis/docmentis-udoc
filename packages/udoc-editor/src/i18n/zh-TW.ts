@@ -66,6 +66,7 @@ export const zhTW: EditMessages = {
     "ribbon.table": "表格",
     "ribbon.object": "物件",
     "ribbon.cell": "儲存格",
+    "ribbon.automation": "自動化",
 
     // Commands
     "command.ruler": "尺規",
@@ -108,6 +109,7 @@ export const zhTW: EditMessages = {
     "command.lineSpacing": "行距與段落間距",
     "command.bulletList": "項目符號清單",
     "command.numberList": "編號清單",
+    "command.insertVariable": "變數",
     "command.shapeFillColor": "填滿",
     "command.shapeStrokeColor": "線條",
     "command.objectFillColor": "填滿",
@@ -557,4 +559,7 @@ export const zhTW: EditMessages = {
 
     // Toolbar
     "toolbar.label": "編輯器工具列",
+
+    // Data panel
+    "data.none": "尚無變數。請從「自動化」索引標籤插入一個。",
 };

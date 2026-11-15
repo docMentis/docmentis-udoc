@@ -66,6 +66,7 @@ export const ko: EditMessages = {
     "ribbon.table": "표",
     "ribbon.object": "개체",
     "ribbon.cell": "셀",
+    "ribbon.automation": "자동화",
 
     // Commands
     "command.ruler": "눈금자",
@@ -108,6 +109,7 @@ export const ko: EditMessages = {
     "command.lineSpacing": "줄 및 단락 간격",
     "command.bulletList": "글머리 기호",
     "command.numberList": "번호 매기기",
+    "command.insertVariable": "변수",
     "command.shapeFillColor": "채우기",
     "command.shapeStrokeColor": "윤곽선",
     "command.objectFillColor": "채우기",
@@ -557,4 +559,7 @@ export const ko: EditMessages = {
 
     // Toolbar
     "toolbar.label": "편집기 도구 모음",
+
+    // Data panel
+    "data.none": "아직 변수가 없습니다. “자동화” 탭에서 삽입하세요.",
 };

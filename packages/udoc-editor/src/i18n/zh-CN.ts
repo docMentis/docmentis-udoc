@@ -66,6 +66,7 @@ export const zhCN: EditMessages = {
     "ribbon.table": "表格",
     "ribbon.object": "对象",
     "ribbon.cell": "单元格",
+    "ribbon.automation": "自动化",
 
     // Commands
     "command.ruler": "标尺",
@@ -108,6 +109,7 @@ export const zhCN: EditMessages = {
     "command.lineSpacing": "行和段落间距",
     "command.bulletList": "项目符号",
     "command.numberList": "编号",
+    "command.insertVariable": "变量",
     "command.shapeFillColor": "填充",
     "command.shapeStrokeColor": "线条",
     "command.objectFillColor": "填充",
@@ -557,4 +559,7 @@ export const zhCN: EditMessages = {
 
     // Toolbar
     "toolbar.label": "编辑器工具栏",
+
+    // Data panel
+    "data.none": "还没有变量。请从“自动化”选项卡插入一个。",
 };

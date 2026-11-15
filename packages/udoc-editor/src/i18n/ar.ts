@@ -66,6 +66,7 @@ export const ar: EditMessages = {
     "ribbon.table": "جدول",
     "ribbon.object": "كائن",
     "ribbon.cell": "خلية",
+    "ribbon.automation": "الأتمتة",
 
     // Commands
     "command.ruler": "المسطرة",
@@ -108,6 +109,7 @@ export const ar: EditMessages = {
     "command.lineSpacing": "تباعد الأسطر والفقرات",
     "command.bulletList": "تعداد نقطي",
     "command.numberList": "تعداد رقمي",
+    "command.insertVariable": "متغير",
     "command.shapeFillColor": "تعبئة",
     "command.shapeStrokeColor": "خط",
     "command.objectFillColor": "تعبئة",
@@ -557,4 +559,7 @@ export const ar: EditMessages = {
 
     // Toolbar
     "toolbar.label": "شريط أدوات المحرر",
+
+    // Data panel
+    "data.none": "لا توجد متغيرات بعد. أدرج متغيرًا من علامة التبويب «الأتمتة».",
 };

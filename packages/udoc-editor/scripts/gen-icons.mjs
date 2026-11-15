@@ -62,6 +62,7 @@ const ICONS = {
     ICON_TAB_TABLE: { mdi: "table" },
     ICON_TAB_TEXT: "text_fields",
     ICON_TAB_CELL: "grid_on",
+    ICON_TAB_AUTOMATION: "data_object",
 
     ICON_WRAP_TEXT: "wrap_text",
     ICON_NUMBER_FORMAT: "123",
@@ -88,6 +89,10 @@ const ICONS = {
 
     // Shape tab
     ICON_CHANGE_SHAPE: "shape_line",
+
+    // A deck's Automation tab
+    ICON_INSERT_VARIABLE: "variable_insert",
+    ICON_DATA_PANEL: "database",
 
     // An image's Home tab
     ICON_CROP: "crop",

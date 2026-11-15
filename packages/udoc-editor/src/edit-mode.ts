@@ -3,6 +3,7 @@ import { selectionPaint, selectionTextFormat, subscribeSelector } from "@docment
 import type { UIExtension, UIState } from "@docmentis/udoc-ui/internal";
 import type { UDocEditorOptions } from "./editor.js";
 import { arrangeCommands } from "./arrange.js";
+import { automationCommands } from "./automation.js";
 import { cellCommands } from "./cell-format.js";
 import { formatCommands } from "./commands.js";
 import { CONTEXT_MENU, GRID_CONTEXT_MENU, TABLE_CONTEXT_MENU } from "./context-menu.js";
@@ -282,6 +283,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
                 resize: () => void imageSize?.open(),
             }),
             ...cropCommands(() => tools?.crop ?? null),
+            ...automationCommands(() => host),
         },
         spacing: (state) => (showPageControls && pageControlsShown(state) ? PAGE_CONTROLS_SPACING : null),
         keydown(e) {
