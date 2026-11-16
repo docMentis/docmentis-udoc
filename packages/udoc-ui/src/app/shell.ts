@@ -25,7 +25,7 @@ import type {
     Destination,
     CellEntryEdit,
     CellEntryMode,
-    CommentMarkup,
+    CommentGeometry,
     CommentCommand,
     GridCellSelectionMove,
     ScrollAlignment,
@@ -81,7 +81,7 @@ import type { OverlayOptions, OverlaySource } from "./components/OverlayManager.
 import { createAnnotationBar } from "./components/AnnotationBar.js";
 import { commentHighlights } from "./components/CommentHighlights.js";
 import { commentMarkers } from "./components/CommentMarkers.js";
-import { markupComment, markupRect } from "./components/commentMarkup.js";
+import { geometryComment, geometryRect } from "./components/commentGeometry.js";
 import { commentPopup } from "./components/CommentPopup.js";
 import { formFieldInput } from "./components/FormFieldInput.js";
 import { mediaPlayers } from "./components/MediaPlayer.js";
@@ -930,12 +930,12 @@ export function mountUIShell(
                 ? state.revisionGroups?.find(({ group }) => group.ids.some((id) => ids.has(id)))
                 : undefined;
         const page = listed?.page ?? null;
-        const markup = listed && page !== null ? await client.wordprocessing.revisionMarkup(0, page) : [];
+        const geometry = listed && page !== null ? await client.wordprocessing.revisionGeometry(0, page) : [];
         if (generation !== revisionStartGeneration) return;
         const key = listed?.group.ids.join();
         // The first line box's corners run top-left, top-right, bottom-right,
         // bottom-left.
-        const corners = markup.find((m) => m.ids.join() === key)?.quads[0]?.points;
+        const corners = geometry.find((m) => m.ids.join() === key)?.quads[0]?.points;
         revisionStart = corners && corners.length > 0 && page !== null ? { page, corners } : null;
         revisionTether?.schedule();
     }
@@ -1349,21 +1349,21 @@ export function mountUIShell(
     });
     canvas.setOverlay("udoc:media", mediaSource, { aboveSelection: true });
     // A marker over each Word, Excel or PowerPoint comment thread on screen,
-    // and a highlight over the text it is on, from the markup read for each
+    // and a highlight over the text it is on, from the geometry read for each
     // page shown; a press on a marker opens the thread in the comments panel.
     // Each change reads the pages shown again; the View tab's Comments hides
     // both.
-    let commentMarkupRead = new Map<string, readonly CommentMarkup[]>();
-    let commentMarkupGeneration = 0;
+    let commentGeometryRead = new Map<string, readonly CommentGeometry[]>();
+    let commentGeometryGeneration = 0;
     const commentMarkersShow = (): boolean => {
         const state = store.getState();
         return state.status === "ready" && state.showComments && OFFICE_COMMENT_DOC_TYPES.has(state.docType ?? "");
     };
-    const commentMarkupShown = (page: number): readonly CommentMarkup[] =>
-        commentMarkupRead.get(`${store.getState().currentPlane}:${page}`) ?? [];
+    const commentGeometryShown = (page: number): readonly CommentGeometry[] =>
+        commentGeometryRead.get(`${store.getState().currentPlane}:${page}`) ?? [];
     const commentHighlightsSource = commentHighlights({
         active: commentMarkersShow,
-        markup: commentMarkupShown,
+        geometry: commentGeometryShown,
         pageToViewport: (page) => canvas.pageToViewport(page),
         open: () => store.getState().openOfficeComment,
     });
@@ -1371,7 +1371,7 @@ export function mountUIShell(
     const commentMarkersSource = commentMarkers({
         active: commentMarkersShow,
         docType: () => store.getState().docType,
-        markup: commentMarkupShown,
+        geometry: commentGeometryShown,
         pageToViewport: (page) => canvas.pageToViewport(page),
         open: () => store.getState().openOfficeComment,
         // Pressed again, the open thread's marker closes it.
@@ -1389,23 +1389,23 @@ export function mountUIShell(
     // The pages the last frame showed, which an edit that paints no frame —
     // a comment's — asks again for.
     let commentMarkerViews: readonly PageView[] = [];
-    // Draw the markup read again — a new read landed, or it was shown or
+    // Draw the geometry read again — a new read landed, or it was shown or
     // hidden.
     const showCommentMarkup = (): void => {
         canvas.setOverlay("udoc:comment-highlights", commentHighlightsSource);
         canvas.setOverlay("udoc:comment-markers", commentMarkersSource);
     };
-    const askCommentMarkup = (): void => {
+    const askCommentGeometry = (): void => {
         if (!commentMarkersShow()) return;
         const plane = store.getState().currentPlane;
         for (const { index } of commentMarkerViews) {
             const key = `${plane}:${index}`;
-            if (commentMarkupRead.has(key)) continue;
-            commentMarkupRead.set(key, []);
-            const generation = commentMarkupGeneration;
-            void client.commentMarkup(plane, index).then((markup) => {
-                if (generation !== commentMarkupGeneration) return;
-                commentMarkupRead.set(key, markup);
+            if (commentGeometryRead.has(key)) continue;
+            commentGeometryRead.set(key, []);
+            const generation = commentGeometryGeneration;
+            void client.commentGeometry(plane, index).then((geometry) => {
+                if (generation !== commentGeometryGeneration) return;
+                commentGeometryRead.set(key, geometry);
                 showCommentMarkup();
             });
         }
@@ -1414,49 +1414,49 @@ export function mountUIShell(
     // that lays the pages out again, and on a pageless page's new width — each
     // can move text — and the pages shown asked again, the old markers
     // standing until the new land.
-    const forgetCommentMarkup = (): void => {
-        commentMarkupGeneration += 1;
-        commentMarkupRead = new Map();
+    const forgetCommentGeometry = (): void => {
+        commentGeometryGeneration += 1;
+        commentGeometryRead = new Map();
     };
-    const readCommentMarkupAgain = (): void => {
-        const shown = commentMarkupRead;
-        forgetCommentMarkup();
-        askCommentMarkup();
+    const readCommentGeometryAgain = (): void => {
+        const shown = commentGeometryRead;
+        forgetCommentGeometry();
+        askCommentGeometry();
         // Until the new land, the pages keep what they showed.
-        for (const [key, markup] of shown)
-            if (commentMarkupRead.get(key)?.length === 0) commentMarkupRead.set(key, markup);
+        for (const [key, geometry] of shown)
+            if (commentGeometryRead.get(key)?.length === 0) commentGeometryRead.set(key, geometry);
     };
     // A word document's tracked-changes view or a sheet's Normal or Page
     // Layout, switched, lays the pages out as the frame after it paints: read
     // again on that frame, once the pages it shows are.
-    let commentMarkupStale = false;
-    const markCommentMarkupStale = (): void => {
-        commentMarkupStale = true;
+    let commentGeometryStale = false;
+    const markCommentGeometryStale = (): void => {
+        commentGeometryStale = true;
     };
     const unsubCommentMarkers = client.onPageViews((frame) => {
         commentMarkerViews = frame.views;
-        if (!commentMarkupStale) {
-            askCommentMarkup();
+        if (!commentGeometryStale) {
+            askCommentGeometry();
             return;
         }
-        commentMarkupStale = false;
-        readCommentMarkupAgain();
+        commentGeometryStale = false;
+        readCommentGeometryAgain();
     });
-    const unsubDocumentChangedMarkers = client.onDocumentChanged(readCommentMarkupAgain);
-    const unsubFontsMarkers = client.onFontsRefreshed(readCommentMarkupAgain);
+    const unsubDocumentChangedMarkers = client.onDocumentChanged(readCommentGeometryAgain);
+    const unsubFontsMarkers = client.onFontsRefreshed(readCommentGeometryAgain);
     // A pageless page flows to the pane's width: resized, it has run a frame
     // at the new one, laid out.
     const unsubResizedMarkers = client.onResized(() => {
-        if (showsPageless(store.getState())) readCommentMarkupAgain();
+        if (showsPageless(store.getState())) readCommentGeometryAgain();
     });
     // A document opened in place of another reads its own.
-    const unsubDocumentOpenedMarkers = subscribeSelector(store, (s) => s.docGeneration, forgetCommentMarkup);
+    const unsubDocumentOpenedMarkers = subscribeSelector(store, (s) => s.docGeneration, forgetCommentGeometry);
     // Shown again, the pages shown are read as they were; hidden, they go.
     const unsubShowComments = subscribeSelector(
         store,
         (s) => s.showComments,
         () => {
-            askCommentMarkup();
+            askCommentGeometry();
             showCommentMarkup();
         },
     );
@@ -2900,7 +2900,7 @@ export function mountUIShell(
         const layout = await client.setSheetLayoutMode(plane, mode);
         // What has painted of the sheet so far shows its other mode.
         paintedPlane = -1;
-        markCommentMarkupStale();
+        markCommentGeometryStale();
         store.dispatch({
             type: "DOC_RELAYOUT",
             pageCount: layout.pageCount ?? null,
@@ -2915,7 +2915,7 @@ export function mountUIShell(
     async function showRevisionDisplay(display: RevisionDisplay): Promise<void> {
         const layout = await client.setRevisionDisplay(display);
         if (layout === null) return;
-        markCommentMarkupStale();
+        markCommentGeometryStale();
         store.dispatch({
             type: "DOC_RELAYOUT",
             pageCount: layout.pageCount ?? null,
@@ -3385,8 +3385,8 @@ export function mountUIShell(
     // `at`: the least scroll shows its text's first line there, or the box
     // it's on — on a sheet not shown, once the sheet is.
     async function goToOfficeComment(id: string, at: { plane: number; page: number }): Promise<void> {
-        const markup = (await client.commentMarkup(at.plane, at.page)).find((m) => markupComment(m) === id);
-        const rect = markup && markupRect(markup);
+        const geometry = (await client.commentGeometry(at.plane, at.page)).find((m) => geometryComment(m) === id);
+        const rect = geometry && geometryRect(geometry);
         const state = store.getState();
         if (!rect || state.status !== "ready") return;
         const alignment = "nearest";
@@ -3756,9 +3756,9 @@ export function mountUIShell(
     }
 
     // Select a change the Revisions panel lists and bring it into view with
-    // the least scroll, as Next lands on one — or, where the view hides all
+    // the least scroll, as Next lands on one — or, where the display hides all
     // of it and the selection on it draws nothing, a deletion in Simple
-    // Markup, where its markup stands on its page.
+    // Markup, where its geometry stands on its page.
     async function chooseRevisionGroup(group: RevisionGroup): Promise<void> {
         const landing =
             selectionStart(await client.wordprocessing.selectRevisionGroup(group.ids)) ??
@@ -3766,7 +3766,7 @@ export function mountUIShell(
         if (landing) client.goToRect(landing.page, landing.rect, "nearest");
     }
 
-    // The box around the first of `group`'s markup on the page its card is
+    // The box around the first of `group`'s geometry on the page its card is
     // listed under; null where it has none there.
     async function revisionLanding(
         group: RevisionGroup,
@@ -3774,8 +3774,8 @@ export function mountUIShell(
         const key = group.ids.join();
         const page = store.getState().revisionGroups?.find((listed) => listed.group.ids.join() === key)?.page;
         if (page === undefined || page === null) return null;
-        const markup = await client.wordprocessing.revisionMarkup(0, page);
-        const quad = markup.find((m) => m.ids.join() === key)?.quads[0];
+        const geometry = await client.wordprocessing.revisionGeometry(0, page);
+        const quad = geometry.find((m) => m.ids.join() === key)?.quads[0];
         return quad ? { page: quad.page, rect: quadBounds(quad) } : null;
     }
 

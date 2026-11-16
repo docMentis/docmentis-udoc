@@ -6,10 +6,10 @@
 // corner, as Excel marks one. A PDF's comments are annotations, which draw
 // themselves on the page.
 
-import type { CommentMarkup, UDocType } from "@docmentis/udoc-wasm";
+import type { CommentGeometry, UDocType } from "@docmentis/udoc-wasm";
 import { ICON_COMMENTS } from "../icons.js";
 import { applyPoint, type Affine } from "./affine.js";
-import { markupComment, markupMarker } from "./commentMarkup.js";
+import { geometryComment, geometryMarker } from "./commentGeometry.js";
 import type { OverlaySource } from "./OverlayManager.js";
 
 export interface CommentMarkersCallbacks {
@@ -17,8 +17,8 @@ export interface CommentMarkersCallbacks {
     active: () => boolean;
     /** The doc type shown, which says how a marker stands at its point. */
     docType: () => UDocType | null;
-    /** The markup read for page `page` of the plane shown — none until read. */
-    markup: (page: number) => readonly CommentMarkup[];
+    /** The geometry read for page `page` of the plane shown — none until read. */
+    geometry: (page: number) => readonly CommentGeometry[];
     pageToViewport: (page: number) => Affine | null;
     /** The thread a marker stands for, by its first comment's id, open. */
     open: () => string | null;
@@ -36,11 +36,11 @@ export function commentMarkers(callbacks: CommentMarkersCallbacks): OverlaySourc
         return frame.views.flatMap((view) => {
             const m = callbacks.pageToViewport(view.index);
             if (!m) return [];
-            return callbacks.markup(view.index).flatMap((markup) => {
-                const marker = markupMarker(markup);
+            return callbacks.geometry(view.index).flatMap((geometry) => {
+                const marker = geometryMarker(geometry);
                 if (!marker) return [];
-                const comment = markupComment(markup);
-                const stands = standing(markup, docType);
+                const comment = geometryComment(geometry);
+                const stands = standing(geometry, docType);
                 const at = applyPoint(m, marker.x, marker.y);
                 return [
                     {
@@ -64,8 +64,8 @@ export function commentMarkers(callbacks: CommentMarkersCallbacks): OverlaySourc
  *  top-right corner, a cell's as a flag, or just right of a slide's shape. */
 const STANDINGS = ["corner", "cell", "beside"] as const;
 
-function standing(markup: CommentMarkup, docType: UDocType | null): (typeof STANDINGS)[number] | null {
-    if ("box" in markup) return docType === "spreadsheet" ? "cell" : "corner";
+function standing(geometry: CommentGeometry, docType: UDocType | null): (typeof STANDINGS)[number] | null {
+    if ("box" in geometry) return docType === "spreadsheet" ? "cell" : "corner";
     return docType === "presentation" ? "beside" : null;
 }
 

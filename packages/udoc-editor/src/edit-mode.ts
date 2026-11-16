@@ -261,8 +261,8 @@ export function editMode(options: UDocEditorOptions): EditMode {
         if (automation === null || !("template" in automation.role)) return;
         const popover = placePopover;
         const done = () => mounted.focusClipboardSink();
-        const id = place.markup.id;
-        const binding = place.markup.binding;
+        const id = place.geometry.id;
+        const binding = place.geometry.binding;
         const ofChoice = binding === "otherwise" || "choice" in binding || "when" in binding;
         void (ofChoice ? mounted.client.bindingChoice(id) : Promise.resolve(null)).then((choice) =>
             popover.open({

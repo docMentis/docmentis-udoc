@@ -1,5 +1,5 @@
 // A template's places, drawn over its slides from the engine's read of where
-// each shows (`bindingMarkup`): a tint behind a place within a paragraph, a bar
+// each shows (`bindingGeometry`): a tint behind a place within a paragraph, a bar
 // beside one around whole paragraphs, and around the place the caret is in an
 // outline, with a tab naming its kind and binding that opens the place's
 // popover; the places of the Data panel's name the pointer is over stand out
@@ -8,7 +8,7 @@
 // until asked, so it reads as an ordinary document.
 import { subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { OverlayFrame, OverlayItem, OverlaySource, PageView } from "@docmentis/udoc-ui";
-import type { Binding, BindingMarkup, Point, SelectionGeometry, SelectionQuad } from "@docmentis/udoc-wasm";
+import type { Binding, BindingGeometry, Point, SelectionGeometry, SelectionQuad } from "@docmentis/udoc-wasm";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { editState } from "./state.js";
@@ -25,7 +25,7 @@ const SLACK = 0.5;
 
 /** The place the caret is in, as the overlay outlines it. */
 export interface CurrentPlace {
-    readonly markup: BindingMarkup;
+    readonly geometry: BindingGeometry;
     readonly page: number;
 }
 
@@ -86,7 +86,7 @@ function placeParts(binding: Binding): [MessageKey, string] {
 export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPlace, tab: DOMRect) => void): Places {
     const { client, store } = host;
     // What was read for each page, by `plane:page`, and which read is current.
-    let read = new Map<string, readonly BindingMarkup[]>();
+    let read = new Map<string, readonly BindingGeometry[]>();
     let generation = 0;
     let views: readonly PageView[] = [];
     let selection: SelectionGeometry | null = null;
@@ -95,7 +95,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     let shown: { id: string; at: string } | null = null;
     let tabElement: HTMLElement | null = null;
 
-    const markupOf = (page: number): readonly BindingMarkup[] =>
+    const geometryOf = (page: number): readonly BindingGeometry[] =>
         read.get(`${store.getState().currentPlane}:${page}`) ?? [];
 
     const source: OverlaySource = (frame) => (placesShown(host) ? items(frame) : []);
@@ -112,9 +112,9 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
             if (read.has(key)) continue;
             read.set(key, []);
             const asked = generation;
-            void client.bindingMarkup(plane, index).then((markup) => {
+            void client.bindingGeometry(plane, index).then((geometry) => {
                 if (asked !== generation) return;
-                read.set(key, markup);
+                read.set(key, geometry);
                 findCurrent();
                 draw();
             });
@@ -128,23 +128,23 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         generation += 1;
         read = new Map();
         ask();
-        for (const [key, markup] of shown) if (read.get(key)?.length === 0) read.set(key, markup);
+        for (const [key, geometry] of shown) if (read.get(key)?.length === 0) read.set(key, geometry);
     }
 
     function atCaret(): CurrentPlace[] {
         const at = caretPoint(selection);
         if (!at || !placesShown(host)) return [];
         // The catalog's order is outermost first, so the places are too.
-        return markupOf(at.page)
-            .filter((markup) => markup.quads.some((quad) => quad.page === at.page && holds(quad, at.point)))
-            .map((markup) => ({ markup, page: at.page }));
+        return geometryOf(at.page)
+            .filter((geometry) => geometry.quads.some((quad) => quad.page === at.page && holds(quad, at.point)))
+            .map((geometry) => ({ geometry, page: at.page }));
     }
 
     function findCurrent(): void {
         const places = atCaret();
         const at = caretKey(selection);
         if (shown && shown.at !== at) shown = null;
-        current = (shown && places.find((place) => place.markup.id === shown?.id)) ?? places.at(-1) ?? null;
+        current = (shown && places.find((place) => place.geometry.id === shown?.id)) ?? places.at(-1) ?? null;
     }
 
     function items(frame: OverlayFrame): OverlayItem[] {
@@ -157,12 +157,12 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         const hovered = new Set(state.activePanel === "data" ? state.dataHover : []);
         for (const view of frame.views) {
             const at = (p: Point) => ({ x: view.x + p.x * frame.scale, y: view.y + p.y * frame.scale });
-            for (const markup of markupOf(view.index)) {
-                const quads = markup.quads.filter((quad) => quad.page === view.index);
+            for (const geometry of geometryOf(view.index)) {
+                const quads = geometry.quads.filter((quad) => quad.page === view.index);
                 if (quads.length === 0) continue;
-                const isOutlined = current?.markup.id === markup.id && current.page === view.index;
-                const isCurrent = isOutlined || hovered.has(markup.id);
-                if (markup.level === "block") {
+                const isOutlined = current?.geometry.id === geometry.id && current.page === view.index;
+                const isCurrent = isOutlined || hovered.has(geometry.id);
+                if (geometry.level === "block") {
                     const corners = quads.flatMap((quad) => quad.points.map(at));
                     bars.push({
                         x: Math.min(...corners.map((p) => p.x)) - BAR_GAP,
@@ -171,7 +171,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                         current: isCurrent,
                     });
                 }
-                if (markup.level === "span" || isCurrent) {
+                if (geometry.level === "span" || isCurrent) {
                     for (const quad of quads) {
                         fills.push({
                             points: quad.points
@@ -223,7 +223,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         }
         if (tab) {
             const { place } = tab;
-            const label = placeLabel(place.markup.binding, i18n);
+            const label = placeLabel(place.geometry.binding, i18n);
             out.push({
                 key: "tab",
                 x: tab.x,
@@ -258,9 +258,9 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         }),
         client.onSelection((state) => {
             selection = state.local;
-            const before = current?.markup.id;
+            const before = current?.geometry.id;
             findCurrent();
-            if (current?.markup.id !== before) draw();
+            if (current?.geometry.id !== before) draw();
         }),
         client.onDocumentChanged(readAgain),
         client.onFontsRefreshed(readAgain),
@@ -293,7 +293,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         current: () => current,
         atCaret,
         show(place) {
-            shown = { id: place.markup.id, at: caretKey(selection) };
+            shown = { id: place.geometry.id, at: caretKey(selection) };
             findCurrent();
             draw();
         },

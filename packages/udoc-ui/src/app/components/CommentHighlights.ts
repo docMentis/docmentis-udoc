@@ -5,7 +5,7 @@
 // text under one is selected and typed in as any other. A PDF's comments are
 // annotations, which draw themselves on the page.
 
-import type { CommentMarkup } from "@docmentis/udoc-wasm";
+import type { CommentGeometry } from "@docmentis/udoc-wasm";
 import { applyPoint, type Affine } from "./affine.js";
 import type { OverlaySource } from "./OverlayManager.js";
 
@@ -14,8 +14,8 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 export interface CommentHighlightsCallbacks {
     /** Whether highlights show: an Office document is open, its comments shown. */
     active: () => boolean;
-    /** The markup read for page `page` of the plane shown — none until read. */
-    markup: (page: number) => readonly CommentMarkup[];
+    /** The geometry read for page `page` of the plane shown — none until read. */
+    geometry: (page: number) => readonly CommentGeometry[];
     pageToViewport: (page: number) => Affine | null;
     /** The thread open, by its first comment's id. */
     open: () => string | null;
@@ -43,9 +43,9 @@ export function commentHighlights(callbacks: CommentHighlightsCallbacks): Overla
         for (const view of frame.views) {
             const m = callbacks.pageToViewport(view.index);
             if (!m) continue;
-            for (const markup of callbacks.markup(view.index)) {
-                if (!("text" in markup)) continue;
-                const { comment, quads } = markup.text;
+            for (const geometry of callbacks.geometry(view.index)) {
+                if (!("text" in geometry)) continue;
+                const { comment, quads } = geometry.text;
                 const at = (p: { x: number; y: number }) => applyPoint(m, p.x, p.y);
                 for (const quad of quads) {
                     const points = quad.points.map((p) => {

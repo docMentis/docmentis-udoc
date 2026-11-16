@@ -2262,11 +2262,11 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 });
                 break;
             }
-            case "revisionMarkup": {
+            case "revisionGeometry": {
                 // A read of the pages composed; none with no open / non-word doc.
                 reply(
                     id,
-                    safeRead(() => session?.wordprocessing.revisionMarkup(msg.plane, msg.page) ?? [], []),
+                    safeRead(() => session?.wordprocessing.revisionGeometry(msg.plane, msg.page) ?? [], []),
                 );
                 break;
             }
@@ -2779,17 +2779,17 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 });
                 break;
             }
-            case "commentMarkup": {
+            case "commentGeometry": {
                 // A read of the pages composed, but for a sheet's or a
                 // slide's comments, which it loads.
                 const open = session;
-                reply(id, open ? safeRead(() => open.commentMarkup(msg.plane, msg.page), []) : []);
+                reply(id, open ? safeRead(() => open.commentGeometry(msg.plane, msg.page), []) : []);
                 break;
             }
-            case "bindingMarkup": {
+            case "bindingGeometry": {
                 // A read of the slide composed, which it loads.
                 const open = session;
-                reply(id, open ? safeRead(() => open.bindingMarkup(msg.plane, msg.page), []) : []);
+                reply(id, open ? safeRead(() => open.bindingGeometry(msg.plane, msg.page), []) : []);
                 break;
             }
             case "bindingChoice": {

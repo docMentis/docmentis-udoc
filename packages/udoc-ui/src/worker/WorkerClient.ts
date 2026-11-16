@@ -33,9 +33,9 @@ import type {
     Automation,
     BindingCatalog,
     BindingChoice,
-    BindingMarkup,
+    BindingGeometry,
     CellEntryEdit,
-    CommentMarkup,
+    CommentGeometry,
     ComposedShapeMedia,
     DelimiterGuess,
     Destination,
@@ -53,7 +53,7 @@ import type {
     PageExportFormat,
     PageMode,
     PresentationBindingPlace,
-    RevisionMarkup,
+    RevisionGeometry,
     RevisionDisplay,
     SaveStrategy,
     SearchContinuation,
@@ -933,8 +933,8 @@ export class WorkerClient {
      * document. What the comment highlights and markers are drawn from, and
      * choosing a thread goes to.
      */
-    async commentMarkup(plane: number, page: number): Promise<CommentMarkup[]> {
-        return (await this.#send({ type: "commentMarkup", plane, page })) as CommentMarkup[];
+    async commentGeometry(plane: number, page: number): Promise<CommentGeometry[]> {
+        return (await this.#send({ type: "commentGeometry", plane, page })) as CommentGeometry[];
     }
 
     /**
@@ -943,8 +943,8 @@ export class WorkerClient {
      * width where it holds only a placeholder that paints nothing — none for
      * any other document. What the places overlay is drawn from.
      */
-    async bindingMarkup(plane: number, page: number): Promise<BindingMarkup[]> {
-        return (await this.#send({ type: "bindingMarkup", plane, page })) as BindingMarkup[];
+    async bindingGeometry(plane: number, page: number): Promise<BindingGeometry[]> {
+        return (await this.#send({ type: "bindingGeometry", plane, page })) as BindingGeometry[];
     }
 
     /**
@@ -1720,12 +1720,12 @@ export class WorkerClient {
             this.#send({ type: "revisionGroups" }) as Promise<RevisionGroupsReply>,
 
         /**
-         * Each tracked change's markup on page `page` of `plane`, page-local, of
+         * Each tracked change's geometry on page `page` of `plane`, page-local, of
          * the pages composed: the line boxes of the text it is on, where its
          * card's tether lands, by its records' ids. A pure read.
          */
-        revisionMarkup: (plane: number, page: number): Promise<RevisionMarkup[]> =>
-            this.#send({ type: "revisionMarkup", plane, page }) as Promise<RevisionMarkup[]>,
+        revisionGeometry: (plane: number, page: number): Promise<RevisionGeometry[]> =>
+            this.#send({ type: "revisionGeometry", plane, page }) as Promise<RevisionGeometry[]>,
 
         /**
          * The ids of the records of the tracked changes the selection touches

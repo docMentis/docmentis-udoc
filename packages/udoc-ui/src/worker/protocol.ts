@@ -54,7 +54,7 @@ import type {
     SearchMatchLocation,
     SearchOptions,
     RevisionGroup,
-    RevisionMarkup,
+    RevisionGeometry,
     RevisionDisplay,
     SheetLayoutMode,
     SlideShowInput,
@@ -1132,18 +1132,18 @@ export interface ListedRevisionGroup {
 }
 
 /**
- * Read each tracked change's markup on page `page` of `plane` — the line boxes
+ * Read each tracked change's geometry on page `page` of `plane` — the line boxes
  * of the text it is on, page-local, where its card's tether lands — of the
  * pages composed. A pure read; none outside a word document.
  */
-export interface RevisionMarkupRequest {
-    type: "revisionMarkup";
+export interface RevisionGeometryRequest {
+    type: "revisionGeometry";
     plane: number;
     page: number;
 }
 
-/** A {@link RevisionMarkupRequest}'s answer. */
-export type RevisionMarkupReply = RevisionMarkup[];
+/** A {@link RevisionGeometryRequest}'s answer. */
+export type RevisionGeometryReply = RevisionGeometry[];
 
 /**
  * Read the ids of the records of the tracked changes the selection touches —
@@ -1374,22 +1374,22 @@ export interface OfficeComment {
 
 /**
  * Read how each comment thread of a Word, Excel or PowerPoint document shows
- * on page `page` of `plane`, page-local points. Replies with `CommentMarkup`[]
+ * on page `page` of `plane`, page-local points. Replies with `CommentGeometry`[]
  * — none for any other document.
  */
-export interface CommentMarkupRequest {
-    type: "commentMarkup";
+export interface CommentGeometryRequest {
+    type: "commentGeometry";
     plane: number;
     page: number;
 }
 
 /**
  * Read where each place a deck's text holds shows on page `page` of `plane`,
- * page-local points. Replies with `BindingMarkup`[] — none for any other
+ * page-local points. Replies with `BindingGeometry`[] — none for any other
  * document, or a page with no places.
  */
-export interface BindingMarkupRequest {
-    type: "bindingMarkup";
+export interface BindingGeometryRequest {
+    type: "bindingGeometry";
     plane: number;
     page: number;
 }
@@ -2457,7 +2457,7 @@ export type WorkerRequest =
     | OutlineRequest
     | WordprocessingOutlineRequest
     | RevisionGroupsRequest
-    | RevisionMarkupRequest
+    | RevisionGeometryRequest
     | SelectionRevisionIdsRequest
     | SearchRequest
     | SearchMatchSelectionRequest
@@ -2475,8 +2475,8 @@ export type WorkerRequest =
     | PageCommentsRequest
     | OfficeCommentsRequest
     | SlideIdRequest
-    | CommentMarkupRequest
-    | BindingMarkupRequest
+    | CommentGeometryRequest
+    | BindingGeometryRequest
     | BindingChoiceRequest
     | ShowBindingOptionRequest
     | PageAnnotationsRequest

@@ -60,7 +60,7 @@ export function bindingKind(binding: Binding): string {
 /** The places the caret is in whose binding is of `binding`'s kind. */
 export function placesOfKind(places: readonly CurrentPlace[], binding: Binding): CurrentPlace[] {
     const kind = bindingKind(binding);
-    return places.filter((place) => bindingKind(place.markup.binding) === kind);
+    return places.filter((place) => bindingKind(place.geometry.binding) === kind);
 }
 
 /** Whether `automation` makes its deck a template. */
