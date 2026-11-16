@@ -1,9 +1,13 @@
 // A template's places, drawn over its slides from the engine's read of where
-// each shows (`bindingGeometry`): a tint behind a place within a paragraph, a bar
-// beside one around whole paragraphs, and around the place the caret is in an
-// outline, with a tab naming every place the caret is in, outermost first —
-// Repeat › Choice › When "low" — each opening its place's popover; the places of
-// the Data panel's name the pointer is over stand out too. Which places the
+// each shows (`bindingGeometry`): brackets, a [ where a place within a
+// paragraph begins and a ] where it ends, and a tall [ and ] either side of
+// one around whole paragraphs at their very edge, the brackets of places
+// within a paragraph beginning or ending together standing apart, outer
+// outside — but for a choice, drawn as the
+// option it shows; the place the caret is in has its
+// brackets stronger, with a tab naming every place the caret is in, outermost
+// first — Repeat › Choice › When "low" — each opening its place's popover; the
+// places of the Data panel's name the pointer is over stand out too. Which places the
 // caret is in is the engine's to say (the selection's `places`): where places
 // end or begin, the caret stands at a level the arrows step through, and the
 // tab names the level. None of it is the document's — it is drawn over the canvas, under
@@ -19,24 +23,34 @@ import { editState } from "./state.js";
 const OVERLAY_ID = "udoc:places";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-/** How far left of a block place's content its bar stands, CSS px. */
-const BAR_GAP = 6;
+/** How far a bracket's ends reach in towards what it holds, CSS px: a span
+ *  place's, then a block place's. */
+const SPAN_TICK = 3;
+const BLOCK_TICK = 6;
 
-/** The place the caret is in, as the overlay outlines it. */
+/** How much further out a bracket stands for each place inside it whose
+ *  bracket would fall on its own, CSS px — and how much taller. */
+const NEST_STEP = 3;
+
+/** Two brackets whose edges are nearer than this across stand on one
+ *  another, CSS px. */
+const COINCIDE = 1.5;
+
+/** The place the caret is in, as the overlay marks it. */
 export interface CurrentPlace {
     readonly geometry: BindingGeometry;
     readonly page: number;
 }
 
 export interface Places {
-    /** The place outlined: the one the caret is in, innermost, unless another
+    /** The place marked: the one the caret is in, innermost, unless another
      *  around the caret is shown; or null. */
     current(): CurrentPlace | null;
     /** Every place the caret is in, outermost first. */
     atCaret(): CurrentPlace[];
-    /** Outline `place`, one the caret is in, until the caret moves. */
+    /** Mark `place`, one the caret is in, until the caret moves. */
     show(place: CurrentPlace): void;
-    /** The outlined place's tab, as drawn, or null. */
+    /** The marked place's tab, as drawn, or null. */
     tab(): HTMLElement | null;
     /** Read the places shown again — after the slide composed again with no
      *  edit to say so, as showing another of a choice's options does. */
@@ -67,6 +81,16 @@ export function placeLabel(binding: Binding, i18n: I18n): string {
     return detail === "" ? name : `${name} · ${detail}`;
 }
 
+/** Whether `binding` is a choice's, which shows one of its options. */
+function isChoice(binding: Binding): boolean {
+    return binding !== "otherwise" && "choice" in binding;
+}
+
+/** Whether `binding` is an option's, one of what a choice shows. */
+function isOption(binding: Binding): boolean {
+    return binding === "otherwise" || "when" in binding;
+}
+
 function placeParts(binding: Binding): [MessageKey, string] {
     if (binding === "otherwise") return ["place.otherwise", ""];
     if ("variable" in binding) return ["place.variable", binding.variable.path];
@@ -92,7 +116,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     // The places the caret is in, outermost first, as the engine reports them.
     let chain: readonly string[] = [];
     let current: CurrentPlace | null = null;
-    // A place `show` outlined, and where the caret stood then.
+    // A place `show` marked, and where the caret stood then.
     let shown: { id: string; at: string } | null = null;
     let tabElement: HTMLElement | null = null;
 
@@ -150,48 +174,43 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     }
 
     function items(frame: OverlayFrame): OverlayItem[] {
-        const fills: { points: string; current: boolean }[] = [];
-        const bars: { x: number; y1: number; y2: number; current: boolean }[] = [];
-        let tab: { x: number; y: number } | null = null;
+        const brackets: Bracket[] = [];
+        // The opening bracket of the place marked, which its tab hangs from.
+        let opening: Bracket | null = null;
         // The places of the Data panel's name the pointer is over stand out as
         // the caret's does.
         const state = store.getState();
         const hovered = new Set(state.activePanel === "data" ? state.dataHover : []);
         for (const view of frame.views) {
             const at = (p: Point) => ({ x: view.x + p.x * frame.scale, y: view.y + p.y * frame.scale });
-            for (const geometry of geometryOf(view.index)) {
+            const geometries = geometryOf(view.index);
+            // A choice draws as the option it shows, which holds all it shows
+            // and comes next: the choice's brackets would only stand on the
+            // option's. The option stands out where the choice does.
+            let choice = null as { isMarked: boolean; isCurrent: boolean } | null;
+            for (const [index, geometry] of geometries.entries()) {
                 const quads = geometry.quads.filter((quad) => quad.page === view.index);
                 if (quads.length === 0) continue;
-                const isOutlined = current?.geometry.id === geometry.id && current.page === view.index;
-                const isCurrent = isOutlined || hovered.has(geometry.id);
-                if (geometry.level === "block") {
-                    const corners = quads.flatMap((quad) => quad.points.map(at));
-                    bars.push({
-                        x: Math.min(...corners.map((p) => p.x)) - BAR_GAP,
-                        y1: Math.min(...corners.map((p) => p.y)),
-                        y2: Math.max(...corners.map((p) => p.y)),
-                        current: isCurrent,
-                    });
+                const isMarked =
+                    (current?.geometry.id === geometry.id && current.page === view.index) || !!choice?.isMarked;
+                const isCurrent = isMarked || hovered.has(geometry.id) || !!choice?.isCurrent;
+                choice = null;
+                const next = geometries[index + 1];
+                if (isChoice(geometry.binding) && next && isOption(next.binding)) {
+                    choice = { isMarked, isCurrent };
+                    continue;
                 }
-                if (geometry.level === "span" || isCurrent) {
-                    for (const quad of quads) {
-                        fills.push({
-                            points: quad.points
-                                .map(at)
-                                .map((p) => `${p.x},${p.y}`)
-                                .join(" "),
-                            current: isCurrent,
-                        });
-                    }
-                }
-                if (isOutlined) {
-                    const [topLeft] = quads[0]!.points;
-                    tab = at(topLeft);
-                }
+                const [open, close] =
+                    geometry.level === "block"
+                        ? blockBrackets(quads.flatMap((quad) => quad.points.map(at)))
+                        : spanBrackets(quads[0]!.points.map(at), quads.at(-1)!.points.map(at));
+                for (const bracket of [open, close]) brackets.push({ ...bracket, current: isCurrent });
+                if (isMarked) opening = brackets.at(-2)!;
             }
         }
+        spread(brackets);
         const out: OverlayItem[] = [];
-        if (fills.length > 0 || bars.length > 0) {
+        if (brackets.length > 0) {
             out.push({
                 key: "places",
                 x: 0,
@@ -201,28 +220,29 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                     el.className = "udoc-places";
                     el.setAttribute("aria-hidden", "true");
                     const svg = document.createElementNS(SVG_NS, "svg");
-                    svg.append(document.createElementNS(SVG_NS, "g"), document.createElementNS(SVG_NS, "g"));
+                    svg.append(document.createElementNS(SVG_NS, "g"));
                     el.appendChild(svg);
                     return el;
                 },
                 update: (el) => {
-                    const [polygons, lines] = (el.firstElementChild as SVGSVGElement).children;
-                    pooled(polygons!, "polygon", fills.length).forEach((polygon, index) => {
-                        const fill = fills[index]!;
-                        polygon.setAttribute("points", fill.points);
-                        polygon.setAttribute("class", classOf("udoc-place", fill.current));
-                    });
-                    pooled(lines!, "line", bars.length).forEach((line, index) => {
-                        const bar = bars[index]!;
-                        line.setAttribute("x1", `${bar.x}`);
-                        line.setAttribute("x2", `${bar.x}`);
-                        line.setAttribute("y1", `${bar.y1}`);
-                        line.setAttribute("y2", `${bar.y2}`);
-                        line.setAttribute("class", classOf("udoc-place-bar", bar.current));
+                    const [group] = (el.firstElementChild as SVGSVGElement).children;
+                    pooled(group!, "polyline", brackets.length).forEach((polyline, index) => {
+                        const bracket = brackets[index]!;
+                        polyline.setAttribute("points", bracketPoints(bracket));
+                        polyline.setAttribute("class", classOf("udoc-place-bracket", bracket.current));
                     });
                 },
             });
         }
+        // The tab hangs from the outermost of the brackets standing with the
+        // marked place's opening one, clear of them all.
+        const marked = opening;
+        const hung =
+            marked &&
+            brackets
+                .filter((bracket) => bracket.side === "open" && (bracket === marked || fallsOn(marked, bracket)))
+                .reduce((outer, bracket) => (bracket.out > outer.out ? bracket : outer), marked);
+        const tab = hung && bracketTop(hung);
         if (tab) {
             // One tab for every place the caret is in, outermost first, the
             // place it stands in last and marked: nested places starting
@@ -373,8 +393,145 @@ function caretKey(selection: SelectionGeometry | null): string {
     return at ? `${at.page}:${at.point.x.toFixed(2)}:${at.point.y.toFixed(2)}` : "";
 }
 
+/** One bracket of a place, in viewport px: the edge it stands on, from its top
+ *  end to its bottom; the way in towards what it holds, a unit vector; how far
+ *  its ends reach in; whether it opens or closes the place; whether its place
+ *  is around whole paragraphs, its bracket at their very edge, never further
+ *  out; how many steps out it stands, for the places inside it whose brackets
+ *  fall on its own; and whether its place stands out. */
+interface Bracket {
+    top: Point;
+    bottom: Point;
+    inward: Point;
+    tick: number;
+    side: "open" | "close";
+    block: boolean;
+    out: number;
+    current: boolean;
+}
+
+type BracketShape = Omit<Bracket, "current">;
+
+/** A place within a paragraph's brackets: a [ at the start of its first quad
+ *  and a ] at the end of its last, each as tall as its line. A quad's corners
+ *  run top-left, top-right, bottom-right, bottom-left. */
+function spanBrackets(first: Point[], last: Point[]): [BracketShape, BracketShape] {
+    const [topLeft, , , bottomLeft] = first;
+    const [, topRight, bottomRight] = last;
+    const forward = readingWay(topLeft!, bottomLeft!);
+    return [
+        { top: topLeft!, bottom: bottomLeft!, inward: forward, tick: SPAN_TICK, side: "open", block: false, out: 0 },
+        {
+            top: topRight!,
+            bottom: bottomRight!,
+            inward: { x: -forward.x, y: -forward.y },
+            tick: SPAN_TICK,
+            side: "close",
+            block: false,
+            out: 0,
+        },
+    ];
+}
+
+/** A place around whole paragraphs' brackets: a [ and a ] as tall as all its
+ *  lines, at either side of them. */
+function blockBrackets(corners: Point[]): [BracketShape, BracketShape] {
+    const xs = corners.map((p) => p.x);
+    const ys = corners.map((p) => p.y);
+    const left = Math.min(...xs);
+    const right = Math.max(...xs);
+    const top = Math.min(...ys);
+    const bottom = Math.max(...ys);
+    return [
+        {
+            top: { x: left, y: top },
+            bottom: { x: left, y: bottom },
+            inward: { x: 1, y: 0 },
+            tick: BLOCK_TICK,
+            side: "open",
+            block: true,
+            out: 0,
+        },
+        {
+            top: { x: right, y: top },
+            bottom: { x: right, y: bottom },
+            inward: { x: -1, y: 0 },
+            tick: BLOCK_TICK,
+            side: "close",
+            block: true,
+            out: 0,
+        },
+    ];
+}
+
+/** The way a line reads, a unit vector, from its start edge's top and bottom:
+ *  that edge turned a quarter forward — right, for a line not turned. */
+function readingWay(top: Point, bottom: Point): Point {
+    const length = Math.hypot(bottom.x - top.x, bottom.y - top.y);
+    return length === 0 ? { x: 1, y: 0 } : { x: (bottom.y - top.y) / length, y: -(bottom.x - top.x) / length };
+}
+
+/** Stand apart the brackets of places within a paragraph beginning or ending
+ *  together: one that a later bracket on its side falls on — a place inside
+ *  its own, as a page's places come each before the places inside it — stands
+ *  a step further out than that one, the outermost furthest. A block place's
+ *  stays at its paragraphs' edge. */
+function spread(brackets: Bracket[]): void {
+    for (let index = brackets.length - 1; index >= 0; index--) {
+        const bracket = brackets[index]!;
+        if (bracket.block) continue;
+        for (const inner of brackets.slice(index + 1)) {
+            if (inner.side === bracket.side && fallsOn(inner, bracket)) {
+                bracket.out = Math.max(bracket.out, inner.out + 1);
+            }
+        }
+    }
+}
+
+/** Whether `bracket` falls on `on`: on its edge across, and beside some of it
+ *  along. */
+function fallsOn(bracket: Bracket, on: Bracket): boolean {
+    const offset = (p: Point) => ({ x: p.x - on.top.x, y: p.y - on.top.y });
+    const across = offset(bracket.top);
+    if (Math.abs(across.x * on.inward.x + across.y * on.inward.y) >= COINCIDE) return false;
+    const length = Math.hypot(on.bottom.x - on.top.x, on.bottom.y - on.top.y);
+    if (length === 0) return false;
+    const along = (p: Point) => {
+        const d = offset(p);
+        return (d.x * (on.bottom.x - on.top.x) + d.y * (on.bottom.y - on.top.y)) / length;
+    };
+    const [from, to] = [along(bracket.top), along(bracket.bottom)].sort((a, b) => a - b);
+    return from! < length - COINCIDE && to! > COINCIDE;
+}
+
+/** `bracket`'s top and bottom ends, stood its steps out and grown as tall. */
+function bracketEnds({ top, bottom, inward, out }: Bracket): [Point, Point] {
+    const step = out * NEST_STEP;
+    const length = Math.hypot(bottom.x - top.x, bottom.y - top.y) || 1;
+    const down = { x: (bottom.x - top.x) / length, y: (bottom.y - top.y) / length };
+    const moved = (p: Point, sign: number) => ({
+        x: p.x - inward.x * step + sign * down.x * step,
+        y: p.y - inward.y * step + sign * down.y * step,
+    });
+    return [moved(top, -1), moved(bottom, 1)];
+}
+
+/** Where `bracket`'s top end stands — what its place's tab hangs from. */
+function bracketTop(bracket: Bracket): Point {
+    return bracketEnds(bracket)[0];
+}
+
+/** `bracket` as a polyline's points: in along its top end, down its edge, in
+ *  along its bottom end. */
+function bracketPoints(bracket: Bracket): string {
+    const [upper, lower] = bracketEnds(bracket);
+    const { inward, tick } = bracket;
+    const reach = (p: Point) => ({ x: p.x + inward.x * tick, y: p.y + inward.y * tick });
+    return [reach(upper), upper, lower, reach(lower)].map((p) => `${p.x},${p.y}`).join(" ");
+}
+
 /** `group`'s first `count` children, made `tag`s as needed, the rest gone. */
-function pooled<K extends "polygon" | "line">(group: Element, tag: K, count: number): SVGElementTagNameMap[K][] {
+function pooled<K extends "polyline">(group: Element, tag: K, count: number): SVGElementTagNameMap[K][] {
     while (group.childElementCount > count) group.lastElementChild!.remove();
     while (group.childElementCount < count) group.appendChild(document.createElementNS(SVG_NS, tag));
     return [...group.children] as SVGElementTagNameMap[K][];

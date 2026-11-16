@@ -1204,16 +1204,14 @@ export const editorStyles = css`
     }
 
     /* A template's places (udoc:places), in the page's colours whatever the
-       theme — a teal apart from the comments' indigo and the search's yellow:
-       a tint behind a place within a paragraph, a bar beside one around whole
-       paragraphs, and the place the caret is in outlined, its tab above its
-       first line naming its kind and binding. Under the selection, taking no
-       press but the tab's. */
+       theme, an indigo, darker for the place the caret is in: brackets, a [
+       and a ] around a place within a paragraph and a tall pair either side
+       of one around whole paragraphs, the place the caret is in with its
+       brackets stronger and its tab above its first line naming every place
+       the caret is in. Under the selection, taking no press but the tab's. */
     .udoc-ui-root {
-        --udoc-canvas-place: rgba(13, 148, 136, 0.1);
-        --udoc-canvas-place-current: rgba(13, 148, 136, 0.16);
-        --udoc-canvas-place-line: #5eead4;
-        --udoc-canvas-place-line-current: #0d9488;
+        --udoc-canvas-binding-marker: #6366f1;
+        --udoc-canvas-binding-marker-current: #4338ca;
     }
     .udoc-ui-root .udoc-places svg {
         position: absolute;
@@ -1224,21 +1222,15 @@ export const editorStyles = css`
         overflow: visible;
         pointer-events: none;
     }
-    .udoc-ui-root .udoc-place {
-        fill: var(--udoc-canvas-place);
+    .udoc-ui-root .udoc-place-bracket {
+        fill: none;
+        stroke: var(--udoc-canvas-binding-marker);
+        stroke-width: 1.5px;
+        stroke-linejoin: miter;
     }
-    .udoc-ui-root .udoc-place--current {
-        fill: var(--udoc-canvas-place-current);
-        stroke: var(--udoc-canvas-place-line-current);
-        stroke-width: 1px;
-    }
-    .udoc-ui-root .udoc-place-bar {
-        stroke: var(--udoc-canvas-place-line);
-        stroke-width: 3px;
-        stroke-linecap: round;
-    }
-    .udoc-ui-root .udoc-place-bar--current {
-        stroke: var(--udoc-canvas-place-line-current);
+    .udoc-ui-root .udoc-place-bracket--current {
+        stroke: var(--udoc-canvas-binding-marker-current);
+        stroke-width: 2px;
     }
     /* The tab over the place the caret is in: every place it is in,
        outermost first, each a crumb opening its popover, the one it stands
@@ -1252,7 +1244,7 @@ export const editorStyles = css`
         max-width: 480px;
         border-radius: 3px 3px 0 0;
         overflow: hidden;
-        background: var(--udoc-canvas-place-line);
+        background: var(--udoc-canvas-binding-marker);
         color: #fff;
         font-size: 11px;
         font-weight: 500;
@@ -1276,7 +1268,7 @@ export const editorStyles = css`
     .udoc-ui-root .udoc-place-crumb--current {
         flex-shrink: 0;
         max-width: 240px;
-        background: var(--udoc-canvas-place-line-current);
+        background: var(--udoc-canvas-binding-marker-current);
         font-weight: 600;
     }
     .udoc-ui-root .udoc-place-crumb-separator {

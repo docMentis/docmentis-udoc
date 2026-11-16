@@ -79,9 +79,13 @@ listed once, by package. Its major and minor version are those of the
   an option's, picks another, and the others take no room. The pick is the
   editor's and edits nothing: the deck opened again shows each choice's
   first.
-  A template's places are drawn over its slides: a tint behind a place within
-  a paragraph, a bar beside one around whole paragraphs, and the place the
-  caret is in outlined, with a tab naming every place the caret is in,
+  A template's places are drawn over its slides as brackets: a [ and a ]
+  around a place within a paragraph, a tall pair either side of one around
+  whole paragraphs at their very edge, and nested places within a paragraph
+  beginning or ending together each a bracket further out, but for a choice,
+  which shares the brackets of the
+  option it shows. The place the caret is in has its brackets stronger,
+  with a tab naming every place the caret is in,
   outermost first, each opening its own popover. Where places end or begin,
   as after a variable's text or between a choice's options, the caret stands
   in one of them or out of them, as at a Word content control's edge: the

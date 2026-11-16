@@ -285,7 +285,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             }),
         );
     };
-    // A place a binding just made: outlined, and its popover opened, once the
+    // A place a binding just made: marked, and its popover opened, once the
     // overlay has read it.
     const placeEditing: PlaceEditing = {
         async edit(binding) {
