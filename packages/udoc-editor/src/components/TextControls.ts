@@ -75,13 +75,14 @@ function matchesFontQuery(name: string, query: string): boolean {
  * Put a font-picker row's family into its label — as its own typeface where we
  * can, and as plain text where we can't yet.
  *
- * Three states, and the row is legible in all of them. A family the browser can
- * load is **live text** with `font-family` set to it: the name shows in the UI
- * face until the web font arrives and in its own from then on, with no work here
- * to make the swap happen. A family only the engine can draw shows the plain
- * name until its specimen lands, then the mask replaces it. A specimen the
- * engine had nothing to draw for stays plain text, which is exactly what the
- * picker looked like before specimens existed.
+ * Three states, and the row is legible in all of them. A Google or local family
+ * is **live text** with `font-family` set to it from the start, and the browser
+ * swaps its face in once it arrives, with no work here. A URL family shows the
+ * plain name in the UI face until its face has loaded, then turns live text the
+ * same way. A family only the engine can draw shows the plain name until its
+ * specimen lands, then the mask replaces it. A specimen the engine had nothing
+ * to draw for stays plain text, which is exactly what the picker looked like
+ * before specimens existed.
  *
  * The engine specimen is a `background: currentColor` box with the PNG as its
  * mask, so it takes the row's text color: the hovered row, the dark theme and
@@ -107,7 +108,11 @@ function fillFontLabel(label: HTMLElement, family: FontFamilySummary, loader: Fo
     label.textContent = family.name;
     // An engine-drawn family keeps the UI face while it waits: naming it to CSS
     // would let a same-named OS font answer for a face the document isn't using.
-    if (!isEngineDrawn(family.sourceType)) label.style.fontFamily = cssFontFamily(family.name);
+    // A URL family keeps it until its face has loaded: until then nothing in the
+    // page answers to its name, and a `font-family` naming it alone falls to the
+    // browser's default font, not the UI's.
+    const named = family.sourceType === "url" ? loader.urlFaceLoaded(family.name) : !isEngineDrawn(family.sourceType);
+    if (named) label.style.fontFamily = cssFontFamily(family.name);
 }
 
 // Reflect a value in a combobox's input. Skipped while the input is focused so

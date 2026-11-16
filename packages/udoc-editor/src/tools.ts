@@ -62,6 +62,7 @@ export function createEditTools(host: EditHost, i18n: I18n): EditTools {
         fontPreviews: createFontPreviewLoader({
             render: (family, size) => host.edit.renderFontPreview(family, false, false, family, size).catch(() => null),
             size: FONT_SPECIMEN_EM,
+            urls: host.client.hostFontUrls,
             googleFontEndpoint: host.client.googleFontEndpoint,
             onSpecimens: () => {
                 for (const listener of specimenListeners) listener();

@@ -88,6 +88,9 @@ listed once, by package. Its major and minor version are those of the
 - The text caret hides when the document loses the keyboard, to a field or
   menu outside it or to another window, and shows again when typing returns
   to the document. It used to keep blinking where typing no longer went.
+- The font picker shows a font registered by URL in its own typeface, as it
+  does a Google font. It showed the name in the browser's default font, or in
+  an installed font of the same name.
 
 ## [0.8.21] - 2026-11-13
 

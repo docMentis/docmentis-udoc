@@ -306,6 +306,8 @@ export class WorkerClient {
     readonly #googleFontFamilies: GoogleFontFamily[] | undefined;
     /** Where the worker asks css2 for a Google family's faces. */
     readonly #googleFontEndpoint: string;
+    /** Each family the host registered by URL, and the URL of its file. */
+    readonly #hostFontUrls = new Map<string, string>();
     readonly #enableCanvasFonts: boolean;
     /** What the license granted the most recently started session. `null`
      *  until the first document is opened. */
@@ -554,7 +556,13 @@ export class WorkerClient {
                 local.push(font);
                 continue;
             }
-            url.push({ ...font, url: resolveAgainstPage(font.url) });
+            const resolved = { ...font, url: resolveAgainstPage(font.url) };
+            url.push(resolved);
+            // One URL per family is enough to draw its name, and the upright
+            // regular face draws it best: it takes the family's place over
+            // any other face.
+            const { family, bold, italic } = resolved.descriptor;
+            if ((!bold && !italic) || !this.#hostFontUrls.has(family)) this.#hostFontUrls.set(family, resolved.url);
         }
         this.#post({ type: "registerFonts", local, url });
     }
@@ -645,6 +653,13 @@ export class WorkerClient {
      *  `googleFontEndpoint`, else Google's own. Fixed for the client's life. */
     get googleFontEndpoint(): string {
         return this.#googleFontEndpoint;
+    }
+
+    /** Each family registered by URL ({@link registerFonts}), and the absolute
+     *  URL of its file: its regular face's where one was registered. The same
+     *  map, live, for the client's life; each registration adds to it. */
+    get hostFontUrls(): ReadonlyMap<string, string> {
+        return this.#hostFontUrls;
     }
 
     /** Update the painted window (scroll / zoom / resize). Latest-wins. */
