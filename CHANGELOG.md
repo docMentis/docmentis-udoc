@@ -19,6 +19,9 @@ listed once, by package. Its major and minor version are those of the
   lines, where they showed an empty one.
 - The View tab shows Material's display settings symbol, a screen with
   sliders, where it showed an eye, which is udoc-editor's View mode's.
+- The Present tab's Set Up Presentation shows its icon alone, a screen with
+  a play button and a gear, named by its tooltip, where it showed two screens
+  with its name beside them.
 
 ### udoc-editor
 

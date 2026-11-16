@@ -991,13 +991,12 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
     },
     // How From Beginning and From Current Slide play the show, in a dialog:
     // with the presenter view or not, full screen or in window mode, and the
-    // screen it fills.
+    // screen it fills. Its icon alone, named by its tooltip.
     setUpSlideShow: {
         id: "setUpSlideShow",
         label: "command.setUpSlideShow",
         icon: ICON_SET_UP_SLIDE_SHOW,
         group: "setUp",
-        labeled: true,
         run: { kind: "action", press: (store) => store.dispatch({ type: "OPEN_SLIDE_SHOW_SETUP" }) },
         enabledWhen: whenReady,
     },

@@ -105,7 +105,7 @@ const ICONS = {
     ICON_SLIDE_SHOW_FROM_BEGINNING: "smart_display",
     ICON_SLIDE_SHOW_FROM_CURRENT: "present_to_all",
     ICON_PRESENTER_VIEW: "co_present",
-    ICON_SET_UP_SLIDE_SHOW: "tv_displays",
+    ICON_SET_UP_SLIDE_SHOW: "video_settings",
     // The presenter view
     ICON_TIMER_PAUSE: "pause",
     ICON_TIMER_RESUME: "play_arrow",
