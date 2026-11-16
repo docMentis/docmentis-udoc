@@ -30,7 +30,7 @@ import type {
     GridCellSelectionMove,
     ScrollAlignment,
     RevisionGroup,
-    RevisionView,
+    RevisionDisplay,
     SheetLayoutMode,
     SlideMasterSummary,
     TextHyperlink,
@@ -113,7 +113,7 @@ import {
     planeOfView,
     planeOfWordprocessingView,
     renderZoom,
-    revisionViewOf,
+    revisionDisplayOf,
     sheetLayoutModeOfView,
     showsPageless,
     showsPaper,
@@ -431,9 +431,9 @@ export interface UIShell {
     setPageRotation: (rotation: 0 | 90 | 180 | 270) => void;
     /** Show or hide a word document's formatting marks. */
     setShowFormattingMarks: (visible: boolean) => void;
-    /** Show `view` of a word document's tracked changes, on the one open and
+    /** Show `display` of a word document's tracked changes, on the one open and
      *  every one opened after. */
-    setRevisionView: (view: RevisionView) => void;
+    setRevisionDisplay: (display: RevisionDisplay) => void;
     /** Set the gaps between pages; `null` restores the built-in gaps. */
     setPageGap: (gap: PageGap | null) => void;
     /** Fit the open document by `fit`, and open every later one by it; `null` restores each doc type's default. */
@@ -513,7 +513,7 @@ export interface UIShellOptions {
     showNotesPanel?: boolean;
     presentationView?: PresentationView;
     wordprocessingView?: WordprocessingView;
-    revisionView?: RevisionView;
+    revisionDisplay?: RevisionDisplay;
     showFormulaBar?: boolean;
     showLoadingOverlay?: boolean;
     zoomSteps?: readonly number[];
@@ -714,7 +714,7 @@ export function mountUIShell(
         notesOpen: shellOptions.showNotesPanel ?? initialState.notesOpen,
         presentationView: shellOptions.presentationView ?? initialState.presentationView,
         wordprocessingView: shellOptions.wordprocessingView ?? initialState.wordprocessingView,
-        revisionView: shellOptions.revisionView ?? initialState.revisionView,
+        revisionDisplay: shellOptions.revisionDisplay ?? initialState.revisionDisplay,
         formulaBarVisible: shellOptions.showFormulaBar ?? initialState.formulaBarVisible,
         showComments: shellOptions.showCommentMarkup ?? initialState.showComments,
         disabledPanels: hostDisabledPanels,
@@ -1754,15 +1754,15 @@ export function mountUIShell(
     client.setFormattingMarks(marksShown(store.getState()));
     // What a word document's tracked changes show, as the Review tab or the host
     // chose: the worker keeps it for every later document, so it goes now too.
-    const unsubRevisionView = subscribeSelector(
+    const unsubRevisionDisplay = subscribeSelector(
         store,
-        (s) => s.revisionView,
-        (view) => {
-            if (view) void showRevisionView(view);
+        (s) => s.revisionDisplay,
+        (display) => {
+            if (display) void showRevisionDisplay(display);
         },
     );
-    const chosenRevisionView = store.getState().revisionView;
-    if (chosenRevisionView) void client.setRevisionView(chosenRevisionView);
+    const chosenRevisionDisplay = store.getState().revisionDisplay;
+    if (chosenRevisionDisplay) void client.setRevisionDisplay(chosenRevisionDisplay);
     // The fit every document opens with: the worker fits by it at open, before
     // the first frame, and the open below adopts the same into the state.
     const unsubDefaultFit = subscribeSelector(
@@ -2413,7 +2413,7 @@ export function mountUIShell(
                 void openPanelIfAsked(layersRead);
             }
             // What its tracked changes show, which the Review tab marks.
-            if (layout.docType === "wordprocessing") void readRevisionView();
+            if (layout.docType === "wordprocessing") void readRevisionDisplay();
             // Which widgets a press fills a form field in through — async, off
             // the critical path.
             if (layout.docType === "portable") void refreshFormWidgets();
@@ -2580,11 +2580,11 @@ export function mountUIShell(
         store.dispatch({ type: "SET_HAS_LAYERS", hasLayers: (properties?.defaultConfig.order ?? []).length > 0 });
     }
 
-    async function readRevisionView(): Promise<void> {
+    async function readRevisionDisplay(): Promise<void> {
         const generation = store.getState().docGeneration;
-        const view = await client.wordprocessing.revisionView();
+        const display = await client.wordprocessing.revisionDisplay();
         if (store.getState().docGeneration !== generation) return;
-        store.dispatch({ type: "SET_OPENED_REVISION_VIEW", view });
+        store.dispatch({ type: "SET_OPENED_REVISION_DISPLAY", display });
     }
 
     const editListeners = new Set<() => void>();
@@ -2909,11 +2909,11 @@ export function mountUIShell(
         });
     }
 
-    // Show `view` of a word document's tracked changes, and adopt the layout the
-    // worker replies with, as a view hides or brings back whole pages. A view
+    // Show `display` of a word document's tracked changes, and adopt the layout the
+    // worker replies with, as a display hides or brings back whole pages. A display
     // change, not a document edit.
-    async function showRevisionView(view: RevisionView): Promise<void> {
-        const layout = await client.setRevisionView(view);
+    async function showRevisionDisplay(display: RevisionDisplay): Promise<void> {
+        const layout = await client.setRevisionDisplay(display);
         if (layout === null) return;
         markCommentMarkupStale();
         store.dispatch({
@@ -3785,9 +3785,9 @@ export function mountUIShell(
     // and Original turn to All Markup, and Simple Markup stays, the engine
     // passing by the deletions it hides.
     async function moveToRevisionGroup(forward: boolean): Promise<void> {
-        const view = revisionViewOf(store.getState());
-        if (view && (view.mode === "noMarkup" || view.mode === "original")) {
-            store.dispatch({ type: "SET_REVISION_VIEW", view: { ...view, mode: "allMarkup" } });
+        const display = revisionDisplayOf(store.getState());
+        if (display && (display.mode === "noMarkup" || display.mode === "original")) {
+            store.dispatch({ type: "SET_REVISION_DISPLAY", display: { ...display, mode: "allMarkup" } });
         }
         const landing = selectionStart(await client.wordprocessing.moveToRevisionGroup(forward));
         if (landing) client.goToRect(landing.page, landing.rect, "nearest");
@@ -4571,15 +4571,15 @@ export function mountUIShell(
             case "setLayoutMode":
                 store.dispatch({ type: "SET_LAYOUT_MODE", mode: action.mode });
                 break;
-            case "setRevisionViewMode":
+            case "setRevisionDisplayMode":
             case "toggleRevisionFilter": {
-                const view = revisionViewOf(store.getState());
-                if (!view) break;
+                const display = revisionDisplayOf(store.getState());
+                if (!display) break;
                 const change =
-                    action.kind === "setRevisionViewMode"
+                    action.kind === "setRevisionDisplayMode"
                         ? { mode: action.mode }
-                        : { [action.filter]: !view[action.filter] };
-                store.dispatch({ type: "SET_REVISION_VIEW", view: { ...view, ...change } });
+                        : { [action.filter]: !display[action.filter] };
+                store.dispatch({ type: "SET_REVISION_DISPLAY", display: { ...display, ...change } });
                 break;
             }
             case "copy":
@@ -4781,7 +4781,7 @@ export function mountUIShell(
         unsubLayoutMode();
         unsubPageRotation();
         unsubFormattingMarks();
-        unsubRevisionView();
+        unsubRevisionDisplay();
         unsubDefaultFit();
         unsubDpi();
         unsubPlane();
@@ -4913,7 +4913,7 @@ export function mountUIShell(
         setLayoutMode: (mode) => store.dispatch({ type: "SET_LAYOUT_MODE", mode }),
         setPageRotation: (rotation) => store.dispatch({ type: "SET_PAGE_ROTATION", rotation }),
         setShowFormattingMarks: (visible) => store.dispatch({ type: "SET_SHOW_FORMATTING_MARKS", visible }),
-        setRevisionView: (view) => store.dispatch({ type: "SET_REVISION_VIEW", view }),
+        setRevisionDisplay: (display) => store.dispatch({ type: "SET_REVISION_DISPLAY", display }),
         setPageGap: (gap) => store.dispatch({ type: "SET_PAGE_GAP", gap }),
         setFit: (fit) => {
             store.dispatch({ type: "SET_DEFAULT_FIT", fit });

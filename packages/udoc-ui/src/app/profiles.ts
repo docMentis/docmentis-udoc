@@ -120,7 +120,7 @@ export const REVIEW_TAB: ToolbarTab = {
     icon: ICON_TAB_REVIEW,
     commands: [
         "revisions",
-        "revisionView",
+        "revisionDisplay",
         "markupOptions",
         "previousRevisionGroup",
         "nextRevisionGroup",

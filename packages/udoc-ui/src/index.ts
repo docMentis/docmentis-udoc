@@ -1,5 +1,7 @@
 // Public API shared by the docMentis packages built on this one: the class
 // each package's own extends, and the types its calls take and return.
+import type { RevisionDisplay, RevisionDisplayMode } from "@docmentis/udoc-wasm";
+
 export { UDocBase } from "./base.js";
 export type {
     DownloadOptions,
@@ -72,8 +74,12 @@ export type {
 export type { ExportFormat, FileFormat, PageExportFormat, SaveStrategy, UDocType } from "@docmentis/udoc-wasm";
 
 // What a word document's tracked changes show (generated from the Rust serde):
-// `UDocBase.revisionView` and `setRevisionView`.
-export type { RevisionBalloons, RevisionView, RevisionViewMode } from "@docmentis/udoc-wasm";
+// `UDocBase.revisionDisplay` and `setRevisionDisplay`.
+export type { RevisionBalloons, RevisionDisplay, RevisionDisplayMode } from "@docmentis/udoc-wasm";
+/** @deprecated Renamed `RevisionDisplay`. */
+export type RevisionView = RevisionDisplay;
+/** @deprecated Renamed `RevisionDisplayMode`. */
+export type RevisionViewMode = RevisionDisplayMode;
 
 // A watermark, for `UDocBase.setWatermarks` (generated from the Rust serde).
 export type {

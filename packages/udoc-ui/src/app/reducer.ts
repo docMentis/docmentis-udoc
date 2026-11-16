@@ -184,7 +184,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
                 viewSettled: false,
                 scrollbars: { x: false, y: false },
                 docGeneration: state.docGeneration + 1,
-                openedRevisionView: null,
+                openedRevisionDisplay: null,
                 // The new doc type's strip opens on the tab it asks to, else folded
                 // (its tab set may differ from the previous document's); a
                 // selection opens its tab.
@@ -261,7 +261,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
         case "CLOSE_DOC":
             return {
                 ...state,
-                openedRevisionView: null,
+                openedRevisionDisplay: null,
                 comments: new Map(),
                 allCommentsRead: false,
                 officeComments: null,
@@ -737,11 +737,11 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
             // The new thread's field takes the panel's focus from the one open.
             return { ...state, newCommentGen: state.newCommentGen + 1, openOfficeComment: null };
 
-        case "SET_REVISION_VIEW":
-            return { ...state, revisionView: action.view };
+        case "SET_REVISION_DISPLAY":
+            return { ...state, revisionDisplay: action.display };
 
-        case "SET_OPENED_REVISION_VIEW":
-            return { ...state, openedRevisionView: action.view };
+        case "SET_OPENED_REVISION_DISPLAY":
+            return { ...state, openedRevisionDisplay: action.display };
 
         case "SET_HAS_LAYERS":
             return action.hasLayers === state.hasLayers ? state : { ...state, hasLayers: action.hasLayers };

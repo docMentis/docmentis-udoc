@@ -2,15 +2,22 @@ import type { HistoryOp, SelectionEdit } from "../worker/protocol.js";
 import type {
     Automation,
     Feature,
-    RevisionView,
-    RevisionViewMode,
+    RevisionDisplay,
+    RevisionDisplayMode,
     SheetLayoutMode,
     StampIcon,
     UDocType,
 } from "@docmentis/udoc-wasm";
 import { allowsEdit } from "../geometry.js";
 import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
-import { commentable, copyAllowed, PAGELESS_PLANE, panelOpenable, revisionViewOf, sheetLayoutModeOf } from "./state.js";
+import {
+    commentable,
+    copyAllowed,
+    PAGELESS_PLANE,
+    panelOpenable,
+    revisionDisplayOf,
+    sheetLayoutModeOf,
+} from "./state.js";
 import type {
     AnnotationTool,
     CommandId,
@@ -72,7 +79,7 @@ import {
     ICON_NORMAL_VIEW,
     ICON_PAGES_VIEW,
     ICON_PAGELESS_VIEW,
-    ICON_REVISION_VIEW,
+    ICON_REVISION_DISPLAY,
     ICON_MARKUP_OPTIONS,
     ICON_REVISIONS,
     ICON_PREVIOUS_REVISION_GROUP,
@@ -162,7 +169,7 @@ export interface CommandContext {
     pageless: boolean;
     /** What a word document's tracked changes show — the Review tab's menus mark
      *  it. `null` with none open. */
-    revisionView: RevisionView | null;
+    revisionDisplay: RevisionDisplay | null;
     /** The sheet layout mode the current sheet of a workbook shows — what its
      *  View tab's Normal and Page Layout read pressed by — or null for a
      *  chartsheet, which shows neither, and any other doc type. */
@@ -221,7 +228,7 @@ export function commandContext(state: UIState): CommandContext {
         presentationView: state.presentationView,
         layoutMode: state.layoutMode,
         pageless: state.docType === "wordprocessing" && state.currentPlane === PAGELESS_PLANE,
-        revisionView: revisionViewOf(state),
+        revisionDisplay: revisionDisplayOf(state),
         sheetLayoutMode: sheetLayoutModeOf(state),
         cellEntry: state.activeCell?.entry != null,
         layersPanel: state.hasLayers && panelOpenable(state, "layers"),
@@ -269,7 +276,7 @@ const whenSheetViews: EnabledWhen = (c) => c.ready && c.sheetLayoutMode !== null
  * `setSheetTabColor` colours its tab `#rrggbb` or takes its colour away,
  * `hideSheet` hides it, and `unhideSheet` shows the hidden sheet on `plane`.
  * `setLayoutMode` groups the pages into spreads as `mode` does.
- * `setRevisionViewMode` shows a word document's tracked changes in `mode`, and
+ * `setRevisionDisplayMode` shows a word document's tracked changes in `mode`, and
  * `toggleRevisionFilter` turns one kind of them on or off.
  * `extension` carries an extension's own intent, which the shell hands back
  * to it (`UIExtension.menuAction`).
@@ -290,7 +297,7 @@ export type MenuAction =
     | { kind: "hideSheet" }
     | { kind: "unhideSheet"; plane: number }
     | { kind: "setLayoutMode"; mode: LayoutMode }
-    | { kind: "setRevisionViewMode"; mode: RevisionViewMode }
+    | { kind: "setRevisionDisplayMode"; mode: RevisionDisplayMode }
     | { kind: "toggleRevisionFilter"; filter: RevisionFilter }
     | { kind: "extension"; action: unknown };
 
@@ -586,23 +593,23 @@ const PAGE_LAYOUT_MENU: readonly MenuItem[] = PAGE_LAYOUTS.map(([mode, label, ic
 /** The kinds of change the Review tab's Markup Options turns on or off. */
 export type RevisionFilter = "insertionsAndDeletions" | "formatting";
 
-/** Enabled once the open word document's view is known. */
-const whenRevisionView: EnabledWhen = (c) => c.ready && c.revisionView !== null;
+/** Enabled once the open word document's display is known. */
+const whenRevisionDisplay: EnabledWhen = (c) => c.ready && c.revisionDisplay !== null;
 
 /** The versions of a tracked document the Review tab offers. */
-const REVISION_VIEW_MODES: readonly (readonly [RevisionViewMode, MessageKey])[] = [
-    ["allMarkup", "revisionView.allMarkup"],
-    ["simpleMarkup", "revisionView.simpleMarkup"],
-    ["noMarkup", "revisionView.noMarkup"],
-    ["original", "revisionView.original"],
+const REVISION_DISPLAY_MODES: readonly (readonly [RevisionDisplayMode, MessageKey])[] = [
+    ["allMarkup", "revisionDisplay.allMarkup"],
+    ["simpleMarkup", "revisionDisplay.simpleMarkup"],
+    ["noMarkup", "revisionDisplay.noMarkup"],
+    ["original", "revisionDisplay.original"],
 ];
 
 /** The Review tab's versions: one exclusive set, the current one marked. */
-const REVISION_VIEW_MENU: readonly MenuItem[] = REVISION_VIEW_MODES.map(([mode, label]) => ({
-    action: { kind: "setRevisionViewMode", mode },
+const REVISION_DISPLAY_MENU: readonly MenuItem[] = REVISION_DISPLAY_MODES.map(([mode, label]) => ({
+    action: { kind: "setRevisionDisplayMode", mode },
     label,
-    enabledWhen: whenRevisionView,
-    activeWhen: (c) => c.revisionView?.mode === mode,
+    enabledWhen: whenRevisionDisplay,
+    activeWhen: (c) => c.revisionDisplay?.mode === mode,
 }));
 
 /** The Review tab's Markup Options: a switch per kind of change, which leave
@@ -616,8 +623,8 @@ const MARKUP_OPTIONS_MENU: readonly MenuItem[] = (
 ).map(([filter, label]) => ({
     action: { kind: "toggleRevisionFilter", filter },
     label,
-    enabledWhen: whenRevisionView,
-    checked: (c) => c.revisionView?.[filter] ?? false,
+    enabledWhen: whenRevisionDisplay,
+    checked: (c) => c.revisionDisplay?.[filter] ?? false,
     keepsOpen: true,
 }));
 
@@ -1133,22 +1140,22 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
     // Review tab — which version of a tracked document shows, its button
     // wearing the one current, and Markup Options, an icon: which of its
     // changes are shown as such.
-    revisionView: {
-        id: "revisionView",
-        label: "command.revisionView",
-        icon: ICON_REVISION_VIEW,
+    revisionDisplay: {
+        id: "revisionDisplay",
+        label: "command.revisionDisplay",
+        icon: ICON_REVISION_DISPLAY,
         group: "revisions",
         labeled: true,
         run: {
             kind: "menu",
-            menu: REVISION_VIEW_MENU,
+            menu: REVISION_DISPLAY_MENU,
             current: (state) => {
-                const shown = revisionViewOf(state)?.mode;
-                const [, label] = REVISION_VIEW_MODES.find(([mode]) => mode === shown) ?? REVISION_VIEW_MODES[0]!;
-                return { icon: ICON_REVISION_VIEW, label };
+                const shown = revisionDisplayOf(state)?.mode;
+                const [, label] = REVISION_DISPLAY_MODES.find(([mode]) => mode === shown) ?? REVISION_DISPLAY_MODES[0]!;
+                return { icon: ICON_REVISION_DISPLAY, label };
             },
         },
-        enabledWhen: whenRevisionView,
+        enabledWhen: whenRevisionDisplay,
     },
     markupOptions: {
         id: "markupOptions",
@@ -1156,7 +1163,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         icon: ICON_MARKUP_OPTIONS,
         group: "revisions",
         run: { kind: "menu", menu: MARKUP_OPTIONS_MENU },
-        enabledWhen: whenRevisionView,
+        enabledWhen: whenRevisionDisplay,
     },
     // And the right panel's Revisions tab, listing the changes, which it
     // shows or hides as the View tab's Layers does its tab.
@@ -1172,7 +1179,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
             press: (store) => store.dispatch({ type: "TOGGLE_PANEL", panel: "revisions" }),
         },
         shownWhen: (c) => c.revisionsPanel,
-        enabledWhen: whenRevisionView,
+        enabledWhen: whenRevisionDisplay,
     },
     // Then Previous and Next, by their arrows alone: on to the tracked change
     // before the selection or after it.
@@ -1182,7 +1189,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         icon: ICON_PREVIOUS_REVISION_GROUP,
         group: "changes",
         run: { kind: "action", press: (store) => store.dispatch({ type: "MOVE_TO_REVISION_GROUP", forward: false }) },
-        enabledWhen: whenRevisionView,
+        enabledWhen: whenRevisionDisplay,
     },
     nextRevisionGroup: {
         id: "nextRevisionGroup",
@@ -1190,7 +1197,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         icon: ICON_NEXT_REVISION_GROUP,
         group: "changes",
         run: { kind: "action", press: (store) => store.dispatch({ type: "MOVE_TO_REVISION_GROUP", forward: true }) },
-        enabledWhen: whenRevisionView,
+        enabledWhen: whenRevisionDisplay,
     },
 
     // View tab — a workbook's views of its current sheet, one segment button

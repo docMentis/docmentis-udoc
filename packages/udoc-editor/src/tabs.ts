@@ -568,7 +568,7 @@ const WORDPROCESSING_REVIEW_TAB: EditTab = {
     ...REVIEW_TAB,
     commands: [
         "revisions",
-        "revisionView",
+        "revisionDisplay",
         "markupOptions",
         "previousRevisionGroup",
         "nextRevisionGroup",

@@ -122,7 +122,7 @@ const ICONS = {
     ICON_SLIDE_MASTER_VIEW: "space_dashboard",
     ICON_PAGES_VIEW: "description",
     ICON_PAGELESS_VIEW: "subject",
-    ICON_REVISION_VIEW: "difference",
+    ICON_REVISION_DISPLAY: "difference",
     ICON_MARKUP_OPTIONS: "tune",
     ICON_REVISIONS: "list_alt",
     ICON_PREVIOUS_REVISION_GROUP: "arrow_upward",

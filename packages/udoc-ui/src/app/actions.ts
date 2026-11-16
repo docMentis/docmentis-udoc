@@ -5,7 +5,7 @@ import type {
     FileFormat,
     PresentationBindingPlace,
     PresentationPlaneKind,
-    RevisionView,
+    RevisionDisplay,
     SearchMatch,
     SheetLayoutMode,
     SheetState,
@@ -278,10 +278,10 @@ export type Action =
     // field, and the thread open closes.
     | { type: "NEW_COMMENT" }
     | { type: "SET_HAS_LAYERS"; hasLayers: boolean }
-    // What a word document's tracked changes show: the view chosen, and the one
+    // What a word document's tracked changes show: the display chosen, and the one
     // the open document opened on
-    | { type: "SET_REVISION_VIEW"; view: RevisionView }
-    | { type: "SET_OPENED_REVISION_VIEW"; view: RevisionView }
+    | { type: "SET_REVISION_DISPLAY"; display: RevisionDisplay }
+    | { type: "SET_OPENED_REVISION_DISPLAY"; display: RevisionDisplay }
     | { type: "ENABLE_PANEL_TRANSITIONS" }
     // Theme & fullscreen
     | { type: "SET_THEME"; theme: ThemeMode }

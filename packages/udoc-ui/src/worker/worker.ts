@@ -67,7 +67,7 @@ import type {
     PageImage,
     PresentationBindingPlace,
     PresentationPlaneKind,
-    RevisionView,
+    RevisionDisplay,
     SheetLayoutMode,
     SheetState,
     SlideMasterSummary,
@@ -265,9 +265,9 @@ let defaultZoom = 1;
 // the host's, from `setDefaultScrollMode`. `null` keeps the doc type's.
 let defaultScrollMode: ScrollMode | null = null;
 // What a word document's tracked changes show, the host's or the Review tab's,
-// from `setRevisionView`. `null` leaves each document to what it asks for (see
-// `openingRevisionView`).
-let chosenRevisionView: RevisionView | null = null;
+// from `setRevisionDisplay`. `null` leaves each document to what it asks for (see
+// `openingRevisionDisplay`).
+let chosenRevisionDisplay: RevisionDisplay | null = null;
 
 // Set if `render_frame` ever throws: the wasm session is then poisoned (an
 // export that unwound on a JS throw leaked its `WasmRefCell` borrow, so every
@@ -2219,8 +2219,8 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, layout);
                 break;
             }
-            case "setRevisionView": {
-                chosenRevisionView = msg.view;
+            case "setRevisionDisplay": {
+                chosenRevisionDisplay = msg.display;
                 if (!showsRevisions(session)) {
                     reply(id, null);
                     break;
@@ -2228,19 +2228,19 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // What was composed composes again, by the frame: the layout
                 // replied is the one known before it, and the selection is
                 // projected onto what the frame shows.
-                session.wordprocessing.setRevisionView(msg.view);
+                session.wordprocessing.setRevisionDisplay(msg.display);
                 const layout = layoutOf(session);
                 emitSelection(false);
                 selectionAfterPaint = true;
                 scheduleFrame();
-                // Then the rest, as a view hides or brings back whole pages.
+                // Then the rest, as a display hides or brings back whole pages.
                 startComposeAhead(session);
                 reply(id, layout);
                 break;
             }
-            case "revisionView": {
-                if (!session) throw new Error("engine worker: revisionView before open");
-                reply(id, session.wordprocessing.revisionView());
+            case "revisionDisplay": {
+                if (!session) throw new Error("engine worker: revisionDisplay before open");
+                reply(id, session.wordprocessing.revisionDisplay());
                 break;
             }
             case "wordprocessingOutline": {
@@ -3246,14 +3246,14 @@ function layoutOf(s: WasmSession, v: number = VIEWER): DocumentLayout {
     };
 }
 
-/** What a word document opens showing with no view chosen: what it asks for,
+/** What a word document opens showing with no display chosen: what it asks for,
  *  its markup shown simply — the final version, a bar beside what changed — as
  *  Word opens one, where it asks for its markup shown. */
-function openingRevisionView(asked: RevisionView): RevisionView {
+function openingRevisionDisplay(asked: RevisionDisplay): RevisionDisplay {
     return asked.mode === "allMarkup" ? { ...asked, mode: "simpleMarkup" } : asked;
 }
 
-/** Whether `s` holds an open word document, whose tracked changes a view shows. */
+/** Whether `s` holds an open word document, whose tracked changes a display shows. */
 function showsRevisions(s: WasmSession | null): s is WasmSession {
     return s !== null && s.docType() === "wordprocessing" && !s.needsPassword();
 }
@@ -3266,9 +3266,9 @@ function showsRevisions(s: WasmSession | null): s is WasmSession {
  */
 function openedLayout(s: WasmSession): DocumentLayout {
     if (showsRevisions(s)) {
-        const asked = s.wordprocessing.revisionView();
-        const view = chosenRevisionView ?? openingRevisionView(asked);
-        if (view !== asked) s.wordprocessing.setRevisionView(view);
+        const asked = s.wordprocessing.revisionDisplay();
+        const display = chosenRevisionDisplay ?? openingRevisionDisplay(asked);
+        if (display !== asked) s.wordprocessing.setRevisionDisplay(display);
     }
     const layout = layoutOf(s);
     // The doc type drives the host's default fit, and the source format is

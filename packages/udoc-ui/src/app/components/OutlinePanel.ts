@@ -5,7 +5,7 @@ import type { WorkerClient } from "../../worker/WorkerClient.js";
 import type { Action } from "../actions.js";
 import { follow } from "../destinations.js";
 import { ICON_CHEVRON_RIGHT } from "../icons.js";
-import { revisionViewOf } from "../state.js";
+import { revisionDisplayOf } from "../state.js";
 import type { UIState } from "../state.js";
 import type { I18n } from "../i18n/index.js";
 
@@ -326,7 +326,7 @@ export function createOutlinePanel(i18n: I18n, callbacks: OutlinePanelCallbacks)
                 (st) => st.docGeneration,
                 (docGeneration) => void load(docGeneration),
             ),
-            subscribeSelector(s, revisionViewOf, scheduleReread),
+            subscribeSelector(s, revisionDisplayOf, scheduleReread),
             c.onDocumentChanged(scheduleReread),
         ];
     }

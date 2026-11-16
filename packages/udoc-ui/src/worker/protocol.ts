@@ -55,7 +55,7 @@ import type {
     SearchOptions,
     RevisionGroup,
     RevisionMarkup,
-    RevisionView,
+    RevisionDisplay,
     SheetLayoutMode,
     SlideShowInput,
     UrlFont,
@@ -757,19 +757,19 @@ export interface SetSheetLayoutModeRequest {
 }
 
 /**
- * Show `view` of a word document's tracked changes: a view setting, never an
+ * Show `display` of a word document's tracked changes: a display setting, never an
  * edit. Kept for every word document opened after, as Word keeps its own. Replies
  * with the layout known before the frame composes again, as `goToPlane` does, or
  * `null` with no word document open to show it on.
  */
-export interface SetRevisionViewRequest {
-    type: "setRevisionView";
-    view: RevisionView;
+export interface SetRevisionDisplayRequest {
+    type: "setRevisionDisplay";
+    display: RevisionDisplay;
 }
 
 /** What the open word document's tracked changes show. Replies with it. */
-export interface RevisionViewRequest {
-    type: "revisionView";
+export interface RevisionDisplayRequest {
+    type: "revisionDisplay";
 }
 
 /** Release the open document (but keep the worker alive for the next open). */
@@ -2393,8 +2393,8 @@ export type WorkerRequest =
     | GoToDestinationRequest
     | GoToBookmarkRequest
     | GoToParagraphRequest
-    | SetRevisionViewRequest
-    | RevisionViewRequest
+    | SetRevisionDisplayRequest
+    | RevisionDisplayRequest
     | ZoomAtPointRequest
     | ZoomToRectRequest
     | SetScrollModeRequest

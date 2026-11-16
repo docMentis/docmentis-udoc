@@ -6,7 +6,7 @@ import { mountUIShell } from "./app/shell.js";
 import type { UIShell } from "./app/shell.js";
 import type { RemoteCheckpointResponse } from "./app/remote.js";
 import type { AnnotationPatch } from "./app/annotation-patch.js";
-import { pageStep, renderZoom, revisionViewOf, sheetViewOf, viewDpi, wordprocessingViewOf } from "./app/state.js";
+import { pageStep, renderZoom, revisionDisplayOf, sheetViewOf, viewDpi, wordprocessingViewOf } from "./app/state.js";
 import type {
     PanelTab,
     PresentationView,
@@ -39,7 +39,7 @@ import type {
     UDocType,
     UrlFont,
     Watermark,
-    RevisionView,
+    RevisionDisplay,
 } from "@docmentis/udoc-wasm";
 import type { OverlayOptions, OverlaySource } from "./app/components/OverlayManager.js";
 import type { ExtensionDocument } from "./app/extension-documents.js";
@@ -146,9 +146,11 @@ export interface UDocOptions {
     /** What a word document's tracked changes show. Each opens on it. Default:
      *  none, so each opens on what it asks for: Simple Markup, the final version
      *  with a bar beside each change, unless saved with markup off.
-     *  {@link UDocBase.setRevisionView} and the Review tab choose one from then
+     *  {@link UDocBase.setRevisionDisplay} and the Review tab choose one from then
      *  on. */
-    revisionView?: RevisionView;
+    revisionDisplay?: RevisionDisplay;
+    /** @deprecated Renamed {@link UDocOptions.revisionDisplay}. */
+    revisionView?: RevisionDisplay;
     /** Show a workbook's formula bar above its grid: the active cell's
      *  reference and its contents, which in edit mode it edits. Default
      *  `true`; the View tab's Formula Bar changes it. */
@@ -513,8 +515,10 @@ export interface UDocEvents {
     "presentationView:changed": { view: PresentationView; previousView: PresentationView };
     /** Fires when {@link UDocBase.wordprocessingView} changes — by the host, the View tab, or a word document opening or closing in another view. */
     "wordprocessingView:changed": { view: WordprocessingView; previousView: WordprocessingView };
-    /** Fires when {@link UDocBase.revisionView} changes — by the host, the Review tab, or a word document opening or closing on another view. */
-    "revisionView:changed": { view: RevisionView | null; previousView: RevisionView | null };
+    /** Fires when {@link UDocBase.revisionDisplay} changes — by the host, the Review tab, or a word document opening or closing on another display. */
+    "revisionDisplay:changed": { display: RevisionDisplay | null; previousDisplay: RevisionDisplay | null };
+    /** @deprecated Renamed `"revisionDisplay:changed"`, whose payload names them `display` and `previousDisplay`. */
+    "revisionView:changed": { view: RevisionDisplay | null; previousView: RevisionDisplay | null };
     /** Fires when {@link UDocBase.sheetView} changes — by the host, the View tab, a move to a sheet in another view, or a workbook opening or closing. */
     "sheetView:changed": { view: SheetView | null; previousView: SheetView | null };
     /** Fires when a deck's or a PDF's slide show starts or ends — by the host, the Present tab, Escape, or a step past its last slide or page. */
@@ -678,7 +682,12 @@ export async function createAs<T, X extends UIExtension | null>(
 ): Promise<T> {
     const client = await WorkerClient.create(options, wrapper, startWorker);
     const extension = extend();
-    const shell = mountUIShell(container, client, options, extension);
+    // The deprecated `revisionView` stands in for `revisionDisplay` it names.
+    const shellOptions =
+        options.revisionDisplay === undefined && options.revisionView !== undefined
+            ? { ...options, revisionDisplay: options.revisionView }
+            : options;
+    const shell = mountUIShell(container, client, shellOptions, extension);
     return construct(shell, extension);
 }
 
@@ -746,9 +755,10 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
             subscribeSelector(shell.store, wordprocessingViewOf, (view, previousView) =>
                 this.#emit("wordprocessingView:changed", { view, previousView }),
             ),
-            subscribeSelector(shell.store, revisionViewOf, (view, previousView) =>
-                this.#emit("revisionView:changed", { view, previousView }),
-            ),
+            subscribeSelector(shell.store, revisionDisplayOf, (display, previousDisplay) => {
+                this.#emit("revisionDisplay:changed", { display, previousDisplay });
+                this.#emit("revisionView:changed", { view: display, previousView: previousDisplay });
+            }),
             subscribeSelector(shell.store, sheetViewOf, (view, previousView) =>
                 this.#emit("sheetView:changed", { view, previousView }),
             ),
@@ -1700,10 +1710,15 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * Choose what a word document's tracked changes show, on the one open and each
      * opened after, as the Review tab does: which version of it (`mode`), which
      * changes are marked (`insertionsAndDeletions`, `formatting`) and whose
-     * (`hiddenAuthors`). A view setting: the document is unchanged.
+     * (`hiddenAuthors`). A display setting: the document is unchanged.
      */
-    setRevisionView(view: RevisionView): void {
-        this.shell.setRevisionView(view);
+    setRevisionDisplay(display: RevisionDisplay): void {
+        this.shell.setRevisionDisplay(display);
+    }
+
+    /** @deprecated Renamed {@link setRevisionDisplay}. */
+    setRevisionView(view: RevisionDisplay): void {
+        this.setRevisionDisplay(view);
     }
 
     /**
@@ -2044,13 +2059,18 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
     }
 
     /**
-     * What a word document's tracked changes show: the view chosen by
-     * {@link setRevisionView}, the `revisionView` option or the Review tab; with
+     * What a word document's tracked changes show: the display chosen by
+     * {@link setRevisionDisplay}, the `revisionDisplay` option or the Review tab; with
      * none chosen, the one the open word document opened on; with no word document
-     * open either, `null`. `"revisionView:changed"` fires when it changes.
+     * open either, `null`. `"revisionDisplay:changed"` fires when it changes.
      */
-    get revisionView(): RevisionView | null {
-        return revisionViewOf(this.shell.getState());
+    get revisionDisplay(): RevisionDisplay | null {
+        return revisionDisplayOf(this.shell.getState());
+    }
+
+    /** @deprecated Renamed {@link revisionDisplay}. */
+    get revisionView(): RevisionDisplay | null {
+        return this.revisionDisplay;
     }
 
     /**

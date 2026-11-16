@@ -26,12 +26,12 @@ import type { EditTools } from "./tools.js";
 type ReviewCommandId = "acceptRevisions" | "rejectRevisions";
 
 /** Which tracked changes a settle takes: those the selection touches, every one
- *  the revision view shows, or every one. */
+ *  the revision display shows, or every one. */
 export type RevisionScope = "selection" | "shown" | "all";
 
 /** Whether a word document is open, its tracked changes there to settle. */
 function whenTracked(c: CommandContext): boolean {
-    return c.ready && c.revisionView !== null;
+    return c.ready && c.revisionDisplay !== null;
 }
 
 /** Settle `scope`'s tracked changes — accepted where `accept`, else rejected —

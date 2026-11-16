@@ -23,6 +23,18 @@ listed once, by package. Its major and minor version are those of the
   kept in the template, one undo step per value. Last come the bindings
   that are wrong, each with what is wrong with it.
 
+#### Changed
+
+- What a word document's tracked changes show is its revision display, as
+  the Review tab's Display for Review names it: the `revisionDisplay` option,
+  `setRevisionDisplay`, the `revisionDisplay` getter, and
+  `"revisionDisplay:changed"`, whose payload names them `display` and
+  `previousDisplay`, with the types `RevisionDisplay` and
+  `RevisionDisplayMode`. The earlier names still work and are deprecated:
+  `revisionView`, `setRevisionView`, `"revisionView:changed"`, `RevisionView`
+  and `RevisionViewMode`. The `translations` keys `command.revisionView` and
+  `revisionView.*` are now `command.revisionDisplay` and `revisionDisplay.*`.
+
 ### udoc-editor
 
 #### Added

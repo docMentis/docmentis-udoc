@@ -54,7 +54,7 @@ import type {
     PageMode,
     PresentationBindingPlace,
     RevisionMarkup,
-    RevisionView,
+    RevisionDisplay,
     SaveStrategy,
     SearchContinuation,
     SearchMatchLocation,
@@ -1765,20 +1765,21 @@ export class WorkerClient {
             this.#post({ type: "goToParagraph", paragraph, alignment, seq: ++this.#viewportSeq });
         },
 
-        /** What the open document's tracked changes show: the view chosen, else
+        /** What the open document's tracked changes show: the display chosen, else
          *  the one it opened on. A pure read. */
-        revisionView: (): Promise<RevisionView> => this.#send({ type: "revisionView" }) as Promise<RevisionView>,
+        revisionDisplay: (): Promise<RevisionDisplay> =>
+            this.#send({ type: "revisionDisplay" }) as Promise<RevisionDisplay>,
     };
 
     /**
-     * Show `view` of a word document's tracked changes, on the one open and every
-     * one opened after: a view setting, never an edit. Resolves with the layout
+     * Show `display` of a word document's tracked changes, on the one open and every
+     * one opened after: a display setting, never an edit. Resolves with the layout
      * known before the frame composes again, or `null` with no word document open.
-     * The pages' thumbnails show the view too, so they redraw
+     * The pages' thumbnails show the display too, so they redraw
      * ({@link invalidateThumbnails}).
      */
-    setRevisionView(view: RevisionView): Promise<DocumentLayout | null> {
-        const layout = this.#send({ type: "setRevisionView", view }) as Promise<DocumentLayout | null>;
+    setRevisionDisplay(display: RevisionDisplay): Promise<DocumentLayout | null> {
+        const layout = this.#send({ type: "setRevisionDisplay", display }) as Promise<DocumentLayout | null>;
         // After the post, as `#send` does for an edit, so a thumbnail the
         // strip re-requests queues behind the switch.
         this.invalidateThumbnails();

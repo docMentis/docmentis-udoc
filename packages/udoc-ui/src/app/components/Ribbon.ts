@@ -1,5 +1,5 @@
 import { createMenuController, subscribeSelector } from "../../framework/index.js";
-import type { AnnotationLineEnding, Automation, Feature, RevisionView, UDocType } from "@docmentis/udoc-wasm";
+import type { AnnotationLineEnding, Automation, Feature, RevisionDisplay, UDocType } from "@docmentis/udoc-wasm";
 import type { Store } from "../../framework/index.js";
 import type { HistoryOp } from "../../worker/protocol.js";
 import type { Action } from "../actions.js";
@@ -185,8 +185,8 @@ interface RibbonSlice {
     activePanel: PanelTab | null;
     showFormattingMarks: boolean;
     showComments: boolean;
-    revisionView: RevisionView | null;
-    openedRevisionView: RevisionView | null;
+    revisionDisplay: RevisionDisplay | null;
+    openedRevisionDisplay: RevisionDisplay | null;
     formulaBarVisible: boolean;
     layersPanel: boolean;
     /** What a deck's Preview shows — Stop while a preview plays — and is
@@ -230,8 +230,8 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
         a.activePanel === b.activePanel &&
         a.showFormattingMarks === b.showFormattingMarks &&
         a.showComments === b.showComments &&
-        a.revisionView === b.revisionView &&
-        a.openedRevisionView === b.openedRevisionView &&
+        a.revisionDisplay === b.revisionDisplay &&
+        a.openedRevisionDisplay === b.openedRevisionDisplay &&
         a.formulaBarVisible === b.formulaBarVisible &&
         a.layersPanel === b.layersPanel &&
         a.slidePreviewing === b.slidePreviewing &&
@@ -264,8 +264,8 @@ function selectSlice(s: UIState): RibbonSlice {
         activePanel: s.activePanel,
         showFormattingMarks: s.showFormattingMarks,
         showComments: s.showComments,
-        revisionView: s.revisionView,
-        openedRevisionView: s.openedRevisionView,
+        revisionDisplay: s.revisionDisplay,
+        openedRevisionDisplay: s.openedRevisionDisplay,
         formulaBarVisible: s.formulaBarVisible,
         layersPanel: s.hasLayers && panelOpenable(s, "layers"),
         slidePreviewing: s.slidePreviewing,
