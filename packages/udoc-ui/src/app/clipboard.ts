@@ -99,7 +99,11 @@ export function parseFragment(text: string): UDocFragment | null {
         // text, is the paste's to decide.
         return value &&
             typeof value === "object" &&
-            ("portable" in value || "presentation" in value || "spreadsheet" in value || "wordprocessing" in value)
+            ("image" in value ||
+                "portable" in value ||
+                "presentation" in value ||
+                "spreadsheet" in value ||
+                "wordprocessing" in value)
             ? (value as UDocFragment)
             : null;
     } catch {
