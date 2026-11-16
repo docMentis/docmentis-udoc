@@ -2,7 +2,9 @@
 // each shows (`bindingGeometry`): brackets, a [ where a place within a
 // paragraph begins and a ] where it ends, and a tall [ and ] either side of
 // one around whole paragraphs, each at its place's very edge — a choice drawn
-// as the option it shows; the place the caret is in has its brackets
+// as the option it shows — and where places begin or end together, the
+// innermost's as tall as its line and each around it a step taller; the
+// place the caret is in has its brackets
 // stronger, with a tab naming every place the caret is in, outermost first —
 // Repeat › Choice › When "low" — each opening its place's popover; the places
 // of the Data panel's name the pointer is over stand out too. Which places the
@@ -23,7 +25,15 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 /** How far a bracket's ends reach in towards what it holds, CSS px, a place
  *  within a paragraph's and one around whole paragraphs' alike. */
-const TICK = 6;
+const TICK = 5;
+
+/** How much further above and below its line a bracket reaches for each place
+ *  inside its own that begins or ends with it, CSS px. */
+const NEST_STEP = 5;
+
+/** Two brackets whose edges are nearer than this across stand on one
+ *  another, CSS px. */
+const COINCIDE = 1.5;
 
 /** The place the caret is in, as the overlay marks it. */
 export interface CurrentPlace {
@@ -197,6 +207,21 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                 if (isMarked) opening = brackets.at(-2)!;
             }
         }
+        // The tab hangs from the tallest of the brackets standing with the
+        // marked place's opening one, clear of all their ends.
+        const levels = nestLevels(brackets);
+        const marked = opening;
+        let hung: Bracket | null = marked;
+        if (marked) {
+            let tallest = levels[brackets.indexOf(marked)]!;
+            for (const [index, bracket] of brackets.entries()) {
+                if (bracket.side === marked.side && fallsOn(marked, bracket) && levels[index]! > tallest) {
+                    hung = bracket;
+                    tallest = levels[index]!;
+                }
+            }
+        }
+        brackets.forEach((bracket, index) => grow(bracket, levels[index]!));
         const out: OverlayItem[] = [];
         if (brackets.length > 0) {
             out.push({
@@ -222,8 +247,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                 },
             });
         }
-        // The tab hangs from the marked place's opening bracket.
-        const tab = opening?.top ?? null;
+        const tab = hung?.top ?? null;
         if (tab) {
             // One tab for every place the caret is in, outermost first, the
             // place it stands in last and marked: nested places starting
@@ -375,12 +399,13 @@ function caretKey(selection: SelectionGeometry | null): string {
 }
 
 /** One bracket of a place, in viewport px: the edge it stands on, from its top
- *  end to its bottom; the way in towards what it holds, a unit vector; and
- *  whether its place stands out. */
+ *  end to its bottom; the way in towards what it holds, a unit vector;
+ *  whether it opens or closes the place; and whether its place stands out. */
 interface Bracket {
     top: Point;
     bottom: Point;
     inward: Point;
+    side: "open" | "close";
     current: boolean;
 }
 
@@ -394,8 +419,8 @@ function spanBrackets(first: Point[], last: Point[]): [BracketShape, BracketShap
     const [, topRight, bottomRight] = last;
     const forward = readingWay(topLeft!, bottomLeft!);
     return [
-        { top: topLeft!, bottom: bottomLeft!, inward: forward },
-        { top: topRight!, bottom: bottomRight!, inward: { x: -forward.x, y: -forward.y } },
+        { top: topLeft!, bottom: bottomLeft!, inward: forward, side: "open" },
+        { top: topRight!, bottom: bottomRight!, inward: { x: -forward.x, y: -forward.y }, side: "close" },
     ];
 }
 
@@ -409,8 +434,8 @@ function blockBrackets(corners: Point[]): [BracketShape, BracketShape] {
     const top = Math.min(...ys);
     const bottom = Math.max(...ys);
     return [
-        { top: { x: left, y: top }, bottom: { x: left, y: bottom }, inward: { x: 1, y: 0 } },
-        { top: { x: right, y: top }, bottom: { x: right, y: bottom }, inward: { x: -1, y: 0 } },
+        { top: { x: left, y: top }, bottom: { x: left, y: bottom }, inward: { x: 1, y: 0 }, side: "open" },
+        { top: { x: right, y: top }, bottom: { x: right, y: bottom }, inward: { x: -1, y: 0 }, side: "close" },
     ];
 }
 
@@ -419,6 +444,55 @@ function blockBrackets(corners: Point[]): [BracketShape, BracketShape] {
 function readingWay(top: Point, bottom: Point): Point {
     const length = Math.hypot(bottom.x - top.x, bottom.y - top.y);
     return length === 0 ? { x: 1, y: 0 } : { x: (bottom.y - top.y) / length, y: -(bottom.x - top.x) / length };
+}
+
+/** How many steps taller each of `brackets` stands: one more than the
+ *  tallest later bracket on its side that falls on it — a place inside its
+ *  own beginning or ending with it, as a page's places come each before the
+ *  places inside it. The innermost stands as tall as its line, and each
+ *  around it a step taller, so brackets meeting at one edge show each its own
+ *  ends, none of them moved off the edge. */
+function nestLevels(brackets: readonly Bracket[]): number[] {
+    const levels = brackets.map(() => 0);
+    for (let index = brackets.length - 1; index >= 0; index--) {
+        const bracket = brackets[index]!;
+        for (let inner = index + 1; inner < brackets.length; inner++) {
+            const other = brackets[inner]!;
+            if (other.side === bracket.side && fallsOn(other, bracket)) {
+                levels[index] = Math.max(levels[index]!, levels[inner]! + 1);
+            }
+        }
+    }
+    return levels;
+}
+
+/** Whether `bracket` falls on `on`: on its edge across, and beside some of it
+ *  along. */
+function fallsOn(bracket: Bracket, on: Bracket): boolean {
+    const offset = (p: Point) => ({ x: p.x - on.top.x, y: p.y - on.top.y });
+    const across = offset(bracket.top);
+    if (Math.abs(across.x * on.inward.x + across.y * on.inward.y) >= COINCIDE) return false;
+    const length = Math.hypot(on.bottom.x - on.top.x, on.bottom.y - on.top.y);
+    if (length === 0) return false;
+    const along = (p: Point) => {
+        const d = offset(p);
+        return (d.x * (on.bottom.x - on.top.x) + d.y * (on.bottom.y - on.top.y)) / length;
+    };
+    const [from, to] = [along(bracket.top), along(bracket.bottom)].sort((a, b) => a - b);
+    return from! < length - COINCIDE && to! > COINCIDE;
+}
+
+/** Make `bracket` `level` steps taller, its ends that much further above
+ *  and below along its edge. */
+function grow(bracket: Bracket, level: number): void {
+    if (level === 0) return;
+    const { top, bottom } = bracket;
+    const length = Math.hypot(bottom.x - top.x, bottom.y - top.y) || 1;
+    const step = level * NEST_STEP;
+    const dx = ((bottom.x - top.x) / length) * step;
+    const dy = ((bottom.y - top.y) / length) * step;
+    bracket.top = { x: top.x - dx, y: top.y - dy };
+    bracket.bottom = { x: bottom.x + dx, y: bottom.y + dy };
 }
 
 /** `bracket` as a polyline's points: in along its top end, down its edge, in
