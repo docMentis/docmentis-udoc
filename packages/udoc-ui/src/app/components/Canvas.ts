@@ -3243,7 +3243,8 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
      * **inside the current selection** keeps it (the menu acts on the whole
      * selection — right-clicking one of three selected shapes must not collapse
      * the pick to that one), and a press **over text** keeps it too (the caret /
-     * range is the selection there, and an object pick would clear it). Anything
+     * range is the selection there, and an object pick would clear it) — in a
+     * table's cell too, where it lands on the range selected. Anything
      * else picks the topmost object at the point, or clears over bare page. The
      * pick is a worker round-trip, so the menu opens on the old capabilities and
      * the report settles its rows a frame later — see `createContextMenu`.
@@ -3271,8 +3272,14 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             // something other than a press. Under it is the frame's own box on a
             // slide, or the tinted cells a block draws: a word document's table
             // has no frame, so a block of its cells is all there is to be on.
+            //
+            // A right-click on the range of text selected keeps it whatever
+            // began it — a drag in the cell, or one from the text before the
+            // table — as one over text outside a table does: the menu's Cut
+            // and Copy act on that range.
+            const onRange = selection.hitTextHighlight(x, y);
             const onSelection = selection.hitLocal(x, y) || selection.hitCells(x, y);
-            if (tableAnchor !== table || !onSelection) {
+            if (!onRange && (tableAnchor !== table || !onSelection)) {
                 client.selectText({ x, y }, { x, y });
                 tableAnchor = table;
             }

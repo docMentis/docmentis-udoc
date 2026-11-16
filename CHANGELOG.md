@@ -31,6 +31,8 @@ listed once, by package. Its major and minor version are those of the
   selection has changed before the copy lands.
 - Delete in the canvas's context menu deletes the text selected, where it
   deleted the shape holding it or wasn't offered.
+- A right-click on text selected in a table's cell keeps it selected, so Cut
+  and Copy act on it, where the selection collapsed to a caret.
 - Text pasted from another app into a worksheet goes into the cell being typed
   into, or begins an entry in the selected cell, where it was dropped.
 - A copy pastes as its text into a document of another kind, as a PDF's text

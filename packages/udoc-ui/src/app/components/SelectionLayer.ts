@@ -662,6 +662,33 @@ export class SelectionLayer {
         return this.#within(this.#state.local.cells, x, y);
     }
 
+    /**
+     * Whether `(x, y)` falls on a **local** text highlight — a quad of the
+     * range of text selected. The "is the pointer on the selected text?" test
+     * for a right-click, whose menu acts on the range rather than collapsing it
+     * to a caret where the press landed.
+     */
+    hitTextHighlight(x: number, y: number): boolean {
+        const byPage = this.#pageMap();
+        return this.#state.local.text.some((quad) => {
+            const view = byPage.get(quad.page);
+            if (!view) return false;
+            const m = this.#viewportOf(view);
+            const corners = quad.points.map((point) => applyPoint(m, point.x, point.y));
+            // Inside a convex quad: on the same side of each of its edges.
+            let sign = 0;
+            for (let index = 0; index < corners.length; index++) {
+                const a = corners[index]!;
+                const b = corners[(index + 1) % corners.length]!;
+                const cross = (b.x - a.x) * (y - a.y) - (b.y - a.y) * (x - a.x);
+                if (cross === 0) continue;
+                if (sign === 0) sign = Math.sign(cross);
+                else if (Math.sign(cross) !== sign) return false;
+            }
+            return true;
+        });
+    }
+
     /** Whether `(x, y)` falls within any of `items`, each projected against its
      *  page's latest view. */
     #within(items: SelectionBox[], x: number, y: number): boolean {
