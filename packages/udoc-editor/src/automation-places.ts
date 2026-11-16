@@ -4,15 +4,15 @@
 // one around whole paragraphs, each at its place's very edge — a choice drawn
 // as the option it shows — and where places begin or end together, the
 // innermost's as tall as its line and each around it a step taller; the
-// place the caret is in has its brackets
-// stronger, with a tab naming every place the caret is in, outermost first —
-// Repeat › Choice › When "low" — each opening its place's popover; the places
-// of the Data panel's name the pointer is over stand out too. Which places the
-// caret is in is the engine's to say (the selection's `places`): where places
-// end or begin, the caret stands at a level the arrows step through, and the
-// tab names the level. None of it is the document's — it is drawn over the canvas, under
-// the selection, and takes no press but the tab's — and an instance shows none
-// until asked, so it reads as an ordinary document.
+// place the caret is in has its brackets stronger, with a binding bar naming
+// every place the caret is in, outermost first — Repeat › Choice › When "low"
+// — each item opening its place's popover; the places of the Data panel's
+// name the pointer is over stand out too. Which places the caret is in is the
+// engine's to say (the selection's `places`): where places end or begin, the
+// caret stands at a level the arrows step through, and the bar names the
+// level. None of it is the document's — it is drawn over the canvas, under
+// the selection, and takes no press but the bar's — and an instance shows
+// none until asked, so it reads as an ordinary document.
 import { subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { OverlayFrame, OverlayItem, OverlaySource, PageView } from "@docmentis/udoc-ui";
 import type { Binding, BindingGeometry, Point, SelectionGeometry, UDocSelectionProperties } from "@docmentis/udoc-wasm";
@@ -49,8 +49,8 @@ export interface Places {
     atCaret(): CurrentPlace[];
     /** Mark `place`, one the caret is in, until the caret moves. */
     show(place: CurrentPlace): void;
-    /** The marked place's tab, as drawn, or null. */
-    tab(): HTMLElement | null;
+    /** The marked place's item on the binding bar, as drawn, or null. */
+    barItem(): HTMLElement | null;
     /** Read the places shown again — after the slide composed again with no
      *  edit to say so, as showing another of a choice's options does. */
     refresh(): void;
@@ -72,7 +72,7 @@ function placesShown(host: EditHost): boolean {
     return "template" in role || edit.showPlaces;
 }
 
-/** The kind a binding's tab names, and what follows it: its path, a repeat's
+/** The kind a binding's item on the binding bar names, and what follows it: its path, a repeat's
  *  item over its path, an option's values. */
 export function placeLabel(binding: Binding, i18n: I18n): string {
     const [kind, detail] = placeParts(binding);
@@ -103,9 +103,9 @@ function placeParts(binding: Binding): [MessageKey, string] {
 }
 
 /** Draw the open deck's places, and keep the place the caret is in, while
- *  edit mode is mounted. `open` opens the popover of the place whose tab is
+ *  edit mode is mounted. `open` opens the popover of the place whose item on the bar is
  *  pressed. */
-export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPlace, tab: DOMRect) => void): Places {
+export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPlace, item: DOMRect) => void): Places {
     const { client, store } = host;
     // What was read for each page, by `plane:page`, and which read is current.
     let read = new Map<string, readonly BindingGeometry[]>();
@@ -117,7 +117,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     let current: CurrentPlace | null = null;
     // A place `show` marked, and where the caret stood then.
     let shown: { id: string; at: string } | null = null;
-    let tabElement: HTMLElement | null = null;
+    let markedItem: HTMLElement | null = null;
 
     const geometryOf = (page: number): readonly BindingGeometry[] =>
         read.get(`${store.getState().currentPlane}:${page}`) ?? [];
@@ -174,7 +174,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
 
     function items(frame: OverlayFrame): OverlayItem[] {
         const brackets: Bracket[] = [];
-        // The opening bracket of the place marked, which its tab hangs from.
+        // The opening bracket of the place marked, which the binding bar hangs from.
         let opening: Bracket | null = null;
         // The places of the Data panel's name the pointer is over stand out as
         // the caret's does.
@@ -207,7 +207,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                 if (isMarked) opening = brackets.at(-2)!;
             }
         }
-        // The tab hangs from the tallest of the brackets standing with the
+        // The binding bar hangs from the tallest of the brackets standing with the
         // marked place's opening one, clear of all their ends.
         const levels = nestLevels(brackets);
         const marked = opening;
@@ -247,51 +247,51 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                 },
             });
         }
-        const tab = hung?.top ?? null;
-        if (tab) {
-            // One tab for every place the caret is in, outermost first, the
+        const bar = hung?.top ?? null;
+        if (bar) {
+            // One binding bar for every place the caret is in, outermost first, the
             // place it stands in last and marked: nested places starting
             // together share it rather than stacking.
-            const crumbs = atCaret();
-            const key = crumbs
+            const items = atCaret();
+            const key = items
                 .map((place) => `${place.geometry.id}:${current?.geometry.id === place.geometry.id}`)
                 .join();
             out.push({
-                key: "tab",
-                x: tab.x,
-                y: tab.y,
+                key: "bar",
+                x: bar.x,
+                y: bar.y,
                 create: () => {
                     const el = document.createElement("div");
-                    el.className = "udoc-place-tab";
-                    // Down on the tab is no press on the text under it.
+                    el.className = "udoc-binding-bar";
+                    // Down on the bar is no press on the text under it.
                     el.addEventListener("pointerdown", (e) => e.stopPropagation());
                     return el;
                 },
                 update: (el) => {
-                    if (el.dataset.crumbs === key) return;
-                    el.dataset.crumbs = key;
-                    tabElement = null;
+                    if (el.dataset.items === key) return;
+                    el.dataset.items = key;
+                    markedItem = null;
                     el.replaceChildren(
-                        ...crumbs.flatMap((place, index) => {
+                        ...items.flatMap((place, index) => {
                             const label = placeLabel(place.geometry.binding, i18n);
-                            const crumb = document.createElement("button");
-                            crumb.type = "button";
+                            const item = document.createElement("button");
+                            item.type = "button";
                             const isCurrent = current?.geometry.id === place.geometry.id;
-                            crumb.className = classOf("udoc-place-crumb", isCurrent);
-                            crumb.textContent = label;
-                            crumb.title = label;
-                            if (isCurrent) tabElement = crumb;
+                            item.className = classOf("udoc-binding-bar__item", isCurrent);
+                            item.textContent = label;
+                            item.title = label;
+                            if (isCurrent) markedItem = item;
                             // The press that opens the popover is no press outside it.
-                            crumb.addEventListener("click", (e) => {
+                            item.addEventListener("click", (e) => {
                                 e.stopPropagation();
-                                open(place, crumb.getBoundingClientRect());
+                                open(place, item.getBoundingClientRect());
                             });
-                            if (index === 0) return [crumb];
+                            if (index === 0) return [item];
                             const separator = document.createElement("span");
-                            separator.className = "udoc-place-crumb-separator";
+                            separator.className = "udoc-binding-bar__separator";
                             separator.textContent = "›";
                             separator.setAttribute("aria-hidden", "true");
-                            return [separator, crumb];
+                            return [separator, item];
                         }),
                     );
                 },
@@ -347,7 +347,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
             findCurrent();
             draw();
         },
-        tab: () => (tabElement?.isConnected ? tabElement : null),
+        barItem: () => (markedItem?.isConnected ? markedItem : null),
         refresh: readAgain,
         async find(pick, frames = 60) {
             for (let frame = 0; frame < frames; frame++) {

@@ -1207,8 +1207,9 @@ export const editorStyles = css`
        theme, an indigo, darker for the place the caret is in: brackets, a [
        and a ] around a place within a paragraph and a tall pair either side
        of one around whole paragraphs, the place the caret is in with its
-       brackets stronger and its tab above its first line naming every place
-       the caret is in. Under the selection, taking no press but the tab's. */
+       brackets stronger and the binding bar above its first line naming
+       every place the caret is in. Under the selection, taking no press but
+       the bar's. */
     .udoc-ui-root {
         --udoc-canvas-binding-marker: #6366f1;
         --udoc-canvas-binding-marker-current: #4338ca;
@@ -1232,11 +1233,11 @@ export const editorStyles = css`
         stroke: var(--udoc-canvas-binding-marker-current);
         stroke-width: 2px;
     }
-    /* The tab over the place the caret is in: every place it is in,
-       outermost first, each a crumb opening its popover, the one it stands
-       in last and marked. An outer crumb gives way first where room runs
+    /* The binding bar over the place the caret is in: every place it is in,
+       outermost first, each an item opening its popover, the one it stands
+       in last and marked. An outer item gives way first where room runs
        out. */
-    .udoc-ui-root .udoc-place-tab {
+    .udoc-ui-root .udoc-binding-bar {
         position: absolute;
         transform: translateY(-100%);
         display: flex;
@@ -1252,7 +1253,7 @@ export const editorStyles = css`
         white-space: nowrap;
         pointer-events: auto;
     }
-    .udoc-ui-root .udoc-place-crumb {
+    .udoc-ui-root .udoc-binding-bar__item {
         min-width: 0;
         max-width: 160px;
         padding: 1px 6px;
@@ -1265,16 +1266,16 @@ export const editorStyles = css`
         text-overflow: ellipsis;
         cursor: pointer;
     }
-    .udoc-ui-root .udoc-place-crumb--current {
+    .udoc-ui-root .udoc-binding-bar__item--current {
         flex-shrink: 0;
         max-width: 240px;
         background: var(--udoc-canvas-binding-marker-current);
         font-weight: 600;
     }
-    .udoc-ui-root .udoc-place-crumb-separator {
+    .udoc-ui-root .udoc-binding-bar__separator {
         opacity: 0.7;
     }
-    /* A place's popover, below its tab: its binding's fields, Remove and
+    /* A place's popover, below its item on the binding bar: its binding's fields, Remove and
        Done — the dialogs' fields and buttons in a panel of their own. */
     .udoc-ui-root .udoc-place-popover {
         position: fixed;
@@ -1335,7 +1336,7 @@ export const editorStyles = css`
         justify-content: space-between;
         margin-top: 12px;
     }
-    .udoc-ui-root .udoc-place-crumb:focus-visible {
+    .udoc-ui-root .udoc-binding-bar__item:focus-visible {
         outline: 2px solid #fff;
         outline-offset: -2px;
     }

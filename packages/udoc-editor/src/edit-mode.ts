@@ -253,8 +253,8 @@ export function editMode(options: UDocEditorOptions): EditMode {
     let automationGenerate: AutomationGenerate | null = null;
     let places: Places | null = null;
     let placePopover: PlacePopover | null = null;
-    // A place's popover, from its tab: a template's places alone are edited.
-    const openPlace = (place: CurrentPlace, tab: DOMRect): void => {
+    // A place's popover, from its item on the binding bar: a template's places alone are edited.
+    const openPlace = (place: CurrentPlace, item: DOMRect): void => {
         const mounted = host;
         if (!mounted || !placePopover) return;
         const automation = mounted.store.getState().automation;
@@ -267,7 +267,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
         void (ofChoice ? mounted.client.bindingChoice(id) : Promise.resolve(null)).then((choice) =>
             popover.open({
                 binding,
-                anchor: tab,
+                anchor: item,
                 choice,
                 // The view's pick: the slide composes again, and the places
                 // are read again where they now stand.
@@ -293,8 +293,8 @@ export function editMode(options: UDocEditorOptions): EditMode {
             if (!found || !places) return;
             places.show(found);
             await new Promise((resolve) => requestAnimationFrame(resolve));
-            const tab = places.tab();
-            if (tab) openPlace(found, tab.getBoundingClientRect());
+            const item = places.barItem();
+            if (item) openPlace(found, item.getBoundingClientRect());
         },
     };
     const grips = createGrips(() => tools);

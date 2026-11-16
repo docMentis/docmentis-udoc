@@ -85,7 +85,7 @@ listed once, by package. Its major and minor version are those of the
   shows. Where places begin or end together, the innermost's bracket is as
   tall as its line and each around it a step taller, all on the one edge.
   The place the caret is in has its brackets stronger,
-  with a tab naming every place the caret is in,
+  with a binding bar naming every place the caret is in,
   outermost first, each opening its own popover. Where places end or begin,
   as after a variable's text or between a choice's options, the caret stands
   in one of them or out of them, as at a Word content control's edge: the
