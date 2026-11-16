@@ -259,21 +259,31 @@ export function editMode(options: UDocEditorOptions): EditMode {
         if (!mounted || !placePopover) return;
         const automation = mounted.store.getState().automation;
         if (automation === null || !("template" in automation.role)) return;
+        const popover = placePopover;
         const done = () => mounted.focusClipboardSink();
-        placePopover.open({
-            binding: place.markup.binding,
-            anchor: tab,
-            onApply: (binding) =>
-                mounted
-                    .commit(() =>
-                        mounted.client.executeOnSelection({ kind: "rebind", place: place.markup.id, binding }),
-                    )
-                    .then(done),
-            onRemove: () =>
-                mounted
-                    .commit(() => mounted.client.executeOnSelection({ kind: "unbind", place: place.markup.id }))
-                    .then(done),
-        });
+        const id = place.markup.id;
+        const binding = place.markup.binding;
+        const ofChoice = binding === "otherwise" || "choice" in binding || "when" in binding;
+        void (ofChoice ? mounted.client.bindingChoice(id) : Promise.resolve(null)).then((choice) =>
+            popover.open({
+                binding,
+                anchor: tab,
+                choice,
+                // The view's pick: the slide composes again, and the places
+                // are read again where they now stand.
+                onShow: async (option) => {
+                    await mounted.client.showBindingOption(option);
+                    places?.refresh();
+                    return mounted.client.bindingChoice(id);
+                },
+                onApply: (binding) =>
+                    mounted
+                        .commit(() => mounted.client.executeOnSelection({ kind: "rebind", place: id, binding }))
+                        .then(done),
+                onRemove: () =>
+                    mounted.commit(() => mounted.client.executeOnSelection({ kind: "unbind", place: id })).then(done),
+            }),
+        );
     };
     // A place a binding just made: outlined, and its popover opened, once the
     // overlay has read it.

@@ -133,6 +133,7 @@ export const zhCN: EditMessages = {
     "place.last": "最后的分隔符",
     "place.not": "为假时显示",
     "place.values": "值",
+    "place.shown": "显示的选项",
     "place.remove": "移除",
     "place.invalid": "路径由字母、数字和 _ 组成的名称以点连接；值中不能有引号。",
     "command.showPlaces": "绑定",

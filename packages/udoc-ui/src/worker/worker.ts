@@ -2792,6 +2792,23 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, open ? safeRead(() => open.bindingMarkup(msg.plane, msg.page), []) : []);
                 break;
             }
+            case "bindingChoice": {
+                const open = session;
+                reply(id, open ? safeRead(() => open.bindingChoice(msg.place), null) : null);
+                break;
+            }
+            case "showBindingOption": {
+                // The engine composes again what was composed; the next frame
+                // paints it, and the caret may sit elsewhere after it.
+                const open = session;
+                const shown = open ? safeRead(() => open.showBindingOption(msg.option), false) : false;
+                if (shown) {
+                    scheduleFrame();
+                    selectionAfterPaint = true;
+                }
+                reply(id, shown);
+                break;
+            }
             case "pageAnnotations": {
                 // A read that loads what it reads, as pageComments.
                 reply(id, session ? pageAnnotations(session, msg.pages) : []);

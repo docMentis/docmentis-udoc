@@ -133,6 +133,7 @@ export const ja: EditMessages = {
     "place.last": "最後の区切り",
     "place.not": "偽のときに表示",
     "place.values": "値",
+    "place.shown": "表示するオプション",
     "place.remove": "削除",
     "place.invalid": "パスは英数字と _ の名前をドットでつないだものです。値に引用符は使えません。",
     "command.showPlaces": "バインド",

@@ -32,6 +32,7 @@ import type {
     Annotation,
     Automation,
     BindingCatalog,
+    BindingChoice,
     BindingMarkup,
     CellEntryEdit,
     CommentMarkup,
@@ -944,6 +945,25 @@ export class WorkerClient {
      */
     async bindingMarkup(plane: number, page: number): Promise<BindingMarkup[]> {
         return (await this.#send({ type: "bindingMarkup", plane, page })) as BindingMarkup[];
+    }
+
+    /**
+     * The choice `place` names — the choice itself, or the one it is an
+     * option of — with its options and the one shown, or null where `place`
+     * names no choice of a deck's. What the place popover's picker lists.
+     */
+    async bindingChoice(place: string): Promise<BindingChoice | null> {
+        return (await this.#send({ type: "bindingChoice", place })) as BindingChoice | null;
+    }
+
+    /**
+     * Show `option` where its choice is, the choice's other options taking no
+     * room — the view's, not the document's: nothing is edited or undone, and
+     * a save or a print elsewhere shows each choice's first option. Resolves
+     * with whether `option` is an option of a choice in a loaded slide.
+     */
+    async showBindingOption(option: string): Promise<boolean> {
+        return (await this.#send({ type: "showBindingOption", option })) as boolean;
     }
 
     /**

@@ -133,6 +133,7 @@ export const ru: EditMessages = {
     "place.last": "Последний разделитель",
     "place.not": "Показывать, если ложно",
     "place.values": "Значения",
+    "place.shown": "Показанный вариант",
     "place.remove": "Удалить",
     "place.invalid": "Путь — это имена из букв, цифр и _, соединённые точками; значение не содержит кавычек.",
     "command.showPlaces": "Привязки",

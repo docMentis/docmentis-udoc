@@ -59,6 +59,10 @@ listed once, by package. Its major and minor version are those of the
   item and separators, whether a condition shows when its value is false, an
   option's values. A choice is made with an option for `"a"` and an
   otherwise. Remove, in the popover, takes the place away and keeps its text.
+  A choice's slide shows one of its options, the first until its popover, or
+  an option's, picks another, and the others take no room. The pick is the
+  editor's and edits nothing: the deck opened again shows each choice's
+  first.
   A template's places are drawn over its slides: a tint behind a place within
   a paragraph, a bar beside one around whole paragraphs, and the place the
   caret is in outlined, with a tab naming its binding that opens its popover.

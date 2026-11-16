@@ -1394,6 +1394,26 @@ export interface BindingMarkupRequest {
     page: number;
 }
 
+/**
+ * Read the choice `place` names — the choice itself, or the one it is an
+ * option of — with its options and the one shown. Replies with a
+ * `BindingChoice`, or null where `place` names no choice of a deck's.
+ */
+export interface BindingChoiceRequest {
+    type: "bindingChoice";
+    place: string;
+}
+
+/**
+ * Show `option` where its choice is, the choice's other options taking no
+ * room — the view's, not the document's: nothing is edited or undone.
+ * Replies with whether `option` is an option of a choice in a loaded slide.
+ */
+export interface ShowBindingOptionRequest {
+    type: "showBindingOption";
+    option: string;
+}
+
 /** What the comments panel lists threads under: a page, a cell of a sheet, a
  *  slide — keyed, and ordered as the document reads. */
 export interface CommentGroup {
@@ -2457,6 +2477,8 @@ export type WorkerRequest =
     | SlideIdRequest
     | CommentMarkupRequest
     | BindingMarkupRequest
+    | BindingChoiceRequest
+    | ShowBindingOptionRequest
     | PageAnnotationsRequest
     | AnnotationRequest
     | SelectionGeometryRequest

@@ -133,6 +133,7 @@ export const ar: EditMessages = {
     "place.last": "الفاصل الأخير",
     "place.not": "إظهار عند الخطأ",
     "place.values": "القيم",
+    "place.shown": "الخيار المعروض",
     "place.remove": "إزالة",
     "place.invalid": "المسار أسماء من حروف وأرقام و _ مفصولة بنقاط، ولا تحتوي القيمة على علامة اقتباس.",
     "command.showPlaces": "المواضع",

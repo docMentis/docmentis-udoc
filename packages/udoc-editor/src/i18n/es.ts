@@ -133,6 +133,7 @@ export const es: EditMessages = {
     "place.last": "Último separador",
     "place.not": "Mostrar si es falso",
     "place.values": "Valores",
+    "place.shown": "Opción mostrada",
     "place.remove": "Quitar",
     "place.invalid": "Una ruta son nombres de letras, dígitos y _, unidos por puntos; un valor no lleva comillas.",
     "command.showPlaces": "Enlaces",

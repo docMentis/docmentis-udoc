@@ -256,6 +256,8 @@ export interface Messages extends UIMessages {
     "place.not": string;
     /** Values — what an option is chosen by, separated by commas */
     "place.values": string;
+    /** Option shown — a choice's options, one picked to show while editing */
+    "place.shown": string;
     /** Remove — dissolve a place, keeping its content */
     "place.remove": string;
     /** A path is names of letters, digits and _, joined by dots; a value holds no quote mark. */

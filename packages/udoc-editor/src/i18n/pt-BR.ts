@@ -133,6 +133,7 @@ export const ptBR: EditMessages = {
     "place.last": "Último separador",
     "place.not": "Mostrar se falso",
     "place.values": "Valores",
+    "place.shown": "Opção exibida",
     "place.remove": "Remover",
     "place.invalid": "Um caminho são nomes de letras, dígitos e _, unidos por pontos; um valor não contém aspas.",
     "command.showPlaces": "Vínculos",

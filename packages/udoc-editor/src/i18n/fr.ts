@@ -133,6 +133,7 @@ export const fr: EditMessages = {
     "place.last": "Dernier séparateur",
     "place.not": "Afficher si faux",
     "place.values": "Valeurs",
+    "place.shown": "Option affichée",
     "place.remove": "Supprimer",
     "place.invalid":
         "Un chemin est fait de noms en lettres, chiffres et _, joints par des points ; une valeur ne contient pas de guillemet.",

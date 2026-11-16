@@ -133,6 +133,7 @@ export const de: EditMessages = {
     "place.last": "Letztes Trennzeichen",
     "place.not": "Anzeigen, wenn falsch",
     "place.values": "Werte",
+    "place.shown": "Angezeigte Option",
     "place.remove": "Entfernen",
     "place.invalid":
         "Ein Pfad besteht aus Namen aus Buchstaben, Ziffern und _, durch Punkte verbunden; ein Wert enthält kein Anführungszeichen.",

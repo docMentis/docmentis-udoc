@@ -1291,6 +1291,30 @@ export const editorStyles = css`
         align-items: center;
         gap: 6px;
     }
+    .udoc-ui-root .udoc-place-popover__options {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin: 8px 0 0;
+        padding: 0;
+        border: 0;
+        min-width: 0;
+    }
+    .udoc-ui-root .udoc-place-popover__options[hidden] {
+        display: none;
+    }
+    .udoc-ui-root .udoc-place-popover__options > legend {
+        padding: 0;
+        margin-bottom: 4px;
+    }
+    .udoc-ui-root .udoc-place-popover__option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     .udoc-ui-root .udoc-place-popover__footer {
         display: flex;
         justify-content: space-between;

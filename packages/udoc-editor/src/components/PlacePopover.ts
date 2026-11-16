@@ -2,13 +2,15 @@
 // binding as fields for its kind — a variable's path and default, a repeat's
 // item, path and separators, a condition's path and whether it shows when
 // false, a choice's path, an option's values — applied with Done or Enter, and
-// Remove, which dissolves the place and keeps its content. Anchored below the
-// tab, it closes on an outside press or Escape, as a menu does.
+// Remove, which dissolves the place and keeps its content. A choice's and an
+// option's list the choice's options, and picking one shows it on the slide
+// at once, the others taking no room — the view's pick, not an edit. Anchored
+// below the tab, it closes on an outside press or Escape, as a menu does.
 //
 // Storeless and imperative: mounted once and reused, `open(ctx)` seeding it
 // with the place's binding and what applying and removing do.
 import { createMenuController, on } from "@docmentis/udoc-ui/internal";
-import type { Binding } from "@docmentis/udoc-wasm";
+import type { Binding, BindingChoice } from "@docmentis/udoc-wasm";
 import { placeLabel } from "../automation-places.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
 
@@ -22,6 +24,11 @@ export interface PlacePopoverContext {
     onApply: (binding: Binding) => Promise<void>;
     /** Dissolve the place, keeping its content. */
     onRemove: () => Promise<void>;
+    /** The choice the place is, or is an option of, with its options and the
+     *  one shown; null for any other place. */
+    choice: BindingChoice | null;
+    /** Show the choice's `option`, resolving with the choice as it then is. */
+    onShow: (option: string) => Promise<BindingChoice | null>;
 }
 
 /** The words no name takes: a tag's keywords. */
@@ -43,6 +50,14 @@ function isLiteral(text: string): boolean {
     return !/["“”]/.test(text);
 }
 
+/** What an option's row in the list reads: its values, quoted, or Otherwise. */
+function optionLabel(binding: Binding, i18n: I18n): string {
+    if (typeof binding === "object" && "when" in binding) {
+        return binding.when.values.map((value) => `"${value}"`).join(", ");
+    }
+    return i18n.t("place.otherwise");
+}
+
 /** One field of the form: its label, its input, and whether it is a box. */
 interface Field {
     readonly key: string;
@@ -60,6 +75,11 @@ export function createPlacePopover(i18n: I18n) {
     heading.className = "udoc-place-popover__heading";
     const form = document.createElement("div");
     form.className = "udoc-place-popover__fields";
+    const options = document.createElement("fieldset");
+    options.className = "udoc-place-popover__options";
+    const legend = document.createElement("legend");
+    legend.className = "udoc-page-modal__field-label";
+    legend.textContent = i18n.t("place.shown");
     const error = document.createElement("div");
     error.className = "udoc-page-modal__error";
     error.setAttribute("role", "alert");
@@ -74,7 +94,7 @@ export function createPlacePopover(i18n: I18n) {
     doneBtn.className = "udoc-page-modal__apply";
     doneBtn.textContent = i18n.t("common.done");
     footer.append(removeBtn, doneBtn);
-    panel.append(heading, form, error, footer);
+    panel.append(heading, form, options, error, footer);
 
     let ctx: PlacePopoverContext | null = null;
     let fields: Field[] = [];
@@ -167,6 +187,45 @@ export function createPlacePopover(i18n: I18n) {
         return values.length > 0 && values.every(isLiteral) ? { when: { values } } : null;
     }
 
+    /** List `choice`'s options, the one shown picked; none where it is null. */
+    function listOptions(choice: BindingChoice | null): void {
+        options.hidden = choice === null;
+        if (choice === null) {
+            options.replaceChildren();
+            return;
+        }
+        options.replaceChildren(
+            legend,
+            ...choice.options.map((option) => {
+                const row = document.createElement("label");
+                row.className = "udoc-place-popover__option";
+                const input = document.createElement("input");
+                input.type = "radio";
+                input.name = "udoc-place-shown";
+                input.checked = option.id === choice.shown;
+                input.addEventListener("change", () => {
+                    if (input.checked) void show(option.id);
+                });
+                const text = document.createElement("span");
+                text.textContent = optionLabel(option.binding, i18n);
+                row.append(input, text);
+                return row;
+            }),
+        );
+    }
+
+    async function show(option: string): Promise<void> {
+        const open = ctx;
+        if (!open || busy) return;
+        busy = true;
+        try {
+            const choice = await open.onShow(option);
+            if (ctx === open) listOptions(choice);
+        } finally {
+            busy = false;
+        }
+    }
+
     async function run(work: () => Promise<void>): Promise<void> {
         if (busy) return;
         busy = true;
@@ -223,14 +282,20 @@ export function createPlacePopover(i18n: I18n) {
                 return label;
             }),
         );
+        listOptions(context.choice);
         error.textContent = "";
         // Below the tab, kept on screen.
         const width = 260;
         panel.style.left = `${Math.max(8, Math.min(context.anchor.left, window.innerWidth - width - 8))}px`;
         panel.style.top = `${context.anchor.bottom + 4}px`;
         controller.open();
-        fields[0]?.input.focus();
-        fields[0]?.input.select();
+        if (fields[0]) {
+            fields[0].input.focus();
+            fields[0].input.select();
+        } else {
+            // An otherwise has no field: its list takes the focus.
+            options.querySelector<HTMLInputElement>("input:checked")?.focus();
+        }
     }
 
     function mount(parent: HTMLElement): void {

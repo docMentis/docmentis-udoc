@@ -39,6 +39,9 @@ export interface Places {
     show(place: CurrentPlace): void;
     /** The outlined place's tab, as drawn, or null. */
     tab(): HTMLElement | null;
+    /** Read the places shown again — after the slide composed again with no
+     *  edit to say so, as showing another of a choice's options does. */
+    refresh(): void;
     /** The first place `pick` finds among those the caret is in, outermost
      *  first, once a read holds it — or null after `frames` frames. */
     find(pick: (places: CurrentPlace[]) => CurrentPlace | undefined, frames?: number): Promise<CurrentPlace | null>;
@@ -295,6 +298,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
             draw();
         },
         tab: () => (tabElement?.isConnected ? tabElement : null),
+        refresh: readAgain,
         async find(pick, frames = 60) {
             for (let frame = 0; frame < frames; frame++) {
                 const found = pick(atCaret());

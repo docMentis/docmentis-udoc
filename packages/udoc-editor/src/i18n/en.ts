@@ -134,6 +134,7 @@ export const en: EditMessages = {
     "place.last": "Last separator",
     "place.not": "Show when false",
     "place.values": "Values",
+    "place.shown": "Option shown",
     "place.remove": "Remove",
     "place.invalid": "A path is names of letters, digits and _, joined by dots; a value holds no quote mark.",
     "command.showPlaces": "Places",
