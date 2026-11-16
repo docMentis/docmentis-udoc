@@ -222,7 +222,8 @@ export const zhTW: EditMessages = {
 
     // The Cell tab, a workbook's
     "cell.fillColor": "填滿色彩",
-    "cell.alignment": "對齊方式",
+    "cell.horizontalAlignment": "水平對齊",
+    "cell.verticalAlignment": "垂直對齊",
     "cell.alignTop": "靠上對齊",
     "cell.alignMiddle": "垂直置中",
     "cell.alignBottom": "靠下對齊",

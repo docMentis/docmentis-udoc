@@ -223,7 +223,8 @@ export const ru: EditMessages = {
 
     // The Cell tab, a workbook's
     "cell.fillColor": "Цвет заливки",
-    "cell.alignment": "Выравнивание",
+    "cell.horizontalAlignment": "Выравнивание по горизонтали",
+    "cell.verticalAlignment": "Выравнивание по вертикали",
     "cell.alignTop": "По верхнему краю",
     "cell.alignMiddle": "По середине",
     "cell.alignBottom": "По нижнему краю",

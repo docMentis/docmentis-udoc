@@ -81,10 +81,10 @@ function cellFormatOf(c: CommandContext): GridCellFormatProperties | null {
     return sheetCellFormat(editStateOf(c).selectionProperties);
 }
 
-/** Where the Alignment dropdown's rows set a cell's text across. */
+/** Where the Horizontal Alignment dropdown's rows set a cell's text across. */
 export type CellAcross = "left" | "center" | "right";
 
-/** Where the Alignment dropdown's rows set a cell's text down. */
+/** Where the Vertical Alignment dropdown's rows set a cell's text down. */
 export type CellDown = "top" | "center" | "bottom";
 
 /** Live where the selection takes a cell edit of `kind`. */
@@ -241,17 +241,52 @@ function horizontalRow(across: CellAcross, label: MessageKey, icon: string): Men
     };
 }
 
-/** The Alignment dropdown: where the cells' text sits, top to bottom, then
- *  across — Excel's six alignment buttons — and the dialog with the rest. */
-export const CELL_ALIGN_MENU: readonly MenuItem<MessageKey>[] = [
-    verticalRow("top", "cell.alignTop", ICON_CELL_ALIGN_TOP),
-    verticalRow("center", "cell.alignMiddle", ICON_CELL_ALIGN_CENTER),
-    verticalRow("bottom", "cell.alignBottom", ICON_CELL_ALIGN_BOTTOM),
-    { ...horizontalRow("left", "paragraph.alignLeft", ICON_PARAGRAPH_LEFT), separatorBefore: true },
-    horizontalRow("center", "paragraph.center", ICON_PARAGRAPH_CENTER),
-    horizontalRow("right", "paragraph.alignRight", ICON_PARAGRAPH_RIGHT),
+/** Excel's horizontal alignment buttons, each by where it sets a cell's text
+ *  across. */
+const ACROSS: readonly (readonly [across: CellAcross, label: MessageKey, icon: string])[] = [
+    ["left", "paragraph.alignLeft", ICON_PARAGRAPH_LEFT],
+    ["center", "paragraph.center", ICON_PARAGRAPH_CENTER],
+    ["right", "paragraph.alignRight", ICON_PARAGRAPH_RIGHT],
+];
+
+/** Excel's vertical alignment buttons, each by where it sets a cell's text top
+ *  to bottom. */
+const DOWN: readonly (readonly [down: CellDown, label: MessageKey, icon: string])[] = [
+    ["top", "cell.alignTop", ICON_CELL_ALIGN_TOP],
+    ["center", "cell.alignMiddle", ICON_CELL_ALIGN_CENTER],
+    ["bottom", "cell.alignBottom", ICON_CELL_ALIGN_BOTTOM],
+];
+
+/** The Horizontal Alignment dropdown: where the cells' text sits across —
+ *  Excel's three buttons — and the dialog with the rest (Fill, Justify, Center
+ *  Across Selection, Distributed). */
+export const CELL_ACROSS_MENU: readonly MenuItem<MessageKey>[] = [
+    ...ACROSS.map(([across, label, icon]) => horizontalRow(across, label, icon)),
     FORMAT_ALIGNMENT_ROW,
 ];
+
+/** The Vertical Alignment dropdown: where the cells' text sits top to bottom —
+ *  Excel's three buttons. */
+export const CELL_DOWN_MENU: readonly MenuItem<MessageKey>[] = DOWN.map(([down, label, icon]) =>
+    verticalRow(down, label, icon),
+);
+
+/** What the Horizontal Alignment dropdown shows: the active cell's alignment
+ *  across, or Align Left's icon for any other — General's included, which sets
+ *  text to the left. */
+function acrossShown(state: UIState): { icon: string; label: MessageKey } {
+    const across = cellFormatIn(state)?.horizontal;
+    const shown = ACROSS.find(([a]) => a === across) ?? ACROSS[0]!;
+    return { icon: shown[2], label: shown[1] };
+}
+
+/** What the Vertical Alignment dropdown shows: the active cell's alignment top
+ *  to bottom, or Bottom's, a cell's default, for any other. */
+function downShown(state: UIState): { icon: string; label: MessageKey } {
+    const down = cellFormatIn(state)?.vertical;
+    const shown = DOWN.find(([d]) => d === down) ?? DOWN[2]!;
+    return { icon: shown[2], label: shown[1] };
+}
 
 /** The Orientation dropdown's turns, Excel's, each by its `@textRotation`:
  *  45 degrees up, 45 down, stacked, 90 up and 90 down. */
@@ -440,12 +475,20 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
             },
             enabledWhen: whenCellEdit("patchSheetCellBorders"),
         },
-        cellAlign: {
-            id: "cellAlign",
-            label: "cell.alignment",
+        cellAlignAcross: {
+            id: "cellAlignAcross",
+            label: "cell.horizontalAlignment",
             icon: ICON_PARAGRAPH_LEFT,
             group: "cellAlignment",
-            run: { kind: "menu", menu: CELL_ALIGN_MENU },
+            run: { kind: "menu", menu: CELL_ACROSS_MENU, current: acrossShown },
+            enabledWhen: whenAlign,
+        },
+        cellAlignDown: {
+            id: "cellAlignDown",
+            label: "cell.verticalAlignment",
+            icon: ICON_CELL_ALIGN_BOTTOM,
+            group: "cellAlignment",
+            run: { kind: "menu", menu: CELL_DOWN_MENU, current: downShown },
             enabledWhen: whenAlign,
         },
         cellOrientation: {

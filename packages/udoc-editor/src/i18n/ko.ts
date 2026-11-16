@@ -222,7 +222,8 @@ export const ko: EditMessages = {
 
     // The Cell tab, a workbook's
     "cell.fillColor": "채우기 색",
-    "cell.alignment": "맞춤",
+    "cell.horizontalAlignment": "가로 맞춤",
+    "cell.verticalAlignment": "세로 맞춤",
     "cell.alignTop": "위쪽 맞춤",
     "cell.alignMiddle": "세로 가운데 맞춤",
     "cell.alignBottom": "아래쪽 맞춤",

@@ -222,7 +222,8 @@ export const ptBR: EditMessages = {
 
     // The Cell tab, a workbook's
     "cell.fillColor": "Cor de Preenchimento",
-    "cell.alignment": "Alinhamento",
+    "cell.horizontalAlignment": "Alinhamento Horizontal",
+    "cell.verticalAlignment": "Alinhamento Vertical",
     "cell.alignTop": "Alinhar em Cima",
     "cell.alignMiddle": "Alinhar no Meio",
     "cell.alignBottom": "Alinhar Embaixo",

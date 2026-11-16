@@ -225,7 +225,8 @@ export const ja: EditMessages = {
 
     // The Cell tab, a workbook's
     "cell.fillColor": "塗りつぶしの色",
-    "cell.alignment": "配置",
+    "cell.horizontalAlignment": "横位置",
+    "cell.verticalAlignment": "縦位置",
     "cell.alignTop": "上揃え",
     "cell.alignMiddle": "上下中央揃え",
     "cell.alignBottom": "下揃え",

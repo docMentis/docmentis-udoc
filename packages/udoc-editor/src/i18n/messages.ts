@@ -412,8 +412,10 @@ export interface Messages extends UIMessages {
     // The Cell tab, a workbook's
     /** Fill Color */
     "cell.fillColor": string;
-    /** Alignment */
-    "cell.alignment": string;
+    /** Horizontal Alignment */
+    "cell.horizontalAlignment": string;
+    /** Vertical Alignment */
+    "cell.verticalAlignment": string;
     /** Top Align */
     "cell.alignTop": string;
     /** Middle Align */

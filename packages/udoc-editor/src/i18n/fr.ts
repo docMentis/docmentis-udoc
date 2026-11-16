@@ -226,7 +226,8 @@ export const fr: EditMessages = {
 
     // The Cell tab, a workbook's
     "cell.fillColor": "Couleur de remplissage",
-    "cell.alignment": "Alignement",
+    "cell.horizontalAlignment": "Alignement horizontal",
+    "cell.verticalAlignment": "Alignement vertical",
     "cell.alignTop": "Aligner en haut",
     "cell.alignMiddle": "Aligner au centre",
     "cell.alignBottom": "Aligner en bas",

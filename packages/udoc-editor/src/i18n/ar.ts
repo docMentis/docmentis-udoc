@@ -222,7 +222,8 @@ export const ar: EditMessages = {
 
     // The Cell tab, a workbook's
     "cell.fillColor": "لون التعبئة",
-    "cell.alignment": "المحاذاة",
+    "cell.horizontalAlignment": "محاذاة أفقية",
+    "cell.verticalAlignment": "محاذاة عمودية",
     "cell.alignTop": "محاذاة إلى الأعلى",
     "cell.alignMiddle": "محاذاة إلى الوسط",
     "cell.alignBottom": "محاذاة إلى الأسفل",

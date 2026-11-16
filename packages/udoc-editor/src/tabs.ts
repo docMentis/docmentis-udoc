@@ -76,7 +76,8 @@ export type EditCommandId =
     | "cellFill"
     | "cellBorderColor"
     | "cellBorder"
-    | "cellAlign"
+    | "cellAlignAcross"
+    | "cellAlignDown"
     | "cellOrientation"
     | "cellIndentDown"
     | "cellIndentUp"
@@ -438,8 +439,10 @@ const CELL_TAB: EditTab = {
 /**
  * The spreadsheet Text tab — the selected cells' text as Excel's Home tab
  * formats it: the font fields, Bold, Italic, Underline and Strikethrough, and
- * Text Color; then how it sits in the cell: the Alignment and Orientation
- * dropdowns, the two indent steps and Wrap Text. A selection of cells opens the
+ * Text Color; then how it sits in the cell, as Excel's two alignment rows set
+ * it: the Horizontal Alignment dropdown and the two indent steps, which go with
+ * it, then the Vertical Alignment and Orientation dropdowns and Wrap Text, which
+ * set how the text runs down the cell. A selection of cells opens the
  * Cell tab, ahead of it; picked, it stays open as the selection moves among the
  * cells and into one being typed in.
  */
@@ -455,10 +458,11 @@ const SPREADSHEET_TEXT_TAB: EditTab = {
         "underline",
         "strikethrough",
         "textFill",
-        "cellAlign",
-        "cellOrientation",
+        "cellAlignAcross",
         "cellIndentDown",
         "cellIndentUp",
+        "cellAlignDown",
+        "cellOrientation",
         "cellWrap",
     ] satisfies EditCommandId[],
     opensFor: sheetCells,
