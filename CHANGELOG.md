@@ -6,6 +6,13 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Fixed
+
+- Copied text keeps its line breaks when pasted into an app that takes the
+  clipboard's HTML, where its lines ran together.
+
 ### udoc-editor
 
 #### Fixed

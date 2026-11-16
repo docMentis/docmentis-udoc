@@ -29,8 +29,9 @@
 // id across — minus the id, because our fragment is self-contained and needs
 // no store behind it.
 //
-// (A *rich* HTML body — real formatting for a paste into Word/Gmail, rather
-// than the plain text projection below — is a later increment.)
+// (A *rich* HTML body — real formatting for a paste into Word/Gmail, and a
+// table for a block of cells pasted into a spreadsheet, rather than the plain
+// text projection below — is a later increment.)
 import type { UDocFragment } from "@docmentis/udoc-wasm";
 import type { Store } from "../framework/index.js";
 import type { WorkerClient } from "../worker/WorkerClient.js";
@@ -59,13 +60,17 @@ function escapeHtml(value: string): string {
  * The `text/html` flavor for `payload`: the fragment JSON on a data attribute
  * (the fidelity), wrapping the readable text (what any other app renders).
  *
+ * Each line break of the text is a `<br>`: an app that reads the HTML before
+ * the plain text — Word, Google Docs, Gmail — renders a bare line feed as a
+ * space, which would run every paragraph into one line.
+ *
  * A pure-shape copy has no text, so its body is a `&nbsp;` — HTML can't
  * express a shape, and there is nothing to say about it; the envelope exists
  * only to carry the attribute. That is what a Google Slides shape copy puts on
  * the clipboard too, and why pasting one into a plain-text app yields a space.
  */
 function fragmentHtml(payload: ClipboardPayload): string {
-    const body = payload.text ? escapeHtml(payload.text) : "&nbsp;";
+    const body = payload.text ? escapeHtml(payload.text).replace(/\r\n|\r|\n/g, "<br>") : "&nbsp;";
     const json = escapeHtml(JSON.stringify(payload.fragment));
     return `<span ${UDOC_FRAGMENT_ATTRIBUTE}="${json}">${body}</span>`;
 }
