@@ -17,6 +17,8 @@ listed once, by package. Its major and minor version are those of the
 - Comments, the comment button over a selected annotation and a comment's
   marker on the page show Material's comment symbol, a speech bubble with
   lines, where they showed an empty one.
+- The View tab shows Material's display settings symbol, a screen with
+  sliders, where it showed an eye, which is udoc-editor's View mode's.
 
 ### udoc-editor
 

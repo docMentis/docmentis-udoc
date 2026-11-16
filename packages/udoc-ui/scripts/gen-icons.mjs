@@ -48,7 +48,7 @@ const ICONS = {
     ICON_TAB_ANNOTATE: "edit_note",
     ICON_TAB_PRESENT: "slideshow",
     ICON_TAB_REVIEW: "rate_review",
-    ICON_TAB_VIEW: "visibility",
+    ICON_TAB_VIEW: "display_settings",
 
     // Chrome
     ICON_CLEAR: "close",
