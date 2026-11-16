@@ -13,6 +13,19 @@
 // runtime effect.
 const css = (strings: TemplateStringsArray, ...values: unknown[]): string => String.raw({ raw: strings }, ...values);
 
+/** The CSS px of each dash, and of each gap, of an empty placeholder's dashed
+ *  frame, which the engine draws (the editor hands it this, see
+ *  `setPlaceholderFrameLine`). The box you are typing in and a peer's box dash
+ *  in it too, so where one traces the frame, their dashes start together at its
+ *  top-left corner and the box covers the frame. Not a host's to restyle for
+ *  that reason. */
+export const PLACEHOLDER_FRAME_DASH = 4;
+/** The CSS px width of an empty placeholder's dashed frame: thinner than the
+ *  boxes that trace it, so they cover it. */
+export const PLACEHOLDER_FRAME_WIDTH = 1;
+/** {@link PLACEHOLDER_FRAME_DASH} as an SVG `stroke-dasharray`. */
+const placeholderFrameDashArray = `${PLACEHOLDER_FRAME_DASH} ${PLACEHOLDER_FRAME_DASH}`;
+
 export const uiStyles = css`
     /* ============================================================
    Color roles and component tokens — the defaults
@@ -2948,18 +2961,18 @@ export const uiStyles = css`
         stroke-width: 1.5px;
     }
     /* The box you are typing in, dashed as Word's and PowerPoint's are: a caret or
-   a range in a text box or a shape's text, where a solid box is a shape picked. */
+   a range in a text box or a shape's text, where a solid box is a shape picked.
+   In an empty placeholder's frame's dash, so typing into one covers its frame. */
     .udoc-ui-root .udoc-ui__selection-box--text {
-        stroke-dasharray: 5 4;
+        stroke-dasharray: ${placeholderFrameDashArray};
     }
     /* A remote collaborator's selection: the peer's stable color (set inline per
-   box), drawn dotted and a touch more transparent than your own so a peer's box
-   reads as clearly theirs and sits visually behind the local selection. The
+   box), dashed and a touch more transparent than your own so a peer's box reads
+   as theirs and sits visually behind the local selection. As wide as your own
+   and in the same dash, so where the two trace one edge yours covers it. The
    modifier class is also the hook for a host to restyle peers separately. */
     .udoc-ui-root .udoc-ui__selection-box--peer {
-        stroke-width: 2px;
-        stroke-dasharray: 0 4;
-        stroke-linecap: round;
+        stroke-dasharray: ${placeholderFrameDashArray};
         stroke-opacity: 0.7;
     }
     /* A spreadsheet grid cell-range block: a translucent fill under a solid border —
@@ -2972,13 +2985,12 @@ export const uiStyles = css`
         stroke-width: 1.5px;
     }
     /* A remote collaborator's cell selection: same fill + border shape, tinted by
-   the peer's stable color (set inline per box), drawn dotted and more
-   transparent than your own (fill alpha set inline; see PEER_CELL_FILL_ALPHA).
-   The modifier class is also the hook for a host to restyle peers separately. */
+   the peer's stable color (set inline per box), dashed and more transparent than
+   your own (fill alpha set inline; see PEER_CELL_FILL_ALPHA), as wide as your own
+   so yours covers it where the two meet. The modifier class is also the hook for
+   a host to restyle peers separately. */
     .udoc-ui-root .udoc-ui__selection-cell--peer {
-        stroke-width: 2px;
-        stroke-dasharray: 0 4;
-        stroke-linecap: round;
+        stroke-dasharray: ${placeholderFrameDashArray};
         stroke-opacity: 0.7;
     }
     /* A text highlight quad: a translucent fill over the selected run(s), no

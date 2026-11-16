@@ -1,6 +1,7 @@
 // Edit mode's requests, answered on the render worker beside the engine's own.
 import type { WorkerHandler } from "@docmentis/udoc-ui/worker";
 import { Transferring } from "@docmentis/udoc-ui/worker";
+import { PLACEHOLDER_FRAME_DASH, PLACEHOLDER_FRAME_WIDTH } from "@docmentis/udoc-ui/internal";
 import type { ThemePalette } from "@docmentis/udoc-ui/internal";
 import type { EditRequest } from "./protocol.js";
 
@@ -23,9 +24,15 @@ export const EDIT_HANDLERS: EditHandlers = {
             // Sticky in Rust, like the backdrop. Only presentations draw
             // prompts — on every viewer, so empty notes prompt in their pane
             // as an empty placeholder does on the slide; a full repaint
-            // shows/clears them on the next frame.
+            // shows/clears them on the next frame. The frame draws in the
+            // dash of the boxes that trace it, so they cover it.
             const session = worker.session;
-            if (session) for (let v = 0; v < session.viewerCount(); v++) session.setPlaceholderPrompts(v, request.on);
+            if (session) {
+                for (let v = 0; v < session.viewerCount(); v++) {
+                    session.setPlaceholderFrameLine(v, PLACEHOLDER_FRAME_WIDTH, PLACEHOLDER_FRAME_DASH);
+                    session.setPlaceholderPrompts(v, request.on);
+                }
+            }
             worker.scheduleFrame();
         },
     },

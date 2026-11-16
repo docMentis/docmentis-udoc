@@ -32,6 +32,14 @@ listed once, by package. Its major and minor version are those of the
   `cell.rotateTextUp`, `cell.rotateTextDown` and `cell.formatAlignment`, are
   new.
 
+#### Changed
+
+- An empty placeholder's dashed outline, the box you're typing in and a
+  collaborator's selection use the same dash. Where they outline the same
+  shape, their dashes line up and the one on top covers the rest, instead of
+  mixing into a broken pattern. A collaborator's selection is dashed in their
+  colour, no longer dotted.
+
 ## [0.8.21] - 2026-11-13
 
 Built on `@docmentis/udoc-wasm` 0.8.24.

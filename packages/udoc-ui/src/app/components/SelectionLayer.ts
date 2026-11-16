@@ -128,7 +128,7 @@ export const ANNOTATION_PADDING = 3;
  *  grab strip for an open text object (ObjectText): a press on the border moves
  *  the object, an interior press edits its text. */
 const BORDER_BAND = 6;
-/** Padding (CSS px) beyond the viewport that a box polygon is clipped to before
+/** Padding (CSS px) beyond the viewport that a cell block's polygon is clipped to before
  *  it becomes SVG (see {@link clipToRect}). Off the visible canvas, so the cut
  *  edges hide under the SVG viewport clip rather than showing at the screen edge. */
 const BOX_CLIP_PAD = 16;
@@ -279,7 +279,7 @@ export function peerColor(peer: string): string {
 /** A peer's translucent fill alpha per role, held below the local fill for the
  *  same role so a collaborator's block reads fainter than your own selection: a
  *  text highlight at 0.2 (local 0.3), a spreadsheet cell block at 0.1 (local
- *  0.15). Peers are set further apart by a dotted, lower-opacity stroke — see the
+ *  0.15). Peers are set further apart by a dashed, lower-opacity stroke — see the
  *  `--peer` classes in the stylesheet. */
 const PEER_TEXT_FILL_ALPHA = 0.2;
 const PEER_CELL_FILL_ALPHA = 0.1;
@@ -821,10 +821,10 @@ export class SelectionLayer {
         const flags: Array<{ x: number; y: number; color: string; name: string }> = [];
         const flaggedPeers = new Set<string>();
 
-        // The padded viewport every box polygon is clipped to (see clipToRect):
-        // a whole-column / whole-sheet cell block reaches the grid's last row, so
-        // its unclipped polygon is tens of millions of px tall and the browser
-        // draws its dotted peer stroke solid. Read the canvas size once here,
+        // The padded viewport a cell block's polygon is clipped to (see
+        // clipToRect): a whole-column / whole-sheet cell block reaches the grid's
+        // last row, so its unclipped polygon is tens of millions of px tall and
+        // the browser draws its dashed peer stroke solid. Read the canvas size once here,
         // before the loop writes any points, so it costs one layout read a frame.
         const clipW = this.#chrome.clientWidth;
         const clipH = this.#chrome.clientHeight;
@@ -866,7 +866,10 @@ export class SelectionLayer {
             let corners = spec.points
                 ? spec.points.map((p) => applyPoint(lv, p.x, p.y))
                 : cornersOf(box).map(([lx, ly]) => applyPoint(lv, lx, ly));
-            if (clipping) {
+            // Only a cell block is clipped: an object's box keeps its own corners,
+            // so its dashes start at its top-left corner wherever it scrolls, in
+            // step with every other line tracing that edge (see PLACEHOLDER_FRAME_DASH).
+            if (clipping && spec.role === "cell") {
                 corners = clipToRect(corners, -BOX_CLIP_PAD, -BOX_CLIP_PAD, clipW + BOX_CLIP_PAD, clipH + BOX_CLIP_PAD);
             }
             poly.setAttribute("points", corners.map((p) => `${p.x},${p.y}`).join(" "));
@@ -1483,10 +1486,10 @@ type ClipPt = { x: number; y: number };
 /**
  * Clip a convex polygon (viewport-px corners) to an axis-aligned rect by
  * Sutherland–Hodgman — the clipped corners, empty when fully outside, unchanged
- * when fully inside. Bounds a selection box's projected corners to a padded
+ * when fully inside. Bounds a cell block's projected corners to a padded
  * viewport before it becomes an SVG polygon: a whole-column / whole-sheet cell
  * block runs to the grid's last row (~1M rows), so its unclipped polygon is tens
- * of millions of px tall — big enough that the browser renders the dotted stroke
+ * of millions of px tall — big enough that the browser renders the dashed stroke
  * solid and misfills it. The padding ({@link BOX_CLIP_PAD}) sits off the visible
  * canvas, so the cut edges hide under the SVG viewport clip rather than drawing a
  * border along the screen edge.
