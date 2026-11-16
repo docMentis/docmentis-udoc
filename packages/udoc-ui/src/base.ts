@@ -783,8 +783,8 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * Each is either a font file's bytes — TrueType, OpenType, a collection,
      * WOFF, WOFF2 or EOT — which name their own family and faces, or a
      * {@link UrlFont}: a family and face, and the URL its file is fetched from
-     * once a document's text asks for it. Bytes that aren't a font register
-     * nothing.
+     * once a document's text asks for it. A relative URL resolves against the
+     * page, as a link's does. Bytes that aren't a font register nothing.
      *
      * A document's own embedded fonts still come first; registered bytes, then
      * URLs, come ahead of Google Fonts and the bundled fonts. Each call adds to

@@ -23,6 +23,12 @@ listed once, by package. Its major and minor version are those of the
   a play button and a gear, named by its tooltip, where it showed two screens
   with its name beside them.
 
+#### Fixed
+
+- A font registered by a relative URL, with `registerFonts` or the `fonts`
+  option, loads: its URL is resolved against the page, as a link's is. It was
+  resolved against the render worker's address, where it couldn't be fetched.
+
 ### udoc-editor
 
 #### Added

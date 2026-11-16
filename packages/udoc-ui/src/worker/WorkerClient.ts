@@ -232,6 +232,19 @@ function isSupported(): boolean {
 }
 
 /**
+ * `url` resolved against the page's base URL, as a link's `href` is. A URL
+ * that doesn't parse is returned as given; fetching it fails as it would have
+ * anyway.
+ */
+function resolveAgainstPage(url: string): string {
+    try {
+        return new URL(url, typeof document === "undefined" ? undefined : document.baseURI).href;
+    } catch {
+        return url;
+    }
+}
+
+/**
  * The anonymous per-user id reported with every permit and usage event,
  * persisted so a returning visitor stays one person.
  *
@@ -529,13 +542,19 @@ export class WorkerClient {
      * font file's bytes, or a {@link UrlFont} fetched once a document's text
      * asks for it. Fire-and-forget: the worker takes messages in order, so a
      * later {@link open} sees them.
+     *
+     * A relative URL is resolved against the page here. The worker can't
+     * resolve one itself, because in a release it runs from a `blob:`.
      */
     registerFonts(fonts: ReadonlyArray<Uint8Array | UrlFont>): void {
         const local: Uint8Array[] = [];
         const url: UrlFont[] = [];
         for (const font of fonts) {
-            if (font instanceof Uint8Array) local.push(font);
-            else url.push(font);
+            if (font instanceof Uint8Array) {
+                local.push(font);
+                continue;
+            }
+            url.push({ ...font, url: resolveAgainstPage(font.url) });
         }
         this.#post({ type: "registerFonts", local, url });
     }
