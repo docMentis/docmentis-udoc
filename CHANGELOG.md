@@ -77,7 +77,12 @@ listed once, by package. Its major and minor version are those of the
   first.
   A template's places are drawn over its slides: a tint behind a place within
   a paragraph, a bar beside one around whole paragraphs, and the place the
-  caret is in outlined, with a tab naming its binding that opens its popover.
+  caret is in outlined, with a tab naming every place the caret is in,
+  outermost first, each opening its own popover. Where places end or begin,
+  as after a variable's text or between a choice's options, the caret stands
+  in one of them or out of them, as at a Word content control's edge: the
+  arrows step it in and out before moving on, a click puts it in what it
+  clicked after, and what is typed goes where it stands.
   Data shows or hides the Data panel; and Preview shows the
   template filled with its sample data, read-only in place of it, until it's
   turned off. A preview fills in every value the sample data lacks: text with

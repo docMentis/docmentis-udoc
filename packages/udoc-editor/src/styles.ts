@@ -1240,24 +1240,47 @@ export const editorStyles = css`
     .udoc-ui-root .udoc-place-bar--current {
         stroke: var(--udoc-canvas-place-line-current);
     }
+    /* The tab over the place the caret is in: every place it is in,
+       outermost first, each a crumb opening its popover, the one it stands
+       in last and marked. An outer crumb gives way first where room runs
+       out. */
     .udoc-ui-root .udoc-place-tab {
         position: absolute;
         transform: translateY(-100%);
-        max-width: 240px;
-        padding: 1px 6px;
-        border: none;
+        display: flex;
+        align-items: stretch;
+        max-width: 480px;
         border-radius: 3px 3px 0 0;
-        background: var(--udoc-canvas-place-line-current);
+        overflow: hidden;
+        background: var(--udoc-canvas-place-line);
         color: #fff;
-        font-family: inherit;
         font-size: 11px;
         font-weight: 500;
         line-height: 16px;
         white-space: nowrap;
+        pointer-events: auto;
+    }
+    .udoc-ui-root .udoc-place-crumb {
+        min-width: 0;
+        max-width: 160px;
+        padding: 1px 6px;
+        border: none;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        line-height: inherit;
         overflow: hidden;
         text-overflow: ellipsis;
         cursor: pointer;
-        pointer-events: auto;
+    }
+    .udoc-ui-root .udoc-place-crumb--current {
+        flex-shrink: 0;
+        max-width: 240px;
+        background: var(--udoc-canvas-place-line-current);
+        font-weight: 600;
+    }
+    .udoc-ui-root .udoc-place-crumb-separator {
+        opacity: 0.7;
     }
     /* A place's popover, below its tab: its binding's fields, Remove and
        Done — the dialogs' fields and buttons in a panel of their own. */
@@ -1320,8 +1343,8 @@ export const editorStyles = css`
         justify-content: space-between;
         margin-top: 12px;
     }
-    .udoc-ui-root .udoc-place-tab:focus-visible {
-        outline: 2px solid var(--udoc-canvas-place-line);
-        outline-offset: 1px;
+    .udoc-ui-root .udoc-place-crumb:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: -2px;
     }
 `;

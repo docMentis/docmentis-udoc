@@ -1,14 +1,17 @@
 // A template's places, drawn over its slides from the engine's read of where
 // each shows (`bindingGeometry`): a tint behind a place within a paragraph, a bar
 // beside one around whole paragraphs, and around the place the caret is in an
-// outline, with a tab naming its kind and binding that opens the place's
-// popover; the places of the Data panel's name the pointer is over stand out
-// too. None of it is the document's — it is drawn over the canvas, under
+// outline, with a tab naming every place the caret is in, outermost first —
+// Repeat › Choice › When "low" — each opening its place's popover; the places of
+// the Data panel's name the pointer is over stand out too. Which places the
+// caret is in is the engine's to say (the selection's `places`): where places
+// end or begin, the caret stands at a level the arrows step through, and the
+// tab names the level. None of it is the document's — it is drawn over the canvas, under
 // the selection, and takes no press but the tab's — and an instance shows none
 // until asked, so it reads as an ordinary document.
 import { subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { OverlayFrame, OverlayItem, OverlaySource, PageView } from "@docmentis/udoc-ui";
-import type { Binding, BindingGeometry, Point, SelectionGeometry, SelectionQuad } from "@docmentis/udoc-wasm";
+import type { Binding, BindingGeometry, Point, SelectionGeometry, UDocSelectionProperties } from "@docmentis/udoc-wasm";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { editState } from "./state.js";
@@ -18,10 +21,6 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 
 /** How far left of a block place's content its bar stands, CSS px. */
 const BAR_GAP = 6;
-
-/** How far a point may lie outside a quad and still be in it, points — so a
- *  caret at a place's edge is in it. */
-const SLACK = 0.5;
 
 /** The place the caret is in, as the overlay outlines it. */
 export interface CurrentPlace {
@@ -90,6 +89,8 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     let generation = 0;
     let views: readonly PageView[] = [];
     let selection: SelectionGeometry | null = null;
+    // The places the caret is in, outermost first, as the engine reports them.
+    let chain: readonly string[] = [];
     let current: CurrentPlace | null = null;
     // A place `show` outlined, and where the caret stood then.
     let shown: { id: string; at: string } | null = null;
@@ -134,10 +135,11 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     function atCaret(): CurrentPlace[] {
         const at = caretPoint(selection);
         if (!at || !placesShown(host)) return [];
-        // The catalog's order is outermost first, so the places are too.
-        return geometryOf(at.page)
-            .filter((geometry) => geometry.quads.some((quad) => quad.page === at.page && holds(quad, at.point)))
-            .map((geometry) => ({ geometry, page: at.page }));
+        const geometries = geometryOf(at.page);
+        return chain.flatMap((id) => {
+            const geometry = geometries.find((place) => place.id === id);
+            return geometry ? [{ geometry, page: at.page }] : [];
+        });
     }
 
     function findCurrent(): void {
@@ -150,7 +152,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     function items(frame: OverlayFrame): OverlayItem[] {
         const fills: { points: string; current: boolean }[] = [];
         const bars: { x: number; y1: number; y2: number; current: boolean }[] = [];
-        let tab: { x: number; y: number; place: CurrentPlace } | null = null;
+        let tab: { x: number; y: number } | null = null;
         // The places of the Data panel's name the pointer is over stand out as
         // the caret's does.
         const state = store.getState();
@@ -182,9 +184,9 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                         });
                     }
                 }
-                if (isOutlined && current) {
+                if (isOutlined) {
                     const [topLeft] = quads[0]!.points;
-                    tab = { ...at(topLeft), place: current };
+                    tab = at(topLeft);
                 }
             }
         }
@@ -222,29 +224,51 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
             });
         }
         if (tab) {
-            const { place } = tab;
-            const label = placeLabel(place.geometry.binding, i18n);
+            // One tab for every place the caret is in, outermost first, the
+            // place it stands in last and marked: nested places starting
+            // together share it rather than stacking.
+            const crumbs = atCaret();
+            const key = crumbs
+                .map((place) => `${place.geometry.id}:${current?.geometry.id === place.geometry.id}`)
+                .join();
             out.push({
                 key: "tab",
                 x: tab.x,
                 y: tab.y,
                 create: () => {
-                    const button = document.createElement("button");
-                    button.type = "button";
-                    button.className = "udoc-place-tab";
-                    tabElement = button;
+                    const el = document.createElement("div");
+                    el.className = "udoc-place-tab";
                     // Down on the tab is no press on the text under it.
-                    button.addEventListener("pointerdown", (e) => e.stopPropagation());
-                    // The press that opens the popover is no press outside it.
-                    button.addEventListener("click", (e) => {
-                        e.stopPropagation();
-                        if (current) open(current, button.getBoundingClientRect());
-                    });
-                    return button;
+                    el.addEventListener("pointerdown", (e) => e.stopPropagation());
+                    return el;
                 },
                 update: (el) => {
-                    el.textContent = label;
-                    el.title = label;
+                    if (el.dataset.crumbs === key) return;
+                    el.dataset.crumbs = key;
+                    tabElement = null;
+                    el.replaceChildren(
+                        ...crumbs.flatMap((place, index) => {
+                            const label = placeLabel(place.geometry.binding, i18n);
+                            const crumb = document.createElement("button");
+                            crumb.type = "button";
+                            const isCurrent = current?.geometry.id === place.geometry.id;
+                            crumb.className = classOf("udoc-place-crumb", isCurrent);
+                            crumb.textContent = label;
+                            crumb.title = label;
+                            if (isCurrent) tabElement = crumb;
+                            // The press that opens the popover is no press outside it.
+                            crumb.addEventListener("click", (e) => {
+                                e.stopPropagation();
+                                open(place, crumb.getBoundingClientRect());
+                            });
+                            if (index === 0) return [crumb];
+                            const separator = document.createElement("span");
+                            separator.className = "udoc-place-crumb-separator";
+                            separator.textContent = "›";
+                            separator.setAttribute("aria-hidden", "true");
+                            return [separator, crumb];
+                        }),
+                    );
                 },
             });
         }
@@ -258,9 +282,10 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         }),
         client.onSelection((state) => {
             selection = state.local;
-            const before = current?.geometry.id;
+            const before = [current?.geometry.id, ...chain].join();
+            chain = placesOf(state.properties);
             findCurrent();
-            if (current?.geometry.id !== before) draw();
+            if ([current?.geometry.id, ...chain].join() !== before) draw();
         }),
         client.onDocumentChanged(readAgain),
         client.onFontsRefreshed(readAgain),
@@ -314,6 +339,12 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     };
 }
 
+/** The places the selection is in, outermost first, as a deck's selection
+ *  properties report them; none for any other selection. */
+function placesOf(properties: UDocSelectionProperties | null): readonly string[] {
+    return properties && "presentation" in properties ? (properties.presentation.text.places ?? []) : [];
+}
+
 /** Where the selection's caret stands — its focus for a range — as a page and
  *  a page-local point. */
 function caretPoint(selection: SelectionGeometry | null): { page: number; point: Point } | null {
@@ -340,24 +371,6 @@ function caretPoint(selection: SelectionGeometry | null): { page: number; point:
 function caretKey(selection: SelectionGeometry | null): string {
     const at = caretPoint(selection);
     return at ? `${at.page}:${at.point.x.toFixed(2)}:${at.point.y.toFixed(2)}` : "";
-}
-
-/** Whether `point` lies in `quad`, convex, its corners in order — within
- *  {@link SLACK}. */
-function holds(quad: SelectionQuad, point: Point): boolean {
-    const corners = quad.points;
-    let sign = 0;
-    for (let i = 0; i < corners.length; i++) {
-        const a = corners[i]!;
-        const b = corners[(i + 1) % corners.length]!;
-        const length = Math.hypot(b.x - a.x, b.y - a.y) || 1;
-        const side = ((b.x - a.x) * (point.y - a.y) - (b.y - a.y) * (point.x - a.x)) / length;
-        if (Math.abs(side) <= SLACK) continue;
-        const s = Math.sign(side);
-        if (sign === 0) sign = s;
-        else if (s !== sign) return false;
-    }
-    return true;
 }
 
 /** `group`'s first `count` children, made `tag`s as needed, the rest gone. */
