@@ -44,6 +44,9 @@ listed once, by package. Its major and minor version are those of the
 
 - New Slide shows the slide it adds, as PowerPoint does, instead of staying
   on the slide it was pressed on.
+- The text caret hides when the document loses the keyboard, to a field or
+  menu outside it or to another window, and shows again when typing returns
+  to the document. It used to keep blinking where typing no longer went.
 
 ## [0.8.21] - 2026-11-13
 

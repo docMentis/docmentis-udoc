@@ -392,6 +392,9 @@ export interface CanvasHooks {
     /** Save the text being typed into a workbook's cell — a press on the grid
      *  outside it, before the press selects. */
     commitCellEntry?: () => void;
+    /** The hidden text input took the keyboard, or lost it — to a control
+     *  outside the canvas, or with the window. */
+    keyboard?: (held: boolean) => void;
     /**
      * A right-click landed on the canvas: open the context menu at viewport
      * `(clientX, clientY)`. The canvas has already settled the selection the
@@ -868,6 +871,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
         },
         key: (ev) => (store?.getState().docType === "spreadsheet" ? hooks.cellKey?.(ev) : hooks.textKey?.(ev)) ?? false,
         beginTyping: (text) => hooks.beginCellEntry?.(text),
+        keyboard: (held) => hooks.keyboard?.(held),
     });
     el.appendChild(textInput.el);
 

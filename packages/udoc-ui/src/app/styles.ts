@@ -3035,6 +3035,13 @@ export const uiStyles = css`
         animation: none;
         visibility: hidden;
     }
+    /* Nor is it shown while the document doesn't have the keyboard — focus is on
+   a control outside it, or in another window — as a native text field's caret
+   isn't. */
+    .udoc-ui-root .udoc-viewport-slot--unfocused .udoc-ui__selection-caret--local {
+        animation: none;
+        visibility: hidden;
+    }
     /* Inherit, not visible, so that what hides the viewport still hides the caret. */
     @keyframes udoc-ui__caret-blink {
         0%,

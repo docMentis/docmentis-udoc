@@ -17,6 +17,10 @@ export interface HiddenTextInputHooks {
      *  `setTypingBegins`) — a character typed on a selected cell, which starts
      *  an entry in it. */
     beginTyping?: (text: string) => void;
+    /** The field took the keyboard, or lost it — to a control outside the
+     *  canvas, or with the window — so the caret shows only while typing lands
+     *  here, as a native text field's does. */
+    keyboard?: (held: boolean) => void;
 }
 
 /**
@@ -142,6 +146,7 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
         else if (typingBegins) hooks.beginTyping?.(value);
     }
 
+    el.addEventListener("focus", () => hooks.keyboard?.(true));
     el.addEventListener("blur", (ev) => {
         // A press on chrome in the canvas (or on its focusable host, where the
         // canvas didn't keep the press from taking focus) blurs this field —
@@ -151,9 +156,15 @@ export function createHiddenTextInput(i18n: I18n, hooks: HiddenTextInputHooks) {
         const target = ev.relatedTarget;
         const withinCanvas = target == null || (target instanceof Node && el.parentElement?.contains(target) === true);
         if (focused && withinCanvas) {
+            // Lost only if the reclaim didn't take it back, so a press it hands
+            // back doesn't blink the caret off. A window that lost focus keeps
+            // this field its active element, and gives it back with a `focus`.
             requestAnimationFrame(() => {
                 if (focused) reclaim();
+                if (document.activeElement !== el || !document.hasFocus()) hooks.keyboard?.(false);
             });
+        } else {
+            hooks.keyboard?.(false);
         }
     });
 

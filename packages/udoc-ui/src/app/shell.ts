@@ -618,7 +618,9 @@ export function mountUIShell(
     leftPanelSlot.setAttribute("tabindex", "-1");
 
     const viewportSlot = document.createElement("div");
-    viewportSlot.className = "udoc-slot udoc-viewport-slot";
+    // Unfocused until the canvas's hidden text input takes the keyboard (see
+    // the canvas's `keyboard` hook), which hides the local caret.
+    viewportSlot.className = "udoc-slot udoc-viewport-slot udoc-viewport-slot--unfocused";
     viewportSlot.setAttribute("role", "region");
     viewportSlot.setAttribute("aria-label", i18n.t("shell.regionDocument"));
     viewportSlot.setAttribute("tabindex", "-1");
@@ -1005,6 +1007,9 @@ export function mountUIShell(
         beginCellEntry: (text) =>
             typingCell() ? editCellEntry({ text: { edit: { insertText: { text } } } }) : beginCellEntry("enter", text),
         commitCellEntry: () => void saveCellEntry(false, null),
+        // The local caret — on a slide or in its notes — shows only while
+        // typing lands in the document.
+        keyboard: (held) => viewportSlot.classList.toggle("udoc-viewport-slot--unfocused", !held),
         resizeColumn: (index, points) => void resizeColumn(index, points),
         resizeRow: (index, points) => void resizeRow(index, points),
         onContextMenu: (x, y, inTable) =>
