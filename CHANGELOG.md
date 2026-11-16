@@ -6,6 +6,28 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Added
+
+- A picture placed in a worksheet's cell, with Excel's Place in Cell or its
+  IMAGE function, draws in the cell, fitted to it and set by the cell's
+  alignment, where the cell showed `#VALUE!`.
+
+#### Fixed
+
+- A worksheet cell's turned text draws as Excel draws it: text at an angle
+  leans the cell's fill and borders with it, text turned a quarter wraps along
+  the column, and stacked text stands a letter a line. Each drew across the
+  cell. A row fitted to such text fits it as Excel's does.
+- A worksheet cell's text follows its reading order: right to left where
+  Excel sets it so, or where it starts in Hebrew or Arabic, and General
+  alignment stands such text at the cell's right, as Excel does. It read left
+  to right from the cell's left.
+- A PDF saved as a package leaves out what only its deleted pages used, so
+  every collaborator, and the server, saves the same package. A session that
+  had shown a page before another deleted it saved what the page used too.
+
 ### udoc-viewer and udoc-editor
 
 #### Changed
@@ -28,6 +50,11 @@ listed once, by package. Its major and minor version are those of the
 - A font registered by a relative URL, with `registerFonts` or the `fonts`
   option, loads: its URL is resolved against the page, as a link's is. It was
   resolved against the render worker's address, where it couldn't be fetched.
+- A page at an IPv6 address, such as `http://[::1]`, opens documents, where
+  every open was refused for the page's address.
+- A collaborator who fell behind as the server cut a document's edit log
+  catches up, where they couldn't when they held an unsent edit to a page
+  someone else had first edited since the cut.
 
 ### udoc-editor
 
@@ -54,6 +81,12 @@ listed once, by package. Its major and minor version are those of the
   `cell.angleCounterclockwise`, `cell.angleClockwise`, `cell.verticalText`,
   `cell.rotateTextUp`, `cell.rotateTextDown` and `cell.formatAlignment`, are
   new.
+- A picture over a worksheet's cells keeps to its Properties in Excel as rows
+  and columns are inserted, deleted and resized: one set to move but not size
+  with cells keeps its size, and one set to do neither keeps its size and
+  place, and each is saved where it stands. One that moves and sizes with
+  cells is deleted once every row or every column under it is, and undo
+  brings it back.
 
 #### Changed
 
@@ -91,6 +124,18 @@ listed once, by package. Its major and minor version are those of the
 - The font picker shows a font registered by URL in its own typeface, as it
   does a Google font. It showed the name in the browser's default font, or in
   an installed font of the same name.
+- A chart in a worksheet redraws when a cell it plots changes, by an edit, a
+  recalculation, an undo or a collaborator, and is saved with the new values,
+  where it kept the values the file was saved with. A chart saved after a
+  sheet it reads is renamed names the sheet by its new name, where it kept the
+  old one.
+
+### udoc-server
+
+#### Fixed
+
+- A branch merges onto a page both branches first edited after their logs
+  were cut, where the merge failed.
 
 ## [0.8.21] - 2026-11-13
 
