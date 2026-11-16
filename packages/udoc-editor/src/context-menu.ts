@@ -2,8 +2,15 @@
 // selection, over a table the Select, Insert, Delete, Merge and Table
 // Properties rows, and over a workbook's grid the Insert and Delete of its rows
 // and columns. The shell opens the menu (`UIExtension.contextMenuItems`).
-import { allowsEdit, COPY_MENU_ITEM, ICON_DELETE, ICON_TOOL_POINTER } from "@docmentis/udoc-ui/internal";
+import {
+    allowsEdit,
+    allowsTextEdit,
+    COPY_MENU_ITEM,
+    ICON_DELETE,
+    ICON_TOOL_POINTER,
+} from "@docmentis/udoc-ui/internal";
 import type { EnabledWhen, MenuItem } from "@docmentis/udoc-ui/internal";
+import { cutDeletes } from "./clipboard.js";
 import type { MessageKey } from "./i18n/index.js";
 import {
     ICON_CUT,
@@ -29,12 +36,15 @@ export type ClipboardOp = "cut" | "paste";
  *  large rather than on the selection. */
 const whenReady: EnabledWhen = (c) => c.ready;
 
-/** Whether the selection deletes — objects, annotations or shapes. */
-const whenDeletes: EnabledWhen = (c) => allowsEdit(c.selection, "deleteObjects", "deleteAnnotations", "deleteShapes");
+/** Whether the selection deletes — a range of text, objects, annotations or
+ *  shapes. */
+const whenDeletes: EnabledWhen = (c) =>
+    allowsTextEdit(c.selection, "deleteText") ||
+    allowsEdit(c.selection, "deleteObjects", "deleteAnnotations", "deleteShapes");
 
-/** Whether the selection cuts: copies, and deletes objects or shapes — a
- *  copyable but locked object is only copied. */
-const whenCuts: EnabledWhen = (c) => c.selection.copyable && allowsEdit(c.selection, "deleteObjects", "deleteShapes");
+/** Whether the selection cuts: copies, and deletes what it copied (see
+ *  `cutDeletes`) — a copyable but locked object is only copied. */
+const whenCuts: EnabledWhen = (c) => c.selection.copyable && cutDeletes(c);
 
 /**
  * The canvas context menu in edit mode — what a right-click offers for the
@@ -44,10 +54,10 @@ const whenCuts: EnabledWhen = (c) => c.selection.copyable && allowsEdit(c.select
  * rather than on a toolbar tab competing for width with the controls that do
  * vary by type.
  *
- * Cut and Copy gate on the engine's `copyable` verdict (Cut additionally on a
- * delete kind — cut is copy-then-delete, so a copyable-but-locked object is only
- * copied). Delete is left out where it can't run, as over a workbook's cells,
- * rather than shown greyed. Paste needs a document, not a selection: it reads the system
+ * Cut and Copy gate on the engine's `copyable` verdict (Cut additionally on
+ * deleting what it copies — cut is copy-then-delete, so a copyable-but-locked
+ * object, or a block of cells, is only copied). Delete is left out where it
+ * can't run, as over a workbook's cells, rather than shown greyed. Paste needs a document, not a selection: it reads the system
  * clipboard, which may hold something to paste even when nothing is selected.
  *
  * Paste pastes the object, not merely its text: the copy path carries the

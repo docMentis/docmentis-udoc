@@ -6,6 +6,17 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-editor
+
+#### Fixed
+
+- Cut takes out the text selected, in a worksheet's cell being typed into
+  too. In a slide's text box or table it deleted the whole box or table, and in
+  a word document's body it left the text in place. A block of a table's cells
+  is copied and the table kept, where Cut deleted it.
+- Delete in the canvas's context menu deletes the text selected, where it
+  deleted the shape holding it or wasn't offered.
+
 ## [0.8.22] - 2026-11-15
 
 Built on `@docmentis/udoc-wasm` 0.8.25.

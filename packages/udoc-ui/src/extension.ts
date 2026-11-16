@@ -176,7 +176,9 @@ export interface UIShellHost {
     /** Whether the selection holds annotations — which an edit of the
      *  selection then acts on, rather than the page objects. */
     annotationsSelected(): boolean;
-    /** Delete what is selected, as the Delete key does. */
+    /** Delete what is selected, as the Delete key does: a range of text as
+     *  text, in a workbook's cell being typed into too, else the pages,
+     *  objects, annotations or shapes picked. */
     deleteSelection(): Promise<void>;
     /** Run a menu row's intent as the shell's own menus do — for a menu an
      *  extension's control builds, as a split button's. */

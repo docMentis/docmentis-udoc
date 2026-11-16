@@ -3791,6 +3791,13 @@ export function mountUIShell(
     function deleteSelection(): Promise<void> {
         let edit: SelectionEdit;
         const state = store.getState();
+        // A workbook deletes here only what is selected of the text typed into
+        // a cell; its grid's cells, rows and columns delete through their own
+        // keys and rows.
+        if (state.docType === "spreadsheet") {
+            if (typingCell()) editCellEntry({ text: { edit: { deleteText: { forward: true } } } });
+            return Promise.resolve();
+        }
         // A section selection holds its slides' pages too: Delete removes the
         // sections, their slides joining the section before.
         if (state.selectedSlideSections.length > 0) {
@@ -3807,6 +3814,10 @@ export function mountUIShell(
                     : { kind: "page", edit: { kind: "deletePages" } },
             );
         }
+        // A range of text deletes as text. The shape it sits in keeps its own
+        // delete live while it holds a caret — it moves and restyles with one
+        // in it — but deleting what is selected in it must not take it.
+        if (allowsTextEdit(state.selectionCaps, "deleteText")) return deleteSelectionText(true);
         if (shapeDocType()) edit = { kind: "deleteShapes" };
         else if (annotationsSelected()) edit = { kind: "annotation", edit: { kind: "deleteAnnotations" } };
         else edit = { kind: "object", edit: { kind: "deleteObjects" } };

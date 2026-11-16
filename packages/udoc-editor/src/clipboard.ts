@@ -16,9 +16,39 @@
 // (Cross-document paste — carrying the referenced images/fonts — and turning
 // foreign `text/plain` into a text box are later increments.)
 import type { UDocFragment } from "@docmentis/udoc-wasm";
-import { allowsEdit, fragmentFromHtml, parseFragment, UDOC_FRAGMENT_FORMAT } from "@docmentis/udoc-ui/internal";
+import {
+    allowsEdit,
+    allowsTableEdit,
+    allowsTextEdit,
+    fragmentFromHtml,
+    parseFragment,
+    UDOC_FRAGMENT_FORMAT,
+} from "@docmentis/udoc-ui/internal";
+import type { CommandContext } from "@docmentis/udoc-ui/internal";
 import type { EditHost } from "./edit-client.js";
 import { editsDocument } from "./mode.js";
+
+/**
+ * Whether a cut deletes what it copied — what Cut does beyond Copy, from the
+ * keyboard as from the menu.
+ *
+ * A range of text deletes as text, in a workbook's cell being typed into
+ * too, and objects, annotations or shapes picked whole delete as they are. A
+ * caret, or a pick in a table, only copies: the shape or table holding it
+ * keeps its own delete live, but a cut of what is in it must not take it. Nor
+ * does a workbook's block of cells delete — Excel's cut moves a block when it
+ * is pasted, and clears nothing before.
+ */
+export function cutDeletes({
+    docType,
+    cellEntry,
+    selection,
+}: Pick<CommandContext, "docType" | "cellEntry" | "selection">): boolean {
+    if (docType === "spreadsheet") return cellEntry;
+    if (allowsTextEdit(selection, "deleteText")) return true;
+    if (allowsTextEdit(selection, "insertText") || allowsTableEdit(selection, "insertRows")) return false;
+    return allowsEdit(selection, "deleteObjects", "deleteAnnotations", "deleteShapes");
+}
 
 /** Edit mode's clipboard verbs, for a menu row — a keyboard cut or paste rides
  *  the native event on the sink instead, and a copy is the shell's. */
@@ -38,19 +68,19 @@ export function createClipboard(host: EditHost): Clipboard {
         return st.status === "ready" && editsDocument(st.mode);
     }
 
-    // The native `cut`: copy, then delete — but only when the selection is
-    // deletable (cut = copy + delete), and only once something was copied. A
+    // The native `cut`: copy, then delete — only what a cut deletes (see
+    // `cutDeletes`), and only once the copy reached the clipboard. A
     // copyable-but-locked object is copied without being removed.
     function onCutEvent(event: ClipboardEvent): void {
         if (!isEditReady()) return;
-        const deletable = allowsEdit(
-            host.store.getState().selectionCaps,
-            "deleteObjects",
-            "deleteAnnotations",
-            "deleteShapes",
-        );
+        const state = host.store.getState();
+        const deletes = cutDeletes({
+            docType: state.docType,
+            cellEntry: state.activeCell?.entry != null,
+            selection: state.selectionCaps,
+        });
         void host.clipboard.write(event).then((copied) => {
-            if (copied && deletable) void host.deleteSelection();
+            if (copied && deletes) void host.deleteSelection();
         });
     }
 
