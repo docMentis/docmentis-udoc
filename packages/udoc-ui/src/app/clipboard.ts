@@ -117,8 +117,8 @@ export interface ClipboardCopy {
     /**
      * Write the selection into the native copy / cut `event`: its precomputed
      * payload, at once, or — when that hasn't landed — through the async
-     * Clipboard API. Resolves whether anything was copied, which a cut deletes
-     * after.
+     * Clipboard API. Resolves whether the selection's fragment reached the
+     * clipboard and is still what is selected — what a cut deletes after.
      */
     write(event: ClipboardEvent): Promise<boolean>;
     /** A menu row's Copy: re-enter the native path, as a click fires no clipboard event. */
@@ -165,7 +165,13 @@ export function createClipboardCopy(
     // envelope — the async API rejects a custom type outright unless it is `web `
     // prefixed, and a `web ` format is in turn invisible to the native paste
     // event, so `text/html` is the only spelling both readers can follow back.
+    //
+    // Resolves true only when the fragment was written and the selection is
+    // still the one copied: a cut deletes on it, and must not delete what the
+    // clipboard doesn't hold — a write the browser refused, or a selection the
+    // user moved on from while the round trip was in flight.
     async function asyncCopyFallback(): Promise<boolean> {
+        const generation = copyGeneration;
         const fragment = await client.copy();
         if (!fragment) return false;
         const text = await client.plainText(fragment);
@@ -176,6 +182,8 @@ export function createClipboardCopy(
         try {
             await navigator.clipboard.write([new ClipboardItem(item)]);
         } catch {
+            // The text alone, for a copy; the fragment didn't land, so nothing
+            // was copied that a cut may delete.
             try {
                 if (text)
                     await navigator.clipboard.write([
@@ -184,8 +192,9 @@ export function createClipboardCopy(
             } catch {
                 /* no clipboard access — nothing more to try */
             }
+            return false;
         }
-        return true;
+        return generation === copyGeneration;
     }
 
     function write(event: ClipboardEvent): Promise<boolean> {

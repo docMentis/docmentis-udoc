@@ -14,6 +14,8 @@ listed once, by package. Its major and minor version are those of the
   too. In a slide's text box or table it deleted the whole box or table, and in
   a word document's body it left the text in place. A block of a table's cells
   is copied and the table kept, where Cut deleted it.
+- Cut deletes nothing when the browser refuses its copy, or when the
+  selection has changed before the copy lands.
 - Delete in the canvas's context menu deletes the text selected, where it
   deleted the shape holding it or wasn't offered.
 
