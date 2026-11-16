@@ -110,6 +110,7 @@ import {
     VIEW_MODE,
     commentable,
     initialState,
+    marksShownIn,
     planeOfView,
     planeOfWordprocessingView,
     renderZoom,
@@ -1747,9 +1748,10 @@ export function mountUIShell(
         (rotation) => client.setPageRotation(rotation / 90),
     );
     client.setPageRotation(arrangementFor(store.getState()).pageRotation / 90);
-    // A word document's formatting marks, as the View tab or Ctrl+Shift+8 left
-    // them. Sticky in the worker across re-opens, so pushed at once too.
-    const marksShown = (s: UIState): boolean => s.showFormattingMarks && s.docType === "wordprocessing";
+    // A word document's or a deck's formatting marks, as the View tab or
+    // Ctrl+Shift+8 left them. Sticky in the worker across re-opens, so pushed
+    // at once too.
+    const marksShown = (s: UIState): boolean => s.showFormattingMarks && marksShownIn(s.docType);
     const unsubFormattingMarks = subscribeSelector(store, marksShown, (on) => client.setFormattingMarks(on));
     client.setFormattingMarks(marksShown(store.getState()));
     // What a word document's tracked changes show, as the Review tab or the host
@@ -2102,12 +2104,13 @@ export function mountUIShell(
             e.preventDefault();
             requestHistory("redo");
         }
-        // Word's Ctrl+Shift+8 shows or hides a word document's formatting
-        // marks, as the View tab's toggle does. Matched by the key's place, as
-        // Shift makes it `*` on a US layout and something else elsewhere.
+        // Word's Ctrl+Shift+8 shows or hides a word document's or a deck's
+        // formatting marks, as the View tab's toggle does. Matched by the key's
+        // place, as Shift makes it `*` on a US layout and something else
+        // elsewhere.
         if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === "Digit8") {
             const state = store.getState();
-            if (state.docType === "wordprocessing") {
+            if (marksShownIn(state.docType)) {
                 e.preventDefault();
                 store.dispatch({ type: "SET_SHOW_FORMATTING_MARKS", visible: !state.showFormattingMarks });
             }

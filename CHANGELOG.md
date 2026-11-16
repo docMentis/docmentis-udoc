@@ -10,6 +10,10 @@ listed once, by package. Its major and minor version are those of the
 
 #### Added
 
+- A deck's View tab has Formatting Marks, as a word document's does: `¶` at
+  each paragraph end, a dot in each space, an arrow in each tab and `↵` at
+  each line break, in its slides' text and its notes, and Ctrl+Shift+8 shows
+  or hides them. `setShowFormattingMarks` covers decks too.
 - A PowerPoint deck offers a Data panel, `"data"` among the panels
   `openPanel` takes: whether the deck is a template, an instance filled from
   one or a plain deck, then, for a template, every name its bindings make

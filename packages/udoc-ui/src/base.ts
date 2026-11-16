@@ -1698,9 +1698,9 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
 
     /**
      * Show or hide formatting marks — `¶` at each paragraph end, a dot in each
-     * space, an arrow in each tab, `↵` at each line break — on word documents,
-     * as the View tab's Formatting Marks and Ctrl+Shift+8 do. Off by
-     * default, and kept for every document opened after.
+     * space, an arrow in each tab, `↵` at each line break — on word documents
+     * and decks, as the View tab's Formatting Marks and Ctrl+Shift+8 do. Off
+     * by default, and kept for every document opened after.
      */
     setShowFormattingMarks(visible: boolean): void {
         this.shell.setShowFormattingMarks(visible);

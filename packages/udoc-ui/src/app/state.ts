@@ -262,6 +262,13 @@ export function planeOfWordprocessingView(
     return plane < state.planeCount ? plane : -1;
 }
 
+/** Whether `docType`'s text shows formatting marks when they are asked for:
+ *  a word document's and a deck's, as Word's and an editor's do. A PDF's text
+ *  is drawn as it was printed, and a workbook's cells take none. */
+export function marksShownIn(docType: UDocType | null): boolean {
+    return docType === "wordprocessing" || docType === "presentation";
+}
+
 /** What a word document's tracked changes show in `state`: the display chosen, else
  *  the one the open document opened on, else none. */
 export function revisionDisplayOf(state: {
@@ -1094,9 +1101,9 @@ export interface UIState {
     /** Whether a workbook shows its formula bar above the grid — the host's
      *  `showFormulaBar`, then the View tab's Formula Bar. */
     formulaBarVisible: boolean;
-    /** Whether a word document shows its formatting marks — `¶` at each
-     *  paragraph end, a dot in each space, an arrow in each tab, `↵` at each
-     *  line break — as Word's toggle does. Kept across documents. */
+    /** Whether a word document or a deck shows its formatting marks — `¶` at
+     *  each paragraph end, a dot in each space, an arrow in each tab, `↵` at
+     *  each line break — as Word's toggle does. Kept across documents. */
     showFormattingMarks: boolean;
     /** Whether a Word, Excel or PowerPoint document shows its comments on the
      *  pages — each thread's marker and its text's highlight — the host's

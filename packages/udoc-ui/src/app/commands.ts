@@ -13,6 +13,7 @@ import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
 import {
     commentable,
     copyAllowed,
+    marksShownIn,
     PAGELESS_PLANE,
     panelOpenable,
     revisionDisplayOf,
@@ -1327,8 +1328,8 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
         shownWhen: (c) => c.layersPanel,
         enabledWhen: whenReady,
     },
-    // A word document's formatting marks, as Word's toggle and its key show
-    // them.
+    // A word document's or a deck's formatting marks, as Word's toggle and
+    // its key show them.
     formattingMarks: {
         id: "formattingMarks",
         label: "command.formattingMarks",
@@ -1341,7 +1342,7 @@ export const COMMAND_CATALOG: Record<CommandId, CommandDef> = {
                 store.dispatch({ type: "SET_SHOW_FORMATTING_MARKS", visible: !store.getState().showFormattingMarks }),
         },
         shortcut: { key: "8", shift: true },
-        enabledWhen: (c) => c.ready && c.docType === "wordprocessing",
+        enabledWhen: (c) => c.ready && marksShownIn(c.docType),
     },
     // A Word, Excel or PowerPoint document's comments on its pages — each
     // thread's marker and its text's highlight — hidden while pressed.

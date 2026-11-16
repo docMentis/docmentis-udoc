@@ -189,6 +189,9 @@ function viewerHost(canvas: OffscreenCanvas | null): ViewerHost {
 
 /** The session's viewers, by index: its own, then each the host added. */
 const viewers: ViewerHost[] = [viewerHost(null)];
+/** Whether the host asked for formatting marks, which a viewer added later
+ *  takes too. */
+let formattingMarks = false;
 
 /**
  * Whether viewer `v` paints: the session's own always — a frame with no
@@ -1877,6 +1880,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 if (session) {
                     session.addViewer();
                     session.attach(msg.viewer, msg.canvas);
+                    session.setFormattingMarks(msg.viewer, formattingMarks);
                 }
                 break;
             }
@@ -2115,8 +2119,10 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "setFormattingMarks": {
                 // Sticky in Rust, like the backdrop; a full repaint shows or
-                // clears the marks on the next frame.
-                session?.setFormattingMarks(VIEWER, msg.on);
+                // clears the marks on the next frame. Every viewer's, so a
+                // deck's notes pane shows them as its slides do.
+                formattingMarks = msg.on;
+                for (let v = 0; v < viewers.length; v++) session?.setFormattingMarks(v, msg.on);
                 scheduleFrame();
                 break;
             }
