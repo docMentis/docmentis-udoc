@@ -45,6 +45,8 @@ import type { I18n, MessageKey } from "../i18n/index.js";
 export interface DataPanelCallbacks {
     /** Select the next of `places`, a row's, `key` naming the row. */
     onChoose: (key: string, places: readonly PresentationBindingPlace[]) => void;
+    /** Point out `places`, a row's the pointer is over — none as it leaves. */
+    onHover: (places: readonly PresentationBindingPlace[]) => void;
     /** Give the template `data` as its sample data. */
     onSampleData: (data: BindingData) => void;
 }
@@ -317,6 +319,8 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
             button.append(count);
         }
         button.addEventListener("click", () => callbacks.onChoose(bound, places));
+        button.addEventListener("pointerenter", () => callbacks.onHover(places));
+        button.addEventListener("pointerleave", () => callbacks.onHover([]));
         return button;
     }
 

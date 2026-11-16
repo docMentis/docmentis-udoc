@@ -142,6 +142,10 @@ export interface EditState {
     /** Whether a template's preview is shown — filled with its sample data, in
      *  place of it — or on its way. */
     automationPreview: boolean;
+
+    /** Whether an instance's places are drawn over its slides, as a
+     *  template's always are. */
+    showPlaces: boolean;
 }
 
 /** Edit mode's state at start. */
@@ -162,6 +166,7 @@ export const INITIAL_EDIT_STATE: EditState = {
     showModeSwitch: true,
     alignToPage: false,
     automationPreview: false,
+    showPlaces: false,
 };
 
 /** Edit mode's state in `state`. */

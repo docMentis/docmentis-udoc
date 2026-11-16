@@ -3,8 +3,13 @@ import { selectionPaint, selectionTextFormat, subscribeSelector } from "@docment
 import type { UIExtension, UIState } from "@docmentis/udoc-ui/internal";
 import type { UDocEditorOptions } from "./editor.js";
 import { arrangeCommands } from "./arrange.js";
-import { automationCommands } from "./automation.js";
+import { automationCommands, placesOfKind } from "./automation.js";
+import type { PlaceEditing } from "./automation.js";
 import { mountGenerate } from "./automation-generate.js";
+import { mountPlaces } from "./automation-places.js";
+import type { CurrentPlace, Places } from "./automation-places.js";
+import { createPlacePopover } from "./components/PlacePopover.js";
+import type { PlacePopover } from "./components/PlacePopover.js";
 import type { AutomationGenerate } from "./automation-generate.js";
 import { createAutomationPreview } from "./automation-preview.js";
 import { cellCommands } from "./cell-format.js";
@@ -246,6 +251,42 @@ export function editMode(options: UDocEditorOptions): EditMode {
     let cellAlignment: CellAlignment | null = null;
     let pageResize: PageResize | null = null;
     let automationGenerate: AutomationGenerate | null = null;
+    let places: Places | null = null;
+    let placePopover: PlacePopover | null = null;
+    // A place's popover, from its tab: a template's places alone are edited.
+    const openPlace = (place: CurrentPlace, tab: DOMRect): void => {
+        const mounted = host;
+        if (!mounted || !placePopover) return;
+        const automation = mounted.store.getState().automation;
+        if (automation === null || !("template" in automation.role)) return;
+        const done = () => mounted.focusClipboardSink();
+        placePopover.open({
+            binding: place.markup.binding,
+            anchor: tab,
+            onApply: (binding) =>
+                mounted
+                    .commit(() =>
+                        mounted.client.executeOnSelection({ kind: "rebind", place: place.markup.id, binding }),
+                    )
+                    .then(done),
+            onRemove: () =>
+                mounted
+                    .commit(() => mounted.client.executeOnSelection({ kind: "unbind", place: place.markup.id }))
+                    .then(done),
+        });
+    };
+    // A place a binding just made: outlined, and its popover opened, once the
+    // overlay has read it.
+    const placeEditing: PlaceEditing = {
+        async edit(binding) {
+            const found = await places?.find((all) => placesOfKind(all, binding).at(-1));
+            if (!found || !places) return;
+            places.show(found);
+            await new Promise((resolve) => requestAnimationFrame(resolve));
+            const tab = places.tab();
+            if (tab) openPlace(found, tab.getBoundingClientRect());
+        },
+    };
     const grips = createGrips(() => tools);
     const preview = createAutomationPreview(options);
     const ruler = createRuler(() => host);
@@ -290,8 +331,10 @@ export function editMode(options: UDocEditorOptions): EditMode {
             ...cropCommands(() => tools?.crop ?? null),
             ...automationCommands(
                 () => host,
+                () => (places ? placeEditing : null),
                 preview,
                 () => void automationGenerate?.open(),
+                () => void automationGenerate?.refresh(),
             ),
         },
         spacing: (state) => (showPageControls && pageControlsShown(state) ? PAGE_CONTROLS_SPACING : null),
@@ -343,7 +386,14 @@ export function editMode(options: UDocEditorOptions): EditMode {
             cellAlignment = mountCellAlignment(mounted, i18n);
             pageResize = mountPageResize(mounted, i18n);
             automationGenerate = mountGenerate(mounted, i18n, options);
+            placePopover = createPlacePopover(i18n);
+            placePopover.mount(mounted.root);
+            places = mountPlaces(mounted, i18n, openPlace);
             return () => {
+                places?.destroy();
+                places = null;
+                placePopover?.destroy();
+                placePopover = null;
                 automationGenerate?.destroy();
                 automationGenerate = null;
                 pageResize?.destroy();

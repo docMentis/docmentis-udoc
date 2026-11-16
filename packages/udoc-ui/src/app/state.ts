@@ -804,6 +804,12 @@ export interface UIState {
      */
     dataBindings: BindingCatalog<PresentationBindingPlace> | null;
     /**
+     * The ids of the places that bind the Data panel's name the pointer is
+     * over, which the slides outline as the caret's place is; none while it is
+     * over none.
+     */
+    dataHover: readonly string[];
+    /**
      * The open deck's automation part, read as it opens and again on each
      * edit: whether the deck is a template or an instance filled from one.
      * Null for a plain deck, which has none, any other document, and until
@@ -1229,6 +1235,7 @@ export const initialState: UIState = {
     revisionGroups: null,
     selectionRevisionIds: [],
     dataBindings: null,
+    dataHover: [],
     automation: null,
 
     searchQuery: "",

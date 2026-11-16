@@ -2786,6 +2786,12 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, open ? safeRead(() => open.commentMarkup(msg.plane, msg.page), []) : []);
                 break;
             }
+            case "bindingMarkup": {
+                // A read of the slide composed, which it loads.
+                const open = session;
+                reply(id, open ? safeRead(() => open.bindingMarkup(msg.plane, msg.page), []) : []);
+                break;
+            }
             case "pageAnnotations": {
                 // A read that loads what it reads, as pageComments.
                 reply(id, session ? pageAnnotations(session, msg.pages) : []);
@@ -3669,6 +3675,9 @@ const TEXT_KINDS: Record<TextSelectionEditType, "text"> = {
     rejectRevisions: "text",
     moveDrawing: "text",
     moveDrawingAnchor: "text",
+    bind: "text",
+    rebind: "text",
+    unbind: "text",
 };
 const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     translateShapes: "shape",

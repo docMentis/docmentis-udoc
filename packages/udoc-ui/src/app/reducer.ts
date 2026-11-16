@@ -823,6 +823,9 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
         case "SET_DATA_BINDINGS":
             return { ...state, dataBindings: action.bindings };
 
+        case "SET_DATA_HOVER":
+            return { ...state, dataHover: action.places };
+
         case "SET_AUTOMATION":
             return { ...state, automation: action.automation };
 

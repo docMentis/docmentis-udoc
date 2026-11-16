@@ -32,6 +32,7 @@ import type {
     Annotation,
     Automation,
     BindingCatalog,
+    BindingMarkup,
     CellEntryEdit,
     CommentMarkup,
     ComposedShapeMedia,
@@ -933,6 +934,16 @@ export class WorkerClient {
      */
     async commentMarkup(plane: number, page: number): Promise<CommentMarkup[]> {
         return (await this.#send({ type: "commentMarkup", plane, page })) as CommentMarkup[];
+    }
+
+    /**
+     * Where each place a deck's text holds shows on page `page` of `plane`: its
+     * id, its level and its content's quads, page-local points, a caret's
+     * width where it holds only a placeholder that paints nothing — none for
+     * any other document. What the places overlay is drawn from.
+     */
+    async bindingMarkup(plane: number, page: number): Promise<BindingMarkup[]> {
+        return (await this.#send({ type: "bindingMarkup", plane, page })) as BindingMarkup[];
     }
 
     /**

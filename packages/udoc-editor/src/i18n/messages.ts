@@ -230,6 +230,40 @@ export interface Messages extends UIMessages {
     "generate.invalid": string;
     /** The document couldn't be generated. */
     "generate.failed": string;
+    /** Variable — a place's kind, on its tab */
+    "place.variable": string;
+    /** Repeat */
+    "place.repeat": string;
+    /** Condition */
+    "place.condition": string;
+    /** Choice */
+    "place.choice": string;
+    /** Option — one of a choice's */
+    "place.when": string;
+    /** Otherwise — a choice's option for any other value */
+    "place.otherwise": string;
+    /** Path — where in the data a place's value is */
+    "place.path": string;
+    /** Default — what a variable shows with no value */
+    "place.default": string;
+    /** Item — the name a repeat gives each item */
+    "place.item": string;
+    /** Separator — written between a repeat's items */
+    "place.join": string;
+    /** Last separator — written before a repeat's last item */
+    "place.last": string;
+    /** Show when false — a condition kept when its value is false */
+    "place.not": string;
+    /** Values — what an option is chosen by, separated by commas */
+    "place.values": string;
+    /** Remove — dissolve a place, keeping its content */
+    "place.remove": string;
+    /** A path is names of letters, digits and _, joined by dots; a value holds no quote mark. */
+    "place.invalid": string;
+    /** Places — show an instance's places */
+    "command.showPlaces": string;
+    /** Refresh — fill an instance again from data */
+    "command.refresh": string;
     /** Fill */
     "command.shapeFillColor": string;
     /** Line */

@@ -1617,6 +1617,11 @@ export function mountUIShell(
         },
         {
             onChoose: (key, places) => void chooseDataPlace(key, places),
+            onHover: (places) =>
+                store.dispatch({
+                    type: "SET_DATA_HOVER",
+                    places: places.flatMap((place) => (place.id === undefined ? [] : [place.id])),
+                }),
             onSampleData: setSampleData,
         },
     );

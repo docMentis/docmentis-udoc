@@ -485,7 +485,10 @@ export type TextEditKind =
     | "indentParagraphs"
     | "applyParagraphStyle"
     | "acceptRevisions"
-    | "rejectRevisions";
+    | "rejectRevisions"
+    | "bind"
+    | "rebind"
+    | "unbind";
 
 /**
  * Whether `caps` allows the text edit `kind` — the text cousin of

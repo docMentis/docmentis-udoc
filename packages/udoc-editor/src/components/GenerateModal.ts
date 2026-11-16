@@ -1,7 +1,8 @@
 // The Generate dialog, opened from a template's Automation tab: the data to fill
 // the template with, as JSON — at first its sample data, every value it lacks
 // made up — edited in place or read from a file, and Generate, which fills a copy
-// of the template with it and downloads the copy. A modal — backdrop + centered
+// of the template with it and downloads the copy. An instance's Refresh opens it
+// too, to fill the instance again in place. A modal — backdrop + centered
 // dialog — on the page-settings dialog's styles.
 //
 // Storeless and imperative: mounted once and reused. `open(ctx)` seeds it with
@@ -12,12 +13,17 @@ import { ICON_CLEAR, on } from "@docmentis/udoc-ui/internal";
 import type { BindingData } from "@docmentis/udoc-wasm";
 import type { I18n } from "../i18n/index.js";
 
-/** What `open` needs: the data to start from, and how to generate. */
+/** What `open` needs: the data to start from, how to fill with it, and what
+ *  the dialog calls that. */
 export interface GenerateContext {
     /** The data the text box starts with, as JSON. */
     json: string;
-    /** Fill a copy of the template with `data` and download it. */
+    /** Fill with `data`: a copy of the template, downloaded, or an instance in
+     *  place. */
     onGenerate: (data: BindingData) => Promise<void>;
+    /** What the dialog and its button are named: Generate, the default, or
+     *  Refresh. */
+    action?: "command.generate" | "command.refresh";
 }
 
 /** `text` read as the data to fill a template with — a JSON object — or null. */
@@ -143,6 +149,10 @@ export function createGenerateModal(i18n: I18n) {
 
     function open(context: GenerateContext): void {
         ctx = context;
+        const action = i18n.t(context.action ?? "command.generate");
+        dialog.setAttribute("aria-label", action);
+        heading.textContent = action;
+        generateBtn.textContent = action;
         text.value = context.json;
         error.textContent = "";
         setBusy(false);

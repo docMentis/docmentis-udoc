@@ -10,6 +10,8 @@ import type {
     AcroFormField,
     ActionHideTarget,
     Annotation,
+    Binding,
+    BindingControlId,
     CellEntryEdit,
     Comment as ModelComment,
     CommentDraft,
@@ -1381,6 +1383,17 @@ export interface CommentMarkupRequest {
     page: number;
 }
 
+/**
+ * Read where each place a deck's text holds shows on page `page` of `plane`,
+ * page-local points. Replies with `BindingMarkup`[] — none for any other
+ * document, or a page with no places.
+ */
+export interface BindingMarkupRequest {
+    type: "bindingMarkup";
+    plane: number;
+    page: number;
+}
+
 /** What the comments panel lists threads under: a page, a cell of a sheet, a
  *  slide — keyed, and ordered as the document reads. */
 export interface CommentGroup {
@@ -1754,6 +1767,15 @@ export type SelectionEdit =
     /** Text: delete at the text caret / range — a range deletes it, a collapsed
      *  caret deletes forward (Delete) or backward (Backspace). */
     | { kind: "deleteText"; forward: boolean }
+    /** Text: make a place of the selection, binding `binding` — around the
+     *  characters a range within a paragraph covers, around the paragraphs a
+     *  range across a paragraph's end touches, or at a caret one holding its
+     *  placeholder. Offered in a template's text alone. */
+    | { kind: "bind"; binding: Binding }
+    /** Text: bind the place `place`, in the selected text, by `binding` instead. */
+    | { kind: "rebind"; place: BindingControlId; binding: Binding }
+    /** Text: dissolve the place `place`, in the selected text, keeping its content. */
+    | { kind: "unbind"; place: BindingControlId }
     /** PDF: insert text at the caret / range in a page text object — typing, an
      *  IME commit, a paste. A newline splits the line (Enter is `text: "\n"`). */
     | { kind: "insertObjectText"; text: string }
@@ -2434,6 +2456,7 @@ export type WorkerRequest =
     | OfficeCommentsRequest
     | SlideIdRequest
     | CommentMarkupRequest
+    | BindingMarkupRequest
     | PageAnnotationsRequest
     | AnnotationRequest
     | SelectionGeometryRequest

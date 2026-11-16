@@ -125,7 +125,9 @@ export type EditCommandId =
     | "insertChoice"
     | "dataPanel"
     | "preview"
-    | "generate";
+    | "generate"
+    | "showPlaces"
+    | "refresh";
 
 /** A tab of edit mode's. */
 type EditTab = ToolbarTab<MessageKey>;
@@ -432,10 +434,11 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
 
 /**
  * The presentation Automation tab — what fills the deck from data: Template,
- * the toggle that makes a plain deck a template and a template plain again,
- * then Variable, a variable's tag written at the caret, and Data, the panel
- * listing what the text binds, both a template's alone, each named beside its
- * icon. Picked, it stays open over
+ * the toggle that makes a plain deck a template and a template plain again;
+ * Variable, Repeat, Condition and Choice, each a place made of the selection;
+ * Data, the panel listing what the text binds; Preview and Generate — a
+ * template's alone — then Places and Refresh, an instance's, each named beside
+ * its icon. Picked, it stays open over
  * every selection the deck's own tabs open for, as a template is written by
  * selecting text and shapes on it; a tab ahead of it holds for each of those,
  * so no selection opens it.
@@ -453,6 +456,8 @@ const PRESENTATION_AUTOMATION_TAB: EditTab = {
         "dataPanel",
         "preview",
         "generate",
+        "showPlaces",
+        "refresh",
     ] satisfies EditCommandId[],
     opensFor: onDeck,
     staysOpen: true,

@@ -312,6 +312,8 @@ export type Action =
     | { type: "SET_REVISION_GROUPS"; groups: readonly ListedRevisionGroup[] }
     // The bindings a deck's text writes, read for the Data panel
     | { type: "SET_DATA_BINDINGS"; bindings: BindingCatalog<PresentationBindingPlace> | null }
+    // The places of the Data panel's name the pointer is over, by their ids
+    | { type: "SET_DATA_HOVER"; places: readonly string[] }
     // The open deck's automation part, read as it opens and on each edit
     | { type: "SET_AUTOMATION"; automation: Automation | null }
     // The records of the changes the selection touches, read for the

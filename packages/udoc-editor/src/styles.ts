@@ -1202,4 +1202,102 @@ export const editorStyles = css`
         min-width: 0;
         min-height: 0;
     }
+
+    /* A template's places (udoc:places), in the page's colours whatever the
+       theme — a teal apart from the comments' indigo and the search's yellow:
+       a tint behind a place within a paragraph, a bar beside one around whole
+       paragraphs, and the place the caret is in outlined, its tab above its
+       first line naming its kind and binding. Under the selection, taking no
+       press but the tab's. */
+    .udoc-ui-root {
+        --udoc-canvas-place: rgba(13, 148, 136, 0.1);
+        --udoc-canvas-place-current: rgba(13, 148, 136, 0.16);
+        --udoc-canvas-place-line: #5eead4;
+        --udoc-canvas-place-line-current: #0d9488;
+    }
+    .udoc-ui-root .udoc-places svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        overflow: visible;
+        pointer-events: none;
+    }
+    .udoc-ui-root .udoc-place {
+        fill: var(--udoc-canvas-place);
+    }
+    .udoc-ui-root .udoc-place--current {
+        fill: var(--udoc-canvas-place-current);
+        stroke: var(--udoc-canvas-place-line-current);
+        stroke-width: 1px;
+    }
+    .udoc-ui-root .udoc-place-bar {
+        stroke: var(--udoc-canvas-place-line);
+        stroke-width: 3px;
+        stroke-linecap: round;
+    }
+    .udoc-ui-root .udoc-place-bar--current {
+        stroke: var(--udoc-canvas-place-line-current);
+    }
+    .udoc-ui-root .udoc-place-tab {
+        position: absolute;
+        transform: translateY(-100%);
+        max-width: 240px;
+        padding: 1px 6px;
+        border: none;
+        border-radius: 3px 3px 0 0;
+        background: var(--udoc-canvas-place-line-current);
+        color: #fff;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 500;
+        line-height: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        cursor: pointer;
+        pointer-events: auto;
+    }
+    /* A place's popover, below its tab: its binding's fields, Remove and
+       Done — the dialogs' fields and buttons in a panel of their own. */
+    .udoc-ui-root .udoc-place-popover {
+        position: fixed;
+        z-index: 1000;
+        width: 260px;
+        box-sizing: border-box;
+        padding: 12px;
+        background: var(--udoc-color-surface-container-highest);
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 8px;
+        box-shadow: var(--udoc-elevation-4);
+        color: var(--udoc-color-on-surface);
+    }
+    .udoc-ui-root .udoc-place-popover__heading {
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .udoc-ui-root .udoc-place-popover__fields {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .udoc-ui-root .udoc-place-popover__check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .udoc-ui-root .udoc-place-popover__footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+    }
+    .udoc-ui-root .udoc-place-tab:focus-visible {
+        outline: 2px solid var(--udoc-canvas-place-line);
+        outline-offset: 1px;
+    }
 `;

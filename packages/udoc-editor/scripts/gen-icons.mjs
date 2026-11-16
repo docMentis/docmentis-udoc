@@ -99,6 +99,8 @@ const ICONS = {
     ICON_PREVIEW: "preview",
     ICON_GENERATE: "file_export",
     ICON_DATA_PANEL: "database",
+    ICON_SHOW_PLACES: "data_object",
+    ICON_REFRESH: "refresh",
 
     // An image's Home tab
     ICON_CROP: "crop",

@@ -18,8 +18,9 @@ listed once, by package. Its major and minor version are those of the
   at every depth, is its sample data: text, a choice picked from its values
   or written as another, a switch for a bool, and an array's items, added
   and removed. A name chosen selects the next place that binds it; where
-  two or more do, their count follows the name. In edit mode the sample
-  data is kept in the template, one undo step per value. Last come the tags
+  two or more do, their count follows the name, and in edit mode pointing
+  at it outlines its places on the slides. In edit mode the sample data is
+  kept in the template, one undo step per value. Last come the bindings
   that are wrong, each with what is wrong with it.
 
 ### udoc-editor
@@ -48,13 +49,20 @@ listed once, by package. Its major and minor version are those of the
   of them moves them, as Excel does: the cells they leave are emptied, and
   formulas naming them follow them, also onto another sheet. Escape, a copy
   or an edit cancels the cut. Cut copied only.
-- A PowerPoint deck's edit mode has an Automation tab, after the Shape tab:
-  Template turns a plain deck into a template and back, and on a template
-  Variable writes `{{var}}` at the caret with `var` selected, to type a path
-  over; Repeat, Condition and Choice write a pair's tags the same way,
-  `{{#item in items}}{{/item}}`, `{{#if flag}}{{/if}}` and
-  `{{#choose value}}{{:when "a"}}{{:otherwise}}{{/choose}}`, their path
-  selected; Data shows or hides the Data panel; and Preview shows the
+- A PowerPoint deck's edit mode has an Automation tab, after the Shape tab.
+  Template turns a plain deck into a template, each `{{…}}` tag in its text
+  becoming a place, and a template back into a plain deck, its places written
+  back as tags. On a template, Variable, Repeat, Condition and Choice make a
+  place of the selection — around the text or the paragraphs selected, or at
+  the caret one holding nothing yet — and open its popover, where its path
+  and the rest of its binding are typed: a variable's default, a repeat's
+  item and separators, whether a condition shows when its value is false, an
+  option's values. A choice is made with an option for `"a"` and an
+  otherwise. Remove, in the popover, takes the place away and keeps its text.
+  A template's places are drawn over its slides: a tint behind a place within
+  a paragraph, a bar beside one around whole paragraphs, and the place the
+  caret is in outlined, with a tab naming its binding that opens its popover.
+  Data shows or hides the Data panel; and Preview shows the
   template filled with its sample data, read-only in place of it, until it's
   turned off. A preview fills in every value the sample data lacks: text with
   its path in title case (`customer.name` reads "Customer Name"), a choice with
@@ -62,7 +70,10 @@ listed once, by package. Its major and minor version are those of the
   While the preview is shown, the toolbar's Download and Print act on it.
   Generate opens a dialog with the data to fill the template with, as JSON —
   its sample data at first, or a file opened — and downloads a filled copy,
-  "Deck (generated).pptx", an instance of the template.
+  "Deck (generated).pptx", an instance of the template. On an instance,
+  Places shows its places as a template's show, and Refresh opens the same
+  dialog to fill it again where it is, one undo step. The `translations` keys
+  under `place.`, and `command.showPlaces` and `command.refresh`, are new.
 - `UDocEditor.generateToBytes(data, options?)` fills a copy of the open
   template with `data` and resolves with the instance's bytes, the template
   left as it is. Picked, the tab stays open as
