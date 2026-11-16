@@ -15,6 +15,12 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-editor
 
+#### Added
+
+- Whole rows, whole columns or a whole table selected in a table show a bar
+  just outside it — at both ends of the rows, above and below the columns, on
+  every side of the table — so they read apart from a block of cells.
+
 #### Fixed
 
 - Cut takes out the text selected, in a worksheet's cell being typed into

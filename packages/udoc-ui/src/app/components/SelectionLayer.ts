@@ -26,6 +26,8 @@ import type {
     SelectionEditKind,
     SelectionQuad,
     SelectionState,
+    SelectionTrackBand,
+    SelectionTracks,
 } from "../../geometry.js";
 import type { Affine } from "./affine.js";
 import {
@@ -128,6 +130,31 @@ export const ANNOTATION_PADDING = 3;
  *  grab strip for an open text object (ObjectText): a press on the border moves
  *  the object, an interior press edits its text. */
 const BORDER_BAND = 6;
+/** How thick a whole-track pick's bar is (CSS px) — keep in sync with the
+ *  stylesheet's `.udoc-ui__selection-track-bar`. */
+const TRACK_BAR_WIDTH = 3;
+/** How far a whole-track pick's bar stands off the table's edge (CSS px). */
+const TRACK_BAR_GAP = 2;
+/** The edges of a whole-track pick's band that carry a bar, as pairs of its
+ *  corners' indices ({@link cornersOf}'s order: top-left, top-right,
+ *  bottom-right, bottom-left): whole rows their two ends, whole columns their
+ *  top and foot, the whole table all four sides. */
+const TRACK_BAR_EDGES: Record<SelectionTracks, ReadonlyArray<readonly [number, number]>> = {
+    rows: [
+        [3, 0],
+        [1, 2],
+    ],
+    columns: [
+        [0, 1],
+        [2, 3],
+    ],
+    all: [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, 0],
+    ],
+};
 /** Padding (CSS px) beyond the viewport that a cell block's polygon is clipped to before
  *  it becomes SVG (see {@link clipToRect}). Off the visible canvas, so the cut
  *  edges hide under the SVG viewport clip rather than showing at the screen edge. */
@@ -310,6 +337,10 @@ export class SelectionLayer {
      *  handle squares, which the user grabs). Inside {@link #chrome}. */
     readonly #svg: SVGSVGElement;
     readonly #polys: SVGPolygonElement[] = [];
+    /** Pooled bars marking whole rows, columns or a table picked — drawn
+     *  outside the table's edge beside its tinted cells (see
+     *  {@link #renderTrackBars}). */
+    readonly #trackBars: SVGLineElement[] = [];
     /** Pooled peer name flags (DOM pills) — one per peer box that has a name,
      *  none for the local user. Live in the container above the SVG so they
      *  read on top of every outline. */
@@ -885,10 +916,75 @@ export class SelectionLayer {
         }
         while (this.#polys.length > used) this.#polys.pop()!.remove();
 
+        this.#renderTrackBars(byPage);
         this.#renderCarets(byPage, flags, flaggedPeers);
         this.#renderLabels(flags);
         this.#renderHandles();
         this.#renderPointers(byPage);
+    }
+
+    /**
+     * Mark each pick of whole tracks — whole rows, whole columns or a whole
+     * table — with bars just outside the table, so it reads apart from a block
+     * of cells, whose tinted cells it shares: at both ends of the rows, above
+     * and below the columns, on all four sides of the table
+     * ({@link TRACK_BAR_EDGES}). A bar runs its edge's full length,
+     * {@link TRACK_BAR_WIDTH} px thick and {@link TRACK_BAR_GAP} px off it
+     * whatever the zoom, placed from the band's projected corners so a turned
+     * table's bars turn with it. A peer's are in its color.
+     */
+    #renderTrackBars(byPage: Map<number, PageView>): void {
+        const picks: Array<{ band: SelectionTrackBand; peer: string | null }> = [
+            ...this.#state.peers.flatMap((peer) =>
+                (peer.selection.trackBands ?? []).map((band) => ({ band, peer: peer.peer.id })),
+            ),
+            ...(this.#state.local.trackBands ?? []).map((band) => ({ band, peer: null })),
+        ];
+        let used = 0;
+        for (const { band, peer } of picks) {
+            const view = byPage.get(band.band.page);
+            if (!view) continue;
+            const place = itemPlacement(band.band);
+            const lv = this.#localToViewport(place.transform, view);
+            const corners = cornersOf(place).map(([x, y]) => applyPoint(lv, x, y));
+            const center = {
+                x: corners.reduce((sum, corner) => sum + corner.x, 0) / corners.length,
+                y: corners.reduce((sum, corner) => sum + corner.y, 0) / corners.length,
+            };
+            for (const [from, to] of TRACK_BAR_EDGES[band.tracks]) {
+                const a = corners[from]!;
+                const b = corners[to]!;
+                const length = Math.hypot(b.x - a.x, b.y - a.y);
+                if (length === 0) continue;
+                // The edge's normal, turned to point away from the band.
+                let nx = -(b.y - a.y) / length;
+                let ny = (b.x - a.x) / length;
+                if (nx * ((a.x + b.x) / 2 - center.x) + ny * ((a.y + b.y) / 2 - center.y) < 0) {
+                    nx = -nx;
+                    ny = -ny;
+                }
+                const offset = TRACK_BAR_GAP + TRACK_BAR_WIDTH / 2;
+                let bar = this.#trackBars[used];
+                if (!bar) {
+                    bar = document.createElementNS(SVG_NS, "line");
+                    this.#svg.appendChild(bar);
+                    this.#trackBars.push(bar);
+                }
+                bar.setAttribute(
+                    "class",
+                    peer
+                        ? "udoc-ui__selection-track-bar udoc-ui__selection-track-bar--peer"
+                        : "udoc-ui__selection-track-bar",
+                );
+                bar.style.stroke = peer ? peerColor(peer) : "";
+                bar.setAttribute("x1", String(a.x + nx * offset));
+                bar.setAttribute("y1", String(a.y + ny * offset));
+                bar.setAttribute("x2", String(b.x + nx * offset));
+                bar.setAttribute("y2", String(b.y + ny * offset));
+                used++;
+            }
+        }
+        while (this.#trackBars.length > used) this.#trackBars.pop()!.remove();
     }
 
     /**

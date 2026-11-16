@@ -22,6 +22,8 @@ import type {
     SelectionBox,
     SelectionQuad,
     SelectionHandle,
+    SelectionTrackBand,
+    SelectionTracks,
     HeaderBands,
     SelectionGeometry,
     PeerSelectionGeometry,
@@ -335,7 +337,16 @@ export function pagesOnScreen(views: readonly PageView[], width: number, height:
 // parallelogram, so rotation and skew render correctly. A text highlight is a
 // `SelectionQuad` instead — four corners already on the page — since the text
 // under it may be bent by a warp, which no parallelogram follows.
-export type { SelectionBox, SelectionQuad, SelectionHandle, HeaderBands, SelectionGeometry, PeerSelectionGeometry };
+export type {
+    SelectionBox,
+    SelectionQuad,
+    SelectionHandle,
+    SelectionTrackBand,
+    SelectionTracks,
+    HeaderBands,
+    SelectionGeometry,
+    PeerSelectionGeometry,
+};
 
 // A collaborator — its replica id, a stable color seed, and the name it
 // advertised — and its pointer: the page it rests on and the point in that

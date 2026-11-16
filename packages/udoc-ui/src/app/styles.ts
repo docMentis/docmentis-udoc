@@ -2985,6 +2985,21 @@ export const uiStyles = css`
         stroke-dasharray: ${placeholderFrameDashArray};
         stroke-opacity: 0.7;
     }
+    /* A pick of whole rows, columns or a table: a solid bar in the selection
+   color just outside the table — at both ends of the rows, above and below the
+   columns, on all four sides of the table — beside the tinted cells it shares
+   with a block, so it reads apart from one. The width is the selection layer's
+   TRACK_BAR_WIDTH. */
+    .udoc-ui-root .udoc-ui__selection-track-bar {
+        stroke: var(--udoc-canvas-selection);
+        stroke-width: 3px;
+        stroke-linecap: butt;
+    }
+    /* A remote collaborator's bar: the peer's color, set inline, a little
+   fainter than your own, as their cell boxes are. */
+    .udoc-ui-root .udoc-ui__selection-track-bar--peer {
+        stroke-opacity: 0.7;
+    }
     /* A text highlight quad: a translucent fill over the selected run(s), no
    outline — the range a text selection covers. */
     .udoc-ui-root .udoc-ui__selection-text {
