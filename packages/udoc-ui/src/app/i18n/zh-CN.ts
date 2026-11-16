@@ -33,7 +33,6 @@ export const zhCN: Messages = {
     "toolbar.menu": "菜单",
     "toolbar.search": "搜索",
     "toolbar.comments": "批注",
-    "toolbar.revisions": "修订",
     "toolbar.print": "打印",
     "toolbar.download": "下载",
     "toolbar.darkMode": "深色模式",

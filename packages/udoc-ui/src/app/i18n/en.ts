@@ -34,7 +34,6 @@ export const en: Messages = {
     "toolbar.menu": "Menu",
     "toolbar.search": "Search",
     "toolbar.comments": "Comments",
-    "toolbar.revisions": "Revisions",
     "toolbar.print": "Print",
     "toolbar.download": "Download",
     "toolbar.darkMode": "Dark Mode",

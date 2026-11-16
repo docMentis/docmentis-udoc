@@ -6,6 +6,15 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Changed
+
+- Search and Comments are buttons on the toolbar's right, where they were
+  items in its menu, and each shows pressed while its panel is open. The menu
+  no longer has Revisions, which a word document's Review tab opens. Its
+  `translations` key, `toolbar.revisions`, is gone.
+
 ### udoc-editor
 
 #### Added

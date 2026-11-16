@@ -33,7 +33,6 @@ export const ru: Messages = {
     "toolbar.menu": "Меню",
     "toolbar.search": "Поиск",
     "toolbar.comments": "Комментарии",
-    "toolbar.revisions": "Исправления",
     "toolbar.print": "Печать",
     "toolbar.download": "Скачать",
     "toolbar.darkMode": "Тёмная тема",

@@ -33,7 +33,6 @@ export const ptBR: Messages = {
     "toolbar.menu": "Menu",
     "toolbar.search": "Pesquisar",
     "toolbar.comments": "Comentários",
-    "toolbar.revisions": "Revisões",
     "toolbar.print": "Imprimir",
     "toolbar.download": "Baixar",
     "toolbar.darkMode": "Modo Escuro",

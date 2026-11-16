@@ -33,7 +33,6 @@ export const ko: Messages = {
     "toolbar.menu": "메뉴",
     "toolbar.search": "검색",
     "toolbar.comments": "메모",
-    "toolbar.revisions": "수정 내용",
     "toolbar.print": "인쇄",
     "toolbar.download": "다운로드",
     "toolbar.darkMode": "다크 모드",

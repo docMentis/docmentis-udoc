@@ -33,7 +33,6 @@ export const ar: Messages = {
     "toolbar.menu": "القائمة",
     "toolbar.search": "بحث",
     "toolbar.comments": "تعليقات",
-    "toolbar.revisions": "المراجعات",
     "toolbar.print": "طباعة",
     "toolbar.download": "تنزيل",
     "toolbar.darkMode": "الوضع الداكن",

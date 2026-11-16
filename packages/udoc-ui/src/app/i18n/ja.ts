@@ -33,7 +33,6 @@ export const ja: Messages = {
     "toolbar.menu": "メニュー",
     "toolbar.search": "検索",
     "toolbar.comments": "コメント",
-    "toolbar.revisions": "変更履歴",
     "toolbar.print": "印刷",
     "toolbar.download": "ダウンロード",
     "toolbar.darkMode": "ダークモード",

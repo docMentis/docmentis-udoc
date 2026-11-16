@@ -33,7 +33,6 @@ export const zhTW: Messages = {
     "toolbar.menu": "選單",
     "toolbar.search": "搜尋",
     "toolbar.comments": "註解",
-    "toolbar.revisions": "修訂",
     "toolbar.print": "列印",
     "toolbar.download": "下載",
     "toolbar.darkMode": "深色模式",

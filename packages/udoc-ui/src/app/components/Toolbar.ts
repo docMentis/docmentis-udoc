@@ -6,7 +6,7 @@ import type { HistoryOp } from "../../worker/protocol.js";
 import type { Action } from "../actions.js";
 import type { UIState, PanelTab, ThemeMode } from "../state.js";
 import type { I18n } from "../i18n/index.js";
-import { LEFT_PANEL_TABS, isLeftPanelTab } from "../state.js";
+import { LEFT_PANEL_TABS, isLeftPanelTab, panelOpenable } from "../state.js";
 import { tabsFor, VIEWING_TAB_IDS } from "../profiles.js";
 import { OFFICE_COMMENT_DOC_TYPES } from "../annotations.js";
 import type { TabSource } from "../profiles.js";
@@ -17,7 +17,6 @@ import {
     ICON_MENU,
     ICON_SEARCH,
     ICON_COMMENTS,
-    ICON_REVISIONS,
     ICON_FULLSCREEN,
     ICON_FULLSCREEN_EXIT,
     ICON_THEME_LIGHT,
@@ -56,8 +55,12 @@ interface ToolbarSlice {
     leftPanelVisible: boolean;
     /** Whether one of the side panel's tabs is open. */
     sidePanelOpen: boolean;
-    rightPanelVisible: boolean;
     disabledPanels: ReadonlySet<PanelTab>;
+    /** Whether the Search and the Comments panels can open, which shows their
+     *  buttons. */
+    searchOpenable: boolean;
+    commentsOpenable: boolean;
+    activePanel: PanelTab | null;
     docType: UDocType | null;
     mode: string;
     features: readonly Feature[];
@@ -78,8 +81,10 @@ function sliceEqual(a: ToolbarSlice, b: ToolbarSlice): boolean {
         a.themeSwitchingDisabled === b.themeSwitchingDisabled &&
         a.leftPanelVisible === b.leftPanelVisible &&
         a.sidePanelOpen === b.sidePanelOpen &&
-        a.rightPanelVisible === b.rightPanelVisible &&
         a.disabledPanels === b.disabledPanels &&
+        a.searchOpenable === b.searchOpenable &&
+        a.commentsOpenable === b.commentsOpenable &&
+        a.activePanel === b.activePanel &&
         a.docType === b.docType &&
         a.mode === b.mode &&
         a.features === b.features &&
@@ -102,8 +107,10 @@ function selectSlice(state: UIState): ToolbarSlice {
         themeSwitchingDisabled: state.themeSwitchingDisabled,
         leftPanelVisible: state.leftPanelVisible,
         sidePanelOpen: state.activePanel !== null && isLeftPanelTab(state.activePanel),
-        rightPanelVisible: state.rightPanelVisible,
         disabledPanels: state.disabledPanels,
+        searchOpenable: panelOpenable(state, "search"),
+        commentsOpenable: panelOpenable(state, "comments"),
+        activePanel: state.activePanel,
         docType: state.docType,
         mode: state.mode,
         features: state.features,
@@ -112,6 +119,14 @@ function selectSlice(state: UIState): ToolbarSlice {
         canUndo: state.canUndo && state.activeCell?.entry == null,
         canRedo: state.canRedo && state.activeCell?.entry == null,
     };
+}
+
+/** Show `button`, which opens a panel, where the panel can open, and pressed
+ *  while it is open. */
+function showPanelButton(button: HTMLButtonElement, openable: boolean, open: boolean): void {
+    button.style.display = openable ? "" : "none";
+    button.classList.toggle("udoc-btn--selected", open);
+    button.setAttribute("aria-pressed", String(open));
 }
 
 /**
@@ -134,10 +149,10 @@ function selectSlice(state: UIState): ToolbarSlice {
  *   ribbon fits them to the slot's width). Empty where the mode has no tabs (the
  *   ribbon hides it).
  * - **right** — the people button while the document is in a collaboration
- *   (who is present, sharing the pointer, pausing co-editing), then `modeSlot`,
- *   where an extension parents its mode switch, then a single app-menu
- *   dropdown collapsing search / comments / print / download / theme /
- *   fullscreen.
+ *   (who is present, sharing the pointer, pausing co-editing), then Search and
+ *   Comments, each opening its panel and pressed while it is open, then
+ *   `modeSlot`, where an extension parents its mode switch, then a single
+ *   app-menu dropdown collapsing print / download / theme / fullscreen.
  */
 export function createToolbar(i18n: I18n, tabsOf: TabSource) {
     const el = document.createElement("div");
@@ -199,10 +214,23 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
     const tabStripSlot = document.createElement("div");
     tabStripSlot.className = "udoc-toolbar__tabs-slot";
 
-    // --- Right section (people + mode slot + app menu) -----------------
+    // --- Right section (people + panels + mode slot + app menu) --------
     const rightSection = document.createElement("div");
     rightSection.className = "udoc-toolbar__right";
     const collaborationMenu = createCollaborationMenu(i18n);
+    // The right panel's Search and Comments, each pressed while its panel is
+    // open; shown where the panel can open (see applyState).
+    const searchBtn = createButton({
+        icon: ICON_SEARCH,
+        label: i18n.t("toolbar.search"),
+        shortcut: nameShortcut({ key: "F" }, i18n),
+        className: "udoc-toolbar__btn--search",
+    });
+    const commentsBtn = createButton({
+        icon: ICON_COMMENTS,
+        label: i18n.t("toolbar.comments"),
+        className: "udoc-toolbar__btn--comments",
+    });
     const modeSlot = document.createElement("div");
     modeSlot.className = "udoc-toolbar__mode-slot";
 
@@ -219,7 +247,7 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
     appMenuDropdown.className = "udoc-menu udoc-menu--end";
     appMenuDropdown.setAttribute("role", "menu");
     appMenuContainer.append(appMenuBtn, appMenuDropdown);
-    rightSection.append(collaborationMenu.el, modeSlot, appMenuContainer);
+    rightSection.append(collaborationMenu.el, searchBtn, commentsBtn, modeSlot, appMenuContainer);
     const appMenu = createMenuController(appMenuBtn, appMenuDropdown, {
         isInside: (t) => appMenuContainer.contains(t),
     });
@@ -269,10 +297,11 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
         unsubEvents.push(on(undoBtn, "click", () => callbacks.onHistory?.("undo")));
         unsubEvents.push(on(redoBtn, "click", () => callbacks.onHistory?.("redo")));
 
+        // --- Search and Comments: show or hide their panels ---
+        unsubEvents.push(on(searchBtn, "click", () => store.dispatch({ type: "TOGGLE_PANEL", panel: "search" })));
+        unsubEvents.push(on(commentsBtn, "click", () => store.dispatch({ type: "TOGGLE_PANEL", panel: "comments" })));
+
         // --- App menu (collapsed global actions) ---
-        const onSearchClick = () => store.dispatch({ type: "TOGGLE_PANEL", panel: "search" });
-        const onCommentsClick = () => store.dispatch({ type: "TOGGLE_PANEL", panel: "comments" });
-        const onRevisionsClick = () => store.dispatch({ type: "TOGGLE_PANEL", panel: "revisions" });
         const onThemeClick = () => {
             const t = store.getState().theme;
             const next: ThemeMode = t === "light" ? "dark" : t === "dark" ? "system" : "light";
@@ -312,16 +341,7 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
             const fsLabel = i18n.t(slice.isFullscreen ? "toolbar.exitFullscreen" : "toolbar.fullscreen");
 
             type Item = { icon: string; label: string; action: () => void };
-            // The panels the menu opens come first, and a divider parts them
-            // from the actions below when both show.
-            const panelItems: Item[] = [];
-            if (slice.rightPanelVisible && !slice.disabledPanels.has("search"))
-                panelItems.push({ icon: ICON_SEARCH, label: i18n.t("toolbar.search"), action: onSearchClick });
-            if (slice.rightPanelVisible && !slice.disabledPanels.has("comments"))
-                panelItems.push({ icon: ICON_COMMENTS, label: i18n.t("toolbar.comments"), action: onCommentsClick });
-            if (slice.rightPanelVisible && !slice.disabledPanels.has("revisions"))
-                panelItems.push({ icon: ICON_REVISIONS, label: i18n.t("toolbar.revisions"), action: onRevisionsClick });
-            const items: Item[] = [...panelItems];
+            const items: Item[] = [];
             if (slice.printButtonVisible)
                 items.push({ icon: ICON_PRINT, label: i18n.t("toolbar.print"), action: onPrintClick });
             if (slice.downloadButtonVisible)
@@ -336,9 +356,8 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
             // The developer entry, when the host shows it — opens the diagnostics dialog.
             if (slice.developerButtonVisible)
                 items.push({ icon: ICON_CODE, label: i18n.t("toolbar.developer"), action: () => devModal.open() });
-            for (const [i, item] of items.entries()) {
+            for (const item of items) {
                 const menuItem = createMenuItem({ icon: item.icon, text: item.label, role: "menuitem" });
-                if (i > 0 && i === panelItems.length) menuItem.classList.add("udoc-menu__item--divider");
                 menuItem.addEventListener("click", (e) => {
                     e.stopPropagation();
                     appMenu.close();
@@ -374,6 +393,9 @@ export function createToolbar(i18n: I18n, tabsOf: TabSource) {
                 undoBtn.disabled = !slice.ready || !slice.canUndo;
                 redoBtn.disabled = !slice.ready || !slice.canRedo;
             }
+
+            showPanelButton(searchBtn, slice.searchOpenable, slice.activePanel === "search");
+            showPanelButton(commentsBtn, slice.commentsOpenable, slice.activePanel === "comments");
 
             buildAppMenu(slice);
             rovingTabindex?.refresh();

@@ -59,8 +59,6 @@ export interface Messages {
     "toolbar.search": string;
     /** Comments */
     "toolbar.comments": string;
-    /** Revisions */
-    "toolbar.revisions": string;
     /** Print */
     "toolbar.print": string;
     /** Download */

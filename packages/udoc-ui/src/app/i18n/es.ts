@@ -33,7 +33,6 @@ export const es: Messages = {
     "toolbar.menu": "Menú",
     "toolbar.search": "Buscar",
     "toolbar.comments": "Comentarios",
-    "toolbar.revisions": "Revisiones",
     "toolbar.print": "Imprimir",
     "toolbar.download": "Descargar",
     "toolbar.darkMode": "Modo oscuro",
