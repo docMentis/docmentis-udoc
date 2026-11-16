@@ -991,11 +991,7 @@ export function mountUIShell(
         followTextLink: (link, page) => followTextLink(link, page),
         annotationHover: (annotation, clientX, clientY) => pageAnnotations.hover(annotation, clientX, clientY),
         annotationClick: (annotation, clientX, clientY) => pageAnnotations.click(annotation, clientX, clientY),
-        insertText: (text) => {
-            if (store.getState().docType !== "spreadsheet") return insertSelectionText(text);
-            if (typingCell()) editCellEntry({ text: { edit: { insertText: { text } } } });
-            else beginCellEntry("enter", text);
-        },
+        insertText: (text) => insertSelectionText(text),
         deleteText: (forward) => {
             // A workbook's grid takes Backspace and Delete as keys where no cell
             // is typed into (see `cellKey`).
@@ -3832,6 +3828,13 @@ export function mountUIShell(
     // `annotation` one.
     function insertSelectionText(text: string): Promise<void> {
         let edit: SelectionEdit;
+        // A workbook types into the cell being typed into, and text on a
+        // selected cell begins an entry there, as a typed character does.
+        if (store.getState().docType === "spreadsheet") {
+            if (typingCell()) editCellEntry({ text: { edit: { insertText: { text } } } });
+            else beginCellEntry("enter", text);
+            return Promise.resolve();
+        }
         if (shapeDocType()) edit = { kind: "insertText", text };
         else if (annotationsSelected())
             edit = { kind: "annotation", edit: { kind: "common", edit: { kind: "insertText", text } } };

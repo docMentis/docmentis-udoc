@@ -25,6 +25,8 @@ listed once, by package. Its major and minor version are those of the
   selection has changed before the copy lands.
 - Delete in the canvas's context menu deletes the text selected, where it
   deleted the shape holding it or wasn't offered.
+- Text pasted from another app into a worksheet goes into the cell being typed
+  into, or begins an entry in the selected cell, where it was dropped.
 
 ## [0.8.22] - 2026-11-15
 

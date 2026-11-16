@@ -183,7 +183,9 @@ export interface UIShellHost {
     /** Run a menu row's intent as the shell's own menus do — for a menu an
      *  extension's control builds, as a split button's. */
     runMenuAction(action: MenuAction): void;
-    /** Type `text` at the text caret, as the keyboard does. */
+    /** Type `text` at the text caret, as the keyboard does — in a workbook,
+     *  into the cell being typed into, or beginning an entry in the selected
+     *  one. */
     insertSelectionText(text: string): Promise<void>;
     /**
      * The canvas's hidden text input, focused for all of edit mode and, in
