@@ -1,7 +1,6 @@
 // Edit mode's requests, answered on the render worker beside the engine's own.
 import type { WorkerHandler } from "@docmentis/udoc-ui/worker";
-import { Transferring } from "@docmentis/udoc-ui/worker";
-import { PLACEHOLDER_FRAME_DASH, PLACEHOLDER_FRAME_WIDTH } from "@docmentis/udoc-ui/internal";
+import { PLACEHOLDER_FRAME_DASH, PLACEHOLDER_FRAME_WIDTH, Transferring } from "@docmentis/udoc-ui/worker";
 import type { ThemePalette } from "@docmentis/udoc-ui/internal";
 import type { EditRequest } from "./protocol.js";
 

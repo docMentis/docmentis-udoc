@@ -11,18 +11,10 @@
 // `css` is an identity tag (returns the template's raw text) so an IDE's CSS
 // syntax highlighting + Prettier light up inside the backticks; it has no
 // runtime effect.
+import { PLACEHOLDER_FRAME_DASH } from "../placeholder-frame.js";
+
 const css = (strings: TemplateStringsArray, ...values: unknown[]): string => String.raw({ raw: strings }, ...values);
 
-/** The CSS px of each dash, and of each gap, of an empty placeholder's dashed
- *  frame, which the engine draws (the editor hands it this, see
- *  `setPlaceholderFrameLine`). The box you are typing in and a peer's box dash
- *  in it too, so where one traces the frame, their dashes start together at its
- *  top-left corner and the box covers the frame. Not a host's to restyle for
- *  that reason. */
-export const PLACEHOLDER_FRAME_DASH = 4;
-/** The CSS px width of an empty placeholder's dashed frame: thinner than the
- *  boxes that trace it, so they cover it. */
-export const PLACEHOLDER_FRAME_WIDTH = 1;
 /** {@link PLACEHOLDER_FRAME_DASH} as an SVG `stroke-dasharray`. */
 const placeholderFrameDashArray = `${PLACEHOLDER_FRAME_DASH} ${PLACEHOLDER_FRAME_DASH}`;
 

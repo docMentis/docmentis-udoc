@@ -25,7 +25,6 @@ export type { DropdownButton, SplitButton } from "./app/components/controls.js";
 export { applyPaintBar, displayToActivePaint, paintSwatch } from "./app/components/Ribbon.js";
 export type { BandCanvas, BandColors, BandLayer, BandStrip, GuideBand } from "./app/components/GuideBands.js";
 export { DRAG_THRESHOLD } from "./app/components/Canvas.js";
-export { PLACEHOLDER_FRAME_DASH, PLACEHOLDER_FRAME_WIDTH } from "./app/styles.js";
 export type { CanvasGesture, CanvasGestureHost } from "./app/components/Canvas.js";
 export type {
     ChromeBox,

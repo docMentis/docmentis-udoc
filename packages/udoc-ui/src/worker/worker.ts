@@ -1154,6 +1154,10 @@ export interface WorkerHandler<R extends ExtensionRequest = ExtensionRequest> {
     handle(request: R, worker: EngineWorker): unknown;
 }
 
+// The line of an empty placeholder's frame, for a product's handler to hand the
+// engine — from here, as importing the UI would bundle it into the worker.
+export { PLACEHOLDER_FRAME_DASH, PLACEHOLDER_FRAME_WIDTH } from "../placeholder-frame.js";
+
 /** A reply whose buffers move to the main thread rather than being copied. */
 export class Transferring {
     constructor(
