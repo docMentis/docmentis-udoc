@@ -1,13 +1,11 @@
 // A template's places, drawn over its slides from the engine's read of where
 // each shows (`bindingGeometry`): brackets, a [ where a place within a
 // paragraph begins and a ] where it ends, and a tall [ and ] either side of
-// one around whole paragraphs at their very edge, the brackets of places
-// within a paragraph beginning or ending together standing apart, outer
-// outside — but for a choice, drawn as the
-// option it shows; the place the caret is in has its
-// brackets stronger, with a tab naming every place the caret is in, outermost
-// first — Repeat › Choice › When "low" — each opening its place's popover; the
-// places of the Data panel's name the pointer is over stand out too. Which places the
+// one around whole paragraphs, each at its place's very edge — a choice drawn
+// as the option it shows; the place the caret is in has its brackets
+// stronger, with a tab naming every place the caret is in, outermost first —
+// Repeat › Choice › When "low" — each opening its place's popover; the places
+// of the Data panel's name the pointer is over stand out too. Which places the
 // caret is in is the engine's to say (the selection's `places`): where places
 // end or begin, the caret stands at a level the arrows step through, and the
 // tab names the level. None of it is the document's — it is drawn over the canvas, under
@@ -23,18 +21,9 @@ import { editState } from "./state.js";
 const OVERLAY_ID = "udoc:places";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-/** How far a bracket's ends reach in towards what it holds, CSS px: a span
- *  place's, then a block place's. */
-const SPAN_TICK = 3;
-const BLOCK_TICK = 6;
-
-/** How much further out a bracket stands for each place inside it whose
- *  bracket would fall on its own, CSS px — and how much taller. */
-const NEST_STEP = 3;
-
-/** Two brackets whose edges are nearer than this across stand on one
- *  another, CSS px. */
-const COINCIDE = 1.5;
+/** How far a bracket's ends reach in towards what it holds, CSS px, a place
+ *  within a paragraph's and one around whole paragraphs' alike. */
+const TICK = 6;
 
 /** The place the caret is in, as the overlay marks it. */
 export interface CurrentPlace {
@@ -208,7 +197,6 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                 if (isMarked) opening = brackets.at(-2)!;
             }
         }
-        spread(brackets);
         const out: OverlayItem[] = [];
         if (brackets.length > 0) {
             out.push({
@@ -234,15 +222,8 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                 },
             });
         }
-        // The tab hangs from the outermost of the brackets standing with the
-        // marked place's opening one, clear of them all.
-        const marked = opening;
-        const hung =
-            marked &&
-            brackets
-                .filter((bracket) => bracket.side === "open" && (bracket === marked || fallsOn(marked, bracket)))
-                .reduce((outer, bracket) => (bracket.out > outer.out ? bracket : outer), marked);
-        const tab = hung && bracketTop(hung);
+        // The tab hangs from the marked place's opening bracket.
+        const tab = opening?.top ?? null;
         if (tab) {
             // One tab for every place the caret is in, outermost first, the
             // place it stands in last and marked: nested places starting
@@ -394,19 +375,12 @@ function caretKey(selection: SelectionGeometry | null): string {
 }
 
 /** One bracket of a place, in viewport px: the edge it stands on, from its top
- *  end to its bottom; the way in towards what it holds, a unit vector; how far
- *  its ends reach in; whether it opens or closes the place; whether its place
- *  is around whole paragraphs, its bracket at their very edge, never further
- *  out; how many steps out it stands, for the places inside it whose brackets
- *  fall on its own; and whether its place stands out. */
+ *  end to its bottom; the way in towards what it holds, a unit vector; and
+ *  whether its place stands out. */
 interface Bracket {
     top: Point;
     bottom: Point;
     inward: Point;
-    tick: number;
-    side: "open" | "close";
-    block: boolean;
-    out: number;
     current: boolean;
 }
 
@@ -420,16 +394,8 @@ function spanBrackets(first: Point[], last: Point[]): [BracketShape, BracketShap
     const [, topRight, bottomRight] = last;
     const forward = readingWay(topLeft!, bottomLeft!);
     return [
-        { top: topLeft!, bottom: bottomLeft!, inward: forward, tick: SPAN_TICK, side: "open", block: false, out: 0 },
-        {
-            top: topRight!,
-            bottom: bottomRight!,
-            inward: { x: -forward.x, y: -forward.y },
-            tick: SPAN_TICK,
-            side: "close",
-            block: false,
-            out: 0,
-        },
+        { top: topLeft!, bottom: bottomLeft!, inward: forward },
+        { top: topRight!, bottom: bottomRight!, inward: { x: -forward.x, y: -forward.y } },
     ];
 }
 
@@ -443,24 +409,8 @@ function blockBrackets(corners: Point[]): [BracketShape, BracketShape] {
     const top = Math.min(...ys);
     const bottom = Math.max(...ys);
     return [
-        {
-            top: { x: left, y: top },
-            bottom: { x: left, y: bottom },
-            inward: { x: 1, y: 0 },
-            tick: BLOCK_TICK,
-            side: "open",
-            block: true,
-            out: 0,
-        },
-        {
-            top: { x: right, y: top },
-            bottom: { x: right, y: bottom },
-            inward: { x: -1, y: 0 },
-            tick: BLOCK_TICK,
-            side: "close",
-            block: true,
-            out: 0,
-        },
+        { top: { x: left, y: top }, bottom: { x: left, y: bottom }, inward: { x: 1, y: 0 } },
+        { top: { x: right, y: top }, bottom: { x: right, y: bottom }, inward: { x: -1, y: 0 } },
     ];
 }
 
@@ -471,63 +421,12 @@ function readingWay(top: Point, bottom: Point): Point {
     return length === 0 ? { x: 1, y: 0 } : { x: (bottom.y - top.y) / length, y: -(bottom.x - top.x) / length };
 }
 
-/** Stand apart the brackets of places within a paragraph beginning or ending
- *  together: one that a later bracket on its side falls on — a place inside
- *  its own, as a page's places come each before the places inside it — stands
- *  a step further out than that one, the outermost furthest. A block place's
- *  stays at its paragraphs' edge. */
-function spread(brackets: Bracket[]): void {
-    for (let index = brackets.length - 1; index >= 0; index--) {
-        const bracket = brackets[index]!;
-        if (bracket.block) continue;
-        for (const inner of brackets.slice(index + 1)) {
-            if (inner.side === bracket.side && fallsOn(inner, bracket)) {
-                bracket.out = Math.max(bracket.out, inner.out + 1);
-            }
-        }
-    }
-}
-
-/** Whether `bracket` falls on `on`: on its edge across, and beside some of it
- *  along. */
-function fallsOn(bracket: Bracket, on: Bracket): boolean {
-    const offset = (p: Point) => ({ x: p.x - on.top.x, y: p.y - on.top.y });
-    const across = offset(bracket.top);
-    if (Math.abs(across.x * on.inward.x + across.y * on.inward.y) >= COINCIDE) return false;
-    const length = Math.hypot(on.bottom.x - on.top.x, on.bottom.y - on.top.y);
-    if (length === 0) return false;
-    const along = (p: Point) => {
-        const d = offset(p);
-        return (d.x * (on.bottom.x - on.top.x) + d.y * (on.bottom.y - on.top.y)) / length;
-    };
-    const [from, to] = [along(bracket.top), along(bracket.bottom)].sort((a, b) => a - b);
-    return from! < length - COINCIDE && to! > COINCIDE;
-}
-
-/** `bracket`'s top and bottom ends, stood its steps out and grown as tall. */
-function bracketEnds({ top, bottom, inward, out }: Bracket): [Point, Point] {
-    const step = out * NEST_STEP;
-    const length = Math.hypot(bottom.x - top.x, bottom.y - top.y) || 1;
-    const down = { x: (bottom.x - top.x) / length, y: (bottom.y - top.y) / length };
-    const moved = (p: Point, sign: number) => ({
-        x: p.x - inward.x * step + sign * down.x * step,
-        y: p.y - inward.y * step + sign * down.y * step,
-    });
-    return [moved(top, -1), moved(bottom, 1)];
-}
-
-/** Where `bracket`'s top end stands — what its place's tab hangs from. */
-function bracketTop(bracket: Bracket): Point {
-    return bracketEnds(bracket)[0];
-}
-
 /** `bracket` as a polyline's points: in along its top end, down its edge, in
  *  along its bottom end. */
 function bracketPoints(bracket: Bracket): string {
-    const [upper, lower] = bracketEnds(bracket);
-    const { inward, tick } = bracket;
-    const reach = (p: Point) => ({ x: p.x + inward.x * tick, y: p.y + inward.y * tick });
-    return [reach(upper), upper, lower, reach(lower)].map((p) => `${p.x},${p.y}`).join(" ");
+    const { top, bottom, inward } = bracket;
+    const reach = (p: Point) => ({ x: p.x + inward.x * TICK, y: p.y + inward.y * TICK });
+    return [reach(top), top, bottom, reach(bottom)].map((p) => `${p.x},${p.y}`).join(" ");
 }
 
 /** `group`'s first `count` children, made `tag`s as needed, the rest gone. */
