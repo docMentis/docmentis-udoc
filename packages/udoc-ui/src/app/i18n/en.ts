@@ -316,7 +316,7 @@ export const en: Messages = {
     "thumbnails.slideMaster": "Slide Master {number}",
     "thumbnails.slideLayout": "{name} Layout",
     "thumbnails.untitledSlideLayout": "Layout",
-    "thumbnails.insertPage": "Insert Page",
+    "thumbnails.newPage": "New Page",
     "thumbnails.duplicatePage": "Duplicate Page",
     "thumbnails.rotateRight": "Rotate Right",
     "thumbnails.rotateLeft": "Rotate Left",

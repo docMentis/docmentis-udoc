@@ -86,6 +86,7 @@ export const zhTW: EditMessages = {
     "command.insertShape": "圖案",
     "command.changeShape": "變更圖案",
     "command.changeLayout": "變更版面配置",
+    "command.layout": "版面配置",
     "command.cropPage": "裁剪",
     "command.resizePage": "影像大小",
     "command.pageResize": "調整頁面大小",

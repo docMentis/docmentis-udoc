@@ -315,7 +315,7 @@ export const ru: Messages = {
     "thumbnails.slideMaster": "Образец слайдов {number}",
     "thumbnails.slideLayout": "Макет «{name}»",
     "thumbnails.untitledSlideLayout": "Макет",
-    "thumbnails.insertPage": "Вставить страницу",
+    "thumbnails.newPage": "Создать страницу",
     "thumbnails.duplicatePage": "Дублировать страницу",
     "thumbnails.rotateRight": "Повернуть вправо",
     "thumbnails.rotateLeft": "Повернуть влево",

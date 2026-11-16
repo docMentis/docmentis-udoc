@@ -86,6 +86,7 @@ export const ar: EditMessages = {
     "command.insertShape": "أشكال",
     "command.changeShape": "تغيير الشكل",
     "command.changeLayout": "تغيير التخطيط",
+    "command.layout": "تخطيط",
     "command.cropPage": "قص",
     "command.resizePage": "حجم الصورة",
     "command.pageResize": "تغيير حجم الصفحة",

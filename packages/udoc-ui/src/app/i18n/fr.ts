@@ -315,7 +315,7 @@ export const fr: Messages = {
     "thumbnails.slideMaster": "Masque des diapositives {number}",
     "thumbnails.slideLayout": "Disposition {name}",
     "thumbnails.untitledSlideLayout": "Disposition",
-    "thumbnails.insertPage": "Insérer une page",
+    "thumbnails.newPage": "Nouvelle page",
     "thumbnails.duplicatePage": "Dupliquer la page",
     "thumbnails.rotateRight": "Faire pivoter à droite",
     "thumbnails.rotateLeft": "Faire pivoter à gauche",

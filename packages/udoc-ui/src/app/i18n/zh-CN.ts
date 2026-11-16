@@ -313,7 +313,7 @@ export const zhCN: Messages = {
     "thumbnails.slideMaster": "幻灯片母版 {number}",
     "thumbnails.slideLayout": "{name} 版式",
     "thumbnails.untitledSlideLayout": "版式",
-    "thumbnails.insertPage": "插入页面",
+    "thumbnails.newPage": "新建页面",
     "thumbnails.duplicatePage": "复制页面",
     "thumbnails.rotateRight": "向右旋转",
     "thumbnails.rotateLeft": "向左旋转",

@@ -51,6 +51,12 @@ listed once, by package. Its major and minor version are those of the
 
 #### Changed
 
+- New Page on a PDF's Page tab, and New Slide and Layout on a deck's Slide
+  tab, show their names beside their icons, as PowerPoint's New Slide and
+  Layout do. Insert Page is named New Page, there and in the page thumbnails'
+  menu, and Change Layout is named Layout, its picker still headed Change
+  Layout. The `translations` key `thumbnails.insertPage` is now
+  `thumbnails.newPage`, and `command.layout` is new.
 - An empty placeholder's dashed outline, the box you're typing in and a
   collaborator's selection use the same dash. Where they outline the same
   shape, their dashes line up and the one on top covers the rest, instead of

@@ -315,7 +315,7 @@ export const de: Messages = {
     "thumbnails.slideMaster": "Folienmaster {number}",
     "thumbnails.slideLayout": "Layout „{name}“",
     "thumbnails.untitledSlideLayout": "Layout",
-    "thumbnails.insertPage": "Seite einfügen",
+    "thumbnails.newPage": "Neue Seite",
     "thumbnails.duplicatePage": "Seite duplizieren",
     "thumbnails.rotateRight": "Nach rechts drehen",
     "thumbnails.rotateLeft": "Nach links drehen",

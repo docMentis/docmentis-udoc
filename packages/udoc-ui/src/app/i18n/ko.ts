@@ -315,7 +315,7 @@ export const ko: Messages = {
     "thumbnails.slideMaster": "슬라이드 마스터 {number}",
     "thumbnails.slideLayout": "{name} 레이아웃",
     "thumbnails.untitledSlideLayout": "레이아웃",
-    "thumbnails.insertPage": "페이지 삽입",
+    "thumbnails.newPage": "새 페이지",
     "thumbnails.duplicatePage": "페이지 복제",
     "thumbnails.rotateRight": "오른쪽으로 회전",
     "thumbnails.rotateLeft": "왼쪽으로 회전",

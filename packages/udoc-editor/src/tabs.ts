@@ -355,12 +355,12 @@ const IMAGE_TAB: EditTab = {
 };
 
 /**
- * The portable Page tab: the pages' edits — a blank page after the current one,
- * and Delete, the two turns and Resize of the current page, or of those picked
- * in the thumbnails — then what goes on a page as its own objects: a text box,
- * shapes and an image. All icons, named by their tooltips. A PDF's strip opens on
- * it, the tools a PDF is usually edited with, and pages picked or nothing selected
- * open it.
+ * The portable Page tab: the pages' edits — New Page, a blank page after the
+ * current one, and Delete, the two turns and Resize of the current page, or of
+ * those picked in the thumbnails — then what goes on a page as its own objects: a
+ * text box, shapes and an image. New Page is named beside its icon, the rest by
+ * their tooltips. A PDF's strip opens on it, the tools a PDF is usually edited
+ * with, and pages picked or nothing selected open it.
  */
 const PORTABLE_PAGE_TAB: EditTab = {
     id: "page",
@@ -376,18 +376,19 @@ const PORTABLE_PAGE_TAB: EditTab = {
         "insertShape",
         "insertPageImage",
     ] satisfies EditCommandId[],
+    labeled: ["pageCreate"],
     opensOnEntry: true,
     opensFor: pagesOrNothing,
 };
 
 /**
  * The presentation Slide tab: the slides' edits — New Slide, after the current
- * slide, then Delete Slide and Change Layout, of the current slide or those
- * picked in the thumbnails — then what goes on a slide: a text box and the
- * gallery's shapes, dragged out on it, a picture, and a table sized on a grid —
- * then New Comment, on what is selected or else the slide. All icons, named by
- * their tooltips. A deck's strip opens on it, and slides or sections picked or
- * nothing selected open it.
+ * slide, then Delete Slide and Layout, of the current slide or those picked in
+ * the thumbnails — then what goes on a slide: a text box and the gallery's
+ * shapes, dragged out on it, a picture, and a table sized on a grid — then New
+ * Comment, on what is selected or else the slide. New Slide and Layout are named
+ * beside their icons, as PowerPoint's are, the rest by their tooltips. A deck's
+ * strip opens on it, and slides or sections picked or nothing selected open it.
  */
 const PRESENTATION_SLIDE_TAB: EditTab = {
     id: "slide",
@@ -403,6 +404,7 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
         "insertTable",
         "newComment",
     ] satisfies EditCommandId[],
+    labeled: ["createSlide", "changeLayout"],
     opensOnEntry: true,
     opensFor: slidesOrNothing,
 };

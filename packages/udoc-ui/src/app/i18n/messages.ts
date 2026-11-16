@@ -581,8 +581,8 @@ export interface Messages {
     "thumbnails.slideLayout": string;
     /** Layout — a slide layout's thumbnail, where it has no name */
     "thumbnails.untitledSlideLayout": string;
-    /** Insert Page */
-    "thumbnails.insertPage": string;
+    /** New Page */
+    "thumbnails.newPage": string;
     /** Duplicate Page */
     "thumbnails.duplicatePage": string;
     /** Rotate Right */

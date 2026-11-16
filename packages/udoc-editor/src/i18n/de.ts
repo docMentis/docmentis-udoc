@@ -86,6 +86,7 @@ export const de: EditMessages = {
     "command.insertShape": "Formen",
     "command.changeShape": "Form ändern",
     "command.changeLayout": "Layout ändern",
+    "command.layout": "Layout",
     "command.cropPage": "Zuschneiden",
     "command.resizePage": "Bildgröße",
     "command.pageResize": "Seitengröße ändern",

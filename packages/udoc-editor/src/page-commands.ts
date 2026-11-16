@@ -103,7 +103,7 @@ export function pageCommands(
     return {
         pageCreate: {
             id: "pageCreate",
-            label: "thumbnails.insertPage",
+            label: "thumbnails.newPage",
             icon: ICON_PAGE_ADD,
             group: "page",
             run: { kind: "action", press: withHost(createPage) },

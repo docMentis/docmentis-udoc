@@ -160,8 +160,10 @@ export interface Messages extends UIMessages {
     "command.insertShape": string;
     /** Change Shape */
     "command.changeShape": string;
-    /** Change Layout */
+    /** Change Layout — the layout picker's heading */
     "command.changeLayout": string;
+    /** Layout — the button that opens the layout picker */
+    "command.layout": string;
     /** Crop */
     "command.cropPage": string;
     /** Image Size */

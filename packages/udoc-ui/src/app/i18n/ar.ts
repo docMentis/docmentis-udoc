@@ -313,7 +313,7 @@ export const ar: Messages = {
     "thumbnails.slideMaster": "الشريحة الرئيسية {number}",
     "thumbnails.slideLayout": "تخطيط {name}",
     "thumbnails.untitledSlideLayout": "تخطيط",
-    "thumbnails.insertPage": "إدراج صفحة",
+    "thumbnails.newPage": "صفحة جديدة",
     "thumbnails.duplicatePage": "تكرار الصفحة",
     "thumbnails.rotateRight": "تدوير لليمين",
     "thumbnails.rotateLeft": "تدوير لليسار",

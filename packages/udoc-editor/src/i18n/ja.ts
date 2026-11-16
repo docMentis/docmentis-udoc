@@ -86,6 +86,7 @@ export const ja: EditMessages = {
     "command.insertShape": "図形",
     "command.changeShape": "図形の変更",
     "command.changeLayout": "レイアウトの変更",
+    "command.layout": "レイアウト",
     "command.cropPage": "トリミング",
     "command.resizePage": "画像サイズ",
     "command.pageResize": "ページのサイズ変更",

@@ -1,4 +1,4 @@
-// A deck's Slide tab's slide commands: New Slide and Change Layout, with the
+// A deck's Slide tab's slide commands: New Slide and Layout, with the
 // layout picker they open, and Delete Slide.
 import type { UDocCommand } from "@docmentis/udoc-ui";
 import { allowsEdit, ICON_DELETE, ICON_SLIDE_ADD } from "@docmentis/udoc-ui/internal";
@@ -50,7 +50,7 @@ async function deleteSlides(host: EditHost): Promise<void> {
     );
 }
 
-/** The 0-based slides Change Layout acts on: those of the sections selected in
+/** The 0-based slides Layout acts on: those of the sections selected in
  *  the thumbnails, else the slides selected there, else the current slide —
  *  an empty section's selection leaving only that. */
 function layoutTargets(state: UIState): number[] {
@@ -210,15 +210,15 @@ export function deleteSlideCommand(host: () => EditHost | null): CommandDef<Mess
 }
 
 /**
- * The Change Layout command, opening the picker with `open` — live whatever is
- * selected, as New Slide is: it acts on the current slide unless slides or
- * sections are picked in the thumbnails. On a deck's slides, not its notes
- * pages or the Slide Master view, and not with no slide to change.
+ * The Layout command, opening the picker, headed Change Layout, with `open` —
+ * live whatever is selected, as New Slide is: it acts on the current slide
+ * unless slides or sections are picked in the thumbnails. On a deck's slides,
+ * not its notes pages or the Slide Master view, and not with no slide to change.
  */
 export function changeLayoutCommand(open: () => void): CommandDef<MessageKey> {
     return {
         id: "changeLayout",
-        label: "command.changeLayout",
+        label: "command.layout",
         icon: ICON_CHANGE_LAYOUT,
         group: "slide",
         run: { kind: "action", press: open },

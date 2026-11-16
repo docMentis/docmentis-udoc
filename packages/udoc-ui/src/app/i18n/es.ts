@@ -315,7 +315,7 @@ export const es: Messages = {
     "thumbnails.slideMaster": "Patrón de diapositivas {number}",
     "thumbnails.slideLayout": "Diseño {name}",
     "thumbnails.untitledSlideLayout": "Diseño",
-    "thumbnails.insertPage": "Insertar página",
+    "thumbnails.newPage": "Nueva página",
     "thumbnails.duplicatePage": "Duplicar página",
     "thumbnails.rotateRight": "Girar a la derecha",
     "thumbnails.rotateLeft": "Girar a la izquierda",

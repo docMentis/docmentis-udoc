@@ -86,6 +86,7 @@ export const ko: EditMessages = {
     "command.insertShape": "도형",
     "command.changeShape": "도형 변경",
     "command.changeLayout": "레이아웃 변경",
+    "command.layout": "레이아웃",
     "command.cropPage": "자르기",
     "command.resizePage": "이미지 크기",
     "command.pageResize": "페이지 크기 조정",

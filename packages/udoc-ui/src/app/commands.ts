@@ -381,7 +381,7 @@ function slideRow(label: MessageKey, icon: string, edit: SelectionEdit & { kind:
  * keeps one.
  */
 export const PAGE_MENU: readonly MenuItem[] = [
-    pageRow("thumbnails.insertPage", ICON_PAGE_ADD, { kind: "insertPage" }),
+    pageRow("thumbnails.newPage", ICON_PAGE_ADD, { kind: "insertPage" }),
     pageRow("thumbnails.duplicatePage", ICON_PAGE_DUPLICATE, { kind: "duplicatePages" }),
     {
         ...pageRow("thumbnails.rotateRight", ICON_ROTATE_RIGHT, { kind: "rotatePages", clockwise: true }),
@@ -391,7 +391,7 @@ export const PAGE_MENU: readonly MenuItem[] = [
     { ...pageRow("thumbnails.deletePage", ICON_DELETE, { kind: "deletePages" }), separatorBefore: true },
 ];
 
-/** An image's thumbnail menu — {@link PAGE_MENU} less Insert Page, as a blank
+/** An image's thumbnail menu — {@link PAGE_MENU} less New Page, as a blank
  *  image page means nothing. Duplicate is greyed but in a TIFF, the one
  *  format that holds more than one page. */
 export const IMAGE_PAGE_MENU: readonly MenuItem[] = PAGE_MENU.slice(1);

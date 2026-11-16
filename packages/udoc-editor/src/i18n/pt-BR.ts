@@ -86,6 +86,7 @@ export const ptBR: EditMessages = {
     "command.insertShape": "Formas",
     "command.changeShape": "Alterar Forma",
     "command.changeLayout": "Alterar Layout",
+    "command.layout": "Layout",
     "command.cropPage": "Cortar",
     "command.resizePage": "Tamanho da imagem",
     "command.pageResize": "Redimensionar página",

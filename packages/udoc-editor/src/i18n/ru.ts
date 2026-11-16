@@ -86,6 +86,7 @@ export const ru: EditMessages = {
     "command.insertShape": "Фигуры",
     "command.changeShape": "Изменить фигуру",
     "command.changeLayout": "Изменить макет",
+    "command.layout": "Макет",
     "command.cropPage": "Обрезать",
     "command.resizePage": "Размер изображения",
     "command.pageResize": "Изменить размер страницы",

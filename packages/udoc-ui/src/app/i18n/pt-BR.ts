@@ -315,7 +315,7 @@ export const ptBR: Messages = {
     "thumbnails.slideMaster": "Slide Mestre {number}",
     "thumbnails.slideLayout": "Layout {name}",
     "thumbnails.untitledSlideLayout": "Layout",
-    "thumbnails.insertPage": "Inserir Página",
+    "thumbnails.newPage": "Nova Página",
     "thumbnails.duplicatePage": "Duplicar Página",
     "thumbnails.rotateRight": "Girar para a Direita",
     "thumbnails.rotateLeft": "Girar para a Esquerda",

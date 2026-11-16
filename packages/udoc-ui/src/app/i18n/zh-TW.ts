@@ -313,7 +313,7 @@ export const zhTW: Messages = {
     "thumbnails.slideMaster": "投影片母片 {number}",
     "thumbnails.slideLayout": "{name} 版面配置",
     "thumbnails.untitledSlideLayout": "版面配置",
-    "thumbnails.insertPage": "插入頁面",
+    "thumbnails.newPage": "新頁面",
     "thumbnails.duplicatePage": "複製頁面",
     "thumbnails.rotateRight": "向右旋轉",
     "thumbnails.rotateLeft": "向左旋轉",

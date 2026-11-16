@@ -315,7 +315,7 @@ export const ja: Messages = {
     "thumbnails.slideMaster": "スライド マスター {number}",
     "thumbnails.slideLayout": "{name} レイアウト",
     "thumbnails.untitledSlideLayout": "レイアウト",
-    "thumbnails.insertPage": "ページを挿入",
+    "thumbnails.newPage": "新しいページ",
     "thumbnails.duplicatePage": "ページを複製",
     "thumbnails.rotateRight": "右へ回転",
     "thumbnails.rotateLeft": "左へ回転",
