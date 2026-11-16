@@ -105,7 +105,7 @@ export function mountSlideLayouts(host: EditHost, i18n: I18n): SlideLayouts {
         // available. The new slide lands at the end of the last section selected
         // in the thumbnails — an empty one too — else right after the last slide
         // selected there, else after the current slide — the 0-based page index
-        // nearest the viewport top — PowerPoint-style.
+        // nearest the viewport top — PowerPoint-style. Then it is shown.
         async newSlide() {
             const { selectedPages, pageIndex, slideSections, selectedSlideSections } = host.store.getState();
             const section = [...slideSections].reverse().find((s) => selectedSlideSections.includes(s.id))?.id;
@@ -113,9 +113,18 @@ export function mountSlideLayouts(host: EditHost, i18n: I18n): SlideLayouts {
                 section !== undefined
                     ? APPEND_INDEX
                     : (selectedPages.length > 0 ? Math.max(...selectedPages) : pageIndex) + 1;
+            // Insert the slide and go to it: the end of the section's run as it
+            // stands when the insert is sent, else `insertIndex`, which the
+            // navigation clamps into a deck that had no slides.
+            const create = async (layout?: string) => {
+                const run = host.store.getState().slideSections.find((s) => s.id === section);
+                const landing = run ? run.start + run.count : insertIndex;
+                await execute(createSlide(insertIndex, layout, section));
+                host.store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: landing });
+            };
             const { options, slideSize } = await roster();
             if (options.length === 0) {
-                void execute(createSlide(insertIndex, undefined, section));
+                void create();
                 return;
             }
             modal.open({
@@ -125,7 +134,7 @@ export function mountSlideLayouts(host: EditHost, i18n: I18n): SlideLayouts {
                 options,
                 slideSize,
                 renderPreview,
-                onPick: (layout) => void execute(createSlide(insertIndex, layout, section)),
+                onPick: (layout) => void create(layout),
             });
         },
         // The slides are read as the picker opens, by id: a peer's edit while it

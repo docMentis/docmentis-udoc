@@ -40,6 +40,11 @@ listed once, by package. Its major and minor version are those of the
   mixing into a broken pattern. A collaborator's selection is dashed in their
   colour, no longer dotted.
 
+#### Fixed
+
+- New Slide shows the slide it adds, as PowerPoint does, instead of staying
+  on the slide it was pressed on.
+
 ## [0.8.21] - 2026-11-13
 
 Built on `@docmentis/udoc-wasm` 0.8.24.
