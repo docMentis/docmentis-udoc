@@ -15,7 +15,7 @@
 //
 // (Cross-document paste — carrying the referenced images/fonts — and turning
 // foreign `text/plain` into a text box are later increments.)
-import type { UDocFragment } from "@docmentis/udoc-wasm";
+import type { UDocFragment, UDocType } from "@docmentis/udoc-wasm";
 import {
     allowsEdit,
     allowsTableEdit,
@@ -59,6 +59,17 @@ export interface Clipboard {
     destroy(): void;
 }
 
+/**
+ * Whether an open document of `docType` pastes `fragment` as itself: one of its
+ * own doc type's. Any other pastes as its text, as one copied from another app
+ * does — the engine takes a fragment only into its own doc type, and into a
+ * workbook none yet, which loses nothing there: a workbook's fragment is only
+ * its text.
+ */
+function pastesFragment(fragment: UDocFragment, docType: UDocType | null): boolean {
+    return docType !== null && docType !== "spreadsheet" && docType in fragment;
+}
+
 /** The clipboard over `host`'s sink. */
 export function createClipboard(host: EditHost): Clipboard {
     const { edit } = host;
@@ -86,16 +97,18 @@ export function createClipboard(host: EditHost): Clipboard {
 
     // The native `paste`: read the clipboard (the source of truth). Prefer our own
     // flavor, then the fragment in the HTML envelope (what a clipboard written by
-    // the copy's async fallback carries — it has no custom format); else fall
-    // through to `text/plain`, which routes to the text caret when one is live and
-    // is otherwise a no-op (a text box from a string is a later increment).
+    // the copy's async fallback carries — it has no custom format), where the
+    // open document pastes it (see `pastesFragment`); else fall through to
+    // `text/plain`, which routes as typing does — to the text caret when one is
+    // live, or a workbook's cell — and is otherwise a no-op (a text box from a
+    // string is a later increment).
     function onPasteEvent(event: ClipboardEvent): void {
         if (!isEditReady()) return;
         event.preventDefault();
         const data = event.clipboardData;
         if (!data) return;
         const own = parseFragment(data.getData(UDOC_FRAGMENT_FORMAT)) ?? fragmentFromHtml(data.getData("text/html"));
-        if (own) {
+        if (own && pastesFragment(own, host.store.getState().docType)) {
             void host.commit(() => edit.paste(own));
             return;
         }
@@ -117,7 +130,8 @@ export function createClipboard(host: EditHost): Clipboard {
     // blocked), so it reads the clipboard asynchronously. That read can't see our
     // custom format (see the flavor note in udoc-ui's clipboard) — it recovers
     // the fragment from the HTML envelope, which is exactly why the envelope
-    // exists. Prefers our fragment, else routes text to the caret.
+    // exists. Prefers our fragment where the open document pastes it, else
+    // routes the text as typing does.
     //
     // Still not the equal of Ctrl/Cmd+V: the read is permission-gated, and Safari
     // fronts it with its own paste-confirmation UI. It pastes the same object,
@@ -139,7 +153,7 @@ export function createClipboard(host: EditHost): Clipboard {
             return; // read unsupported / denied
         }
         const frag = fragment;
-        if (frag) void host.commit(() => edit.paste(frag));
+        if (frag && pastesFragment(frag, host.store.getState().docType)) void host.commit(() => edit.paste(frag));
         else if (text) void host.insertSelectionText(text);
     }
 

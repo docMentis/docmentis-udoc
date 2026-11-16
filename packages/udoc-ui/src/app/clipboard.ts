@@ -95,7 +95,8 @@ export function parseFragment(text: string): UDocFragment | null {
     try {
         const value: unknown = JSON.parse(text);
         // Our own clipboard flavor is a doc-type-tagged UDocFragment; accept any
-        // known tag. A mismatched-doc-type paste is rejected worker-side.
+        // known tag. Whether the open document pastes it as itself, or as its
+        // text, is the paste's to decide.
         return value &&
             typeof value === "object" &&
             ("portable" in value || "presentation" in value || "spreadsheet" in value || "wordprocessing" in value)

@@ -27,6 +27,9 @@ listed once, by package. Its major and minor version are those of the
   deleted the shape holding it or wasn't offered.
 - Text pasted from another app into a worksheet goes into the cell being typed
   into, or begins an entry in the selected cell, where it was dropped.
+- A copy pastes as its text into a document of another kind, as a PDF's text
+  into a slide, and what is copied in a worksheet pastes into one as text,
+  where neither pasted anything.
 
 ## [0.8.22] - 2026-11-15
 
