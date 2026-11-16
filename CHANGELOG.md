@@ -51,6 +51,12 @@ listed once, by package. Its major and minor version are those of the
 
 #### Changed
 
+- A workbook's Cell tab is split in two. A new Text tab holds the font, size,
+  Bold, Italic, Underline, Strikethrough and Text Color, then Alignment,
+  Orientation, the indent steps and Wrap Text. The Cell tab keeps Fill,
+  Border Color, Border, Merge & Center, the number format and decimals, Clear
+  Formats and New Comment. Selecting cells opens the Cell tab; once picked,
+  the Text tab stays open as the selection moves.
 - New Page on a PDF's Page tab, and New Slide and Layout on a deck's Slide
   tab, show their names beside their icons, as PowerPoint's New Slide and
   Layout do. Insert Page is named New Page, there and in the page thumbnails'

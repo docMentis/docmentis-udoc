@@ -410,12 +410,9 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
 };
 
 /**
- * The spreadsheet Cell tab — the selected cells formatted as Excel's Home tab
- * formats them: the Text tab's font fields, Bold, Italic, Underline and
- * Strikethrough, and Text Color, with Fill Color beside it; Border Color and
- * Border; the Alignment and Orientation dropdowns, the two indent steps, Wrap
- * Text and Merge & Center; the Number Format dropdown and the two decimal
- * steps; Clear Formats; and New Comment, on
+ * The spreadsheet Cell tab — the selected cells themselves as Excel's Home tab
+ * formats them: Fill Color, Border Color and Border; Merge & Center; the Number
+ * Format dropdown and the two decimal steps; Clear Formats; and New Comment, on
  * the active cell. A workbook's strip opens on it, and a selection of cells
  * opens it.
  */
@@ -424,21 +421,9 @@ const CELL_TAB: EditTab = {
     label: "ribbon.cell",
     icon: ICON_TAB_CELL,
     commands: [
-        "fontFamily",
-        "fontSize",
-        "bold",
-        "italic",
-        "underline",
-        "strikethrough",
-        "textFill",
         "cellFill",
         "cellBorderColor",
         "cellBorder",
-        "cellAlign",
-        "cellOrientation",
-        "cellIndentDown",
-        "cellIndentUp",
-        "cellWrap",
         "cellMerge",
         "cellNumberFormat",
         "cellDecimalsUp",
@@ -448,6 +433,36 @@ const CELL_TAB: EditTab = {
     ] satisfies EditCommandId[],
     opensOnEntry: true,
     opensFor: sheetCells,
+};
+
+/**
+ * The spreadsheet Text tab — the selected cells' text as Excel's Home tab
+ * formats it: the font fields, Bold, Italic, Underline and Strikethrough, and
+ * Text Color; then how it sits in the cell: the Alignment and Orientation
+ * dropdowns, the two indent steps and Wrap Text. A selection of cells opens the
+ * Cell tab, ahead of it; picked, it stays open as the selection moves among the
+ * cells and into one being typed in.
+ */
+const SPREADSHEET_TEXT_TAB: EditTab = {
+    id: "text",
+    label: "ribbon.text",
+    icon: ICON_TAB_TEXT,
+    commands: [
+        "fontFamily",
+        "fontSize",
+        "bold",
+        "italic",
+        "underline",
+        "strikethrough",
+        "textFill",
+        "cellAlign",
+        "cellOrientation",
+        "cellIndentDown",
+        "cellIndentUp",
+        "cellWrap",
+    ] satisfies EditCommandId[],
+    opensFor: sheetCells,
+    staysOpen: true,
 };
 
 /** `docType`'s View tab, as edit mode has it: with the views edit mode alone
@@ -529,8 +544,8 @@ const WORDPROCESSING_REVIEW_MODE_TABS: readonly EditTab[] = [
  *  and its View last. Table goes ahead of Shape, as on a deck. */
 const IMAGE_TABS: readonly EditTab[] = [IMAGE_TAB, PRESENTATION_TEXT_TAB, TABLE_TAB, SHAPE_TAB, editViewTab("image")];
 
-/** The spreadsheet strip: its Cell tab, and its View. */
-const SPREADSHEET_TABS: readonly EditTab[] = [CELL_TAB, editViewTab("spreadsheet")];
+/** The spreadsheet strip: its Cell and Text tabs, and its View. */
+const SPREADSHEET_TABS: readonly EditTab[] = [CELL_TAB, SPREADSHEET_TEXT_TAB, editViewTab("spreadsheet")];
 
 /** The tab strip of a document of `docType` in `mode`, edit or review mode. */
 export function editTabs(docType: UDocType | null, mode: string): readonly EditTab[] {
