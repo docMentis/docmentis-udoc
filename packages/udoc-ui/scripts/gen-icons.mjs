@@ -60,8 +60,8 @@ const ICONS = {
     ICON_SIDE_PANEL_CLOSE: "left_panel_close",
     ICON_CODE: "code",
     ICON_SEARCH: "search",
-    ICON_COMMENTS: "mode_comment",
-    // Its tail on the right, as `mode_comment`'s is.
+    ICON_COMMENTS: "comment",
+    // Its tail on the right, as `comment`'s is.
     ICON_NEW_COMMENT: { symbol: "add_comment", mirrored: true },
     // A resolved comment thread opened again.
     ICON_REOPEN: "replay",
@@ -121,7 +121,6 @@ const ICONS = {
     ICON_SLIDE_MASTER_VIEW: "space_dashboard",
     ICON_PAGES_VIEW: "description",
     ICON_PAGELESS_VIEW: "subject",
-    ICON_TRACK_CHANGES: "edit_document",
     ICON_REVISION_VIEW: "difference",
     ICON_MARKUP_OPTIONS: "tune",
     ICON_REVISIONS: "list_alt",

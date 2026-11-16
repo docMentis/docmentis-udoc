@@ -14,6 +14,9 @@ listed once, by package. Its major and minor version are those of the
   items in its menu, and each shows pressed while its panel is open. The menu
   no longer has Revisions, which a word document's Review tab opens. Its
   `translations` key, `toolbar.revisions`, is gone.
+- Comments, the comment button over a selected annotation and a comment's
+  marker on the page show Material's comment symbol, a speech bubble with
+  lines, where they showed an empty one.
 
 ### udoc-editor
 
