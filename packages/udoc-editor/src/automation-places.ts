@@ -449,17 +449,32 @@ function readingWay(top: Point, bottom: Point): Point {
 /** How many steps taller each of `brackets` stands: one more than the
  *  tallest later bracket on its side that falls on it — a place inside its
  *  own beginning or ending with it, as a page's places come each before the
- *  places inside it. The innermost stands as tall as its line, and each
- *  around it a step taller, so brackets meeting at one edge show each its own
- *  ends, none of them moved off the edge. */
+ *  places inside it — and a place's two brackets alike, the taller of the
+ *  two, so its [ and its ] match. `brackets` holds each place's opening
+ *  bracket and then its closing one. The innermost stands as tall as its
+ *  line, and each around it a step taller, so brackets meeting at one edge
+ *  show each its own ends, none of them moved off the edge. */
 function nestLevels(brackets: readonly Bracket[]): number[] {
     const levels = brackets.map(() => 0);
-    for (let index = brackets.length - 1; index >= 0; index--) {
-        const bracket = brackets[index]!;
-        for (let inner = index + 1; inner < brackets.length; inner++) {
-            const other = brackets[inner]!;
-            if (other.side === bracket.side && fallsOn(other, bracket)) {
-                levels[index] = Math.max(levels[index]!, levels[inner]! + 1);
+    // A pair grown to match can stand taller than a place around it at the
+    // other edge, which grows again: on until nothing does.
+    for (let changed = true; changed; ) {
+        changed = false;
+        for (let index = brackets.length - 1; index >= 0; index--) {
+            const bracket = brackets[index]!;
+            for (let inner = index + 1; inner < brackets.length; inner++) {
+                const other = brackets[inner]!;
+                if (other.side === bracket.side && fallsOn(other, bracket) && levels[inner]! >= levels[index]!) {
+                    levels[index] = levels[inner]! + 1;
+                    changed = true;
+                }
+            }
+        }
+        for (let open = 0; open + 1 < brackets.length; open += 2) {
+            const tallest = Math.max(levels[open]!, levels[open + 1]!);
+            if (levels[open] !== tallest || levels[open + 1] !== tallest) {
+                levels[open] = levels[open + 1] = tallest;
+                changed = true;
             }
         }
     }
