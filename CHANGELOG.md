@@ -105,8 +105,9 @@ listed once, by package. Its major and minor version are those of the
   the shape shows where its condition holds and is hidden where it doesn't,
   as PowerPoint's Selection Pane hides one, so Refresh shows it again. The
   Data panel lists it with the places in text, and choosing it selects it.
-  Data shows or hides the Data panel, and Binding Markup the brackets and
-  bars: a template's show until it's pressed, and an instance's once it is.
+  Binding Markup shows or hides the brackets and bars — a template's show
+  until it's pressed, and an instance's once it is — and Data the Data
+  panel.
   Preview shows the
   template filled with its sample data, as the Data panel shows it,
   read-only in place of it, until it's turned off. A value the sample data

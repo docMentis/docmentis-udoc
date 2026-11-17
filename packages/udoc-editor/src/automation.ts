@@ -223,8 +223,8 @@ export function automationCommands(
             ICON_INSERT_CHOICE,
             NEW_CHOICE,
         ),
-        // Then Data, which shows or hides the panel listing the tags, as the
-        // Review tab's Revisions does its panel.
+        // Then Binding Markup, and Data, which shows or hides the panel
+        // listing the tags, as the Review tab's Revisions does its panel.
         dataPanel: {
             id: "dataPanel",
             label: "rightPanel.data",
@@ -240,7 +240,8 @@ export function automationCommands(
             enabledWhen: template,
         },
         // Binding Markup, its icon alone, pressed while the deck's places are
-        // drawn: a template's at first, an instance's once asked for.
+        // drawn: a template's at first, an instance's once asked for. A plain
+        // deck has none, and shows it disabled.
         bindingMarkup: {
             id: "bindingMarkup",
             label: "command.bindingMarkup",
@@ -251,7 +252,6 @@ export function automationCommands(
                 pressed: bindingMarkupShown,
                 press: (store) => updateEditState(store, { showBindingMarkup: !bindingMarkupShown(store.getState()) }),
             },
-            shownWhen: automated,
             enabledWhen: automated,
         },
         // Last Preview, pressed while the template's preview is shown or on its

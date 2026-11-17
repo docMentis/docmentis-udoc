@@ -115,7 +115,7 @@ const ICONS = {
     ICON_PREVIEW: "preview",
     ICON_GENERATE: "file_export",
     ICON_DATA_PANEL: "database",
-    ICON_BINDING_MARKUP: "data_array",
+    ICON_BINDING_MARKUP: "frame_source",
     // A place's popover's Remove
     ICON_REMOVE_PLACE: "delete",
     ICON_REFRESH: "refresh",
