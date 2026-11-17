@@ -1,7 +1,8 @@
 // A template's places, drawn over its slides from the engine's read of where
 // each shows (`bindingGeometry`): brackets, a [ where a place within a
 // paragraph begins and a ] where it ends, and a tall [ and ] either side of
-// one around whole paragraphs, each at its place's very edge — a choice drawn
+// one around whole paragraphs, or of a shape a binding makes a place, each at
+// its place's very edge — a choice drawn
 // as the option it shows — and where places begin or end together, the
 // innermost's as tall as its line and each around it a step taller; the
 // place the caret is in has its brackets stronger. Every place the caret is
@@ -11,14 +12,23 @@
 // stacked one joined to its bracket by a line straight down from its
 // bottom-left corner. The places of the Data
 // panel's name the pointer is over stand out too. Which places the caret is
-// in is the engine's to say (the selection's `places`): where places end or
-// begin, the caret stands at a level the arrows step through, and the bars
-// show the level. None of it is the document's — it is drawn over the
+// in is the engine's to say (the selection's `places`): the shapes made places
+// around it, outermost first, and then the places in its text — where those
+// end or begin, the caret stands at a level the arrows step through, and the
+// bars show the level. A whole shape selected stands where the caret would. None of it is the document's — it is drawn over the
 // canvas, under the selection, and takes no press but the bars' — and an
 // instance shows none until asked, so it reads as an ordinary document.
 import { subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { OverlayFrame, OverlayItem, OverlaySource, PageView } from "@docmentis/udoc-ui";
-import type { Binding, BindingGeometry, Point, SelectionGeometry, UDocSelectionProperties } from "@docmentis/udoc-wasm";
+import type {
+    Binding,
+    BindingGeometry,
+    Point,
+    SelectionBox,
+    SelectionGeometry,
+    SelectionQuad,
+    UDocSelectionProperties,
+} from "@docmentis/udoc-wasm";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { editState } from "./state.js";
@@ -38,10 +48,29 @@ const NEST_STEP = 5;
  *  another, CSS px. */
 const COINCIDE = 1.5;
 
+/** A place as the overlay reads it: its id — the container's around a place
+ *  in text, the shape's a binding makes a place — what it binds, what it is,
+ *  and where it shows. */
+export interface PlaceGeometry {
+    readonly id: string;
+    readonly binding: Binding;
+    /** Within a paragraph, around whole paragraphs, or a shape. */
+    readonly level: "span" | "block" | "shape";
+    readonly quads: readonly SelectionQuad[];
+}
+
 /** The place the caret is in, as the overlay marks it. */
 export interface CurrentPlace {
-    readonly geometry: BindingGeometry;
+    readonly geometry: PlaceGeometry;
     readonly page: number;
+}
+
+/** The engine's `geometry` of a place, as the overlay reads it. */
+function placeGeometry(geometry: BindingGeometry): PlaceGeometry {
+    const { place, binding, quads } = geometry;
+    return "shape" in place
+        ? { id: place.shape.id, binding, level: "shape", quads }
+        : { id: place.text.id, binding, level: place.text.level, quads };
 }
 
 export interface Places {
@@ -111,7 +140,7 @@ function placeParts(binding: Binding): [MessageKey, string] {
 export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPlace, item: DOMRect) => void): Places {
     const { client, store } = host;
     // What was read for each page, by `plane:page`, and which read is current.
-    let read = new Map<string, readonly BindingGeometry[]>();
+    let read = new Map<string, readonly PlaceGeometry[]>();
     let generation = 0;
     let views: readonly PageView[] = [];
     let selection: SelectionGeometry | null = null;
@@ -122,7 +151,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     let shown: { id: string; at: string } | null = null;
     let markedItem: HTMLElement | null = null;
 
-    const geometryOf = (page: number): readonly BindingGeometry[] =>
+    const geometryOf = (page: number): readonly PlaceGeometry[] =>
         read.get(`${store.getState().currentPlane}:${page}`) ?? [];
 
     const source: OverlaySource = (frame) => (placesShown(host) ? items(frame) : []);
@@ -141,7 +170,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
             const asked = generation;
             void client.bindingGeometry(plane, index).then((geometry) => {
                 if (asked !== generation) return;
-                read.set(key, geometry);
+                read.set(key, geometry.map(placeGeometry));
                 findCurrent();
                 draw();
             });
@@ -206,9 +235,9 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                     continue;
                 }
                 const [open, close] =
-                    geometry.level === "block"
-                        ? blockBrackets(quads.flatMap((quad) => quad.points.map(at)))
-                        : spanBrackets(quads[0]!.points.map(at), quads.at(-1)!.points.map(at));
+                    geometry.level === "span"
+                        ? spanBrackets(quads[0]!.points.map(at), quads.at(-1)!.points.map(at))
+                        : blockBrackets(quads.flatMap((quad) => quad.points.map(at)));
                 for (const bracket of [open, close]) brackets.push({ ...bracket, current: isCurrent });
                 const opening = brackets.length - 2;
                 opened.set(`${view.index}:${geometry.id}`, opening);
@@ -396,31 +425,41 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
 }
 
 /** The places the selection is in, outermost first, as a deck's selection
- *  properties report them; none for any other selection. */
+ *  properties report them: the shapes made places around it, then the places
+ *  in its text; none for any other selection. */
 function placesOf(properties: UDocSelectionProperties | null): readonly string[] {
-    return properties && "presentation" in properties ? (properties.presentation.text.places ?? []) : [];
+    if (!properties || !("presentation" in properties)) return [];
+    const { shape, text } = properties.presentation;
+    return [...(shape.places ?? []), ...(text.places ?? [])];
 }
 
-/** Where the selection's caret stands — its focus for a range — as a page and
- *  a page-local point. */
+/** Where the selection's caret stands — its focus for a range, or the first
+ *  shape's box where whole shapes are selected — as a page and a page-local
+ *  point. */
 function caretPoint(selection: SelectionGeometry | null): { page: number; point: Point } | null {
     const box = selection?.caret ?? selection?.focus ?? null;
-    if (box) {
-        const { rect, transform: t } = box;
-        const x = (rect.x0 + rect.x1) / 2;
-        const y = (rect.y0 + rect.y1) / 2;
-        return {
-            page: box.page,
-            point: {
-                x: t.scaleX * x + t.skewX * y + t.translateX,
-                y: t.skewY * x + t.scaleY * y + t.translateY,
-            },
-        };
-    }
+    if (box) return boxCenter(box);
     const quad = selection?.text[0];
-    if (!quad) return null;
-    const [a, , c] = quad.points;
-    return { page: quad.page, point: { x: (a.x + c.x) / 2, y: (a.y + c.y) / 2 } };
+    if (quad) {
+        const [a, , c] = quad.points;
+        return { page: quad.page, point: { x: (a.x + c.x) / 2, y: (a.y + c.y) / 2 } };
+    }
+    const object = selection?.objects[0];
+    return object ? boxCenter(object) : null;
+}
+
+/** The middle of `box`, as a page and a page-local point. */
+function boxCenter(box: SelectionBox): { page: number; point: Point } {
+    const { rect, transform: t } = box;
+    const x = (rect.x0 + rect.x1) / 2;
+    const y = (rect.y0 + rect.y1) / 2;
+    return {
+        page: box.page,
+        point: {
+            x: t.scaleX * x + t.skewX * y + t.translateX,
+            y: t.skewY * x + t.scaleY * y + t.translateY,
+        },
+    };
 }
 
 /** Where the selection's caret stands, as a key that changes when it moves. */
@@ -493,8 +532,8 @@ function spanBrackets(first: Point[], last: Point[]): [BracketShape, BracketShap
     ];
 }
 
-/** A place around whole paragraphs' brackets: a [ and a ] as tall as all its
- *  lines, at either side of them. */
+/** A place around whole paragraphs' brackets, or a shape's: a [ and a ] as
+ *  tall as all its lines, or its box, at either side of them. */
 function blockBrackets(corners: Point[]): [BracketShape, BracketShape] {
     const xs = corners.map((p) => p.x);
     const ys = corners.map((p) => p.y);

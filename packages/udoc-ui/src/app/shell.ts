@@ -1621,7 +1621,10 @@ export function mountUIShell(
             onHover: (places) =>
                 store.dispatch({
                     type: "SET_DATA_HOVER",
-                    places: places.flatMap((place) => (place.id === undefined ? [] : [place.id])),
+                    places: places.flatMap((place) => {
+                        const id = place.id ?? place.shape;
+                        return id === undefined ? [] : [id];
+                    }),
                 }),
             onSampleData: setSampleData,
         },
@@ -3741,13 +3744,23 @@ export function mountUIShell(
     );
 
     // Select the next of the places a Data panel row `key` stands for, and
-    // bring its slide into view.
+    // bring its slide into view: a place in text where it is, a shape whole.
     async function chooseDataPlace(key: string, places: readonly PresentationBindingPlace[]): Promise<void> {
         if (places.length === 0) return;
         const index = ((dataPlaceChosen.get(key) ?? -1) + 1) % places.length;
         dataPlaceChosen.set(key, index);
         const place = places[index]!;
         client.goToPage(place.slide);
+        if (place.shape !== undefined) {
+            const slide = await client.presentation.slideId(place.slide);
+            if (slide !== null) {
+                setSelection({
+                    presentation: { shapes: { container: { slide }, selection: { shapes: [place.shape] } } },
+                });
+            }
+            return;
+        }
+        if (place.location === undefined) return;
         const selection = await client.searchMatchSelection(place.location);
         if (selection) setSelection(selection);
     }

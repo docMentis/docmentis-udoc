@@ -3,8 +3,9 @@
 // again, its places written back as tags; Variable, Repeat, Condition and
 // Choice, which each make a place of the selection — around what a range
 // holds, or at a caret one holding its placeholder, the engine choosing a span
-// or a block by the selection — and open its popover on a path made up for the
-// author to type over, a variable inside a repeat's its item; Data, which
+// or a block by the selection, and Condition of whole shapes selected too —
+// and open its popover on a path made up for the author to type over, a
+// variable inside a repeat's its item; Data, which
 // shows or hides the right panel's Data tab,
 // what the deck's text binds; Preview, which shows the template filled with
 // its sample data in place of it, or the template again
@@ -12,7 +13,7 @@
 // the data the author gives and downloads it (automation-generate.ts); and an
 // instance's Places, which shows its places as a template's always show, and
 // Refresh, which fills it again in place from the data given.
-import { allowsTextEdit } from "@docmentis/udoc-ui/internal";
+import { allowsEdit, allowsTextEdit } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef } from "@docmentis/udoc-ui/internal";
 import type { Automation, Binding } from "@docmentis/udoc-wasm";
 import type { CurrentPlace } from "./automation-places.js";
@@ -107,17 +108,25 @@ function madeIn(binding: Binding, around: readonly CurrentPlace[]): Binding {
     return repeat ? { variable: { ...binding.variable, path: repeat.item } } : binding;
 }
 
-/** Make a place of the selection binding `binding`, one undo step, then open
- *  its popover for the author to bind it as they mean. */
-async function insertBinding(host: EditHost, places: PlaceEditing, binding: Binding): Promise<void> {
+/** Make a place of the selection binding `binding`, one undo step — of the
+ *  whole shapes selected, where `shapes` says the binding binds them and they
+ *  take it, else of the text selected — then open its popover for the author
+ *  to bind it as they mean. */
+async function insertBinding(host: EditHost, places: PlaceEditing, binding: Binding, shapes: boolean): Promise<void> {
     const made = madeIn(binding, places.around());
-    await host.commit(() => host.client.executeOnSelection({ kind: "bind", binding: made }));
+    const ofShapes = shapes && allowsEdit(host.store.getState().selectionCaps, "bindShapes");
+    await host.commit(() =>
+        host.client.executeOnSelection(
+            ofShapes ? { kind: "bindShapes", binding: made } : { kind: "bind", binding: made },
+        ),
+    );
     await places.edit(made);
 }
 
 /** The command making a place of the selection binding `binding`, labelled
  *  `label` beside `icon`: live in a template, wherever its text takes a place,
- *  a caret or a range in a shape's text or a table's cell. */
+ *  a caret or a range in a shape's text or a table's cell, and where `shapes`
+ *  says the binding binds whole shapes, for the whole shapes selected. */
 function insertCommand(
     host: () => EditHost | null,
     places: () => PlaceEditing | null,
@@ -125,6 +134,7 @@ function insertCommand(
     label: MessageKey,
     icon: string,
     binding: Binding,
+    shapes = false,
 ): CommandDef<MessageKey> {
     return {
         id,
@@ -137,10 +147,11 @@ function insertCommand(
             press: () => {
                 const mounted = host();
                 const editing = places();
-                if (mounted && editing) void insertBinding(mounted, editing, binding);
+                if (mounted && editing) void insertBinding(mounted, editing, binding, shapes);
             },
         },
-        enabledWhen: (c) => template(c) && allowsTextEdit(c.selection, "bind"),
+        enabledWhen: (c) =>
+            template(c) && (allowsTextEdit(c.selection, "bind") || (shapes && allowsEdit(c.selection, "bindShapes"))),
     };
 }
 
@@ -172,7 +183,8 @@ export function automationCommands(
             enabledWhen: (c) =>
                 c.ready && c.docType === "presentation" && (c.automation === null || isTemplate(c.automation)),
         },
-        // Variable, Repeat, Condition and Choice, each named beside its icon.
+        // Variable, Repeat, Condition and Choice, each named beside its icon;
+        // Condition binds whole shapes too.
         insertVariable: insertCommand(
             host,
             places,
@@ -196,6 +208,7 @@ export function automationCommands(
             "command.insertCondition",
             ICON_INSERT_CONDITION,
             NEW_CONDITION,
+            true,
         ),
         insertChoice: insertCommand(
             host,

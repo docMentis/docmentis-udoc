@@ -27,6 +27,7 @@ import type {
     PaintLine,
     Rect as CornerRect,
     ShapeGeometry,
+    ShapeNodeId,
     TextBodyProperties,
     Watermark,
     TextCharacterProperties,
@@ -1796,6 +1797,17 @@ export type SelectionEdit =
     | { kind: "rebind"; place: BindingControlId; binding: Binding }
     /** Text: dissolve the place `place`, in the selected text, keeping its content. */
     | { kind: "unbind"; place: BindingControlId }
+    /** Shapes: make each selected whole shape a place binding `binding`, a
+     *  condition, which a fill shows the shape by or hides it by. Offered in a
+     *  template alone. */
+    | { kind: "bindShapes"; binding: Binding }
+    /** Shapes: bind the shape `shape`, a place the selection is in — the shape
+     *  selected or holding the selection, or a group around it — by `binding`
+     *  instead. */
+    | { kind: "rebindShape"; shape: ShapeNodeId; binding: Binding }
+    /** Shapes: take the binding off the shape `shape`, a place the selection is
+     *  in, leaving an ordinary shape. */
+    | { kind: "unbindShape"; shape: ShapeNodeId }
     /** PDF: insert text at the caret / range in a page text object — typing, an
      *  IME commit, a paste. A newline splits the line (Enter is `text: "\n"`). */
     | { kind: "insertObjectText"; text: string }

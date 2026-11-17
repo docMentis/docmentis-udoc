@@ -276,12 +276,28 @@ export function editMode(options: UDocEditorOptions): EditMode {
                     places?.refresh();
                     return mounted.client.bindingChoice(id);
                 },
+                // A shape a binding makes a place is bound otherwise, or
+                // unbound, as a shape; a place in text as text.
                 onApply: (binding) =>
                     mounted
-                        .commit(() => mounted.client.executeOnSelection({ kind: "rebind", place: id, binding }))
+                        .commit(() =>
+                            mounted.client.executeOnSelection(
+                                place.geometry.level === "shape"
+                                    ? { kind: "rebindShape", shape: id, binding }
+                                    : { kind: "rebind", place: id, binding },
+                            ),
+                        )
                         .then(done),
                 onRemove: () =>
-                    mounted.commit(() => mounted.client.executeOnSelection({ kind: "unbind", place: id })).then(done),
+                    mounted
+                        .commit(() =>
+                            mounted.client.executeOnSelection(
+                                place.geometry.level === "shape"
+                                    ? { kind: "unbindShape", shape: id }
+                                    : { kind: "unbind", place: id },
+                            ),
+                        )
+                        .then(done),
             }),
         );
     };

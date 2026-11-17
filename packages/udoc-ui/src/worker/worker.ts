@@ -3720,6 +3720,9 @@ const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     adjustShapeHandle: "shape",
     adjustTextWarpHandle: "shape",
     pasteShapes: "shape",
+    bindShapes: "shape",
+    rebindShape: "shape",
+    unbindShape: "shape",
 };
 const DRAWING_FAMILY: Record<string, "text" | "shape"> = { ...TEXT_KINDS, ...SHAPE_KINDS };
 

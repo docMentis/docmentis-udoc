@@ -93,6 +93,12 @@ listed once, by package. Its major and minor version are those of the
   in one of them or out of them, as at a Word content control's edge: the
   arrows step it in and out before moving on, a click puts it in what it
   clicked after, and what is typed goes where it stands.
+  Condition makes whole shapes selected places too, a picture, a group or a
+  table among them: such a shape has brackets either side of its box, and a
+  binding bar while it, or a shape or text inside it, is selected. Filled,
+  the shape shows where its condition holds and is hidden where it doesn't,
+  as PowerPoint's Selection Pane hides one, so Refresh shows it again. The
+  Data panel lists it with the places in text, and choosing it selects it.
   Data shows or hides the Data panel; and Preview shows the
   template filled with its sample data, read-only in place of it, until it's
   turned off. A preview fills in every value the sample data lacks: text with
