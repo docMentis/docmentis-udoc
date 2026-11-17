@@ -84,9 +84,11 @@ listed once, by package. Its major and minor version are those of the
   side of one around whole paragraphs, and a choice's those of the option it
   shows. Where places begin or end together, the innermost's bracket is as
   tall as its line and each around it a step taller, all on the one edge.
-  The place the caret is in has its brackets stronger,
-  with a binding bar naming every place the caret is in,
-  outermost first, each opening its own popover. Where places end or begin,
+  The place the caret is in has its brackets stronger. Each place the caret
+  is in has a binding bar naming it, on top of its own opening bracket and
+  opening its popover, the one the caret stands in marked; bars that would
+  overlap stack up, each joined to its bracket by a line down from its
+  corner. Where places end or begin,
   as after a variable's text or between a choice's options, the caret stands
   in one of them or out of them, as at a Word content control's edge: the
   arrows step it in and out before moving on, a click puts it in what it

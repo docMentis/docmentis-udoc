@@ -4,15 +4,18 @@
 // one around whole paragraphs, each at its place's very edge — a choice drawn
 // as the option it shows — and where places begin or end together, the
 // innermost's as tall as its line and each around it a step taller; the
-// place the caret is in has its brackets stronger, with a binding bar naming
-// every place the caret is in, outermost first — Repeat › Choice › When "low"
-// — each item opening its place's popover; the places of the Data panel's
-// name the pointer is over stand out too. Which places the caret is in is the
-// engine's to say (the selection's `places`): where places end or begin, the
-// caret stands at a level the arrows step through, and the bar names the
-// level. None of it is the document's — it is drawn over the canvas, under
-// the selection, and takes no press but the bar's — and an instance shows
-// none until asked, so it reads as an ordinary document.
+// place the caret is in has its brackets stronger. Every place the caret is
+// in has a binding bar naming it, standing on top of its own opening bracket,
+// left-aligned with it, and opening its popover, the place it stands in
+// marked; bars that would overlap stack up, the outer over the inner, each
+// stacked one joined to its bracket by a line straight down from its
+// bottom-left corner. The places of the Data
+// panel's name the pointer is over stand out too. Which places the caret is
+// in is the engine's to say (the selection's `places`): where places end or
+// begin, the caret stands at a level the arrows step through, and the bars
+// show the level. None of it is the document's — it is drawn over the
+// canvas, under the selection, and takes no press but the bars' — and an
+// instance shows none until asked, so it reads as an ordinary document.
 import { subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { OverlayFrame, OverlayItem, OverlaySource, PageView } from "@docmentis/udoc-ui";
 import type { Binding, BindingGeometry, Point, SelectionGeometry, UDocSelectionProperties } from "@docmentis/udoc-wasm";
@@ -49,7 +52,7 @@ export interface Places {
     atCaret(): CurrentPlace[];
     /** Mark `place`, one the caret is in, until the caret moves. */
     show(place: CurrentPlace): void;
-    /** The marked place's item on the binding bar, as drawn, or null. */
+    /** The marked place's binding bar, as drawn, or null. */
     barItem(): HTMLElement | null;
     /** Read the places shown again — after the slide composed again with no
      *  edit to say so, as showing another of a choice's options does. */
@@ -72,8 +75,8 @@ function placesShown(host: EditHost): boolean {
     return "template" in role || edit.showPlaces;
 }
 
-/** The kind a binding's item on the binding bar names, and what follows it: its path, a repeat's
- *  item over its path, an option's values. */
+/** The kind a place's binding bar names, and what follows it: its path, a
+ *  repeat's item over its path, an option's values. */
 export function placeLabel(binding: Binding, i18n: I18n): string {
     const [kind, detail] = placeParts(binding);
     const name = i18n.t(kind);
@@ -174,8 +177,9 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
 
     function items(frame: OverlayFrame): OverlayItem[] {
         const brackets: Bracket[] = [];
-        // The opening bracket of the place marked, which the binding bar hangs from.
-        let opening: Bracket | null = null;
+        // Each place's opening bracket, by page and id — where its binding bar
+        // stands.
+        const opened = new Map<string, number>();
         // The places of the Data panel's name the pointer is over stand out as
         // the caret's does.
         const state = store.getState();
@@ -185,18 +189,20 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
             const geometries = geometryOf(view.index);
             // A choice draws as the option it shows, which holds all it shows
             // and comes next: the choice's brackets would only stand on the
-            // option's. The option stands out where the choice does.
-            let choice = null as { isMarked: boolean; isCurrent: boolean } | null;
+            // option's. The option stands out where the choice does, and the
+            // choice's bar stands on the option's bracket.
+            let choice = null as { id: string; isMarked: boolean; isCurrent: boolean } | null;
             for (const [index, geometry] of geometries.entries()) {
                 const quads = geometry.quads.filter((quad) => quad.page === view.index);
                 if (quads.length === 0) continue;
                 const isMarked =
                     (current?.geometry.id === geometry.id && current.page === view.index) || !!choice?.isMarked;
                 const isCurrent = isMarked || hovered.has(geometry.id) || !!choice?.isCurrent;
+                const held = choice;
                 choice = null;
                 const next = geometries[index + 1];
                 if (isChoice(geometry.binding) && next && isOption(next.binding)) {
-                    choice = { isMarked, isCurrent };
+                    choice = { id: geometry.id, isMarked, isCurrent };
                     continue;
                 }
                 const [open, close] =
@@ -204,23 +210,12 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                         ? blockBrackets(quads.flatMap((quad) => quad.points.map(at)))
                         : spanBrackets(quads[0]!.points.map(at), quads.at(-1)!.points.map(at));
                 for (const bracket of [open, close]) brackets.push({ ...bracket, current: isCurrent });
-                if (isMarked) opening = brackets.at(-2)!;
+                const opening = brackets.length - 2;
+                opened.set(`${view.index}:${geometry.id}`, opening);
+                if (held) opened.set(`${view.index}:${held.id}`, opening);
             }
         }
-        // The binding bar hangs from the tallest of the brackets standing with the
-        // marked place's opening one, clear of all their ends.
         const levels = nestLevels(brackets);
-        const marked = opening;
-        let hung: Bracket | null = marked;
-        if (marked) {
-            let tallest = levels[brackets.indexOf(marked)]!;
-            for (const [index, bracket] of brackets.entries()) {
-                if (bracket.side === marked.side && fallsOn(marked, bracket) && levels[index]! > tallest) {
-                    hung = bracket;
-                    tallest = levels[index]!;
-                }
-            }
-        }
         brackets.forEach((bracket, index) => grow(bracket, levels[index]!));
         const out: OverlayItem[] = [];
         if (brackets.length > 0) {
@@ -247,53 +242,89 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                 },
             });
         }
-        const bar = hung?.top ?? null;
-        if (bar) {
-            // One binding bar for every place the caret is in, outermost first, the
-            // place it stands in last and marked: nested places starting
-            // together share it rather than stacking.
-            const items = atCaret();
-            const key = items
-                .map((place) => `${place.geometry.id}:${current?.geometry.id === place.geometry.id}`)
-                .join();
+        // A binding bar for every place the caret is in, each on top of its
+        // own opening bracket; the place it stands in marked.
+        const bars: Bar[] = atCaret().flatMap((place) => {
+            const opening = opened.get(`${place.page}:${place.geometry.id}`);
+            if (opening === undefined) return [];
+            const isCurrent = current?.geometry.id === place.geometry.id;
+            return [{ place, anchor: brackets[opening]!.top, current: isCurrent }];
+        });
+        if (bars.length > 0) {
+            const key = bars.map((bar) => `${bar.place.geometry.id}:${bar.current}`).join();
             out.push({
-                key: "bar",
-                x: bar.x,
-                y: bar.y,
+                key: "bars",
+                x: 0,
+                y: 0,
                 create: () => {
                     const el = document.createElement("div");
-                    el.className = "udoc-binding-bar";
-                    // Down on the bar is no press on the text under it.
-                    el.addEventListener("pointerdown", (e) => e.stopPropagation());
+                    el.className = "udoc-binding-bars";
+                    const svg = document.createElementNS(SVG_NS, "svg");
+                    svg.setAttribute("aria-hidden", "true");
+                    svg.append(document.createElementNS(SVG_NS, "g"));
+                    el.appendChild(svg);
                     return el;
                 },
                 update: (el) => {
-                    if (el.dataset.items === key) return;
-                    el.dataset.items = key;
-                    markedItem = null;
-                    el.replaceChildren(
-                        ...items.flatMap((place, index) => {
-                            const label = placeLabel(place.geometry.binding, i18n);
-                            const item = document.createElement("button");
-                            item.type = "button";
-                            const isCurrent = current?.geometry.id === place.geometry.id;
-                            item.className = classOf("udoc-binding-bar__item", isCurrent);
-                            item.textContent = label;
-                            item.title = label;
-                            if (isCurrent) markedItem = item;
-                            // The press that opens the popover is no press outside it.
-                            item.addEventListener("click", (e) => {
-                                e.stopPropagation();
-                                open(place, item.getBoundingClientRect());
-                            });
-                            if (index === 0) return [item];
-                            const separator = document.createElement("span");
-                            separator.className = "udoc-binding-bar__separator";
-                            separator.textContent = "›";
-                            separator.setAttribute("aria-hidden", "true");
-                            return [separator, item];
-                        }),
+                    const svg = el.firstElementChild as SVGSVGElement;
+                    if (el.dataset.bars !== key) {
+                        el.dataset.bars = key;
+                        markedItem = null;
+                        el.replaceChildren(
+                            svg,
+                            ...bars.map((bar) => {
+                                const label = placeLabel(bar.place.geometry.binding, i18n);
+                                const item = document.createElement("button");
+                                item.type = "button";
+                                item.className = classOf("udoc-binding-bar", bar.current);
+                                item.textContent = label;
+                                item.title = label;
+                                if (bar.current) markedItem = item;
+                                // Down on a bar is no press on the text under it,
+                                // and the press that opens the popover no press
+                                // outside it.
+                                item.addEventListener("pointerdown", (e) => e.stopPropagation());
+                                item.addEventListener("click", (e) => {
+                                    e.stopPropagation();
+                                    open(bar.place, item.getBoundingClientRect());
+                                });
+                                return item;
+                            }),
+                        );
+                    }
+                    const items = [...el.querySelectorAll<HTMLElement>(".udoc-binding-bar")];
+                    const placed = stacked(
+                        bars.map((bar, index) => ({
+                            left: bar.anchor.x,
+                            bottom: bar.anchor.y,
+                            width: items[index]!.offsetWidth,
+                            height: items[index]!.offsetHeight,
+                        })),
                     );
+                    const leaders: { from: Point; to: Point; current: boolean }[] = [];
+                    placed.forEach((box, index) => {
+                        const item = items[index]!;
+                        const bar = bars[index]!;
+                        item.style.left = `${box.left}px`;
+                        item.style.top = `${box.bottom - box.height}px`;
+                        // Stacked off its place, a line straight down from its
+                        // bottom-left corner to its opening bracket's top.
+                        if (box.bottom < bar.anchor.y - 0.5) {
+                            leaders.push({
+                                from: { x: box.left, y: box.bottom },
+                                to: bar.anchor,
+                                current: bar.current,
+                            });
+                        }
+                    });
+                    pooled(svg.firstElementChild!, "line", leaders.length).forEach((line, index) => {
+                        const leader = leaders[index]!;
+                        line.setAttribute("x1", `${leader.from.x}`);
+                        line.setAttribute("y1", `${leader.from.y}`);
+                        line.setAttribute("x2", `${leader.to.x}`);
+                        line.setAttribute("y2", `${leader.to.y}`);
+                        line.setAttribute("class", classOf("udoc-binding-bar-leader", leader.current));
+                    });
                 },
             });
         }
@@ -396,6 +427,44 @@ function caretPoint(selection: SelectionGeometry | null): { page: number; point:
 function caretKey(selection: SelectionGeometry | null): string {
     const at = caretPoint(selection);
     return at ? `${at.page}:${at.point.x.toFixed(2)}:${at.point.y.toFixed(2)}` : "";
+}
+
+/** A place's binding bar: the place, its opening bracket's top end, which
+ *  the bar's bottom-left corner stands on, and whether it is the place the
+ *  caret stands in. */
+interface Bar {
+    place: CurrentPlace;
+    anchor: Point;
+    current: boolean;
+}
+
+/** How far apart bars stacked one over another stand, CSS px. */
+const BAR_GAP = 2;
+
+/** Where each of `boxes` stands, outermost place first — each on top of its
+ *  own place, and one that would overlap a bar nearer its place's text
+ *  stacked up over that bar, the innermost place's standing where it is. */
+function stacked(
+    boxes: { left: number; bottom: number; width: number; height: number }[],
+): { left: number; bottom: number; width: number; height: number }[] {
+    const placed: { left: number; bottom: number; width: number; height: number }[] = [];
+    const out = boxes.map((box) => ({ ...box }));
+    for (let index = out.length - 1; index >= 0; index--) {
+        const box = out[index]!;
+        for (let moved = true; moved; ) {
+            moved = false;
+            for (const other of placed) {
+                const across = box.left < other.left + other.width && other.left < box.left + box.width;
+                const down = box.bottom - box.height < other.bottom && other.bottom - other.height < box.bottom;
+                if (across && down) {
+                    box.bottom = other.bottom - other.height - BAR_GAP;
+                    moved = true;
+                }
+            }
+        }
+        placed.push(box);
+    }
+    return out;
 }
 
 /** One bracket of a place, in viewport px: the edge it stands on, from its top
@@ -519,7 +588,7 @@ function bracketPoints(bracket: Bracket): string {
 }
 
 /** `group`'s first `count` children, made `tag`s as needed, the rest gone. */
-function pooled<K extends "polyline">(group: Element, tag: K, count: number): SVGElementTagNameMap[K][] {
+function pooled<K extends "polyline" | "line">(group: Element, tag: K, count: number): SVGElementTagNameMap[K][] {
     while (group.childElementCount > count) group.lastElementChild!.remove();
     while (group.childElementCount < count) group.appendChild(document.createElementNS(SVG_NS, tag));
     return [...group.children] as SVGElementTagNameMap[K][];

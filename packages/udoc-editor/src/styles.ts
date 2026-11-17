@@ -1233,49 +1233,47 @@ export const editorStyles = css`
         stroke: var(--udoc-canvas-binding-marker-current);
         stroke-width: 2px;
     }
-    /* The binding bar over the place the caret is in: every place it is in,
-       outermost first, each an item opening its popover, the one it stands
-       in last and marked. An outer item gives way first where room runs
-       out. */
+    /* The binding bars: one over each place the caret is in, on top of its
+       opening bracket, the one it stands in marked; stacked ones are joined
+       to their places by a line. */
+    .udoc-ui-root .udoc-binding-bars svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        overflow: visible;
+        pointer-events: none;
+    }
     .udoc-ui-root .udoc-binding-bar {
         position: absolute;
-        transform: translateY(-100%);
-        display: flex;
-        align-items: stretch;
-        max-width: 480px;
+        max-width: 240px;
+        padding: 1px 6px;
+        border: none;
         border-radius: 3px 3px 0 0;
-        overflow: hidden;
         background: var(--udoc-canvas-binding-marker);
         color: #fff;
         font-size: 11px;
         font-weight: 500;
         line-height: 16px;
         white-space: nowrap;
-        pointer-events: auto;
-    }
-    .udoc-ui-root .udoc-binding-bar__item {
-        min-width: 0;
-        max-width: 160px;
-        padding: 1px 6px;
-        border: none;
-        background: transparent;
-        color: inherit;
-        font: inherit;
-        line-height: inherit;
         overflow: hidden;
         text-overflow: ellipsis;
         cursor: pointer;
+        pointer-events: auto;
     }
-    .udoc-ui-root .udoc-binding-bar__item--current {
-        flex-shrink: 0;
-        max-width: 240px;
+    .udoc-ui-root .udoc-binding-bar--current {
         background: var(--udoc-canvas-binding-marker-current);
         font-weight: 600;
     }
-    .udoc-ui-root .udoc-binding-bar__separator {
-        opacity: 0.7;
+    .udoc-ui-root .udoc-binding-bar-leader {
+        stroke: var(--udoc-canvas-binding-marker);
+        stroke-width: 1px;
     }
-    /* A place's popover, below its item on the binding bar: its binding's fields, Remove and
+    .udoc-ui-root .udoc-binding-bar-leader--current {
+        stroke: var(--udoc-canvas-binding-marker-current);
+    }
+    /* A place's popover, below its binding bar: its binding's fields, Remove and
        Done — the dialogs' fields and buttons in a panel of their own. */
     .udoc-ui-root .udoc-place-popover {
         position: fixed;
@@ -1336,7 +1334,7 @@ export const editorStyles = css`
         justify-content: space-between;
         margin-top: 12px;
     }
-    .udoc-ui-root .udoc-binding-bar__item:focus-visible {
+    .udoc-ui-root .udoc-binding-bar:focus-visible {
         outline: 2px solid #fff;
         outline-offset: -2px;
     }

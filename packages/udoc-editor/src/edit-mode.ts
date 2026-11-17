@@ -253,7 +253,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
     let automationGenerate: AutomationGenerate | null = null;
     let places: Places | null = null;
     let placePopover: PlacePopover | null = null;
-    // A place's popover, from its item on the binding bar: a template's places alone are edited.
+    // A place's popover, from its binding bar: a template's places alone are edited.
     const openPlace = (place: CurrentPlace, item: DOMRect): void => {
         const mounted = host;
         if (!mounted || !placePopover) return;

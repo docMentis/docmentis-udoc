@@ -1,11 +1,11 @@
-// A place's popover, opened from its item on the binding bar over a
+// A place's popover, opened from its binding bar over a
 // template's slide: the place's binding as fields for its kind — a variable's
 // path and default, a repeat's item, path and separators, a condition's path
 // and whether it shows when false, a choice's path, an option's values —
 // applied with Done or Enter, and Remove, which dissolves the place and keeps
 // its content. A choice's and an option's list the choice's options, and
 // picking one shows it on the slide at once, the others taking no room — the
-// view's pick, not an edit. Anchored below the item, it closes on an outside
+// view's pick, not an edit. Anchored below the bar, it closes on an outside
 // press or Escape, as a menu does.
 //
 // Storeless and imperative: mounted once and reused, `open(ctx)` seeding it
@@ -15,11 +15,11 @@ import type { Binding, BindingChoice } from "@docmentis/udoc-wasm";
 import { placeLabel } from "../automation-places.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
 
-/** What `open` needs: the binding, where its item on the binding bar stands,
+/** What `open` needs: the binding, where its binding bar stands,
  *  and what Done and Remove do. */
 export interface PlacePopoverContext {
     binding: Binding;
-    /** The item's rect, in client px, the popover opens below. */
+    /** The bar's rect, in client px, the popover opens below. */
     anchor: DOMRect;
     /** Bind the place by `binding` instead. */
     onApply: (binding: Binding) => Promise<void>;
@@ -285,7 +285,7 @@ export function createPlacePopover(i18n: I18n) {
         );
         listOptions(context.choice);
         error.textContent = "";
-        // Below the item, kept on screen.
+        // Below the bar, kept on screen.
         const width = 260;
         panel.style.left = `${Math.max(8, Math.min(context.anchor.left, window.innerWidth - width - 8))}px`;
         panel.style.top = `${context.anchor.bottom + 4}px`;
