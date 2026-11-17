@@ -102,6 +102,15 @@ export default defineConfig({
     // The package's own README, for its folder on GitHub, not a page of the
     // site.
     srcExclude: ["README.md"],
+    // Inline code is shown as written: a template's `{{…}}` tag, in a guide or
+    // a doc comment, isn't Vue's to interpolate. VitePress leaves fenced code
+    // alone, and inline code only with this.
+    markdown: {
+        config(md) {
+            const code = md.renderer.rules.code_inline!;
+            md.renderer.rules.code_inline = (...args) => code(...args).replace(/^<code/, "<code v-pre");
+        },
+    },
     // docmentis.com's icon and wordmark, from `public/`. VitePress puts the
     // logo under `base` itself, but not what `head` links to.
     head: [["link", { rel: "icon", type: "image/svg+xml", href: `${base}favicon.svg` }]],
