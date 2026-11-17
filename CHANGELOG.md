@@ -8,6 +8,12 @@ listed once, by package. Its major and minor version are those of the
 
 ### udoc-viewer and udoc-editor
 
+#### Added
+
+- Copy works on the slides, sections or pages selected in the thumbnails, on
+  PDF annotations, and on a worksheet's whole rows, whole columns, whole sheet
+  or objects.
+
 #### Fixed
 
 - Copied text keeps its line breaks when pasted into an app that takes the
@@ -20,6 +26,8 @@ listed once, by package. Its major and minor version are those of the
 - Whole rows, whole columns or a whole table selected in a table show a bar
   just outside it — at both ends of the rows, above and below the columns, on
   every side of the table — so they read apart from a block of cells.
+- Cut takes out the slides, sections, pages or PDF annotations selected once
+  they are copied, a section with its slides.
 
 #### Fixed
 

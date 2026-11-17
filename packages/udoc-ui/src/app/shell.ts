@@ -2097,12 +2097,33 @@ export function mountUIShell(
             e.preventDefault();
             return;
         }
+        // Copy, cut and paste ride native clipboard events on the hidden sink,
+        // not a shortcut here — but the browser fires them at whatever holds
+        // the focus. Where that is the shell's own, not a real field — the
+        // thumbnails, whose arrow keys pick pages — the sink takes the focus
+        // for the event that follows this key, then hands it back. Taken
+        // outright: the sink's own reclaim stands aside for the thumbnails'
+        // list, which is the point of it everywhere but here.
+        const sink = canvas.clipboardSink;
+        if (
+            (e.ctrlKey || e.metaKey) &&
+            !e.shiftKey &&
+            !e.altKey &&
+            ["c", "x", "v"].includes(e.key.toLowerCase()) &&
+            e.target !== sink &&
+            !isTypingTarget(e)
+        ) {
+            const holder = document.activeElement;
+            sink.focus({ preventScroll: true });
+            if (holder instanceof HTMLElement && holder !== sink)
+                setTimeout(() => {
+                    if (document.activeElement === sink) holder.focus({ preventScroll: true });
+                });
+        }
         // Delete / Backspace removes the selected objects — but only in edit
         // mode, bar annotations, which edit in view mode too where their
         // capabilities allow (a session not entitled to annotate has none),
         // and never while typing in a real field, where the key edits text.
-        // (Copy/cut/paste ride native clipboard events on the hidden sink, not
-        // a shortcut here.)
         if (e.key === "Delete" || e.key === "Backspace") {
             const state = store.getState();
             const deletes = annotationsSelected()

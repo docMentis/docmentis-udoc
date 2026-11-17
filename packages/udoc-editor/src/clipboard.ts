@@ -33,11 +33,12 @@ import { editsDocument } from "./mode.js";
  * keyboard as from the menu.
  *
  * A range of text deletes as text, in a workbook's cell being typed into
- * too, and objects, annotations or shapes picked whole delete as they are. A
- * caret, or a pick in a table, only copies: the shape or table holding it
- * keeps its own delete live, but a cut of what is in it must not take it. Nor
- * does a workbook's block of cells delete — Excel's cut moves a block when it
- * is pasted, and clears nothing before.
+ * too, and objects, annotations, shapes, slides, sections or pages picked
+ * whole delete as they are. A caret, or a pick in a table, only copies: the
+ * shape or table holding it keeps its own delete live, but a cut of what is in
+ * it must not take it. Nor does anything picked in a workbook's grid delete —
+ * Excel's cut moves cells when they are pasted, and clears nothing before —
+ * nor, yet, its objects.
  */
 export function cutDeletes({
     docType,
@@ -47,7 +48,15 @@ export function cutDeletes({
     if (docType === "spreadsheet") return cellEntry;
     if (allowsTextEdit(selection, "deleteText")) return true;
     if (allowsTextEdit(selection, "insertText") || allowsTableEdit(selection, "insertRows")) return false;
-    return allowsEdit(selection, "deleteObjects", "deleteAnnotations", "deleteShapes");
+    return allowsEdit(
+        selection,
+        "deleteObjects",
+        "deleteAnnotations",
+        "deleteShapes",
+        "deleteSlides",
+        "deleteSlideSectionsWithSlides",
+        "deletePages",
+    );
 }
 
 /** Edit mode's clipboard verbs, for a menu row — a keyboard cut or paste rides
@@ -91,8 +100,17 @@ export function createClipboard(host: EditHost): Clipboard {
             selection: state.selectionCaps,
         });
         void host.clipboard.write(event).then((copied) => {
-            if (copied && deletes) void host.deleteSelection();
+            if (copied && deletes) void deleteCut();
         });
+    }
+
+    // What a cut deletes once its copy landed: the selection, as Delete takes
+    // it — except sections, whose copy carries their slides, so their cut
+    // takes the slides too, where Delete hands them to the section before.
+    function deleteCut(): Promise<void> {
+        if (host.store.getState().selectedSlideSections.length > 0)
+            return host.commit(() => host.client.executeOnSelection({ kind: "deleteSlideSectionsWithSlides" }));
+        return host.deleteSelection();
     }
 
     // The native `paste`: read the clipboard (the source of truth). Prefer our own
