@@ -3,7 +3,7 @@
 // `createAs` its own class and its extension of the shell, and builds that
 // extension from what the shell lends it.
 export { createAs } from "./base.js";
-export { completedSample, filledDataOf, sampleDataOf } from "./app/data-bindings.js";
+export { filledDataOf, sampleDataOf } from "./app/data-bindings.js";
 export type { WorkerClient, Wrapper } from "./worker/WorkerClient.js";
 export type { UIShell, UIShellOptions } from "./app/shell.js";
 export type {

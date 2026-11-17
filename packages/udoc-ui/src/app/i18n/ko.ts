@@ -392,6 +392,8 @@ export const ko: Messages = {
     "data.places.other": "{count}곳에서 사용",
     "data.items.other": "항목 {count}개",
     "data.other": "기타…",
+    "data.fillIn": "채우기",
+    "data.fillInHint": "샘플 데이터에 없는 이름마다 값 만들기",
 
     // Search panel
     "search.placeholder": "문서에서 검색",

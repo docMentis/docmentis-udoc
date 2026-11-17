@@ -394,6 +394,8 @@ export const fr: Messages = {
     "data.items.one": "{count} élément",
     "data.items.other": "{count} éléments",
     "data.other": "Autre…",
+    "data.fillIn": "Remplir",
+    "data.fillInHint": "Inventer une valeur pour chaque nom sans donnée d’exemple",
 
     // Search panel
     "search.placeholder": "Rechercher dans le document",

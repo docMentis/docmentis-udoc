@@ -2,7 +2,8 @@
 // bindings, and the template's sample data, written against it. Above, the
 // deck's role, as its automation part gives it: a template, whose braces are
 // read as tags, an instance filled from one, or a plain deck, whose braces are
-// only text until it is made a template.
+// only text until it is made a template; beside a template's, Fill In, which
+// gives its sample data a value made up for each name it lacks.
 //
 // For a template, the schema its bindings make, as a form of its sample data: a
 // tree of the names the data must hold, nested as the data nests it, each
@@ -38,9 +39,9 @@ import type { Action } from "../actions.js";
 import {
     blankItem,
     boundPath,
+    filledInSample,
     sampleAt,
     sampleDataOf,
-    titleOf,
     withItem,
     withSample,
     withoutItem,
@@ -124,11 +125,15 @@ function textAt(data: BindingData | undefined, path: SamplePath): string | undef
 export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
     const el = div("udoc-data-panel");
     el.setAttribute("aria-label", i18n.t("rightPanel.data"));
-    // The deck's role, once read: hidden until then.
+    // The deck's role, once read: hidden until then; and beside it what acts
+    // on the whole sample data.
     const role = div("udoc-data-panel__role");
     role.hidden = true;
+    const actions = div("udoc-data-panel__actions");
+    const header = div("udoc-data-panel__header");
+    header.append(role, actions);
     const body = div("udoc-data-panel__body");
-    el.append(role, body);
+    el.append(header, body);
     let unsubscribe: (() => void) | null = null;
     /** What is drawn, drawn again as a group folds or unfolds. */
     let current: DataPanelSlice | null = null;
@@ -160,6 +165,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
      *  instance, or until the bindings are read. */
     function render(slice: DataPanelSlice): void {
         const { bindings, automation } = slice;
+        actions.replaceChildren();
         if (bindings === null || (automation !== null && !("template" in automation.role))) {
             body.replaceChildren();
             return;
@@ -177,6 +183,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         }
         const parts: HTMLElement[] = [];
         if (named) {
+            actions.append(fillInButton(bindings.schema, slice));
             const form = div("udoc-data-panel__form");
             form.setAttribute("role", "group");
             form.append(...entries(properties, [], 0, slice));
@@ -353,14 +360,15 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
             if (controls.length > 1) value.classList.add("udoc-data-panel__value--stacked");
             value.append(...controls);
         } else {
-            value.append(textInput(name, path, titleOf(path), slice));
+            value.append(textInput(name, path, slice));
         }
         return value;
     }
 
-    /** The text input of the value at `path`, `placeholder` what a preview
-     *  fills in where the sample data gives nothing. */
-    function textInput(name: string, path: SamplePath, placeholder: string, slice: DataPanelSlice): HTMLInputElement {
+    /** The text input of the value at `path`, empty where the sample data
+     *  gives nothing — `placeholder` the hint it shows then, a choice's Other
+     *  field's alone. */
+    function textInput(name: string, path: SamplePath, slice: DataPanelSlice, placeholder = ""): HTMLInputElement {
         const data = sampleDataOf(slice.automation);
         const input = document.createElement("input");
         input.type = "text";
@@ -406,7 +414,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         chevron.className = "udoc-data-panel__chevron";
         chevron.innerHTML = ICON_CHEVRON_DOWN;
         wrap.append(select, chevron);
-        return other ? [wrap, textInput(name, path, i18n.t("data.other"), slice)] : [wrap];
+        return other ? [wrap, textInput(name, path, slice, i18n.t("data.other"))] : [wrap];
     }
 
     /** How many items the array at `path` holds, after its name. */
@@ -416,6 +424,23 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         meta.className = "udoc-data-panel__meta";
         meta.textContent = i18n.plural("data.items", Array.isArray(held) ? held.length : 0);
         return meta;
+    }
+
+    /** Fill In: gives the template a value made up for each name `schema`
+     *  holds that its sample data lacks ({@link filledInSample}), one undo
+     *  step — live in edit mode while one lacks a value. */
+    function fillInButton(schema: BindingSchema, slice: DataPanelSlice): HTMLElement {
+        const sample = sampleDataOf(slice.automation);
+        const filled = filledInSample(sample, schema);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "udoc-data-panel__text-button";
+        button.textContent = i18n.t("data.fillIn");
+        button.title = i18n.t("data.fillInHint");
+        button.dataset.focus = "fillIn";
+        button.disabled = !slice.editable || JSON.stringify(filled) === JSON.stringify(sample ?? {});
+        button.addEventListener("click", () => callbacks.onSampleData(filled));
+        return button;
     }
 
     /** An icon button, `icon`, named `name`, keyed `focus`. */
@@ -532,7 +557,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         renderRole(slice);
         render(slice);
         if (key === undefined) return;
-        const again = [...body.querySelectorAll<HTMLElement>("[data-focus]")].find(
+        const again = [...el.querySelectorAll<HTMLElement>("[data-focus]")].find(
             (control) => control.dataset.focus === key,
         );
         if (!again) return;

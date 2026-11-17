@@ -8,7 +8,7 @@
 // toolbar's Download and Print act on it: what is downloaded or printed is what
 // is seen. The preview is made anew each time it's turned on, and gone when it's
 // turned off, when the deck stops being a template, or in view mode.
-import { completedSample, sampleDataOf, subscribeSelector } from "@docmentis/udoc-ui/internal";
+import { sampleDataOf, subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { UIShell } from "@docmentis/udoc-ui/internal";
 import type { BindingData, FileFormat } from "@docmentis/udoc-wasm";
 import { copyName, downloadBytes, filledCopy, instanceFormat } from "./automation-copy.js";
@@ -34,11 +34,11 @@ export function templateFormat(host: EditHost): FileFormat {
     return (host.store.getState().sourceFormat as FileFormat | null) ?? "pptx";
 }
 
-/** The template's sample data, every value it lacks made up from its schema. */
-export async function previewData(host: EditHost): Promise<BindingData> {
-    const bindings = await host.client.presentation.automationBindings();
-    const sample = sampleDataOf(host.store.getState().automation);
-    return bindings ? completedSample(sample, bindings.schema) : (sample ?? {});
+/** The template's sample data, as the Data panel shows it: what a preview
+ *  fills the template with, and Generate offers first. A value it lacks is
+ *  filled as Generate fills it, made up nowhere. */
+export function previewData(host: EditHost): BindingData {
+    return sampleDataOf(host.store.getState().automation) ?? {};
 }
 
 /** A template preview for an editor made with `options`, whose license, look
@@ -70,7 +70,8 @@ export function createAutomationPreview(options: UDocEditorOptions): AutomationP
         const at = ++turn;
         updateEditState(host.store, { automationPreview: true });
         const format = templateFormat(host);
-        const [data, bytes] = await Promise.all([previewData(host), host.client.saveToBytes(format)]);
+        const data = previewData(host);
+        const bytes = await host.client.saveToBytes(format);
         if (!wanted(host, at)) return;
         const body = host.root.querySelector<HTMLElement>(".udoc-body-slot") ?? host.root;
         const overlay = document.createElement("div");

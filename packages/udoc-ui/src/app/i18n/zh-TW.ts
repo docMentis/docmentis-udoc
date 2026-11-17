@@ -390,6 +390,8 @@ export const zhTW: Messages = {
     "data.places.other": "在 {count} 處使用",
     "data.items.other": "{count} 項",
     "data.other": "其他…",
+    "data.fillIn": "填入",
+    "data.fillInHint": "為範例資料缺少的每個名稱產生值",
 
     // Search panel
     "search.placeholder": "在文件中搜尋",

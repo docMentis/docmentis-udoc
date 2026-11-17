@@ -745,6 +745,10 @@ export interface Messages {
     "data.items.other": string;
     /** Other… — a choice's value that is none of its options' */
     "data.other": string;
+    /** Fill In */
+    "data.fillIn": string;
+    /** Make up a value for each name the sample data lacks */
+    "data.fillInHint": string;
 
     // Search panel
     /** Search in document */

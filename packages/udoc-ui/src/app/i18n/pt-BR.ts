@@ -394,6 +394,8 @@ export const ptBR: Messages = {
     "data.items.one": "{count} item",
     "data.items.other": "{count} itens",
     "data.other": "Outro…",
+    "data.fillIn": "Preencher",
+    "data.fillInHint": "Criar um valor para cada nome sem dado de exemplo",
 
     // Search panel
     "search.placeholder": "Pesquisar no documento",

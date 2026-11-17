@@ -11,10 +11,8 @@ import type { BindingData, BindingSchema } from "@docmentis/udoc-wasm";
 import {
     blankItem,
     boundPath,
-    completedSample,
-    madeUpSample,
+    filledInSample,
     sampleAt,
-    titleOf,
     withItem,
     withoutItem,
     withSample,
@@ -53,32 +51,35 @@ test("a value's bound path names every item alike", () => {
     assert.equal(boundPath(["funds"]), "funds");
 });
 
-test("a made-up sample is each path's title, a choice's first value, true and three items", () => {
-    assert.equal(titleOf(["customer", "name"]), "Customer Name");
-    assert.equal(titleOf(["funds", 2, "paysDividend"]), "Funds Pays Dividend");
-    assert.equal(titleOf(["first_name"]), "First Name");
+test("filling in makes up what the sample data lacks: a title, a choice's first value, true and three items", () => {
     const schema: BindingSchema = {
         object: {
             properties: {
                 customer: { object: { properties: { name: { text: { values: [] } } } } },
                 rating: { text: { values: ["low", "high"] } },
                 vip: "bool",
-                managers: { array: { item: { text: { values: [] } } } },
+                funds: { array: { item: { object: { properties: { fund_name: { text: { values: [] } } } } } } },
             },
         },
     };
-    assert.deepEqual(madeUpSample(schema), {
+    assert.deepEqual(filledInSample(undefined, schema), {
         customer: { name: "Customer Name" },
         rating: "low",
         vip: true,
-        managers: ["Managers", "Managers", "Managers"],
+        funds: [{ fund_name: "Funds Fund Name" }, { fund_name: "Funds Fund Name" }, { fund_name: "Funds Fund Name" }],
     });
-    assert.deepEqual(completedSample({ customer: { name: "Ada" }, managers: ["Bo"] }, schema), {
-        customer: { name: "Ada" },
-        rating: "low",
-        vip: true,
-        managers: ["Bo"],
-    });
+    // What it holds stays, an empty text, false and an empty array among it;
+    // its items are filled in as made-up items are.
+    assert.deepEqual(
+        filledInSample({ customer: { name: "" }, vip: false, funds: [{}, { fund_name: "Alpha" }] }, schema),
+        {
+            customer: { name: "" },
+            rating: "low",
+            vip: false,
+            funds: [{ fund_name: "Funds Fund Name" }, { fund_name: "Alpha" }],
+        },
+    );
+    assert.deepEqual(filledInSample({ funds: [] }, schema).funds, []);
 });
 
 test("a new item is blank as its kind is", () => {

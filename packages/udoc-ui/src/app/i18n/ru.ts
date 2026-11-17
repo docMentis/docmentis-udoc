@@ -398,6 +398,8 @@ export const ru: Messages = {
     "data.items.many": "{count} элементов",
     "data.items.other": "{count} элемента",
     "data.other": "Другое…",
+    "data.fillIn": "Заполнить",
+    "data.fillInHint": "Придумать значение для каждого имени без примера данных",
 
     // Search panel
     "search.placeholder": "Поиск в документе",

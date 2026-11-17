@@ -24,8 +24,11 @@ listed once, by package. Its major and minor version are those of the
   and removed. A name chosen selects the next place that binds it; where
   two or more do, their count follows the name, and in edit mode pointing
   at it outlines its places on the slides. In edit mode the sample data is
-  kept in the template, one undo step per value. Last come the bindings
-  that are wrong, each with what is wrong with it.
+  kept in the template, one undo step per value, and Fill In, beside the
+  template's role, gives it a value for each name it lacks, one undo step:
+  text its path in title case (`customer.name` reads "Customer Name"), a
+  choice its first option's value, a bool `true` and an array three items.
+  Last come the bindings that are wrong, each with what is wrong with it.
 
 #### Changed
 
@@ -100,10 +103,10 @@ listed once, by package. Its major and minor version are those of the
   as PowerPoint's Selection Pane hides one, so Refresh shows it again. The
   Data panel lists it with the places in text, and choosing it selects it.
   Data shows or hides the Data panel; and Preview shows the
-  template filled with its sample data, read-only in place of it, until it's
-  turned off. A preview fills in every value the sample data lacks: text with
-  its path in title case (`customer.name` reads "Customer Name"), a choice with
-  its first option's value, a bool `true`, and an array with three items.
+  template filled with its sample data, as the Data panel shows it,
+  read-only in place of it, until it's turned off. A value the sample data
+  lacks is filled as Generate fills it, made up nowhere but by the Data
+  panel's Fill In.
   While the preview is shown, the toolbar's Download and Print act on it.
   Generate opens a dialog with the data to fill the template with, as JSON —
   its sample data at first, or a file opened — and downloads a filled copy,

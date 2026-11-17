@@ -44,14 +44,14 @@ export function mountGenerate(host: EditHost, i18n: I18n, options: UDocEditorOpt
     modal.mount(host.root);
     return {
         async open() {
-            const data = await previewData(host);
+            const data = previewData(host);
             modal.open({
                 json: JSON.stringify(data, null, 2),
                 onGenerate: (chosen) => generate(host, options, chosen),
             });
         },
         async refresh() {
-            const data = filledDataOf(host.store.getState().automation) ?? (await previewData(host));
+            const data = filledDataOf(host.store.getState().automation) ?? previewData(host);
             modal.open({
                 action: "command.refresh",
                 json: JSON.stringify(data, null, 2),

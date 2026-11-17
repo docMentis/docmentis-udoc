@@ -69,7 +69,7 @@ const MADE_UP_ITEMS = 3;
 
 /** The words of `path`'s names in title case — `customer.name` "Customer
  *  Name", `fund.paysDividend` "Fund Pays Dividend". An item's index is no word. */
-export function titleOf(path: SamplePath): string {
+function titleOf(path: SamplePath): string {
     return path
         .filter((step): step is string => typeof step === "string")
         .flatMap((name) => name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").split(/[_\s]+/))
@@ -79,9 +79,9 @@ export function titleOf(path: SamplePath): string {
 }
 
 /** A value made up for what `schema` holds at `path`: text its path's title,
- *  or a choice's first value; `true`; three items; an object of a value for
- *  each of its properties. */
-export function madeUpSample(schema: BindingSchema, path: SamplePath = []): BindingValue {
+ *  or a choice's first value; `true`, so what a condition holds shows; three
+ *  items; an object of a value for each of its properties. */
+function madeUpSample(schema: BindingSchema, path: SamplePath): BindingValue {
     if (schema === "bool") return true;
     if ("text" in schema) return schema.text.values[0] ?? titleOf(path);
     if ("array" in schema) {
@@ -97,9 +97,36 @@ export function madeUpSample(schema: BindingSchema, path: SamplePath = []): Bind
     return object;
 }
 
-/** `sample`, the sample data a template keeps, with every value it lacks made
- *  up from `schema` ({@link madeUpSample}): its own values kept, its arrays'
- *  items as many as it holds, each completed as a made-up item is. */
+/** `sample`, a template's sample data, with a value made up for each name
+ *  `schema` holds that it lacks — what the Data panel's Fill In writes into
+ *  it: text its path's title, or a choice's first value; `true`; three items;
+ *  an object a value for each of its properties. Its own values are kept, an
+ *  empty text or an empty array among them, and its arrays' items as many as
+ *  it holds, each filled in as a made-up item is. */
+export function filledInSample(sample: BindingData | undefined, schema: BindingSchema): BindingData {
+    const filled = fillIn(sample, schema, []);
+    return isObject(filled) ? filled : {};
+}
+
+/** `kept`, the value at `path`, with what `schema` holds that it lacks made
+ *  up. */
+function fillIn(kept: BindingValue | undefined, schema: BindingSchema, path: SamplePath): BindingValue {
+    if (kept === undefined || kept === null) return madeUpSample(schema, path);
+    if (schema === "bool" || "text" in schema) return kept;
+    if ("array" in schema) {
+        const item = schema.array.item;
+        return Array.isArray(kept) && item !== undefined
+            ? kept.map((value, index) => fillIn(value, item, [...path, index]))
+            : kept;
+    }
+    if (!isObject(kept)) return kept;
+    const out: BindingData = { ...kept };
+    for (const [name, property] of Object.entries(schema.object.properties)) {
+        out[name] = fillIn(kept[name], property, [...path, name]);
+    }
+    return out;
+}
+
 /** A template's sample data, as its automation part's role holds it; none
  *  for an instance or a plain document. */
 export function sampleDataOf(automation: Automation | null | undefined): BindingData | undefined {
@@ -110,29 +137,6 @@ export function sampleDataOf(automation: Automation | null | undefined): Binding
  *  part's role holds it; none for a template or a plain document. */
 export function filledDataOf(automation: Automation | null | undefined): BindingData | undefined {
     return automation && "instance" in automation.role ? automation.role.instance.data : undefined;
-}
-
-export function completedSample(sample: BindingData | undefined, schema: BindingSchema): BindingData {
-    const completed = complete(sample, madeUpSample(schema));
-    return isObject(completed) ? completed : {};
-}
-
-/** `kept` with what it lacks taken from `madeUp`. */
-function complete(kept: BindingValue | undefined, madeUp: BindingValue): BindingValue {
-    if (kept === undefined || kept === null) return madeUp;
-    if (isObject(kept) && isObject(madeUp)) {
-        const out: BindingData = { ...madeUp };
-        for (const [name, value] of Object.entries(kept)) {
-            const other = madeUp[name];
-            out[name] = other === undefined ? value : complete(value, other);
-        }
-        return out;
-    }
-    if (Array.isArray(kept) && Array.isArray(madeUp)) {
-        const item = madeUp[0];
-        return item === undefined ? kept : kept.map((value) => complete(value, item));
-    }
-    return kept;
 }
 
 function isObject(value: BindingValue | undefined): value is BindingData {

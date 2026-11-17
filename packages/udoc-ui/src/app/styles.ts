@@ -3906,12 +3906,45 @@ export const uiStyles = css`
             sans-serif;
         color: var(--udoc-color-on-surface);
     }
+    /* The deck's role, and at the other end what acts on the whole sample
+       data. */
+    .udoc-ui-root .udoc-data-panel__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .udoc-ui-root .udoc-data-panel__actions {
+        display: flex;
+        gap: 4px;
+    }
+    .udoc-ui-root .udoc-data-panel__text-button {
+        height: 24px;
+        padding: 0 8px;
+        font: inherit;
+        font-weight: 600;
+        color: var(--udoc-color-primary);
+        background: none;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-data-panel__text-button:hover:not(:disabled) {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root .udoc-data-panel__text-button:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: -2px;
+    }
+    .udoc-ui-root .udoc-data-panel__text-button:disabled {
+        cursor: default;
+        opacity: var(--udoc-state-disabled-opacity, 0.38);
+    }
     /* The deck's role: a template's in the accent, an instance's or a plain
        deck's muted. */
     .udoc-ui-root .udoc-data-panel__role {
         display: inline-flex;
         align-items: center;
-        align-self: flex-start;
         gap: 6px;
         height: 22px;
         margin-left: 4px;

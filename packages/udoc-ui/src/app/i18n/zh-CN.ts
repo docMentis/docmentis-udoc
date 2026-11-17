@@ -390,6 +390,8 @@ export const zhCN: Messages = {
     "data.places.other": "在 {count} 处使用",
     "data.items.other": "{count} 项",
     "data.other": "其他…",
+    "data.fillIn": "填充",
+    "data.fillInHint": "为示例数据缺少的每个名称生成值",
 
     // Search panel
     "search.placeholder": "在文档中搜索",

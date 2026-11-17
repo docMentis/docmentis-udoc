@@ -395,6 +395,8 @@ export const en: Messages = {
     "data.items.one": "{count} item",
     "data.items.other": "{count} items",
     "data.other": "Other…",
+    "data.fillIn": "Fill In",
+    "data.fillInHint": "Make up a value for each name the sample data lacks",
 
     // Search panel
     "search.placeholder": "Search in document",

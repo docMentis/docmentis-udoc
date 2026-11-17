@@ -400,6 +400,8 @@ export const ar: Messages = {
     "data.items.many": "{count} عنصرًا",
     "data.items.other": "{count} عنصر",
     "data.other": "أخرى…",
+    "data.fillIn": "تعبئة",
+    "data.fillInHint": "إنشاء قيمة لكل اسم تفتقده بيانات العينة",
 
     // Search panel
     "search.placeholder": "البحث في المستند",

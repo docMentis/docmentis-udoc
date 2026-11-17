@@ -392,6 +392,8 @@ export const ja: Messages = {
     "data.places.other": "{count} か所で使用",
     "data.items.other": "{count} 件",
     "data.other": "その他…",
+    "data.fillIn": "自動入力",
+    "data.fillInHint": "サンプルデータにない名前ごとに値を作成",
 
     // Search panel
     "search.placeholder": "文書内を検索",
