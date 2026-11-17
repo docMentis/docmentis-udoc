@@ -1,10 +1,11 @@
 // The right panel's Data tab: what a deck's text binds, as the engine reads its
 // bindings, and the data written against it — a template's sample data, or the
-// data an instance was filled with. Above the form, what acts on all of it:
-// Load JSON, which fills the form from a file; for a template, Generate Sample
-// Data, which makes up a value for each name the sample data lacks, and Clear,
-// which empties it; for an instance, Reset, which puts back the data it was
-// last filled with.
+// data an instance was filled with. What acts on all of it is a row of icon
+// buttons the right panel stands in its title bar, each named by its tooltip:
+// for a template, Generate Sample Data, which makes up a value for each name
+// the sample data lacks, Load JSON, which fills the form from a file, and
+// Clear, which empties it; for an instance, Load JSON and Reset, which puts
+// back the data it was last filled with.
 //
 // For a template or an instance, the schema its bindings make, as a form of its
 // data: a
@@ -64,6 +65,7 @@ import {
 import { VIEW_MODE } from "../state.js";
 import type { UIState } from "../state.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
+import { createButton } from "./controls.js";
 
 export interface DataPanelCallbacks {
     /** Select the next of `places`, a row's, `key` naming the row. */
@@ -163,13 +165,11 @@ function isData(value: unknown): value is BindingData {
 export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
     const el = div("udoc-data-panel");
     el.setAttribute("aria-label", i18n.t("rightPanel.data"));
-    // What acts on all the data, and under it what a file Load JSON couldn't
-    // take says.
+    // What acts on all the data, which the right panel stands in its title
+    // bar; and above the form what a file Load JSON couldn't take says.
     const actions = div("udoc-data-panel__actions");
     const notice = div("udoc-data-panel__notice");
     notice.setAttribute("role", "alert");
-    const header = div("udoc-data-panel__header");
-    header.append(actions, notice);
     const body = div("udoc-data-panel__body");
     // Load JSON's file picker, which nothing shows.
     const picker = document.createElement("input");
@@ -181,7 +181,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         picker.value = "";
         if (file) void loadJson(file);
     });
-    el.append(header, body, picker);
+    el.append(notice, body, picker);
     let unsubscribe: (() => void) | null = null;
     let storeRef: Store<UIState, Action> | null = null;
     /** What is drawn, drawn again as a group folds or unfolds. */
@@ -217,8 +217,8 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         if (current) give(current, data);
     }
 
-    /** A button acting on all the data: its icon and its label, `hint` its
-     *  tooltip, keyed `focus`. */
+    /** A button acting on all the data: its icon alone, named `label`, its
+     *  tooltip the name and `hint`, keyed `focus`. */
     function action(
         icon: string,
         label: MessageKey,
@@ -227,23 +227,19 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         enabled: boolean,
         run: () => void,
     ): HTMLElement {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "udoc-data-panel__action";
-        button.innerHTML = icon;
-        const text = document.createElement("span");
-        text.textContent = i18n.t(label);
-        button.append(text);
-        button.title = i18n.t(hint);
+        const name = i18n.t(label);
+        const button = createButton({ icon, label: name });
+        button.title = `${name}\n${i18n.t(hint)}`;
         button.dataset.focus = focus;
         button.disabled = !enabled;
         button.addEventListener("click", run);
         return button;
     }
 
-    /** What acts on all of `slice`'s data, `schema` its bindings': Load JSON,
-     *  then a template's Generate Sample Data and Clear, or an instance's
-     *  Reset — each live in edit mode while it would change something. */
+    /** What acts on all of `slice`'s data, `schema` its bindings': a
+     *  template's Generate Sample Data, Load JSON and Clear, or an instance's
+     *  Load JSON and Reset — each live in edit mode while it would change
+     *  something. */
     function actionButtons(schema: BindingSchema, slice: DataPanelSlice): HTMLElement[] {
         const data = formData(slice);
         const load = action(ICON_LOAD_JSON, "data.loadJson", "data.loadJsonHint", "loadJson", slice.editable, () =>
@@ -265,7 +261,6 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         }
         const filled = filledInSample(data, schema);
         return [
-            load,
             action(
                 ICON_SAMPLE_DATA,
                 "data.sampleData",
@@ -274,6 +269,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
                 slice.editable && !sameData(filled, data),
                 () => give(slice, filled),
             ),
+            load,
             action(
                 ICON_CLEAR_DATA,
                 "data.clear",
@@ -664,7 +660,8 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
      *  anew — a text input's caret where it was. */
     function show(slice: DataPanelSlice): void {
         const focused = document.activeElement;
-        const key = focused instanceof HTMLElement && el.contains(focused) ? focused.dataset.focus : undefined;
+        const ours = focused instanceof HTMLElement && (el.contains(focused) || actions.contains(focused));
+        const key = ours ? focused.dataset.focus : undefined;
         const caret: readonly [number | null, number | null] | null =
             focused instanceof HTMLInputElement && focused.type === "text"
                 ? [focused.selectionStart, focused.selectionEnd]
@@ -672,9 +669,10 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         current = slice;
         render(slice);
         if (key === undefined) return;
-        const again = [...el.querySelectorAll<HTMLElement>("[data-focus]")].find(
-            (control) => control.dataset.focus === key,
-        );
+        const again = [
+            ...el.querySelectorAll<HTMLElement>("[data-focus]"),
+            ...actions.querySelectorAll<HTMLElement>("[data-focus]"),
+        ].find((control) => control.dataset.focus === key);
         if (!again) return;
         again.focus();
         if (caret && again instanceof HTMLInputElement && again.type === "text") {
@@ -705,10 +703,11 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         unsubscribe?.();
         unsubscribe = null;
         storeRef = null;
+        actions.remove();
         el.remove();
     }
 
-    return { el, mount, destroy };
+    return { el, actions, mount, destroy };
 }
 
 export type DataPanelComponent = ReturnType<typeof createDataPanel>;

@@ -25,13 +25,14 @@ listed once, by package. Its major and minor version are those of the
   their count follows the name, and in edit mode pointing at it outlines its
   places on the slides. Last come the bindings that are wrong, each with
   what is wrong with it; a plain deck shows a note.
-  Above the form, in edit mode, Load JSON fills it from a file. A template's
-  sample data is kept in the template, one undo step per value, and its
-  Generate Sample Data gives it a value for each name it lacks, one undo
-  step — text its path in title case (`customer.name` reads "Customer
-  Name"), a choice its first option's value, a bool `true` and an array
-  three items — and Clear empties it. An instance's changes wait in the
-  panel for its Refresh, and its Reset puts back the data it was last filled
+  In its title bar, icon buttons named by their tooltips act on all of it,
+  in edit mode. A template's sample data is kept in the template, one undo
+  step per value: its Generate Sample Data gives it a value for each name it
+  lacks, one undo step — text its path in title case (`customer.name` reads
+  "Customer Name"), a choice its first option's value, a bool `true` and an
+  array three items — Load JSON fills it from a file, and Clear empties it.
+  An instance's changes wait in the panel for its Refresh: Load JSON fills
+  them from a file, and Reset puts back the data it was last filled
   with. The `translations` keys `data.loadJson`, `data.sampleData`,
   `data.clear`, `data.reset`, their `…Hint`s and `data.notJson` are new.
 

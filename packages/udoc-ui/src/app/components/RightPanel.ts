@@ -64,8 +64,11 @@ export function createRightPanel(
     header.className = "udoc-right-panel__header";
     const title = document.createElement("span");
     title.className = "udoc-right-panel__title";
+    // What acts on the tab shown, which its panel gives: the Data tab's.
+    const tabActions = document.createElement("div");
+    tabActions.className = "udoc-right-panel__actions";
     const closeBtn = createButton({ icon: ICON_CLEAR, label: i18n.t("rightPanel.close") });
-    header.append(title, closeBtn);
+    header.append(title, tabActions, closeBtn);
 
     const content = document.createElement("div");
     content.className = "udoc-right-panel__content";
@@ -108,6 +111,7 @@ export function createRightPanel(
         dataPanel?.destroy();
         dataPanel = null;
         content.innerHTML = "";
+        tabActions.replaceChildren();
         if (slice.activeTab) {
             content.setAttribute("data-tab", slice.activeTab);
             const label = i18n.t(TAB_LABEL[slice.activeTab]);
@@ -125,6 +129,7 @@ export function createRightPanel(
             } else if (slice.activeTab === "data" && storeRef) {
                 dataPanel = createDataPanel(i18n, data);
                 dataPanel.mount(content, storeRef);
+                tabActions.append(dataPanel.actions);
             }
         } else {
             content.removeAttribute("data-tab");

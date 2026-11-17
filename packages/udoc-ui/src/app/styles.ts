@@ -1886,8 +1886,8 @@ export const uiStyles = css`
         transition: none;
     }
 
-    /* The header: the tab shown named, then the panel's close button at the
-   trailing edge. */
+    /* The header: the tab shown named, then what acts on it — the Data tab's
+   icon buttons — and the panel's close button at the trailing edge. */
     .udoc-ui-root .udoc-right-panel__header {
         display: flex;
         flex: none;
@@ -1900,9 +1900,25 @@ export const uiStyles = css`
     }
 
     .udoc-ui-root .udoc-right-panel__title {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
         padding: 0 var(--udoc-btn-pad-x);
         font-size: var(--udoc-btn-font);
         color: var(--udoc-color-on-surface);
+    }
+
+    /* Set apart from the close button, so a press meant for one isn't the
+   other's: the last of them, Clear or Reset, empties what the tab holds. */
+    .udoc-ui-root .udoc-right-panel__actions {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 2px;
+    }
+    .udoc-ui-root .udoc-right-panel__actions:not(:empty) {
+        margin-right: 8px;
     }
 
     .udoc-ui-root .udoc-right-panel__content {
@@ -3905,62 +3921,13 @@ export const uiStyles = css`
             sans-serif;
         color: var(--udoc-color-on-surface);
     }
-    /* What acts on all the data — a row of buttons, each its icon and its
-       label — and under it what a file Load JSON couldn't take says. */
-    .udoc-ui-root .udoc-data-panel__header {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-    .udoc-ui-root .udoc-data-panel__header:has(.udoc-data-panel__actions:empty):has(.udoc-data-panel__notice:empty) {
-        display: none;
-    }
-    .udoc-ui-root .udoc-data-panel__actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-    .udoc-ui-root .udoc-data-panel__actions:empty,
-    .udoc-ui-root .udoc-data-panel__notice:empty {
-        display: none;
-    }
-    .udoc-ui-root .udoc-data-panel__action {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        height: 28px;
-        padding: 0 10px 0 8px;
-        font: inherit;
-        font-size: 12px;
-        font-weight: 500;
-        color: var(--udoc-color-on-surface);
-        background: var(--udoc-color-surface);
-        border: 1px solid var(--udoc-color-outline-variant);
-        border-radius: 6px;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-    .udoc-ui-root .udoc-data-panel__action svg {
-        flex: none;
-        width: 18px;
-        height: 18px;
-        color: var(--udoc-color-on-surface-variant);
-    }
-    .udoc-ui-root .udoc-data-panel__action:hover:not(:disabled) {
-        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
-        border-color: var(--udoc-color-outline);
-    }
-    .udoc-ui-root .udoc-data-panel__action:focus-visible {
-        outline: 2px solid var(--udoc-color-primary);
-        outline-offset: 1px;
-    }
-    .udoc-ui-root .udoc-data-panel__action:disabled {
-        cursor: default;
-        opacity: var(--udoc-state-disabled-opacity, 0.38);
-    }
+    /* What a file Load JSON couldn't take says, above the form. */
     .udoc-ui-root .udoc-data-panel__notice {
         font-size: 12px;
         color: var(--udoc-color-error);
+    }
+    .udoc-ui-root .udoc-data-panel__notice:empty {
+        display: none;
     }
     .udoc-ui-root .udoc-data-panel__body {
         display: flex;
