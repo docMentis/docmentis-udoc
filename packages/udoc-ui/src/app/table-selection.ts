@@ -1,56 +1,49 @@
-// What a pick in a table deletes — Delete and Cut alike, as Word and
-// PowerPoint cut it: a block of cells its text, whole rows or columns those
-// tracks, the whole table the table. Pure but for `deleteTablePick`, which
-// issues the one edit the pick calls for.
+// What Delete and Cut take out of a table, as Word and PowerPoint cut it,
+// by the innermost `TableSelection`: `Cells` their text, `Rows` or `Columns`
+// those tracks, `All` the table. Pure but for `deleteTableSelection`, which
+// issues the one edit the selection calls for.
 import type { ShapeSelection, TableSelection, TextSelection, UDocSelection, UDocType } from "@docmentis/udoc-wasm";
 import { allowsTableEdit } from "../geometry.js";
 import type { DocumentLayout, SelectionCapabilities } from "../geometry.js";
 import type { WorkerClient } from "../worker/WorkerClient.js";
 
-/** What is picked in a table: a block of cells, whole rows, whole columns, or
- *  the whole table. */
-export type TablePick = "cells" | "rows" | "columns" | "all";
-
-/** The innermost pick in a table `selection` holds — through a caret in a
- *  cell, a table in a shape or a shape in text — or `null` where it holds none:
- *  a caret or a range of text is no pick. */
-export function tablePick(selection: UDocSelection): TablePick | null {
+/** The innermost `TableSelection` of cells, rows, columns or the whole table
+ *  that `selection` holds — through a caret in a cell, a table in a shape or a
+ *  shape in text — or `null` where it holds none: a caret or a range of text,
+ *  in a cell too, is none. */
+export function innerTableSelection(selection: UDocSelection): TableSelection | null {
     if ("presentation" in selection) {
         const deck = selection.presentation;
-        return typeof deck === "object" && "shapes" in deck ? shapePick(deck.shapes.selection) : null;
+        return typeof deck === "object" && "shapes" in deck ? inShapeSelection(deck.shapes.selection) : null;
     }
     if ("image" in selection) {
         const image = selection.image;
-        return typeof image === "object" && "shapes" in image ? shapePick(image.shapes.selection) : null;
+        return typeof image === "object" && "shapes" in image ? inShapeSelection(image.shapes.selection) : null;
     }
     if ("wordprocessing" in selection) {
         const word = selection.wordprocessing;
         if (typeof word !== "object") return null;
-        if ("sectionText" in word) return textPick(word.sectionText.selection);
-        if ("headerText" in word) return textPick(word.headerText.selection);
-        if ("footerText" in word) return textPick(word.footerText.selection);
+        if ("sectionText" in word) return inTextSelection(word.sectionText.selection);
+        if ("headerText" in word) return inTextSelection(word.headerText.selection);
+        if ("footerText" in word) return inTextSelection(word.footerText.selection);
     }
     return null;
 }
 
-function shapePick(selection: ShapeSelection): TablePick | null {
-    if ("shapeTable" in selection) return pickIn(selection.shapeTable[1]);
-    if ("shapeText" in selection) return textPick(selection.shapeText[1]);
+function inShapeSelection(selection: ShapeSelection): TableSelection | null {
+    if ("shapeTable" in selection) return inTableSelection(selection.shapeTable[1]);
+    if ("shapeText" in selection) return inTextSelection(selection.shapeText[1]);
     return null;
 }
 
-function textPick(selection: TextSelection): TablePick | null {
-    if ("table" in selection) return pickIn(selection.table.table);
-    if ("drawing" in selection) return shapePick(selection.drawing.shape);
+function inTextSelection(selection: TextSelection): TableSelection | null {
+    if ("table" in selection) return inTableSelection(selection.table.table);
+    if ("drawing" in selection) return inShapeSelection(selection.drawing.shape);
     return null;
 }
 
-function pickIn(table: TableSelection): TablePick | null {
-    if ("cellText" in table) return textPick(table.cellText.text);
-    if ("cells" in table) return "cells";
-    if ("rows" in table) return "rows";
-    if ("columns" in table) return "columns";
-    return "all";
+function inTableSelection(table: TableSelection): TableSelection | null {
+    return "cellText" in table ? inTextSelection(table.cellText.text) : table;
 }
 
 /** The one position the innermost table `text` is in takes in its story, as a
@@ -115,21 +108,21 @@ export async function deleteTable({ client, commit, docType }: TableDeleteHost):
 }
 
 /**
- * Delete what is picked in a table, as Delete and Cut take it: a block of
- * cells loses its text, whole rows or columns go — the table where they are
- * all of it, since a table with none is no table — and the whole table goes.
- * `capabilities` are the selection's, which say whether its rows or columns
- * may go.
+ * Delete what the innermost `TableSelection` selects, as Delete and Cut take
+ * it: `Cells` lose their text, `Rows` or `Columns` go — the table where they
+ * are all of it, since a table with none is no table — and `All` takes the
+ * table. `capabilities` are the selection's, which say whether its rows or
+ * columns may go.
  */
-export async function deleteTablePick(host: TableDeleteHost, capabilities: SelectionCapabilities): Promise<void> {
+export async function deleteTableSelection(host: TableDeleteHost, capabilities: SelectionCapabilities): Promise<void> {
     const selection = await host.client.selection();
-    const pick = selection && tablePick(selection);
-    if (pick === null) return;
+    const table = selection && innerTableSelection(selection);
+    if (!table) return;
     const { client, commit } = host;
-    if (pick === "cells") return commit(() => client.executeOnSelection("clearCellText"));
-    if (pick === "rows" && allowsTableEdit(capabilities, "deleteRows"))
+    if ("cells" in table) return commit(() => client.executeOnSelection("clearCellText"));
+    if ("rows" in table && allowsTableEdit(capabilities, "deleteRows"))
         return commit(() => client.executeOnSelection("deleteRows"));
-    if (pick === "columns" && allowsTableEdit(capabilities, "deleteColumns"))
+    if ("columns" in table && allowsTableEdit(capabilities, "deleteColumns"))
         return commit(() => client.executeOnSelection("deleteColumns"));
     return deleteTable(host);
 }

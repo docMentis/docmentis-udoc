@@ -14,7 +14,7 @@ export function consensusValue<T>(consensus: "absent" | "mixed" | { value: T } |
 }
 
 // The selection a word document's Delete Table deletes, shared with the
-// shell's Delete of a table pick.
+// shell's Delete of a selection in a table.
 export { tableSlotSelection, wordTableSelection } from "@docmentis/udoc-ui/internal";
 
 /** The four sides of a cell's margins, by name. */

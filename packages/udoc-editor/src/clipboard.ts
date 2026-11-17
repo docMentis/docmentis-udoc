@@ -33,12 +33,12 @@ import { editsDocument } from "./mode.js";
  * keyboard as from the menu.
  *
  * A range of text deletes as text, in a workbook's cell being typed into
- * too, and objects, annotations, shapes, slides, sections or pages picked
- * whole delete as they are. A pick in a table deletes what it picked, as
- * Delete does: a block its cells' text, whole rows or columns those tracks,
- * the whole table the table. A caret only copies: the shape or table holding
- * it keeps its own delete live, but a cut of what is in it must not take it.
- * Nor does anything picked in a workbook's grid delete —
+ * too, and objects, annotations, shapes, slides, sections or pages selected
+ * whole delete as they are. A selection in a table deletes what it selects,
+ * as Delete does: cells their text, whole rows or columns those tracks, the
+ * whole table the table. A caret only copies: the shape or table holding it
+ * keeps its own delete live, but a cut of what is in it must not take it.
+ * Nor does anything selected in a workbook's grid delete —
  * Excel's cut moves cells when they are pasted, and clears nothing before —
  * nor, yet, its objects.
  */

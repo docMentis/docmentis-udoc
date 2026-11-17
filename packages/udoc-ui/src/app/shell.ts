@@ -54,7 +54,7 @@ import type { PageSpacing, UIExtension } from "../extension.js";
 import type { Action } from "./actions.js";
 import { CONTEXT_MENU, commandContext, sheetTabMenu } from "./commands.js";
 import { reorderTo } from "./page-order.js";
-import { deleteTablePick } from "./table-pick.js";
+import { deleteTableSelection } from "./table-selection.js";
 import type { MenuAction } from "./commands.js";
 import { createClipboardCopy } from "./clipboard.js";
 import { createCanvas } from "./components/Canvas.js";
@@ -2101,7 +2101,7 @@ export function mountUIShell(
         // Copy, cut and paste ride native clipboard events on the hidden sink,
         // not a shortcut here — but the browser fires them at whatever holds
         // the focus. Where that is the shell's own, not a real field — the
-        // thumbnails, whose arrow keys pick pages — the sink takes the focus
+        // thumbnails, whose arrow keys select pages — the sink takes the focus
         // for the event that follows this key, then hands it back. Taken
         // outright: the sink's own reclaim stands aside for the thumbnails'
         // list, which is the point of it everywhere but here.
@@ -3836,11 +3836,11 @@ export function mountUIShell(
         // delete live while it holds a caret — it moves and restyles with one
         // in it — but deleting what is selected in it must not take it.
         if (allowsTextEdit(state.selectionCaps, "deleteText")) return deleteSelectionText(true);
-        // A pick in a table deletes what it picked — a block its cells' text,
+        // A selection in a table deletes what it selects — cells their text,
         // whole rows or columns those tracks, the whole table the table — and
         // never the frame holding it.
         if (allowsTableEdit(state.selectionCaps, "clearCellText"))
-            return deleteTablePick({ client, commit, docType: state.docType }, state.selectionCaps);
+            return deleteTableSelection({ client, commit, docType: state.docType }, state.selectionCaps);
         if (shapeDocType()) edit = { kind: "deleteShapes" };
         else if (annotationsSelected()) edit = { kind: "annotation", edit: { kind: "deleteAnnotations" } };
         else edit = { kind: "object", edit: { kind: "deleteObjects" } };
