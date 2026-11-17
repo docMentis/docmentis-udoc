@@ -6,6 +6,23 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-editor
+
+#### Added
+
+- Copied slides paste after the slides selected, or the slide shown, and
+  copied sections after the section selected, with their slides; copied PDF
+  pages and an image's pages after the page selected or shown, and PDF
+  annotations on top of the page. Each pasted nothing.
+- Text pasted on a slide or an image with shapes or nothing selected lands in
+  a text box of its own, and a table pasted there in a new table, where both
+  pasted nothing.
+- Text pasted over a block of cells in a table goes into its first cell, in
+  place of that cell's text, where it pasted nothing.
+- Shapes, a table or text pasted while a drawing is selected in a word
+  document's text take its place, as Word pastes over a picture, where they
+  pasted nothing.
+
 ## [0.8.23] - 2026-11-16
 
 Built on `@docmentis/udoc-wasm` 0.8.26.
