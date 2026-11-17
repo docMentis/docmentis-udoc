@@ -22,6 +22,12 @@ listed once, by package. Its major and minor version are those of the
 - Shapes, a table or text pasted while a drawing is selected in a word
   document's text take its place, as Word pastes over a picture, where they
   pasted nothing.
+- Cells, whole rows or columns, or a whole sheet copied in a workbook paste as
+  cells, as Excel pastes them: their contents, their formats and the merges
+  inside them, formulas with their references moved as far as the cells
+  moved, and whole rows' heights and columns' widths. A block fills a
+  selection that holds it a whole number of times. They pasted as text typed
+  into one cell.
 
 ## [0.8.23] - 2026-11-16
 

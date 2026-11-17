@@ -70,15 +70,22 @@ export interface Clipboard {
     destroy(): void;
 }
 
+/** What a workbook copies of its grid — cells, whole rows or columns, the sheet — which it pastes as itself. */
+const WORKBOOK_GRID_FRAGMENTS = ["cells", "rows", "columns", "all"];
+
 /**
  * Whether an open document of `docType` pastes `fragment` as itself: one of its
- * own doc type's. Any other pastes as its text, as one copied from another app
- * does — the engine takes a fragment only into its own doc type, and into a
- * workbook none yet, which loses nothing there: a workbook's fragment is only
- * its text.
+ * own doc type's — in a workbook, a copy of its grid, and not while a cell is
+ * typed into (`cellEntry`). Any other pastes as its text, as one copied from
+ * another app does: the engine takes a fragment only into its own doc type,
+ * and a workbook's copied typing and objects not yet.
  */
-function pastesFragment(fragment: UDocFragment, docType: UDocType | null): boolean {
-    return docType !== null && docType !== "spreadsheet" && docType in fragment;
+function pastesFragment(fragment: UDocFragment, docType: UDocType | null, cellEntry: boolean): boolean {
+    if (docType === null || !(docType in fragment)) return false;
+    if (docType !== "spreadsheet") return true;
+    if (cellEntry || !("spreadsheet" in fragment)) return false;
+    const copied: unknown = fragment.spreadsheet;
+    return typeof copied === "object" && copied !== null && WORKBOOK_GRID_FRAGMENTS.some((kind) => kind in copied);
 }
 
 /** The clipboard over `host`'s sink. */
@@ -88,6 +95,12 @@ export function createClipboard(host: EditHost): Clipboard {
     function isEditReady(): boolean {
         const st = host.store.getState();
         return st.status === "ready" && editsDocument(st.mode);
+    }
+
+    // Whether the open document pastes `fragment` as itself (see `pastesFragment`).
+    function pastesOwn(fragment: UDocFragment): boolean {
+        const state = host.store.getState();
+        return pastesFragment(fragment, state.docType, state.activeCell?.entry != null);
     }
 
     // The native `cut`: copy, then delete — only what a cut deletes (see
@@ -128,7 +141,7 @@ export function createClipboard(host: EditHost): Clipboard {
         const data = event.clipboardData;
         if (!data) return;
         const own = parseFragment(data.getData(UDOC_FRAGMENT_FORMAT)) ?? fragmentFromHtml(data.getData("text/html"));
-        if (own && pastesFragment(own, host.store.getState().docType)) {
+        if (own && pastesOwn(own)) {
             void host.commit(() => edit.paste(own));
             return;
         }
@@ -173,7 +186,7 @@ export function createClipboard(host: EditHost): Clipboard {
             return; // read unsupported / denied
         }
         const frag = fragment;
-        if (frag && pastesFragment(frag, host.store.getState().docType)) void host.commit(() => edit.paste(frag));
+        if (frag && pastesOwn(frag)) void host.commit(() => edit.paste(frag));
         else if (text) void host.insertSelectionText(text);
     }
 
