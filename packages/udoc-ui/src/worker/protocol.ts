@@ -1855,6 +1855,12 @@ export type SelectionEdit =
     | { kind: "mergeSheetCells"; across: boolean; center: boolean }
     /** Spreadsheet: Excel's Unmerge Cells over the selection. */
     | { kind: "unmergeSheetCells" }
+    /** Spreadsheet: Excel's Cut over the selected cells, once their copy is on
+     *  the clipboard — marks them, writing nothing; a paste of them moves
+     *  them. */
+    | { kind: "cutSheetCells" }
+    /** Spreadsheet: let the cells cut be, as Escape or a copy does. */
+    | { kind: "cancelSheetCut" }
     /** PDF: a page edit (`deletePages`, `reorderPages`, …) on the selected pages. */
     | { kind: "page"; edit: SelectionEdit }
     /** PDF: an object edit (`translateObjects`, `insertObjectText`, …) on the

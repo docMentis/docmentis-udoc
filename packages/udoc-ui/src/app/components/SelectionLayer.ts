@@ -54,13 +54,14 @@ interface SelectionFrame {
 }
 
 /** How to draw a pooled box this frame: an object box (stroked, handled for the
- *  local user), a grid cell-range block (filled + bordered, no handles), or a
- *  text highlight (fill). Assigned from which group of the structured geometry
+ *  local user), a grid cell-range block (filled + bordered, no handles), the
+ *  grid cells a cut waits to move (a moving dashed border), or a text
+ *  highlight (fill). Assigned from which group of the structured geometry
  *  the box came from — a peer's boxes carry the same roles, tinted by its color.
  *  Carets are not polygon specs: the local one and each peer's draw as HTML
  *  lines (see `#renderCarets`). Presentation only, not part of the wire
  *  contract. */
-type BoxRole = "object" | "cell" | "text";
+type BoxRole = "object" | "cell" | "cut" | "text";
 
 interface BoxSpec {
     page: number;
@@ -871,6 +872,7 @@ export class SelectionLayer {
         for (const b of local.annotations)
             specs.push({ ...boxSpec(b, "object", null, null), padding: ANNOTATION_PADDING });
         for (const b of local.cells) specs.push(boxSpec(b, "cell", null, null));
+        if (local.cutCells) specs.push(boxSpec(local.cutCells, "cut", null, null));
         for (const q of local.text) specs.push(quadSpec(q, null, null));
 
         // Peer name flags placed this frame: the projected box top-left, the
@@ -924,10 +926,10 @@ export class SelectionLayer {
             let corners = spec.points
                 ? spec.points.map((p) => applyPoint(lv, p.x, p.y))
                 : cornersOf(box).map(([lx, ly]) => applyPoint(lv, lx, ly));
-            // Only a cell block is clipped: an object's box keeps its own corners,
+            // Only a cell block, or cells cut, is clipped: an object's box keeps its own corners,
             // so its dashes start at its top-left corner wherever it scrolls, in
             // step with every other line tracing that edge (see PLACEHOLDER_FRAME_DASH).
-            if (clipping && spec.role === "cell") {
+            if (clipping && (spec.role === "cell" || spec.role === "cut")) {
                 corners = clipToRect(corners, -BOX_CLIP_PAD, -BOX_CLIP_PAD, clipW + BOX_CLIP_PAD, clipH + BOX_CLIP_PAD);
             }
             poly.setAttribute("points", corners.map((p) => `${p.x},${p.y}`).join(" "));
@@ -1481,7 +1483,8 @@ function rotateDelta(angle: number, cx: number, cy: number): Affine {
 
 /** The CSS class for a selection polygon by its role: an object box (stroked,
  *  handled for the local user), a grid cell block (filled + bordered, no
- *  handles), or a text highlight (filled). `--peer` is the host's restyle hook
+ *  handles), the cells a cut waits to move (a moving dashed border), or a
+ *  text highlight (filled). `--peer` is the host's restyle hook
  *  for a collaborator's box; the peer's color is applied inline (see `render`),
  *  so the class only picks the fill/stroke shape. */
 function boxClass(spec: BoxSpec, inText: boolean): string {
@@ -1490,6 +1493,8 @@ function boxClass(spec: BoxSpec, inText: boolean): string {
             return "udoc-ui__selection-text";
         case "cell":
             return spec.peer ? "udoc-ui__selection-cell udoc-ui__selection-cell--peer" : "udoc-ui__selection-cell";
+        case "cut":
+            return "udoc-ui__selection-cut";
         default:
             if (spec.peer) return "udoc-ui__selection-box udoc-ui__selection-box--peer";
             return inText ? "udoc-ui__selection-box udoc-ui__selection-box--text" : "udoc-ui__selection-box";

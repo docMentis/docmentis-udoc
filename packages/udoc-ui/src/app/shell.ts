@@ -1131,7 +1131,12 @@ export function mountUIShell(
         // A key pressed before the report of the press that selected the cell
         // reaches the worker after that press, and takes the cell it selected.
         if (state.status !== "ready") return false;
-        const action = cellKeyAction(ev, cellEntryMode(), state.mode !== VIEW_MODE);
+        const action = cellKeyAction(
+            ev,
+            cellEntryMode(),
+            state.mode !== VIEW_MODE,
+            allowsEdit(state.selectionCaps, "cancelSheetCut"),
+        );
         if (!action) return false;
         runCellKey(action);
         return true;
@@ -1169,6 +1174,9 @@ export function mountUIShell(
             case "cancel":
                 entryAsked = null;
                 editCellEntry("cancel");
+                return;
+            case "cancelCut":
+                void commit(() => client.executeOnSelection({ kind: "cancelSheetCut" }));
                 return;
         }
     }

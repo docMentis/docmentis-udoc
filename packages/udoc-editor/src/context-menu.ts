@@ -43,8 +43,10 @@ const whenDeletes: EnabledWhen = (c) =>
     allowsEdit(c.selection, "deleteObjects", "deleteAnnotations", "deleteShapes");
 
 /** Whether the selection cuts: copies, and deletes what it copied (see
- *  `cutDeletes`) — a copyable but locked object is only copied. */
-const whenCuts: EnabledWhen = (c) => c.selection.copyable && cutDeletes(c);
+ *  `cutDeletes`) or, a workbook's cells, marks them for a paste to move — a
+ *  copyable but locked object is only copied. */
+const whenCuts: EnabledWhen = (c) =>
+    c.selection.copyable && (cutDeletes(c) || allowsEdit(c.selection, "cutSheetCells"));
 
 /**
  * The canvas context menu in edit mode — what a right-click offers for the
@@ -56,7 +58,8 @@ const whenCuts: EnabledWhen = (c) => c.selection.copyable && cutDeletes(c);
  *
  * Cut and Copy gate on the engine's `copyable` verdict (Cut additionally on
  * deleting what it copies — cut is copy-then-delete, so a copyable-but-locked
- * object, or a block of cells, is only copied). Delete is left out where it
+ * object is only copied — or, over a workbook's cells, on marking them for a
+ * paste to move). Delete is left out where it
  * can't run, as over a workbook's cells, rather than shown greyed. Paste needs a document, not a selection: it reads the system
  * clipboard, which may hold something to paste even when nothing is selected.
  *

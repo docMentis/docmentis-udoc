@@ -43,6 +43,13 @@ test("F2, Backspace and Delete edit only in edit mode", () => {
     for (const name of ["F2", "Backspace", "Delete"]) assert.equal(cellKeyAction(key(name), null, false), null);
 });
 
+test("Escape lets cells cut be, only in edit mode with a cut waiting, and drops what is typed", () => {
+    assert.deepEqual(cellKeyAction(key("Escape"), null, true, true), { kind: "cancelCut" });
+    assert.equal(cellKeyAction(key("Escape"), null, true), null);
+    assert.equal(cellKeyAction(key("Escape"), null, false, true), null);
+    assert.deepEqual(cellKeyAction(key("Escape"), "enter", true, true), { kind: "cancel" });
+});
+
 test("Shift with F11 inserts a sheet, only in edit mode and not while typing", () => {
     assert.deepEqual(cellKeyAction(key("F11", { shiftKey: true }), null, true), { kind: "insertSheet" });
     assert.equal(cellKeyAction(key("F11"), null, true), null);

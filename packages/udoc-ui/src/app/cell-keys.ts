@@ -4,8 +4,9 @@
 // Ready — no cell being typed into — an arrow moves the active cell (Shift
 // extends the block, Ctrl or Cmd jumps to the edge of the data), Enter and Tab
 // step down and right (Shift back), and in edit mode F2 edits the cell's
-// contents, Backspace starts an empty entry, Delete clears the cells and
-// Shift with F11 inserts a worksheet before the current sheet. A
+// contents, Backspace starts an empty entry, Delete clears the cells,
+// Shift with F11 inserts a worksheet before the current sheet and, with cells
+// cut and waiting to move, Escape lets them be. A
 // typed character starts an entry in Enter mode in place of what the cell
 // holds; that is the hidden text input's, not a key's.
 //
@@ -36,7 +37,9 @@ export type CellKeyAction =
     /** Insert a worksheet before the current sheet. */
     | { kind: "insertSheet" }
     /** Drop what is typed. */
-    | { kind: "cancel" };
+    | { kind: "cancel" }
+    /** Let the cells cut be. */
+    | { kind: "cancelCut" };
 
 /** The parts of a key press the grid reads. */
 export interface CellKey {
@@ -64,11 +67,17 @@ function arrowMove(key: string, jump: boolean): GridCellSelectionMove | null {
 
 /**
  * What `ev` does on a workbook's grid whose active cell is being typed into in
- * `entry` mode, or isn't (`null`); `editable` where the mode edits. `null` for
- * a key the grid leaves to everything else — a shortcut, a typed character,
- * a caret move in Edit mode.
+ * `entry` mode, or isn't (`null`); `editable` where the mode edits, and
+ * `cutWaiting` where cells cut wait to move. `null` for a key the grid leaves
+ * to everything else — a shortcut, a typed character, a caret move in Edit
+ * mode.
  */
-export function cellKeyAction(ev: CellKey, entry: CellEntryMode | null, editable: boolean): CellKeyAction | null {
+export function cellKeyAction(
+    ev: CellKey,
+    entry: CellEntryMode | null,
+    editable: boolean,
+    cutWaiting = false,
+): CellKeyAction | null {
     const jump = ev.ctrlKey || ev.metaKey;
     const arrow = arrowMove(ev.key, jump);
     if (entry !== null) {
@@ -104,6 +113,8 @@ export function cellKeyAction(ev: CellKey, entry: CellEntryMode | null, editable
             return { kind: "clear" };
         case "F11":
             return ev.shiftKey ? { kind: "insertSheet" } : null;
+        case "Escape":
+            return cutWaiting ? { kind: "cancelCut" } : null;
     }
     return null;
 }

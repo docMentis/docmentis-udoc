@@ -39,8 +39,9 @@ import { editsDocument } from "./mode.js";
  * whole table the table. A caret only copies: the shape or table holding it
  * keeps its own delete live, but a cut of what is in it must not take it.
  * Nor does anything selected in a workbook's grid delete —
- * Excel's cut moves cells when they are pasted, and clears nothing before —
- * nor, yet, its objects.
+ * Excel's cut moves cells when they are pasted, and clears nothing before:
+ * their cut marks them instead (see `createClipboard`) — nor, yet, its
+ * objects.
  */
 export function cutDeletes({
     docType,
@@ -105,7 +106,8 @@ export function createClipboard(host: EditHost): Clipboard {
 
     // The native `cut`: copy, then delete — only what a cut deletes (see
     // `cutDeletes`), and only once the copy reached the clipboard. A
-    // copyable-but-locked object is copied without being removed.
+    // copyable-but-locked object is copied without being removed. A workbook's
+    // cells are marked as cut instead, once copied, for a paste to move them.
     function onCutEvent(event: ClipboardEvent): void {
         if (!isEditReady()) return;
         const state = host.store.getState();
@@ -114,9 +116,18 @@ export function createClipboard(host: EditHost): Clipboard {
             cellEntry: state.activeCell?.entry != null,
             selection: state.selectionCaps,
         });
+        const marks = !deletes && allowsEdit(state.selectionCaps, "cutSheetCells");
         void host.clipboard.write(event).then((copied) => {
             if (copied && deletes) void deleteCut();
+            if (copied && marks) void host.commit(() => host.client.executeOnSelection({ kind: "cutSheetCells" }));
         });
+    }
+
+    // The native `copy` — the shell's writes it — lets cells cut be, as Excel's
+    // copy does.
+    function onCopyEvent(): void {
+        if (!isEditReady() || !allowsEdit(host.store.getState().selectionCaps, "cancelSheetCut")) return;
+        void host.commit(() => host.client.executeOnSelection({ kind: "cancelSheetCut" }));
     }
 
     // What a cut deletes once its copy landed: the selection, as Delete takes
@@ -191,8 +202,9 @@ export function createClipboard(host: EditHost): Clipboard {
     }
 
     const sink = host.clipboardSink;
-    const listeners: ReadonlyArray<readonly ["cut" | "paste", (event: ClipboardEvent) => void]> = [
+    const listeners: ReadonlyArray<readonly ["cut" | "copy" | "paste", (event: ClipboardEvent) => void]> = [
         ["cut", onCutEvent],
+        ["copy", onCopyEvent],
         ["paste", onPasteEvent],
     ];
     for (const [type, listener] of listeners) sink.addEventListener(type, listener);

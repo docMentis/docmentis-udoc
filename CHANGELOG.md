@@ -28,6 +28,10 @@ listed once, by package. Its major and minor version are those of the
   moved, and whole rows' heights and columns' widths. A block fills a
   selection that holds it a whole number of times. They pasted as text typed
   into one cell.
+- Cut in a workbook marks the cells with a moving dashed border, and a paste
+  of them moves them, as Excel does: the cells they leave are emptied, and
+  formulas naming them follow them, also onto another sheet. Escape, a copy
+  or an edit cancels the cut. Cut copied only.
 
 ## [0.8.23] - 2026-11-16
 

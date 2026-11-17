@@ -2985,6 +2985,21 @@ export const uiStyles = css`
         stroke-dasharray: ${placeholderFrameDashArray};
         stroke-opacity: 0.7;
     }
+    /* Cells cut and waiting to move: Excel's moving dashed border in the
+   selection color, unfilled, until a paste moves them or Escape, a copy or an
+   edit lets them be. */
+    .udoc-ui-root .udoc-ui__selection-cut {
+        fill: none;
+        stroke: var(--udoc-canvas-selection);
+        stroke-width: 2px;
+        stroke-dasharray: 6 4;
+        animation: udoc-ui__cut-march 0.5s linear infinite;
+    }
+    @keyframes udoc-ui__cut-march {
+        to {
+            stroke-dashoffset: -10;
+        }
+    }
     /* A pick of whole rows, columns or a table: a solid bar in the selection
    color just outside the table — at both ends of the rows, above and below the
    columns, on all four sides of the table — beside the tinted cells it shares

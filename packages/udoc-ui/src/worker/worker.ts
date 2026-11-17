@@ -3782,6 +3782,8 @@ const WORKSHEET_KINDS: Record<WorksheetSelectionEditType, "worksheet"> = {
     clearCellFormats: "worksheet",
     mergeSheetCells: "worksheet",
     unmergeSheetCells: "worksheet",
+    cutSheetCells: "worksheet",
+    cancelSheetCut: "worksheet",
 };
 
 function spreadsheetEdit(edit: SelectionEdit): unknown {

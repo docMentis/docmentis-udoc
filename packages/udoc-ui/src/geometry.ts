@@ -434,6 +434,8 @@ export type SelectionEditKind =
     | "clearCellFormats"
     | "mergeSheetCells"
     | "unmergeSheetCells"
+    | "cutSheetCells"
+    | "cancelSheetCut"
     | "insertComment";
 
 /** Whether `caps` allows a selection edit of any of `kinds` — no per-doc-type
