@@ -1,8 +1,10 @@
 // Deal rooms, backstage: `/api/deal-rooms`. Those who sell make them, and work in
 // those they can enter: the ones they're on, and for a manager, all their tenant's.
 // A room's file is its own copy of a version the library published, picked from
-// a collection, kept as a document of its own and edited apart from where it came
-// from, with versions reviewed as a library file's are. Nothing here reaches a buyer
+// a collection, or a deck udoc-server filled from a template there with the deal's
+// data, and filled again as the data changes; kept as a document of its own and
+// edited apart from where it came from, with versions reviewed as a library file's
+// are. Nothing here reaches a buyer
 // until someone puts the room on its frontstage: that copies what it says of
 // itself, and each file chosen goes on at its latest approved version. All of this
 // is its tenant's alone: another tenant's room is as unknown as one that isn't there.
@@ -17,6 +19,7 @@ import type {
     DealRoomFile,
     DealRoomFileDetail,
     DealRoomNews,
+    DealRoomTemplate,
     DocumentActivity,
     PageView,
     PublishedFile,
@@ -36,9 +39,20 @@ import {
 import type { AssetRow, PublishedFileRow } from "../assets.ts";
 import type { TenantDb } from "../db.ts";
 import { anySentToReview, entersDealRoom } from "../dealRooms.ts";
-import { COLOR, Refusal, idsOf, imageTypeOf, nameOf, noteOf, sendImage, signedIn, signedInAs } from "../http.ts";
+import {
+    COLOR,
+    Refusal,
+    dataOf,
+    idsOf,
+    imageTypeOf,
+    nameOf,
+    noteOf,
+    sendImage,
+    signedIn,
+    signedInAs,
+} from "../http.ts";
 import type { Access, Scope } from "../scope.ts";
-import { keptThumbnails } from "./thumbnails.ts";
+import { keepThumbnails, keptThumbnails } from "./thumbnails.ts";
 import { addCopiedVersion, addEvent, versionsOf } from "./versions.ts";
 
 /** The largest banner image, in bytes. */
@@ -688,6 +702,117 @@ export function dealRoomRoutes(app: FastifyInstance, access: Access): void {
                 throw error;
             }
             return { room: roomFor(scope, room.id) };
+        },
+    );
+
+    /**
+     * The published files in a collection that are templates, which a room fills
+     * with its deal's data: `{ templates }`, each with the sample data its author
+     * previews it with, and whether the room holds a deck filled from it already.
+     * Whether a version is a template is udoc-server's to read, once a version.
+     */
+    app.get<{ Params: { id: string } }>(
+        "/api/deal-rooms/:id/templates",
+        async (request): Promise<{ templates: DealRoomTemplate[] }> => {
+            const scope = seller(request);
+            const { db, documents } = scope;
+            const room = roomFor(scope, request.params.id);
+            const held = new Set(room.files.map(({ source }) => source.id));
+            const rows = db
+                .prepare(
+                    `SELECT ${PUBLISHED_FILE_COLUMNS} FROM ${PUBLISHED_FILES}
+                    WHERE assets.tenant_id = :tenant AND assets.format IN ('pptx', 'potx') AND EXISTS (
+                        SELECT 1 FROM collection_items AS item
+                        WHERE item.tenant_id = assets.tenant_id AND item.asset_id = assets.id
+                    )
+                    ORDER BY assets.name COLLATE NOCASE`,
+                )
+                .all() as unknown as PublishedFileRow[];
+            const templates: DealRoomTemplate[] = [];
+            for (const file of rows.map(publishedFileOfRow)) {
+                const { automation } = await documents.automationAt(file.documentId, file.checkpoint);
+                if (!automation || !("template" in automation.role)) continue;
+                const sampleData = automation.role.template.sampleData ?? null;
+                templates.push({ file, sampleData, held: held.has(file.id) });
+            }
+            return { templates };
+        },
+    );
+
+    /**
+     * Fill a template, `{ source, data, name? }` — a published file in a collection
+     * — with the deal's data, as a deck of the room's own at its end: filled by
+     * udoc-server from the version the library publishes, kept as a document of its
+     * own, its first version approved as that version was, and named `name`, or as
+     * the template is. `{ room, assetId }`; `400` for a file that isn't in a
+     * collection, `409` for one the room holds a deck of already, and `422` for one
+     * that's no template.
+     */
+    app.post<{ Params: { id: string }; Body: { source?: unknown; data?: unknown; name?: unknown } | undefined }>(
+        "/api/deal-rooms/:id/generated-files",
+        async (request, reply) => {
+            const scope = seller(request);
+            const { user, db, documents } = scope;
+            const room = roomFor(scope, request.params.id);
+            const data = dataOf(request.body?.data);
+            const sourceId = typeof request.body?.source === "string" ? request.body.source : "";
+            const row = db
+                .prepare(
+                    `SELECT ${PUBLISHED_FILE_COLUMNS} FROM ${PUBLISHED_FILES}
+                    WHERE assets.tenant_id = :tenant AND assets.id = ? AND EXISTS (
+                        SELECT 1 FROM collection_items AS item
+                        WHERE item.tenant_id = assets.tenant_id AND item.asset_id = assets.id
+                    )`,
+                )
+                .get(sourceId) as PublishedFileRow | undefined;
+            if (!row) throw new Refusal(400, "notInCollection", "only a file in a collection goes in a deal room");
+            const source = publishedFileOfRow(row);
+            if (room.files.some((file) => file.source.id === source.id))
+                throw new Refusal(409, "alreadyInRoom", "the room holds a deck of that file already");
+            const name = request.body?.name === undefined ? source.name : nameOf(request.body.name);
+            const filled = await documents.instanceOf(source.documentId, data, source.checkpoint);
+            const assetId = randomUUID();
+            try {
+                db.transaction(() => {
+                    const at = Date.now();
+                    db.prepare(
+                        `INSERT INTO assets (tenant_id, id, name, format, size, document_id, uploaded_by, uploaded_at)
+                        VALUES (:tenant, ?, ?, 'pptx', ?, ?, ?, ?)`,
+                    ).run(assetId, name, filled.size, filled.id, user.id, at);
+                    addCopiedVersion(
+                        db,
+                        assetId,
+                        user.id,
+                        at,
+                        `Filled with the deal's data from version ${source.version} of “${source.name}”, as the library published it`,
+                    );
+                    db.prepare(
+                        `INSERT INTO deal_room_files (tenant_id, asset_id, room_id, position, source_asset_id,
+                            source_name, source_version)
+                        VALUES (:tenant, :asset, :room, (
+                            SELECT coalesce(MAX(position), -1) + 1 FROM deal_room_files
+                            WHERE tenant_id = :tenant AND room_id = :room
+                        ), :source, :name, :version)`,
+                    ).run({
+                        asset: assetId,
+                        room: room.id,
+                        source: source.id,
+                        name: source.name,
+                        version: source.version,
+                    });
+                    touch(db, room.id, at);
+                });
+            } catch (error) {
+                await documents.deleteDocument(filled.id);
+                throw error;
+            }
+            // Its pages are its own, not the template's: rendered as filled.
+            try {
+                await keepThumbnails(db, documents, { assetId, documentId: filled.id, number: 1 });
+            } catch (error) {
+                request.log.warn(error, "thumbnails weren't rendered");
+            }
+            return reply.code(201).send({ room: roomFor(scope, room.id), assetId });
         },
     );
 

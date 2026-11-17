@@ -150,11 +150,31 @@ class FakeSession {
         if (this.originalLocked && strategy !== "rewrite") {
             throw new UDocError("unsupported", "the original needs a password");
         }
-        // Absent, it is the engine's for a PDF: incremental.
-        if (strategy !== "rewrite") {
+        // Absent, it is the engine's for a PDF: incremental, over the original
+        // a session opened with one holds.
+        if (strategy !== "rewrite" && !(strategy === undefined && this.holdsOriginal)) {
             throw new UDocError("invalidRequest", "this session holds no original to save over");
         }
         return bytesOf("%PDF");
+    }
+    /** Whether it holds an original to save over, as the engine's do once opened with one. */
+    holdsOriginal = false;
+    /** Its automation part: a template's, an instance's once filled, or none, a plain document's. */
+    automationPart: { role: unknown } | undefined;
+    /** Every command run on it. */
+    readonly commands: unknown[] = [];
+    /** A fill is an edit, named for its data, which makes the document an instance. */
+    async execute(command: unknown): Promise<void> {
+        this.commands.push(command);
+        const data = (command as { automation?: { applyData?: { data: unknown } } }).automation?.applyData?.data;
+        if (data === undefined) return;
+        await this.merge(bytesOf(JSON.stringify([`fill ${JSON.stringify(data)}`])));
+    }
+    async automation(): Promise<{ role: unknown } | undefined> {
+        return this.automationPart;
+    }
+    async bindings(): Promise<unknown> {
+        return this.automationPart ? { schema: { object: { properties: {} } }, places: [] } : undefined;
     }
     async saveToPackage({ version }: { version?: number } = {}): Promise<Uint8Array> {
         this.packageSaves.push(version);
@@ -202,7 +222,12 @@ class FakeSession {
         return bytesOf(JSON.stringify([...this.edits].filter((edit) => !held.includes(edit))));
     }
     async merge(patch: Uint8Array): Promise<void> {
-        for (const edit of editsOf(patch)) this.edits.add(edit);
+        for (const edit of editsOf(patch)) {
+            this.edits.add(edit);
+            if (edit.startsWith("fill ") && this.automationPart) {
+                this.automationPart = { role: { instance: { template: "T", data: JSON.parse(edit.slice(5)) } } };
+            }
+        }
     }
     async presence(): Promise<Uint8Array> {
         return bytesOf(JSON.stringify(this.peers));
@@ -244,6 +269,10 @@ class FakeUDoc {
         withOriginal?: boolean | undefined;
     }[] = [];
     refusing = false;
+    /** Whether what it opens over the store is a template. */
+    templates = false;
+    /** Whether what it opens over the store with its original holds it, to save over. */
+    originals = false;
     readonly #package: Uint8Array;
 
     constructor(udocPackage: Uint8Array = PACKAGE) {
@@ -261,6 +290,8 @@ class FakeUDoc {
             baselineFrontier?: unknown[];
         };
         const session = new FakeSession(description.docType, description.sourceFormat ?? "pdf", true, this.#package);
+        session.holdsOriginal = this.originals && (withOriginal ?? false);
+        if (this.templates) session.automationPart = { role: { template: { id: "T" } } };
         if (description.baselineFrontier) await session.merge(inflateRawSync(await fetch(`${url}/crdt`)));
         this.opened.push({ bytes: url, format: undefined, session, fetch, withOriginal });
         return session as unknown as UDocSession;
@@ -1443,4 +1474,108 @@ test("a client whose document can't be opened is closed saying why", async (t) =
     await new DirectoryDocumentStore(directory).putLog(id, "main", bytesOf("not a patch"));
     const third = await serve(t, directory);
     assert.deepEqual(await (await collaborator(t, third.base, id)).closed, { code: 4002, reason: "not a patch" });
+});
+
+/** A fill's body: `{ data }`. */
+const dataBody = (data: unknown) => JSON.stringify({ data });
+
+test("a fill runs ApplyData on the branch as an editor's edit: its editors get it and its log keeps it", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const udoc = new FakeUDoc();
+    udoc.templates = true;
+    const { base, request, upload } = await serve(t, directory, {}, udoc);
+    const id = await upload();
+    const alex = await collaborator(t, base, id);
+    alex.send(JOIN, "[]");
+
+    const filled = await request("POST", `/documents/${id}/fill`, dataBody({ client: "Calderwood" }));
+    assert.equal(filled.status, 204);
+    const edit = 'fill {"client":"Calderwood"}';
+    await until(() => alex.received.some(([kind, payload]) => kind === PATCH && payload === JSON.stringify([edit])));
+    assert.equal((await kept(directory, id))[LOG], JSON.stringify([edit]));
+    const pooled = udoc.opened.find(({ bytes }) => bytes === keptUrl(id))!;
+    assert.deepEqual(pooled.session.commands, [{ automation: { applyData: { data: { client: "Calderwood" } } } }]);
+
+    assert.deepEqual(await errorOf(await request("POST", `/documents/${id}/fill`, "not json")), [
+        400,
+        "invalidRequest",
+    ]);
+    assert.deepEqual(await errorOf(await request("POST", `/documents/${id}/fill`, dataBody([1]))), [
+        400,
+        "invalidRequest",
+    ]);
+    assert.deepEqual(
+        await errorOf(
+            await request("POST", `/documents/${id}/branches/00000000-0000-4000-8000-000000000000/fill`, dataBody({})),
+        ),
+        [404, "notFound"],
+    );
+    udoc.templates = false;
+    const plain = await upload();
+    assert.deepEqual(await errorOf(await request("POST", `/documents/${plain}/fill`, dataBody({}))), [
+        422,
+        "notAutomated",
+    ]);
+});
+
+test("an instance is a new document filled from the template as it is now, or at a version, which stays as it was", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const udoc = new FakeUDoc();
+    udoc.templates = true;
+    udoc.originals = true;
+    const { base, request, upload } = await serve(t, directory, {}, udoc);
+    const id = await upload();
+    const alex = await collaborator(t, base, id);
+    alex.send(JOIN, "[]");
+    alex.send(PATCH, '["alex 1"]');
+    await until(async () => (await kept(directory, id))[LOG] === '["alex 1"]');
+
+    const made = await request("POST", `/documents/${id}/instances`, dataBody({ client: "Calderwood" }));
+    assert.equal(made.status, 201);
+    const { id: instance } = (await made.json()) as { id: string };
+    assert.match(instance, /^[0-9a-f-]{36}$/);
+    assert.notEqual(instance, id);
+    // Filled in a session of its own over the template as its editors left it,
+    // closed after; the template's own goes on, unfilled.
+    const [pooled, filler] = udoc.opened.filter(({ bytes }) => bytes === keptUrl(id));
+    assert.ok(filler?.withOriginal && filler.session.isClosed);
+    assert.deepEqual([...filler.session.edits], ["alex 1", 'fill {"client":"Calderwood"}']);
+    assert.equal(pooled?.session.isClosed, false);
+    assert.equal((await kept(directory, id))[LOG], '["alex 1"]');
+    // The instance is kept as an upload is: what the fill saved, its original.
+    const original = await request("GET", `/documents/${instance}/original`);
+    assert.equal(text(new Uint8Array(await original.arrayBuffer())), "%PDF");
+    assert.deepEqual(await (await request("GET", `/documents/${instance}/versions`)).json(), {
+        versions: [{ version: 0, branch: "main" }],
+    });
+
+    await request("POST", `/documents/${id}/checkpoints`);
+    assert.equal((await request("POST", `/documents/${id}/versions/1/instances`, dataBody({}))).status, 201);
+    assert.ok(udoc.opened.some(({ bytes }) => bytes.endsWith(`/documents/${id}/versions/1/package`)));
+
+    udoc.templates = false;
+    const plain = await upload();
+    assert.deepEqual(await errorOf(await request("POST", `/documents/${plain}/instances`, dataBody({}))), [
+        422,
+        "notATemplate",
+    ]);
+});
+
+test("a document's automation answers its part and its bindings, or null for each a plain document lacks", async (t) => {
+    const directory = await temporaryDirectory(t);
+    const udoc = new FakeUDoc();
+    udoc.templates = true;
+    const { request, upload } = await serve(t, directory, {}, udoc);
+    const id = await upload();
+    assert.deepEqual(await (await request("GET", `/documents/${id}/automation`)).json(), {
+        automation: { role: { template: { id: "T" } } },
+        bindings: { schema: { object: { properties: {} } }, places: [] },
+    });
+    udoc.templates = false;
+    const plain = await upload();
+    await request("POST", `/documents/${plain}/checkpoints`);
+    assert.deepEqual(await (await request("GET", `/documents/${plain}/versions/1/automation`)).json(), {
+        automation: null,
+        bindings: null,
+    });
 });

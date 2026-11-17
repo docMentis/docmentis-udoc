@@ -23,4 +23,18 @@ export type {
 export type { LogCut } from "@docmentis/udoc-wasm";
 // What a session is entitled to, and the features a call can need.
 export type { Entitlements, Feature } from "@docmentis/udoc-wasm";
+// A command `UDocSession.execute` runs, and a deck's automation and bindings,
+// which `UDocSession.automation` and `UDocSession.bindings` read.
+export type {
+    Automation,
+    AutomationCommand,
+    AutomationRole,
+    Binding,
+    BindingCatalog,
+    BindingData,
+    BindingSchema,
+    BindingValue,
+    PresentationBindingPlace,
+    UDocCommand,
+} from "@docmentis/udoc-wasm";
 export { isFileFormat } from "./format.js";

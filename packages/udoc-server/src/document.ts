@@ -1,15 +1,23 @@
 // The document routes: a document imported once and kept, then served from
 // what is kept — its original and its packages read from the store, its pages
 // and its copies from a session over one of its branches — edited together on
-// a branch, versioned, branched and merged (docs/design/node-branches.md), and
-// forgotten. `main`'s routes are the document's own; any branch's, beneath
-// `branches/:branch`.
+// a branch, versioned, branched and merged (docs/design/node-branches.md),
+// filled from data — a template made an instance, an instance filled again, a
+// template filled into a new document — and forgotten. `main`'s routes are the
+// document's own; any branch's, beneath `branches/:branch`.
 
 import { randomUUID } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 
 import { UDocError, isFileFormat } from "@docmentis/udoc-node";
-import type { FileFormat, PageExportFormat, SaveStrategy, UDocNode, UDocSession } from "@docmentis/udoc-node";
+import type {
+    BindingData,
+    FileFormat,
+    PageExportFormat,
+    SaveStrategy,
+    UDocNode,
+    UDocSession,
+} from "@docmentis/udoc-node";
 
 import { BRANCH_ID, MINTED_ID, branchKey } from "./branch.ts";
 import type { VersionNumbers } from "./branch.ts";
@@ -58,7 +66,8 @@ const VERSION = /\d+/;
  * `cannotVerify`), `unreadableDocument`, `passwordRequired`,
  * `incorrectPassword`, `cannotImportPackage`, `pageNotFound`, `cannotSave`,
  * `upgradeRequired`, `notFound`, `badRequest`, `methodNotAllowed`,
- * `payloadTooLarge`, `cannotMergeAgain`, `serverClosing` or `internal`.
+ * `payloadTooLarge`, `cannotMergeAgain`, `notAutomated`, `notATemplate`,
+ * `serverClosing` or `internal`.
  */
 export function documentRoutes({
     udoc,
@@ -80,6 +89,9 @@ export function documentRoutes({
         route("POST", "/documents/:id/versions/:version/branches", createBranch, { params: { version: VERSION } }),
         route("DELETE", "/documents/:id/branches/:branch", deleteBranch, { params: { branch: BRANCH_ID } }),
         route("POST", "/documents/:id/branches/:branch/merge", merge, { params: { branch: BRANCH_ID } }),
+        ...onBranches("POST", "/fill", fill),
+        ...onBranches("POST", "/instances", instances),
+        ...onBranches("GET", "/automation", automation),
         ...onBranches("GET", "/layout/page-count", pageCount),
         ...onBranches("GET", "/layout/pages.pdf", pages),
         ...onBranches("GET", "/layout/pages/:index.:format", page, { params: { index: /\d+/, format: /png|svg/ } }),
@@ -94,6 +106,8 @@ export function documentRoutes({
         ...onVersions("/package", versionResource),
         ...onVersions("/package/*route", versionResource),
         ...onVersions("/file.:format", versionFile, { params: { format: /\w+/ } }),
+        ...onVersions("/instances", instances, { method: "POST" }),
+        ...onVersions("/automation", automation),
     ];
 
     /** A route of a branch's: `main`'s beneath the document, and every branch's beneath `branches/:branch`. */
@@ -105,11 +119,15 @@ export function documentRoutes({
         ];
     }
 
-    /** A route of one version's, beneath `versions/:version`, and beneath `checkpoints/:version`, as it was named before. */
-    function onVersions<H>(path: string, handle: H, options: RouteOptions = {}): Route<H>[] {
+    /** A route of one version's, beneath `versions/:version`, and beneath `checkpoints/:version`, as it was named before; a `GET` unless `method` says otherwise. */
+    function onVersions<H>(
+        path: string,
+        handle: H,
+        { method = "GET", ...options }: RouteOptions & { method?: string } = {},
+    ): Route<H>[] {
         const params = { ...options.params, version: VERSION };
         return ["versions", "checkpoints"].map((under) =>
-            route("GET", `/documents/:id/${under}/:version${path}`, handle, { ...options, params }),
+            route(method, `/documents/:id/${under}/:version${path}`, handle, { ...options, params }),
         );
     }
 
@@ -351,6 +369,100 @@ export function documentRoutes({
             return;
         }
         await collaborations.join(id, params.branch ?? MAIN_BRANCH, upgrade);
+    }
+
+    /**
+     * Fill the branch from the data the body holds, `{ data }`, `204`: its
+     * template's places filled, making it an instance of itself, or its
+     * instance's filled again — the engine's `ApplyData`, run on the branch's
+     * own session and merged as an editor's edit is, so it reaches every
+     * client editing the branch, and its log, before this answers. A document
+     * neither a template nor an instance is refused, `422 notAutomated`.
+     */
+    async function fill({ params, incoming }: RouteRequest): Promise<Reply> {
+        const id = documentId(params);
+        const branch = params.branch ?? MAIN_BRANCH;
+        const data = await dataOf(incoming);
+        if (!(await store.getBranches(id)).some((kept) => kept.branch === branch)) throw await noBranch(id, branch);
+        await collaborations.merge(id, branch, async (session) => {
+            if ((await session.automation()) === undefined) {
+                throw new HttpFailure(422, "notAutomated", "the document is neither a template nor an instance");
+            }
+            const before = await session.versionVector();
+            await session.execute({ automation: { applyData: { data } } });
+            return session.patchSince(before);
+        });
+        return noContent();
+    }
+
+    /**
+     * A new document filled from the branch, a template as it is now — or
+     * from one of its versions, beneath `versions/:version` — and the data
+     * the body holds, `{ data }`: an instance of it, `201 { id }`, kept as an
+     * upload is, so its `v0` is the filled instance and it shares none of the
+     * template's history. A template's own format saves as the format of what
+     * it makes, a `potx` as a `pptx`. The template stays as it is. It is
+     * filled in a session of its own and imported in another, each spending a
+     * permit. A document that is no template is refused, `422 notATemplate`.
+     */
+    async function instances({ params, incoming }: RouteRequest): Promise<Reply> {
+        const id = documentId(params);
+        const data = await dataOf(incoming);
+        let at: At;
+        if (params.version !== undefined) {
+            at = { version: Number(params.version) };
+        } else {
+            const branch = params.branch ?? MAIN_BRANCH;
+            if (!(await store.getBranches(id)).some((kept) => kept.branch === branch)) {
+                throw await noBranch(id, branch);
+            }
+            // As it is now: every edit its editors sent, in what is reopened.
+            await collaborations.kept(id, branch);
+            at = { branch };
+        }
+        const filled = await openKept(id, at);
+        let saved: { bytes: Uint8Array; format: FileFormat };
+        try {
+            if (!("template" in ((await filled.automation())?.role ?? {}))) {
+                throw new HttpFailure(422, "notATemplate", "the document is not a template");
+            }
+            await filled.execute({ automation: { applyData: { data } } });
+            const format = instanceFormatOf(filled.sourceFormat!);
+            saved = { bytes: await saveFaithfully(filled, format), format };
+        } finally {
+            await filled.close();
+        }
+        const session = await openUpload(saved.bytes, saved.format, undefined, undefined);
+        const created = randomUUID();
+        try {
+            await store.put(created, await keptDocumentOf(session, saved.bytes));
+        } finally {
+            await session.close();
+        }
+        return json(201, { id: created });
+    }
+
+    /**
+     * The branch's automation — or one version's, beneath `versions/:version`
+     * — as a host builds a form or checks its data by:
+     * `{ automation, bindings }`, its automation part, which says whether it
+     * is a template or an instance and holds a template's sample data or an
+     * instance's data, and its bindings, the schema they make and each place;
+     * each `null` where the document has none, a plain document's automation
+     * and any but a deck's bindings.
+     */
+    async function automation({ params }: RouteRequest): Promise<Reply> {
+        const read = async (session: UDocSession) => ({
+            automation: (await session.automation()) ?? null,
+            bindings: (await session.bindings()) ?? null,
+        });
+        if (params.version === undefined) return json(200, await sessions.use(keyOf(params), read));
+        const session = await openKept(documentId(params), { version: Number(params.version) });
+        try {
+            return json(200, await read(session));
+        } finally {
+            await session.close();
+        }
     }
 
     /**
@@ -657,6 +769,48 @@ function scaleOf(value: string | null): number {
         throw new HttpFailure(400, "invalidRequest", `scale must be a positive number, got ${JSON.stringify(value)}`);
     }
     return scale;
+}
+
+/** The most a fill's data may take, in bytes: far more than any template's values. */
+const MAX_DATA_BYTES = 16 * 1024 * 1024;
+
+/** The data a fill's body holds, `{ data }`, an object; refuses any other body, `400`. */
+async function dataOf(request: IncomingMessage): Promise<BindingData> {
+    const body = new TextDecoder().decode(await readBody(request, MAX_DATA_BYTES));
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(body);
+    } catch {
+        throw new HttpFailure(400, "invalidRequest", "the body is not JSON: send { data }");
+    }
+    const data = (parsed as { data?: unknown } | null)?.data;
+    if (typeof data !== "object" || data === null || Array.isArray(data)) {
+        throw new HttpFailure(400, "invalidRequest", "send the data to fill with as { data }, an object");
+    }
+    return data as BindingData;
+}
+
+/** The format a template in `format` makes its instances in: a template format's document one, else its own. */
+function instanceFormatOf(format: FileFormat): FileFormat {
+    const made: Partial<Record<FileFormat, FileFormat>> = {
+        potx: "pptx",
+        potm: "pptm",
+        dotx: "docx",
+        dotm: "docm",
+        xltx: "xlsx",
+        xltm: "xlsm",
+    };
+    return made[format] ?? format;
+}
+
+/** `session` saved as `format` by the strategy keeping the most of its original, or, where it can't write over that, rewritten. */
+async function saveFaithfully(session: UDocSession, format: FileFormat): Promise<Uint8Array> {
+    try {
+        return await session.saveToBytes({ format });
+    } catch (error) {
+        if (failureOf(error).code !== "unsupported") throw error;
+        return session.saveToBytes({ format, strategy: "rewrite" });
+    }
 }
 
 async function readBody(request: IncomingMessage, limit: number): Promise<Uint8Array> {

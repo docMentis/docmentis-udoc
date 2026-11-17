@@ -1,9 +1,11 @@
-"""Write Larchmere's files: `python3 main.py <logo.png> <out> <staged>`.
+"""Write Larchmere's files: `python3 main.py <logo.png> <out> <staged> [--template]`.
 
 The decks, the questionnaire and the workbook go to `out` as they are; the
 fact sheets and the commentary go to `staged` as Word documents, which
-generate.mjs has Word save as PDF. Run generate.mjs rather than this: it
-makes the logo's PNG first, and the PDFs after.
+generate.mjs has Word save as PDF, and the pitch book's template goes there
+too, its tags plain text, which template.mjs has udoc make a template. Run
+generate.mjs rather than this: it makes the logo's PNG first, and the PDFs and
+the template after. `--template` writes the template alone.
 """
 
 from __future__ import annotations
@@ -36,6 +38,7 @@ def _dated(path: Path) -> None:
 
 def main() -> None:
     logo, out, staged = (Path(arg) for arg in sys.argv[1:4])
+    only_template = "--template" in sys.argv[4:]
     brand.LOGO_PNG = logo.read_bytes()
 
     import decks
@@ -47,6 +50,8 @@ def main() -> None:
     staged.mkdir(parents=True, exist_ok=True)
     written = [
         (decks.pitch_book, out / "global-equity-pitch-book.pptx", {}),
+        # Its tags turned into places, and its sample data given, by udoc: see template.mjs.
+        (decks.pitch_book, staged / "global-equity-pitch-book-template.pptx", {"template": True}),
         (decks.firm_overview, out / "firm-overview.pptx", {}),
         (documents.ddq, out / "global-equity-ddq.docx", {}),
         (workbook.workbook, out / "performance-and-fees-q3-2026.xlsx", {}),
@@ -56,6 +61,8 @@ def main() -> None:
         (documents.fact_sheet, staged / "global-infrastructure-fact-sheet.docx", {"s": figures.INFRASTRUCTURE, "draft_flaws": True}),
         (documents.commentary, staged / "market-commentary-q3-2026.docx", {}),
     ]
+    if only_template:
+        written = [entry for entry in written if entry[1].name == "global-equity-pitch-book-template.pptx"]
     for write, path, options in written:
         write(str(path), **options)
         _dated(path)

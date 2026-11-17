@@ -1,12 +1,18 @@
-"""Larchmere's decks: the Global Equity pitch book and the firm overview, 16:9,
-on a theme of Larchmere's colors and fonts, their charts native."""
+"""Larchmere's decks: the Global Equity pitch book, the template a deal's is
+filled from, and the firm overview, 16:9, on a theme of Larchmere's colors and
+fonts, their charts native."""
 
 from __future__ import annotations
 
 import re
 
+from xml.sax.saxutils import escape
+
+from lxml import etree
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE
+from pptx.opc.constants import CONTENT_TYPE as CT
+from pptx.opc.package import Part
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.opc.constants import RELATIONSHIP_TYPE as RT
 from pptx.util import Emu, Inches, Pt
@@ -162,13 +168,44 @@ def numbered(slide, x, y, n: str, *, fill=b.FOREST, color=b.WHITE, d=Inches(0.55
     run.font.color.rgb = b.rgb(color)
 
 
-def cover(deck, kicker: str, heading: str, subheading: str):
+def bound(slide, shape, tag: str) -> None:
+    """Make `shape` a place, its binding `tag`, as a deck keeps one: the tag
+    named UDOC of a tags part of the shape's own, which its custDataLst names."""
+    part = Part(
+        slide.part.package.next_partname("/ppt/tags/tag%d.xml"),
+        CT.PML_TAGS,
+        slide.part.package,
+        f'<p:tagLst xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:tag name="UDOC" val="{escape(tag, {chr(34): "&quot;"})}"/></p:tagLst>'.encode("utf-8"),
+    )
+    r_id = slide.part.relate_to(part, RT.TAGS)
+    nv = shape._element.xpath("./p:nvSpPr/p:nvPr | ./p:nvPicPr/p:nvPr | ./p:nvGrpSpPr/p:nvPr")[0]
+    nv.append(etree.fromstring(
+        f'<p:custDataLst xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main" '
+        f'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><p:tags r:id="{r_id}"/></p:custDataLst>'
+    ))
+
+
+def cover(deck, kicker: str, heading: str, subheading: str, *, finals: str | None = None):
+    """A cover; `finals`, the binding of a badge saying it's a finals presentation."""
     slide = deck.slides.add_slide(deck.slide_layouts[6])
     box(slide, 0, 0, W, H, b.FOREST)
     text(slide, MARGIN + Inches(0.2), Inches(2.0), Inches(7.6), Inches(0.4), kicker.upper(), size=14, color=b.SAGE, bold=True)
     text(slide, MARGIN + Inches(0.2), Inches(2.45), Inches(7.6), Inches(1.9), heading, size=46, color=b.WHITE, head=True)
     text(slide, MARGIN + Inches(0.2), Inches(4.35), Inches(7.6), Inches(0.9), subheading, size=20, color=b.MINT)
     text(slide, MARGIN + Inches(0.2), H - Inches(1.1), Inches(7.6), Inches(0.4), f"Data as of {f.AS_OF_TEXT}  ·  For institutional investors only", size=12, color=b.SAGE)
+    if finals:
+        badge = box(slide, MARGIN + Inches(0.2), Inches(1.2), Inches(2.9), Inches(0.5), b.AMBER, rounded=True)
+        frame = badge.text_frame
+        frame.margin_top = frame.margin_bottom = 0
+        frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+        p = frame.paragraphs[0]
+        p.alignment = PP_ALIGN.CENTER
+        run = p.add_run()
+        run.text = "FINALS PRESENTATION"
+        run.font.size = Pt(13)
+        run.font.bold = True
+        run.font.color.rgb = b.rgb(b.WHITE)
+        bound(slide, badge, finals)
     card = Inches(3.6)
     cx, cy = W - MARGIN - card - Inches(0.2), (H - card) / 2
     box(slide, cx, cy, card, card, b.WHITE, rounded=True)
@@ -199,15 +236,24 @@ def disclosures(deck, number: int, note: str, extra: list[str]):
 # ── The Global Equity pitch book ──────────────────────────────────────────────
 
 
-def pitch_book(path: str) -> None:
+def pitch_book(path: str, *, template: bool = False) -> None:
+    """The pitch book; with `template`, the one a deal's deck is filled from:
+    its client, the meeting, the mandate and the deal team written as tags,
+    and a finals badge a binding shows, which udoc turns into places."""
     s = f.GLOBAL_EQUITY
-    deck = _deck("Larchmere Global Equity: strategy review", f"Pitch book, data as of {f.AS_OF_TEXT}")
+    deck = _deck(
+        "Larchmere Global Equity: strategy review" + (", template" if template else ""),
+        f"Pitch book{' template' if template else ''}, data as of {f.AS_OF_TEXT}",
+    )
     note = f"Larchmere Global Equity  ·  Data as of {f.AS_OF_TEXT}  ·  Fictional, for demonstration"
     trailing = f.trailing(s)
     inception = trailing[-1]
     risk = f.risk(s)
 
-    cover(deck, "Global Equity", "Larchmere Global Equity", "Quality companies, bought sensibly and held patiently")
+    if template:
+        cover(deck, "Global Equity", "Larchmere Global Equity", "Prepared for {{client.name}}, {{meeting.date}}", finals="{{#if meeting.isFinals}}")
+    else:
+        cover(deck, "Global Equity", "Larchmere Global Equity", "Quality companies, bought sensibly and held patiently")
 
     # 2: at a glance
     slide = content(deck, "Global Equity at a glance", "The strategy", 2, note)
@@ -222,7 +268,11 @@ def pitch_book(path: str) -> None:
         stat(slide, MARGIN + i * (w + Inches(0.3)), CONTENT_TOP + Inches(0.1), w, Inches(2.3), figure, label)
     box(slide, MARGIN, Inches(4.35), W - 2 * MARGIN, Inches(2.2), "F4F8F5", rounded=True)
     text(slide, MARGIN + Inches(0.35), Inches(4.6), Inches(2.2), Inches(0.4), "Objective", size=18, color=b.FOREST, head=True)
-    text(slide, MARGIN + Inches(2.7), Inches(4.62), W - 2 * MARGIN - Inches(3.1), Inches(1.8), [s.objective, f"Benchmark: {s.benchmark}  ·  Inception: {s.inception_text}  ·  {s.vehicle}"], size=16, spacing=10)
+    objective = [s.objective]
+    if template:
+        objective.append("Proposed for {{client.name}}: a {{mandate.size}} global equity mandate.")
+    objective.append(f"Benchmark: {s.benchmark}  ·  Inception: {s.inception_text}  ·  {s.vehicle}")
+    text(slide, MARGIN + Inches(2.7), Inches(4.62), W - 2 * MARGIN - Inches(3.1), Inches(1.8), objective, size=16, spacing=10)
 
     # 3: the firm
     slide = content(deck, "Larchmere at a glance", "The firm", 3, note)
@@ -371,16 +421,26 @@ def pitch_book(path: str) -> None:
 
     # 13: contacts
     slide = content(deck, "Your Larchmere team", "Contacts", 13, note)
-    w = (W - 2 * MARGIN - Inches(0.4)) / 2
-    for i, (name, role, email) in enumerate(f.CONTACTS):
-        x = MARGIN + i * (w + Inches(0.4))
-        box(slide, x, CONTENT_TOP + Inches(0.3), w, Inches(2.4), "F4F8F5", rounded=True)
-        text(slide, x + Inches(0.4), CONTENT_TOP + Inches(0.65), w - Inches(0.8), Inches(1.8), [[(name, {"size": 26, "head": True, "color": b.FOREST})], [(role, {"size": 16})], [(email, {"size": 15, "color": b.GREEN})]], spacing=8)
+    if template:
+        # A repeat over the deal's team, a paragraph each: their name, then their role and email.
+        box(slide, MARGIN, CONTENT_TOP + Inches(0.3), W - 2 * MARGIN, Inches(2.4), "F4F8F5", rounded=True)
+        text(slide, MARGIN + Inches(0.4), CONTENT_TOP + Inches(0.5), W - 2 * MARGIN - Inches(0.8), Inches(2.0), [
+            "{{#member in team}}",
+            [("{{member.name}}", {"size": 22, "head": True, "color": b.FOREST})],
+            [("{{member.role}}  ·  ", {"size": 15}), ("{{member.email}}", {"size": 15, "color": b.GREEN})],
+            "{{/member}}",
+        ], spacing=4)
+    else:
+        w = (W - 2 * MARGIN - Inches(0.4)) / 2
+        for i, (name, role, email) in enumerate(f.CONTACTS):
+            x = MARGIN + i * (w + Inches(0.4))
+            box(slide, x, CONTENT_TOP + Inches(0.3), w, Inches(2.4), "F4F8F5", rounded=True)
+            text(slide, x + Inches(0.4), CONTENT_TOP + Inches(0.65), w - Inches(0.8), Inches(1.8), [[(name, {"size": 26, "head": True, "color": b.FOREST})], [(role, {"size": 16})], [(email, {"size": 15, "color": b.GREEN})]], spacing=8)
     text(slide, MARGIN, CONTENT_TOP + Inches(3.05), W - 2 * MARGIN, Inches(0.4), "Next steps", size=20, color=b.FOREST, head=True)
     steps = [
         ("Due diligence", "We answer your questionnaire, and send our composite's full record and the representative account's holdings."),
         ("Meet the team", "Elena Varga and Paula Ortiz take you through the portfolio, in Boston or wherever suits you."),
-        ("Proposal", "A fee proposal and investment guidelines drafted to your mandate's size and constraints."),
+        ("Proposal", "A fee proposal and investment guidelines drafted to {{client.name}}'s mandate." if template else "A fee proposal and investment guidelines drafted to your mandate's size and constraints."),
     ]
     w = (W - 2 * MARGIN - 2 * Inches(0.4)) / 3
     for i, (head, body) in enumerate(steps):

@@ -203,6 +203,11 @@ export interface UIShellHost {
     /** The name of the open document's file, as it was opened; none for bytes
      *  opened without one. */
     filename(): string | undefined;
+    /** The package URL the open document was opened from with `openRemote` —
+     *  `…/documents/{id}/package`, a branch's or a checkpoint's — which what
+     *  is asked of the server keeping it is resolved against; none for a
+     *  document opened from its bytes. */
+    remotePackage(): string | undefined;
     /**
      * The canvas's hidden text input, focused for all of edit mode and, in
      * view mode, while the selection is copyable — where the native `copy` /

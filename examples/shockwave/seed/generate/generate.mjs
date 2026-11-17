@@ -6,7 +6,8 @@
 // on a Mac; and the packages built (`npm run build` from the repo's root).
 // udoc renders the logo to the PNG the files carry. The fact sheets and the
 // commentary are written as Word documents, and Word saves them as PDF, as
-// Larchmere's marketing would: the PDFs are Word's.
+// Larchmere's marketing would: the PDFs are Word's. udoc makes the pitch book's
+// template a template (template.mjs).
 import { spawnSync } from "node:child_process";
 import {
     copyFileSync,
@@ -23,6 +24,8 @@ import { homedir, tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
 import { UDocNode } from "@docmentis/udoc-node";
+
+import { TEMPLATE, finishTemplate, renderLogo } from "./template.mjs";
 
 const here = import.meta.dirname;
 const larchmere = join(here, "..", "larchmere");
@@ -62,13 +65,7 @@ const license = process.env.UDOC_LICENSE;
 const domain = process.env.UDOC_DOMAIN;
 const udoc = await UDocNode.create({ ...(license ? { license } : {}), ...(domain ? { domain } : {}) });
 try {
-    const logo = join(work, "logo.png");
-    const svg = await udoc.open(readFileSync(join(larchmere, "logo.svg")));
-    try {
-        writeFileSync(logo, await svg.exportPageToBytes(0, { png: { scale: 8 } }));
-    } finally {
-        await svg.close();
-    }
+    const logo = await renderLogo(udoc, work);
 
     console.log("Writing Larchmere's files…");
     const python = process.env.PYTHON ?? "python3";
@@ -79,9 +76,11 @@ try {
     });
     if (run.status !== 0) throw new Error(`${python} main.py failed${run.error ? `: ${run.error.message}` : ""}`);
 
+    await finishTemplate(udoc, staged, out);
+
     rmSync(wordDir, { recursive: true, force: true });
     mkdirSync(wordDir, { recursive: true });
-    for (const name of readdirSync(staged)) {
+    for (const name of readdirSync(staged).filter((name) => name !== TEMPLATE)) {
         const docx = join(wordDir, name);
         const pdf = join(wordDir, basename(name, ".docx") + ".pdf");
         copyFileSync(join(staged, name), docx);

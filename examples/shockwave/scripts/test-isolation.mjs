@@ -380,6 +380,14 @@ const PROBES = [
     }),
     probe("DELETE", "/api/deal-rooms/:id/files/:assetId", (x) => ({ id: x.room, assetId: x.copy })),
     probe("PUT", "/api/deal-rooms/:id/order", (x) => ({ id: x.room }), { body: { assetIds: [] } }),
+    probe("GET", "/api/deal-rooms/:id/templates", (x) => ({ id: x.room })),
+    probe("POST", "/api/deal-rooms/:id/generated-files", (x) => ({ id: x.room }), {
+        body: (x) => ({ source: x.asset, data: {} }),
+    }),
+    // Larchmere's own room, filled from Northwind's file.
+    probe("POST", "/api/deal-rooms/:id/generated-files", () => ({ id: A.room.id }), {
+        body: (x) => ({ source: x.asset, data: {} }),
+    }),
     probe("PUT", "/api/deal-rooms/:id/frontstage", (x) => ({ id: x.room }), { body: { assetIds: [made()] } }),
     probe("DELETE", "/api/deal-rooms/:id/frontstage", (x) => ({ id: x.room })),
     probe("GET", "/api/deal-rooms/:id/activity", (x) => ({ id: x.room })),
@@ -657,6 +665,8 @@ console.log("4. The gate");
         "/checkpoints/0/package",
         "/checkpoints/0/package/crdt",
         "/checkpoints/0/file.pptx",
+        "/checkpoints/0/automation",
+        "/automation",
         "/package",
         "/package/crdt",
         "/package/cuts",
@@ -682,7 +692,11 @@ console.log("4. The gate");
             }
             for (const [method, suffix] of [
                 ["DELETE", ""],
+                ["DELETE", "/branches/main"],
                 ["POST", "/checkpoints"],
+                ["POST", "/fill"],
+                ["POST", "/instances"],
+                ["POST", "/checkpoints/0/instances"],
             ]) {
                 const answer = await rawRequest(`/udoc/documents/${document}${suffix}`, { method, cookie });
                 check(

@@ -10,7 +10,8 @@ export type Moment =
     | ThumbnailsShown
     | ThumbnailsHidden
     | ViewerColorsShown
-    | ViewerColorsHidden;
+    | ViewerColorsHidden
+    | DeckFilled;
 
 /** A document opened in the browser. */
 export interface DocumentOpened {
@@ -64,6 +65,13 @@ export interface ViewerColorsHidden {
     kind: "viewer-colors:hidden";
     /** Where: the workspace's brand settings. */
     where: "settings";
+}
+
+/** A deck filled with a deal's data by udoc-server, generated from a template into a deal room. */
+export interface DeckFilled {
+    kind: "deck:filled";
+    /** From asking for it to the deck filled, in milliseconds. */
+    ms: number;
 }
 
 const moments = new EventTarget();

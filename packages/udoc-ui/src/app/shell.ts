@@ -4713,6 +4713,7 @@ export function mountUIShell(
             standIn = next;
         },
         filename: () => sourceFilename,
+        remotePackage: () => remotePackage,
         clipboardSink: canvas.clipboardSink,
         focusClipboardSink: canvas.focusClipboardSink,
         clipboard,

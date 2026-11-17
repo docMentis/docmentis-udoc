@@ -3,14 +3,18 @@
 import type { MessagePort } from "node:worker_threads";
 
 import type {
+    Automation,
+    BindingCatalog,
     Entitlements,
     ExportFormat,
     FileFormat,
     GoogleFontFamily,
     LogCut,
     PageExportFormat,
+    PresentationBindingPlace,
     SaveStrategy,
     SessionConfig,
+    UDocCommand,
     UDocError,
     UDocType,
     UrlFont,
@@ -91,7 +95,10 @@ export type WorkerRequest =
     | { id: number; type: "patchSince"; peer: Uint8Array }
     | { id: number; type: "merge"; patch: Uint8Array }
     | { id: number; type: "presence" }
-    | { id: number; type: "mergePresence"; presence: Uint8Array };
+    | { id: number; type: "mergePresence"; presence: Uint8Array }
+    | { id: number; type: "execute"; command: UDocCommand }
+    | { id: number; type: "automation" }
+    | { id: number; type: "bindings" };
 
 /**
  * What the document opened as: its doc type, the format it came from, whether
@@ -127,6 +134,9 @@ export interface WorkerResult {
     merge: undefined;
     presence: Uint8Array;
     mergePresence: undefined;
+    execute: undefined;
+    automation: Automation | undefined;
+    bindings: BindingCatalog<PresentationBindingPlace> | undefined;
 }
 
 /**

@@ -2,16 +2,18 @@
 // template copied, filled with its sample data and shown read-only over the
 // document's body, in place of the template, until it's turned off.
 //
-// The copy is the template saved as it is now and filled in a document UI of its
-// own (automation-copy.ts), with the template's sample data, every value it
-// lacks made up from the schema its bindings make. While it's shown, the
-// toolbar's Download and Print act on it: what is downloaded or printed is what
-// is seen. The preview is made anew each time it's turned on, and gone when it's
-// turned off, when the deck stops being a template, or in view mode.
+// The copy is filled with the template's sample data as the Data panel shows
+// it. The udoc server keeping a template opened with `openRemote` fills it
+// there, as a document of its own it deletes once the preview goes; a template
+// opened from its bytes is saved as it is now and filled in a document UI of its
+// own (automation-copy.ts). While it's shown, the toolbar's Download and Print act
+// on it: what is downloaded or printed is what is seen. The preview is made anew
+// each time it's turned on, and gone when it's turned off, when the deck stops
+// being a template, or in view mode.
 import { sampleDataOf, subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { UIShell } from "@docmentis/udoc-ui/internal";
 import type { BindingData, FileFormat } from "@docmentis/udoc-wasm";
-import { copyName, downloadBytes, filledCopy, instanceFormat } from "./automation-copy.js";
+import { copyName, downloadBytes, filledCopy, instanceFormat, openedCopy, serverCopy } from "./automation-copy.js";
 import type { EditHost } from "./edit-client.js";
 import type { UDocEditorOptions } from "./editor.js";
 import { editState, updateEditState } from "./state.js";
@@ -22,11 +24,13 @@ export interface AutomationPreview {
     toggle(host: EditHost): void;
 }
 
-/** A shown preview: its document UI, what holds it, and what it watches to go. */
+/** A shown preview: its document UI, what holds it, what it watches to go,
+ *  and what deletes a copy the server filled. */
 interface Shown {
     shell: UIShell;
     overlay: HTMLElement;
     unsubscribe: () => void;
+    release?: (() => void) | undefined;
 }
 
 /** The format the open template is saved as to copy it. */
@@ -59,6 +63,7 @@ export function createAutomationPreview(options: UDocEditorOptions): AutomationP
             shown.unsubscribe();
             shown.shell.destroy();
             shown.overlay.remove();
+            shown.release?.();
             shown = null;
         }
         if (editState(host.store.getState()).automationPreview) {
@@ -71,17 +76,26 @@ export function createAutomationPreview(options: UDocEditorOptions): AutomationP
         updateEditState(host.store, { automationPreview: true });
         const format = templateFormat(host);
         const data = previewData(host);
-        const bytes = await host.client.saveToBytes(format);
-        if (!wanted(host, at)) return;
+        // Filled by the server keeping the template, where it's kept there.
+        const remote = host.remotePackage();
+        const copy = remote !== undefined ? await serverCopy(remote, data) : undefined;
+        const bytes = copy ? undefined : await host.client.saveToBytes(format);
+        if (!wanted(host, at)) {
+            copy?.close();
+            return;
+        }
         const body = host.root.querySelector<HTMLElement>(".udoc-body-slot") ?? host.root;
         const overlay = document.createElement("div");
         overlay.className = "udoc-automation-preview";
         body.append(overlay);
         let shell: UIShell;
         try {
-            shell = await filledCopy(bytes, overlay, options, data);
+            shell = copy
+                ? await openedCopy(copy.url, overlay, options)
+                : await filledCopy(bytes!, overlay, options, data);
         } catch (error) {
             overlay.remove();
+            copy?.close();
             throw error;
         }
         // Gone with the template, or in view mode.
@@ -92,16 +106,19 @@ export function createAutomationPreview(options: UDocEditorOptions): AutomationP
                 if (!template) close(host);
             },
         );
-        shown = { shell, overlay, unsubscribe };
+        shown = { shell, overlay, unsubscribe, release: copy?.close };
         if (!wanted(host, at)) {
             close(host);
             return;
         }
         const instance = instanceFormat(format);
         host.setStandIn({
+            // A copy kept elsewhere is saved where it is kept.
             download: async () =>
                 downloadBytes(
-                    await shell.saveToBytes({ format: instance }),
+                    copy
+                        ? await shell.requestRemoteCopy({ format: instance })
+                        : await shell.saveToBytes({ format: instance }),
                     copyName(host.filename(), "preview", instance),
                 ),
             print: () => shell.print(),

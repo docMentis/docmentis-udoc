@@ -47,7 +47,7 @@ Seismic, Highspot, Showpad and Letter AI each do these jobs:
 | Buyer engagement, page by page      | the viewer's `currentPage:changed`, `viewport:changed`, `document:downloaded` and `document:printed`, which the host records | core                            |
 | Sharing under control               | `setWatermarks`; `showDownloadButton`, `showPrintButton` and `enableCopy` turned off                                         | partial: no redaction           |
 | Searching the library, AI on it     | search within one document alone: only a word document saves as text or Markdown, and a PDF's or a deck's text can't be had  | gap                             |
-| Decks generated from a template     | udoc-node opens, saves and exports a document, with no API to edit it                                                        | gap                             |
+| Decks generated from a template     | udoc-server fills a template's places with a deal's data beside the documents it keeps: a new deck, a preview, or a refresh  | core                            |
 | Copying slides between decks        | not looked into yet                                                                                                          | likely gap                      |
 
 The gaps are what Shockwave logs in `GAPS.md` as it reaches them, and the
@@ -88,16 +88,19 @@ documents says so.
 
 An empty database starts with Larchmere's content, made as its people would
 make it: once the backend's up, it signs in as each of them and calls the app's
-own routes (`server/seedContent.ts`). Maya uploads a pitch book, a firm
+own routes (`server/seedContent.ts`). Maya uploads a pitch book and its template, a firm
 overview, three fact sheets, a commentary, a due diligence questionnaire and a
 performance workbook; Colin approves most, returns one with a note and has one
 waiting; Maya publishes what's approved; Sam arranges two collections; and Ryan
-prepares a deal room with Paula and puts it on its frontstage. So every page
+prepares a deal room with Paula, its pitch book personalized from the template with
+the search's data, and puts it on its frontstage. So every page
 and every persona's Home has something real on it, and what's seeded is what
 the app makes. A buyer's visit isn't seeded: a frontstage's activity is what its
 visitors do. The files are generated, from one set of made-up figures, by
 `seed/generate/`, and committed: Python writes the Office files, and Word saves
-the fact sheets and the commentary as PDF, as Larchmere's marketing would.
+the fact sheets and the commentary as PDF, as Larchmere's marketing would; udoc-node
+makes the pitch book's template a template, its tags places, and gives it its sample
+data (`seed/generate/template.mjs`).
 
 Its users see the app in its brand, as a tenant's do: its logo, a square icon,
 and its name lead the header, the logo kept with the tenant and served to its
@@ -282,19 +285,22 @@ itself, or a `TenantDb` for each tenant it names, in a module of its own. A rout
 reaches one by accident.
 
 **The gate.** udoc-server has no end-user authentication. So every `/udoc/*` request
-and WebSocket upgrade passes the gate first, which wants a signed-in session and a
-document id the user's tenant has an
-asset for, and lets a user only read it. Those who read the Library read all of
-it; anyone else reads only the checkpoint its file publishes, and nothing of the
-document around it. An upgrade, which joins the collaboration that edits a
-document, passes only for those who change the Library. A deal room's file is
-another matter: those who enter the room read it and join its collaboration, and
-a reviewer reads the versions sent to them. Either way, a version is reviewed in a
-branch of the document ([below](#versions)): its reviewer reads it, and joins its
-collaboration while the version waits on them, and no one else writes there. A buyer has no session: a frontstage's
-link admits them to the package of each file it shows, at the version it shows
-([below](#deal-rooms)). The browser
-never imports, checkpoints or deletes a document in udoc-server: the backend does.
+and WebSocket upgrade passes the gate first, which guards the URL as a whole, by
+document rather than route by route: it wants a signed-in session and a document id
+the user's tenant has an asset for, and lets the user read it or edit it. Those who
+read the Library read all of it; anyone else reads only the checkpoint its file
+publishes, and nothing of the document around it. Editing — joining the
+collaboration that edits a document, or any other request that isn't a read, such
+as the editor asking udoc-server to fill it or to make a filled copy of it — passes
+only for those who change the Library. A deal room's file is another matter: those
+who enter the room read it and edit it, and a reviewer reads the versions sent to
+them. Either way, a version is reviewed in a branch of the document
+([below](#versions)): its reviewer reads it, and edits it while the version waits on
+them, and no one else writes there. A document made through the gate, a template's
+filled copy, is its maker's alone. A buyer has no session: a frontstage's link admits
+them to the package of each file it shows, at the version it shows
+([below](#deal-rooms)). The browser never imports a document, or deletes one an
+asset holds, or a branch of it: the backend does.
 
 **Importing.** An upload goes to `POST /api/assets`, and the backend imports it
 and records the asset under the id udoc-server answers. udoc-server is driven
@@ -436,6 +442,21 @@ account. Nothing reaches a buyer until someone puts it there.
 
 A manager enters every room at their tenant; a member, those they're on, starting with
 those they make. An admin or a reviewer enters none.
+
+**A deck from a template.** A deck the library keeps as a template — the pitch book's,
+its client, meeting, mandate and deal team written as places, and a finals badge a
+condition shows — is personalized in a room rather than copied: Personalize picks one
+from the collections and takes the deal's data, as JSON starting from the template's
+sample data, and udoc-server fills the version the library publishes, beside the
+documents it keeps, as a deck of the room's own (`POST /api/deal-rooms/:id/generated-files`).
+The browser sends the data and nothing more. The deck keeps the data it was filled
+with, so its editor's Refresh offers it again, and filling it again happens on the
+server too, where it is, an edit that reaches whoever has it open. In the library,
+the template's editor previews it in a copy the server fills with its sample data,
+which goes with the preview, and Generate downloads one. The editor asks udoc-server
+for each itself, through [the gate](#how-it-fits-together), which needs nothing of them but
+its rules for editing a document. Whether a published deck is a template is
+udoc-server's to read, once a version (`GAPS.md`).
 
 **A file is a copy, not a reference.** Personalizing means editing the document, so
 each file is a document of its own, an asset that `deal_room_files` holds out of the

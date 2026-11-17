@@ -5,6 +5,8 @@ import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 
 import type { Role } from "../shared/api.ts";
 import type { Access, Scope } from "./scope.ts";
+import type { BindingData } from "@docmentis/udoc-node";
+
 import { UdocFailure } from "./udoc.ts";
 
 /** The longest name a folder, a file, a collection or a deal room is given. */
@@ -73,6 +75,13 @@ export function idsOf(value: unknown): string[] {
     if (!Array.isArray(value) || !value.every((id) => typeof id === "string"))
         throw new Refusal(400, "badRequest", "a list is needed");
     return value as string[];
+}
+
+/** The data a request fills a template with, `{ data }`'s: an object; a `400` for anything else. */
+export function dataOf(value: unknown): BindingData {
+    if (typeof value !== "object" || value === null || Array.isArray(value))
+        throw new Refusal(400, "badRequest", "the data to fill with is an object");
+    return value as BindingData;
 }
 
 /** A color a request gives: `#rrggbb`. */

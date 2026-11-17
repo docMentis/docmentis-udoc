@@ -6,14 +6,19 @@
 // backend's own HTTP server, and a request goes to the server of the tenant it's for.
 //
 // udoc-server has no end-user authentication, so a request reaches it only past the
-// gate: the backend's own, with this process's token, for the tenant it names; a
-// signed-in user's, reading a document their tenant has an asset for, all of it if
-// they read the library and only its published version if not; one who changes the
-// library, joining the collaboration that edits its working copy, `main`; those who
-// enter a deal room, doing either with its files, and a reviewer, reading the
-// versions sent to them and the branches they're reviewed in, and joining a branch's
-// collaboration while its version waits on them; and a buyer's, with no account,
-// reading a file a frontstage's link shows, at the version it shows.
+// gate, which guards its URL as a whole, by document, not route by route: the
+// backend's own, with this process's token, for the tenant it names; a signed-in
+// user's, reading a document their tenant has an asset for, all of it if they read
+// the library and only its published version if not; one who changes the library,
+// editing its working copy, `main` — joining the collaboration that edits it, or
+// asking udoc-server to change it, fill it or make a copy of it; those who enter a
+// deal room, doing either with its files, and a reviewer, reading the versions sent
+// to them and the branches they're reviewed in, and editing a branch while its
+// version waits on them; one who made a document through the gate, a template's
+// filled copy, doing what they like with it; and a buyer's, with no account,
+// reading a file a frontstage's link shows, at the version it shows. Deleting a
+// document an asset holds, or a branch of it, is the backend's alone.
+import { AsyncLocalStorage } from "node:async_hooks";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
@@ -21,11 +26,12 @@ import type { DatabaseSync } from "node:sqlite";
 import type { Duplex } from "node:stream";
 
 import { UDocNode } from "@docmentis/udoc-node";
+import type { Automation, BindingCatalog, BindingData, PresentationBindingPlace } from "@docmentis/udoc-node";
 import { DirectoryDocumentStore, MAIN_BRANCH, createUDocServer } from "@docmentis/udoc-server";
-import type { UDocServer } from "@docmentis/udoc-server";
+import type { KeptDocument, UDocServer } from "@docmentis/udoc-server";
 
 import { managesLibrary, readsLibrary } from "../shared/api.ts";
-import type { Failure } from "../shared/api.ts";
+import type { Failure, User } from "../shared/api.ts";
 import { tenantOfFrontstage, userOf } from "./auth.ts";
 import { config } from "./config.ts";
 import { TenantDb } from "./db.ts";
@@ -42,6 +48,9 @@ const TENANT_HEADER = "x-shockwave-tenant";
 
 /** A document's routes: `/udoc/documents/:id`, and those under it. */
 const DOCUMENT_PATH = new RegExp(`^${BASE}/documents/([^/]+)(?:/|$)`);
+
+/** A document itself, `/udoc/documents/:id`, nothing under it. */
+const DOCUMENT_ONLY_PATH = new RegExp(`^${BASE}/documents/[^/]+/?$`);
 
 /** One checkpoint's routes: `/udoc/documents/:id/checkpoints/:version`, and those under it. */
 const CHECKPOINT_PATH = new RegExp(`^${BASE}/documents/[^/]+/checkpoints/(\\d+)(?:/|$)`);
@@ -97,6 +106,26 @@ export interface TenantDocuments {
      * all of its first sheet (GAPS.md).
      */
     renderPages(id: string, scale: number): Promise<Uint8Array[]>;
+    /**
+     * Fill a copy of document `id`, a template — at checkpoint `checkpoint`, or as
+     * it is now — with `data`, filled by udoc-server and kept as a new document of
+     * its own, its first checkpoint the filled deck: the id it keeps it as.
+     */
+    instanceOf(id: string, data: BindingData, checkpoint?: number): Promise<{ id: string; size: number }>;
+    /**
+     * Document `id`'s automation at checkpoint `checkpoint`, as udoc-server reads
+     * it: whether it's a template, and what it binds. Read once a checkpoint,
+     * which never changes after.
+     */
+    automationAt(id: string, checkpoint: number): Promise<KeptAutomation>;
+}
+
+/** What udoc-server reads of a document's automation. */
+export interface KeptAutomation {
+    /** Its automation part: none for a plain document. */
+    automation: Automation | null;
+    /** What a deck's slides bind: none for any other document. */
+    bindings: BindingCatalog<PresentationBindingPlace> | null;
 }
 
 export interface Udoc {
@@ -109,8 +138,14 @@ export interface Udoc {
     close(): Promise<void>;
 }
 
-/** What the gate makes of a request: the tenant it's let through for, or why it's turned away. */
-type Passage = { tenantId: string } | { status: number; failure: Failure };
+/** What the gate makes of a request: the tenant it's let through for, and the user, if it's one's; or why it's turned away. */
+type Passage = { tenantId: string; user?: Maker } | { status: number; failure: Failure };
+
+/** Who made a document through the gate: a user at a tenant. */
+interface Maker {
+    tenantId: string;
+    userId: string;
+}
 
 /**
  * A udoc-server for each tenant over its documents, opening them with one
@@ -124,12 +159,29 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
     const token = randomBytes(32).toString("base64url");
     const origin = `http://127.0.0.1:${config.port}`;
     const tenants = new Map<string, { server: UDocServer; store: DirectoryDocumentStore }>();
+    // The user a request udoc-server is answering is for, which a document it
+    // keeps while answering was made by.
+    const asking = new AsyncLocalStorage<Maker>();
+    // Each document made through the gate, by its id, and who made it: kept no
+    // longer than this process, which the documents outlive (GAPS.md).
+    const made = new Map<string, Maker>();
+
+    /** A tenant's store, which notes who made each document it keeps. */
+    class TenantStore extends DirectoryDocumentStore {
+        override async put(id: string, document: KeptDocument): Promise<void> {
+            await super.put(id, document);
+            const maker = asking.getStore();
+            if (maker) made.set(id, maker);
+        }
+    }
+    // What each checkpoint's automation reads, by tenant, document and checkpoint.
+    const automations = new Map<string, Promise<KeptAutomation>>();
 
     /** Tenant `tenantId`'s server and store, made the first time they're needed. */
     function tenantUdoc(tenantId: string): { server: UDocServer; store: DirectoryDocumentStore } {
         let kept = tenants.get(tenantId);
         if (!kept) {
-            const store = new DirectoryDocumentStore(join(config.dataDir, "udoc", tenantId));
+            const store = new TenantStore(join(config.dataDir, "udoc", tenantId));
             kept = { store, server: createUDocServer({ udoc, store, basePath: BASE }) };
             tenants.set(tenantId, kept);
         }
@@ -254,12 +306,23 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
         const id = DOCUMENT_PATH.exec(path)?.[1];
         // Another tenant's document is as unknown as one that isn't kept.
         const unknown: Passage = { status: 404, failure: { error: "notFound", message: "no such document" } };
+        const asUser: Passage = { tenantId, user: { tenantId, userId: user.id } };
+        // A document made through the gate, its maker's alone.
+        const maker = id === undefined ? undefined : made.get(id);
+        if (maker?.tenantId === tenantId && maker.userId === user.id) {
+            if (request.method === "DELETE" && DOCUMENT_ONLY_PATH.test(path)) made.delete(id!);
+            return asUser;
+        }
         if (!keptFor(tenant, id)) return unknown;
-        // Reading alone: the backend imports, checkpoints and deletes.
-        if (request.method !== "GET" && request.method !== "HEAD")
-            return { status: 403, failure: { error: "forbidden", message: "a document is read here, not changed" } };
         const checkpoint = CHECKPOINT_PATH.exec(path)?.[1];
         const branch = BRANCH_PATH.exec(path)?.[1];
+        if (request.method !== "GET" && request.method !== "HEAD") {
+            // An asset's document goes with the asset, and a review's branch with the review.
+            if (request.method === "DELETE")
+                return { status: 403, failure: { error: "forbidden", message: "the backend deletes this" } };
+            if (edits(tenant, user, id!, branch ?? MAIN_BRANCH)) return asUser;
+            return { status: 403, failure: { error: "forbidden", message: "a document is read here, not changed" } };
+        }
         const room = roomOfDocument(tenant, id!);
         if (room) {
             // Those on a deal room read all of its file; a reviewer, the versions sent
@@ -277,10 +340,17 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
     }
 
     /**
-     * The tenant of the document `request`, a WebSocket upgrade, joins a collaboration
-     * of, if the user may: its working copy's, `main`'s, if they change it; a review
-     * branch's, if they're the reviewer it waits on. No one else writes in a review.
+     * Whether `user` edits document `id`'s branch `branch`: its working copy,
+     * `main`, if they change it; a review branch, if they're the reviewer it waits
+     * on. No one else writes in a review.
      */
+    function edits(tenant: TenantDb, user: User, id: string, branch: string): boolean {
+        if (branch !== MAIN_BRANCH) return branchSentToReview(tenant, id, branch, user.id, true);
+        const room = roomOfDocument(tenant, id);
+        return room ? entersDealRoom(tenant, user, room.roomId) : managesLibrary(user.role);
+    }
+
+    /** The tenant of the document `request`, a WebSocket upgrade, joins a collaboration of, if the user {@link edits} it. */
     function editorsTenant(request: IncomingMessage): string | undefined {
         const user = userOf(db, request);
         if (!user) return undefined;
@@ -289,12 +359,14 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
         const id = DOCUMENT_PATH.exec(path)?.[1];
         if (!keptFor(tenant, id)) return undefined;
         const branch = BRANCH_PATH.exec(path)?.[1] ?? MAIN_BRANCH;
-        if (branch !== MAIN_BRANCH) {
-            return branchSentToReview(tenant, id!, branch, user.id, true) ? user.tenant.id : undefined;
-        }
-        const room = roomOfDocument(tenant, id!);
-        const edits = room ? entersDealRoom(tenant, user, room.roomId) : managesLibrary(user.role);
-        return edits ? user.tenant.id : undefined;
+        return edits(tenant, user, id!, branch) ? user.tenant.id : undefined;
+    }
+
+    /** Have udoc-server answer `request`, let through as `passed`, a document it makes the user's: false for no such route. */
+    function answer(passed: { tenantId: string; user?: Maker }, request: IncomingMessage, response: ServerResponse) {
+        const { server } = tenantUdoc(passed.tenantId);
+        if (!passed.user) return server.handleRequest(request, response);
+        return asking.run(passed.user, () => server.handleRequest(request, response));
     }
 
     /** Ask tenant `tenantId`'s udoc-server for `path`, as the backend: its answer, or a `UdocFailure`. */
@@ -317,7 +389,7 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
                 response
                     .writeHead(passed.status, { "content-type": "application/json" })
                     .end(JSON.stringify(passed.failure));
-            } else if (!tenantUdoc(passed.tenantId).server.handleRequest(request, response)) {
+            } else if (!answer(passed, request, response)) {
                 response
                     .writeHead(404, { "content-type": "application/json" })
                     .end(JSON.stringify({ error: "notFound", message: "no such resource" }));
@@ -325,7 +397,7 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
             return true;
         },
 
-        // Collaboration, udoc-server's one upgrade, is how a document is edited:
+        // Collaboration, udoc-server's one upgrade, is how a document is edited live:
         // a library's by those who change it, a deal room's by those who enter it.
         handleUpgrade(request, socket, head) {
             if (!isUdocPath(pathOf(request))) return false;
@@ -396,6 +468,30 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
                     );
                 },
 
+                // udoc-server fills a template beside the documents it keeps, so the
+                // browser never loads all of one to fill it.
+                async instanceOf(id, data, checkpoint) {
+                    const at = checkpoint === undefined ? "" : `/checkpoints/${checkpoint}`;
+                    const path = `/documents/${encodeURIComponent(id)}${at}/instances`;
+                    const answer = await ask(tenantId, "POST", path, json({ data }));
+                    const { id: copy } = (await answer.json()) as { id: string };
+                    const original = await tenantUdoc(tenantId).store.getOriginal(copy);
+                    return { id: copy, size: original?.bytes.length ?? 0 };
+                },
+
+                automationAt(id, checkpoint) {
+                    const key = `${tenantId}/${id}/${checkpoint}`;
+                    let read = automations.get(key);
+                    if (!read) {
+                        const path = `/documents/${encodeURIComponent(id)}/checkpoints/${checkpoint}/automation`;
+                        read = ask(tenantId, "GET", path).then((answer) => answer.json() as Promise<KeptAutomation>);
+                        // A failure is read again next time.
+                        read.catch(() => automations.delete(key));
+                        automations.set(key, read);
+                    }
+                    return read;
+                },
+
                 async renderPages(id, scale) {
                     const document = `/documents/${encodeURIComponent(id)}`;
                     const counted = await ask(tenantId, "GET", `${document}/layout/page-count`);
@@ -424,6 +520,11 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
             await Promise.all([...tenants.values()].map(({ server }) => server.close()));
         },
     };
+}
+
+/** `value` as the bytes of a JSON body. */
+function json(value: unknown): Uint8Array {
+    return new TextEncoder().encode(JSON.stringify(value));
 }
 
 function pathOf(request: IncomingMessage): string {

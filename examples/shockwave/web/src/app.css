@@ -1661,6 +1661,50 @@ input {
     transform: scale(1);
 }
 
+/* Material 3's radio button, at the checkbox's size: a ring, its dot the
+   primary once chosen. */
+.radio {
+    display: grid;
+    flex-shrink: 0;
+    place-content: center;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 2px solid var(--md-sys-color-on-surface-variant);
+    border-radius: 50%;
+    appearance: none;
+    cursor: inherit;
+}
+
+.radio::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--md-sys-color-primary);
+    transform: scale(0);
+}
+
+.radio:checked {
+    border-color: var(--md-sys-color-primary);
+}
+
+.radio:checked::before {
+    transform: scale(1);
+}
+
+.radio:disabled {
+    opacity: 0.38;
+}
+
+/* A deal's data, as the JSON a template is filled with: in the code face. */
+.data-json textarea {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    line-height: 18px;
+    white-space: pre;
+}
+
 /* Uploading: the file in the viewer, and beside it what it's uploaded as. */
 .upload-dialog {
     width: 1120px;

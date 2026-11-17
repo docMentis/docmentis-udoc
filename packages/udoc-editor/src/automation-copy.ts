@@ -1,7 +1,9 @@
 // A template's filled copy, which Preview shows and Generate saves: the template's
 // bytes, opened in a document UI of its own with a worker of its own, and filled
-// there with Apply Data, so the template and its editor are left alone.
-import { createAs } from "@docmentis/udoc-ui/internal";
+// there with Apply Data, so the template and its editor are left alone — or, for
+// a template opened with `openRemote`, a copy the udoc server keeping it filled,
+// opened from where it is kept.
+import { createAs, deleteRemoteDocument, remoteInstance } from "@docmentis/udoc-ui/internal";
 import type { UIShell } from "@docmentis/udoc-ui/internal";
 import type { BindingData, FileFormat } from "@docmentis/udoc-wasm";
 import type { UDocEditorOptions } from "./editor.js";
@@ -35,6 +37,54 @@ export async function filledCopy(
         throw error;
     }
     return shell;
+}
+
+/** A copy of a template the udoc server keeping it filled, kept there as a
+ *  document of its own. */
+export interface ServerCopy {
+    /** The copy's package URL. */
+    url: string;
+    /** Delete the copy where it is kept. */
+    close(): void;
+}
+
+/**
+ * A copy the server filled, kept at the package URL `url`, opened in a document
+ * UI of its own as {@link filledCopy} opens its own, and streamed from where it
+ * is kept. The caller destroys it.
+ */
+export async function openedCopy(url: string, container: HTMLElement, options: UDocEditorOptions): Promise<UIShell> {
+    const shell = await createAs(
+        container,
+        { ...options, showToolbar: false, showLeftPanel: false, showRightPanel: false },
+        EDITOR_WRAPPER,
+        startRenderWorker,
+        () => null,
+        (created) => created,
+    );
+    try {
+        await shell.openRemote(url);
+    } catch (error) {
+        shell.destroy();
+        throw error;
+    }
+    return shell;
+}
+
+/**
+ * A copy of the template the server keeps at `packageUrl` filled with `data` on
+ * that server, as a document of its own, which closing deletes there.
+ */
+export async function serverCopy(packageUrl: string, data: BindingData): Promise<ServerCopy> {
+    const url = await remoteInstance(packageUrl, data);
+    return {
+        url,
+        close: () => {
+            deleteRemoteDocument(url).catch((error: unknown) => {
+                console.error("udoc: the filled copy couldn't be deleted", error);
+            });
+        },
+    };
 }
 
 /** The format an instance of a template opened as `source` is saved as: its

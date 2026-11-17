@@ -44,10 +44,15 @@ export interface Highlight {
 
 /** A moment's format and time, as its figures: "PPTX · 180 ms". */
 function formatAndTime(moment: Moment): string[] {
+    if (!("format" in moment)) return time(moment);
+    return [...(moment.format ? [moment.format.toUpperCase()] : []), ...time(moment)];
+}
+
+/** A moment's time alone, as its figures: "640 ms". */
+function time(moment: Moment): string[] {
     if (!("ms" in moment)) return [];
-    const { format, ms } = moment;
-    const time = ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`;
-    return [...(format ? [format.toUpperCase()] : []), time];
+    const { ms } = moment;
+    return [ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`];
 }
 
 export const HIGHLIGHTS: Highlight[] = [
@@ -74,6 +79,14 @@ export const HIGHLIGHTS: Highlight[] = [
         body: "udoc-server generates thumbnails on the server. Every page's is generated once, when a file is uploaded or a version is saved, and stored, so flipping through a card's pages loads stored images, each page as that version was saved, with nothing rendered on request.",
         figures: formatAndTime,
         ends: (moment) => moment.kind === "thumbnails:hidden" && moment.where === "card",
+    },
+    {
+        id: "deck-generated-on-the-server",
+        tells: (moment) => moment.kind === "deck:filled",
+        title: "Personalized on the server",
+        body: "udoc-server filled the template's places with the deal's data, in udoc-node beside the documents it keeps: the client's name and the mandate in its text, a slide's paragraph for each of the deal team, and a badge a condition shows or hides. It's a deck of the room's own now, ready to edit and present, and the browser sent nothing but the data.",
+        figures: time,
+        ends: (moment) => moment.kind === "deck:filled" || moment.kind === "document:closed",
     },
     {
         id: "viewer-in-your-brand",

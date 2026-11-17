@@ -12,7 +12,10 @@ udoc-server once it is; edited in the editor; and saved as versions, which are
 reviewed, approved and published; the collections a sales manager arranges
 what's published in, for everyone at the tenant to read; and the deal rooms sales
 prepare it in together, backstage, each put on a frontstage that its buyers read at
-a link, with no account, and what they read, anonymously, for those who shared it.
+a link, with no account, and what they read, anonymously, for those who shared it;
+and the pitch book's template, which the library previews and a deal room
+personalizes with its deal's data, filled by udoc-server, and refreshes as the deal
+moves on.
 
 ## Running it
 

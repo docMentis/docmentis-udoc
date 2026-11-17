@@ -202,6 +202,30 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
             case "mergePresence":
                 opened().mergePresence(request.presence);
                 return { id, ok: true, result: undefined };
+            case "execute":
+                opened().execute(request.command);
+                return { id, ok: true, result: undefined };
+            // A deck's automation, read from its model: none for a plain deck
+            // or any other document.
+            case "automation": {
+                const s = opened();
+                return {
+                    id,
+                    ok: true,
+                    result:
+                        s.docType() === "presentation"
+                            ? (s.presentation.model.automation.dump() ?? undefined)
+                            : undefined,
+                };
+            }
+            case "bindings": {
+                const s = opened();
+                return {
+                    id,
+                    ok: true,
+                    result: s.docType() === "presentation" ? s.presentation.model.automation.bindings() : undefined,
+                };
+            }
         }
     } catch (error) {
         return { id, ok: false, failure: failureOf(error) };

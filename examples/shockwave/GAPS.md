@@ -316,3 +316,34 @@ calculates it on opening.
 
 **Workaround.** The generator works out each formula's value itself and keeps
 it beside the formula, as Excel does when it saves (`seed/generate/workbook.py`).
+
+## A template is told from a plain deck only by opening it
+
+**Needed.** Personalize, in a deal room, lists the published decks that are
+templates, each with the sample data its author previews it with.
+
+**Offered.** udoc-server's `GET …/checkpoints/:version/automation` answers a
+version's automation part, and so whether it's a template, but reads it in a
+session of its own, which asks for a permit; nothing kept beside the version,
+or in its description, says so.
+
+**Workaround.** The backend reads each published version's automation once and
+keeps it in memory, by document and checkpoint, since a checkpoint never
+changes (`server/udoc.ts`). The first list after a start still opens a session
+for each published deck in a collection.
+
+## A preview's filled copy is kept like any document
+
+**Needed.** A template's Preview, in the editor, on a copy the server fills
+with its sample data, which only the author previewing reads, and which goes
+when the preview does.
+
+**Offered.** udoc-server's `POST …/instances` keeps the filled copy as a
+document of its own, imported as an upload is, with nothing to say it's
+temporary or whose it is: it stays until it's deleted. The editor deletes it
+when the preview goes.
+
+**Workaround.** The gate notes who made each document made through it, in
+memory: that user alone reads it and deletes it (`server/udoc.ts`). A copy whose
+preview never ended — its tab closed, or the backend stopped — stays in the
+store.

@@ -9,12 +9,16 @@ import { MessageChannel, Worker } from "node:worker_threads";
 import type { MessagePort, TransferListItem } from "node:worker_threads";
 
 import type {
+    Automation,
+    BindingCatalog,
     Entitlements,
     ExportFormat,
     FileFormat,
     LogCut,
     PageExportFormat,
+    PresentationBindingPlace,
     SaveStrategy,
+    UDocCommand,
     UDocType,
     Watermark,
 } from "@docmentis/udoc-wasm";
@@ -477,6 +481,38 @@ export class UDocSession {
      */
     setWatermarks(watermarks: readonly Watermark[]): Promise<void> {
         return this.#call((id) => ({ id, type: "setWatermarks", watermarks: [...watermarks] }));
+    }
+
+    /**
+     * Run `command` on the document — an edit, as an editor's is, one undo
+     * step that {@link patchSince} then carries to a peer: the edits a host
+     * makes on its own, such as `{ automation: { applyData: { data } } }`,
+     * which fills a template's places from `data` and makes it an instance
+     * of it, or fills an instance again. Rejects with `notEntitled` where the
+     * license, or the permit, doesn't entitle the session to the feature the
+     * command needs, and with the engine's message for a command it refuses.
+     */
+    execute(command: UDocCommand): Promise<void> {
+        return this.#call((id) => ({ id, type: "execute", command }));
+    }
+
+    /**
+     * The document's automation part, which says whether it is a template or
+     * an instance, and holds a template's sample data or the data an instance
+     * was filled with: `undefined` for a plain document, and for any but a
+     * deck, which alone takes places yet.
+     */
+    automation(): Promise<Automation | undefined> {
+        return this.#call((id) => ({ id, type: "automation" }));
+    }
+
+    /**
+     * The bindings a deck's slides set: the schema of the data they bind,
+     * which a host builds a form from or checks its data against, and each
+     * place. `undefined` for any document but a deck.
+     */
+    bindings(): Promise<BindingCatalog<PresentationBindingPlace> | undefined> {
+        return this.#call((id) => ({ id, type: "bindings" }));
     }
 
     /**

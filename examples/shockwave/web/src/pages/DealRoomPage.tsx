@@ -11,10 +11,17 @@ import { sellsDeals } from "../../../shared/api.ts";
 import type { DealRoom, DealRoomActivity, DealRoomFile } from "../../../shared/api.ts";
 import { ApiError, api } from "../api";
 import { BuyerActivity } from "../DealRoomActivity";
-import { AddDealFilesDialog, ConfirmDialog, DealFileDialog, FrontstageDialog, PeopleDialog } from "../DealRoomDialogs";
-import { DealBanner, DealFileCard, DealFileTable } from "../DealRoomViews";
+import {
+    AddDealFilesDialog,
+    ConfirmDialog,
+    DealFileDialog,
+    FrontstageDialog,
+    PeopleDialog,
+    PersonalizeDialog,
+} from "../DealRoomDialogs";
+import { DealBanner, DealFileCard, DealFileTable, dealRoomFilePath } from "../DealRoomViews";
 import { formatDateTime } from "../files";
-import { GridIcon, ListIcon, PlusIcon } from "../icons";
+import { GridIcon, ListIcon, PersonalizeIcon, PlusIcon } from "../icons";
 import { useUser } from "../session";
 import { ActionsMenu, EmptyState, useDocumentTitle } from "../ui";
 import { NotFoundPage } from "./PlaceholderPage";
@@ -34,6 +41,7 @@ function savedView(): View {
 /** What a dialog is open for. */
 type Task =
     | "add"
+    | "personalize"
     | "people"
     | "frontstage"
     | "takeOff"
@@ -207,6 +215,10 @@ export function DealRoomPage() {
                                     </button>
                                 </div>
                             )}
+                            <button className="button" onClick={() => setTask("personalize")}>
+                                <PersonalizeIcon />
+                                Personalize
+                            </button>
                             <button className="button" onClick={() => setTask("add")}>
                                 <PlusIcon />
                                 Add files
@@ -244,6 +256,16 @@ export function DealRoomPage() {
             )}
             {room && task === "add" && (
                 <AddDealFilesDialog room={room} onClose={() => setTask(undefined)} onAdded={changed} />
+            )}
+            {room && task === "personalize" && (
+                <PersonalizeDialog
+                    room={room}
+                    onClose={() => setTask(undefined)}
+                    onMade={(made, assetId) => {
+                        changed(made);
+                        void navigate(dealRoomFilePath(made.id, assetId));
+                    }}
+                />
             )}
             {room && task === "people" && (
                 <PeopleDialog room={room} onClose={() => setTask(undefined)} onChanged={changed} />

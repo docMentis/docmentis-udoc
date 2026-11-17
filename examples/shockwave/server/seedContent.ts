@@ -40,6 +40,15 @@ const FILES: { file: string; name: string; folder: string; review: Review }[] = 
         review: { to: "published", submitted: QUARTER },
     },
     {
+        file: "global-equity-pitch-book-template.pptx",
+        name: "Global Equity Pitch Book Template",
+        folder: "Pitch books",
+        review: {
+            to: "published",
+            submitted: "The pitch book as a template: a deal room fills it with its client, its mandate and its team.",
+        },
+    },
+    {
         file: "firm-overview.pptx",
         name: "Firm Overview",
         folder: "Pitch books",
@@ -101,6 +110,11 @@ const COLLECTIONS: { name: string; description: string; instructions: string; it
             "the DDQ. Figures are as of September 30, 2026.",
         items: [
             ["global-equity-pitch-book.pptx", "Present from this. Slides 10 to 12 carry this quarter's performance."],
+            [
+                "global-equity-pitch-book-template.pptx",
+                "For a search: Personalize in your deal room fills it with the client, the mandate and your team, " +
+                    "and shows the finals badge for a finals presentation.",
+            ],
             ["global-equity-fact-sheet.pdf", "The leave-behind: send it ahead of a first meeting."],
             [
                 "global-equity-ddq.docx",
@@ -134,13 +148,24 @@ const DEAL_ROOM = {
         "Prepared for Calderwood County Employees' Retirement System's search for a global equity manager: " +
         "Larchmere Global Equity, and its record to September 30, 2026.",
     people: ["Ryan", "Paula"],
-    files: [
-        {
-            file: "global-equity-pitch-book.pptx",
-            name: "Global Equity Pitch Book",
-            description: "Our Global Equity strategy: its philosophy, process, team and results to September 30, 2026.",
-            frontstage: true,
+    // The pitch book, filled from its template with the search's data: not yet
+    // the finals, which a refresh of `meeting.isFinals` shows.
+    personalized: {
+        file: "global-equity-pitch-book-template.pptx",
+        name: "Calderwood County ERS: Global Equity Pitch Book",
+        description:
+            "Our Global Equity strategy for your search: its philosophy, process, team and results to September 30, 2026.",
+        data: {
+            client: { name: "Calderwood County Employees' Retirement System" },
+            meeting: { date: "December 2026", isFinals: false },
+            mandate: { size: "$250 million" },
+            team: [
+                { name: "Ryan Brooks", role: "Director, Institutional Sales", email: "ryan.brooks@larchmere.example" },
+                { name: "Paula Ortiz", role: "Client Portfolio Manager", email: "paula.ortiz@larchmere.example" },
+            ],
         },
+    },
+    files: [
         {
             file: "global-equity-fact-sheet.pdf",
             name: "Global Equity Fact Sheet, Q3 2026",
@@ -264,8 +289,21 @@ export async function fillLarchmere(app: FastifyInstance): Promise<void> {
     const copyOf = (file: string) => filled.files.find(({ source }) => source.id === assets.get(file)!.id)!.asset;
     for (const { file, name, description: says } of files)
         await ryan.call("PATCH", `/api/deal-rooms/${room.id}/files/${copyOf(file).id}`, { name, description: says });
+    // The pitch book, personalized from its template, first.
+    const { personalized } = DEAL_ROOM;
+    const { assetId: pitchBook } = await ryan.call<{ assetId: string }>(
+        "POST",
+        `/api/deal-rooms/${room.id}/generated-files`,
+        { source: assets.get(personalized.file)!.id, data: personalized.data, name: personalized.name },
+    );
+    await ryan.call("PATCH", `/api/deal-rooms/${room.id}/files/${pitchBook}`, {
+        name: personalized.name,
+        description: personalized.description,
+    });
+    const order = [pitchBook, ...files.map(({ file }) => copyOf(file).id)];
+    await ryan.call("PUT", `/api/deal-rooms/${room.id}/order`, { assetIds: order });
     await ryan.call("PUT", `/api/deal-rooms/${room.id}/frontstage`, {
-        assetIds: files.filter(({ frontstage }) => frontstage).map(({ file }) => copyOf(file).id),
+        assetIds: [pitchBook, ...files.filter(({ frontstage }) => frontstage).map(({ file }) => copyOf(file).id)],
     });
 
     for (const person of [maya, colin, sam, ryan]) await person.signOut();

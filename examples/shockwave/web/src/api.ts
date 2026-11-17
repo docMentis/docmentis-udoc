@@ -6,6 +6,7 @@ import type {
     DealRoomActivity,
     DealRoomFileDetail,
     DealRoomNews,
+    DealRoomTemplate,
     DocumentActivity,
     Failure,
     Folder,
@@ -16,6 +17,7 @@ import type {
     Reviewer,
     Seller,
     SessionActivity,
+    TemplateData,
     Tenant,
     User,
     Version,
@@ -216,6 +218,16 @@ export const api = {
     async addToDealRoom(id: string, assetIds: string[]): Promise<DealRoom> {
         return (await request<{ room: DealRoom }>(`/api/deal-rooms/${id}/files`, withJson("POST", { assetIds }))).room;
     },
+    /** The templates a deal room can fill with its deal's data, from the files in collections. */
+    async dealRoomTemplates(id: string): Promise<DealRoomTemplate[]> {
+        return (await request<{ templates: DealRoomTemplate[] }>(`/api/deal-rooms/${id}/templates`)).templates;
+    },
+    /** Fill template `source` with `data`, as a deck of the room's own named `name`: the room, and the deck's file id. */
+    personalize: (id: string, source: string, data: TemplateData, name: string) =>
+        request<{ room: DealRoom; assetId: string }>(
+            `/api/deal-rooms/${id}/generated-files`,
+            withJson("POST", { source, data, name }),
+        ),
     /** A deal room's file, with its versions; an `ApiError` `404` for one that isn't the user's to see. */
     dealRoomFile: (id: string, assetId: string) =>
         request<DealRoomFileDetail>(`/api/deal-rooms/${id}/files/${assetId}`),

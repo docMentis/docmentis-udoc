@@ -4,6 +4,7 @@
 // extension from what the shell lends it.
 export { createAs } from "./base.js";
 export { filledDataOf, sampleDataOf } from "./app/data-bindings.js";
+export { deleteRemoteDocument, remoteCopy, remoteFill, remoteInstance } from "./app/remote.js";
 export type { WorkerClient, Wrapper } from "./worker/WorkerClient.js";
 export type { UIShell, UIShellOptions } from "./app/shell.js";
 export type {

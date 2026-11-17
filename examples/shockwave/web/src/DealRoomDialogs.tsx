@@ -5,10 +5,19 @@ import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 
 import { entersAllDealRooms } from "../../shared/api.ts";
-import type { Collection, DealRoom, DealRoomFile, PublishedFile, Seller } from "../../shared/api.ts";
+import type {
+    Collection,
+    DealRoom,
+    DealRoomFile,
+    DealRoomTemplate,
+    PublishedFile,
+    Seller,
+    TemplateData,
+} from "../../shared/api.ts";
 import { api } from "./api";
 import { FileBadge, formatDate, typeLabel } from "./files";
 import { SearchIcon } from "./icons";
+import { announceMoment } from "./moments";
 import { useUser } from "./session";
 import { Dialog, EmptyState } from "./ui";
 
@@ -218,6 +227,147 @@ export function AddDealFilesDialog({
                     </button>
                 </DialogFoot>
             </div>
+        </Dialog>
+    );
+}
+
+/** `text` as the data a template is filled with: an object, or why it isn't one. */
+function templateDataOf(text: string): TemplateData | string {
+    try {
+        const data: unknown = JSON.parse(text);
+        if (typeof data === "object" && data !== null && !Array.isArray(data)) return data as TemplateData;
+        return "The data is a JSON object, in braces.";
+    } catch (error) {
+        return `The data isn't JSON: ${error instanceof Error ? error.message : String(error)}`;
+    }
+}
+
+/**
+ * Filling a template from the collections with the deal's data, as a deck of
+ * `room`'s own: udoc-server fills it beside the documents it keeps, and the deck
+ * opens to edit. The data starts as the template's sample data.
+ */
+export function PersonalizeDialog({
+    room,
+    onClose,
+    onMade,
+}: {
+    room: DealRoom;
+    onClose: () => void;
+    onMade: (changed: DealRoom, assetId: string) => void;
+}) {
+    const [templates, setTemplates] = useState<DealRoomTemplate[]>();
+    const [failed, setFailed] = useState(false);
+    const [chosen, setChosen] = useState<DealRoomTemplate>();
+    const [name, setName] = useState("");
+    const [data, setData] = useState("");
+    const [invalid, setInvalid] = useState<string>();
+    const { busy, error, attempt } = useAttempt();
+
+    useEffect(() => {
+        let gone = false;
+        api.dealRoomTemplates(room.id).then(
+            (found) => gone || setTemplates(found),
+            () => gone || setFailed(true),
+        );
+        return () => {
+            gone = true;
+        };
+    }, [room.id]);
+
+    function choose(template: DealRoomTemplate) {
+        setChosen(template);
+        setName(template.file.name.replace(/\s*template$/i, ""));
+        setData(JSON.stringify(template.sampleData ?? {}, null, 2));
+        setInvalid(undefined);
+    }
+
+    function make(event: FormEvent) {
+        event.preventDefault();
+        if (!chosen) return;
+        const parsed = templateDataOf(data);
+        if (typeof parsed === "string") {
+            setInvalid(parsed);
+            return;
+        }
+        setInvalid(undefined);
+        void attempt(async () => {
+            const start = performance.now();
+            const made = await api.personalize(room.id, chosen.file.id, parsed, name.trim() || chosen.file.name);
+            announceMoment({ kind: "deck:filled", ms: performance.now() - start });
+            onMade(made.room, made.assetId);
+        });
+    }
+
+    return (
+        <Dialog title="Personalize a template" onClose={onClose}>
+            <form className="dialog-body" onSubmit={make}>
+                <p>
+                    The template is filled with this deal&apos;s data on the server, as a deck of this room&apos;s own.
+                    The library&apos;s stays as it is.
+                </p>
+                {templates?.length === 0 && (
+                    <EmptyState title="No templates in your collections">
+                        A deck the library makes a template shows here once it&apos;s in a collection.
+                    </EmptyState>
+                )}
+                {templates && templates.length > 0 && (
+                    <div className="pick-list" role="radiogroup" aria-label="Templates">
+                        {templates.map((template) => (
+                            <label key={template.file.id} className="pick-row">
+                                <input
+                                    type="radio"
+                                    name="template"
+                                    className="radio"
+                                    disabled={template.held}
+                                    checked={chosen?.file.id === template.file.id}
+                                    onChange={() => choose(template)}
+                                />
+                                <FileBadge format={template.file.format} />
+                                <span className="pick-row-text">
+                                    <span className="pick-row-name">{template.file.name}</span>
+                                    <span className="pick-row-meta">
+                                        {template.held
+                                            ? "Personalized in this room already"
+                                            : `Template · Published ${formatDate(template.file.publishedAt)}`}
+                                    </span>
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                )}
+                {chosen && (
+                    <>
+                        <label className="field">
+                            <span className="visually-hidden">Name</span>
+                            <input
+                                value={name}
+                                maxLength={200}
+                                placeholder="Name"
+                                onChange={(event) => setName(event.target.value)}
+                            />
+                        </label>
+                        <label className="field data-json">
+                            <span className="visually-hidden">The deal&apos;s data</span>
+                            <textarea
+                                value={data}
+                                rows={14}
+                                spellCheck={false}
+                                aria-invalid={invalid !== undefined}
+                                onChange={(event) => setData(event.target.value)}
+                            />
+                        </label>
+                    </>
+                )}
+                <DialogFoot
+                    error={failed ? "The templates didn't load. Try again." : (invalid ?? error)}
+                    onClose={onClose}
+                >
+                    <button type="submit" className="button primary" disabled={busy || !chosen}>
+                        {busy ? "Personalizing…" : "Personalize"}
+                    </button>
+                </DialogFoot>
+            </form>
         </Dialog>
     );
 }

@@ -255,6 +255,20 @@ export interface PublishedFile {
     publishedAt: number;
 }
 
+/** The data a template is filled with, as JSON: names to values, nested as the data nests them. */
+export type TemplateData = { [name: string]: unknown };
+
+/**
+ * A published file in a collection that's a template, which a deal room fills
+ * with its deal's data: the file, the sample data its author previews it with,
+ * and whether the room holds a deck filled from it already.
+ */
+export interface DealRoomTemplate {
+    file: PublishedFile;
+    sampleData: TemplateData | null;
+    held: boolean;
+}
+
 /** A file in a collection, which shows whichever version the file publishes. */
 export interface CollectionItem {
     file: PublishedFile;

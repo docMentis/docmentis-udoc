@@ -119,6 +119,13 @@ listed once, by package. Its major and minor version are those of the
   template with `data` and resolves with the instance's bytes, the template
   left as it is. Picked, the tab stays open as
   the selection moves.
+- A template opened with `openRemote` is filled by the udoc server keeping
+  it, not in the browser: Preview shows a copy the server filled, deleted
+  once the preview goes; Generate downloads one; and Refresh fills an
+  instance where it is, an edit every editor of it gets. Each asks the server
+  through its routes beside the package URL the document was opened from —
+  `instances`, `fill`, and `DELETE /documents/:id` for a copy — so whatever
+  guards that URL guards these too.
 - Increase Font Size and Decrease Font Size, beside the size field in word
   documents, decks, workbooks and the text on images, step the selection to
   the next or previous size in the size field's list, which now lists more
@@ -132,6 +139,32 @@ listed once, by package. Its major and minor version are those of the
   left such a paragraph where it was. A bulleted paragraph on a slide whose
   bullets come from its layout steps a list level, as in PowerPoint, where it
   moved its margin.
+
+### udoc-node
+
+#### Added
+
+- `UDocSession.execute(command)` runs an engine command on the document,
+  an edit as an editor's is — `{ automation: { applyData: { data } } }`
+  fills a template from `data` — and `UDocSession.automation()` and
+  `UDocSession.bindings()` read a deck's automation part and what its slides
+  bind. `UDocCommand`, `BindingData` and the automation types are exported.
+
+### udoc-server
+
+#### Added
+
+- `POST /documents/:id/instances`, `{ data }`, fills a copy of a template —
+  as it is now, or beneath `versions/:version` as it was then — and keeps it
+  as a new document, `201 { id }`: an instance, its `v0` the filled deck,
+  the template left as it is.
+- `POST /documents/:id/fill`, `{ data }`, fills a template or an instance
+  where it is, as an edit that reaches every client editing it, and its
+  log, before it answers; a branch's beneath `branches/:branch`.
+- `GET /documents/:id/automation`, and a version's, answers
+  `{ automation, bindings }`: whether the document is a template or an
+  instance, its sample data or the data it was filled with, and what it
+  binds.
 
 ## [0.8.23] - 2026-11-16
 

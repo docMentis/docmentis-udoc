@@ -133,3 +133,26 @@ test("the thread holds the process open only while a call is in flight", async (
     assert.equal(thread.referenced, false);
     await Promise.all([first, second]);
 });
+
+test("a command goes to the thread as it is, and a deck's automation and bindings come back as read", async () => {
+    const thread = new FakeThread();
+    const session = sessionOn(thread);
+    const command = { automation: { applyData: { data: { client: { name: "Calderwood" } } } } } as const;
+    const executed = session.execute(command);
+    const read = session.automation();
+    const bindings = session.bindings();
+    assert.deepEqual(
+        thread.posted.map((request) => request.type),
+        ["execute", "automation", "bindings"],
+    );
+    const [sent] = thread.posted;
+    assert.ok(sent?.type === "execute");
+    assert.deepEqual(sent.command, command);
+    const automation = { id: "1", role: { instance: { template: "{T}" } } };
+    thread.reply({ id: thread.posted[0]!.id, ok: true, result: undefined });
+    thread.reply({ id: thread.posted[1]!.id, ok: true, result: automation as never });
+    thread.reply({ id: thread.posted[2]!.id, ok: true, result: undefined });
+    assert.equal(await executed, undefined);
+    assert.deepEqual(await read, automation);
+    assert.equal(await bindings, undefined);
+});
