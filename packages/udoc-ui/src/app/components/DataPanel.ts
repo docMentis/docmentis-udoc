@@ -35,7 +35,16 @@ import type {
 import type { Store } from "../../framework/index.js";
 import { subscribeSelector } from "../../framework/index.js";
 import type { Action } from "../actions.js";
-import { blankItem, boundPath, sampleAt, titleOf, withItem, withSample, withoutItem } from "../data-bindings.js";
+import {
+    blankItem,
+    boundPath,
+    sampleAt,
+    sampleDataOf,
+    titleOf,
+    withItem,
+    withSample,
+    withoutItem,
+} from "../data-bindings.js";
 import type { SamplePath } from "../data-bindings.js";
 import { ICON_ADD, ICON_CHEVRON_DOWN, ICON_DELETE } from "../icons.js";
 import { VIEW_MODE } from "../state.js";
@@ -329,7 +338,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
     function valueControl(name: string, node: BindingSchema, path: SamplePath, slice: DataPanelSlice): HTMLElement {
         const value = div("udoc-data-panel__value");
         if (node === "bool") {
-            const data = slice.automation?.sampleData;
+            const data = sampleDataOf(slice.automation);
             const input = document.createElement("input");
             input.type = "checkbox";
             input.className = "udoc-switch udoc-data-panel__switch";
@@ -352,7 +361,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
     /** The text input of the value at `path`, `placeholder` what a preview
      *  fills in where the sample data gives nothing. */
     function textInput(name: string, path: SamplePath, placeholder: string, slice: DataPanelSlice): HTMLInputElement {
-        const data = slice.automation?.sampleData;
+        const data = sampleDataOf(slice.automation);
         const input = document.createElement("input");
         input.type = "text";
         input.className = "udoc-data-panel__input";
@@ -375,7 +384,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         path: SamplePath,
         slice: DataPanelSlice,
     ): HTMLElement[] {
-        const data = slice.automation?.sampleData;
+        const data = sampleDataOf(slice.automation);
         const held = textAt(data, path);
         const other = held !== undefined && !values.includes(held);
         const wrap = div("udoc-data-panel__select");
@@ -402,7 +411,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
 
     /** How many items the array at `path` holds, after its name. */
     function itemCount(path: SamplePath, slice: DataPanelSlice): HTMLElement {
-        const held = sampleAt(slice.automation?.sampleData, path);
+        const held = sampleAt(sampleDataOf(slice.automation), path);
         const meta = document.createElement("span");
         meta.className = "udoc-data-panel__meta";
         meta.textContent = i18n.plural("data.items", Array.isArray(held) ? held.length : 0);
@@ -428,7 +437,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         const key = pathKey(path);
         return iconButton(ICON_ADD, i18n.t("data.add"), `add:${key}`, slice.editable, () => {
             folded.delete(key);
-            callbacks.onSampleData(withItem(slice.automation?.sampleData, path, blankItem(arrayItem(node))));
+            callbacks.onSampleData(withItem(sampleDataOf(slice.automation), path, blankItem(arrayItem(node))));
         });
     }
 
@@ -436,7 +445,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
     function removeButton(path: SamplePath, index: number, slice: DataPanelSlice): HTMLElement {
         const focus = `remove:${pathKey([...path, index])}`;
         const button = iconButton(ICON_DELETE, i18n.t("data.remove"), focus, slice.editable, () =>
-            callbacks.onSampleData(withoutItem(slice.automation?.sampleData, path, index)),
+            callbacks.onSampleData(withoutItem(sampleDataOf(slice.automation), path, index)),
         );
         button.classList.add("udoc-data-panel__icon-button--remove");
         return button;
@@ -456,7 +465,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
      *  by its number and that button, holding what the item holds. */
     function items(node: BindingSchema, path: SamplePath, depth: number, slice: DataPanelSlice): HTMLElement[] {
         const item = arrayItem(node);
-        const held = sampleAt(slice.automation?.sampleData, path);
+        const held = sampleAt(sampleDataOf(slice.automation), path);
         const count = Array.isArray(held) ? held.length : 0;
         const out: HTMLElement[] = [];
         for (let index = 0; index < count; index++) {

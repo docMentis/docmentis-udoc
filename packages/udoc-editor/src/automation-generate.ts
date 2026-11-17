@@ -2,7 +2,9 @@
 // the template's sample data, every value it lacks made up, which fills a copy
 // of the template with the data the author gives and downloads it — an instance,
 // the template left as it is. An instance's Refresh opens the same dialog, on
-// data its places make up, and fills the instance again where it is.
+// the data the instance was last filled with — or, where it keeps none, data
+// its places make up — and fills the instance again where it is.
+import { filledDataOf } from "@docmentis/udoc-ui/internal";
 import type { BindingData } from "@docmentis/udoc-wasm";
 import { copyName, downloadBytes, filledCopy, instanceFormat } from "./automation-copy.js";
 import { previewData, templateFormat } from "./automation-preview.js";
@@ -15,8 +17,9 @@ import type { I18n } from "./i18n/index.js";
 export interface AutomationGenerate {
     /** Open the dialog on the template's sample data. */
     open(): Promise<void>;
-    /** Open the dialog to refresh an instance: on data its places make up,
-     *  which fills the instance again in place, one undo step. */
+    /** Open the dialog to refresh an instance: on the data it was last filled
+     *  with, or data its places make up, which fills the instance again in
+     *  place, one undo step. */
     refresh(): Promise<void>;
     destroy(): void;
 }
@@ -48,7 +51,7 @@ export function mountGenerate(host: EditHost, i18n: I18n, options: UDocEditorOpt
             });
         },
         async refresh() {
-            const data = await previewData(host);
+            const data = filledDataOf(host.store.getState().automation) ?? (await previewData(host));
             modal.open({
                 action: "command.refresh",
                 json: JSON.stringify(data, null, 2),

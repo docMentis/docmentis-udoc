@@ -2,7 +2,7 @@
 // place in the data, named by the steps from its root — a name into an object,
 // an index into an array — read, set, and an array's items added and removed,
 // each edit giving a new copy of the data and leaving the old one as it is.
-import type { BindingData, BindingSchema, BindingValue } from "@docmentis/udoc-wasm";
+import type { Automation, BindingData, BindingSchema, BindingValue } from "@docmentis/udoc-wasm";
 
 /** A place in the data: the names and indices from its root. */
 export type SamplePath = readonly (string | number)[];
@@ -100,6 +100,18 @@ export function madeUpSample(schema: BindingSchema, path: SamplePath = []): Bind
 /** `sample`, the sample data a template keeps, with every value it lacks made
  *  up from `schema` ({@link madeUpSample}): its own values kept, its arrays'
  *  items as many as it holds, each completed as a made-up item is. */
+/** A template's sample data, as its automation part's role holds it; none
+ *  for an instance or a plain document. */
+export function sampleDataOf(automation: Automation | null | undefined): BindingData | undefined {
+    return automation && "template" in automation.role ? automation.role.template.sampleData : undefined;
+}
+
+/** An instance's data, the data it was last filled with, as its automation
+ *  part's role holds it; none for a template or a plain document. */
+export function filledDataOf(automation: Automation | null | undefined): BindingData | undefined {
+    return automation && "instance" in automation.role ? automation.role.instance.data : undefined;
+}
+
 export function completedSample(sample: BindingData | undefined, schema: BindingSchema): BindingData {
     const completed = complete(sample, madeUpSample(schema));
     return isObject(completed) ? completed : {};

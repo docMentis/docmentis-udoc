@@ -8,7 +8,7 @@
 // toolbar's Download and Print act on it: what is downloaded or printed is what
 // is seen. The preview is made anew each time it's turned on, and gone when it's
 // turned off, when the deck stops being a template, or in view mode.
-import { completedSample, subscribeSelector } from "@docmentis/udoc-ui/internal";
+import { completedSample, sampleDataOf, subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { UIShell } from "@docmentis/udoc-ui/internal";
 import type { BindingData, FileFormat } from "@docmentis/udoc-wasm";
 import { copyName, downloadBytes, filledCopy, instanceFormat } from "./automation-copy.js";
@@ -37,7 +37,7 @@ export function templateFormat(host: EditHost): FileFormat {
 /** The template's sample data, every value it lacks made up from its schema. */
 export async function previewData(host: EditHost): Promise<BindingData> {
     const bindings = await host.client.presentation.automationBindings();
-    const sample = host.store.getState().automation?.sampleData;
+    const sample = sampleDataOf(host.store.getState().automation);
     return bindings ? completedSample(sample, bindings.schema) : (sample ?? {});
 }
 

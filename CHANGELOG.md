@@ -103,7 +103,8 @@ listed once, by package. Its major and minor version are those of the
   its sample data at first, or a file opened — and downloads a filled copy,
   "Deck (generated).pptx", an instance of the template. On an instance,
   Places shows its places as a template's show, and Refresh opens the same
-  dialog to fill it again where it is, one undo step. The `translations` keys
+  dialog to fill it again where it is, one undo step, on the data the
+  instance was last filled with, which it keeps. The `translations` keys
   under `place.`, and `command.showPlaces` and `command.refresh`, are new.
 - `UDocEditor.generateToBytes(data, options?)` fills a copy of the open
   template with `data` and resolves with the instance's bytes, the template
