@@ -18,6 +18,11 @@ listed once, by package. Its major and minor version are those of the
 
 - Copied text keeps its line breaks when pasted into an app that takes the
   clipboard's HTML, where its lines ran together.
+- Copy takes the text selected in a word document's header or footer, or in a
+  PDF's free text annotation, where it copied nothing.
+- Text copied from a word document with tracked changes pastes into another
+  app as the document's view shows it, where it carried the text the view
+  hides, such as what No Markup leaves out.
 
 ### udoc-editor
 
@@ -28,6 +33,24 @@ listed once, by package. Its major and minor version are those of the
   every side of the table — so they read apart from a block of cells.
 - Cut takes out the slides, sections, pages or PDF annotations selected once
   they are copied, a section with its slides.
+- A table or shapes paste at a caret in a word document's text, in the body, a
+  table's cell or a text box: the table where Insert Table puts one, the shapes
+  as one drawing in the line. With Track Changes on, both are marked inserted.
+  Each pasted nothing.
+- A table pasted at a caret in a slide's shape, or in a shape of an image's
+  markup, lands on the page as a new table, centred, with the caret in its
+  first cell, as Insert Table leaves one. It pasted nothing.
+- An image's markup takes a paste: text at the caret, and shapes beside the
+  ones selected, or on top of the page shown when nothing is. Markup selected
+  on an image copies, to paste there or onto another image.
+
+#### Changed
+
+- Whole rows or columns copied from a table paste into a table as rows
+  inserted above the selection, or columns left of it, with their heights or
+  widths, where they wrote their cells over the cells there. With Track
+  Changes on in a word document, pasted rows are marked inserted and columns
+  don't paste, as Insert Columns doesn't.
 
 #### Fixed
 
@@ -48,6 +71,10 @@ listed once, by package. Its major and minor version are those of the
 - A copy pastes as its text into a document of another kind, as a PDF's text
   into a slide, and what is copied in a worksheet pastes into one as text,
   where neither pasted anything.
+- Copy takes the text selected in a PDF's text box being edited, where it
+  copied nothing.
+- Text copied from a word document with a picture in its line pastes, where
+  the paste failed.
 
 ## [0.8.22] - 2026-11-15
 
