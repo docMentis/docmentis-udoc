@@ -13,6 +13,7 @@ import type { MessageKey } from "./i18n/index.js";
 import type {
     Automation,
     BindingCatalog,
+    BindingData,
     CellEntryMode,
     Feature,
     FileFormat,
@@ -817,6 +818,19 @@ export interface UIState {
      */
     dataHover: readonly string[];
     /**
+     * An instance's data as the Data panel holds it, changed there and not
+     * yet filled into the deck: what its Refresh offers. Null while the panel
+     * holds the data the instance was last filled with.
+     */
+    dataDraft: BindingData | null;
+    /**
+     * Whether a stand-in shows in the open document's place — a template's
+     * preview — which the toolbar's Download and Print act on. The ribbon
+     * shows its open tab alone, every command not made for the stand-in is
+     * disabled, and the Data panel is read only, till it goes.
+     */
+    standIn: boolean;
+    /**
      * The open deck's automation part, read as it opens and again on each
      * edit: whether the deck is a template or an instance filled from one.
      * Null for a plain deck, which has none, any other document, and until
@@ -1243,6 +1257,8 @@ export const initialState: UIState = {
     selectionRevisionIds: [],
     dataBindings: null,
     dataHover: [],
+    dataDraft: null,
+    standIn: false,
     automation: null,
 
     searchQuery: "",

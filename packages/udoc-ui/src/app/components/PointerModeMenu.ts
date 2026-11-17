@@ -95,11 +95,24 @@ export function createPointerModeMenu(i18n: I18n) {
         }
 
         apply(store.getState().pointerMode.kind);
-        unsub = subscribeSelector(
+        const unsubKind = subscribeSelector(
             store,
             (s) => s.pointerMode.kind,
             (kind) => apply(kind),
         );
+        // No tool while a stand-in shows in the document's place: the canvas
+        // under it is the document's.
+        const lock = (standIn: boolean) => {
+            split.main.disabled = standIn;
+            split.caret.disabled = standIn;
+            if (standIn) split.controller.close();
+        };
+        lock(store.getState().standIn);
+        const unsubLock = subscribeSelector(store, (s) => s.standIn, lock);
+        unsub = () => {
+            unsubKind();
+            unsubLock();
+        };
     }
 
     function destroy(): void {

@@ -155,6 +155,10 @@ export interface CommandContext {
     /** The extension's own state ({@link UIState.extension}) — what its
      *  commands' and menu rows' predicates read beyond the shell's. */
     extension: unknown;
+    /** Whether a stand-in shows in the document's place
+     *  ({@link UIState.standIn}): every command but one made for it
+     *  ({@link CommandDef.whileStandIn}) is disabled. */
+    standIn: boolean;
     /** The open document's type — the gate for a control that belongs to some
      *  doc types whatever is selected. */
     docType: UDocType | null;
@@ -224,6 +228,7 @@ export function commandContext(state: UIState): CommandContext {
             color: state.planeColors[state.currentPlane] ?? null,
         },
         extension: state.extension,
+        standIn: state.standIn,
         docType: state.docType,
         scrollMode: state.scrollMode,
         presentationView: state.presentationView,
@@ -815,6 +820,10 @@ export interface CommandDef<K extends string = MessageKey> {
     shownWhen?: EnabledWhen;
     /** The key that runs it — the shell's own handler, which the tooltip names. */
     shortcut?: Shortcut;
+    /** Whether it acts while a stand-in shows in the document's place — the
+     *  stand-in's own control, a template's Preview, which turns it off. Every
+     *  other command is disabled while one shows. */
+    whileStandIn?: boolean;
     /** When this command is enabled, given the current {@link CommandContext}
      *  (see {@link EnabledWhen}). The toolbar ANDs this with its own UI policy
      *  (host-disabled commands, mode). Most commands just need a document

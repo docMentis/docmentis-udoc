@@ -15,20 +15,25 @@ listed once, by package. Its major and minor version are those of the
   each line break, in its slides' text and its notes, and Ctrl+Shift+8 shows
   or hides them. `setShowFormattingMarks` covers decks too.
 - A PowerPoint deck offers a Data panel, `"data"` among the panels
-  `openPanel` takes: whether the deck is a template, an instance filled from
-  one or a plain deck, then, for a template, every name its bindings make
-  the data hold, as a tree that nests them as the data does — `funds` ›
+  `openPanel` takes: for a template or an instance, every name its bindings
+  make the data hold, as a tree that nests them as the data does — `funds` ›
   `name` — each object and array folding. Beside each name, in one column
-  at every depth, is its sample data: text, a choice picked from its values
-  or written as another, a switch for a bool, and an array's items, added
-  and removed. A name chosen selects the next place that binds it; where
-  two or more do, their count follows the name, and in edit mode pointing
-  at it outlines its places on the slides. In edit mode the sample data is
-  kept in the template, one undo step per value, and Fill In, beside the
-  template's role, gives it a value for each name it lacks, one undo step:
-  text its path in title case (`customer.name` reads "Customer Name"), a
-  choice its first option's value, a bool `true` and an array three items.
-  Last come the bindings that are wrong, each with what is wrong with it.
+  at every depth, is its data — a template's sample data, an instance's the
+  data it was filled with: text, a choice picked from its values or written
+  as another, a switch for a bool, and an array's items, added and removed.
+  A name chosen selects the next place that binds it; where two or more do,
+  their count follows the name, and in edit mode pointing at it outlines its
+  places on the slides. Last come the bindings that are wrong, each with
+  what is wrong with it; a plain deck shows a note.
+  Above the form, in edit mode, Load JSON fills it from a file. A template's
+  sample data is kept in the template, one undo step per value, and its
+  Generate Sample Data gives it a value for each name it lacks, one undo
+  step — text its path in title case (`customer.name` reads "Customer
+  Name"), a choice its first option's value, a bool `true` and an array
+  three items — and Clear empties it. An instance's changes wait in the
+  panel for its Refresh, and its Reset puts back the data it was last filled
+  with. The `translations` keys `data.loadJson`, `data.sampleData`,
+  `data.clear`, `data.reset`, their `…Hint`s and `data.notJson` are new.
 
 #### Changed
 
@@ -110,15 +115,18 @@ listed once, by package. Its major and minor version are those of the
   panel.
   Preview shows the
   template filled with its sample data, as the Data panel shows it,
-  read-only in place of it, until it's turned off. A value the sample data
-  lacks is filled as Generate fills it, made up nowhere but by the Data
-  panel's Fill In.
-  While the preview is shown, the toolbar's Download and Print act on it.
+  read-only in place of it, from the slide shown, until it's turned off. A
+  value the sample data lacks is filled as Generate fills it, made up
+  nowhere but by the Data panel's Generate Sample Data. While the preview is
+  shown, the ribbon shows the Automation tab alone, every command but
+  Preview is disabled, the Data panel is read only, and the toolbar's
+  Download and Print act on the preview.
   Generate opens a dialog with the data to fill the template with, as JSON —
   its sample data at first, or a file opened — and downloads a filled copy,
   "Deck (generated).pptx", an instance of the template. On an instance,
   Refresh opens the same dialog to fill it again where it is, one undo step,
-  on the data the instance was last filled with, which it keeps. The
+  on the data its Data panel holds — as changed there, else as the instance
+  was last filled with, which it keeps. The
   `translations` keys under `place.`, and `command.bindingMarkup` and
   `command.refresh`, are new.
 - `UDocEditor.generateToBytes(data, options?)` fills a copy of the open

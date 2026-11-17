@@ -224,7 +224,8 @@ export function automationCommands(
             NEW_CHOICE,
         ),
         // Then Binding Markup, and Data, which shows or hides the panel
-        // listing the tags, as the Review tab's Revisions does its panel.
+        // holding a template's or an instance's data, as the Review tab's
+        // Revisions does its panel.
         dataPanel: {
             id: "dataPanel",
             label: "rightPanel.data",
@@ -237,7 +238,7 @@ export function automationCommands(
                 press: (store) => store.dispatch({ type: "TOGGLE_PANEL", panel: "data" }),
             },
             shownWhen: (c) => c.dataPanel,
-            enabledWhen: template,
+            enabledWhen: automated,
         },
         // Binding Markup, its icon alone, pressed while the deck's places are
         // drawn: a template's at first, an instance's once asked for. A plain
@@ -255,13 +256,16 @@ export function automationCommands(
             enabledWhen: automated,
         },
         // Last Preview, pressed while the template's preview is shown or on its
-        // way, and Generate, which opens the Generate dialog.
+        // way — the one command the preview, a stand-in in the deck's place,
+        // leaves live, to turn it off — and Generate, which opens the Generate
+        // dialog.
         preview: {
             id: "preview",
             label: "command.preview",
             icon: ICON_PREVIEW,
             group: "output",
             labeled: true,
+            whileStandIn: true,
             run: {
                 kind: "toggle",
                 pressed: (state) => editState(state).automationPreview,

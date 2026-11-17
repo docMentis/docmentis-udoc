@@ -119,6 +119,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
                 revisionGroups: null,
                 selectionRevisionIds: [],
                 dataBindings: null,
+                dataDraft: null,
                 automation: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
@@ -269,6 +270,7 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
                 revisionGroups: null,
                 selectionRevisionIds: [],
                 dataBindings: null,
+                dataDraft: null,
                 automation: null,
                 searchMatches: [],
                 searchActiveIndex: -1,
@@ -825,6 +827,12 @@ function reduce(state: UIState, action: Action, tabsOf: TabSource, modeFor: Mode
 
         case "SET_DATA_HOVER":
             return { ...state, dataHover: action.places };
+
+        case "SET_DATA_DRAFT":
+            return { ...state, dataDraft: action.data };
+
+        case "SET_STAND_IN":
+            return { ...state, standIn: action.standIn };
 
         case "SET_AUTOMATION":
             return { ...state, automation: action.automation };

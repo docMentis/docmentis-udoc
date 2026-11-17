@@ -695,12 +695,6 @@ export interface Messages {
     // Data panel
     /** No variables yet */
     "data.none": string;
-    /** Template — the deck's role, when its braces are read as tags */
-    "data.template": string;
-    /** Instance — the deck's role, when a fill made it from a template */
-    "data.instance": string;
-    /** Plain document — the deck's role, when it is neither */
-    "data.plain": string;
     /** Its braces are only text until it is a template. — a plain deck's note in the list's place */
     "data.plainNote": string;
     /** Errors — the heading over the tags that are wrong */
@@ -745,10 +739,24 @@ export interface Messages {
     "data.items.other": string;
     /** Other… — a choice's value that is none of its options' */
     "data.other": string;
-    /** Fill In */
-    "data.fillIn": string;
-    /** Make up a value for each name the sample data lacks */
-    "data.fillInHint": string;
+    /** Load JSON — the Data panel's action filling its form from a file */
+    "data.loadJson": string;
+    /** Fill the form from a JSON file */
+    "data.loadJsonHint": string;
+    /** That file holds no JSON object. — a file Load JSON can't take */
+    "data.notJson": string;
+    /** Generate Sample Data — a template's action making up what its sample data lacks */
+    "data.sampleData": string;
+    /** Make up a value for each name without one */
+    "data.sampleDataHint": string;
+    /** Clear — a template's action emptying its sample data */
+    "data.clear": string;
+    /** Take every value out of the sample data */
+    "data.clearHint": string;
+    /** Reset — an instance's action putting its data back */
+    "data.reset": string;
+    /** Put back the data the deck was last filled with */
+    "data.resetHint": string;
 
     // Search panel
     /** Search in document */

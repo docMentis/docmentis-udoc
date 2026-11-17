@@ -3889,14 +3889,13 @@ export const uiStyles = css`
     }
 
     /* =========================================================================
-   Data panel (the right panel's Data tab): the deck's role as a chip, then a
-   template's schema as a tree of its sample data — one grid, the names in a
-   column as wide as the widest needs and the values beside them, each group
-   folding under a guide line — then the tags that are wrong
+   Data panel (the right panel's Data tab): what acts on all the data, then a
+   template's or an instance's schema as a tree of its data — one grid, the
+   names in a column as wide as the widest needs and the values beside them,
+   each group folding under a guide line — then the tags that are wrong
    ========================================================================= */
     .udoc-ui-root .udoc-data-panel {
         --udoc-data-indent: 16px;
-        --udoc-data-tint: color-mix(in srgb, var(--udoc-color-on-surface) 8%, transparent);
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -3906,68 +3905,62 @@ export const uiStyles = css`
             sans-serif;
         color: var(--udoc-color-on-surface);
     }
-    /* The deck's role, and at the other end what acts on the whole sample
-       data. */
+    /* What acts on all the data — a row of buttons, each its icon and its
+       label — and under it what a file Load JSON couldn't take says. */
     .udoc-ui-root .udoc-data-panel__header {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .udoc-ui-root .udoc-data-panel__header:has(.udoc-data-panel__actions:empty):has(.udoc-data-panel__notice:empty) {
+        display: none;
     }
     .udoc-ui-root .udoc-data-panel__actions {
         display: flex;
-        gap: 4px;
+        flex-wrap: wrap;
+        gap: 6px;
     }
-    .udoc-ui-root .udoc-data-panel__text-button {
-        height: 24px;
-        padding: 0 8px;
-        font: inherit;
-        font-weight: 600;
-        color: var(--udoc-color-primary);
-        background: none;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
+    .udoc-ui-root .udoc-data-panel__actions:empty,
+    .udoc-ui-root .udoc-data-panel__notice:empty {
+        display: none;
     }
-    .udoc-ui-root .udoc-data-panel__text-button:hover:not(:disabled) {
-        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
-    }
-    .udoc-ui-root .udoc-data-panel__text-button:focus-visible {
-        outline: 2px solid var(--udoc-color-primary);
-        outline-offset: -2px;
-    }
-    .udoc-ui-root .udoc-data-panel__text-button:disabled {
-        cursor: default;
-        opacity: var(--udoc-state-disabled-opacity, 0.38);
-    }
-    /* The deck's role: a template's in the accent, an instance's or a plain
-       deck's muted. */
-    .udoc-ui-root .udoc-data-panel__role {
+    .udoc-ui-root .udoc-data-panel__action {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        height: 22px;
-        margin-left: 4px;
+        height: 28px;
         padding: 0 10px 0 8px;
-        font-size: 11px;
-        font-weight: 600;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--udoc-color-on-surface);
+        background: var(--udoc-color-surface);
+        border: 1px solid var(--udoc-color-outline-variant);
+        border-radius: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .udoc-ui-root .udoc-data-panel__action svg {
+        flex: none;
+        width: 18px;
+        height: 18px;
         color: var(--udoc-color-on-surface-variant);
-        background: var(--udoc-data-tint);
-        border-radius: 11px;
     }
-    .udoc-ui-root .udoc-data-panel__role::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        background: currentColor;
-        border-radius: 50%;
+    .udoc-ui-root .udoc-data-panel__action:hover:not(:disabled) {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+        border-color: var(--udoc-color-outline);
     }
-    .udoc-ui-root .udoc-data-panel__role[data-role="template"] {
-        color: var(--udoc-color-primary);
-        background: color-mix(in srgb, var(--udoc-color-primary) 12%, transparent);
+    .udoc-ui-root .udoc-data-panel__action:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: 1px;
     }
-    .udoc-ui-root .udoc-data-panel__role[hidden] {
-        display: none;
+    .udoc-ui-root .udoc-data-panel__action:disabled {
+        cursor: default;
+        opacity: var(--udoc-state-disabled-opacity, 0.38);
+    }
+    .udoc-ui-root .udoc-data-panel__notice {
+        font-size: 12px;
+        color: var(--udoc-color-error);
     }
     .udoc-ui-root .udoc-data-panel__body {
         display: flex;

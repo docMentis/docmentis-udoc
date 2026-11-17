@@ -163,6 +163,8 @@ export function displayToActivePaint(display: PaintDisplay): PaintSpec | null {
 
 interface RibbonSlice {
     toolbarVisible: boolean;
+    /** A stand-in in the document's place: the open tab alone shows. */
+    standIn: boolean;
     docType: UDocType | null;
     mode: string;
     features: readonly Feature[];
@@ -207,6 +209,7 @@ function displayHex(display: PaintDisplay): string | null {
 function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
     return (
         a.toolbarVisible === b.toolbarVisible &&
+        a.standIn === b.standIn &&
         a.docType === b.docType &&
         a.mode === b.mode &&
         a.features === b.features &&
@@ -243,6 +246,7 @@ function sliceEqual(a: RibbonSlice, b: RibbonSlice): boolean {
 function selectSlice(s: UIState): RibbonSlice {
     return {
         toolbarVisible: s.toolbarVisible,
+        standIn: s.standIn,
         docType: s.docType,
         mode: s.mode,
         features: s.features,
@@ -397,9 +401,13 @@ export function createRibbon(
     /** A tab's or command's label, by its key — the shell's messages speak the
      *  extension's keys too. */
     const labelOf = (key: string): string => i18n.t(key as MessageKey);
-    /** The tab strip `slice` shows, less the tabs its session isn't entitled to. */
+    /** The tab strip `slice` shows, less the tabs its session isn't entitled
+     *  to — and, while a stand-in shows in the document's place, the open tab
+     *  alone. */
     const tabsIn = (slice: RibbonSlice): readonly ToolbarTab<string>[] =>
-        tabsFor(tabsOf(slice.docType, slice.mode), slice.features);
+        tabsFor(tabsOf(slice.docType, slice.mode), slice.features).filter(
+            (tab) => !slice.standIn || tab.id === slice.activeTab,
+        );
     el.style.display = "none";
 
     const toolsSection = document.createElement("div");
@@ -625,8 +633,11 @@ export function createRibbon(
                 const active = tab.id === slice.activeTab;
                 btn.classList.toggle("udoc-ribbon__tab--selected", active);
                 btn.setAttribute("aria-selected", String(active));
-                // Pressing the open tab folds the ribbon; any tab unfolds it.
-                btn.addEventListener("click", () => store.dispatch({ type: "SET_TAB", tab: active ? null : tab.id }));
+                // Pressing the open tab folds the ribbon; any tab unfolds it. Not
+                // while a stand-in shows: its tab is all there is to turn it off.
+                btn.addEventListener("click", () =>
+                    store.dispatch({ type: "SET_TAB", tab: active && !slice.standIn ? null : tab.id }),
+                );
                 tabButtons.push(btn);
             }
             fitTabs();
@@ -953,7 +964,7 @@ export function createRibbon(
             // Tab strip: rebuilt on doc-type / mode / active-tab / tab-style change,
             // independent of the tool surface (which stays visible for any active
             // tab — even one with no commands — and hides only while folded).
-            const tabsKey = `${slice.docType}:${slice.mode}:${slice.activeTab}:${slice.ribbonTabStyle}`;
+            const tabsKey = `${slice.docType}:${slice.mode}:${slice.activeTab}:${slice.ribbonTabStyle}:${slice.standIn}`;
             if (tabsKey !== builtTabsKey) {
                 builtTabsKey = tabsKey;
                 buildTabs(slice);
@@ -999,7 +1010,7 @@ export function createRibbon(
             for (const btn of el.querySelectorAll<HTMLButtonElement>("[data-command]")) {
                 const def = commandOf(btn.dataset.command ?? "");
                 if (!def) continue;
-                btn.disabled = !def.enabledWhen(ctx);
+                btn.disabled = !def.enabledWhen(ctx) || (ctx.standIn && !def.whileStandIn);
                 // An extension's control mirrors the state itself (below).
                 if (def.run.kind === "control") continue;
                 if (def.run.kind === "annotationPaint") {

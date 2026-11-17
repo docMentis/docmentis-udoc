@@ -2814,7 +2814,8 @@ export function mountUIShell(
             if (op === "undo") runCellKey({ kind: "cancel" });
             return;
         }
-        if (!(op === "undo" ? state.canUndo : state.canRedo)) return;
+        // Not the document's while a stand-in shows in its place.
+        if (state.standIn || !(op === "undo" ? state.canUndo : state.canRedo)) return;
         void history(op);
     }
 
@@ -4711,6 +4712,7 @@ export function mountUIShell(
         insertSelectionText,
         setStandIn: (next) => {
             standIn = next;
+            store.dispatch({ type: "SET_STAND_IN", standIn: next !== null });
         },
         filename: () => sourceFilename,
         remotePackage: () => remotePackage,

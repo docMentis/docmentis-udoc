@@ -115,9 +115,10 @@ function selectSlice(state: UIState): ToolbarSlice {
         mode: state.mode,
         features: state.features,
         ready: state.status === "ready",
-        // Typing into a cell isn't on the history, which waits for its save.
-        canUndo: state.canUndo && state.activeCell?.entry == null,
-        canRedo: state.canRedo && state.activeCell?.entry == null,
+        // Typing into a cell isn't on the history, which waits for its save;
+        // nor is anything while a stand-in shows in the document's place.
+        canUndo: state.canUndo && state.activeCell?.entry == null && !state.standIn,
+        canRedo: state.canRedo && state.activeCell?.entry == null && !state.standIn,
     };
 }
 

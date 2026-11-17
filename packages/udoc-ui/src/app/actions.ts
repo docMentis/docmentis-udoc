@@ -1,6 +1,7 @@
 import type {
     Automation,
     BindingCatalog,
+    BindingData,
     Feature,
     FileFormat,
     PresentationBindingPlace,
@@ -314,6 +315,8 @@ export type Action =
     | { type: "SET_DATA_BINDINGS"; bindings: BindingCatalog<PresentationBindingPlace> | null }
     // The places of the Data panel's name the pointer is over, by their ids
     | { type: "SET_DATA_HOVER"; places: readonly string[] }
+    | { type: "SET_DATA_DRAFT"; data: BindingData | null }
+    | { type: "SET_STAND_IN"; standIn: boolean }
     // The open deck's automation part, read as it opens and on each edit
     | { type: "SET_AUTOMATION"; automation: Automation | null }
     // The records of the changes the selection touches, read for the

@@ -192,6 +192,12 @@ const ICONS = {
     // Delete
     ICON_DELETE: "delete",
 
+    // The Data panel's actions
+    ICON_LOAD_JSON: "upload_file",
+    ICON_SAMPLE_DATA: "wand_stars",
+    ICON_CLEAR_DATA: "delete_sweep",
+    ICON_RESET_DATA: "restart_alt",
+
     // Pages — the thumbnails' menu and edit mode's page controls
     ICON_PAGE_ADD: "note_add",
     ICON_PAGE_DUPLICATE: "file_copy",

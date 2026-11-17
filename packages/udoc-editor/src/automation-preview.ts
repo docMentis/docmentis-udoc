@@ -6,8 +6,11 @@
 // it. The udoc server keeping a template opened with `openRemote` fills it
 // there, as a document of its own it deletes once the preview goes; a template
 // opened from its bytes is saved as it is now and filled in a document UI of its
-// own (automation-copy.ts). While it's shown, the toolbar's Download and Print act
-// on it: what is downloaded or printed is what is seen. The preview is made anew
+// own (automation-copy.ts). It opens at the page the template shows. While it's
+// shown it stands in the template's place: the toolbar's Download and Print act
+// on it — what is downloaded or printed is what is seen — the ribbon shows the
+// Automation tab alone, every command but Preview's is disabled, and the Data
+// panel is read only. The preview is made anew
 // each time it's turned on, and gone when it's turned off, when the deck stops
 // being a template, or in view mode.
 import { sampleDataOf, subscribeSelector } from "@docmentis/udoc-ui/internal";
@@ -98,6 +101,8 @@ export function createAutomationPreview(options: UDocEditorOptions): AutomationP
             copy?.close();
             throw error;
         }
+        // Open at the page the template shows.
+        shell.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: host.store.getState().pageIndex });
         // Gone with the template, or in view mode.
         const unsubscribe = subscribeSelector(
             host.store,
