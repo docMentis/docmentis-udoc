@@ -4,7 +4,8 @@
 // Choice, which each make a place of the selection — around what a range
 // holds, or at a caret one holding its placeholder, the engine choosing a span
 // or a block by the selection — and open its popover on a path made up for the
-// author to type over; Data, which shows or hides the right panel's Data tab,
+// author to type over, a variable inside a repeat's its item; Data, which
+// shows or hides the right panel's Data tab,
 // what the deck's text binds; Preview, which shows the template filled with
 // its sample data in place of it, or the template again
 // (automation-preview.ts); Generate, which fills a copy of the template with
@@ -44,9 +45,11 @@ const NEW_CONDITION: Binding = { condition: { not: false, path: "flag" } };
 /** A choice by `option`, which the engine makes holding its options. */
 const NEW_CHOICE: Binding = { choice: { path: "option" } };
 
-/** What edit mode lends the tab of a template's places: finding the place a
- *  new binding made, and opening its popover. */
+/** What edit mode lends the tab of a template's places: the places the caret
+ *  is in, finding the place a new binding made, and opening its popover. */
 export interface PlaceEditing {
+    /** The places the caret is in, outermost first. */
+    around(): readonly CurrentPlace[];
     /** Open the popover of the innermost place the caret is in whose binding
      *  is of `binding`'s kind, once the overlay has read it. */
     edit(binding: Binding): Promise<void>;
@@ -92,11 +95,24 @@ async function toggleTemplate(host: EditHost): Promise<void> {
     await host.commit(() => host.client.execute({ automation: command }));
 }
 
+/** `binding` as made where the selection is, in `around`, the places it is
+ *  in: a variable inside a repeat names the innermost repeat's item, which
+ *  each copy of the repeat shows its own of. */
+function madeIn(binding: Binding, around: readonly CurrentPlace[]): Binding {
+    if (typeof binding === "string" || !("variable" in binding)) return binding;
+    const repeats = around.flatMap(({ geometry }) =>
+        typeof geometry.binding !== "string" && "repeat" in geometry.binding ? [geometry.binding.repeat] : [],
+    );
+    const repeat = repeats.at(-1);
+    return repeat ? { variable: { ...binding.variable, path: repeat.item } } : binding;
+}
+
 /** Make a place of the selection binding `binding`, one undo step, then open
  *  its popover for the author to bind it as they mean. */
 async function insertBinding(host: EditHost, places: PlaceEditing, binding: Binding): Promise<void> {
-    await host.commit(() => host.client.executeOnSelection({ kind: "bind", binding }));
-    await places.edit(binding);
+    const made = madeIn(binding, places.around());
+    await host.commit(() => host.client.executeOnSelection({ kind: "bind", binding: made }));
+    await places.edit(made);
 }
 
 /** The command making a place of the selection binding `binding`, labelled

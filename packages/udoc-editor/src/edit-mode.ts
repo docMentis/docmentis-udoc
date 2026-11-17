@@ -288,6 +288,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
     // A place a binding just made: marked, and its popover opened, once the
     // overlay has read it.
     const placeEditing: PlaceEditing = {
+        around: () => places?.atCaret() ?? [],
         async edit(binding) {
             const found = await places?.find((all) => placesOfKind(all, binding).at(-1));
             if (!found || !places) return;
