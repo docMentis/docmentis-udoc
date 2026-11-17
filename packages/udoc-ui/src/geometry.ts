@@ -506,6 +506,7 @@ export type TableEditKind =
     | "deleteColumns"
     | "mergeCells"
     | "unmergeCells"
+    | "clearCellText"
     | "patchTableProperties"
     | "patchRowProperties"
     | "patchCellProperties"

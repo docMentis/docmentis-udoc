@@ -15,6 +15,7 @@ import {
     createDropdownButton,
     createMenuItem,
     createSplitButton,
+    deleteTable as deleteWholeTable,
     displayToActivePaint,
     drawingProperties,
     ICON_FILL as ICON_SHADING,
@@ -46,7 +47,7 @@ import {
 import { changedDrawingLine } from "./line-edit.js";
 import { mapThemeColors, paintToDrawingFill, THEMED } from "./paint.js";
 import { editState } from "./state.js";
-import { consensusValue, wordTableSelection } from "./table-edits.js";
+import { consensusValue } from "./table-edits.js";
 import type { EditTools } from "./tools.js";
 
 /** The selection's table properties — what the Table tab's controls mirror —
@@ -63,23 +64,13 @@ export function toggleTableLook(host: UIShellHost, flag: keyof TableLook): Promi
     return runTableEdit(host, { patchTableProperties: { properties: { look: { ...look, [flag]: !look[flag] } } } });
 }
 
-/**
- * Delete the table the selection is in. A deck's table is its frame, a shape
- * like any other, so it goes as the selected shape does. A word document's
- * takes one position in its story, so that position is selected and deleted as
- * text — the paragraphs either side stay apart, as a table's own position is
- * all a delete of it covers.
- */
-export async function deleteTable(host: UIShellHost): Promise<void> {
-    if (host.store.getState().docType === "wordprocessing") {
-        const selection = await host.client.selection();
-        const slot = selection && wordTableSelection(selection);
-        if (!slot) return;
-        host.client.setSelection(slot);
-        await host.commit(() => host.client.executeOnSelection({ kind: "deleteText", forward: true }));
-        return;
-    }
-    await host.commit(() => host.client.executeOnSelection({ kind: "deleteShapes" }));
+/** Delete the table the selection is in — see udoc-ui's `deleteTable`. */
+export function deleteTable(host: UIShellHost): Promise<void> {
+    return deleteWholeTable({
+        client: host.client,
+        commit: (run) => host.commit(run),
+        docType: host.store.getState().docType,
+    });
 }
 
 /** Run `edit` on the table the selection is in — one committing edit. */

@@ -33,8 +33,10 @@ listed once, by package. Its major and minor version are those of the
 
 - Cut takes out the text selected, in a worksheet's cell being typed into
   too. In a slide's text box or table it deleted the whole box or table, and in
-  a word document's body it left the text in place. A block of a table's cells
-  is copied and the table kept, where Cut deleted it.
+  a word document's body it left the text in place.
+- Cut and Delete on what is selected in a table take out what was selected: a
+  block of cells loses its text, whole rows or columns are deleted, and a whole
+  table goes, where both deleted the whole table.
 - Cut deletes nothing when the browser refuses its copy, or when the
   selection has changed before the copy lands.
 - Delete in the canvas's context menu deletes the text selected, where it

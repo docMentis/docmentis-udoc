@@ -6,8 +6,6 @@ import type {
     TableRowProperties,
     TableSelectionEdit,
     TableSelectionProperties,
-    TextSelection,
-    UDocSelection,
 } from "@docmentis/udoc-wasm";
 
 /** The value a consensus holds, `null` where it holds several or none. */
@@ -15,39 +13,9 @@ export function consensusValue<T>(consensus: "absent" | "mixed" | { value: T } |
     return typeof consensus === "object" ? consensus.value : null;
 }
 
-/** The one position the innermost table `text` is in takes in its story, as a
- *  range over it — what a delete of that table deletes. `null` outside a table. */
-export function tableSlotSelection(text: TextSelection): TextSelection | null {
-    if (!("table" in text)) return null;
-    const { story, offset, table } = text.table;
-    // A table in a cell of this one is the innermost: descend through the cell.
-    if ("cellText" in table) {
-        const inner = tableSlotSelection(table.cellText.text);
-        if (inner) return { table: { story, offset, table: { cellText: { ...table.cellText, text: inner } } } };
-    }
-    return { range: { story, anchor: offset, focus: offset + 1 } };
-}
-
-/** A word document's selection with the table it is in selected as text — the
- *  body's, a header's or a footer's — or `null` where it isn't in one. */
-export function wordTableSelection(selection: UDocSelection): UDocSelection | null {
-    if (!("wordprocessing" in selection)) return null;
-    const word = selection.wordprocessing;
-    if (typeof word !== "object") return null;
-    if ("sectionText" in word) {
-        const slot = tableSlotSelection(word.sectionText.selection);
-        return slot && { wordprocessing: { sectionText: { ...word.sectionText, selection: slot } } };
-    }
-    if ("headerText" in word) {
-        const slot = tableSlotSelection(word.headerText.selection);
-        return slot && { wordprocessing: { headerText: { ...word.headerText, selection: slot } } };
-    }
-    if ("footerText" in word) {
-        const slot = tableSlotSelection(word.footerText.selection);
-        return slot && { wordprocessing: { footerText: { ...word.footerText, selection: slot } } };
-    }
-    return null;
-}
+// The selection a word document's Delete Table deletes, shared with the
+// shell's Delete of a table pick.
+export { tableSlotSelection, wordTableSelection } from "@docmentis/udoc-ui/internal";
 
 /** The four sides of a cell's margins, by name. */
 export type MarginSide = "top" | "bottom" | "left" | "right";

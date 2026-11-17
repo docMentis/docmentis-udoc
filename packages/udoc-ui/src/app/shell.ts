@@ -54,6 +54,7 @@ import type { PageSpacing, UIExtension } from "../extension.js";
 import type { Action } from "./actions.js";
 import { CONTEXT_MENU, commandContext, sheetTabMenu } from "./commands.js";
 import { reorderTo } from "./page-order.js";
+import { deleteTablePick } from "./table-pick.js";
 import type { MenuAction } from "./commands.js";
 import { createClipboardCopy } from "./clipboard.js";
 import { createCanvas } from "./components/Canvas.js";
@@ -3835,6 +3836,11 @@ export function mountUIShell(
         // delete live while it holds a caret — it moves and restyles with one
         // in it — but deleting what is selected in it must not take it.
         if (allowsTextEdit(state.selectionCaps, "deleteText")) return deleteSelectionText(true);
+        // A pick in a table deletes what it picked — a block its cells' text,
+        // whole rows or columns those tracks, the whole table the table — and
+        // never the frame holding it.
+        if (allowsTableEdit(state.selectionCaps, "clearCellText"))
+            return deleteTablePick({ client, commit, docType: state.docType }, state.selectionCaps);
         if (shapeDocType()) edit = { kind: "deleteShapes" };
         else if (annotationsSelected()) edit = { kind: "annotation", edit: { kind: "deleteAnnotations" } };
         else edit = { kind: "object", edit: { kind: "deleteObjects" } };
