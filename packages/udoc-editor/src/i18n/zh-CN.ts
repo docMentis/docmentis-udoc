@@ -136,7 +136,7 @@ export const zhCN: EditMessages = {
     "place.shown": "显示的选项",
     "place.remove": "移除",
     "place.invalid": "路径由字母、数字和 _ 组成的名称以点连接；值中不能有引号。",
-    "command.showPlaces": "绑定",
+    "command.bindingMarkup": "绑定标记",
     "command.refresh": "刷新",
     "command.shapeFillColor": "填充",
     "command.shapeStrokeColor": "线条",

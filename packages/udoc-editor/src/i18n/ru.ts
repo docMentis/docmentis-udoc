@@ -136,7 +136,7 @@ export const ru: EditMessages = {
     "place.shown": "Показанный вариант",
     "place.remove": "Удалить",
     "place.invalid": "Путь — это имена из букв, цифр и _, соединённые точками; значение не содержит кавычек.",
-    "command.showPlaces": "Привязки",
+    "command.bindingMarkup": "Пометки привязок",
     "command.refresh": "Обновить",
     "command.shapeFillColor": "Заливка",
     "command.shapeStrokeColor": "Контур",

@@ -136,7 +136,7 @@ export const ko: EditMessages = {
     "place.shown": "표시할 옵션",
     "place.remove": "제거",
     "place.invalid": "경로는 문자, 숫자, _로 된 이름을 점으로 이은 것이며, 값에는 따옴표를 쓸 수 없습니다.",
-    "command.showPlaces": "바인딩",
+    "command.bindingMarkup": "바인딩 표시",
     "command.refresh": "새로 고침",
     "command.shapeFillColor": "채우기",
     "command.shapeStrokeColor": "윤곽선",

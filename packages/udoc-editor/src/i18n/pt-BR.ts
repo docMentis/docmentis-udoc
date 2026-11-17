@@ -136,7 +136,7 @@ export const ptBR: EditMessages = {
     "place.shown": "Opção exibida",
     "place.remove": "Remover",
     "place.invalid": "Um caminho são nomes de letras, dígitos e _, unidos por pontos; um valor não contém aspas.",
-    "command.showPlaces": "Vínculos",
+    "command.bindingMarkup": "Marcações de Vínculos",
     "command.refresh": "Atualizar",
     "command.shapeFillColor": "Preenchimento",
     "command.shapeStrokeColor": "Contorno",

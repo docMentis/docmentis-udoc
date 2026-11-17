@@ -262,8 +262,8 @@ export interface Messages extends UIMessages {
     "place.remove": string;
     /** A path is names of letters, digits and _, joined by dots; a value holds no quote mark. */
     "place.invalid": string;
-    /** Places — show an instance's places */
-    "command.showPlaces": string;
+    /** Binding Markup — show or hide the brackets and bars of a deck's places */
+    "command.bindingMarkup": string;
     /** Refresh — fill an instance again from data */
     "command.refresh": string;
     /** Fill */

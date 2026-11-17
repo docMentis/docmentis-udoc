@@ -29,10 +29,10 @@ import {
     ICON_INSERT_VARIABLE,
     ICON_PREVIEW,
     ICON_REFRESH,
-    ICON_SHOW_PLACES,
+    ICON_BINDING_MARKUP,
     ICON_TEMPLATE,
 } from "./icons.js";
-import { editState, updateEditState } from "./state.js";
+import { bindingMarkupShown, editState, updateEditState } from "./state.js";
 
 /** A variable, its path made up for the author to type over. */
 const NEW_VARIABLE: Binding = { variable: { path: "value" } };
@@ -85,6 +85,11 @@ function instance(c: CommandContext): boolean {
 /** Whether the open deck is a template, ready to be written. */
 function template(c: CommandContext): boolean {
     return c.ready && c.docType === "presentation" && isTemplate(c.automation);
+}
+
+/** Whether the open deck is a template or an instance: one with places. */
+function automated(c: CommandContext): boolean {
+    return c.ready && c.docType === "presentation" && c.automation !== null;
 }
 
 /** Make the open deck a template, or a template plain again, one undo step. An
@@ -234,6 +239,21 @@ export function automationCommands(
             shownWhen: (c) => c.dataPanel,
             enabledWhen: template,
         },
+        // Binding Markup, its icon alone, pressed while the deck's places are
+        // drawn: a template's at first, an instance's once asked for.
+        bindingMarkup: {
+            id: "bindingMarkup",
+            label: "command.bindingMarkup",
+            icon: ICON_BINDING_MARKUP,
+            group: "data",
+            run: {
+                kind: "toggle",
+                pressed: bindingMarkupShown,
+                press: (store) => updateEditState(store, { showBindingMarkup: !bindingMarkupShown(store.getState()) }),
+            },
+            shownWhen: automated,
+            enabledWhen: automated,
+        },
         // Last Preview, pressed while the template's preview is shown or on its
         // way, and Generate, which opens the Generate dialog.
         preview: {
@@ -261,22 +281,8 @@ export function automationCommands(
             run: { kind: "action", press: generate },
             enabledWhen: template,
         },
-        // An instance's: Places, pressed while its places show, and Refresh,
-        // which opens the data dialog to fill it again where it is.
-        showPlaces: {
-            id: "showPlaces",
-            label: "command.showPlaces",
-            icon: ICON_SHOW_PLACES,
-            group: "instance",
-            labeled: true,
-            run: {
-                kind: "toggle",
-                pressed: (state) => editState(state).showPlaces,
-                press: (store) => updateEditState(store, { showPlaces: !editState(store.getState()).showPlaces }),
-            },
-            shownWhen: instance,
-            enabledWhen: instance,
-        },
+        // An instance's Refresh, which opens the data dialog to fill it again
+        // where it is.
         refresh: {
             id: "refresh",
             label: "command.refresh",

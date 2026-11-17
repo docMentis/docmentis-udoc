@@ -16,8 +16,10 @@
 // around it, outermost first, and then the places in its text — where those
 // end or begin, the caret stands at a level the arrows step through, and the
 // bars show the level. A whole shape selected stands where the caret would. None of it is the document's — it is drawn over the
-// canvas, under the selection, and takes no press but the bars' — and an
-// instance shows none until asked, so it reads as an ordinary document.
+// canvas, under the selection, and takes no press but the bars'. It is the
+// deck's binding markup, which Binding Markup shows or hides: a template shows
+// it until it's hidden, and an instance none until it's asked for, so it reads
+// as an ordinary document.
 import { subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { OverlayFrame, OverlayItem, OverlaySource, PageView } from "@docmentis/udoc-ui";
 import type {
@@ -31,7 +33,7 @@ import type {
 } from "@docmentis/udoc-wasm";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
-import { editState } from "./state.js";
+import { bindingMarkupShown, editState } from "./state.js";
 
 const OVERLAY_ID = "udoc:places";
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -92,16 +94,13 @@ export interface Places {
     destroy(): void;
 }
 
-/** What the overlay shows places for: an open deck that is a template, being
- *  edited, not previewed; or an instance whose places are asked to show. */
+/** What the overlay shows places for: an open deck that is a template or an
+ *  instance, being edited, not previewed, while its binding markup shows. */
 function placesShown(host: EditHost): boolean {
     const state = host.store.getState();
     if (state.status !== "ready" || state.docType !== "presentation") return false;
-    const edit = editState(state);
-    if (edit.automationPreview) return false;
-    const role = state.automation?.role;
-    if (role === undefined) return false;
-    return "template" in role || edit.showPlaces;
+    if (editState(state).automationPreview) return false;
+    return bindingMarkupShown(state);
 }
 
 /** The kind a place's binding bar names, and what follows it: its path, a

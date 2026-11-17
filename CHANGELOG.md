@@ -77,13 +77,16 @@ listed once, by package. Its major and minor version are those of the
   and the rest of its binding are typed: a variable's default, a repeat's
   item and separators, whether a condition shows when its value is false, an
   option's values. A choice is made with an option for `"a"` and an
-  otherwise. Remove, in the popover, takes the place away and keeps its text.
+  otherwise. Done applies what's typed, and Escape or a click outside leaves
+  the binding as it was; the bin beside the popover's title, Remove, takes
+  the place away and keeps its text. The popover opens above its bar where
+  the window has no room below.
   A choice's slide shows one of its options, the first until its popover, or
   an option's, picks another, and the others take no room. The pick is the
   editor's and edits nothing: the deck opened again shows each choice's
   first.
-  A template's places are drawn over its slides as brackets at their very
-  edge: a [ and a ] around a place within a paragraph, a tall pair either
+  A deck's places are drawn over its slides as brackets at their very
+  edge, its binding markup: a [ and a ] around a place within a paragraph, a tall pair either
   side of one around whole paragraphs, and a choice's those of the option it
   shows. Where places begin or end together, the innermost's bracket is as
   tall as its line and each around it a step taller, all on the one edge.
@@ -102,7 +105,9 @@ listed once, by package. Its major and minor version are those of the
   the shape shows where its condition holds and is hidden where it doesn't,
   as PowerPoint's Selection Pane hides one, so Refresh shows it again. The
   Data panel lists it with the places in text, and choosing it selects it.
-  Data shows or hides the Data panel; and Preview shows the
+  Data shows or hides the Data panel, and Binding Markup the brackets and
+  bars: a template's show until it's pressed, and an instance's once it is.
+  Preview shows the
   template filled with its sample data, as the Data panel shows it,
   read-only in place of it, until it's turned off. A value the sample data
   lacks is filled as Generate fills it, made up nowhere but by the Data
@@ -111,10 +116,10 @@ listed once, by package. Its major and minor version are those of the
   Generate opens a dialog with the data to fill the template with, as JSON —
   its sample data at first, or a file opened — and downloads a filled copy,
   "Deck (generated).pptx", an instance of the template. On an instance,
-  Places shows its places as a template's show, and Refresh opens the same
-  dialog to fill it again where it is, one undo step, on the data the
-  instance was last filled with, which it keeps. The `translations` keys
-  under `place.`, and `command.showPlaces` and `command.refresh`, are new.
+  Refresh opens the same dialog to fill it again where it is, one undo step,
+  on the data the instance was last filled with, which it keeps. The
+  `translations` keys under `place.`, and `command.bindingMarkup` and
+  `command.refresh`, are new.
 - `UDocEditor.generateToBytes(data, options?)` fills a copy of the open
   template with `data` and resolves with the instance's bytes, the template
   left as it is. Picked, the tab stays open as

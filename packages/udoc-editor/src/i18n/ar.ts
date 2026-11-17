@@ -136,7 +136,7 @@ export const ar: EditMessages = {
     "place.shown": "الخيار المعروض",
     "place.remove": "إزالة",
     "place.invalid": "المسار أسماء من حروف وأرقام و _ مفصولة بنقاط، ولا تحتوي القيمة على علامة اقتباس.",
-    "command.showPlaces": "المواضع",
+    "command.bindingMarkup": "علامات الربط",
     "command.refresh": "تحديث",
     "command.shapeFillColor": "تعبئة",
     "command.shapeStrokeColor": "خط",

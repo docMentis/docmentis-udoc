@@ -2,11 +2,12 @@
 // template's slide: the place's binding as fields for its kind — a variable's
 // path and default, a repeat's item, path and separators, a condition's path
 // and whether it shows when false, a choice's path, an option's values —
-// applied with Done or Enter, and Remove, which dissolves the place and keeps
-// its content. A choice's and an option's list the choice's options, and
-// picking one shows it on the slide at once, the others taking no room — the
-// view's pick, not an edit. Anchored below the bar, it closes on an outside
-// press or Escape, as a menu does.
+// applied with Done or Enter, and left as it was by Escape or a press outside,
+// which close it as they close a menu. Remove, the bin beside its title, apart
+// from Done, dissolves the place and keeps its content. A choice's and an
+// option's list the choice's options, and picking one shows it on the slide at
+// once, the others taking no room — the view's pick, not an edit. It opens
+// below the bar, or above it where the window has no room below.
 //
 // Storeless and imperative: mounted once and reused, `open(ctx)` seeding it
 // with the place's binding and what applying and removing do.
@@ -14,6 +15,7 @@ import { createMenuController, on } from "@docmentis/udoc-ui/internal";
 import type { Binding, BindingChoice } from "@docmentis/udoc-wasm";
 import { placeLabel } from "../automation-places.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
+import { ICON_REMOVE_PLACE } from "../icons.js";
 
 /** What `open` needs: the binding, where its binding bar stands,
  *  and what Done and Remove do. */
@@ -74,6 +76,15 @@ export function createPlacePopover(i18n: I18n) {
 
     const heading = document.createElement("div");
     heading.className = "udoc-place-popover__heading";
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "udoc-place-popover__remove";
+    removeBtn.innerHTML = ICON_REMOVE_PLACE;
+    removeBtn.title = i18n.t("place.remove");
+    removeBtn.setAttribute("aria-label", i18n.t("place.remove"));
+    const header = document.createElement("div");
+    header.className = "udoc-place-popover__header";
+    header.append(heading, removeBtn);
     const form = document.createElement("div");
     form.className = "udoc-place-popover__fields";
     const options = document.createElement("fieldset");
@@ -86,16 +97,12 @@ export function createPlacePopover(i18n: I18n) {
     error.setAttribute("role", "alert");
     const footer = document.createElement("div");
     footer.className = "udoc-place-popover__footer";
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.className = "udoc-page-modal__secondary";
-    removeBtn.textContent = i18n.t("place.remove");
     const doneBtn = document.createElement("button");
     doneBtn.type = "button";
     doneBtn.className = "udoc-page-modal__apply";
     doneBtn.textContent = i18n.t("common.done");
-    footer.append(removeBtn, doneBtn);
-    panel.append(heading, form, options, error, footer);
+    footer.append(doneBtn);
+    panel.append(header, form, options, error, footer);
 
     let ctx: PlacePopoverContext | null = null;
     let fields: Field[] = [];
@@ -285,11 +292,18 @@ export function createPlacePopover(i18n: I18n) {
         );
         listOptions(context.choice);
         error.textContent = "";
-        // Below the bar, kept on screen.
+        // Below the bar, kept on screen: above it where the window has no room
+        // below and has above, else as low as it can.
         const width = 260;
         panel.style.left = `${Math.max(8, Math.min(context.anchor.left, window.innerWidth - width - 8))}px`;
         panel.style.top = `${context.anchor.bottom + 4}px`;
         controller.open();
+        const height = panel.offsetHeight;
+        const room = window.innerHeight - 8;
+        if (context.anchor.bottom + 4 + height > room) {
+            const above = context.anchor.top - 4 - height;
+            panel.style.top = `${above >= 8 ? above : Math.max(8, room - height)}px`;
+        }
         if (fields[0]) {
             fields[0].input.focus();
             fields[0].input.select();

@@ -136,7 +136,7 @@ export const ja: EditMessages = {
     "place.shown": "表示するオプション",
     "place.remove": "削除",
     "place.invalid": "パスは英数字と _ の名前をドットでつないだものです。値に引用符は使えません。",
-    "command.showPlaces": "バインド",
+    "command.bindingMarkup": "バインドのマークアップ",
     "command.refresh": "更新",
     "command.shapeFillColor": "塗りつぶし",
     "command.shapeStrokeColor": "枠線",

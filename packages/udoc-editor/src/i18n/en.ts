@@ -137,7 +137,7 @@ export const en: EditMessages = {
     "place.shown": "Option shown",
     "place.remove": "Remove",
     "place.invalid": "A path is names of letters, digits and _, joined by dots; a value holds no quote mark.",
-    "command.showPlaces": "Places",
+    "command.bindingMarkup": "Binding Markup",
     "command.refresh": "Refresh",
     "command.shapeFillColor": "Fill",
     "command.shapeStrokeColor": "Line",

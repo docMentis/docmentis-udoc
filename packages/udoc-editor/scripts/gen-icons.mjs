@@ -27,6 +27,11 @@
 // sizes are separate drawings, not scalings: the 20px one carries heavier
 // strokes than the 24px and 48px masters so it holds up at 20px.
 //
+// A symbol Google has drawn anew since COMMIT, which the Material Symbols site
+// shows but the repository doesn't have yet, is taken as Google's font CDN
+// serves it (`servedUrl`), at an unversioned URL: so the SVG it served is kept
+// in SERVED, with the day it was served, and a rerun reproduces it.
+//
 // A Material Design Icon (pictogrammers.com/library/mdi) comes from the
 // Templarian/MaterialDesign-SVG repository, pinned to MDI_COMMIT the same way.
 // Its one drawing is on a 24px grid, which the chrome scales to 20px, in the
@@ -47,10 +52,21 @@ const MDI_COMMIT = "9e04201d4557e729822fb57f62a316c3dea1d4a8"; // v7.4.47, 2023-
 // ---------------------------------------------------------------------------
 
 /**
+ * Symbols as Google's font CDN served them, by name, where the repository at
+ * COMMIT has an older drawing — `{ served }` in ICONS. Refresh one from its
+ * `servedUrl`, and drop it once COMMIT moves past a commit that has its drawing.
+ */
+const SERVED = {
+    // 2026-11-17: the repository's last change to it is 2024-07-05's.
+    automation: `<svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20"><path d="M357-291q-46 51-102.5 50.5T156-273q-42-32-57-85.5T120-470l64-103q-19-20-29.5-44.99Q144-642.98 144-672q0-60 42-102t102-42q60 0 102 42t42 102q0 60-42 102t-102 42q-10.67 0-21.33-2-10.67-2-21.67-5l-64 103q-19 30-10.5 57.5T201-330q22 17 50.5 17t52.5-26l299-330q46-51 102-51t98 32q42 32 57.5 85.5T840-490l-64 103q19 20 29.5 44.99Q816-317.02 816-288q0 60-42 102t-102 42q-60 0-102-42t-42-102q0-60 42-102t102-42q11.08 0 21.54 2 10.46 2 21.46 5l64-103q19-30 10.5-58T759-631q-22-17-51-16.5T656-621L357-291Zm-18-330.21q21-21.21 21-51T338.79-723q-21.21-21-51-21T237-722.79q-21 21.21-21 51T237.21-621q21.21 21 51 21T339-621.21Zm384 384q21-21.21 21-51T722.79-339q-21.21-21-51-21T621-338.79q-21 21.21-21 51T621.21-237q21.21 21 51 21T723-237.21ZM288-672Zm384 384Z"/></svg>`,
+};
+
+/**
  * Exported constant -> Material Symbol name, or `{ symbol, rotate, note }` for
  * one turned `rotate` degrees clockwise, `note` saying how and why in its doc
  * comment. `{ mdi, rotate, note }` names a Material Design Icon instead, as
- * its library spells it (`table-row-remove`).
+ * its library spells it (`table-row-remove`); `{ served }` names a symbol of
+ * SERVED, as Google's font CDN served it.
  */
 const ICONS = {
     // Ribbon tabs — on the strip, in its icon style
@@ -62,7 +78,7 @@ const ICONS = {
     ICON_TAB_TABLE: { mdi: "table" },
     ICON_TAB_TEXT: "text_fields",
     ICON_TAB_CELL: "grid_on",
-    ICON_TAB_AUTOMATION: "data_object",
+    ICON_TAB_AUTOMATION: { served: "automation" },
 
     ICON_WRAP_TEXT: "wrap_text",
     ICON_NUMBER_FORMAT: "123",
@@ -99,7 +115,9 @@ const ICONS = {
     ICON_PREVIEW: "preview",
     ICON_GENERATE: "file_export",
     ICON_DATA_PANEL: "database",
-    ICON_SHOW_PLACES: "data_object",
+    ICON_BINDING_MARKUP: "data_array",
+    // A place's popover's Remove
+    ICON_REMOVE_PLACE: "delete",
     ICON_REFRESH: "refresh",
 
     // An image's Home tab
@@ -207,6 +225,7 @@ const ICONS = {
 const symbolUrl = (name) =>
     `https://raw.githubusercontent.com/google/material-design-icons/${COMMIT}` +
     `/symbols/web/${name}/${STYLE}/${name}_${OPSZ}px.svg`;
+const servedUrl = (name) => `https://fonts.gstatic.com/s/i/short-term/release/${STYLE}/${name}/default/${OPSZ}px.svg`;
 const mdiUrl = (path) => `https://raw.githubusercontent.com/Templarian/MaterialDesign-SVG/${MDI_COMMIT}/${path}`;
 
 async function fetchOk(url) {
@@ -220,9 +239,13 @@ async function fetchOk(url) {
 // no namespace or id, and CSS sets its size, so only the viewBox and the drawing
 // survive; `currentColor` lets the button's color tint it.
 async function fetchSvg(url) {
-    const svg = (await (await fetchOk(url)).text()).trim();
+    return inline((await (await fetchOk(url)).text()).trim(), url);
+}
+
+// An SVG as a file holds it, from `source`, as the chrome inlines it.
+function inline(svg, source) {
     const match = /^<svg\b[^>]*\bviewBox="([^"]+)"[^>]*>([\s\S]*)<\/svg>$/.exec(svg);
-    if (!match) throw new Error(`${url}: unexpected SVG shape`);
+    if (!match) throw new Error(`${source}: unexpected SVG shape`);
     return `<svg viewBox="${match[1]}" fill="currentColor">${match[2]}</svg>`;
 }
 
@@ -254,29 +277,39 @@ function rotated(svg, degrees) {
 
 const entries = Object.entries(ICONS).map(([constant, icon]) => {
     const entry = typeof icon === "string" ? { symbol: icon } : icon;
-    if (!entry.symbol === !entry.mdi) throw new Error(`${constant}: name a \`symbol\` or an \`mdi\` icon`);
+    if ([entry.symbol, entry.mdi, entry.served].filter(Boolean).length !== 1)
+        throw new Error(`${constant}: name a \`symbol\`, an \`mdi\` icon or a \`served\` one`);
+    if (entry.served) {
+        const svg = SERVED[entry.served];
+        if (!svg) throw new Error(`${constant}: SERVED has no \`${entry.served}\``);
+        const doc = `\`${entry.served}\`, as Google's font CDN serves it`;
+        return { constant, ...entry, svg: inline(svg, servedUrl(entry.served)), doc };
+    }
     return entry.mdi
         ? { constant, ...entry, url: mdiUrl(`svg/${entry.mdi}.svg`), doc: `Material Design Icons' \`${entry.mdi}\`` }
         : { constant, ...entry, url: symbolUrl(entry.symbol), doc: `\`${entry.symbol}\`` };
 });
 const mdiNames = [...new Set(entries.filter((entry) => entry.mdi).map((entry) => entry.mdi))];
 await checkMdi(mdiNames);
-const urls = [...new Set(entries.map((entry) => entry.url))];
+const urls = [...new Set(entries.flatMap((entry) => entry.url ?? []))];
 const svgs = new Map(await Promise.all(urls.map(async (url) => [url, await fetchSvg(url)])));
 
 const rows = entries
-    .map(({ constant, url, doc, rotate, note }) => {
-        const svg = svgs.get(url);
+    .map(({ constant, url, svg: served, doc, rotate, note }) => {
+        const svg = served ?? svgs.get(url);
         return `/** ${note ? `${doc}, ${note}.` : doc} */\nexport const ${constant} = \`${rotate ? rotated(svg, rotate) : svg}\`;`;
     })
     .join("\n\n");
 
-// The header names Material Design Icons only once ICONS takes one.
+// The header names Material Design Icons only once ICONS takes one, and the
+// symbols served by Google's font CDN only once it takes one of those.
 const mdi = mdiNames.length > 0;
+const served = [...new Set(entries.flatMap((entry) => entry.served ?? []))];
 writeFileSync(
     OUT,
     `// AUTO-GENERATED by scripts/gen-icons.mjs — do not edit by hand.
 // Material Symbols Outlined, ${OPSZ}px optical size, google/material-design-icons@${COMMIT.slice(0, 12)}.
+${served.length > 0 ? `// Newer than that commit, as Google's font CDN served them: ${served.join(", ")}.\n` : ""}\
 ${mdi ? `// Material Design Icons, Templarian/MaterialDesign-SVG@${MDI_COMMIT.slice(0, 12)}.\n` : ""}\
 // Regenerate: \`npm run gen:icons\` (pick icons in the script's ICONS table).
 //
@@ -289,5 +322,5 @@ ${rows}
 );
 console.log(
     `[gen-icons] wrote ${Object.keys(ICONS).length} icons (${urls.length - mdiNames.length} symbols, ` +
-        `${mdiNames.length} Material Design Icons) -> ${OUT}`,
+        `${served.length} served, ${mdiNames.length} Material Design Icons) -> ${OUT}`,
 );

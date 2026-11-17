@@ -136,7 +136,7 @@ export const es: EditMessages = {
     "place.shown": "Opción mostrada",
     "place.remove": "Quitar",
     "place.invalid": "Una ruta son nombres de letras, dígitos y _, unidos por puntos; un valor no lleva comillas.",
-    "command.showPlaces": "Enlaces",
+    "command.bindingMarkup": "Marcas de enlaces",
     "command.refresh": "Actualizar",
     "command.shapeFillColor": "Relleno",
     "command.shapeStrokeColor": "Línea",

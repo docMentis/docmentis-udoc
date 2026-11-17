@@ -136,7 +136,7 @@ export const zhTW: EditMessages = {
     "place.shown": "顯示的選項",
     "place.remove": "移除",
     "place.invalid": "路徑由字母、數字和 _ 組成的名稱以點連接；值中不能有引號。",
-    "command.showPlaces": "繫結",
+    "command.bindingMarkup": "繫結標記",
     "command.refresh": "重新整理",
     "command.shapeFillColor": "填滿",
     "command.shapeStrokeColor": "線條",

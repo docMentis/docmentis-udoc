@@ -137,7 +137,7 @@ export const fr: EditMessages = {
     "place.remove": "Supprimer",
     "place.invalid":
         "Un chemin est fait de noms en lettres, chiffres et _, joints par des points ; une valeur ne contient pas de guillemet.",
-    "command.showPlaces": "Liaisons",
+    "command.bindingMarkup": "Marques de liaison",
     "command.refresh": "Actualiser",
     "command.shapeFillColor": "Remplissage",
     "command.shapeStrokeColor": "Contour",

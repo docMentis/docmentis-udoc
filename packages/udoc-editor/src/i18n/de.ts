@@ -137,7 +137,7 @@ export const de: EditMessages = {
     "place.remove": "Entfernen",
     "place.invalid":
         "Ein Pfad besteht aus Namen aus Buchstaben, Ziffern und _, durch Punkte verbunden; ein Wert enthält kein Anführungszeichen.",
-    "command.showPlaces": "Bindungen",
+    "command.bindingMarkup": "Bindungsmarkierungen",
     "command.refresh": "Aktualisieren",
     "command.shapeFillColor": "Füllung",
     "command.shapeStrokeColor": "Linie",

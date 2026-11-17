@@ -1287,8 +1287,15 @@ export const editorStyles = css`
         box-shadow: var(--udoc-elevation-4);
         color: var(--udoc-color-on-surface);
     }
+    .udoc-ui-root .udoc-place-popover__header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: -4px -4px 8px 0;
+    }
     .udoc-ui-root .udoc-place-popover__heading {
-        margin-bottom: 8px;
+        flex: 1;
+        min-width: 0;
         font-size: 13px;
         font-weight: 600;
         overflow: hidden;
@@ -1331,8 +1338,34 @@ export const editorStyles = css`
     }
     .udoc-ui-root .udoc-place-popover__footer {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
         margin-top: 12px;
+    }
+    /* Remove, the bin beside the title: as a dialog's close button is drawn. */
+    .udoc-ui-root .udoc-place-popover__remove {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--udoc-color-on-surface-variant);
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-place-popover__remove:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root .udoc-place-popover__remove:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: -2px;
+    }
+    .udoc-ui-root .udoc-place-popover__remove svg {
+        width: var(--udoc-btn-glyph);
+        height: var(--udoc-btn-glyph);
     }
     .udoc-ui-root .udoc-binding-bar:focus-visible {
         outline: 2px solid #fff;

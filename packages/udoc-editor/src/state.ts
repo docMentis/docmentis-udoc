@@ -143,9 +143,10 @@ export interface EditState {
      *  place of it — or on its way. */
     automationPreview: boolean;
 
-    /** Whether an instance's places are drawn over its slides, as a
-     *  template's always are. */
-    showPlaces: boolean;
+    /** Whether a deck's places are drawn over its slides — their brackets and
+     *  binding bars, its binding markup — as Binding Markup was last pressed;
+     *  null for its role's say: a template's are, an instance's aren't. */
+    showBindingMarkup: boolean | null;
 }
 
 /** Edit mode's state at start. */
@@ -166,7 +167,7 @@ export const INITIAL_EDIT_STATE: EditState = {
     showModeSwitch: true,
     alignToPage: false,
     automationPreview: false,
-    showPlaces: false,
+    showBindingMarkup: null,
 };
 
 /** Edit mode's state in `state`. */
@@ -182,4 +183,14 @@ export function editStateOf(context: CommandContext): EditState {
 /** Change edit mode's state in `store` by `change`. */
 export function updateEditState(store: Store<UIState, Action>, change: Partial<EditState>): void {
     store.dispatch({ type: "SET_EXTENSION_STATE", extension: { ...editState(store.getState()), ...change } });
+}
+
+/** Whether the open deck's binding markup shows — its places' brackets and
+ *  binding bars — as Binding Markup was last pressed, or, till it is, as the
+ *  deck's role has it: a template's does, an instance's doesn't. A plain deck
+ *  has none. */
+export function bindingMarkupShown(state: UIState): boolean {
+    const role = state.automation?.role;
+    if (role === undefined) return false;
+    return editState(state).showBindingMarkup ?? "template" in role;
 }
