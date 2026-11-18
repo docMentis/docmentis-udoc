@@ -93,6 +93,8 @@ export const es: EditMessages = {
     "command.paragraphStyle": "Estilo de párrafo",
     "command.fontFamily": "Fuente",
     "command.fontSize": "Tamaño",
+    "command.increaseFontSize": "Aumentar tamaño de fuente",
+    "command.decreaseFontSize": "Disminuir tamaño de fuente",
     "command.bold": "Negrita",
     "command.italic": "Cursiva",
     "command.underline": "Subrayado",

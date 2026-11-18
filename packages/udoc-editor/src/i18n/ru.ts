@@ -93,6 +93,8 @@ export const ru: EditMessages = {
     "command.paragraphStyle": "Стиль абзаца",
     "command.fontFamily": "Шрифт",
     "command.fontSize": "Размер",
+    "command.increaseFontSize": "Увеличить размер шрифта",
+    "command.decreaseFontSize": "Уменьшить размер шрифта",
     "command.bold": "Полужирный",
     "command.italic": "Курсив",
     "command.underline": "Подчёркнутый",

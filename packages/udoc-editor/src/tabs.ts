@@ -33,6 +33,8 @@ export type EditCommandId =
     | "paragraphStyle"
     | "fontFamily"
     | "fontSize"
+    | "fontSizeUp"
+    | "fontSizeDown"
     | "bold"
     | "italic"
     | "underline"
@@ -166,8 +168,8 @@ function slidesOrNothing(caps: SelectionCapabilities): boolean {
 
 /**
  * The Text tab — the paragraph style picker first, the broadest control and the
- * one the rest refine; then the character half (the font family / size fields,
- * the Bold / Italic / Underline / Strikethrough / Superscript / Subscript
+ * one the rest refine; then the character half (the font family / size fields
+ * and the Increase / Decrease Font Size steps, the Bold / Italic / Underline / Strikethrough / Superscript / Subscript
  * toggles, the Scale dropdown, the Text Color / Highlight pickers), then the
  * paragraph half (the Align + Indent dropdown, the Line & Paragraph Spacing
  * dropdown, and the two list split buttons). For the doc types whose text edits
@@ -188,6 +190,8 @@ const TEXT_TAB: EditTab = {
         "paragraphStyle",
         "fontFamily",
         "fontSize",
+        "fontSizeUp",
+        "fontSizeDown",
         "bold",
         "italic",
         "underline",
@@ -438,8 +442,8 @@ const CELL_TAB: EditTab = {
 
 /**
  * The spreadsheet Text tab — the selected cells' text as Excel's Home tab
- * formats it: the font fields, Bold, Italic, Underline and Strikethrough, and
- * Text Color; then how it sits in the cell, as Excel's two alignment rows set
+ * formats it: the font fields and the two font size steps, Bold, Italic,
+ * Underline and Strikethrough, and Text Color; then how it sits in the cell, as Excel's two alignment rows set
  * it: the Horizontal Alignment dropdown and the two indent steps, which go with
  * it, then the Vertical Alignment and Orientation dropdowns and Wrap Text, which
  * set how the text runs down the cell. A selection of cells opens the
@@ -453,6 +457,8 @@ const SPREADSHEET_TEXT_TAB: EditTab = {
     commands: [
         "fontFamily",
         "fontSize",
+        "fontSizeUp",
+        "fontSizeDown",
         "bold",
         "italic",
         "underline",

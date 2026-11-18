@@ -1847,6 +1847,10 @@ export type SelectionEdit =
     /** Spreadsheet: Excel's Increase Indent, or with `increase` false
      *  Decrease Indent — each selected cell's own indent one step. */
     | { kind: "stepCellIndent"; increase: boolean }
+    /** Spreadsheet: Increase Font Size, or with `increase` false Decrease
+     *  Font Size — each selected cell's own font size one size along the size
+     *  field's list. */
+    | { kind: "stepCellFontSize"; increase: boolean }
     /** Spreadsheet: Excel's Clear Formats over the selection. */
     | { kind: "clearCellFormats" }
     /** Spreadsheet: Excel's Merge Cells over the selected block — `across`
@@ -1883,6 +1887,11 @@ export type SelectionEdit =
     /** Text: reset each of `keys` to inherited on the text selection — clear
      *  direct character formatting. */
     | { kind: "clearCharacterProperties"; keys: TextCharacterPropertyKey[] }
+    /** Text: Increase Font Size, or with `increase` false Decrease Font Size —
+     *  each span of the text selection one size along the size field's list,
+     *  from the size it shows, so text of two sizes stays two sizes; over a
+     *  block of table cells, all the text of each cell. */
+    | { kind: "stepFontSize"; increase: boolean }
     // Text paragraph formatting — the Text tab's paragraph controls (align /
     // line and paragraph spacing / the two list toggles). Their unit is the
     // paragraphs the selection *touches*, not the spans it covers, so unlike the

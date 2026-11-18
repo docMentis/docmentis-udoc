@@ -93,6 +93,8 @@ export const fr: EditMessages = {
     "command.paragraphStyle": "Style de paragraphe",
     "command.fontFamily": "Police",
     "command.fontSize": "Taille",
+    "command.increaseFontSize": "Augmenter la taille de police",
+    "command.decreaseFontSize": "Réduire la taille de police",
     "command.bold": "Gras",
     "command.italic": "Italique",
     "command.underline": "Souligner",

@@ -93,6 +93,8 @@ export const ko: EditMessages = {
     "command.paragraphStyle": "단락 스타일",
     "command.fontFamily": "글꼴",
     "command.fontSize": "크기",
+    "command.increaseFontSize": "글꼴 크기 크게",
+    "command.decreaseFontSize": "글꼴 크기 작게",
     "command.bold": "굵게",
     "command.italic": "기울임꼴",
     "command.underline": "밑줄",

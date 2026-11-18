@@ -93,6 +93,8 @@ export const zhCN: EditMessages = {
     "command.paragraphStyle": "段落样式",
     "command.fontFamily": "字体",
     "command.fontSize": "字号",
+    "command.increaseFontSize": "增大字号",
+    "command.decreaseFontSize": "减小字号",
     "command.bold": "加粗",
     "command.italic": "倾斜",
     "command.underline": "下划线",

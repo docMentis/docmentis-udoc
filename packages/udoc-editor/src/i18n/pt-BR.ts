@@ -93,6 +93,8 @@ export const ptBR: EditMessages = {
     "command.paragraphStyle": "Estilo de Parágrafo",
     "command.fontFamily": "Fonte",
     "command.fontSize": "Tamanho",
+    "command.increaseFontSize": "Aumentar Tamanho da Fonte",
+    "command.decreaseFontSize": "Diminuir Tamanho da Fonte",
     "command.bold": "Negrito",
     "command.italic": "Itálico",
     "command.underline": "Sublinhado",

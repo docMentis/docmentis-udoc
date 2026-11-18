@@ -93,6 +93,8 @@ export const zhTW: EditMessages = {
     "command.paragraphStyle": "段落樣式",
     "command.fontFamily": "字型",
     "command.fontSize": "大小",
+    "command.increaseFontSize": "放大字型",
+    "command.decreaseFontSize": "縮小字型",
     "command.bold": "粗體",
     "command.italic": "斜體",
     "command.underline": "底線",

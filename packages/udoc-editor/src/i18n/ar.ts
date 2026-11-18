@@ -93,6 +93,8 @@ export const ar: EditMessages = {
     "command.paragraphStyle": "نمط الفقرة",
     "command.fontFamily": "الخط",
     "command.fontSize": "الحجم",
+    "command.increaseFontSize": "تكبير حجم الخط",
+    "command.decreaseFontSize": "تصغير حجم الخط",
     "command.bold": "غامق",
     "command.italic": "مائل",
     "command.underline": "تسطير",

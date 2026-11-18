@@ -176,6 +176,10 @@ export interface Messages extends UIMessages {
     "command.fontFamily": string;
     /** Size */
     "command.fontSize": string;
+    /** Increase Font Size */
+    "command.increaseFontSize": string;
+    /** Decrease Font Size */
+    "command.decreaseFontSize": string;
     /** Bold */
     "command.bold": string;
     /** Italic */

@@ -93,6 +93,8 @@ export const ja: EditMessages = {
     "command.paragraphStyle": "段落スタイル",
     "command.fontFamily": "フォント",
     "command.fontSize": "サイズ",
+    "command.increaseFontSize": "フォント サイズの拡大",
+    "command.decreaseFontSize": "フォント サイズの縮小",
     "command.bold": "太字",
     "command.italic": "斜体",
     "command.underline": "下線",

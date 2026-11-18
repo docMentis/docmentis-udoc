@@ -22,10 +22,15 @@ import type { EditTools } from "../tools.js";
 import { createComboBox } from "./ComboBox.js";
 import type { ComboBox } from "./ComboBox.js";
 
-/** The point sizes the Text tab's size dropdown offers — the common Office set.
- *  The selection's own size still shows on the trigger even when it isn't one of
- *  these (a document can carry any size); the list is just the quick picks. */
-const SIZE_PRESETS: readonly number[] = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 60, 72];
+/** The point sizes the Text tab's size dropdown offers — the sizes the engine's
+ *  Increase / Decrease Font Size step lands on, so a stepped size is always a
+ *  row here. The selection's own size still shows on the trigger even when it
+ *  isn't one of these (a document can carry any size); the list is just the
+ *  quick picks. */
+const SIZE_PRESETS: readonly number[] = [
+    5, 5.5, 6.5, 7.5, 8, 9, 10, 10.5, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 44, 48, 54, 60, 66, 72, 80,
+    88, 96,
+];
 
 // Font dropdown virtualization knobs. FONT_ROW_H must match the fixed
 // `.udoc-font-item` height in styles.ts; FONT_MENU_ROWS is how many rows

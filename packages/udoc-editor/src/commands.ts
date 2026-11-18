@@ -2,7 +2,15 @@
 // over the text selection, Change Shape over a drawing's shapes, and the Fill /
 // Line controls over those or a PDF's page objects (their arrangement commands
 // are `arrange.ts`'s).
-import { allowsEdit, ICON_FILL, ICON_OPACITY, ICON_STROKE, ICON_TEXT_HIGHLIGHT } from "@docmentis/udoc-ui/internal";
+import {
+    allowsEdit,
+    ICON_FILL,
+    ICON_OPACITY,
+    ICON_STROKE,
+    ICON_TEXT_HIGHLIGHT,
+    ICON_TEXT_LARGER,
+    ICON_TEXT_SMALLER,
+} from "@docmentis/udoc-ui/internal";
 import type { CommandDef } from "@docmentis/udoc-ui/internal";
 import {
     fontFamilyControl,
@@ -36,6 +44,7 @@ import { CHANGE_SHAPE_GALLERY, galleryShape } from "./shape-gallery.js";
 import {
     LINE_SPACING_MENU,
     PARAGRAPH_ALIGN_MENU,
+    whenFontSizeStep,
     whenParagraphFormat,
     whenParagraphStyle,
     whenTextFormat,
@@ -100,6 +109,26 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
             group: "font",
             run: { kind: "control", create: (env) => fontSizeControl(env, "fontSize", tools()) },
             enabledWhen: whenTextFormat,
+        },
+        // Increase / Decrease Font Size, beside the field as Word, PowerPoint
+        // and Excel keep them: one size along the field's list, each span (each
+        // cell) of the selection from its own size, so mixed sizes step
+        // together and stay mixed.
+        fontSizeUp: {
+            id: "fontSizeUp",
+            label: "command.increaseFontSize",
+            icon: ICON_TEXT_LARGER,
+            group: "font",
+            run: { kind: "action", press: () => void tools().text.stepFontSizeSelection(true) },
+            enabledWhen: whenFontSizeStep,
+        },
+        fontSizeDown: {
+            id: "fontSizeDown",
+            label: "command.decreaseFontSize",
+            icon: ICON_TEXT_SMALLER,
+            group: "font",
+            run: { kind: "action", press: () => void tools().text.stepFontSizeSelection(false) },
+            enabledWhen: whenFontSizeStep,
         },
         // The character-format toggles are their own group ("textStyle"), split
         // from the font fields above so a divider fences the toggle cluster off

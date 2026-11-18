@@ -94,6 +94,8 @@ export const en: EditMessages = {
     "command.paragraphStyle": "Paragraph Style",
     "command.fontFamily": "Font",
     "command.fontSize": "Size",
+    "command.increaseFontSize": "Increase Font Size",
+    "command.decreaseFontSize": "Decrease Font Size",
     "command.bold": "Bold",
     "command.italic": "Italic",
     "command.underline": "Underline",

@@ -93,6 +93,8 @@ export const de: EditMessages = {
     "command.paragraphStyle": "Absatzformatvorlage",
     "command.fontFamily": "Schriftart",
     "command.fontSize": "Schriftgrad",
+    "command.increaseFontSize": "Schriftgrad vergrößern",
+    "command.decreaseFontSize": "Schriftgrad verkleinern",
     "command.bold": "Fett",
     "command.italic": "Kursiv",
     "command.underline": "Unterstreichen",

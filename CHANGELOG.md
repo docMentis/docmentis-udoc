@@ -32,6 +32,19 @@ listed once, by package. Its major and minor version are those of the
   of them moves them, as Excel does: the cells they leave are emptied, and
   formulas naming them follow them, also onto another sheet. Escape, a copy
   or an edit cancels the cut. Cut copied only.
+- Increase Font Size and Decrease Font Size, beside the size field in word
+  documents, decks, workbooks and the text on images, step the selection to
+  the next or previous size in the size field's list, which now lists more
+  sizes. Text of several sizes steps each from its own, so its sizes stay
+  apart, and a block of table cells and a workbook's cells step the same way.
+
+#### Fixed
+
+- Increase Indent and Decrease Indent step a paragraph from the indent it
+  shows, including one its style or the document gives it, where Increase
+  left such a paragraph where it was. A bulleted paragraph on a slide whose
+  bullets come from its layout steps a list level, as in PowerPoint, where it
+  moved its margin.
 
 ## [0.8.23] - 2026-11-16
 

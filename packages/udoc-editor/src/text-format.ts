@@ -91,6 +91,12 @@ export function listStyles(list: ListKind): readonly ListStyle[] {
 export const whenTextFormat: EnabledWhen = (c) =>
     allowsTextEdit(c.selection, "patchCharacterProperties") || allowsEdit(c.selection, "patchCellFont");
 
+/** The Increase / Decrease Font Size buttons: live where the engine steps the
+ *  selection's sizes — the text {@link whenTextFormat} formats, a block of
+ *  table cells, or a workbook's cells. */
+export const whenFontSizeStep: EnabledWhen = (c) =>
+    allowsTextEdit(c.selection, "stepFontSize") || allowsEdit(c.selection, "stepCellFontSize");
+
 /** The Text tab's *paragraph* controls (align / indent / spacing / the two list
  *  toggles). Deliberately **not** {@link whenTextFormat}: a character format
  *  needs spans to cover, so a bare caret leaves it greyed, while a caret is
@@ -400,6 +406,17 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
         return patchCharacterProperties([{ size: size }]);
     }
 
+    /** Step the selection's font size one size up, or down — the Increase /
+     *  Decrease Font Size buttons. Relative, so the engine steps each span (each
+     *  cell) from the size it shows, and text of two sizes stays two sizes. */
+    function stepFontSizeSelection(increase: boolean): Promise<void> {
+        if (sheetDocType()) {
+            return commit(() => client.executeOnSelection({ kind: "stepCellFontSize", increase }));
+        }
+        if (!textDocType()) return Promise.resolve();
+        return commit(() => client.executeOnSelection({ kind: "stepFontSize", increase }));
+    }
+
     /** Apply a text color (the span fill) to the text selection — a cell's
      *  font color, automatic for "no fill". */
     function textFillSelection(paint: PaintSpec): Promise<void> {
@@ -472,6 +489,7 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
         formatTextSelection,
         fontFamilySelection,
         fontSizeSelection,
+        stepFontSizeSelection,
         textFillSelection,
         patchParagraphProperties,
         indentSelection,
