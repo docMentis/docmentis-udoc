@@ -491,7 +491,9 @@ export type TextEditKind =
     | "rejectRevisions"
     | "bind"
     | "rebind"
-    | "unbind";
+    | "unbind"
+    | "addBindingOption"
+    | "removeBindingOption";
 
 /**
  * Whether `caps` allows the text edit `kind` — the text cousin of

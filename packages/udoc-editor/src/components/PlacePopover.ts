@@ -6,12 +6,15 @@
 // which close it as they close a menu. Remove, the bin beside its title, apart
 // from Done, dissolves the place and keeps its content. A choice's and an
 // option's list the choice's options, and picking one shows it on the slide at
-// once, the others taking no room — the view's pick, not an edit. It opens
-// below the bar, or above it where the window has no room below.
+// once, the others taking no room — the view's pick, not an edit. Each option
+// is taken out by the bin on its row, but a choice's last, and Add option and
+// Add otherwise under the list add one, shown at once: edits, each one undo
+// step, made as they are pressed. It opens below the bar, or above it where
+// the window has no room below.
 //
 // Storeless and imperative: mounted once and reused, `open(ctx)` seeding it
 // with the place's binding and what applying and removing do.
-import { createMenuController, on } from "@docmentis/udoc-ui/internal";
+import { ICON_ADD, ICON_DELETE, createMenuController, on } from "@docmentis/udoc-ui/internal";
 import type { Binding, BindingChoice } from "@docmentis/udoc-wasm";
 import { placeLabel } from "../automation-places.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
@@ -32,6 +35,12 @@ export interface PlacePopoverContext {
     choice: BindingChoice | null;
     /** Show the choice's `option`, resolving with the choice as it then is. */
     onShow: (option: string) => Promise<BindingChoice | null>;
+    /** Add an option bound by `binding` to the choice, resolving with the
+     *  choice as it then is. */
+    onAddOption: (binding: Binding) => Promise<BindingChoice | null>;
+    /** Take the choice's `option` out, resolving with the choice as it then
+     *  is — null where the place the popover is for went with it. */
+    onRemoveOption: (option: string) => Promise<BindingChoice | null>;
 }
 
 /** The words no name takes: a tag's keywords. */
@@ -59,6 +68,26 @@ function optionLabel(binding: Binding, i18n: I18n): string {
         return binding.when.values.map((value) => `"${value}"`).join(", ");
     }
     return i18n.t("place.otherwise");
+}
+
+/** The values `choice`'s `when`s match. */
+function valuesOf(choice: BindingChoice): Set<string> {
+    return new Set(
+        choice.options.flatMap(({ binding }) =>
+            typeof binding === "object" && "when" in binding ? binding.when.values : [],
+        ),
+    );
+}
+
+/** A value for a new option to match, made up for its author to change: the
+ *  first letter no option of `choice` matches yet, else a number. */
+function newValue(choice: BindingChoice): string {
+    const taken = valuesOf(choice);
+    const letter = [..."abcdefghijklmnopqrstuvwxyz"].find((value) => !taken.has(value));
+    if (letter) return letter;
+    let n = choice.options.length + 1;
+    while (taken.has(String(n))) n += 1;
+    return String(n);
 }
 
 /** One field of the form: its label, its input, and whether it is a box. */
@@ -92,6 +121,11 @@ export function createPlacePopover(i18n: I18n) {
     const legend = document.createElement("legend");
     legend.className = "udoc-page-modal__field-label";
     legend.textContent = i18n.t("place.shown");
+    const adding = document.createElement("div");
+    adding.className = "udoc-place-popover__adding";
+    const addOption = addButton(i18n.t("place.addOption"));
+    const addOtherwise = addButton(i18n.t("place.addOtherwise"));
+    adding.append(addOption, addOtherwise);
     const error = document.createElement("div");
     error.className = "udoc-page-modal__error";
     error.setAttribute("role", "alert");
@@ -105,6 +139,8 @@ export function createPlacePopover(i18n: I18n) {
     panel.append(header, form, options, error, footer);
 
     let ctx: PlacePopoverContext | null = null;
+    /** The choice the list shows, as it last stood. */
+    let listed: BindingChoice | null = null;
     let fields: Field[] = [];
     let busy = false;
     const unsubEvents: Array<() => void> = [];
@@ -115,6 +151,18 @@ export function createPlacePopover(i18n: I18n) {
             ctx = null;
         },
     });
+
+    /** A button under the option list, its icon beside its name. */
+    function addButton(name: string): HTMLButtonElement {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "udoc-place-popover__add";
+        button.innerHTML = ICON_ADD;
+        const text = document.createElement("span");
+        text.textContent = name;
+        button.append(text);
+        return button;
+    }
 
     function field(key: string, label: MessageKey, value: string, type: "text" | "checkbox" = "text"): Field {
         const input = document.createElement("input");
@@ -195,18 +243,24 @@ export function createPlacePopover(i18n: I18n) {
         return values.length > 0 && values.every(isLiteral) ? { when: { values } } : null;
     }
 
-    /** List `choice`'s options, the one shown picked; none where it is null. */
+    /** List `choice`'s options, the one shown picked, each with its bin — but
+     *  a choice's last — and under them what adds one: Add otherwise only
+     *  where the choice has none. None where it is null. */
     function listOptions(choice: BindingChoice | null): void {
+        listed = choice;
         options.hidden = choice === null;
         if (choice === null) {
             options.replaceChildren();
             return;
         }
+        const last = choice.options.length < 2;
         options.replaceChildren(
             legend,
             ...choice.options.map((option) => {
-                const row = document.createElement("label");
-                row.className = "udoc-place-popover__option";
+                const row = document.createElement("div");
+                row.className = "udoc-place-popover__option-row";
+                const label = document.createElement("label");
+                label.className = "udoc-place-popover__option";
                 const input = document.createElement("input");
                 input.type = "radio";
                 input.name = "udoc-place-shown";
@@ -216,23 +270,61 @@ export function createPlacePopover(i18n: I18n) {
                 });
                 const text = document.createElement("span");
                 text.textContent = optionLabel(option.binding, i18n);
-                row.append(input, text);
+                label.append(input, text);
+                const remove = document.createElement("button");
+                remove.type = "button";
+                remove.className = "udoc-place-popover__remove-option";
+                remove.innerHTML = ICON_DELETE;
+                remove.title = i18n.t("place.removeOption");
+                remove.setAttribute("aria-label", `${i18n.t("place.removeOption")}: ${text.textContent}`);
+                remove.disabled = last;
+                remove.addEventListener("click", () => void removeOption(option.id));
+                row.append(label, remove);
                 return row;
             }),
+            adding,
         );
+        addOtherwise.hidden = choice.options.some(({ binding }) => binding === "otherwise");
     }
 
-    async function show(option: string): Promise<void> {
+    /** Run `work`, which changes the choice, and list it as it then is; the
+     *  popover closes where the choice is gone from under it. */
+    async function change(work: (open: PlacePopoverContext) => Promise<BindingChoice | null>): Promise<void> {
         const open = ctx;
         if (!open || busy) return;
         busy = true;
         try {
-            const choice = await open.onShow(option);
-            if (ctx === open) listOptions(choice);
+            const choice = await work(open);
+            if (ctx !== open) return;
+            if (choice === null && listed !== null) controller.close();
+            else listOptions(choice);
         } finally {
             busy = false;
         }
     }
+
+    function show(option: string): Promise<void> {
+        return change((open) => open.onShow(option));
+    }
+
+    /** Add an option bound by `binding`, and show it. */
+    function add(binding: Binding): Promise<void> {
+        return change(async (open) => {
+            const before = new Set(listed?.options.map((option) => option.id));
+            const choice = await open.onAddOption(binding);
+            const added = choice?.options.find((option) => !before.has(option.id));
+            return added ? open.onShow(added.id) : choice;
+        });
+    }
+
+    function removeOption(option: string): Promise<void> {
+        return change((open) => open.onRemoveOption(option));
+    }
+
+    on(addOption, "click", () => {
+        if (listed) void add({ when: { values: [newValue(listed)] } });
+    });
+    on(addOtherwise, "click", () => void add("otherwise"));
 
     async function run(work: () => Promise<void>): Promise<void> {
         if (busy) return;

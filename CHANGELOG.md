@@ -90,7 +90,11 @@ listed once, by package. Its major and minor version are those of the
   A choice's slide shows one of its options, the first until its popover, or
   an option's, picks another, and the others take no room. The pick is the
   editor's and edits nothing: the deck opened again shows each choice's
-  first.
+  first. The popover adds and takes out options too, each one undo step:
+  the bin on an option's row takes it out, all it holds with it, but a
+  choice's last; Add option adds one, for the first letter no option has,
+  before the otherwise, and Add otherwise, where the choice has none, adds
+  one last. An option added is shown.
   A deck's places are drawn over its slides as brackets at their very
   edge, its binding markup: a [ and a ] around a place within a paragraph, a tall pair either
   side of one around whole paragraphs, and a choice's those of the option it

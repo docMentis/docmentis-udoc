@@ -135,6 +135,9 @@ export const de: EditMessages = {
     "place.values": "Werte",
     "place.shown": "Angezeigte Option",
     "place.remove": "Entfernen",
+    "place.addOption": "Option hinzufügen",
+    "place.addOtherwise": "Sonst hinzufügen",
+    "place.removeOption": "Option entfernen",
     "place.invalid":
         "Ein Pfad besteht aus Namen aus Buchstaben, Ziffern und _, durch Punkte verbunden; ein Wert enthält kein Anführungszeichen.",
     "command.bindingMarkup": "Bindungsmarkierungen",

@@ -3701,6 +3701,8 @@ const TEXT_KINDS: Record<TextSelectionEditType, "text"> = {
     bind: "text",
     rebind: "text",
     unbind: "text",
+    addBindingOption: "text",
+    removeBindingOption: "text",
 };
 const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
     translateShapes: "shape",

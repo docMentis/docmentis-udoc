@@ -135,6 +135,9 @@ export const fr: EditMessages = {
     "place.values": "Valeurs",
     "place.shown": "Option affichée",
     "place.remove": "Supprimer",
+    "place.addOption": "Ajouter une option",
+    "place.addOtherwise": "Ajouter Sinon",
+    "place.removeOption": "Supprimer l’option",
     "place.invalid":
         "Un chemin est fait de noms en lettres, chiffres et _, joints par des points ; une valeur ne contient pas de guillemet.",
     "command.bindingMarkup": "Marques de liaison",

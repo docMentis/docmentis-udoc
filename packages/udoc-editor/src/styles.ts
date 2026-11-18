@@ -1328,13 +1328,73 @@ export const editorStyles = css`
         padding: 0;
         margin-bottom: 4px;
     }
+    .udoc-ui-root .udoc-place-popover__option-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+    }
     .udoc-ui-root .udoc-place-popover__option {
+        flex: 1;
+        min-width: 0;
         display: flex;
         align-items: center;
         gap: 6px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+    /* An option's bin, and what adds one: quiet icon buttons, as the Data
+       panel's for an array's items. */
+    .udoc-ui-root .udoc-place-popover__remove-option,
+    .udoc-ui-root .udoc-place-popover__add {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        height: 24px;
+        padding: 0;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--udoc-color-on-surface-variant);
+        font: inherit;
+        cursor: pointer;
+    }
+    .udoc-ui-root .udoc-place-popover__remove-option {
+        width: 24px;
+    }
+    .udoc-ui-root .udoc-place-popover__add {
+        padding: 0 6px 0 2px;
+        color: var(--udoc-color-primary);
+    }
+    .udoc-ui-root .udoc-place-popover__add[hidden] {
+        display: none;
+    }
+    .udoc-ui-root .udoc-place-popover__remove-option:hover:not(:disabled),
+    .udoc-ui-root .udoc-place-popover__add:hover {
+        background-image: linear-gradient(var(--udoc-state-hover) 0 0);
+    }
+    .udoc-ui-root .udoc-place-popover__remove-option:disabled {
+        opacity: 0.38;
+        cursor: default;
+    }
+    .udoc-ui-root .udoc-place-popover__remove-option:focus-visible,
+    .udoc-ui-root .udoc-place-popover__add:focus-visible {
+        outline: 2px solid var(--udoc-color-primary);
+        outline-offset: -2px;
+    }
+    .udoc-ui-root .udoc-place-popover__remove-option svg,
+    .udoc-ui-root .udoc-place-popover__add svg {
+        width: 18px;
+        height: 18px;
+    }
+    .udoc-ui-root .udoc-place-popover__adding {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 2px;
     }
     .udoc-ui-root .udoc-place-popover__footer {
         display: flex;

@@ -276,6 +276,27 @@ export function editMode(options: UDocEditorOptions): EditMode {
                     places?.refresh();
                     return mounted.client.bindingChoice(id);
                 },
+                // A choice's options, added and taken out as edits of its
+                // text, each one undo step.
+                onAddOption: async (option) => {
+                    if (choice === null) return null;
+                    await mounted.commit(() =>
+                        mounted.client.executeOnSelection({
+                            kind: "addBindingOption",
+                            choice: choice.id,
+                            binding: option,
+                        }),
+                    );
+                    places?.refresh();
+                    return mounted.client.bindingChoice(id);
+                },
+                onRemoveOption: async (option) => {
+                    await mounted.commit(() =>
+                        mounted.client.executeOnSelection({ kind: "removeBindingOption", option }),
+                    );
+                    places?.refresh();
+                    return mounted.client.bindingChoice(id);
+                },
                 // A shape a binding makes a place is bound otherwise, or
                 // unbound, as a shape; a place in text as text.
                 onApply: (binding) =>

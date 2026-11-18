@@ -260,6 +260,12 @@ export interface Messages extends UIMessages {
     "place.shown": string;
     /** Remove — dissolve a place, keeping its content */
     "place.remove": string;
+    /** Add option */
+    "place.addOption": string;
+    /** Add otherwise */
+    "place.addOtherwise": string;
+    /** Remove option */
+    "place.removeOption": string;
     /** A path is names of letters, digits and _, joined by dots; a value holds no quote mark. */
     "place.invalid": string;
     /** Binding Markup — show or hide the brackets and bars of a deck's places */

@@ -1797,6 +1797,14 @@ export type SelectionEdit =
     | { kind: "rebind"; place: BindingControlId; binding: Binding }
     /** Text: dissolve the place `place`, in the selected text, keeping its content. */
     | { kind: "unbind"; place: BindingControlId }
+    /** Text: add an option bound by `binding` — a `when` with its values, or
+     *  the `otherwise` — to the choice `choice`, in the selected text, holding
+     *  its placeholder: before the choice's otherwise, or last where it has
+     *  none. */
+    | { kind: "addBindingOption"; choice: BindingControlId; binding: Binding }
+    /** Text: take the option `option`, in the selected text, out of its
+     *  choice with all it holds. A choice keeps its last option. */
+    | { kind: "removeBindingOption"; option: BindingControlId }
     /** Shapes: make each selected whole shape a place binding `binding`, a
      *  condition, which a fill shows the shape by or hides it by. Offered in a
      *  template alone. */
