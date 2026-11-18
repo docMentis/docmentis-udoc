@@ -382,6 +382,8 @@ export const ru: Messages = {
     "data.error.unclosedPair": "Не закрыт",
     "data.error.unmatchedClose": "Не закрывает последний открытый тег",
     "data.error.misplacedOption": "Вне выбора или после его otherwise",
+    "data.error.emptyChoice": "Не содержит ни одного варианта",
+    "data.error.textBeforeOption": "Текст перед его первым вариантом",
     "data.error.splitPair": "Расположен не так, как открывающий тег",
     "data.add": "Добавить",
     "data.remove": "Удалить",

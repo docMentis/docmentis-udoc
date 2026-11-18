@@ -382,6 +382,8 @@ export const ja: Messages = {
     "data.error.unclosedPair": "閉じられていません",
     "data.error.unmatchedClose": "最後に開いたタグを閉じていません",
     "data.error.misplacedOption": "選択の外、または otherwise の後にあります",
+    "data.error.emptyChoice": "オプションがありません",
+    "data.error.textBeforeOption": "最初のオプションの前にテキストがあります",
     "data.error.splitPair": "開始タグと同じ位置に置かれていません",
     "data.add": "追加",
     "data.remove": "削除",

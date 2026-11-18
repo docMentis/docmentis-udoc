@@ -713,6 +713,10 @@ export interface Messages {
     "data.error.unmatchedClose": string;
     /** Outside a choice, or after its otherwise — a misplaced option */
     "data.error.misplacedOption": string;
+    /** Holds no option — a choice's opening tag, where the choice has no option */
+    "data.error.emptyChoice": string;
+    /** Text before its first option — a choice's opening tag, where text stands before its first option */
+    "data.error.textBeforeOption": string;
     /** Not placed like its opening tag — alone in its paragraph or sharing it, unlike the tag that opened the pair */
     "data.error.splitPair": string;
     /** Add — adds an item to an array in the sample data */

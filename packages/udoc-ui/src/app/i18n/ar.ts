@@ -380,6 +380,8 @@ export const ar: Messages = {
     "data.error.unclosedPair": "لم تُغلق أبدًا",
     "data.error.unmatchedClose": "لا تغلق آخر علامة فُتحت",
     "data.error.misplacedOption": "خارج اختيار أو بعد otherwise الخاص به",
+    "data.error.emptyChoice": "لا يحتوي على أي خيار",
+    "data.error.textBeforeOption": "نص قبل خياره الأول",
     "data.error.splitPair": "ليست موضوعة مثل علامة الفتح الخاصة بها",
     "data.add": "إضافة",
     "data.remove": "إزالة",

@@ -380,6 +380,8 @@ export const zhCN: Messages = {
     "data.error.unclosedPair": "从未闭合",
     "data.error.unmatchedClose": "未闭合最后打开的标记",
     "data.error.misplacedOption": "在选择之外，或在其 otherwise 之后",
+    "data.error.emptyChoice": "不含任何选项",
+    "data.error.textBeforeOption": "第一个选项之前有文字",
     "data.error.splitPair": "位置与其开始标记不一致",
     "data.add": "添加",
     "data.remove": "删除",

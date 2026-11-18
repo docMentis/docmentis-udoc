@@ -382,6 +382,8 @@ export const de: Messages = {
     "data.error.unclosedPair": "Nie geschlossen",
     "data.error.unmatchedClose": "Schließt nicht das zuletzt geöffnete Tag",
     "data.error.misplacedOption": "Außerhalb einer Auswahl oder nach deren otherwise",
+    "data.error.emptyChoice": "Enthält keine Option",
+    "data.error.textBeforeOption": "Text vor ihrer ersten Option",
     "data.error.splitPair": "Nicht wie sein öffnendes Tag platziert",
     "data.add": "Hinzufügen",
     "data.remove": "Entfernen",

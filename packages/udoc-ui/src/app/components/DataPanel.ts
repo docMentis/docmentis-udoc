@@ -115,6 +115,10 @@ function errorMessage(error: BindingError): MessageKey {
             return "data.error.unmatchedClose";
         case "misplacedOption":
             return "data.error.misplacedOption";
+        case "emptyChoice":
+            return "data.error.emptyChoice";
+        case "textBeforeOption":
+            return "data.error.textBeforeOption";
         case "splitPair":
             return "data.error.splitPair";
         case "conflictingType":

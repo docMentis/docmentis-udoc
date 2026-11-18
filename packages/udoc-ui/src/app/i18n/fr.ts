@@ -382,6 +382,8 @@ export const fr: Messages = {
     "data.error.unclosedPair": "Jamais fermée",
     "data.error.unmatchedClose": "Ne ferme pas la dernière balise ouverte",
     "data.error.misplacedOption": "Hors d'un choix, ou après son otherwise",
+    "data.error.emptyChoice": "Ne contient aucune option",
+    "data.error.textBeforeOption": "Du texte avant sa première option",
     "data.error.splitPair": "Pas placée comme sa balise d'ouverture",
     "data.add": "Ajouter",
     "data.remove": "Supprimer",

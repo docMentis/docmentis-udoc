@@ -382,6 +382,8 @@ export const es: Messages = {
     "data.error.unclosedPair": "Nunca se cierra",
     "data.error.unmatchedClose": "No cierra la última etiqueta abierta",
     "data.error.misplacedOption": "Fuera de una elección o después de su otherwise",
+    "data.error.emptyChoice": "No contiene ninguna opción",
+    "data.error.textBeforeOption": "Texto antes de su primera opción",
     "data.error.splitPair": "No está colocada como su etiqueta de apertura",
     "data.add": "Agregar",
     "data.remove": "Quitar",

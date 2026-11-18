@@ -382,6 +382,8 @@ export const ptBR: Messages = {
     "data.error.unclosedPair": "Nunca fechada",
     "data.error.unmatchedClose": "Não fecha a última tag aberta",
     "data.error.misplacedOption": "Fora de uma escolha ou depois do seu otherwise",
+    "data.error.emptyChoice": "Não contém nenhuma opção",
+    "data.error.textBeforeOption": "Texto antes da sua primeira opção",
     "data.error.splitPair": "Não está posicionada como a tag de abertura",
     "data.add": "Adicionar",
     "data.remove": "Remover",

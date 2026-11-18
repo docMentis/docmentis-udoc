@@ -383,6 +383,8 @@ export const en: Messages = {
     "data.error.unclosedPair": "Never closed",
     "data.error.unmatchedClose": "Doesn't close the last tag opened",
     "data.error.misplacedOption": "Outside a choice, or after its otherwise",
+    "data.error.emptyChoice": "Holds no option",
+    "data.error.textBeforeOption": "Text before its first option",
     "data.error.splitPair": "Not placed like its opening tag",
     "data.add": "Add",
     "data.remove": "Remove",

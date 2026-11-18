@@ -382,6 +382,8 @@ export const ko: Messages = {
     "data.error.unclosedPair": "닫히지 않았습니다",
     "data.error.unmatchedClose": "마지막으로 연 태그를 닫지 않습니다",
     "data.error.misplacedOption": "선택 밖이나 otherwise 뒤에 있습니다",
+    "data.error.emptyChoice": "옵션이 없습니다",
+    "data.error.textBeforeOption": "첫 옵션 앞에 텍스트가 있습니다",
     "data.error.splitPair": "여는 태그와 같은 방식으로 놓이지 않았습니다",
     "data.add": "추가",
     "data.remove": "제거",

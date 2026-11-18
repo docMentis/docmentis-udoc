@@ -380,6 +380,8 @@ export const zhTW: Messages = {
     "data.error.unclosedPair": "從未關閉",
     "data.error.unmatchedClose": "未關閉最後開啟的標記",
     "data.error.misplacedOption": "在選擇之外，或在其 otherwise 之後",
+    "data.error.emptyChoice": "不含任何選項",
+    "data.error.textBeforeOption": "第一個選項之前有文字",
     "data.error.splitPair": "位置與其開始標記不一致",
     "data.add": "新增",
     "data.remove": "移除",
