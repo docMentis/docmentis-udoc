@@ -1623,9 +1623,9 @@ export function mountUIShell(
                 store.dispatch({
                     type: "SET_DATA_HOVER",
                     bindingPlaces: entries.flatMap((entry) => {
-                        if ("text" in entry) return [entry.text.id];
-                        if ("shape" in entry) return [entry.shape.shape];
-                        return [];
+                        if (!("place" in entry)) return [];
+                        const { bindingPlace } = entry.place;
+                        return ["text" in bindingPlace ? bindingPlace.text.id : bindingPlace.shape.id];
                     }),
                 }),
             onSampleData: setSampleData,
@@ -3747,26 +3747,17 @@ export function mountUIShell(
     );
 
     // Select the next of the entries a Data panel row `key` stands for, and
-    // bring its slide into view: a binding place in text or a tag where it is,
-    // a shape whole.
+    // bring its slide into view: a binding place whole, a tag where it is.
     async function chooseDataEntry(key: string, entries: readonly PresentationBindingEntry[]): Promise<void> {
         if (entries.length === 0) return;
         const index = ((dataEntryChosen.get(key) ?? -1) + 1) % entries.length;
         dataEntryChosen.set(key, index);
         const entry = entries[index]!;
-        const { slide: slideIndex } = entryFields(entry);
-        client.goToPage(slideIndex);
-        if ("shape" in entry) {
-            const slide = await client.presentation.slideId(slideIndex);
-            if (slide !== null) {
-                setSelection({
-                    presentation: { shapes: { container: { slide }, selection: { shapes: [entry.shape.shape] } } },
-                });
-            }
-            return;
-        }
-        const { location } = "text" in entry ? entry.text : entry.tag;
-        const selection = await client.searchMatchSelection(location);
+        client.goToPage(entryFields(entry).slide);
+        const selection =
+            "place" in entry
+                ? await client.bindingPlaceSelection(entry.place.bindingPlace)
+                : await client.searchMatchSelection(entry.tag.location);
         if (selection) setSelection(selection);
     }
 

@@ -11,13 +11,11 @@ import type {
 } from "@docmentis/udoc-wasm";
 
 /** What an entry of a deck's binding report holds, whichever kind it is — a
- *  binding place in text, a shape, or a tag in a plain deck's text: its slide,
- *  the binding as written, its path and what is wrong with it, beside what
- *  only its kind has. */
+ *  binding place, or a tag in a plain deck's text: its slide, the binding as
+ *  written, its path and what is wrong with it, beside what only its kind
+ *  has. */
 export function entryFields(entry: PresentationBindingEntry) {
-    if ("text" in entry) return entry.text;
-    if ("shape" in entry) return entry.shape;
-    return entry.tag;
+    return "place" in entry ? entry.place : entry.tag;
 }
 
 /** A place in the data: the names and indices from its root. */

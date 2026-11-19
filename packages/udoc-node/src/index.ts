@@ -35,6 +35,8 @@ export type {
     BindingSchema,
     BindingValue,
     PresentationBindingEntry,
+    PresentationBindingPlaceRef,
+    TextBindingLevel,
     UDocCommand,
 } from "@docmentis/udoc-wasm";
 export { isFileFormat } from "./format.js";

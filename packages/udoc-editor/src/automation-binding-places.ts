@@ -27,6 +27,7 @@ import type {
     Binding,
     BindingGeometry,
     Point,
+    PresentationBindingPlaceRef,
     SelectionBox,
     SelectionGeometry,
     SelectionQuad,
@@ -69,7 +70,7 @@ export interface CurrentBindingPlace {
 }
 
 /** The engine's `geometry` of a binding place, as the overlay reads it. */
-function bindingPlaceGeometry(geometry: BindingGeometry): BindingPlaceGeometry {
+function bindingPlaceGeometry(geometry: BindingGeometry<PresentationBindingPlaceRef>): BindingPlaceGeometry {
     const { bindingPlace, binding, quads } = geometry;
     return "shape" in bindingPlace
         ? { id: bindingPlace.shape.id, binding, level: "shape", quads }

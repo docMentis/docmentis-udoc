@@ -2642,6 +2642,14 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 );
                 break;
             }
+            case "bindingPlaceSelection": {
+                // A pure read — null with no open deck or nothing to select.
+                reply(
+                    id,
+                    safeRead(() => session?.bindingPlaceSelection(msg.bindingPlace) ?? null, null),
+                );
+                break;
+            }
             case "outline": {
                 // A read that loads the outline part on first use. One with no
                 // items with no open / non-portable doc.

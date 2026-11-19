@@ -49,6 +49,7 @@ import type {
     FontLocation,
     GoogleFontFamily,
     PageExportFormat,
+    PresentationBindingPlaceRef,
     SaveStrategy,
     SearchBatch,
     SearchContinuation,
@@ -1090,6 +1091,17 @@ export interface SearchMatchSelectionRequest {
 }
 
 /**
+ * Read the selection of a deck's binding place `bindingPlace` whole — a binding
+ * place in text, its content; a shape a binding makes a binding place, the
+ * shape. Replies with the {@link UDocSelection}, or `null` for any other
+ * document, or where no loaded slide holds it.
+ */
+export interface BindingPlaceSelectionRequest {
+    type: "bindingPlaceSelection";
+    bindingPlace: PresentationBindingPlaceRef;
+}
+
+/**
  * Read the portable document's outline — its bookmarks, loaded on first read.
  * Replies with the `Outline`; one with no items when the document has none (or
  * no PDF is open).
@@ -1385,9 +1397,9 @@ export interface CommentGeometryRequest {
 }
 
 /**
- * Read where each binding place a deck's text holds shows on page `page` of
- * `plane`, page-local points. Replies with `BindingGeometry`[] — none for any
- * other document, or a page with no binding places.
+ * Read where each binding place a deck holds shows on page `page` of `plane`,
+ * page-local points. Replies with `BindingGeometry<PresentationBindingPlaceRef>`[]
+ * — none for any other document, or a page with no binding places.
  */
 export interface BindingGeometryRequest {
     type: "bindingGeometry";
@@ -2484,6 +2496,7 @@ export type WorkerRequest =
     | SelectionRevisionIdsRequest
     | SearchRequest
     | SearchMatchSelectionRequest
+    | BindingPlaceSelectionRequest
     | FontInfoListRequest
     | AcroFormRequest
     | FormWidgetRequest

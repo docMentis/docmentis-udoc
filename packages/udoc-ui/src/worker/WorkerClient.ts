@@ -53,6 +53,7 @@ import type {
     PageExportFormat,
     PageMode,
     PresentationBindingEntry,
+    PresentationBindingPlaceRef,
     RevisionGeometry,
     RevisionDisplay,
     SaveStrategy,
@@ -938,14 +939,18 @@ export class WorkerClient {
     }
 
     /**
-     * Where each binding place a deck's text holds shows on page `page` of
-     * `plane`: its id, its level and its content's quads, page-local points, a
-     * caret's width where it holds only a placeholder that paints nothing —
-     * none for any other document. What the binding places overlay is drawn
-     * from.
+     * Where each binding place a deck holds shows on page `page` of `plane`:
+     * which it is, its binding and its quads, page-local points — a binding
+     * place in text's content, a caret's width where it holds only a
+     * placeholder that paints nothing; a shape's box — none for any other
+     * document. What the binding places overlay is drawn from.
      */
-    async bindingGeometry(plane: number, page: number): Promise<BindingGeometry[]> {
-        return (await this.#send({ type: "bindingGeometry", plane, page })) as BindingGeometry[];
+    async bindingGeometry(plane: number, page: number): Promise<BindingGeometry<PresentationBindingPlaceRef>[]> {
+        return (await this.#send({
+            type: "bindingGeometry",
+            plane,
+            page,
+        })) as BindingGeometry<PresentationBindingPlaceRef>[];
     }
 
     /**
@@ -991,6 +996,16 @@ export class WorkerClient {
      */
     async searchMatchSelection(location: SearchMatchLocation): Promise<UDocSelection | null> {
         return (await this.#send({ type: "searchMatchSelection", location })) as UDocSelection | null;
+    }
+
+    /**
+     * The selection of a deck's binding place `bindingPlace` whole — a binding
+     * place in text, its content; a shape a binding makes a binding place, the
+     * shape — for {@link setSelection}. `null` for any other document, or
+     * where no loaded slide holds it.
+     */
+    async bindingPlaceSelection(bindingPlace: PresentationBindingPlaceRef): Promise<UDocSelection | null> {
+        return (await this.#send({ type: "bindingPlaceSelection", bindingPlace })) as UDocSelection | null;
     }
 
     /**
