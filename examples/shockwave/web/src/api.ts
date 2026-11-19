@@ -123,9 +123,12 @@ export const api = {
     async versions(assetId: string): Promise<Version[]> {
         return (await request<{ versions: Version[] }>(`/api/assets/${assetId}/versions`)).versions;
     },
-    /** Save a file's document as it is now as a new version, with `note`. */
-    saveVersion: (assetId: string, note: string) =>
-        request<VersionedAsset>(`/api/assets/${assetId}/versions`, withJson("POST", { note })),
+    /**
+     * Save a file's working copy as it is now as a new version, with `note`; or
+     * with `review`, a version's number, that version's review, once it's decided.
+     */
+    saveVersion: (assetId: string, note: string, review?: number) =>
+        request<VersionedAsset>(`/api/assets/${assetId}/versions`, withJson("POST", { note, review })),
     /**
      * Take `step` with version `number` of a file, with `note`, and for a step
      * that sends it to someone, `reviewerId`; an `ApiError` `409` for a version

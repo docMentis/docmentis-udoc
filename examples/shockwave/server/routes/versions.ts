@@ -5,8 +5,11 @@
 // version is saved as a draft, submitted to a reviewer, who alone then approves
 // or returns it; one returned stays so, and what changes goes in a new version.
 // It's reviewed in a branch of the document started at it, where its reviewer
-// comments; deciding merges the branch into the working copy, so each comment
-// reaches whoever edits it, on what it was made on, wherever that has moved.
+// comments, and suggests changes to a Word document. Deciding leaves the branch as
+// it is, the version's review, for those who edit the file to take up: they go on
+// working in it, and save a version from it to submit; or they bring it into the
+// working copy, so each comment reaches whoever edits it, on what it was made on,
+// wherever that has moved. Either, or both, as often as they like.
 // Any approved version may be published, an older one taking the file back to
 // it. No one reviews what they submitted themselves. A deal room's file has its
 // versions the same way, those who enter the room in place of those who keep the
@@ -34,6 +37,9 @@ import { Refusal, noteOf, signedIn } from "../http.ts";
 import type { Access } from "../scope.ts";
 import { keepThumbnails } from "./thumbnails.ts";
 
+/** Where a version stands once its reviewer has decided it: its review is there to take up. */
+const DECIDED: VersionStatus[] = ["approved", "returned"];
+
 /**
  * What each step asks of a version and its user: who takes it, of those who edit
  * the file and those who review; and what it leaves: its status, or as it was with
@@ -54,7 +60,8 @@ const STEPS: Record<
     return: { taker: "reviewer", from: ["submitted"], to: "returned", event: "returned", needsNote: true },
     publish: { taker: "editor", from: ["approved"], event: "published" },
     reassign: { taker: "either", from: ["submitted"], event: "reassigned" },
-    dismiss: { taker: "editor", from: ["approved", "returned"], event: "dismissed" },
+    dismiss: { taker: "editor", from: DECIDED, event: "dismissed" },
+    merge: { taker: "editor", from: DECIDED, event: "merged" },
 };
 
 interface VersionRow {
@@ -64,6 +71,7 @@ interface VersionRow {
     reviewer_id: string | null;
     reviewer_name: string | null;
     review_branch: string | null;
+    from_review: number | null;
 }
 
 interface EventRow {
@@ -87,7 +95,7 @@ export function versionsOf(db: TenantDb, assetId: string): Version[] {
     const rows = db
         .prepare(
             `SELECT versions.number, versions.checkpoint, versions.status, versions.reviewer_id,
-                users.name AS reviewer_name, versions.review_branch
+                users.name AS reviewer_name, versions.review_branch, versions.from_review
             FROM versions LEFT JOIN users ON users.tenant_id = versions.tenant_id AND users.id = versions.reviewer_id
             WHERE versions.tenant_id = :tenant AND versions.asset_id = ? ORDER BY versions.number DESC`,
         )
@@ -109,6 +117,7 @@ export function versionsOf(db: TenantDb, assetId: string): Version[] {
         status,
         reviewer: reviewerId === null ? null : { id: reviewerId, name: reviewerName! },
         reviewBranch: row.review_branch,
+        fromReview: row.from_review,
         events: events
             .filter((event) => event.number === number)
             .map((event) => ({
@@ -148,7 +157,11 @@ export function addEvent(
     ).run(assetId, number, kind, userId, toUserId, at, note);
 }
 
-/** Record a new version of file `assetId`, checkpoint `checkpoint`, a draft: its number. Run in a transaction. */
+/**
+ * Record a new version of file `assetId`, checkpoint `checkpoint`, a draft,
+ * saved from the review of version `fromReview`, or `null`, the working copy:
+ * its number. Run in a transaction.
+ */
 function addVersion(
     db: TenantDb,
     assetId: string,
@@ -156,14 +169,16 @@ function addVersion(
     userId: string,
     at: number,
     note: string | null,
+    fromReview: number | null = null,
 ): number {
     const { latest } = db
         .prepare("SELECT MAX(number) AS latest FROM versions WHERE tenant_id = :tenant AND asset_id = ?")
         .get(assetId) as { latest: number | null };
     const number = (latest ?? 0) + 1;
     db.prepare(
-        "INSERT INTO versions (tenant_id, asset_id, number, checkpoint, status) VALUES (:tenant, ?, ?, ?, 'draft')",
-    ).run(assetId, number, checkpoint);
+        `INSERT INTO versions (tenant_id, asset_id, number, checkpoint, status, from_review)
+        VALUES (:tenant, ?, ?, ?, 'draft', ?)`,
+    ).run(assetId, number, checkpoint, fromReview);
     addEvent(db, { assetId, number, kind: "saved", userId, at, note });
     return number;
 }
@@ -201,6 +216,25 @@ function reviewerOf(db: TenantDb, value: unknown, submitterId: string): string {
     if (!row || !reviewsLibrary(row.role)) throw new Refusal(400, "notAReviewer", "that person doesn't review");
     if (value === submitterId) throw OWN_SUBMISSION();
     return value;
+}
+
+/**
+ * `value`, the number of a version of file `assetId` whose review a new version
+ * is saved from: `undefined` for none, the working copy; otherwise the review's
+ * branch. A `400` for what isn't a version's number, a `404` for no such
+ * version, and a `409` for one whose review isn't decided.
+ */
+function decidedReview(db: TenantDb, assetId: string, value: unknown): { number: number; branch: string } | undefined {
+    if (value === undefined || value === null) return undefined;
+    if (typeof value !== "number" || !Number.isInteger(value))
+        throw new Refusal(400, "badRequest", "a review is named by its version's number");
+    const row = db
+        .prepare("SELECT status, review_branch FROM versions WHERE tenant_id = :tenant AND asset_id = ? AND number = ?")
+        .get(assetId, value) as Pick<VersionRow, "status" | "review_branch"> | undefined;
+    if (!row) throw new Refusal(404, "notFound", "no such version");
+    if (row.review_branch === null || !DECIDED.includes(row.status))
+        throw new Refusal(409, "wrongStatus", "only an approved or returned version's review is saved from");
+    return { number: value, branch: row.review_branch };
 }
 
 /** Whether version `number` of file `assetId` has had an event of one of `kinds`. */
@@ -312,11 +346,12 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
     });
 
     /**
-     * Save the file's document as it is now as a new version, `{ note }`: a
-     * checkpoint udoc-server takes, each of its pages kept as that version's
-     * thumbnails. `201`, a `VersionedAsset`.
+     * Save the file's working copy as it is now as a new version, `{ note }`, or
+     * with `review`, a version's number, that version's review, once it's
+     * decided: a checkpoint udoc-server takes, each of its pages kept as that
+     * version's thumbnails. `201`, a `VersionedAsset`.
      */
-    app.post<{ Params: { id: string }; Body: { note?: unknown } | undefined }>(
+    app.post<{ Params: { id: string }; Body: { note?: unknown; review?: unknown } | undefined }>(
         "/api/assets/:id/versions",
         async (request, reply) => {
             const { user, db, documents } = signedIn(access, request);
@@ -324,10 +359,13 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
             if (!editsFile(db, user, file)) throw new Refusal(403, "forbidden", "your role doesn't let you do this");
             const { id, documentId } = file;
             const note = noteOf(request.body?.note);
-            const checkpoint = await documents.checkpoint(documentId);
-            const number = db.transaction(() => addVersion(db, id, checkpoint, user.id, Date.now(), note));
+            const review = decidedReview(db, id, request.body?.review);
+            const checkpoint = await documents.checkpoint(documentId, review?.branch);
+            const number = db.transaction(() =>
+                addVersion(db, id, checkpoint, user.id, Date.now(), note, review?.number ?? null),
+            );
             try {
-                await keepThumbnails(db, documents, { assetId: id, documentId, number });
+                await keepThumbnails(db, documents, { assetId: id, documentId, number, branch: review?.branch });
             } catch (error) {
                 // The version is kept all the same, with no thumbnails.
                 request.log.warn(error, "thumbnails weren't rendered");
@@ -342,9 +380,9 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
      * for a step that sends it to someone: a `VersionedAsset`; a `403` for a
      * user the step isn't theirs to take; and a `409` for a version not where
      * it starts from, or that has taken it already. Submitting starts the branch
-     * it's reviewed in; approving or returning merges that branch into the working
-     * copy, after the step is kept: a merge that fails leaves the comments in the
-     * branch, which the version still opens.
+     * it's reviewed in; approving or returning leaves it as it is; and merging
+     * brings it into the working copy, before the step is kept: a merge udoc-server
+     * refuses is no step taken, and answers as it does.
      */
     for (const [step, { taker, from, to, event, needsNote }] of Object.entries(STEPS)) {
         app.post<{
@@ -406,8 +444,12 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
             )
                 throw new Refusal(409, "wrongStatus", "this version isn't waiting on anyone");
 
+            if (step === "merge" && row.review_branch === null)
+                throw new Refusal(409, "wrongStatus", "this version has no review to bring in");
+
             const note = noteOf(request.body?.note);
             if (needsNote && !note) throw new Refusal(400, "badRequest", "a note is needed");
+            if (step === "merge") await documents.mergeBranch(asset.documentId, row.review_branch!);
             const branch = step === "submit" ? await documents.startBranch(asset.documentId, row.checkpoint) : null;
             db.transaction(() => {
                 db.prepare(
@@ -429,13 +471,6 @@ export function versionRoutes(app: FastifyInstance, access: Access): void {
                     note,
                 });
             });
-            if ((step === "approve" || step === "return") && row.review_branch !== null) {
-                try {
-                    await documents.mergeBranch(asset.documentId, row.review_branch);
-                } catch (error) {
-                    request.log.warn(error, "the review's branch wasn't merged into the working copy");
-                }
-            }
             return { asset: anyFileOf(db, asset.id), versions: versionsOf(db, asset.id) };
         });
     }

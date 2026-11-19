@@ -174,8 +174,11 @@ export interface Asset {
  */
 export type VersionStatus = "draft" | "submitted" | "approved" | "returned";
 
-/** What's done to a version: `POST /api/assets/:id/versions/:number/:step`. */
-export type VersionStep = "submit" | "approve" | "return" | "publish" | "reassign" | "dismiss";
+/**
+ * What's done to a version: `POST /api/assets/:id/versions/:number/:step`;
+ * `merge`, bringing its review into the working copy once it's decided.
+ */
+export type VersionStep = "submit" | "approve" | "return" | "publish" | "reassign" | "dismiss" | "merge";
 
 /** Someone a version can be sent to for review. */
 export interface Reviewer {
@@ -187,7 +190,7 @@ export interface Reviewer {
 
 /** Something that happened to a version. */
 export interface VersionEvent {
-    kind: "saved" | "submitted" | "approved" | "returned" | "published" | "reassigned" | "dismissed";
+    kind: "saved" | "submitted" | "approved" | "returned" | "published" | "reassigned" | "dismissed" | "merged";
     by: { id: string; name: string };
     /** Who it was sent to, for one submitted or reassigned; otherwise `null`. */
     to: { id: string; name: string } | null;
@@ -209,12 +212,16 @@ export interface Version {
     /** Who reviews it, or reviewed it; `null` before it's submitted. */
     reviewer: { id: string; name: string } | null;
     /**
-     * The branch it's reviewed in, `null` before it's submitted: started at its
-     * checkpoint, opened from `/udoc/documents/:documentId/branches/:reviewBranch/package`,
-     * and what its reviewer comments goes there, then into the working copy once
-     * they approve or return it.
+     * The branch it's reviewed in, its review, `null` before it's submitted:
+     * started at its checkpoint, opened from
+     * `/udoc/documents/:documentId/branches/:reviewBranch/package`, and what its
+     * reviewer writes goes there. Once they approve or return it, those who edit
+     * the file go on working in it, save versions from it, and bring it into the
+     * working copy, as they choose.
      */
     reviewBranch: string | null;
+    /** The version whose review it was saved from; `null` for one saved from the working copy, or uploaded. */
+    fromReview: number | null;
     /** What happened to it, oldest first; the first, its being saved. */
     events: VersionEvent[];
 }

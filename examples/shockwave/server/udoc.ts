@@ -14,7 +14,8 @@
 // asking udoc-server to change it, fill it or make a copy of it; those who enter a
 // deal room, doing either with its files, and a reviewer, reading the versions sent
 // to them and the branches they're reviewed in, and editing a branch while its
-// version waits on them; one who made a document through the gate, a template's
+// version waits on them, which those who edit the file do once they've decided;
+// one who made a document through the gate, a template's
 // filled copy, doing what they like with it; and a buyer's, with no account,
 // reading a file a frontstage's link shows, at the version it shows. Deleting a
 // document an asset holds, or a branch of it, is the backend's alone.
@@ -94,18 +95,26 @@ export interface TenantDocuments {
      * how many bytes it is.
      */
     copyCheckpoint(id: string, checkpoint: number, format: string): Promise<{ id: string; size: number }>;
-    /** Save document `id`'s working copy as it is now as a new checkpoint: the checkpoint's number. */
-    checkpoint(id: string): Promise<number>;
+    /**
+     * Save document `id`'s working copy as it is now as a new checkpoint, or with
+     * `branch`, that branch as it is now: the checkpoint's number.
+     */
+    checkpoint(id: string, branch?: string): Promise<number>;
     /** Start a branch of document `id` at checkpoint `checkpoint`: the branch's id. */
     startBranch(id: string, checkpoint: number): Promise<string>;
-    /** Merge branch `branch` of document `id` into its working copy: each edit made in it reaches the copy's editors and its log. */
+    /**
+     * Merge branch `branch` of document `id` into its working copy: each edit made
+     * in it the copy lacks reaches the copy's editors and its log. Merged again, it
+     * brings what's been made since.
+     */
     mergeBranch(id: string, branch: string): Promise<void>;
     /**
      * Document `id`'s pages as PNGs, in order, `scale` pixels to a point, up to
      * the first udoc-server turns down: none for a workbook, whose first page is
-     * all of its first sheet (GAPS.md).
+     * all of its first sheet (GAPS.md). Its working copy's, or with `branch`, that
+     * branch's.
      */
-    renderPages(id: string, scale: number): Promise<Uint8Array[]>;
+    renderPages(id: string, scale: number, branch?: string): Promise<Uint8Array[]>;
     /**
      * Fill a copy of document `id`, a template — at checkpoint `checkpoint`, or as
      * it is now — with `data`, filled by udoc-server and kept as a new document of
@@ -339,15 +348,30 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
         return checkpoint !== undefined && published(tenant, id!, Number(checkpoint)) ? { tenantId } : unknown;
     }
 
+    /** Whether branch `branch` of document `id` is the one a version was reviewed in, and its reviewer has decided it. */
+    function reviewDecided(tenant: TenantDb, id: string, branch: string): boolean {
+        const row = tenant
+            .prepare(
+                `SELECT 1 FROM versions JOIN assets ON assets.tenant_id = versions.tenant_id
+                    AND assets.id = versions.asset_id
+                WHERE versions.tenant_id = :tenant AND assets.document_id = ? AND versions.review_branch = ?
+                    AND versions.status IN ('approved', 'returned')`,
+            )
+            .get(id, branch);
+        return row !== undefined;
+    }
+
     /**
      * Whether `user` edits document `id`'s branch `branch`: its working copy,
      * `main`, if they change it; a review branch, if they're the reviewer it waits
-     * on. No one else writes in a review.
+     * on, and once they've decided, if they change the working copy. No one else
+     * writes in a review.
      */
     function edits(tenant: TenantDb, user: User, id: string, branch: string): boolean {
-        if (branch !== MAIN_BRANCH) return branchSentToReview(tenant, id, branch, user.id, true);
         const room = roomOfDocument(tenant, id);
-        return room ? entersDealRoom(tenant, user, room.roomId) : managesLibrary(user.role);
+        const changes = room ? entersDealRoom(tenant, user, room.roomId) : managesLibrary(user.role);
+        if (branch === MAIN_BRANCH) return changes;
+        return branchSentToReview(tenant, id, branch, user.id, true) || (changes && reviewDecided(tenant, id, branch));
     }
 
     /** The tenant of the document `request`, a WebSocket upgrade, joins a collaboration of, if the user {@link edits} it. */
@@ -448,8 +472,12 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
                     }
                 },
 
-                async checkpoint(id) {
-                    const response = await ask(tenantId, "POST", `/documents/${encodeURIComponent(id)}/checkpoints`);
+                async checkpoint(id, branch) {
+                    const document = `/documents/${encodeURIComponent(id)}`;
+                    const path = branch
+                        ? `${document}/branches/${encodeURIComponent(branch)}/versions`
+                        : `${document}/checkpoints`;
+                    const response = await ask(tenantId, "POST", path);
                     return ((await response.json()) as { version: number }).version;
                 },
 
@@ -492,8 +520,8 @@ export async function createUdoc(db: DatabaseSync): Promise<Udoc> {
                     return read;
                 },
 
-                async renderPages(id, scale) {
-                    const document = `/documents/${encodeURIComponent(id)}`;
+                async renderPages(id, scale, branch) {
+                    const document = `/documents/${encodeURIComponent(id)}${branch ? `/branches/${encodeURIComponent(branch)}` : ""}`;
                     const counted = await ask(tenantId, "GET", `${document}/layout/page-count`);
                     const { pageCount } = (await counted.json()) as { pageCount: number };
                     const pages: Uint8Array[] = [];

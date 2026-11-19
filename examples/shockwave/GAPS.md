@@ -123,6 +123,24 @@ alone.
 **Workaround.** A reviewer comments on a deck, a word document or a workbook,
 and draws only on a PDF.
 
+## Only the browser keeps a reviewer out of edit mode
+
+**Needed.** A reviewer who suggests changes and comments, and changes nothing
+outright: in a Word document, each of their edits a tracked change under their
+name.
+
+**Offered.** The editor's `allowedModes`, `["review", "view"]`, leaves edit mode
+out, so its toolbar records each edit a reviewer makes as a tracked change. But
+that's the browser's choice. udoc-server's collaboration takes whatever edit a
+client joined to it sends, and neither it nor a gate in front of it can tell a
+tracked change or a comment from any other edit, as a merge can't either
+([Node Branches](../../docs/design/node-branches.md)).
+
+**Workaround.** The reviewer's editor allows review and view mode alone, and the
+gate lets them write in the version's review branch alone, while it waits on them.
+What they write reaches the working copy only when someone who edits the file
+brings it in, having seen it there first (`web/src/FileWorkspace.tsx`).
+
 ## A new upload can't become a version of a document
 
 **Needed.** A revised file, edited in PowerPoint on someone's own computer,

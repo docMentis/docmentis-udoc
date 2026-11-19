@@ -335,8 +335,9 @@ const versionProbes = (file) => [
     probe("GET", "/api/assets/:id", (x) => ({ id: x[file] })),
     probe("GET", "/api/assets/:id/versions", (x) => ({ id: x[file] })),
     probe("POST", "/api/assets/:id/versions", (x) => ({ id: x[file] }), { body: { note: "taken" } }),
+    probe("POST", "/api/assets/:id/versions", (x) => ({ id: x[file] }), { body: { note: "taken", review: 1 } }),
     probe("GET", "/api/thumbnails/:assetId/:number/:page", (x) => ({ assetId: x[file], number: 1, page: 0 })),
-    ...["submit", "approve", "return", "publish", "reassign", "dismiss"].map((step) =>
+    ...["submit", "approve", "return", "publish", "reassign", "dismiss", "merge"].map((step) =>
         probe("POST", `/api/assets/:id/versions/:number/${step}`, (x) => ({ id: x[file], number: 1 }), {
             body: { note: "taken", reviewerId: larchmereIds.reviewer },
         }),
@@ -711,6 +712,17 @@ console.log("4. The gate");
     }
     const buyerJoined = await rawRequest(`/udoc/documents/${B.deck.documentId}/collaboration`, { headers: upgrade });
     check("no one signed in joins Northwind's collaboration", buyerJoined.status === 403, buyerJoined.status);
+
+    // A review, once decided, is written by those who edit its file, at its own tenant alone.
+    const { versions: deckVersions } = (await northwind.admin("GET", `/api/assets/${B.deck.id}/versions`)).data;
+    const review = `/udoc/documents/${B.deck.documentId}/branches/${deckVersions.at(-1).reviewBranch}`;
+    for (const role of ROLES) {
+        const cookie = cookies[larchmereEmails[role]];
+        const saved = await rawRequest(`${review}/versions`, { method: "POST", cookie });
+        check(`${role}: saving a version of Northwind's decided review is refused`, saved.status >= 400, saved.status);
+        const joined = await rawRequest(`${review}/collaboration`, { cookie, headers: upgrade });
+        check(`${role}: joining Northwind's decided review is refused`, joined.status === 403, joined.status);
+    }
 
     // The gate and the server each parse a path: neither may be led to read another's document.
     const a = A.deck.documentId;
@@ -1500,6 +1512,14 @@ console.log("11. Northwind holds rows with Larchmere's very ids");
             { reviewerId: larchmereIds.reviewer },
         ],
         ["approves it", larchmere.reviewer, "POST", `/api/assets/${A.deck.id}/versions/2/approve`, {}],
+        ["brings its review in", larchmere.admin, "POST", `/api/assets/${A.deck.id}/versions/2/merge`, {}],
+        [
+            "saves a version from its review",
+            larchmere.admin,
+            "POST",
+            `/api/assets/${A.deck.id}/versions`,
+            { note: "x", review: 2 },
+        ],
         ["publishes it", larchmere.admin, "POST", `/api/assets/${A.deck.id}/versions/2/publish`, {}],
         ["saves a copy's version", larchmere.member, "POST", `/api/assets/${A.copy.id}/versions`, { note: "x" }],
     ];

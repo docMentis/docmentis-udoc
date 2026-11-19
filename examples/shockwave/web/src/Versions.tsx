@@ -97,12 +97,13 @@ const EVENTS: Record<VersionEvent["kind"], string> = {
     published: "Published",
     reassigned: "Reassigned",
     dismissed: "Dismissed",
+    merged: "Brought into the working copy",
 };
 
 /**
  * A file's versions, newest first, under its working copy for those who edit
- * it: each opens as it's pressed. A version says who saved it, when and why;
- * the one shown, what's happened to it since.
+ * it: each opens as it's pressed. A version says who saved it, when, from which
+ * review if it was, and why; the one shown, what's happened to it since.
  */
 export function VersionList({
     versions,
@@ -159,6 +160,9 @@ export function VersionList({
                             <span className="version-row-meta">
                                 {saved.by.name} · {formatDateTime(saved.at)}
                             </span>
+                            {version.fromReview !== null && (
+                                <span className="version-row-meta">From version {version.fromReview}'s review</span>
+                            )}
                             {saved.note && <span className="version-row-note">{saved.note}</span>}
                             {version.status === "submitted" && (
                                 <span className="version-row-meta">
@@ -225,9 +229,13 @@ export function VersionDialog({
             await onSubmit(note.trim(), reviewerId);
         } catch (failure) {
             setError(
-                failure instanceof ApiError && (failure.status === 409 || failure.status === 403)
-                    ? "This version has moved on since it was opened. Reload the page to see where it stands."
-                    : "That didn't go through. Try again.",
+                !(failure instanceof ApiError)
+                    ? "That didn't go through. Try again."
+                    : failure.error === "cannotMergeAgain"
+                      ? "This review can't be brought into the working copy again."
+                      : failure.status === 409 || failure.status === 403
+                        ? "This version has moved on since it was opened. Reload the page to see where it stands."
+                        : "That didn't go through. Try again.",
             );
             setBusy(false);
         }

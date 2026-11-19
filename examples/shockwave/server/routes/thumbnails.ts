@@ -40,17 +40,17 @@ export function thumbnailCount(number: string): string {
 }
 
 /**
- * Render each page of document `documentId` and keep them as version `number`
- * of file `assetId`, just saved: how many, none for a document udoc-server
- * won't render the first page of. The version must be recorded first.
- * udoc-server failing keeps nothing.
+ * Render each page of document `documentId`, its working copy or with `branch`
+ * that branch, and keep them as version `number` of file `assetId`, just saved
+ * from it: how many, none for a document udoc-server won't render the first page
+ * of. The version must be recorded first. udoc-server failing keeps nothing.
  */
 export async function keepThumbnails(
     db: TenantDb,
     documents: TenantDocuments,
-    { assetId, documentId, number }: { assetId: string; documentId: string; number: number },
+    { assetId, documentId, number, branch }: { assetId: string; documentId: string; number: number; branch?: string },
 ): Promise<number> {
-    const pages = await documents.renderPages(documentId, CARD_PAGE_SCALE);
+    const pages = await documents.renderPages(documentId, CARD_PAGE_SCALE, branch);
     db.transaction(() => {
         const keep = db.prepare(
             "INSERT INTO thumbnails (tenant_id, asset_id, number, page, png) VALUES (:tenant, ?, ?, ?, ?)",

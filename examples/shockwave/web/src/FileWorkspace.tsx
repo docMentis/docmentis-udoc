@@ -3,9 +3,12 @@
 // can be done with what's shown, over what's shown from udoc-server: the working
 // copy, in the viewer or being edited, or a version, read-only, as the address says.
 // Those who don't edit it see the version sent to them to review, or the latest. A
-// version is reviewed in a branch of its own: its reviewer comments there while it
-// waits on them, and once they decide, it shows what they wrote; until then, anyone
-// else sees the version as it was submitted.
+// version is reviewed in a branch of its own, its review: its reviewer writes there
+// while it waits on them, in the editor, in review mode where the document's open to
+// it and view mode where it isn't, never edit mode; until they decide, anyone else
+// sees the version as it was submitted. Once they've decided, the version shows its
+// review, which those who edit the file take up there, as they choose: they edit it
+// and save a version from it to submit, or bring it into the working copy.
 // Inside the card, beside what's shown, a panel of the app's own on the file, its
 // tabs each what a feature knows of it, which the title bar's button shows or hides.
 import { useState } from "react";
@@ -15,10 +18,9 @@ import { useSearchParams } from "react-router";
 import { reviewsLibrary } from "../../shared/api.ts";
 import type { Asset, Reviewer, Version, VersionStep, VersionedAsset } from "../../shared/api.ts";
 import { api } from "./api";
-import { DocumentEditor } from "./DocumentEditor";
+import { DocumentEditor, REVIEW_MODES } from "./DocumentEditor";
 import type { EditingState } from "./DocumentEditor";
 import { DocumentViewer } from "./DocumentViewer";
-import type { CollaborationState } from "./DocumentViewer";
 import { announceMoment } from "./moments";
 import { useUser } from "./session";
 import { useSidePanel } from "./sidePanel";
@@ -28,8 +30,11 @@ import { VersionDialog, VersionList, publishedLabelOf } from "./Versions";
 /** What a dialog is open for. */
 type Task = "save" | { step: VersionStep; version: Version };
 
-/** What the dialog for each step with a version says. */
-const STEPS: Record<VersionStep, { verb: string; action: string; placeholder: string; text?: string }> = {
+/** What the dialog for each step with a version says: its title, unless `title` says otherwise, the verb and the version. */
+const STEPS: Record<
+    VersionStep,
+    { verb: string; title?: (number: number) => string; action: string; placeholder: string; text?: string }
+> = {
     submit: {
         verb: "Submit",
         action: "Submit",
@@ -64,6 +69,13 @@ const STEPS: Record<VersionStep, { verb: string; action: string; placeholder: st
         action: "Dismiss",
         placeholder: "Why (optional)",
         text: "Takes this version off what's waiting on you. It stays as it is, and its history keeps this.",
+    },
+    merge: {
+        verb: "Bring in",
+        title: (number) => `Bring version ${number}'s review into the working copy`,
+        action: "Bring in",
+        placeholder: "A note (optional)",
+        text: "Brings what's in this review, what its reviewer wrote and what's been changed in it since, into the working copy, which then opens to edit. The review stays as it is, to go on with here or bring in again.",
     },
 };
 
@@ -114,14 +126,13 @@ export function FileWorkspace({
     const { open: panel, show: showPanel, toggle: panelToggle } = useSidePanel();
     const [tab, setTab] = useState<"versions" | "details">("versions");
     const [editingState, setEditingState] = useState<EditingState>();
-    const [reviewingState, setReviewingState] = useState<CollaborationState>();
+    const [reviewingState, setReviewingState] = useState<EditingState>();
 
     // What's shown: the version the address names; or the working copy, for
     // those who edit it; or, for anyone else, what's waiting on them.
     const named = versions.find((version) => String(version.number) === params.get("version"));
     const sentToMe = versions.find((version) => version.status === "submitted" && version.reviewer?.id === user.id);
     const shown = named ?? (edits ? undefined : (sentToMe ?? versions[0]));
-    const editing = edits && !shown && params.has("edit");
     const isPublished = shown !== undefined && asset.publishedVersion === shown.number;
     // What publishes a deal room's file is putting its room on the frontstage.
     const publishes = asset.dealRoomId === null;
@@ -133,15 +144,24 @@ export function FileWorkspace({
     const mayReview = reviews && isReviewer && submitter !== user.id;
     const reassignable = reviewers.filter(({ id }) => id !== shown?.reviewer?.id && id !== submitter);
     const dealtWith = shown?.events.some((event) => event.kind === "dismissed" || event.kind === "published");
-    // The branch it's reviewed in, for its reviewer, and for everyone once they've
-    // decided; and whether they're commenting in it now.
+    // The branch it's reviewed in, its review: for its reviewer, and for everyone
+    // once they've decided; and whether they're reviewing in it now.
     const decided = shown?.status === "approved" || shown?.status === "returned";
     const review = shown?.reviewBranch && (isReviewer || decided) ? shown.reviewBranch : undefined;
-    const commenting = review !== undefined && mayReview && shown?.status === "submitted";
-    // A step taken while comments can't reach the server would leave them out of the merge.
-    const unsaved = commenting && reviewingState !== "joined";
-    const connection = editing ? editingState : commenting ? reviewingState : undefined;
-    const kept = editing ? "Your edits" : "Your comments";
+    const reviewing = review !== undefined && mayReview && shown?.status === "submitted";
+    // A decided version, whose review those who edit the file take up; and what
+    // they edit, the working copy or that review, and whether they're editing it.
+    const takenUp = edits && decided && review !== undefined ? shown : undefined;
+    const editable = edits && (!shown || takenUp !== undefined);
+    const editing = editable && params.has("edit");
+    // Where what's shown is, with or without its being edited.
+    const here: Record<string, string> = shown ? { version: String(shown.number) } : {};
+    // A step taken while what's written can't reach the server would leave it out:
+    // of the review decided, or of the version saved or the review brought in.
+    const reviewUnsaved = reviewing && reviewingState !== "joined";
+    const editsUnsaved = editing && editingState !== "joined";
+    const connection = editing ? editingState : reviewing ? reviewingState : undefined;
+    const kept = editing ? "Your edits" : "Your comments and changes";
 
     /** The file as a change to its versions left it, with the side panel showing them. */
     function changed(versioned: VersionedAsset) {
@@ -159,7 +179,12 @@ export function FileWorkspace({
                     <div className="document-title">
                         <h1>{asset.name}</h1>
                         <p>
-                            {shown ? `Version ${shown.number}` : "Working copy"} · {about}
+                            {!shown
+                                ? "Working copy"
+                                : decided && review
+                                  ? `Version ${shown.number}, with ${shown.reviewer?.name ?? "its reviewer"}'s review`
+                                  : `Version ${shown.number}`}{" "}
+                            · {about}
                         </p>
                         {connection === "interrupted" && (
                             <p className="error" role="status">
@@ -173,25 +198,34 @@ export function FileWorkspace({
                         )}
                     </div>
                     <div className="document-actions">
-                        {edits && !shown && (
+                        {editable && (
                             <>
                                 <button
                                     type="button"
                                     className="button"
-                                    onClick={() => setParams(editing ? {} : { edit: "1" })}
+                                    onClick={() => setParams(editing ? here : { ...here, edit: "1" })}
                                 >
                                     {editing ? "Done" : "Edit"}
                                 </button>
-                                {/* A version saved while edits can't reach the server would lack them. */}
                                 <button
                                     type="button"
-                                    className="button primary"
-                                    disabled={editing && editingState !== "joined"}
+                                    className={!shown || editing ? "button primary" : "button"}
+                                    disabled={editsUnsaved}
                                     onClick={() => setTask("save")}
                                 >
                                     Save version
                                 </button>
                             </>
+                        )}
+                        {takenUp && (
+                            <button
+                                type="button"
+                                className="button"
+                                disabled={editsUnsaved}
+                                onClick={() => setTask({ step: "merge", version: takenUp })}
+                            >
+                                Bring into working copy
+                            </button>
                         )}
                         {edits && shown?.status === "draft" && (
                             <button
@@ -216,7 +250,7 @@ export function FileWorkspace({
                                 <button
                                     type="button"
                                     className="button"
-                                    disabled={unsaved}
+                                    disabled={reviewUnsaved}
                                     onClick={() => setTask({ step: "return", version: shown })}
                                 >
                                     Return
@@ -224,14 +258,14 @@ export function FileWorkspace({
                                 <button
                                     type="button"
                                     className="button primary"
-                                    disabled={unsaved}
+                                    disabled={reviewUnsaved}
                                     onClick={() => setTask({ step: "approve", version: shown })}
                                 >
                                     Approve
                                 </button>
                             </>
                         )}
-                        {edits && submitter && shown && shown.status !== "submitted" && !dealtWith && (
+                        {edits && submitter && shown && shown.status !== "submitted" && !dealtWith && !editing && (
                             <button
                                 type="button"
                                 className="button"
@@ -240,7 +274,7 @@ export function FileWorkspace({
                                 Dismiss
                             </button>
                         )}
-                        {edits && publishes && shown?.status === "approved" && !isPublished && (
+                        {edits && publishes && shown?.status === "approved" && !isPublished && !editing && (
                             <button
                                 type="button"
                                 className="button primary"
@@ -258,14 +292,22 @@ export function FileWorkspace({
                         {editing ? (
                             <DocumentEditor
                                 documentId={asset.documentId}
+                                branch={takenUp ? review : undefined}
                                 userName={user.name}
                                 onState={setEditingState}
+                            />
+                        ) : reviewing ? (
+                            <DocumentEditor
+                                documentId={asset.documentId}
+                                branch={review}
+                                userName={user.name}
+                                modes={REVIEW_MODES}
+                                onState={setReviewingState}
                             />
                         ) : (
                             <DocumentViewer
                                 documentId={asset.documentId}
                                 {...(review ? { branch: review } : { version: shown?.checkpoint })}
-                                {...(commenting && { collaborateAs: user.name, onState: setReviewingState })}
                                 onOpened={({ format, ms }) =>
                                     announceMoment({ kind: "document:opened", where: "file", format, ms })
                                 }
@@ -327,16 +369,23 @@ export function FileWorkspace({
             {task === "save" && (
                 <VersionDialog
                     title="Save version"
-                    text={`Saves the working copy as it is now as version ${asset.latestVersion.number + 1}. Editing can go on: that version won't change.`}
+                    text={
+                        takenUp
+                            ? `Saves version ${takenUp.number} as it is here, with its review and what's been changed since, as version ${asset.latestVersion.number + 1}, to submit. Editing can go on, here and in the working copy: that version won't change.`
+                            : `Saves the working copy as it is now as version ${asset.latestVersion.number + 1}. Editing can go on: that version won't change.`
+                    }
                     action="Save"
                     placeholder="What changed (optional)"
                     onClose={() => setTask(undefined)}
-                    onSubmit={async (note) => changed(await api.saveVersion(asset.id, note))}
+                    onSubmit={async (note) => changed(await api.saveVersion(asset.id, note, takenUp?.number))}
                 />
             )}
             {typeof task === "object" && (
                 <VersionDialog
-                    title={`${STEPS[task.step].verb} version ${task.version.number}`}
+                    title={
+                        STEPS[task.step].title?.(task.version.number) ??
+                        `${STEPS[task.step].verb} version ${task.version.number}`
+                    }
                     text={stepText(task.step, asset)}
                     action={STEPS[task.step].action}
                     placeholder={STEPS[task.step].placeholder}
@@ -349,9 +398,11 @@ export function FileWorkspace({
                               : undefined
                     }
                     onClose={() => setTask(undefined)}
-                    onSubmit={async (note, reviewerId) =>
-                        changed(await api.takeVersionStep(asset.id, task.version.number, task.step, note, reviewerId))
-                    }
+                    onSubmit={async (note, reviewerId) => {
+                        changed(await api.takeVersionStep(asset.id, task.version.number, task.step, note, reviewerId));
+                        // Brought in, the review's worked on in the working copy.
+                        if (task.step === "merge") setParams({ edit: "1" });
+                    }}
                 />
             )}
         </div>

@@ -344,6 +344,34 @@ const MIGRATIONS = [
     `
     ALTER TABLE tenants ADD COLUMN seed_pending INTEGER NOT NULL DEFAULT 0;
     `,
+    // A review stays in its branch once its reviewer decides, for those who edit the
+    // file to take up: to go on working in, and save a version from, `from_review`
+    // naming the version whose review that was; or to bring into the working copy,
+    // which a version's history keeps as `merged`.
+    `
+    ALTER TABLE versions ADD COLUMN from_review INTEGER;
+    CREATE TABLE events_with_merges (
+        id INTEGER PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        asset_id TEXT NOT NULL,
+        number INTEGER NOT NULL,
+        kind TEXT NOT NULL CHECK (
+            kind IN ('saved', 'submitted', 'approved', 'returned', 'published', 'reassigned', 'dismissed', 'merged')
+        ),
+        user_id TEXT NOT NULL,
+        to_user_id TEXT,
+        at INTEGER NOT NULL,
+        note TEXT,
+        FOREIGN KEY (tenant_id, asset_id, number) REFERENCES versions (tenant_id, asset_id, number) ON DELETE CASCADE,
+        FOREIGN KEY (tenant_id, user_id) REFERENCES users (tenant_id, id),
+        FOREIGN KEY (tenant_id, to_user_id) REFERENCES users (tenant_id, id)
+    );
+    INSERT INTO events_with_merges (id, tenant_id, asset_id, number, kind, user_id, to_user_id, at, note)
+        SELECT id, tenant_id, asset_id, number, kind, user_id, to_user_id, at, note FROM version_events;
+    DROP TABLE version_events;
+    ALTER TABLE events_with_merges RENAME TO version_events;
+    CREATE INDEX version_events_by_version ON version_events (tenant_id, asset_id, number);
+    `,
 ];
 
 /** SQLite's code for a `UNIQUE` constraint failing. */
