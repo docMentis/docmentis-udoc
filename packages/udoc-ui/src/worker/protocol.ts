@@ -11,7 +11,6 @@ import type {
     ActionHideTarget,
     Annotation,
     Binding,
-    BindingControlId,
     CellEntryEdit,
     Comment as ModelComment,
     CommentDraft,
@@ -28,6 +27,7 @@ import type {
     Rect as CornerRect,
     ShapeGeometry,
     ShapeNodeId,
+    TextBindingId,
     TextBodyProperties,
     Watermark,
     TextCharacterProperties,
@@ -1795,18 +1795,18 @@ export type SelectionEdit =
     | { kind: "bind"; binding: Binding }
     /** Text: bind the binding place `bindingPlace`, in the selected text, by
      *  `binding` instead. */
-    | { kind: "rebind"; bindingPlace: BindingControlId; binding: Binding }
+    | { kind: "rebind"; bindingPlace: TextBindingId; binding: Binding }
     /** Text: dissolve the binding place `bindingPlace`, in the selected text,
      *  keeping its content. */
-    | { kind: "unbind"; bindingPlace: BindingControlId }
+    | { kind: "unbind"; bindingPlace: TextBindingId }
     /** Text: add an option bound by `binding` — a `when` with its values, or
      *  the `otherwise` — to the choice `choice`, in the selected text, holding
      *  its placeholder: before the choice's otherwise, or last where it has
      *  none. */
-    | { kind: "addBindingOption"; choice: BindingControlId; binding: Binding }
+    | { kind: "addBindingOption"; choice: TextBindingId; binding: Binding }
     /** Text: take the option `option`, in the selected text, out of its
      *  choice with all it holds. A choice keeps its last option. */
-    | { kind: "removeBindingOption"; option: BindingControlId }
+    | { kind: "removeBindingOption"; option: TextBindingId }
     /** Shapes: make each selected whole shape a binding place binding
      *  `binding`, a condition, which a fill shows the shape by or hides it by.
      *  Offered in a template alone. */
