@@ -48,6 +48,13 @@ listed once, by package. Its major and minor version are those of the
   and `RevisionViewMode`. The `translations` keys `command.revisionView` and
   `revisionView.*` are now `command.revisionDisplay` and `revisionDisplay.*`.
 
+#### Fixed
+
+- A page or column break selected on its own in a word document shows
+  selected, where the selection vanished, and with formatting marks shown a
+  selection over one covers its rule and leaves the paragraph mark after it
+  apart, as Word selects them.
+
 ### udoc-editor
 
 #### Added
@@ -162,7 +169,26 @@ listed once, by package. Its major and minor version are those of the
   The `translations` keys `command.increaseFontSize` and
   `command.decreaseFontSize` are new.
 
+#### Changed
+
+- Right at the very end of a text steps once more, past its last paragraph
+  mark, and what's typed there starts a paragraph of its own. A table cell's
+  text goes on to the next cell, and a word document's section to the next
+  section, as before.
+
 #### Fixed
+
+- A click on the line a page break ends lands before the break, as in Word,
+  so what's typed there stays on that page, and End stops there too.
+- Backspace and Delete at the edge of a content control around paragraphs in
+  a word document leave the caret where it is, and an empty one stays, while
+  Backspace at its start takes an empty paragraph before it. A selection
+  holding a content control or a table whole deletes it whole, leaving one
+  paragraph where the selection ran on into the paragraph after it; a content
+  control ending the document is taken in by Shift+Right from its end,
+  Ctrl+Shift+End and Select All.
+- A paragraph break typed or pasted inside a content control within a
+  paragraph lands as a line break, keeping the control whole.
 
 - Increase Indent and Decrease Indent step a paragraph from the indent it
   shows, including one its style or the document gives it, where Increase
