@@ -33,8 +33,8 @@ listed once, by package. Its major and minor version are those of the
   array three items — Load JSON fills it from a file, and Clear empties it.
   An instance's changes wait in the panel for its Refresh: Load JSON fills
   them from a file, and Reset puts back the data it was last filled
-  with. The `translations` keys `data.loadJson`, `data.sampleData`,
-  `data.clear`, `data.reset`, their `…Hint`s and `data.notJson` are new.
+  with. The `translations` keys under `data.`, and `rightPanel.data`, are
+  new.
 
 #### Changed
 
@@ -75,7 +75,7 @@ listed once, by package. Its major and minor version are those of the
   formulas naming them follow them, also onto another sheet. Escape, a copy
   or an edit cancels the cut. Cut copied only.
 - A PowerPoint deck's edit mode has an Automation tab, after the Shape tab.
-  Template turns a plain deck into a template, each `{{…}}` tag in its text
+  Picked, the tab stays open as the selection moves. Template turns a plain deck into a template, each `{{…}}` tag in its text
   becoming a binding place, and a template back into a plain deck, its binding
   places written back as tags. On a template, Variable, Repeat, Condition and
   Choice make a binding place of the selection — around the text or the
@@ -83,7 +83,8 @@ listed once, by package. Its major and minor version are those of the
   its popover, where its path and the rest of its binding are typed: a
   variable's default, a repeat's item and separators, whether a condition
   shows when its value is false, an option's values. A choice is made with an
-  option for `"a"` and an otherwise. Done applies what's typed, and Escape or
+  option for `"a"` and an otherwise, and a variable made inside a repeat binds
+  the item of the innermost repeat around it. Done applies what's typed, and Escape or
   a click outside leaves the binding as it was; the bin beside the popover's
   title, Remove, takes the binding place away and keeps its text. The popover
   opens above its bar where the window has no room below.
@@ -109,6 +110,9 @@ listed once, by package. Its major and minor version are those of the
   caret stands in one of them or out of them, as at a Word content control's
   edge: the arrows step it in and out before moving on, a click puts it in
   what it clicked after, and what is typed goes where it stands.
+  `--udoc-canvas-binding-marker` colours the brackets and bars, and
+  `--udoc-canvas-binding-marker-current` those of the binding place the caret
+  is in.
   Condition makes whole shapes selected binding places too, a picture, a group
   or a table among them: such a shape has brackets either side of its box, and
   a binding bar while it, or a shape or text inside it, is selected. Filled,
@@ -132,12 +136,17 @@ listed once, by package. Its major and minor version are those of the
   Refresh opens the same dialog to fill it again where it is, one undo step,
   on the data its Data panel holds — as changed there, else as the instance
   was last filled with, which it keeps. The
-  `translations` keys under `bindingPlace.`, and `command.bindingMarkup` and
+  `translations` keys under `bindingPlace.` and `generate.`,
+  `ribbon.automation`, and `command.template`, `command.insertVariable`,
+  `command.insertRepeat`, `command.insertCondition`, `command.insertChoice`,
+  `command.bindingMarkup`, `command.preview`, `command.generate` and
   `command.refresh`, are new.
 - `UDocEditor.generateToBytes(data, options?)` fills a copy of the open
   template with `data` and resolves with the instance's bytes, the template
-  left as it is. Picked, the tab stays open as
-  the selection moves.
+  left as it is: in the template's own format, a PowerPoint template's as a
+  presentation, or in `options.format`. It rejects with `invalidRequest` for
+  a document that isn't a template. `GenerateOptions`, `BindingData` and
+  `BindingValue` are exported.
 - A template opened with `openRemote` is filled by the udoc server keeping
   it, not in the browser: Preview shows a copy the server filled, deleted
   once the preview goes; Generate downloads one; and Refresh fills an
@@ -150,6 +159,8 @@ listed once, by package. Its major and minor version are those of the
   the next or previous size in the size field's list, which now lists more
   sizes. Text of several sizes steps each from its own, so its sizes stay
   apart, and a block of table cells and a workbook's cells step the same way.
+  The `translations` keys `command.increaseFontSize` and
+  `command.decreaseFontSize` are new.
 
 #### Fixed
 
@@ -175,8 +186,8 @@ listed once, by package. Its major and minor version are those of the
 
 - `POST /documents/:id/instances`, `{ data }`, fills a copy of a template —
   as it is now, or beneath `versions/:version` as it was then — and keeps it
-  as a new document, `201 { id }`: an instance, its `v0` the filled deck,
-  the template left as it is.
+  as a new document, `201 { id }`: an instance, its `v0` the filled deck, a
+  `potx` template's saved as a `pptx`, the template left as it is.
 - `POST /documents/:id/fill`, `{ data }`, fills a template or an instance
   where it is, as an edit that reaches every client editing it, and its
   log, before it answers; a branch's beneath `branches/:branch`.
@@ -184,6 +195,9 @@ listed once, by package. Its major and minor version are those of the
   `{ automation, bindings }`: whether the document is a template or an
   instance, its sample data or the data it was filled with, and what it
   binds.
+- `instances` answers a document that isn't a template `422 notATemplate`,
+  and `fill` one that is neither a template nor an instance
+  `422 notAutomated`.
 
 ## [0.8.23] - 2026-11-16
 
