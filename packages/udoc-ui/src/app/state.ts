@@ -12,12 +12,12 @@ import type { AnnotationStyles } from "./annotations.js";
 import type { MessageKey } from "./i18n/index.js";
 import type {
     Automation,
-    BindingCatalog,
     BindingData,
+    BindingReport,
     CellEntryMode,
     Feature,
     FileFormat,
-    PresentationBindingPlace,
+    PresentationBindingEntry,
     PresentationPlaneKind,
     RevisionDisplay,
     SearchMatch,
@@ -810,7 +810,7 @@ export interface UIState {
      * schema they make and the binding places that bind it — read while that
      * panel is open and again whenever the document changes; null until read.
      */
-    dataBindings: BindingCatalog<PresentationBindingPlace> | null;
+    dataBindings: BindingReport<PresentationBindingEntry> | null;
     /**
      * The ids of the binding places that bind the Data panel's name the pointer
      * is over, which the slides outline as the caret's binding place is; none

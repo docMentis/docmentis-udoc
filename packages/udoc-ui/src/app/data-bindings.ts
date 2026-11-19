@@ -2,7 +2,23 @@
 // place in the data, named by the steps from its root — a name into an object,
 // an index into an array — read, set, and an array's items added and removed,
 // each edit giving a new copy of the data and leaving the old one as it is.
-import type { Automation, BindingData, BindingSchema, BindingValue } from "@docmentis/udoc-wasm";
+import type {
+    Automation,
+    BindingData,
+    BindingSchema,
+    BindingValue,
+    PresentationBindingEntry,
+} from "@docmentis/udoc-wasm";
+
+/** What an entry of a deck's binding report holds, whichever kind it is — a
+ *  binding place in text, a shape, or a tag in a plain deck's text: its slide,
+ *  the binding as written, its path and what is wrong with it, beside what
+ *  only its kind has. */
+export function entryFields(entry: PresentationBindingEntry) {
+    if ("text" in entry) return entry.text;
+    if ("shape" in entry) return entry.shape;
+    return entry.tag;
+}
 
 /** A place in the data: the names and indices from its root. */
 export type SamplePath = readonly (string | number)[];

@@ -31,11 +31,11 @@
 
 import type {
     Automation,
-    BindingCatalog,
     BindingData,
     BindingError,
+    BindingReport,
     BindingSchema,
-    PresentationBindingPlace,
+    PresentationBindingEntry,
 } from "@docmentis/udoc-wasm";
 import type { Store } from "../../framework/index.js";
 import { subscribeSelector } from "../../framework/index.js";
@@ -43,6 +43,7 @@ import type { Action } from "../actions.js";
 import {
     blankItem,
     boundPath,
+    entryFields,
     filledDataOf,
     filledInSample,
     sampleAt,
@@ -67,18 +68,18 @@ import type { I18n, MessageKey } from "../i18n/index.js";
 import { createButton } from "./controls.js";
 
 export interface DataPanelCallbacks {
-    /** Select the next of `bindingPlaces`, a row's, `key` naming the row. */
-    onChoose: (key: string, bindingPlaces: readonly PresentationBindingPlace[]) => void;
-    /** Point out `bindingPlaces`, a row's the pointer is over — none as it
+    /** Select the next of `entries`, a row's, `key` naming the row. */
+    onChoose: (key: string, entries: readonly PresentationBindingEntry[]) => void;
+    /** Point out `entries`, a row's the pointer is over — none as it
      *  leaves. */
-    onHover: (bindingPlaces: readonly PresentationBindingPlace[]) => void;
+    onHover: (entries: readonly PresentationBindingEntry[]) => void;
     /** Give the template `data` as its sample data. */
     onSampleData: (data: BindingData) => void;
 }
 
 /** What the panel draws from. */
 interface DataPanelSlice {
-    bindings: BindingCatalog<PresentationBindingPlace> | null;
+    bindings: BindingReport<PresentationBindingEntry> | null;
     automation: Automation | null;
     /** An instance's data as the panel holds it, where it differs from what
      *  the instance was last filled with. */
@@ -307,7 +308,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
             body.replaceChildren(note(i18n.t("data.plainNote")));
             return;
         }
-        const errors = bindings.bindingPlaces.filter((bindingPlace) => bindingPlace.error !== undefined);
+        const errors = bindings.entries.filter((entry) => entryFields(entry).error !== undefined);
         const properties = propertiesOf(bindings.schema);
         const named = Object.keys(properties).length > 0;
         if (!named && errors.length === 0) {
@@ -444,13 +445,11 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
      *  are two or more: one, as most are, goes without saying. */
     function nameButton(name: string, path: SamplePath, slice: DataPanelSlice): HTMLElement {
         const bound = boundPath(path);
-        const bindingPlaces = (slice.bindings?.bindingPlaces ?? []).filter(
-            (bindingPlace) => bindingPlace.path === bound,
-        );
+        const entries = (slice.bindings?.entries ?? []).filter((entry) => entryFields(entry).path === bound);
         const text = document.createElement("span");
         text.className = "udoc-data-panel__name-text";
         text.textContent = name;
-        if (bindingPlaces.length === 0) {
+        if (entries.length === 0) {
             const plain = document.createElement("span");
             plain.className = "udoc-data-panel__name";
             plain.title = bound;
@@ -460,17 +459,17 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "udoc-data-panel__name udoc-data-panel__name--binding-places";
-        button.title = `${bound} · ${i18n.plural("data.bindingPlaces", bindingPlaces.length)}`;
+        button.title = `${bound} · ${i18n.plural("data.bindingPlaces", entries.length)}`;
         button.dataset.focus = `name:${bound}`;
         button.append(text);
-        if (bindingPlaces.length > 1) {
+        if (entries.length > 1) {
             const count = document.createElement("span");
             count.className = "udoc-data-panel__count";
-            count.textContent = String(bindingPlaces.length);
+            count.textContent = String(entries.length);
             button.append(count);
         }
-        button.addEventListener("click", () => callbacks.onChoose(bound, bindingPlaces));
-        button.addEventListener("pointerenter", () => callbacks.onHover(bindingPlaces));
+        button.addEventListener("click", () => callbacks.onChoose(bound, entries));
+        button.addEventListener("pointerenter", () => callbacks.onHover(entries));
         button.addEventListener("pointerleave", () => callbacks.onHover([]));
         return button;
     }
@@ -642,7 +641,8 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
     }
 
     /** A wrong tag's row: as written, and what is wrong with it. */
-    function errorRow(bindingPlace: PresentationBindingPlace, index: number): HTMLElement {
+    function errorRow(entry: PresentationBindingEntry, index: number): HTMLElement {
+        const { text: written, error } = entryFields(entry);
         const item = document.createElement("div");
         item.setAttribute("role", "listitem");
         const button = document.createElement("button");
@@ -651,15 +651,13 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         button.dataset.focus = `error:${index}`;
         const text = document.createElement("span");
         text.className = "udoc-data-panel__tag";
-        text.textContent = bindingPlace.text;
-        text.title = bindingPlace.text;
+        text.textContent = written;
+        text.title = written;
         const message = document.createElement("span");
         message.className = "udoc-data-panel__message";
-        message.textContent = bindingPlace.error ? i18n.t(errorMessage(bindingPlace.error)) : "";
+        message.textContent = error ? i18n.t(errorMessage(error)) : "";
         button.append(text, message);
-        button.addEventListener("click", () =>
-            callbacks.onChoose(`error:${index}:${bindingPlace.text}`, [bindingPlace]),
-        );
+        button.addEventListener("click", () => callbacks.onChoose(`error:${index}:${written}`, [entry]));
         item.append(button);
         return item;
     }

@@ -1,10 +1,10 @@
 import type {
     Automation,
-    BindingCatalog,
     BindingData,
+    BindingReport,
     Feature,
     FileFormat,
-    PresentationBindingPlace,
+    PresentationBindingEntry,
     PresentationPlaneKind,
     RevisionDisplay,
     SearchMatch,
@@ -312,7 +312,7 @@ export type Action =
     // A word document's tracked changes, read for the revisions panel
     | { type: "SET_REVISION_GROUPS"; groups: readonly ListedRevisionGroup[] }
     // The bindings a deck's text writes, read for the Data panel
-    | { type: "SET_DATA_BINDINGS"; bindings: BindingCatalog<PresentationBindingPlace> | null }
+    | { type: "SET_DATA_BINDINGS"; bindings: BindingReport<PresentationBindingEntry> | null }
     // The binding places of the Data panel's name the pointer is over, by their
     // ids
     | { type: "SET_DATA_HOVER"; bindingPlaces: readonly string[] }

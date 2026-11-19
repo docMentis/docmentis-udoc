@@ -30,11 +30,11 @@ export type {
     AutomationCommand,
     AutomationRole,
     Binding,
-    BindingCatalog,
     BindingData,
+    BindingReport,
     BindingSchema,
     BindingValue,
-    PresentationBindingPlace,
+    PresentationBindingEntry,
     UDocCommand,
 } from "@docmentis/udoc-wasm";
 export { isFileFormat } from "./format.js";

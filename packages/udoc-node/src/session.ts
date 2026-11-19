@@ -10,13 +10,13 @@ import type { MessagePort, TransferListItem } from "node:worker_threads";
 
 import type {
     Automation,
-    BindingCatalog,
+    BindingReport,
     Entitlements,
     ExportFormat,
     FileFormat,
     LogCut,
     PageExportFormat,
-    PresentationBindingPlace,
+    PresentationBindingEntry,
     SaveStrategy,
     UDocCommand,
     UDocType,
@@ -508,10 +508,11 @@ export class UDocSession {
 
     /**
      * The bindings a deck's slides set: the schema of the data they bind,
-     * which a host builds a form from or checks its data against, and each
-     * binding place. `undefined` for any document but a deck.
+     * which a host builds a form from or checks its data against, and an entry
+     * for each binding place, or each tag in a plain deck's text. `undefined`
+     * for any document but a deck.
      */
-    bindings(): Promise<BindingCatalog<PresentationBindingPlace> | undefined> {
+    bindings(): Promise<BindingReport<PresentationBindingEntry> | undefined> {
         return this.#call((id) => ({ id, type: "bindings" }));
     }
 

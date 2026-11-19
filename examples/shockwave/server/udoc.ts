@@ -26,7 +26,7 @@ import type { DatabaseSync } from "node:sqlite";
 import type { Duplex } from "node:stream";
 
 import { UDocNode } from "@docmentis/udoc-node";
-import type { Automation, BindingCatalog, BindingData, PresentationBindingPlace } from "@docmentis/udoc-node";
+import type { Automation, BindingData, BindingReport, PresentationBindingEntry } from "@docmentis/udoc-node";
 import { DirectoryDocumentStore, MAIN_BRANCH, createUDocServer } from "@docmentis/udoc-server";
 import type { KeptDocument, UDocServer } from "@docmentis/udoc-server";
 
@@ -125,7 +125,7 @@ export interface KeptAutomation {
     /** Its automation part: none for a plain document. */
     automation: Automation | null;
     /** What a deck's slides bind: none for any other document. */
-    bindings: BindingCatalog<PresentationBindingPlace> | null;
+    bindings: BindingReport<PresentationBindingEntry> | null;
 }
 
 export interface Udoc {

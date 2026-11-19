@@ -18,7 +18,7 @@ import type {
     SearchMatch,
     SearchOptions,
     SearchQuad,
-    PresentationBindingPlace,
+    PresentationBindingEntry,
     BindingData,
     UrlFont,
     UDocSearchScope,
@@ -55,6 +55,7 @@ import type { Store } from "../framework/index.js";
 import type { DocumentStandIn, PageSpacing, UIExtension } from "../extension.js";
 import type { Action } from "./actions.js";
 import { CONTEXT_MENU, commandContext, sheetTabMenu } from "./commands.js";
+import { entryFields } from "./data-bindings.js";
 import { reorderTo } from "./page-order.js";
 import { deleteTableSelection } from "./table-selection.js";
 import type { MenuAction } from "./commands.js";
@@ -1617,13 +1618,14 @@ export function mountUIShell(
             actions: (state) => (extension && state.mode !== VIEW_MODE ? extension.revisionActions(state) : []),
         },
         {
-            onChoose: (key, bindingPlaces) => void chooseDataBindingPlace(key, bindingPlaces),
-            onHover: (bindingPlaces) =>
+            onChoose: (key, entries) => void chooseDataEntry(key, entries),
+            onHover: (entries) =>
                 store.dispatch({
                     type: "SET_DATA_HOVER",
-                    bindingPlaces: bindingPlaces.flatMap((bindingPlace) => {
-                        const id = bindingPlace.id ?? bindingPlace.shape;
-                        return id === undefined ? [] : [id];
+                    bindingPlaces: entries.flatMap((entry) => {
+                        if ("text" in entry) return [entry.text.id];
+                        if ("shape" in entry) return [entry.shape.shape];
+                        return [];
                     }),
                 }),
             onSampleData: setSampleData,
@@ -3733,40 +3735,38 @@ export function mountUIShell(
         { equality: shallowEqual },
     );
 
-    // Which binding place of each row the Data panel chose last, by the row:
-    // choosing it again goes on to the next, round to the first after the last.
-    // Kept while the bindings are read again after an edit, and dropped with
-    // the document.
-    const dataBindingPlaceChosen = new Map<string, number>();
+    // Which entry of each row the Data panel chose last, by the row: choosing
+    // it again goes on to the next, round to the first after the last. Kept
+    // while the bindings are read again after an edit, and dropped with the
+    // document.
+    const dataEntryChosen = new Map<string, number>();
     const unsubDataBindingsOpened = subscribeSelector(
         store,
         (s) => s.docGeneration,
-        () => dataBindingPlaceChosen.clear(),
+        () => dataEntryChosen.clear(),
     );
 
-    // Select the next of the binding places a Data panel row `key` stands for,
-    // and bring its slide into view: a binding place in text where it is, a
-    // shape whole.
-    async function chooseDataBindingPlace(
-        key: string,
-        bindingPlaces: readonly PresentationBindingPlace[],
-    ): Promise<void> {
-        if (bindingPlaces.length === 0) return;
-        const index = ((dataBindingPlaceChosen.get(key) ?? -1) + 1) % bindingPlaces.length;
-        dataBindingPlaceChosen.set(key, index);
-        const bindingPlace = bindingPlaces[index]!;
-        client.goToPage(bindingPlace.slide);
-        if (bindingPlace.shape !== undefined) {
-            const slide = await client.presentation.slideId(bindingPlace.slide);
+    // Select the next of the entries a Data panel row `key` stands for, and
+    // bring its slide into view: a binding place in text or a tag where it is,
+    // a shape whole.
+    async function chooseDataEntry(key: string, entries: readonly PresentationBindingEntry[]): Promise<void> {
+        if (entries.length === 0) return;
+        const index = ((dataEntryChosen.get(key) ?? -1) + 1) % entries.length;
+        dataEntryChosen.set(key, index);
+        const entry = entries[index]!;
+        const { slide: slideIndex } = entryFields(entry);
+        client.goToPage(slideIndex);
+        if ("shape" in entry) {
+            const slide = await client.presentation.slideId(slideIndex);
             if (slide !== null) {
                 setSelection({
-                    presentation: { shapes: { container: { slide }, selection: { shapes: [bindingPlace.shape] } } },
+                    presentation: { shapes: { container: { slide }, selection: { shapes: [entry.shape.shape] } } },
                 });
             }
             return;
         }
-        if (bindingPlace.location === undefined) return;
-        const selection = await client.searchMatchSelection(bindingPlace.location);
+        const { location } = "text" in entry ? entry.text : entry.tag;
+        const selection = await client.searchMatchSelection(location);
         if (selection) setSelection(selection);
     }
 

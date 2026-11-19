@@ -6,6 +6,17 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-node
+
+#### Changed
+
+- `UDocSession.bindings()` gives a `BindingReport` in place of a
+  `BindingCatalog`: its `entries`, each a `PresentationBindingEntry` —
+  `text`, a binding place in a slide's text; `shape`, a shape a binding makes
+  a binding place; or `tag`, a tag in a plain deck's text — each holding what
+  its kind has, where the catalog's `bindingPlaces` gave every field to each,
+  most of them optional.
+
 ## [0.8.24] - 2026-11-18
 
 Built on `@docmentis/udoc-wasm` 0.8.27.

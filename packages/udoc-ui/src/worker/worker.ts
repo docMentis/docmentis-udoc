@@ -60,12 +60,12 @@ import initEngine, {
 } from "@docmentis/udoc-wasm";
 import type {
     Automation,
-    BindingCatalog,
+    BindingReport,
     CanvasText,
     FontLocation,
     GoogleFontFamily,
     PageImage,
-    PresentationBindingPlace,
+    PresentationBindingEntry,
     PresentationPlaneKind,
     RevisionDisplay,
     SheetLayoutMode,
@@ -3475,7 +3475,7 @@ function automation(s: WasmSession): Automation | null {
 }
 
 /** The bindings the open deck's slides write — null for any other document. */
-function automationBindings(s: WasmSession): BindingCatalog<PresentationBindingPlace> | null {
+function automationBindings(s: WasmSession): BindingReport<PresentationBindingEntry> | null {
     return safeRead(() => s.presentation.model.automation.bindings(), null);
 }
 

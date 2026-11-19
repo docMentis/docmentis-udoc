@@ -1556,9 +1556,10 @@ export interface AutomationRequest {
 }
 
 /**
- * Read the bindings the open deck's slides write: the schema they make, and the
- * binding places that bind it, each with what is wrong with it and where it is.
- * Replies with the {@link BindingCatalog}, or `null` for any other document.
+ * Read the bindings the open deck's slides write: the schema they make, and an
+ * entry for each binding place, or each tag in a plain deck's text, with what is
+ * wrong with it and where it is. Replies with the {@link BindingReport}, or
+ * `null` for any other document.
  */
 export interface AutomationBindingsRequest {
     type: "automationBindings";

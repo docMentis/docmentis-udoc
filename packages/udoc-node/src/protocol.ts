@@ -4,14 +4,14 @@ import type { MessagePort } from "node:worker_threads";
 
 import type {
     Automation,
-    BindingCatalog,
+    BindingReport,
     Entitlements,
     ExportFormat,
     FileFormat,
     GoogleFontFamily,
     LogCut,
     PageExportFormat,
-    PresentationBindingPlace,
+    PresentationBindingEntry,
     SaveStrategy,
     SessionConfig,
     UDocCommand,
@@ -136,7 +136,7 @@ export interface WorkerResult {
     mergePresence: undefined;
     execute: undefined;
     automation: Automation | undefined;
-    bindings: BindingCatalog<PresentationBindingPlace> | undefined;
+    bindings: BindingReport<PresentationBindingEntry> | undefined;
 }
 
 /**

@@ -31,9 +31,9 @@ import type {
     ActionHideTarget,
     Annotation,
     Automation,
-    BindingCatalog,
     BindingChoice,
     BindingGeometry,
+    BindingReport,
     CellEntryEdit,
     CommentGeometry,
     ComposedShapeMedia,
@@ -52,7 +52,7 @@ import type {
     Outline,
     PageExportFormat,
     PageMode,
-    PresentationBindingPlace,
+    PresentationBindingEntry,
     RevisionGeometry,
     RevisionDisplay,
     SaveStrategy,
@@ -1663,13 +1663,13 @@ export class WorkerClient {
         /**
          * The bindings the open deck's slides write: the schema they make —
          * each name the data must hold, nested, with the type its bindings
-         * imply — and the binding places that bind it, each with what is
-         * wrong with it and where it is, which {@link searchMatchSelection}
-         * selects. `null` for any other document. A read that loads every
-         * slide, laying none out.
+         * imply — and an entry for each binding place, or each tag in a plain
+         * deck's text, with what is wrong with it and where it is, which
+         * {@link searchMatchSelection} selects in text. `null` for any other
+         * document. A read that loads every slide, laying none out.
          */
-        automationBindings: (): Promise<BindingCatalog<PresentationBindingPlace> | null> =>
-            this.#send({ type: "automationBindings" }) as Promise<BindingCatalog<PresentationBindingPlace> | null>,
+        automationBindings: (): Promise<BindingReport<PresentationBindingEntry> | null> =>
+            this.#send({ type: "automationBindings" }) as Promise<BindingReport<PresentationBindingEntry> | null>,
     };
 
     /**
