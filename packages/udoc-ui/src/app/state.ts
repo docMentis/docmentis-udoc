@@ -807,14 +807,14 @@ export interface UIState {
     revisionGroups: readonly ListedRevisionGroup[] | null;
     /**
      * The bindings a deck's text writes, as the Data panel shows them — the
-     * schema they make and the places that bind it — read while that panel is
-     * open and again whenever the document changes; null until read.
+     * schema they make and the binding places that bind it — read while that
+     * panel is open and again whenever the document changes; null until read.
      */
     dataBindings: BindingCatalog<PresentationBindingPlace> | null;
     /**
-     * The ids of the places that bind the Data panel's name the pointer is
-     * over, which the slides outline as the caret's place is; none while it is
-     * over none.
+     * The ids of the binding places that bind the Data panel's name the pointer
+     * is over, which the slides outline as the caret's binding place is; none
+     * while it is over none.
      */
     dataHover: readonly string[];
     /**

@@ -8,18 +8,17 @@
 // back the data it was last filled with.
 //
 // For a template or an instance, the schema its bindings make, as a form of its
-// data: a
-// tree of the names the data must hold, nested as the data nests it, each
-// object and array a group that folds, and each object item of an array. Beside
-// each name is the value its bindings imply: text, a choice's text picked from
-// its options' values or written as another, a bool as a switch, an array as
-// its items, added and taken out. A name's count of the places that bind it,
-// chosen, selects the next of them and brings its slide into view, round to the
-// first again after the last. A name inside an array's items stands for every
-// item's: its places are all the places bound by its path, `funds[].name`,
-// whichever item is shown. The tree is one grid of rows, the names in one
-// column, as wide as the widest needs, and the values in the other, so they
-// line up at every depth.
+// data: a tree of the names the data must hold, nested as the data nests it,
+// each object and array a group that folds, and each object item of an array.
+// Beside each name is the value its bindings imply: text, a choice's text
+// picked from its options' values or written as another, a bool as a switch, an
+// array as its items, added and taken out. A name's count of the binding places
+// that bind it, chosen, selects the next of them and brings its slide into
+// view, round to the first again after the last. A name inside an array's items
+// stands for every item's: its binding places are all the binding places bound
+// by its path, `funds[].name`, whichever item is shown. The tree is one grid of
+// rows, the names in one column, as wide as the widest needs, and the values in
+// the other, so they line up at every depth.
 // Last, the tags that are wrong, each as written with what is wrong with it. A
 // plain deck shows a note in their place.
 //
@@ -68,10 +67,11 @@ import type { I18n, MessageKey } from "../i18n/index.js";
 import { createButton } from "./controls.js";
 
 export interface DataPanelCallbacks {
-    /** Select the next of `places`, a row's, `key` naming the row. */
-    onChoose: (key: string, places: readonly PresentationBindingPlace[]) => void;
-    /** Point out `places`, a row's the pointer is over — none as it leaves. */
-    onHover: (places: readonly PresentationBindingPlace[]) => void;
+    /** Select the next of `bindingPlaces`, a row's, `key` naming the row. */
+    onChoose: (key: string, bindingPlaces: readonly PresentationBindingPlace[]) => void;
+    /** Point out `bindingPlaces`, a row's the pointer is over — none as it
+     *  leaves. */
+    onHover: (bindingPlaces: readonly PresentationBindingPlace[]) => void;
     /** Give the template `data` as its sample data. */
     onSampleData: (data: BindingData) => void;
 }
@@ -307,7 +307,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
             body.replaceChildren(note(i18n.t("data.plainNote")));
             return;
         }
-        const errors = bindings.places.filter((place) => place.error !== undefined);
+        const errors = bindings.bindingPlaces.filter((bindingPlace) => bindingPlace.error !== undefined);
         const properties = propertiesOf(bindings.schema);
         const named = Object.keys(properties).length > 0;
         if (!named && errors.length === 0) {
@@ -333,7 +333,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
             heading.append(title, count);
             const list = div("udoc-data-panel__error-list");
             list.setAttribute("role", "list");
-            list.append(...errors.map((place, index) => errorRow(place, index)));
+            list.append(...errors.map((bindingPlace, index) => errorRow(bindingPlace, index)));
             section.append(heading, list);
             parts.push(section);
         }
@@ -438,17 +438,19 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         return button;
     }
 
-    /** The name of the value at `path`, which chooses the places that bind
-     *  it — plain text where none do, as for an object, which no binding binds
-     *  itself. How many places there are follows it, where there are two or
-     *  more: one, as most are, goes without saying. */
+    /** The name of the value at `path`, which chooses the binding places that
+     *  bind it — plain text where none do, as for an object, which no binding
+     *  binds itself. How many binding places there are follows it, where there
+     *  are two or more: one, as most are, goes without saying. */
     function nameButton(name: string, path: SamplePath, slice: DataPanelSlice): HTMLElement {
         const bound = boundPath(path);
-        const places = (slice.bindings?.places ?? []).filter((place) => place.path === bound);
+        const bindingPlaces = (slice.bindings?.bindingPlaces ?? []).filter(
+            (bindingPlace) => bindingPlace.path === bound,
+        );
         const text = document.createElement("span");
         text.className = "udoc-data-panel__name-text";
         text.textContent = name;
-        if (places.length === 0) {
+        if (bindingPlaces.length === 0) {
             const plain = document.createElement("span");
             plain.className = "udoc-data-panel__name";
             plain.title = bound;
@@ -457,18 +459,18 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         }
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "udoc-data-panel__name udoc-data-panel__name--places";
-        button.title = `${bound} · ${i18n.plural("data.places", places.length)}`;
+        button.className = "udoc-data-panel__name udoc-data-panel__name--binding-places";
+        button.title = `${bound} · ${i18n.plural("data.bindingPlaces", bindingPlaces.length)}`;
         button.dataset.focus = `name:${bound}`;
         button.append(text);
-        if (places.length > 1) {
+        if (bindingPlaces.length > 1) {
             const count = document.createElement("span");
             count.className = "udoc-data-panel__count";
-            count.textContent = String(places.length);
+            count.textContent = String(bindingPlaces.length);
             button.append(count);
         }
-        button.addEventListener("click", () => callbacks.onChoose(bound, places));
-        button.addEventListener("pointerenter", () => callbacks.onHover(places));
+        button.addEventListener("click", () => callbacks.onChoose(bound, bindingPlaces));
+        button.addEventListener("pointerenter", () => callbacks.onHover(bindingPlaces));
         button.addEventListener("pointerleave", () => callbacks.onHover([]));
         return button;
     }
@@ -640,7 +642,7 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
     }
 
     /** A wrong tag's row: as written, and what is wrong with it. */
-    function errorRow(place: PresentationBindingPlace, index: number): HTMLElement {
+    function errorRow(bindingPlace: PresentationBindingPlace, index: number): HTMLElement {
         const item = document.createElement("div");
         item.setAttribute("role", "listitem");
         const button = document.createElement("button");
@@ -649,13 +651,15 @@ export function createDataPanel(i18n: I18n, callbacks: DataPanelCallbacks) {
         button.dataset.focus = `error:${index}`;
         const text = document.createElement("span");
         text.className = "udoc-data-panel__tag";
-        text.textContent = place.text;
-        text.title = place.text;
+        text.textContent = bindingPlace.text;
+        text.title = bindingPlace.text;
         const message = document.createElement("span");
         message.className = "udoc-data-panel__message";
-        message.textContent = place.error ? i18n.t(errorMessage(place.error)) : "";
+        message.textContent = bindingPlace.error ? i18n.t(errorMessage(bindingPlace.error)) : "";
         button.append(text, message);
-        button.addEventListener("click", () => callbacks.onChoose(`error:${index}:${place.text}`, [place]));
+        button.addEventListener("click", () =>
+            callbacks.onChoose(`error:${index}:${bindingPlace.text}`, [bindingPlace]),
+        );
         item.append(button);
         return item;
     }

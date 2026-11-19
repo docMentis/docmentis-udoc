@@ -373,7 +373,7 @@ export function documentRoutes({
 
     /**
      * Fill the branch from the data the body holds, `{ data }`, `204`: its
-     * template's places filled, making it an instance of itself, or its
+     * template's binding places filled, making it an instance of itself, or its
      * instance's filled again — the engine's `ApplyData`, run on the branch's
      * own session and merged as an editor's edit is, so it reaches every
      * client editing the branch, and its log, before this answers. A document
@@ -447,7 +447,7 @@ export function documentRoutes({
      * — as a host builds a form or checks its data by:
      * `{ automation, bindings }`, its automation part, which says whether it
      * is a template or an instance and holds a template's sample data or an
-     * instance's data, and its bindings, the schema they make and each place;
+     * instance's data, and its bindings, the schema they make and each binding place;
      * each `null` where the document has none, a plain document's automation
      * and any but a deck's bindings.
      */

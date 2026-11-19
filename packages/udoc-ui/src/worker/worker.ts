@@ -2800,7 +2800,7 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
             }
             case "bindingChoice": {
                 const open = session;
-                reply(id, open ? safeRead(() => open.bindingChoice(msg.place), null) : null);
+                reply(id, open ? safeRead(() => open.bindingChoice(msg.bindingPlace), null) : null);
                 break;
             }
             case "showBindingOption": {

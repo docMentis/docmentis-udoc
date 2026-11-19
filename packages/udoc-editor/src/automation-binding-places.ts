@@ -1,25 +1,26 @@
-// A template's places, drawn over its slides from the engine's read of where
-// each shows (`bindingGeometry`): brackets, a [ where a place within a
-// paragraph begins and a ] where it ends, and a tall [ and ] either side of
-// one around whole paragraphs, or of a shape a binding makes a place, each at
-// its place's very edge — a choice drawn
-// as the option it shows — and where places begin or end together, the
-// innermost's as tall as its line and each around it a step taller; the
-// place the caret is in has its brackets stronger. Every place the caret is
-// in has a binding bar naming it, standing on top of its own opening bracket,
-// left-aligned with it, and opening its popover, the place it stands in
+// A template's binding places, drawn over its slides from the engine's read of
+// where each shows (`bindingGeometry`): brackets, a [ where a binding place
+// within a paragraph begins and a ] where it ends, and a tall [ and ] either
+// side of one around whole paragraphs, or of a shape a binding makes a binding
+// place, each at its binding place's very edge — a choice drawn as the option
+// it shows — and where binding places begin or end together, the innermost's
+// as tall as its line and each around it a step taller; the binding place the
+// caret is in has its brackets stronger. Every binding place the caret is in
+// has a binding bar naming it, standing on top of its own opening bracket,
+// left-aligned with it, and opening its popover, the binding place it stands in
 // marked; bars that would overlap stack up, the outer over the inner, each
 // stacked one joined to its bracket by a line straight down from its
-// bottom-left corner. The places of the Data
-// panel's name the pointer is over stand out too. Which places the caret is
-// in is the engine's to say (the selection's `places`): the shapes made places
-// around it, outermost first, and then the places in its text — where those
-// end or begin, the caret stands at a level the arrows step through, and the
-// bars show the level. A whole shape selected stands where the caret would. None of it is the document's — it is drawn over the
-// canvas, under the selection, and takes no press but the bars'. It is the
-// deck's binding markup, which Binding Markup shows or hides: a template shows
-// it until it's hidden, and an instance none until it's asked for, so it reads
-// as an ordinary document.
+// bottom-left corner. The binding places of the Data panel's name the pointer
+// is over stand out too. Which binding places the caret is in is the engine's
+// to say (the selection's `bindingPlaces`): the shapes made binding places
+// around it, outermost first, and then the binding places in its text — where
+// those end or begin, the caret stands at a level the arrows step through, and
+// the bars show the level. A whole shape selected stands where the caret would.
+// None of it is the document's — it is drawn over the canvas, under the
+// selection, and takes no press but the bars'. It is the deck's binding markup,
+// which Binding Markup shows or hides: a template shows it until it's hidden,
+// and an instance none until it's asked for, so it reads as an ordinary
+// document.
 import { subscribeSelector } from "@docmentis/udoc-ui/internal";
 import type { OverlayFrame, OverlayItem, OverlaySource, PageView } from "@docmentis/udoc-ui";
 import type {
@@ -35,25 +36,25 @@ import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { bindingMarkupShown, editState } from "./state.js";
 
-const OVERLAY_ID = "udoc:places";
+const OVERLAY_ID = "udoc:binding-places";
 const SVG_NS = "http://www.w3.org/2000/svg";
 
-/** How far a bracket's ends reach in towards what it holds, CSS px, a place
- *  within a paragraph's and one around whole paragraphs' alike. */
+/** How far a bracket's ends reach in towards what it holds, CSS px, a binding
+ *  place within a paragraph's and one around whole paragraphs' alike. */
 const TICK = 5;
 
-/** How much further above and below its line a bracket reaches for each place
- *  inside its own that begins or ends with it, CSS px. */
+/** How much further above and below its line a bracket reaches for each binding
+ *  place inside its own that begins or ends with it, CSS px. */
 const NEST_STEP = 5;
 
 /** Two brackets whose edges are nearer than this across stand on one
  *  another, CSS px. */
 const COINCIDE = 1.5;
 
-/** A place as the overlay reads it: its id — the container's around a place
- *  in text, the shape's a binding makes a place — what it binds, what it is,
- *  and where it shows. */
-export interface PlaceGeometry {
+/** A binding place as the overlay reads it: its id — the container's around a
+ *  binding place in text, the shape's a binding makes a binding place — what
+ *  it binds, what it is, and where it shows. */
+export interface BindingPlaceGeometry {
     readonly id: string;
     readonly binding: Binding;
     /** Within a paragraph, around whole paragraphs, or a shape. */
@@ -61,52 +62,55 @@ export interface PlaceGeometry {
     readonly quads: readonly SelectionQuad[];
 }
 
-/** The place the caret is in, as the overlay marks it. */
-export interface CurrentPlace {
-    readonly geometry: PlaceGeometry;
+/** The binding place the caret is in, as the overlay marks it. */
+export interface CurrentBindingPlace {
+    readonly geometry: BindingPlaceGeometry;
     readonly page: number;
 }
 
-/** The engine's `geometry` of a place, as the overlay reads it. */
-function placeGeometry(geometry: BindingGeometry): PlaceGeometry {
-    const { place, binding, quads } = geometry;
-    return "shape" in place
-        ? { id: place.shape.id, binding, level: "shape", quads }
-        : { id: place.text.id, binding, level: place.text.level, quads };
+/** The engine's `geometry` of a binding place, as the overlay reads it. */
+function bindingPlaceGeometry(geometry: BindingGeometry): BindingPlaceGeometry {
+    const { bindingPlace, binding, quads } = geometry;
+    return "shape" in bindingPlace
+        ? { id: bindingPlace.shape.id, binding, level: "shape", quads }
+        : { id: bindingPlace.text.id, binding, level: bindingPlace.text.level, quads };
 }
 
-export interface Places {
-    /** The place marked: the one the caret is in, innermost, unless another
-     *  around the caret is shown; or null. */
-    current(): CurrentPlace | null;
-    /** Every place the caret is in, outermost first. */
-    atCaret(): CurrentPlace[];
-    /** Mark `place`, one the caret is in, until the caret moves. */
-    show(place: CurrentPlace): void;
-    /** The marked place's binding bar, as drawn, or null. */
+export interface BindingPlaces {
+    /** The binding place marked: the one the caret is in, innermost, unless
+     *  another around the caret is shown; or null. */
+    current(): CurrentBindingPlace | null;
+    /** Every binding place the caret is in, outermost first. */
+    atCaret(): CurrentBindingPlace[];
+    /** Mark `bindingPlace`, one the caret is in, until the caret moves. */
+    show(bindingPlace: CurrentBindingPlace): void;
+    /** The marked binding place's binding bar, as drawn, or null. */
     barItem(): HTMLElement | null;
-    /** Read the places shown again — after the slide composed again with no
-     *  edit to say so, as showing another of a choice's options does. */
+    /** Read the binding places shown again — after the slide composed again
+     *  with no edit to say so, as showing another of a choice's options does. */
     refresh(): void;
-    /** The first place `pick` finds among those the caret is in, outermost
-     *  first, once a read holds it — or null after `frames` frames. */
-    find(pick: (places: CurrentPlace[]) => CurrentPlace | undefined, frames?: number): Promise<CurrentPlace | null>;
+    /** The first binding place `pick` finds among those the caret is in,
+     *  outermost first, once a read holds it — or null after `frames` frames. */
+    find(
+        pick: (bindingPlaces: CurrentBindingPlace[]) => CurrentBindingPlace | undefined,
+        frames?: number,
+    ): Promise<CurrentBindingPlace | null>;
     destroy(): void;
 }
 
-/** What the overlay shows places for: an open deck that is a template or an
- *  instance, being edited, not previewed, while its binding markup shows. */
-function placesShown(host: EditHost): boolean {
+/** What the overlay shows binding places for: an open deck that is a template
+ *  or an instance, being edited, not previewed, while its binding markup shows. */
+function bindingPlacesShown(host: EditHost): boolean {
     const state = host.store.getState();
     if (state.status !== "ready" || state.docType !== "presentation") return false;
     if (editState(state).automationPreview) return false;
     return bindingMarkupShown(state);
 }
 
-/** The kind a place's binding bar names, and what follows it: its path, a
- *  repeat's item over its path, an option's values. */
-export function placeLabel(binding: Binding, i18n: I18n): string {
-    const [kind, detail] = placeParts(binding);
+/** The kind a binding place's binding bar names, and what follows it: its path,
+ *  a repeat's item over its path, an option's values. */
+export function bindingPlaceLabel(binding: Binding, i18n: I18n): string {
+    const [kind, detail] = bindingPlaceParts(binding);
     const name = i18n.t(kind);
     return detail === "" ? name : `${name} · ${detail}`;
 }
@@ -121,46 +125,51 @@ function isOption(binding: Binding): boolean {
     return binding === "otherwise" || "when" in binding;
 }
 
-function placeParts(binding: Binding): [MessageKey, string] {
-    if (binding === "otherwise") return ["place.otherwise", ""];
-    if ("variable" in binding) return ["place.variable", binding.variable.path];
-    if ("repeat" in binding) return ["place.repeat", `${binding.repeat.item} ∈ ${binding.repeat.path}`];
+function bindingPlaceParts(binding: Binding): [MessageKey, string] {
+    if (binding === "otherwise") return ["bindingPlace.otherwise", ""];
+    if ("variable" in binding) return ["bindingPlace.variable", binding.variable.path];
+    if ("repeat" in binding) return ["bindingPlace.repeat", `${binding.repeat.item} ∈ ${binding.repeat.path}`];
     if ("condition" in binding) {
         const { not, path } = binding.condition;
-        return ["place.condition", not ? `¬ ${path}` : path];
+        return ["bindingPlace.condition", not ? `¬ ${path}` : path];
     }
-    if ("choice" in binding) return ["place.choice", binding.choice.path];
-    return ["place.when", binding.when.values.map((value) => `"${value}"`).join(", ")];
+    if ("choice" in binding) return ["bindingPlace.choice", binding.choice.path];
+    return ["bindingPlace.when", binding.when.values.map((value) => `"${value}"`).join(", ")];
 }
 
-/** Draw the open deck's places, and keep the place the caret is in, while
- *  edit mode is mounted. `open` opens the popover of the place whose item on the bar is
- *  pressed. */
-export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPlace, item: DOMRect) => void): Places {
+/** Draw the open deck's binding places, and keep the binding place the caret is
+ *  in, while edit mode is mounted. `open` opens the popover of the binding
+ *  place whose item on the bar is pressed. */
+export function mountBindingPlaces(
+    host: EditHost,
+    i18n: I18n,
+    open: (bindingPlace: CurrentBindingPlace, item: DOMRect) => void,
+): BindingPlaces {
     const { client, store } = host;
     // What was read for each page, by `plane:page`, and which read is current.
-    let read = new Map<string, readonly PlaceGeometry[]>();
+    let read = new Map<string, readonly BindingPlaceGeometry[]>();
     let generation = 0;
     let views: readonly PageView[] = [];
     let selection: SelectionGeometry | null = null;
-    // The places the caret is in, outermost first, as the engine reports them.
+    // The binding places the caret is in, outermost first, as the engine
+    // reports them.
     let chain: readonly string[] = [];
-    let current: CurrentPlace | null = null;
-    // A place `show` marked, and where the caret stood then.
+    let current: CurrentBindingPlace | null = null;
+    // A binding place `show` marked, and where the caret stood then.
     let shown: { id: string; at: string } | null = null;
     let markedItem: HTMLElement | null = null;
 
-    const geometryOf = (page: number): readonly PlaceGeometry[] =>
+    const geometryOf = (page: number): readonly BindingPlaceGeometry[] =>
         read.get(`${store.getState().currentPlane}:${page}`) ?? [];
 
-    const source: OverlaySource = (frame) => (placesShown(host) ? items(frame) : []);
+    const source: OverlaySource = (frame) => (bindingPlacesShown(host) ? items(frame) : []);
 
     function draw(): void {
         host.setOverlay(OVERLAY_ID, source);
     }
 
     function ask(): void {
-        if (!placesShown(host)) return;
+        if (!bindingPlacesShown(host)) return;
         const plane = store.getState().currentPlane;
         for (const { index } of views) {
             const key = `${plane}:${index}`;
@@ -169,15 +178,15 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
             const asked = generation;
             void client.bindingGeometry(plane, index).then((geometry) => {
                 if (asked !== generation) return;
-                read.set(key, geometry.map(placeGeometry));
+                read.set(key, geometry.map(bindingPlaceGeometry));
                 findCurrent();
                 draw();
             });
         }
     }
 
-    // A change can move every place: the pages shown are read again, keeping
-    // what they showed until the new land.
+    // A change can move every binding place: the pages shown are read again,
+    // keeping what they showed until the new land.
     function readAgain(): void {
         const shown = read;
         generation += 1;
@@ -186,30 +195,33 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         for (const [key, geometry] of shown) if (read.get(key)?.length === 0) read.set(key, geometry);
     }
 
-    function atCaret(): CurrentPlace[] {
+    function atCaret(): CurrentBindingPlace[] {
         const at = caretPoint(selection);
-        if (!at || !placesShown(host)) return [];
+        if (!at || !bindingPlacesShown(host)) return [];
         const geometries = geometryOf(at.page);
         return chain.flatMap((id) => {
-            const geometry = geometries.find((place) => place.id === id);
+            const geometry = geometries.find((bindingPlace) => bindingPlace.id === id);
             return geometry ? [{ geometry, page: at.page }] : [];
         });
     }
 
     function findCurrent(): void {
-        const places = atCaret();
+        const bindingPlaces = atCaret();
         const at = caretKey(selection);
         if (shown && shown.at !== at) shown = null;
-        current = (shown && places.find((place) => place.geometry.id === shown?.id)) ?? places.at(-1) ?? null;
+        current =
+            (shown && bindingPlaces.find((bindingPlace) => bindingPlace.geometry.id === shown?.id)) ??
+            bindingPlaces.at(-1) ??
+            null;
     }
 
     function items(frame: OverlayFrame): OverlayItem[] {
         const brackets: Bracket[] = [];
-        // Each place's opening bracket, by page and id — where its binding bar
-        // stands.
+        // Each binding place's opening bracket, by page and id — where its
+        // binding bar stands.
         const opened = new Map<string, number>();
-        // The places of the Data panel's name the pointer is over stand out as
-        // the caret's does.
+        // The binding places of the Data panel's name the pointer is over stand
+        // out as the caret's does.
         const state = store.getState();
         const hovered = new Set(state.activePanel === "data" ? state.dataHover : []);
         for (const view of frame.views) {
@@ -248,12 +260,12 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         const out: OverlayItem[] = [];
         if (brackets.length > 0) {
             out.push({
-                key: "places",
+                key: "bindingPlaces",
                 x: 0,
                 y: 0,
                 create: () => {
                     const el = document.createElement("div");
-                    el.className = "udoc-places";
+                    el.className = "udoc-binding-places";
                     el.setAttribute("aria-hidden", "true");
                     const svg = document.createElementNS(SVG_NS, "svg");
                     svg.append(document.createElementNS(SVG_NS, "g"));
@@ -265,21 +277,21 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                     pooled(group!, "polyline", brackets.length).forEach((polyline, index) => {
                         const bracket = brackets[index]!;
                         polyline.setAttribute("points", bracketPoints(bracket));
-                        polyline.setAttribute("class", classOf("udoc-place-bracket", bracket.current));
+                        polyline.setAttribute("class", classOf("udoc-binding-place-bracket", bracket.current));
                     });
                 },
             });
         }
-        // A binding bar for every place the caret is in, each on top of its
-        // own opening bracket; the place it stands in marked.
-        const bars: Bar[] = atCaret().flatMap((place) => {
-            const opening = opened.get(`${place.page}:${place.geometry.id}`);
+        // A binding bar for every binding place the caret is in, each on top of
+        // its own opening bracket; the binding place it stands in marked.
+        const bars: Bar[] = atCaret().flatMap((bindingPlace) => {
+            const opening = opened.get(`${bindingPlace.page}:${bindingPlace.geometry.id}`);
             if (opening === undefined) return [];
-            const isCurrent = current?.geometry.id === place.geometry.id;
-            return [{ place, anchor: brackets[opening]!.top, current: isCurrent }];
+            const isCurrent = current?.geometry.id === bindingPlace.geometry.id;
+            return [{ bindingPlace, anchor: brackets[opening]!.top, current: isCurrent }];
         });
         if (bars.length > 0) {
-            const key = bars.map((bar) => `${bar.place.geometry.id}:${bar.current}`).join();
+            const key = bars.map((bar) => `${bar.bindingPlace.geometry.id}:${bar.current}`).join();
             out.push({
                 key: "bars",
                 x: 0,
@@ -301,7 +313,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                         el.replaceChildren(
                             svg,
                             ...bars.map((bar) => {
-                                const label = placeLabel(bar.place.geometry.binding, i18n);
+                                const label = bindingPlaceLabel(bar.bindingPlace.geometry.binding, i18n);
                                 const item = document.createElement("button");
                                 item.type = "button";
                                 item.className = classOf("udoc-binding-bar", bar.current);
@@ -314,7 +326,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                                 item.addEventListener("pointerdown", (e) => e.stopPropagation());
                                 item.addEventListener("click", (e) => {
                                     e.stopPropagation();
-                                    open(bar.place, item.getBoundingClientRect());
+                                    open(bar.bindingPlace, item.getBoundingClientRect());
                                 });
                                 return item;
                             }),
@@ -335,8 +347,9 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
                         const bar = bars[index]!;
                         item.style.left = `${box.left}px`;
                         item.style.top = `${box.bottom - box.height}px`;
-                        // Stacked off its place, a line straight down from its
-                        // bottom-left corner to its opening bracket's top.
+                        // Stacked off its binding place, a line straight down
+                        // from its bottom-left corner to its opening bracket's
+                        // top.
                         if (box.bottom < bar.anchor.y - 0.5) {
                             leaders.push({
                                 from: { x: box.left, y: box.bottom },
@@ -367,7 +380,7 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         client.onSelection((state) => {
             selection = state.local;
             const before = [current?.geometry.id, ...chain].join();
-            chain = placesOf(state.properties);
+            chain = bindingPlacesOf(state.properties);
             findCurrent();
             if ([current?.geometry.id, ...chain].join() !== before) draw();
         }),
@@ -385,10 +398,10 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
         // The Data panel's name the pointer is over, or the panel shown or not.
         subscribeSelector(store, (s) => (s.activePanel === "data" ? s.dataHover : []), draw),
         // Shown or hidden as the deck becomes a template, is previewed, or an
-        // instance's places are asked for.
+        // instance's binding places are asked for.
         subscribeSelector(
             store,
-            () => placesShown(host),
+            () => bindingPlacesShown(host),
             () => {
                 ask();
                 findCurrent();
@@ -401,8 +414,8 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     return {
         current: () => current,
         atCaret,
-        show(place) {
-            shown = { id: place.geometry.id, at: caretKey(selection) };
+        show(bindingPlace) {
+            shown = { id: bindingPlace.geometry.id, at: caretKey(selection) };
             findCurrent();
             draw();
         },
@@ -423,13 +436,13 @@ export function mountPlaces(host: EditHost, i18n: I18n, open: (place: CurrentPla
     };
 }
 
-/** The places the selection is in, outermost first, as a deck's selection
- *  properties report them: the shapes made places around it, then the places
- *  in its text; none for any other selection. */
-function placesOf(properties: UDocSelectionProperties | null): readonly string[] {
+/** The binding places the selection is in, outermost first, as a deck's
+ *  selection properties report them: the shapes made binding places around it,
+ *  then the binding places in its text; none for any other selection. */
+function bindingPlacesOf(properties: UDocSelectionProperties | null): readonly string[] {
     if (!properties || !("presentation" in properties)) return [];
     const { shape, text } = properties.presentation;
-    return [...(shape.places ?? []), ...(text.places ?? [])];
+    return [...(shape.bindingPlaces ?? []), ...(text.bindingPlaces ?? [])];
 }
 
 /** Where the selection's caret stands — its focus for a range, or the first
@@ -467,11 +480,11 @@ function caretKey(selection: SelectionGeometry | null): string {
     return at ? `${at.page}:${at.point.x.toFixed(2)}:${at.point.y.toFixed(2)}` : "";
 }
 
-/** A place's binding bar: the place, its opening bracket's top end, which
- *  the bar's bottom-left corner stands on, and whether it is the place the
- *  caret stands in. */
+/** A binding place's binding bar: the binding place, its opening bracket's top
+ *  end, which the bar's bottom-left corner stands on, and whether it is the
+ *  binding place the caret stands in. */
 interface Bar {
-    place: CurrentPlace;
+    bindingPlace: CurrentBindingPlace;
     anchor: Point;
     current: boolean;
 }
@@ -479,9 +492,10 @@ interface Bar {
 /** How far apart bars stacked one over another stand, CSS px. */
 const BAR_GAP = 2;
 
-/** Where each of `boxes` stands, outermost place first — each on top of its
- *  own place, and one that would overlap a bar nearer its place's text
- *  stacked up over that bar, the innermost place's standing where it is. */
+/** Where each of `boxes` stands, outermost binding place first — each on top
+ *  of its own binding place, and one that would overlap a bar nearer its
+ *  binding place's text stacked up over that bar, the innermost binding place's
+ *  standing where it is. */
 function stacked(
     boxes: { left: number; bottom: number; width: number; height: number }[],
 ): { left: number; bottom: number; width: number; height: number }[] {
@@ -505,9 +519,10 @@ function stacked(
     return out;
 }
 
-/** One bracket of a place, in viewport px: the edge it stands on, from its top
- *  end to its bottom; the way in towards what it holds, a unit vector;
- *  whether it opens or closes the place; and whether its place stands out. */
+/** One bracket of a binding place, in viewport px: the edge it stands on, from
+ *  its top end to its bottom; the way in towards what it holds, a unit vector;
+ *  whether it opens or closes the binding place; and whether its binding place
+ *  stands out. */
 interface Bracket {
     top: Point;
     bottom: Point;
@@ -518,9 +533,9 @@ interface Bracket {
 
 type BracketShape = Omit<Bracket, "current">;
 
-/** A place within a paragraph's brackets: a [ at the start of its first quad
- *  and a ] at the end of its last, each as tall as its line. A quad's corners
- *  run top-left, top-right, bottom-right, bottom-left. */
+/** A binding place within a paragraph's brackets: a [ at the start of its first
+ *  quad and a ] at the end of its last, each as tall as its line. A quad's
+ *  corners run top-left, top-right, bottom-right, bottom-left. */
 function spanBrackets(first: Point[], last: Point[]): [BracketShape, BracketShape] {
     const [topLeft, , , bottomLeft] = first;
     const [, topRight, bottomRight] = last;
@@ -531,8 +546,8 @@ function spanBrackets(first: Point[], last: Point[]): [BracketShape, BracketShap
     ];
 }
 
-/** A place around whole paragraphs' brackets, or a shape's: a [ and a ] as
- *  tall as all its lines, or its box, at either side of them. */
+/** A binding place around whole paragraphs' brackets, or a shape's: a [ and a ]
+ *  as tall as all its lines, or its box, at either side of them. */
 function blockBrackets(corners: Point[]): [BracketShape, BracketShape] {
     const xs = corners.map((p) => p.x);
     const ys = corners.map((p) => p.y);
@@ -553,18 +568,18 @@ function readingWay(top: Point, bottom: Point): Point {
     return length === 0 ? { x: 1, y: 0 } : { x: (bottom.y - top.y) / length, y: -(bottom.x - top.x) / length };
 }
 
-/** How many steps taller each of `brackets` stands: one more than the
- *  tallest later bracket on its side that falls on it — a place inside its
- *  own beginning or ending with it, as a page's places come each before the
- *  places inside it — and a place's two brackets alike, the taller of the
- *  two, so its [ and its ] match. `brackets` holds each place's opening
- *  bracket and then its closing one. The innermost stands as tall as its
- *  line, and each around it a step taller, so brackets meeting at one edge
- *  show each its own ends, none of them moved off the edge. */
+/** How many steps taller each of `brackets` stands: one more than the tallest
+ *  later bracket on its side that falls on it — a binding place inside its
+ *  own beginning or ending with it, as a page's binding places come each before
+ *  the binding places inside it — and a binding place's two brackets alike,
+ *  the taller of the two, so its [ and its ] match. `brackets` holds each
+ *  binding place's opening bracket and then its closing one. The innermost
+ *  stands as tall as its line, and each around it a step taller, so brackets
+ *  meeting at one edge show each its own ends, none of them moved off the edge. */
 function nestLevels(brackets: readonly Bracket[]): number[] {
     const levels = brackets.map(() => 0);
-    // A pair grown to match can stand taller than a place around it at the
-    // other edge, which grows again: on until nothing does.
+    // A pair grown to match can stand taller than a binding place around it at
+    // the other edge, which grows again: on until nothing does.
     for (let changed = true; changed; ) {
         changed = false;
         for (let index = brackets.length - 1; index >= 0; index--) {
@@ -632,7 +647,7 @@ function pooled<K extends "polyline" | "line">(group: Element, tag: K, count: nu
     return [...group.children] as SVGElementTagNameMap[K][];
 }
 
-/** `base`, and its current modifier for the place the caret is in. */
+/** `base`, and its current modifier for the binding place the caret is in. */
 function classOf(base: string, current: boolean): string {
     return current ? `${base} ${base}--current` : base;
 }

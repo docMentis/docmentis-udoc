@@ -1385,9 +1385,9 @@ export interface CommentGeometryRequest {
 }
 
 /**
- * Read where each place a deck's text holds shows on page `page` of `plane`,
- * page-local points. Replies with `BindingGeometry`[] — none for any other
- * document, or a page with no places.
+ * Read where each binding place a deck's text holds shows on page `page` of
+ * `plane`, page-local points. Replies with `BindingGeometry`[] — none for any
+ * other document, or a page with no binding places.
  */
 export interface BindingGeometryRequest {
     type: "bindingGeometry";
@@ -1396,13 +1396,13 @@ export interface BindingGeometryRequest {
 }
 
 /**
- * Read the choice `place` names — the choice itself, or the one it is an
- * option of — with its options and the one shown. Replies with a
- * `BindingChoice`, or null where `place` names no choice of a deck's.
+ * Read the choice `bindingPlace` names — the choice itself, or the one it is
+ * an option of — with its options and the one shown. Replies with a
+ * `BindingChoice`, or null where `bindingPlace` names no choice of a deck's.
  */
 export interface BindingChoiceRequest {
     type: "bindingChoice";
-    place: string;
+    bindingPlace: string;
 }
 
 /**
@@ -1557,8 +1557,8 @@ export interface AutomationRequest {
 
 /**
  * Read the bindings the open deck's slides write: the schema they make, and the
- * places that bind it, each with what is wrong with it and where it is. Replies
- * with the {@link BindingCatalog}, or `null` for any other document.
+ * binding places that bind it, each with what is wrong with it and where it is.
+ * Replies with the {@link BindingCatalog}, or `null` for any other document.
  */
 export interface AutomationBindingsRequest {
     type: "automationBindings";
@@ -1788,15 +1788,17 @@ export type SelectionEdit =
     /** Text: delete at the text caret / range — a range deletes it, a collapsed
      *  caret deletes forward (Delete) or backward (Backspace). */
     | { kind: "deleteText"; forward: boolean }
-    /** Text: make a place of the selection, binding `binding` — around the
-     *  characters a range within a paragraph covers, around the paragraphs a
-     *  range across a paragraph's end touches, or at a caret one holding its
-     *  placeholder. Offered in a template's text alone. */
+    /** Text: make a binding place of the selection, binding `binding` —
+     *  around the characters a range within a paragraph covers, around the
+     *  paragraphs a range across a paragraph's end touches, or at a caret one
+     *  holding its placeholder. Offered in a template's text alone. */
     | { kind: "bind"; binding: Binding }
-    /** Text: bind the place `place`, in the selected text, by `binding` instead. */
-    | { kind: "rebind"; place: BindingControlId; binding: Binding }
-    /** Text: dissolve the place `place`, in the selected text, keeping its content. */
-    | { kind: "unbind"; place: BindingControlId }
+    /** Text: bind the binding place `bindingPlace`, in the selected text, by
+     *  `binding` instead. */
+    | { kind: "rebind"; bindingPlace: BindingControlId; binding: Binding }
+    /** Text: dissolve the binding place `bindingPlace`, in the selected text,
+     *  keeping its content. */
+    | { kind: "unbind"; bindingPlace: BindingControlId }
     /** Text: add an option bound by `binding` — a `when` with its values, or
      *  the `otherwise` — to the choice `choice`, in the selected text, holding
      *  its placeholder: before the choice's otherwise, or last where it has
@@ -1805,16 +1807,16 @@ export type SelectionEdit =
     /** Text: take the option `option`, in the selected text, out of its
      *  choice with all it holds. A choice keeps its last option. */
     | { kind: "removeBindingOption"; option: BindingControlId }
-    /** Shapes: make each selected whole shape a place binding `binding`, a
-     *  condition, which a fill shows the shape by or hides it by. Offered in a
-     *  template alone. */
+    /** Shapes: make each selected whole shape a binding place binding
+     *  `binding`, a condition, which a fill shows the shape by or hides it by.
+     *  Offered in a template alone. */
     | { kind: "bindShapes"; binding: Binding }
-    /** Shapes: bind the shape `shape`, a place the selection is in — the shape
-     *  selected or holding the selection, or a group around it — by `binding`
-     *  instead. */
+    /** Shapes: bind the shape `shape`, a binding place the selection is in —
+     *  the shape selected or holding the selection, or a group around it — by
+     *  `binding` instead. */
     | { kind: "rebindShape"; shape: ShapeNodeId; binding: Binding }
-    /** Shapes: take the binding off the shape `shape`, a place the selection is
-     *  in, leaving an ordinary shape. */
+    /** Shapes: take the binding off the shape `shape`, a binding place the
+     *  selection is in, leaving an ordinary shape. */
     | { kind: "unbindShape"; shape: ShapeNodeId }
     /** PDF: insert text at the caret / range in a page text object — typing, an
      *  IME commit, a paste. A newline splits the line (Enter is `text: "\n"`). */

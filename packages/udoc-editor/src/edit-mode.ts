@@ -3,13 +3,13 @@ import { selectionPaint, selectionTextFormat, subscribeSelector } from "@docment
 import type { UIExtension, UIState } from "@docmentis/udoc-ui/internal";
 import type { UDocEditorOptions } from "./editor.js";
 import { arrangeCommands } from "./arrange.js";
-import { automationCommands, placesOfKind } from "./automation.js";
-import type { PlaceEditing } from "./automation.js";
+import { automationCommands, bindingPlacesOfKind } from "./automation.js";
+import type { BindingPlaceEditing } from "./automation.js";
 import { mountGenerate } from "./automation-generate.js";
-import { mountPlaces } from "./automation-places.js";
-import type { CurrentPlace, Places } from "./automation-places.js";
-import { createPlacePopover } from "./components/PlacePopover.js";
-import type { PlacePopover } from "./components/PlacePopover.js";
+import { mountBindingPlaces } from "./automation-binding-places.js";
+import type { CurrentBindingPlace, BindingPlaces } from "./automation-binding-places.js";
+import { createBindingPlacePopover } from "./components/BindingPlacePopover.js";
+import type { BindingPlacePopover } from "./components/BindingPlacePopover.js";
 import type { AutomationGenerate } from "./automation-generate.js";
 import { createAutomationPreview } from "./automation-preview.js";
 import { cellCommands } from "./cell-format.js";
@@ -251,29 +251,30 @@ export function editMode(options: UDocEditorOptions): EditMode {
     let cellAlignment: CellAlignment | null = null;
     let pageResize: PageResize | null = null;
     let automationGenerate: AutomationGenerate | null = null;
-    let places: Places | null = null;
-    let placePopover: PlacePopover | null = null;
-    // A place's popover, from its binding bar: a template's places alone are edited.
-    const openPlace = (place: CurrentPlace, item: DOMRect): void => {
+    let bindingPlaces: BindingPlaces | null = null;
+    let bindingPlacePopover: BindingPlacePopover | null = null;
+    // A binding place's popover, from its binding bar: a template's binding
+    // places alone are edited.
+    const openBindingPlace = (bindingPlace: CurrentBindingPlace, item: DOMRect): void => {
         const mounted = host;
-        if (!mounted || !placePopover) return;
+        if (!mounted || !bindingPlacePopover) return;
         const automation = mounted.store.getState().automation;
         if (automation === null || !("template" in automation.role)) return;
-        const popover = placePopover;
+        const popover = bindingPlacePopover;
         const done = () => mounted.focusClipboardSink();
-        const id = place.geometry.id;
-        const binding = place.geometry.binding;
+        const id = bindingPlace.geometry.id;
+        const binding = bindingPlace.geometry.binding;
         const ofChoice = binding === "otherwise" || "choice" in binding || "when" in binding;
         void (ofChoice ? mounted.client.bindingChoice(id) : Promise.resolve(null)).then((choice) =>
             popover.open({
                 binding,
                 anchor: item,
                 choice,
-                // The view's pick: the slide composes again, and the places
-                // are read again where they now stand.
+                // The view's pick: the slide composes again, and the binding
+                // places are read again where they now stand.
                 onShow: async (option) => {
                     await mounted.client.showBindingOption(option);
-                    places?.refresh();
+                    bindingPlaces?.refresh();
                     return mounted.client.bindingChoice(id);
                 },
                 // A choice's options, added and taken out as edits of its
@@ -287,25 +288,25 @@ export function editMode(options: UDocEditorOptions): EditMode {
                             binding: option,
                         }),
                     );
-                    places?.refresh();
+                    bindingPlaces?.refresh();
                     return mounted.client.bindingChoice(id);
                 },
                 onRemoveOption: async (option) => {
                     await mounted.commit(() =>
                         mounted.client.executeOnSelection({ kind: "removeBindingOption", option }),
                     );
-                    places?.refresh();
+                    bindingPlaces?.refresh();
                     return mounted.client.bindingChoice(id);
                 },
-                // A shape a binding makes a place is bound otherwise, or
-                // unbound, as a shape; a place in text as text.
+                // A shape a binding makes a binding place is bound otherwise,
+                // or unbound, as a shape; a binding place in text as text.
                 onApply: (binding) =>
                     mounted
                         .commit(() =>
                             mounted.client.executeOnSelection(
-                                place.geometry.level === "shape"
+                                bindingPlace.geometry.level === "shape"
                                     ? { kind: "rebindShape", shape: id, binding }
-                                    : { kind: "rebind", place: id, binding },
+                                    : { kind: "rebind", bindingPlace: id, binding },
                             ),
                         )
                         .then(done),
@@ -313,26 +314,26 @@ export function editMode(options: UDocEditorOptions): EditMode {
                     mounted
                         .commit(() =>
                             mounted.client.executeOnSelection(
-                                place.geometry.level === "shape"
+                                bindingPlace.geometry.level === "shape"
                                     ? { kind: "unbindShape", shape: id }
-                                    : { kind: "unbind", place: id },
+                                    : { kind: "unbind", bindingPlace: id },
                             ),
                         )
                         .then(done),
             }),
         );
     };
-    // A place a binding just made: marked, and its popover opened, once the
-    // overlay has read it.
-    const placeEditing: PlaceEditing = {
-        around: () => places?.atCaret() ?? [],
+    // A binding place a binding just made: marked, and its popover opened, once
+    // the overlay has read it.
+    const bindingPlaceEditing: BindingPlaceEditing = {
+        around: () => bindingPlaces?.atCaret() ?? [],
         async edit(binding) {
-            const found = await places?.find((all) => placesOfKind(all, binding).at(-1));
-            if (!found || !places) return;
-            places.show(found);
+            const found = await bindingPlaces?.find((all) => bindingPlacesOfKind(all, binding).at(-1));
+            if (!found || !bindingPlaces) return;
+            bindingPlaces.show(found);
             await new Promise((resolve) => requestAnimationFrame(resolve));
-            const item = places.barItem();
-            if (item) openPlace(found, item.getBoundingClientRect());
+            const item = bindingPlaces.barItem();
+            if (item) openBindingPlace(found, item.getBoundingClientRect());
         },
     };
     const grips = createGrips(() => tools);
@@ -379,7 +380,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
             ...cropCommands(() => tools?.crop ?? null),
             ...automationCommands(
                 () => host,
-                () => (places ? placeEditing : null),
+                () => (bindingPlaces ? bindingPlaceEditing : null),
                 preview,
                 () => void automationGenerate?.open(),
                 () => void automationGenerate?.refresh(),
@@ -434,14 +435,14 @@ export function editMode(options: UDocEditorOptions): EditMode {
             cellAlignment = mountCellAlignment(mounted, i18n);
             pageResize = mountPageResize(mounted, i18n);
             automationGenerate = mountGenerate(mounted, i18n, options);
-            placePopover = createPlacePopover(i18n);
-            placePopover.mount(mounted.root);
-            places = mountPlaces(mounted, i18n, openPlace);
+            bindingPlacePopover = createBindingPlacePopover(i18n);
+            bindingPlacePopover.mount(mounted.root);
+            bindingPlaces = mountBindingPlaces(mounted, i18n, openBindingPlace);
             return () => {
-                places?.destroy();
-                places = null;
-                placePopover?.destroy();
-                placePopover = null;
+                bindingPlaces?.destroy();
+                bindingPlaces = null;
+                bindingPlacePopover?.destroy();
+                bindingPlacePopover = null;
                 automationGenerate?.destroy();
                 automationGenerate = null;
                 pageResize?.destroy();

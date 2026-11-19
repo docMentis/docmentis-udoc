@@ -388,7 +388,7 @@ export const ko: Messages = {
     "data.add": "추가",
     "data.remove": "제거",
     "data.error.conflictingType": "다른 곳에서 다른 형식으로 사용됩니다",
-    "data.places.other": "{count}곳에서 사용",
+    "data.bindingPlaces.other": "{count}곳에서 사용",
     "data.items.other": "항목 {count}개",
     "data.other": "기타…",
     "data.loadJson": "JSON 불러오기",

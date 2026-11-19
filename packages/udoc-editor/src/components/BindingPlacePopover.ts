@@ -1,37 +1,37 @@
-// A place's popover, opened from its binding bar over a
-// template's slide: the place's binding as fields for its kind — a variable's
+// A binding place's popover, opened from its binding bar over a template's
+// slide: the binding place's binding as fields for its kind — a variable's
 // path and default, a repeat's item, path and separators, a condition's path
 // and whether it shows when false, a choice's path, an option's values —
 // applied with Done or Enter, and left as it was by Escape or a press outside,
 // which close it as they close a menu. Remove, the bin beside its title, apart
-// from Done, dissolves the place and keeps its content. A choice's and an
-// option's list the choice's options, and picking one shows it on the slide at
-// once, the others taking no room — the view's pick, not an edit. Each option
-// is taken out by the bin on its row, but a choice's last, and Add option and
-// Add otherwise under the list add one, shown at once: edits, each one undo
-// step, made as they are pressed. It opens below the bar, or above it where
-// the window has no room below.
+// from Done, dissolves the binding place and keeps its content. A choice's and
+// an option's list the choice's options, and picking one shows it on the slide
+// at once, the others taking no room — the view's pick, not an edit. Each
+// option is taken out by the bin on its row, but a choice's last, and Add
+// option and Add otherwise under the list add one, shown at once: edits, each
+// one undo step, made as they are pressed. It opens below the bar, or above it
+// where the window has no room below.
 //
 // Storeless and imperative: mounted once and reused, `open(ctx)` seeding it
-// with the place's binding and what applying and removing do.
+// with the binding place's binding and what applying and removing do.
 import { ICON_ADD, ICON_DELETE, createMenuController, on } from "@docmentis/udoc-ui/internal";
 import type { Binding, BindingChoice } from "@docmentis/udoc-wasm";
-import { placeLabel } from "../automation-places.js";
+import { bindingPlaceLabel } from "../automation-binding-places.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
-import { ICON_REMOVE_PLACE } from "../icons.js";
+import { ICON_REMOVE_BINDING_PLACE } from "../icons.js";
 
 /** What `open` needs: the binding, where its binding bar stands,
  *  and what Done and Remove do. */
-export interface PlacePopoverContext {
+export interface BindingPlacePopoverContext {
     binding: Binding;
     /** The bar's rect, in client px, the popover opens below. */
     anchor: DOMRect;
-    /** Bind the place by `binding` instead. */
+    /** Bind the binding place by `binding` instead. */
     onApply: (binding: Binding) => Promise<void>;
-    /** Dissolve the place, keeping its content. */
+    /** Dissolve the binding place, keeping its content. */
     onRemove: () => Promise<void>;
-    /** The choice the place is, or is an option of, with its options and the
-     *  one shown; null for any other place. */
+    /** The choice the binding place is, or is an option of, with its options
+     *  and the one shown; null for any other binding place. */
     choice: BindingChoice | null;
     /** Show the choice's `option`, resolving with the choice as it then is. */
     onShow: (option: string) => Promise<BindingChoice | null>;
@@ -39,7 +39,7 @@ export interface PlacePopoverContext {
      *  choice as it then is. */
     onAddOption: (binding: Binding) => Promise<BindingChoice | null>;
     /** Take the choice's `option` out, resolving with the choice as it then
-     *  is — null where the place the popover is for went with it. */
+     *  is — null where the binding place the popover is for went with it. */
     onRemoveOption: (option: string) => Promise<BindingChoice | null>;
 }
 
@@ -67,7 +67,7 @@ function optionLabel(binding: Binding, i18n: I18n): string {
     if (typeof binding === "object" && "when" in binding) {
         return binding.when.values.map((value) => `"${value}"`).join(", ");
     }
-    return i18n.t("place.otherwise");
+    return i18n.t("bindingPlace.otherwise");
 }
 
 /** The values `choice`'s `when`s match. */
@@ -97,40 +97,40 @@ interface Field {
     readonly input: HTMLInputElement;
 }
 
-/** Build the place popover, mounted once and re-seeded by `open`. */
-export function createPlacePopover(i18n: I18n) {
+/** Build the binding place popover, mounted once and re-seeded by `open`. */
+export function createBindingPlacePopover(i18n: I18n) {
     const panel = document.createElement("div");
-    panel.className = "udoc-place-popover";
+    panel.className = "udoc-binding-place-popover";
     panel.setAttribute("role", "dialog");
 
     const heading = document.createElement("div");
-    heading.className = "udoc-place-popover__heading";
+    heading.className = "udoc-binding-place-popover__heading";
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
-    removeBtn.className = "udoc-place-popover__remove";
-    removeBtn.innerHTML = ICON_REMOVE_PLACE;
-    removeBtn.title = i18n.t("place.remove");
-    removeBtn.setAttribute("aria-label", i18n.t("place.remove"));
+    removeBtn.className = "udoc-binding-place-popover__remove";
+    removeBtn.innerHTML = ICON_REMOVE_BINDING_PLACE;
+    removeBtn.title = i18n.t("bindingPlace.remove");
+    removeBtn.setAttribute("aria-label", i18n.t("bindingPlace.remove"));
     const header = document.createElement("div");
-    header.className = "udoc-place-popover__header";
+    header.className = "udoc-binding-place-popover__header";
     header.append(heading, removeBtn);
     const form = document.createElement("div");
-    form.className = "udoc-place-popover__fields";
+    form.className = "udoc-binding-place-popover__fields";
     const options = document.createElement("fieldset");
-    options.className = "udoc-place-popover__options";
+    options.className = "udoc-binding-place-popover__options";
     const legend = document.createElement("legend");
     legend.className = "udoc-page-modal__field-label";
-    legend.textContent = i18n.t("place.shown");
+    legend.textContent = i18n.t("bindingPlace.shown");
     const adding = document.createElement("div");
-    adding.className = "udoc-place-popover__adding";
-    const addOption = addButton(i18n.t("place.addOption"));
-    const addOtherwise = addButton(i18n.t("place.addOtherwise"));
+    adding.className = "udoc-binding-place-popover__adding";
+    const addOption = addButton(i18n.t("bindingPlace.addOption"));
+    const addOtherwise = addButton(i18n.t("bindingPlace.addOtherwise"));
     adding.append(addOption, addOtherwise);
     const error = document.createElement("div");
     error.className = "udoc-page-modal__error";
     error.setAttribute("role", "alert");
     const footer = document.createElement("div");
-    footer.className = "udoc-place-popover__footer";
+    footer.className = "udoc-binding-place-popover__footer";
     const doneBtn = document.createElement("button");
     doneBtn.type = "button";
     doneBtn.className = "udoc-page-modal__apply";
@@ -138,7 +138,7 @@ export function createPlacePopover(i18n: I18n) {
     footer.append(doneBtn);
     panel.append(header, form, options, error, footer);
 
-    let ctx: PlacePopoverContext | null = null;
+    let ctx: BindingPlacePopoverContext | null = null;
     /** The choice the list shows, as it last stood. */
     let listed: BindingChoice | null = null;
     let fields: Field[] = [];
@@ -156,7 +156,7 @@ export function createPlacePopover(i18n: I18n) {
     function addButton(name: string): HTMLButtonElement {
         const button = document.createElement("button");
         button.type = "button";
-        button.className = "udoc-place-popover__add";
+        button.className = "udoc-binding-place-popover__add";
         button.innerHTML = ICON_ADD;
         const text = document.createElement("span");
         text.textContent = name;
@@ -181,23 +181,26 @@ export function createPlacePopover(i18n: I18n) {
         if (binding === "otherwise") return [];
         if ("variable" in binding) {
             const { path, default: fallback } = binding.variable;
-            return [field("path", "place.path", path), field("default", "place.default", fallback ?? "")];
+            return [field("path", "bindingPlace.path", path), field("default", "bindingPlace.default", fallback ?? "")];
         }
         if ("repeat" in binding) {
             const { item, path, join, last } = binding.repeat;
             return [
-                field("item", "place.item", item),
-                field("path", "place.path", path),
-                field("join", "place.join", join ?? ""),
-                field("last", "place.last", last ?? ""),
+                field("item", "bindingPlace.item", item),
+                field("path", "bindingPlace.path", path),
+                field("join", "bindingPlace.join", join ?? ""),
+                field("last", "bindingPlace.last", last ?? ""),
             ];
         }
         if ("condition" in binding) {
             const { not, path } = binding.condition;
-            return [field("path", "place.path", path), field("not", "place.not", String(not), "checkbox")];
+            return [
+                field("path", "bindingPlace.path", path),
+                field("not", "bindingPlace.not", String(not), "checkbox"),
+            ];
         }
-        if ("choice" in binding) return [field("path", "place.path", binding.choice.path)];
-        return [field("values", "place.values", binding.when.values.join(", "))];
+        if ("choice" in binding) return [field("path", "bindingPlace.path", binding.choice.path)];
+        return [field("values", "bindingPlace.values", binding.when.values.join(", "))];
     }
 
     /** The binding the fields say, of `kind`'s kind; null where one is wrong. */
@@ -258,12 +261,12 @@ export function createPlacePopover(i18n: I18n) {
             legend,
             ...choice.options.map((option) => {
                 const row = document.createElement("div");
-                row.className = "udoc-place-popover__option-row";
+                row.className = "udoc-binding-place-popover__option-row";
                 const label = document.createElement("label");
-                label.className = "udoc-place-popover__option";
+                label.className = "udoc-binding-place-popover__option";
                 const input = document.createElement("input");
                 input.type = "radio";
-                input.name = "udoc-place-shown";
+                input.name = "udoc-binding-place-shown";
                 input.checked = option.id === choice.shown;
                 input.addEventListener("change", () => {
                     if (input.checked) void show(option.id);
@@ -273,10 +276,10 @@ export function createPlacePopover(i18n: I18n) {
                 label.append(input, text);
                 const remove = document.createElement("button");
                 remove.type = "button";
-                remove.className = "udoc-place-popover__remove-option";
+                remove.className = "udoc-binding-place-popover__remove-option";
                 remove.innerHTML = ICON_DELETE;
-                remove.title = i18n.t("place.removeOption");
-                remove.setAttribute("aria-label", `${i18n.t("place.removeOption")}: ${text.textContent}`);
+                remove.title = i18n.t("bindingPlace.removeOption");
+                remove.setAttribute("aria-label", `${i18n.t("bindingPlace.removeOption")}: ${text.textContent}`);
                 remove.disabled = last;
                 remove.addEventListener("click", () => void removeOption(option.id));
                 row.append(label, remove);
@@ -289,7 +292,7 @@ export function createPlacePopover(i18n: I18n) {
 
     /** Run `work`, which changes the choice, and list it as it then is; the
      *  popover closes where the choice is gone from under it. */
-    async function change(work: (open: PlacePopoverContext) => Promise<BindingChoice | null>): Promise<void> {
+    async function change(work: (open: BindingPlacePopoverContext) => Promise<BindingChoice | null>): Promise<void> {
         const open = ctx;
         if (!open || busy) return;
         busy = true;
@@ -342,7 +345,7 @@ export function createPlacePopover(i18n: I18n) {
         if (!open) return;
         const binding = read(open.binding);
         if (binding === null) {
-            error.textContent = i18n.t("place.invalid");
+            error.textContent = i18n.t("bindingPlace.invalid");
             return;
         }
         error.textContent = "";
@@ -365,15 +368,16 @@ export function createPlacePopover(i18n: I18n) {
         }
     });
 
-    function open(context: PlacePopoverContext): void {
+    function open(context: BindingPlacePopoverContext): void {
         ctx = context;
-        heading.textContent = placeLabel(context.binding, i18n);
+        heading.textContent = bindingPlaceLabel(context.binding, i18n);
         panel.setAttribute("aria-label", heading.textContent);
         fields = fieldsOf(context.binding);
         form.replaceChildren(
             ...fields.map((f) => {
                 const label = document.createElement("label");
-                label.className = f.input.type === "checkbox" ? "udoc-place-popover__check" : "udoc-page-modal__field";
+                label.className =
+                    f.input.type === "checkbox" ? "udoc-binding-place-popover__check" : "udoc-page-modal__field";
                 const text = document.createElement("span");
                 text.className = "udoc-page-modal__field-label";
                 text.textContent = i18n.t(f.label);
@@ -418,4 +422,4 @@ export function createPlacePopover(i18n: I18n) {
     return { mount, open, close: () => controller.close(), destroy };
 }
 
-export type PlacePopover = ReturnType<typeof createPlacePopover>;
+export type BindingPlacePopover = ReturnType<typeof createBindingPlacePopover>;

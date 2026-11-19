@@ -50,7 +50,7 @@ def main() -> None:
     staged.mkdir(parents=True, exist_ok=True)
     written = [
         (decks.pitch_book, out / "global-equity-pitch-book.pptx", {}),
-        # Its tags turned into places, and its sample data given, by udoc: see template.mjs.
+        # Its tags turned into binding places, and its sample data given, by udoc: see template.mjs.
         (decks.pitch_book, staged / "global-equity-pitch-book-template.pptx", {"template": True}),
         (decks.firm_overview, out / "firm-overview.pptx", {}),
         (documents.ddq, out / "global-equity-ddq.docx", {}),

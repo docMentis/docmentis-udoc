@@ -1203,18 +1203,18 @@ export const editorStyles = css`
         min-height: 0;
     }
 
-    /* A template's places (udoc:places), in the page's colours whatever the
-       theme, an indigo, darker for the place the caret is in: brackets, a [
-       and a ] around a place within a paragraph and a tall pair either side
-       of one around whole paragraphs, the place the caret is in with its
-       brackets stronger and the binding bar above its first line naming
-       every place the caret is in. Under the selection, taking no press but
-       the bar's. */
+    /* A template's binding places (udoc:binding-places), in the page's colours
+       whatever the theme, an indigo, darker for the binding place the caret
+       is in: brackets, a [ and a ] around a binding place within a paragraph
+       and a tall pair either side of one around whole paragraphs, the
+       binding place the caret is in with its brackets stronger and the
+       binding bar above its first line naming every binding place the caret
+       is in. Under the selection, taking no press but the bar's. */
     .udoc-ui-root {
         --udoc-canvas-binding-marker: #6366f1;
         --udoc-canvas-binding-marker-current: #4338ca;
     }
-    .udoc-ui-root .udoc-places svg {
+    .udoc-ui-root .udoc-binding-places svg {
         position: absolute;
         top: 0;
         left: 0;
@@ -1223,19 +1223,19 @@ export const editorStyles = css`
         overflow: visible;
         pointer-events: none;
     }
-    .udoc-ui-root .udoc-place-bracket {
+    .udoc-ui-root .udoc-binding-place-bracket {
         fill: none;
         stroke: var(--udoc-canvas-binding-marker);
         stroke-width: 1.5px;
         stroke-linejoin: miter;
     }
-    .udoc-ui-root .udoc-place-bracket--current {
+    .udoc-ui-root .udoc-binding-place-bracket--current {
         stroke: var(--udoc-canvas-binding-marker-current);
         stroke-width: 2px;
     }
-    /* The binding bars: one over each place the caret is in, on top of its
-       opening bracket, the one it stands in marked; stacked ones are joined
-       to their places by a line. */
+    /* The binding bars: one over each binding place the caret is in, on top
+       of its opening bracket, the one it stands in marked; stacked ones are
+       joined to their binding places by a line. */
     .udoc-ui-root .udoc-binding-bars svg {
         position: absolute;
         top: 0;
@@ -1273,9 +1273,10 @@ export const editorStyles = css`
     .udoc-ui-root .udoc-binding-bar-leader--current {
         stroke: var(--udoc-canvas-binding-marker-current);
     }
-    /* A place's popover, below its binding bar: its binding's fields, Remove and
-       Done — the dialogs' fields and buttons in a panel of their own. */
-    .udoc-ui-root .udoc-place-popover {
+    /* A binding place's popover, below its binding bar: its binding's fields,
+       Remove and Done — the dialogs' fields and buttons in a panel of their
+       own. */
+    .udoc-ui-root .udoc-binding-place-popover {
         position: fixed;
         z-index: 1000;
         width: 260px;
@@ -1287,13 +1288,13 @@ export const editorStyles = css`
         box-shadow: var(--udoc-elevation-4);
         color: var(--udoc-color-on-surface);
     }
-    .udoc-ui-root .udoc-place-popover__header {
+    .udoc-ui-root .udoc-binding-place-popover__header {
         display: flex;
         align-items: center;
         gap: 8px;
         margin: -4px -4px 8px 0;
     }
-    .udoc-ui-root .udoc-place-popover__heading {
+    .udoc-ui-root .udoc-binding-place-popover__heading {
         flex: 1;
         min-width: 0;
         font-size: 13px;
@@ -1302,17 +1303,17 @@ export const editorStyles = css`
         text-overflow: ellipsis;
         white-space: nowrap;
     }
-    .udoc-ui-root .udoc-place-popover__fields {
+    .udoc-ui-root .udoc-binding-place-popover__fields {
         display: flex;
         flex-direction: column;
         gap: 8px;
     }
-    .udoc-ui-root .udoc-place-popover__check {
+    .udoc-ui-root .udoc-binding-place-popover__check {
         display: flex;
         align-items: center;
         gap: 6px;
     }
-    .udoc-ui-root .udoc-place-popover__options {
+    .udoc-ui-root .udoc-binding-place-popover__options {
         display: flex;
         flex-direction: column;
         gap: 4px;
@@ -1321,20 +1322,20 @@ export const editorStyles = css`
         border: 0;
         min-width: 0;
     }
-    .udoc-ui-root .udoc-place-popover__options[hidden] {
+    .udoc-ui-root .udoc-binding-place-popover__options[hidden] {
         display: none;
     }
-    .udoc-ui-root .udoc-place-popover__options > legend {
+    .udoc-ui-root .udoc-binding-place-popover__options > legend {
         padding: 0;
         margin-bottom: 4px;
     }
-    .udoc-ui-root .udoc-place-popover__option-row {
+    .udoc-ui-root .udoc-binding-place-popover__option-row {
         display: flex;
         align-items: center;
         gap: 4px;
         min-width: 0;
     }
-    .udoc-ui-root .udoc-place-popover__option {
+    .udoc-ui-root .udoc-binding-place-popover__option {
         flex: 1;
         min-width: 0;
         display: flex;
@@ -1346,8 +1347,8 @@ export const editorStyles = css`
     }
     /* An option's bin, and what adds one: quiet icon buttons, as the Data
        panel's for an array's items. */
-    .udoc-ui-root .udoc-place-popover__remove-option,
-    .udoc-ui-root .udoc-place-popover__add {
+    .udoc-ui-root .udoc-binding-place-popover__remove-option,
+    .udoc-ui-root .udoc-binding-place-popover__add {
         flex: none;
         display: inline-flex;
         align-items: center;
@@ -1362,47 +1363,47 @@ export const editorStyles = css`
         font: inherit;
         cursor: pointer;
     }
-    .udoc-ui-root .udoc-place-popover__remove-option {
+    .udoc-ui-root .udoc-binding-place-popover__remove-option {
         width: 24px;
     }
-    .udoc-ui-root .udoc-place-popover__add {
+    .udoc-ui-root .udoc-binding-place-popover__add {
         padding: 0 6px 0 2px;
         color: var(--udoc-color-primary);
     }
-    .udoc-ui-root .udoc-place-popover__add[hidden] {
+    .udoc-ui-root .udoc-binding-place-popover__add[hidden] {
         display: none;
     }
-    .udoc-ui-root .udoc-place-popover__remove-option:hover:not(:disabled),
-    .udoc-ui-root .udoc-place-popover__add:hover {
+    .udoc-ui-root .udoc-binding-place-popover__remove-option:hover:not(:disabled),
+    .udoc-ui-root .udoc-binding-place-popover__add:hover {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
-    .udoc-ui-root .udoc-place-popover__remove-option:disabled {
+    .udoc-ui-root .udoc-binding-place-popover__remove-option:disabled {
         opacity: 0.38;
         cursor: default;
     }
-    .udoc-ui-root .udoc-place-popover__remove-option:focus-visible,
-    .udoc-ui-root .udoc-place-popover__add:focus-visible {
+    .udoc-ui-root .udoc-binding-place-popover__remove-option:focus-visible,
+    .udoc-ui-root .udoc-binding-place-popover__add:focus-visible {
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: -2px;
     }
-    .udoc-ui-root .udoc-place-popover__remove-option svg,
-    .udoc-ui-root .udoc-place-popover__add svg {
+    .udoc-ui-root .udoc-binding-place-popover__remove-option svg,
+    .udoc-ui-root .udoc-binding-place-popover__add svg {
         width: 18px;
         height: 18px;
     }
-    .udoc-ui-root .udoc-place-popover__adding {
+    .udoc-ui-root .udoc-binding-place-popover__adding {
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
         margin-top: 2px;
     }
-    .udoc-ui-root .udoc-place-popover__footer {
+    .udoc-ui-root .udoc-binding-place-popover__footer {
         display: flex;
         justify-content: flex-end;
         margin-top: 12px;
     }
     /* Remove, the bin beside the title: as a dialog's close button is drawn. */
-    .udoc-ui-root .udoc-place-popover__remove {
+    .udoc-ui-root .udoc-binding-place-popover__remove {
         flex: none;
         display: inline-flex;
         align-items: center;
@@ -1416,14 +1417,14 @@ export const editorStyles = css`
         color: var(--udoc-color-on-surface-variant);
         cursor: pointer;
     }
-    .udoc-ui-root .udoc-place-popover__remove:hover {
+    .udoc-ui-root .udoc-binding-place-popover__remove:hover {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
-    .udoc-ui-root .udoc-place-popover__remove:focus-visible {
+    .udoc-ui-root .udoc-binding-place-popover__remove:focus-visible {
         outline: 2px solid var(--udoc-color-primary);
         outline-offset: -2px;
     }
-    .udoc-ui-root .udoc-place-popover__remove svg {
+    .udoc-ui-root .udoc-binding-place-popover__remove svg {
         width: var(--udoc-btn-glyph);
         height: var(--udoc-btn-glyph);
     }

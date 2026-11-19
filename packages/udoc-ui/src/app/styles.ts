@@ -4001,8 +4001,8 @@ export const uiStyles = css`
         color: var(--udoc-color-on-surface);
     }
     /* A name, set bold, wrapped anywhere where its column is too narrow — a
-       name has no spaces — then how many places bind it, where it's two or
-       more; one that binds places is a button choosing them. */
+       name has no spaces — then how many binding places bind it, where it's
+       two or more; one that binding places bind is a button choosing them. */
     .udoc-ui-root .udoc-data-panel__name {
         display: flex;
         flex: 0 1 auto;
@@ -4023,14 +4023,14 @@ export const uiStyles = css`
         font-weight: 600;
         overflow-wrap: anywhere;
     }
-    .udoc-ui-root .udoc-data-panel__name--places {
+    .udoc-ui-root .udoc-data-panel__name--binding-places {
         cursor: pointer;
     }
-    .udoc-ui-root .udoc-data-panel__name--places:hover,
+    .udoc-ui-root .udoc-data-panel__name--binding-places:hover,
     .udoc-ui-root .udoc-data-panel__error:hover {
         background-image: linear-gradient(var(--udoc-state-hover) 0 0);
     }
-    .udoc-ui-root .udoc-data-panel__name--places:focus-visible,
+    .udoc-ui-root .udoc-data-panel__name--binding-places:focus-visible,
     .udoc-ui-root .udoc-data-panel__fold:focus-visible,
     .udoc-ui-root .udoc-data-panel__icon-button:focus-visible,
     .udoc-ui-root .udoc-data-panel__error:focus-visible {

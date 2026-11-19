@@ -169,8 +169,9 @@ def numbered(slide, x, y, n: str, *, fill=b.FOREST, color=b.WHITE, d=Inches(0.55
 
 
 def bound(slide, shape, tag: str) -> None:
-    """Make `shape` a place, its binding `tag`, as a deck keeps one: the tag
-    named UDOC of a tags part of the shape's own, which its custDataLst names."""
+    """Make `shape` a binding place, its binding `tag`, as a deck keeps one: the
+    tag named UDOC of a tags part of the shape's own, which its custDataLst
+    names."""
     part = Part(
         slide.part.package.next_partname("/ppt/tags/tag%d.xml"),
         CT.PML_TAGS,
@@ -239,7 +240,7 @@ def disclosures(deck, number: int, note: str, extra: list[str]):
 def pitch_book(path: str, *, template: bool = False) -> None:
     """The pitch book; with `template`, the one a deal's deck is filled from:
     its client, the meeting, the mandate and the deal team written as tags,
-    and a finals badge a binding shows, which udoc turns into places."""
+    and a finals badge a binding shows, which udoc turns into binding places."""
     s = f.GLOBAL_EQUITY
     deck = _deck(
         "Larchmere Global Equity: strategy review" + (", template" if template else ""),

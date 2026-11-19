@@ -1,8 +1,8 @@
 // The pitch book's template, which a deal room fills with its deal's data:
-// main.py writes the deck with its places as `{{…}}` tags, and the badge's
-// binding in its shape's tag, and udoc makes it a template here — its tags
-// places — and gives it the sample data an author previews it with, as Maya
-// would in the editor's Automation tab and Data panel.
+// main.py writes the deck with its binding places as `{{…}}` tags, and the
+// badge's binding in its shape's tag, and udoc makes it a template here — its
+// tags binding places — and gives it the sample data an author previews it
+// with, as Maya would in the editor's Automation tab and Data panel.
 //
 // generate.mjs runs this with the rest; `node seed/generate/template.mjs`, from
 // shockwave's folder, makes the template alone, with no Word.

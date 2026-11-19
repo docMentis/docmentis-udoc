@@ -116,8 +116,8 @@ const ICONS = {
     ICON_GENERATE: "file_export",
     ICON_DATA_PANEL: "database",
     ICON_BINDING_MARKUP: "frame_source",
-    // A place's popover's Remove
-    ICON_REMOVE_PLACE: "delete",
+    // A binding place's popover's Remove
+    ICON_REMOVE_BINDING_PLACE: "delete",
     ICON_REFRESH: "refresh",
 
     // An image's Home tab

@@ -386,7 +386,7 @@ export const zhTW: Messages = {
     "data.add": "新增",
     "data.remove": "移除",
     "data.error.conflictingType": "在別處被用作其他類型",
-    "data.places.other": "在 {count} 處使用",
+    "data.bindingPlaces.other": "在 {count} 處使用",
     "data.items.other": "{count} 項",
     "data.other": "其他…",
     "data.loadJson": "載入 JSON",

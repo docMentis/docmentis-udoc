@@ -1617,12 +1617,12 @@ export function mountUIShell(
             actions: (state) => (extension && state.mode !== VIEW_MODE ? extension.revisionActions(state) : []),
         },
         {
-            onChoose: (key, places) => void chooseDataPlace(key, places),
-            onHover: (places) =>
+            onChoose: (key, bindingPlaces) => void chooseDataBindingPlace(key, bindingPlaces),
+            onHover: (bindingPlaces) =>
                 store.dispatch({
                     type: "SET_DATA_HOVER",
-                    places: places.flatMap((place) => {
-                        const id = place.id ?? place.shape;
+                    bindingPlaces: bindingPlaces.flatMap((bindingPlace) => {
+                        const id = bindingPlace.id ?? bindingPlace.shape;
                         return id === undefined ? [] : [id];
                     }),
                 }),
@@ -3733,36 +3733,40 @@ export function mountUIShell(
         { equality: shallowEqual },
     );
 
-    // Which place of each row the Data panel chose last, by the row: choosing
-    // it again goes on to the next, round to the first after the last. Kept
-    // while the bindings are read again after an edit, and dropped with the
-    // document.
-    const dataPlaceChosen = new Map<string, number>();
+    // Which binding place of each row the Data panel chose last, by the row:
+    // choosing it again goes on to the next, round to the first after the last.
+    // Kept while the bindings are read again after an edit, and dropped with
+    // the document.
+    const dataBindingPlaceChosen = new Map<string, number>();
     const unsubDataBindingsOpened = subscribeSelector(
         store,
         (s) => s.docGeneration,
-        () => dataPlaceChosen.clear(),
+        () => dataBindingPlaceChosen.clear(),
     );
 
-    // Select the next of the places a Data panel row `key` stands for, and
-    // bring its slide into view: a place in text where it is, a shape whole.
-    async function chooseDataPlace(key: string, places: readonly PresentationBindingPlace[]): Promise<void> {
-        if (places.length === 0) return;
-        const index = ((dataPlaceChosen.get(key) ?? -1) + 1) % places.length;
-        dataPlaceChosen.set(key, index);
-        const place = places[index]!;
-        client.goToPage(place.slide);
-        if (place.shape !== undefined) {
-            const slide = await client.presentation.slideId(place.slide);
+    // Select the next of the binding places a Data panel row `key` stands for,
+    // and bring its slide into view: a binding place in text where it is, a
+    // shape whole.
+    async function chooseDataBindingPlace(
+        key: string,
+        bindingPlaces: readonly PresentationBindingPlace[],
+    ): Promise<void> {
+        if (bindingPlaces.length === 0) return;
+        const index = ((dataBindingPlaceChosen.get(key) ?? -1) + 1) % bindingPlaces.length;
+        dataBindingPlaceChosen.set(key, index);
+        const bindingPlace = bindingPlaces[index]!;
+        client.goToPage(bindingPlace.slide);
+        if (bindingPlace.shape !== undefined) {
+            const slide = await client.presentation.slideId(bindingPlace.slide);
             if (slide !== null) {
                 setSelection({
-                    presentation: { shapes: { container: { slide }, selection: { shapes: [place.shape] } } },
+                    presentation: { shapes: { container: { slide }, selection: { shapes: [bindingPlace.shape] } } },
                 });
             }
             return;
         }
-        if (place.location === undefined) return;
-        const selection = await client.searchMatchSelection(place.location);
+        if (bindingPlace.location === undefined) return;
+        const selection = await client.searchMatchSelection(bindingPlace.location);
         if (selection) setSelection(selection);
     }
 

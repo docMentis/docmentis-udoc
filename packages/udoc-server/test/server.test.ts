@@ -174,7 +174,7 @@ class FakeSession {
         return this.automationPart;
     }
     async bindings(): Promise<unknown> {
-        return this.automationPart ? { schema: { object: { properties: {} } }, places: [] } : undefined;
+        return this.automationPart ? { schema: { object: { properties: {} } }, bindingPlaces: [] } : undefined;
     }
     async saveToPackage({ version }: { version?: number } = {}): Promise<Uint8Array> {
         this.packageSaves.push(version);
@@ -1569,7 +1569,7 @@ test("a document's automation answers its part and its bindings, or null for eac
     const id = await upload();
     assert.deepEqual(await (await request("GET", `/documents/${id}/automation`)).json(), {
         automation: { role: { template: { id: "T" } } },
-        bindings: { schema: { object: { properties: {} } }, places: [] },
+        bindings: { schema: { object: { properties: {} } }, bindingPlaces: [] },
     });
     udoc.templates = false;
     const plain = await upload();

@@ -938,22 +938,24 @@ export class WorkerClient {
     }
 
     /**
-     * Where each place a deck's text holds shows on page `page` of `plane`: its
-     * id, its level and its content's quads, page-local points, a caret's
-     * width where it holds only a placeholder that paints nothing — none for
-     * any other document. What the places overlay is drawn from.
+     * Where each binding place a deck's text holds shows on page `page` of
+     * `plane`: its id, its level and its content's quads, page-local points, a
+     * caret's width where it holds only a placeholder that paints nothing —
+     * none for any other document. What the binding places overlay is drawn
+     * from.
      */
     async bindingGeometry(plane: number, page: number): Promise<BindingGeometry[]> {
         return (await this.#send({ type: "bindingGeometry", plane, page })) as BindingGeometry[];
     }
 
     /**
-     * The choice `place` names — the choice itself, or the one it is an
-     * option of — with its options and the one shown, or null where `place`
-     * names no choice of a deck's. What the place popover's picker lists.
+     * The choice `bindingPlace` names — the choice itself, or the one it is
+     * an option of — with its options and the one shown, or null where
+     * `bindingPlace` names no choice of a deck's. What the binding place
+     * popover's picker lists.
      */
-    async bindingChoice(place: string): Promise<BindingChoice | null> {
-        return (await this.#send({ type: "bindingChoice", place })) as BindingChoice | null;
+    async bindingChoice(bindingPlace: string): Promise<BindingChoice | null> {
+        return (await this.#send({ type: "bindingChoice", bindingPlace })) as BindingChoice | null;
     }
 
     /**
@@ -1661,10 +1663,10 @@ export class WorkerClient {
         /**
          * The bindings the open deck's slides write: the schema they make —
          * each name the data must hold, nested, with the type its bindings
-         * imply — and the places that bind it, each with what is wrong with it
-         * and where it is, which {@link searchMatchSelection} selects. `null`
-         * for any other document. A read that loads every slide, laying none
-         * out.
+         * imply — and the binding places that bind it, each with what is
+         * wrong with it and where it is, which {@link searchMatchSelection}
+         * selects. `null` for any other document. A read that loads every
+         * slide, laying none out.
          */
         automationBindings: (): Promise<BindingCatalog<PresentationBindingPlace> | null> =>
             this.#send({ type: "automationBindings" }) as Promise<BindingCatalog<PresentationBindingPlace> | null>,

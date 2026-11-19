@@ -21,10 +21,10 @@ listed once, by package. Its major and minor version are those of the
   at every depth, is its data — a template's sample data, an instance's the
   data it was filled with: text, a choice picked from its values or written
   as another, a switch for a bool, and an array's items, added and removed.
-  A name chosen selects the next place that binds it; where two or more do,
-  their count follows the name, and in edit mode pointing at it outlines its
-  places on the slides. Last come the bindings that are wrong, each with
-  what is wrong with it; a plain deck shows a note.
+  A name chosen selects the next binding place that binds it; where two or
+  more do, their count follows the name, and in edit mode pointing at it
+  outlines its binding places on the slides. Last come the bindings that are
+  wrong, each with what is wrong with it; a plain deck shows a note.
   In its title bar, icon buttons named by their tooltips act on all of it,
   in edit mode. A template's sample data is kept in the template, one undo
   step per value: its Generate Sample Data gives it a value for each name it
@@ -76,17 +76,17 @@ listed once, by package. Its major and minor version are those of the
   or an edit cancels the cut. Cut copied only.
 - A PowerPoint deck's edit mode has an Automation tab, after the Shape tab.
   Template turns a plain deck into a template, each `{{…}}` tag in its text
-  becoming a place, and a template back into a plain deck, its places written
-  back as tags. On a template, Variable, Repeat, Condition and Choice make a
-  place of the selection — around the text or the paragraphs selected, or at
-  the caret one holding nothing yet — and open its popover, where its path
-  and the rest of its binding are typed: a variable's default, a repeat's
-  item and separators, whether a condition shows when its value is false, an
-  option's values. A choice is made with an option for `"a"` and an
-  otherwise. Done applies what's typed, and Escape or a click outside leaves
-  the binding as it was; the bin beside the popover's title, Remove, takes
-  the place away and keeps its text. The popover opens above its bar where
-  the window has no room below.
+  becoming a binding place, and a template back into a plain deck, its binding
+  places written back as tags. On a template, Variable, Repeat, Condition and
+  Choice make a binding place of the selection — around the text or the
+  paragraphs selected, or at the caret one holding nothing yet — and open
+  its popover, where its path and the rest of its binding are typed: a
+  variable's default, a repeat's item and separators, whether a condition
+  shows when its value is false, an option's values. A choice is made with an
+  option for `"a"` and an otherwise. Done applies what's typed, and Escape or
+  a click outside leaves the binding as it was; the bin beside the popover's
+  title, Remove, takes the binding place away and keeps its text. The popover
+  opens above its bar where the window has no room below.
   A choice's slide shows one of its options, the first until its popover, or
   an option's, picks another, and the others take no room. The pick is the
   editor's and edits nothing: the deck opened again shows each choice's
@@ -95,26 +95,26 @@ listed once, by package. Its major and minor version are those of the
   choice's last; Add option adds one, for the first letter no option has,
   before the otherwise, and Add otherwise, where the choice has none, adds
   one last. An option added is shown.
-  A deck's places are drawn over its slides as brackets at their very
-  edge, its binding markup: a [ and a ] around a place within a paragraph, a tall pair either
-  side of one around whole paragraphs, and a choice's those of the option it
-  shows. Where places begin or end together, the innermost's bracket is as
-  tall as its line and each around it a step taller, all on the one edge.
-  The place the caret is in has its brackets stronger. Each place the caret
-  is in has a binding bar naming it, on top of its own opening bracket and
-  opening its popover, the one the caret stands in marked; bars that would
-  overlap stack up, each joined to its bracket by a line down from its
-  corner. Where places end or begin,
-  as after a variable's text or between a choice's options, the caret stands
-  in one of them or out of them, as at a Word content control's edge: the
-  arrows step it in and out before moving on, a click puts it in what it
-  clicked after, and what is typed goes where it stands.
-  Condition makes whole shapes selected places too, a picture, a group or a
-  table among them: such a shape has brackets either side of its box, and a
-  binding bar while it, or a shape or text inside it, is selected. Filled,
-  the shape shows where its condition holds and is hidden where it doesn't,
-  as PowerPoint's Selection Pane hides one, so Refresh shows it again. The
-  Data panel lists it with the places in text, and choosing it selects it.
+  A deck's binding places are drawn over its slides as brackets at their very
+  edge, its binding markup: a [ and a ] around a binding place within a
+  paragraph, a tall pair either side of one around whole paragraphs, and a
+  choice's those of the option it shows. Where binding places begin or end
+  together, the innermost's bracket is as tall as its line and each around it
+  a step taller, all on the one edge. The binding place the caret is in has
+  its brackets stronger. Each binding place the caret is in has a binding bar
+  naming it, on top of its own opening bracket and opening its popover, the
+  one the caret stands in marked; bars that would overlap stack up, each
+  joined to its bracket by a line down from its corner. Where binding places
+  end or begin, as after a variable's text or between a choice's options, the
+  caret stands in one of them or out of them, as at a Word content control's
+  edge: the arrows step it in and out before moving on, a click puts it in
+  what it clicked after, and what is typed goes where it stands.
+  Condition makes whole shapes selected binding places too, a picture, a group
+  or a table among them: such a shape has brackets either side of its box, and
+  a binding bar while it, or a shape or text inside it, is selected. Filled,
+  the shape shows where its condition holds and is hidden where it doesn't, as
+  PowerPoint's Selection Pane hides one, so Refresh shows it again. The Data
+  panel lists it with the binding places in text, and choosing it selects it.
   Binding Markup shows or hides the brackets and bars — a template's show
   until it's pressed, and an instance's once it is — and Data the Data
   panel.
@@ -132,7 +132,7 @@ listed once, by package. Its major and minor version are those of the
   Refresh opens the same dialog to fill it again where it is, one undo step,
   on the data its Data panel holds — as changed there, else as the instance
   was last filled with, which it keeps. The
-  `translations` keys under `place.`, and `command.bindingMarkup` and
+  `translations` keys under `bindingPlace.`, and `command.bindingMarkup` and
   `command.refresh`, are new.
 - `UDocEditor.generateToBytes(data, options?)` fills a copy of the open
   template with `data` and resolves with the instance's bytes, the template

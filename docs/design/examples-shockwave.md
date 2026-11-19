@@ -34,21 +34,21 @@ Seismic, Highspot, Showpad and Letter AI each do these jobs:
 
 ## Where docMentis fits
 
-| Job                                 | docMentis today                                                                                                              | Strength                        |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| Previewing the library, any format  | the viewer: PDF, DOCX, PPTX, XLSX, images, Markdown, HTML, CSV, video and audio, web pages                                   | core                            |
-| Previewing before uploading         | the viewer renders the file in the browser, in WebAssembly; it never leaves the computer                                     | core                            |
-| Thumbnails                          | udoc-server's page routes, PNG or SVG; udoc-node's `exportPageToBytes`                                                       | core                            |
-| Personalizing a deck                | the editor edits the PPTX, DOCX or XLSX itself, in the browser, with no trip to desktop Office                               | core                            |
-| A frozen PDF of an approved version | `exportToBytes("pdf")`, udoc-server's `pages.pdf`                                                                            | core                            |
-| Compliance review                   | comment threads in Word, Excel, PowerPoint and PDF, made on the version reviewed and merged into the working copy            | partial: drawn markup PDF alone |
-| Co-editing an RFP                   | udoc-server's collaboration over WebSocket, with presence and each other's pointers                                          | core                            |
-| Presenting                          | the slide show: PowerPoint's transitions, animations and Morph, the presenter view on a second screen; a PDF too             | core                            |
-| Buyer engagement, page by page      | the viewer's `currentPage:changed`, `viewport:changed`, `document:downloaded` and `document:printed`, which the host records | core                            |
-| Sharing under control               | `setWatermarks`; `showDownloadButton`, `showPrintButton` and `enableCopy` turned off                                         | partial: no redaction           |
-| Searching the library, AI on it     | search within one document alone: only a word document saves as text or Markdown, and a PDF's or a deck's text can't be had  | gap                             |
-| Decks generated from a template     | udoc-server fills a template's places with a deal's data beside the documents it keeps: a new deck, a preview, or a refresh  | core                            |
-| Copying slides between decks        | not looked into yet                                                                                                          | likely gap                      |
+| Job                                 | docMentis today                                                                                                                     | Strength                        |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| Previewing the library, any format  | the viewer: PDF, DOCX, PPTX, XLSX, images, Markdown, HTML, CSV, video and audio, web pages                                          | core                            |
+| Previewing before uploading         | the viewer renders the file in the browser, in WebAssembly; it never leaves the computer                                            | core                            |
+| Thumbnails                          | udoc-server's page routes, PNG or SVG; udoc-node's `exportPageToBytes`                                                              | core                            |
+| Personalizing a deck                | the editor edits the PPTX, DOCX or XLSX itself, in the browser, with no trip to desktop Office                                      | core                            |
+| A frozen PDF of an approved version | `exportToBytes("pdf")`, udoc-server's `pages.pdf`                                                                                   | core                            |
+| Compliance review                   | comment threads in Word, Excel, PowerPoint and PDF, made on the version reviewed and merged into the working copy                   | partial: drawn markup PDF alone |
+| Co-editing an RFP                   | udoc-server's collaboration over WebSocket, with presence and each other's pointers                                                 | core                            |
+| Presenting                          | the slide show: PowerPoint's transitions, animations and Morph, the presenter view on a second screen; a PDF too                    | core                            |
+| Buyer engagement, page by page      | the viewer's `currentPage:changed`, `viewport:changed`, `document:downloaded` and `document:printed`, which the host records        | core                            |
+| Sharing under control               | `setWatermarks`; `showDownloadButton`, `showPrintButton` and `enableCopy` turned off                                                | partial: no redaction           |
+| Searching the library, AI on it     | search within one document alone: only a word document saves as text or Markdown, and a PDF's or a deck's text can't be had         | gap                             |
+| Decks generated from a template     | udoc-server fills a template's binding places with a deal's data beside the documents it keeps: a new deck, a preview, or a refresh | core                            |
+| Copying slides between decks        | not looked into yet                                                                                                                 | likely gap                      |
 
 The gaps are what Shockwave logs in `GAPS.md` as it reaches them, and the
 strongest candidates for the engine's roadmap.
@@ -99,7 +99,7 @@ the app makes. A buyer's visit isn't seeded: a frontstage's activity is what its
 visitors do. The files are generated, from one set of made-up figures, by
 `seed/generate/`, and committed: Python writes the Office files, and Word saves
 the fact sheets and the commentary as PDF, as Larchmere's marketing would; udoc-node
-makes the pitch book's template a template, its tags places, and gives it its sample
+makes the pitch book's template a template, its tags binding places, and gives it its sample
 data (`seed/generate/template.mjs`).
 
 Its users see the app in its brand, as a tenant's do: its logo, a square icon,
@@ -444,7 +444,7 @@ A manager enters every room at their tenant; a member, those they're on, startin
 those they make. An admin or a reviewer enters none.
 
 **A deck from a template.** A deck the library keeps as a template — the pitch book's,
-its client, meeting, mandate and deal team written as places, and a finals badge a
+its client, meeting, mandate and deal team written as binding places, and a finals badge a
 condition shows — is personalized in a room rather than copied: Personalize picks one
 from the collections and takes the deal's data, as JSON starting from the template's
 sample data, and udoc-server fills the version the library publishes, beside the

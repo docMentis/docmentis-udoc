@@ -230,45 +230,45 @@ export interface Messages extends UIMessages {
     "generate.invalid": string;
     /** The document couldn't be generated. */
     "generate.failed": string;
-    /** Variable — a place's kind, on its tab */
-    "place.variable": string;
+    /** Variable — a binding place's kind, on its tab */
+    "bindingPlace.variable": string;
     /** Repeat */
-    "place.repeat": string;
+    "bindingPlace.repeat": string;
     /** Condition */
-    "place.condition": string;
+    "bindingPlace.condition": string;
     /** Choice */
-    "place.choice": string;
+    "bindingPlace.choice": string;
     /** Option — one of a choice's */
-    "place.when": string;
+    "bindingPlace.when": string;
     /** Otherwise — a choice's option for any other value */
-    "place.otherwise": string;
-    /** Path — where in the data a place's value is */
-    "place.path": string;
+    "bindingPlace.otherwise": string;
+    /** Path — where in the data a binding place's value is */
+    "bindingPlace.path": string;
     /** Default — what a variable shows with no value */
-    "place.default": string;
+    "bindingPlace.default": string;
     /** Item — the name a repeat gives each item */
-    "place.item": string;
+    "bindingPlace.item": string;
     /** Separator — written between a repeat's items */
-    "place.join": string;
+    "bindingPlace.join": string;
     /** Last separator — written before a repeat's last item */
-    "place.last": string;
+    "bindingPlace.last": string;
     /** Show when false — a condition kept when its value is false */
-    "place.not": string;
+    "bindingPlace.not": string;
     /** Values — what an option is chosen by, separated by commas */
-    "place.values": string;
+    "bindingPlace.values": string;
     /** Option shown — a choice's options, one picked to show while editing */
-    "place.shown": string;
-    /** Remove — dissolve a place, keeping its content */
-    "place.remove": string;
+    "bindingPlace.shown": string;
+    /** Remove — dissolve a binding place, keeping its content */
+    "bindingPlace.remove": string;
     /** Add option */
-    "place.addOption": string;
+    "bindingPlace.addOption": string;
     /** Add otherwise */
-    "place.addOtherwise": string;
+    "bindingPlace.addOtherwise": string;
     /** Remove option */
-    "place.removeOption": string;
+    "bindingPlace.removeOption": string;
     /** A path is names of letters, digits and _, joined by dots; a value holds no quote mark. */
-    "place.invalid": string;
-    /** Binding Markup — show or hide the brackets and bars of a deck's places */
+    "bindingPlace.invalid": string;
+    /** Binding Markup — show or hide the brackets and bars of a deck's binding places */
     "command.bindingMarkup": string;
     /** Refresh — fill an instance again from data */
     "command.refresh": string;

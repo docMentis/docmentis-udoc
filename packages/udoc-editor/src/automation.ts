@@ -1,22 +1,22 @@
 // A deck's Automation tab's commands: Template, which makes a plain deck a
-// template, turning the tags in its text into places, or a template plain
-// again, its places written back as tags; Variable, Repeat, Condition and
-// Choice, which each make a place of the selection — around what a range
-// holds, or at a caret one holding its placeholder, the engine choosing a span
-// or a block by the selection, and Condition of whole shapes selected too —
-// and open its popover on a path made up for the author to type over, a
-// variable inside a repeat's its item; Data, which
-// shows or hides the right panel's Data tab,
-// what the deck's text binds; Preview, which shows the template filled with
-// its sample data in place of it, or the template again
-// (automation-preview.ts); Generate, which fills a copy of the template with
-// the data the author gives and downloads it (automation-generate.ts); and an
-// instance's Places, which shows its places as a template's always show, and
-// Refresh, which fills it again in place from the data given.
+// template, turning the tags in its text into binding places, or a template
+// plain again, its binding places written back as tags; Variable, Repeat,
+// Condition and Choice, which each make a binding place of the selection —
+// around what a range holds, or at a caret one holding its placeholder, the
+// engine choosing a span or a block by the selection, and Condition of whole
+// shapes selected too — and open its popover on a path made up for the author
+// to type over, a variable inside a repeat's its item; Data, which shows or
+// hides the right panel's Data tab, what the deck's text binds; Preview, which
+// shows the template filled with its sample data in place of it, or the
+// template again (automation-preview.ts); Generate, which fills a copy of the
+// template with the data the author gives and downloads it
+// (automation-generate.ts); and an instance's Binding Markup, which shows its
+// binding places as a template's always show, and Refresh, which fills it again
+// in place from the data given.
 import { allowsEdit, allowsTextEdit } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef } from "@docmentis/udoc-ui/internal";
 import type { Automation, Binding } from "@docmentis/udoc-wasm";
-import type { CurrentPlace } from "./automation-places.js";
+import type { CurrentBindingPlace } from "./automation-binding-places.js";
 import type { AutomationPreview } from "./automation-preview.js";
 import type { EditHost } from "./edit-client.js";
 import type { MessageKey } from "./i18n/index.js";
@@ -46,13 +46,14 @@ const NEW_CONDITION: Binding = { condition: { not: false, path: "flag" } };
 /** A choice by `option`, which the engine makes holding its options. */
 const NEW_CHOICE: Binding = { choice: { path: "option" } };
 
-/** What edit mode lends the tab of a template's places: the places the caret
- *  is in, finding the place a new binding made, and opening its popover. */
-export interface PlaceEditing {
-    /** The places the caret is in, outermost first. */
-    around(): readonly CurrentPlace[];
-    /** Open the popover of the innermost place the caret is in whose binding
-     *  is of `binding`'s kind, once the overlay has read it. */
+/** What edit mode lends the tab of a template's binding places: the binding
+ *  places the caret is in, finding the binding place a new binding made, and
+ *  opening its popover. */
+export interface BindingPlaceEditing {
+    /** The binding places the caret is in, outermost first. */
+    around(): readonly CurrentBindingPlace[];
+    /** Open the popover of the innermost binding place the caret is in whose
+     *  binding is of `binding`'s kind, once the overlay has read it. */
     edit(binding: Binding): Promise<void>;
 }
 
@@ -61,10 +62,13 @@ export function bindingKind(binding: Binding): string {
     return typeof binding === "string" ? binding : Object.keys(binding)[0]!;
 }
 
-/** The places the caret is in whose binding is of `binding`'s kind. */
-export function placesOfKind(places: readonly CurrentPlace[], binding: Binding): CurrentPlace[] {
+/** The binding places the caret is in whose binding is of `binding`'s kind. */
+export function bindingPlacesOfKind(
+    bindingPlaces: readonly CurrentBindingPlace[],
+    binding: Binding,
+): CurrentBindingPlace[] {
     const kind = bindingKind(binding);
-    return places.filter((place) => bindingKind(place.geometry.binding) === kind);
+    return bindingPlaces.filter((bindingPlace) => bindingKind(bindingPlace.geometry.binding) === kind);
 }
 
 /** Whether `automation` makes its deck a template. */
@@ -87,7 +91,7 @@ function template(c: CommandContext): boolean {
     return c.ready && c.docType === "presentation" && isTemplate(c.automation);
 }
 
-/** Whether the open deck is a template or an instance: one with places. */
+/** Whether the open deck is a template or an instance: one with binding places. */
 function automated(c: CommandContext): boolean {
     return c.ready && c.docType === "presentation" && c.automation !== null;
 }
@@ -101,10 +105,10 @@ async function toggleTemplate(host: EditHost): Promise<void> {
     await host.commit(() => host.client.execute({ automation: command }));
 }
 
-/** `binding` as made where the selection is, in `around`, the places it is
- *  in: a variable inside a repeat names the innermost repeat's item, which
+/** `binding` as made where the selection is, in `around`, the binding places it
+ *  is in: a variable inside a repeat names the innermost repeat's item, which
  *  each copy of the repeat shows its own of. */
-function madeIn(binding: Binding, around: readonly CurrentPlace[]): Binding {
+function madeIn(binding: Binding, around: readonly CurrentBindingPlace[]): Binding {
     if (typeof binding === "string" || !("variable" in binding)) return binding;
     const repeats = around.flatMap(({ geometry }) =>
         typeof geometry.binding !== "string" && "repeat" in geometry.binding ? [geometry.binding.repeat] : [],
@@ -113,28 +117,34 @@ function madeIn(binding: Binding, around: readonly CurrentPlace[]): Binding {
     return repeat ? { variable: { ...binding.variable, path: repeat.item } } : binding;
 }
 
-/** Make a place of the selection binding `binding`, one undo step — of the
- *  whole shapes selected, where `shapes` says the binding binds them and they
- *  take it, else of the text selected — then open its popover for the author
- *  to bind it as they mean. */
-async function insertBinding(host: EditHost, places: PlaceEditing, binding: Binding, shapes: boolean): Promise<void> {
-    const made = madeIn(binding, places.around());
+/** Make a binding place of the selection binding `binding`, one undo step —
+ *  of the whole shapes selected, where `shapes` says the binding binds them and
+ *  they take it, else of the text selected — then open its popover for the
+ *  author to bind it as they mean. */
+async function insertBinding(
+    host: EditHost,
+    bindingPlaces: BindingPlaceEditing,
+    binding: Binding,
+    shapes: boolean,
+): Promise<void> {
+    const made = madeIn(binding, bindingPlaces.around());
     const ofShapes = shapes && allowsEdit(host.store.getState().selectionCaps, "bindShapes");
     await host.commit(() =>
         host.client.executeOnSelection(
             ofShapes ? { kind: "bindShapes", binding: made } : { kind: "bind", binding: made },
         ),
     );
-    await places.edit(made);
+    await bindingPlaces.edit(made);
 }
 
-/** The command making a place of the selection binding `binding`, labelled
- *  `label` beside `icon`: live in a template, wherever its text takes a place,
- *  a caret or a range in a shape's text or a table's cell, and where `shapes`
- *  says the binding binds whole shapes, for the whole shapes selected. */
+/** The command making a binding place of the selection binding `binding`,
+ *  labelled `label` beside `icon`: live in a template, wherever its text takes
+ *  a binding place, a caret or a range in a shape's text or a table's cell, and
+ *  where `shapes` says the binding binds whole shapes, for the whole shapes
+ *  selected. */
 function insertCommand(
     host: () => EditHost | null,
-    places: () => PlaceEditing | null,
+    bindingPlaces: () => BindingPlaceEditing | null,
     id: string,
     label: MessageKey,
     icon: string,
@@ -151,7 +161,7 @@ function insertCommand(
             kind: "action",
             press: () => {
                 const mounted = host();
-                const editing = places();
+                const editing = bindingPlaces();
                 if (mounted && editing) void insertBinding(mounted, editing, binding, shapes);
             },
         },
@@ -163,7 +173,7 @@ function insertCommand(
 /** The Automation tab's commands, over the shell `host` lends once mounted. */
 export function automationCommands(
     host: () => EditHost | null,
-    places: () => PlaceEditing | null,
+    bindingPlaces: () => BindingPlaceEditing | null,
     preview: AutomationPreview,
     generate: () => void,
     refresh: () => void,
@@ -192,7 +202,7 @@ export function automationCommands(
         // Condition binds whole shapes too.
         insertVariable: insertCommand(
             host,
-            places,
+            bindingPlaces,
             "insertVariable",
             "command.insertVariable",
             ICON_INSERT_VARIABLE,
@@ -200,7 +210,7 @@ export function automationCommands(
         ),
         insertRepeat: insertCommand(
             host,
-            places,
+            bindingPlaces,
             "insertRepeat",
             "command.insertRepeat",
             ICON_INSERT_REPEAT,
@@ -208,7 +218,7 @@ export function automationCommands(
         ),
         insertCondition: insertCommand(
             host,
-            places,
+            bindingPlaces,
             "insertCondition",
             "command.insertCondition",
             ICON_INSERT_CONDITION,
@@ -217,7 +227,7 @@ export function automationCommands(
         ),
         insertChoice: insertCommand(
             host,
-            places,
+            bindingPlaces,
             "insertChoice",
             "command.insertChoice",
             ICON_INSERT_CHOICE,
@@ -240,9 +250,9 @@ export function automationCommands(
             shownWhen: (c) => c.dataPanel,
             enabledWhen: automated,
         },
-        // Binding Markup, its icon alone, pressed while the deck's places are
-        // drawn: a template's at first, an instance's once asked for. A plain
-        // deck has none, and shows it disabled.
+        // Binding Markup, its icon alone, pressed while the deck's binding
+        // places are drawn: a template's at first, an instance's once asked
+        // for. A plain deck has none, and shows it disabled.
         bindingMarkup: {
             id: "bindingMarkup",
             label: "command.bindingMarkup",

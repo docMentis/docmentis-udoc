@@ -435,14 +435,14 @@ const PRESENTATION_SLIDE_TAB: EditTab = {
 /**
  * The presentation Automation tab — what fills the deck from data: Template,
  * the toggle that makes a plain deck a template and a template plain again;
- * Variable, Repeat, Condition and Choice, each a place made of the selection;
- * Binding Markup, its icon alone, which shows or hides the brackets and bars
- * of a template's or an instance's places, and Data, the panel listing what
- * the text binds; Preview and Generate — a template's alone — then Refresh,
- * an instance's, each but Binding Markup named beside its icon. Picked, it stays open over
- * every selection the deck's own tabs open for, as a template is written by
- * selecting text and shapes on it; a tab ahead of it holds for each of those,
- * so no selection opens it.
+ * Variable, Repeat, Condition and Choice, each a binding place made of the
+ * selection; Binding Markup, its icon alone, which shows or hides the brackets
+ * and bars of a template's or an instance's binding places, and Data, the
+ * panel listing what the text binds; Preview and Generate — a template's
+ * alone — then Refresh, an instance's, each but Binding Markup named beside
+ * its icon. Picked, it stays open over every selection the deck's own tabs open
+ * for, as a template is written by selecting text and shapes on it; a tab
+ * ahead of it holds for each of those, so no selection opens it.
  */
 const PRESENTATION_AUTOMATION_TAB: EditTab = {
     id: "automation",
