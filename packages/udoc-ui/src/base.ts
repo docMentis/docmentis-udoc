@@ -962,8 +962,10 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * object payloads the host's own way and mint their ids with
      * {@link mintId}. One committing edit (one undo step); resolves
      * once the layout has refreshed, with any selection change reported via
-     * `"selection:changed"`. Rejects if the command is invalid for the open
-     * document.
+     * `"selection:changed"`. Where the command says it landed becomes the
+     * selection: the objects, annotations or shapes an insert, a paste or a
+     * group makes, and the caret a text command leaves. Rejects if the command
+     * is invalid for the open document.
      */
     execute(command: UDocCommand): Promise<void> {
         return this.shell.execute(command);

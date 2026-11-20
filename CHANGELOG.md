@@ -6,6 +6,16 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### udoc-viewer and udoc-editor
+
+#### Changed
+
+- `execute` selects where its command landed, as it already selected a PDF's
+  inserted objects and annotations: the shapes an insert, a paste, a group or
+  an ungroup makes on a slide, an image's page or in a word document's
+  drawing, and the caret a text command leaves in a shape, a cell or a word
+  document's body.
+
 ### udoc-node
 
 #### Changed
