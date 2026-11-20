@@ -33,14 +33,14 @@ function whenDeletable(c: CommandContext): boolean {
     return pagesPicked(c.selection) ? allowsEdit(c.selection, "deletePages") : c.pageCount > 1;
 }
 
-/** Insert a blank page after the last page picked, or else the current one —
+/** Create a blank page after the last page picked, or else the current one —
  *  a page the size of the one it follows — and go to it. */
 async function createPage(host: EditHost): Promise<void> {
     const { selectionCaps, selectedPages, pageIndex } = host.store.getState();
-    const picked = allowsEdit(selectionCaps, "insertPage");
+    const picked = allowsEdit(selectionCaps, "createPage");
     const index = (picked ? Math.max(...selectedPages) : pageIndex) + 1;
     await (picked
-        ? host.commit(() => host.client.executeOnSelection({ kind: "page", edit: { kind: "insertPage" } }))
+        ? host.commit(() => host.client.executeOnSelection({ kind: "page", edit: { kind: "createPage" } }))
         : applyPageEdit(host, { kind: "insert", index }));
     host.store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: index });
 }

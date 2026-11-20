@@ -19,11 +19,11 @@ import { root } from "./packages.mjs";
 const DOCUMENTS = {
     portable: {
         file: "pdf/nasa-hubble-fact-sheet-mission-operations.pdf",
-        insert: { portable: { editPage: { command: { insertPage: { index: 0 } } } } },
+        insert: { portable: { editPage: { command: { createPage: { index: 0 } } } } },
     },
     presentation: {
         file: "pptx/james-webb-space-telescope.pptx",
-        insert: { presentation: { editSlide: { command: { insertSlide: { index: 0 } } } } },
+        insert: { presentation: { editSlide: { command: { createSlide: { index: 0 } } } } },
     },
     spreadsheet: {
         file: "xlsx/nasa_asp_schedule_2026_01.xlsx",

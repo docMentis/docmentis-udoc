@@ -293,7 +293,7 @@ async function editing() {
     const ui = await UDocEditor.create(null);
     await check("editor: execute, undo and redo change the pages", async () => {
         await ui.open(await read(SHORT_PDF), { filename: "short.pdf" });
-        await ui.execute({ portable: { editPage: { command: { insertPage: { index: 0 } } } } });
+        await ui.execute({ portable: { editPage: { command: { createPage: { index: 0 } } } } });
         expect(ui.pageCount === 3, `${ui.pageCount} pages after inserting one`);
         await ui.undo();
         expect(ui.pageCount === 2, `${ui.pageCount} pages after undo`);
@@ -356,7 +356,7 @@ async function collaboration() {
                 }
             }, 100);
         });
-        await one.execute({ portable: { editPage: { command: { insertPage: { index: 0 } } } } });
+        await one.execute({ portable: { editPage: { command: { createPage: { index: 0 } } } } });
         await reached;
         expect(other.pageCount === 3, `the other has ${other.pageCount} pages`);
         one.destroy();

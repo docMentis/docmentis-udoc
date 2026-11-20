@@ -3764,7 +3764,7 @@ function drawingEdit(edit: SelectionEdit): unknown {
  *  in — typed against the gate union tsify declares, as the drawing ones are. */
 const SLIDE_KINDS: Record<SlideSelectionEditType, "slide"> = {
     deleteSlides: "slide",
-    insertSlide: "slide",
+    createSlide: "slide",
     duplicateSlides: "slide",
     reorderSlides: "slide",
     setSlidesShow: "slide",

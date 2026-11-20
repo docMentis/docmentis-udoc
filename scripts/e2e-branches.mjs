@@ -219,7 +219,7 @@ const REVIEWS = {
                 },
             });
             run(s, "insert a slide before it", {
-                presentation: { editSlide: { command: { insertSlide: { index: 0 } } } },
+                presentation: { editSlide: { command: { createSlide: { index: 0 } } } },
             });
             run(s, "delete the doomed comment's shape", {
                 presentation: {
@@ -308,7 +308,7 @@ const REVIEWS = {
             { body: "doomed", deleted: true, make: (s, ids) => pageNote(s, ids.usable[3], "doomed") },
         ],
         meanwhile(s, ids) {
-            run(s, "insert a page before", { portable: { editPage: { command: { insertPage: { index: 0 } } } } });
+            run(s, "insert a page before", { portable: { editPage: { command: { createPage: { index: 0 } } } } });
             run(s, "delete the doomed note's page", {
                 portable: { editPage: { command: { deletePages: { ids: [ids.usable[3]] } } } },
             });

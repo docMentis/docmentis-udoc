@@ -58,7 +58,7 @@ const FORMATS = {
         removed: ({ pages }) => ["pages", pages.at(-1)],
         remove: (s, { pages }) =>
             run(s, "deletePages", { portable: { editPage: { command: { deletePages: { ids: pages.slice(-1) } } } } }),
-        edits: [(s) => insertPage(s), (s) => insertPage(s)],
+        edits: [(s) => createPage(s), (s) => createPage(s)],
         shown: (entries) => J(entries, named(entries, /^parts\/page_list_/)[0]).pages.length,
     },
     presentation: {
@@ -69,7 +69,7 @@ const FORMATS = {
             run(s, "deleteSlides", {
                 presentation: { editSlide: { command: { deleteSlides: { ids: slides.slice(-1) } } } },
             }),
-        edits: [(s) => insertSlide(s), (s) => insertSlide(s)],
+        edits: [(s) => createSlide(s), (s) => createSlide(s)],
         shown: (entries) => J(entries, named(entries, /^parts\/presentation_/)[0]).slideIdList.ids.length,
     },
     wordprocessing: {
@@ -89,9 +89,9 @@ const FORMATS = {
     },
 };
 
-const insertPage = (s) => run(s, "insertPage", { portable: { editPage: { command: { insertPage: { index: 0 } } } } });
-const insertSlide = (s) =>
-    run(s, "insertSlide", { presentation: { editSlide: { command: { insertSlide: { index: 0 } } } } });
+const createPage = (s) => run(s, "createPage", { portable: { editPage: { command: { createPage: { index: 0 } } } } });
+const createSlide = (s) =>
+    run(s, "createSlide", { presentation: { editSlide: { command: { createSlide: { index: 0 } } } } });
 const insertSheet = (s, name) =>
     run(s, "insertWorksheet", { spreadsheet: { editWorkbook: { command: { insertWorksheet: { index: 0, name } } } } });
 const typeAt = (s, { story }, at, text) =>

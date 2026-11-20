@@ -1847,8 +1847,8 @@ export type SelectionEdit =
     /** Image: flip the selected pages — left to right when `horizontal`, else
      *  top to bottom — inside a `page` edit. */
     | { kind: "flipPages"; horizontal: boolean }
-    /** PDF: insert a blank page after the last selected one, inside a `page` edit. */
-    | { kind: "insertPage" }
+    /** PDF: create a blank page after the last selected one, inside a `page` edit. */
+    | { kind: "createPage" }
     /** PDF: copy the selected pages in after the last of them, inside a `page` edit. */
     | { kind: "duplicatePages" }
     /** PDF: move the selected pages, as one run in document order, to `to` —
@@ -1857,8 +1857,8 @@ export type SelectionEdit =
     | { kind: "reorderPages"; to: number }
     /** Presentation: the twin of `deletePages`. */
     | { kind: "deleteSlides" }
-    /** Presentation: the twin of `insertPage`. */
-    | { kind: "insertSlide" }
+    /** Presentation: the twin of `createPage`. */
+    | { kind: "createSlide" }
     /** Presentation: the twin of `duplicatePages`. */
     | { kind: "duplicateSlides" }
     /** Presentation: the twin of `reorderPages`, the slides joining the section

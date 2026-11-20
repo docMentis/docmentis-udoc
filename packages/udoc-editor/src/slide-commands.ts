@@ -22,7 +22,7 @@ function createSlide(index: number, layout?: string, slideSection?: string): UDo
         presentation: {
             editSlide: {
                 command: {
-                    insertSlide: {
+                    createSlide: {
                         index,
                         ...(layout == null ? {} : { layout }),
                         ...(slideSection == null ? {} : { slideSection }),

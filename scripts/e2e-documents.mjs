@@ -275,7 +275,7 @@ export const DOCUMENTS = {
                     },
                 }),
             );
-            if (round === 0) run(s, "C insertPage", P({ editPage: { command: { insertPage: { index: 0 } } } }));
+            if (round === 0) run(s, "C createPage", P({ editPage: { command: { createPage: { index: 0 } } } }));
         },
         two(s, { usable, objects }, round) {
             const page = usable[2 + round];
@@ -374,7 +374,7 @@ export const DOCUMENTS = {
                     },
                 });
             if (round === 0)
-                run(s, "C insertSlide", { presentation: { editSlide: { command: { insertSlide: { index: 1 } } } } });
+                run(s, "C createSlide", { presentation: { editSlide: { command: { createSlide: { index: 1 } } } } });
         },
         two(s, { slides, shapes, text }, round) {
             const slide = slides[2 + round];

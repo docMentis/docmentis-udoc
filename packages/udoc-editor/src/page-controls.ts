@@ -60,7 +60,7 @@ function pageCommand(edit: PageStructureEdit, id: string): UDocCommand {
     const editPage = (command: PageCommand): UDocCommand => ({ portable: { editPage: { command } } });
     switch (edit.kind) {
         case "insert":
-            return editPage({ insertPage: { index: edit.index } });
+            return editPage({ createPage: { index: edit.index } });
         case "delete":
             return editPage({ deletePages: { ids: [id] } });
         case "reorder":
