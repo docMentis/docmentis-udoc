@@ -13,8 +13,12 @@ listed once, by package. Its major and minor version are those of the
 - `execute` selects where its command landed, as it already selected a PDF's
   inserted objects and annotations: the shapes an insert, a paste, a group or
   an ungroup makes on a slide, an image's page or in a word document's
-  drawing, and the caret a text command leaves in a shape, a cell or a word
-  document's body.
+  drawing; the caret a text command leaves in a shape, a cell or a word
+  document's body; the slide, page or copies an insert or a duplicate makes;
+  a new slide section; and a new worksheet's first cell.
+- A `groupShapes` command no longer names its `group`, nor an `addShapeText`
+  its `story`: the engine makes the group and the text body, so it mints
+  their ids, and the selection `execute` lands on names them.
 
 ### udoc-node
 
