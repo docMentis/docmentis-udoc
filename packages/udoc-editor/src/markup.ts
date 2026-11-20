@@ -407,7 +407,13 @@ export function markupTable(
     const caret: ShapeSelection = {
         shapeTable: [
             frame,
-            { cellText: { table, cell, text: { range: { story: stories[0] ?? "", anchor: 0, focus: 0 } } } },
+            {
+                cellText: {
+                    table,
+                    cell,
+                    text: { range: { story: stories[0] ?? "", anchor: { offset: 0 }, focus: { offset: 0 } } },
+                },
+            },
         ],
     };
     return { node, caret };

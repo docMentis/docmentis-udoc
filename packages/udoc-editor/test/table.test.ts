@@ -91,14 +91,19 @@ function caretInCell(story: string, offset: number, text: TextSelection): TextSe
     };
 }
 
-const CARET: TextSelection = { range: { story: "cell", anchor: 0, focus: 0 } };
+const CARET: TextSelection = { range: { story: "cell", anchor: { offset: 0 }, focus: { offset: 0 } } };
 
 test("Delete Table in a word document selects the one position the table takes", () => {
     const selection: UDocSelection = {
         wordprocessing: { sectionText: { section: "s", selection: caretInCell("body", 4, CARET) } },
     };
     assert.deepEqual(wordTableSelection(selection), {
-        wordprocessing: { sectionText: { section: "s", selection: { range: { story: "body", anchor: 4, focus: 5 } } } },
+        wordprocessing: {
+            sectionText: {
+                section: "s",
+                selection: { range: { story: "body", anchor: { offset: 4 }, focus: { offset: 5 } } },
+            },
+        },
     });
 });
 
@@ -106,7 +111,7 @@ test("Delete Table takes the innermost table, the one the caret is in", () => {
     const nested = caretInCell("body", 4, caretInCell("cell", 2, CARET));
     assert.deepEqual(
         tableSlotSelection(nested),
-        caretInCell("body", 4, { range: { story: "cell", anchor: 2, focus: 3 } }),
+        caretInCell("body", 4, { range: { story: "cell", anchor: { offset: 2 }, focus: { offset: 3 } } }),
     );
 });
 

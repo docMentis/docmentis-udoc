@@ -366,6 +366,8 @@ export function placeMarkupTextBox(
         host,
         page,
         (id, story, size) => markupTextBox(id, story, text, p0, p1, size, drawingColorOf(DOCMENTIS_LINE)),
-        (id, story) => ({ shapeText: [id, { range: { story, anchor: 0, focus: text.length } }] }),
+        (id, story) => ({
+            shapeText: [id, { range: { story, anchor: { offset: 0 }, focus: { offset: text.length } } }],
+        }),
     );
 }

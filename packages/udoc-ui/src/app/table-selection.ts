@@ -56,7 +56,7 @@ export function tableSlotSelection(text: TextSelection): TextSelection | null {
         const inner = tableSlotSelection(table.cellText.text);
         if (inner) return { table: { story, offset, table: { cellText: { ...table.cellText, text: inner } } } };
     }
-    return { range: { story, anchor: offset, focus: offset + 1 } };
+    return { range: { story, anchor: { offset }, focus: { offset: offset + 1 } } };
 }
 
 /** A word document's selection with the table it is in selected as text — the

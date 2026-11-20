@@ -101,7 +101,7 @@ const typeAt = (s, { story }, at, text) =>
                 story,
                 command: {
                     replaceText: {
-                        range: { start: at, end: at },
+                        range: { start: { offset: at }, end: { offset: at } },
                         fragment: {
                             blocks: [
                                 {

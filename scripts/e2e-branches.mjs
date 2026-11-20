@@ -36,7 +36,10 @@ const typed = (text) => ({
     blocks: [{ paragraph: { properties: { props: [] }, spans: [{ regular: { properties: { props: [] }, text } }] } }],
 });
 const replaceText = (start, end, text) => ({
-    replaceText: { range: { start, end }, fragment: text === "" ? { blocks: [] } : typed(text) },
+    replaceText: {
+        range: { start: { offset: start }, end: { offset: end } },
+        fragment: text === "" ? { blocks: [] } : typed(text),
+    },
 });
 
 /** A comment as the reviewer writes one: its ids minted by the editor writing it. */

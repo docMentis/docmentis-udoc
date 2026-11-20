@@ -65,7 +65,9 @@ const named = (e, re) => [...e.keys()].filter((n) => re.test(n));
 const typed = (text) => ({
     blocks: [{ paragraph: { properties: { props: [] }, spans: [{ regular: { properties: { props: [] }, text } }] } }],
 });
-const insertText = (at, text) => ({ replaceText: { range: { start: at, end: at }, fragment: typed(text) } });
+const insertText = (at, text) => ({
+    replaceText: { range: { start: { offset: at }, end: { offset: at } }, fragment: typed(text) },
+});
 const flags = {
     invisible: false,
     hidden: false,

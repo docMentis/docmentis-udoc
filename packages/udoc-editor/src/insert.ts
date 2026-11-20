@@ -406,7 +406,7 @@ async function placeSlideTextBox(host: EditHost, page: number, p0: ShapePoint, p
             },
         }),
     );
-    const range = { story, anchor: 0, focus: TEXT_BOX_PLACEHOLDER.length };
+    const range = { story, anchor: { offset: 0 }, focus: { offset: TEXT_BOX_PLACEHOLDER.length } };
     host.client.setSelection({
         presentation: { shapes: { container, selection: { shapeText: [id, { range }] } } },
     });

@@ -294,7 +294,7 @@ test("a table puts the caret at the start of its first cell", () => {
                 cellText: {
                     table: model.id,
                     cell: { row: row.regular.id, column: model.columns[0]?.id },
-                    text: { range: { story: cell.regular.body.story.id, anchor: 0, focus: 0 } },
+                    text: { range: { story: cell.regular.body.story.id, anchor: { offset: 0 }, focus: { offset: 0 } } },
                 },
             },
         ],
