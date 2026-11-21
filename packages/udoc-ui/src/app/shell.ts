@@ -3185,7 +3185,7 @@ export function mountUIShell(
         }
     }
 
-    // Open a thread holding `richContents`, by this user, now, its ids minted
+    // Open a thread holding `richContents`, by this user, now, its id minted
     // here, on what is selected where the engine grants it — a document's
     // text; a slide's text selected in a shape, else its shape, else the
     // slide; a sheet's active cell — and with nothing selected on a slide, on
@@ -3195,11 +3195,10 @@ export function mountUIShell(
         const docType = state.docType;
         if (docType !== "wordprocessing" && docType !== "presentation" && docType !== "spreadsheet") return;
         if (!commentable(state.selectionCaps, docType, state.presentationView, state.features)) return;
-        const [id, story] = await Promise.all([mintId(), mintId()]);
-        if (id === null || story === null) return;
+        const id = await mintId();
+        if (id === null) return;
         const comment = {
             id,
-            story,
             author: { name: userName ?? "" },
             created: dateTime(new Date()),
             body: richContents,
@@ -3215,14 +3214,13 @@ export function mountUIShell(
     }
 
     // Answer the Office thread `comment` is in with a reply holding
-    // `richContents`, by this user, now — its ids minted here, as a command
-    // carries every id it creates.
+    // `richContents`, by this user, now — its id minted here, and its body's
+    // by the engine, which builds the body.
     async function replyToOfficeComment(comment: Comment, richContents: string): Promise<void> {
-        const [id, story] = await Promise.all([mintId(), mintId()]);
-        if (id === null || story === null) return;
+        const id = await mintId();
+        if (id === null) return;
         const reply = {
             id,
-            story,
             author: { name: userName ?? "" },
             created: dateTime(new Date()),
             body: richContents,

@@ -42,10 +42,9 @@ const replaceText = (start, end, text) => ({
     },
 });
 
-/** A comment as the reviewer writes one: its ids minted by the editor writing it. */
+/** A comment as the reviewer writes one: its id minted by the editor writing it. */
 const draft = (s, body) => ({
     id: s.mintId(),
-    story: s.mintId(),
     author: { name: "Reviewer" },
     created: "2026-11-12T10:00:00+00:00",
     body: `<p>${body}</p>`,
