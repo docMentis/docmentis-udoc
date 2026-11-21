@@ -19,6 +19,7 @@ import type {
     PresentationBindingEntry,
     SaveStrategy,
     UDocCommand,
+    UDocOutcome,
     UDocType,
     Watermark,
 } from "@docmentis/udoc-wasm";
@@ -488,11 +489,14 @@ export class UDocSession {
      * step that {@link patchSince} then carries to a peer: the edits a host
      * makes on its own, such as `{ automation: { applyData: { data } } }`,
      * which fills a template's binding places from `data` and makes it an instance
-     * of it, or fills an instance again. Rejects with `notEntitled` where the
-     * license, or the permit, doesn't entitle the session to the feature the
-     * command needs, and with the engine's message for a command it refuses.
+     * of it, or fills an instance again. Resolves with what the command did —
+     * a `UDocOutcome`: what it inserted, deleted, reordered or changed, the ids
+     * it minted — or `undefined` where it found nothing to act on. Rejects with
+     * `notEntitled` where the license, or the permit, doesn't entitle the
+     * session to the feature the command needs, and with the engine's message
+     * for a command it refuses.
      */
-    execute(command: UDocCommand): Promise<void> {
+    execute(command: UDocCommand): Promise<UDocOutcome | undefined> {
         return this.#call((id) => ({ id, type: "execute", command }));
     }
 

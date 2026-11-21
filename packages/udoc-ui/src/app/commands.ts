@@ -404,7 +404,7 @@ function slideRow(label: MessageKey, icon: string, edit: SelectionEdit & { kind:
  * keeps one.
  */
 export const PAGE_MENU: readonly MenuItem[] = [
-    pageRow("thumbnails.newPage", ICON_PAGE_ADD, { kind: "createPage" }),
+    pageRow("thumbnails.newPage", ICON_PAGE_ADD, { kind: "createPage", before: false }),
     pageRow("thumbnails.duplicatePage", ICON_PAGE_DUPLICATE, { kind: "duplicatePages" }),
     {
         ...pageRow("thumbnails.rotateRight", ICON_ROTATE_RIGHT, { kind: "rotatePages", clockwise: true }),
@@ -422,7 +422,7 @@ export const IMAGE_PAGE_MENU: readonly MenuItem[] = PAGE_MENU.slice(1);
 /** A deck's thumbnail menu — {@link PAGE_MENU}'s twin for its slides, with
  *  Add Section, and Hide Slide, checked while every selected slide is hidden. */
 export const SLIDE_MENU: readonly MenuItem[] = [
-    slideRow("thumbnails.newSlide", ICON_SLIDE_ADD, { kind: "createSlide" }),
+    slideRow("thumbnails.newSlide", ICON_SLIDE_ADD, { kind: "createSlide", layout: null }),
     slideRow("thumbnails.duplicateSlide", ICON_PAGE_DUPLICATE, { kind: "duplicateSlides" }),
     {
         action: { kind: "addSlideSection" },

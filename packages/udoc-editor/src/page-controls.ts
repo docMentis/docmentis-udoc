@@ -53,14 +53,12 @@ function addressedPage(edit: PageStructureEdit): number | null {
     }
 }
 
-/** The `UDocCommand` for a page-structure edit, the page it addresses named by
- *  `id` (its {@link addressedPage}'s id; unused by an insert). `to` is the index
+/** The `UDocCommand` for a page-structure edit but an insert, the page it
+ *  addresses named by `id` (its {@link addressedPage}'s id). `to` is the index
  *  the moved page takes in the resulting order. */
-function pageCommand(edit: PageStructureEdit, id: string): UDocCommand {
+function pageCommand(edit: Exclude<PageStructureEdit, { kind: "insert" }>, id: string): UDocCommand {
     const editPage = (command: PageCommand): UDocCommand => ({ portable: { editPage: { command } } });
     switch (edit.kind) {
-        case "insert":
-            return editPage({ createPage: { index: edit.index } });
         case "delete":
             return editPage({ deletePages: { ids: [id] } });
         case "reorder":
@@ -74,13 +72,29 @@ function pageCommand(edit: PageStructureEdit, id: string): UDocCommand {
 
 /**
  * Run `edit` on `host`'s document. Commands address a page by id: this reads
- * the addressed page's id first, and skips the edit when that page is gone.
+ * the addressed page's id first, and skips the edit when that page is gone. An
+ * insert is the page selection's edit (see {@link insertPage}).
  */
 export async function applyPageEdit(host: UIShellHost, edit: PageStructureEdit): Promise<void> {
+    if (edit.kind === "insert") return insertPage(host, edit.index);
     const page = addressedPage(edit);
     const id = page === null ? "" : await host.client.portable.pageIdByIndex(page);
     if (id === undefined) return;
     await host.commit(() => host.client.execute(pageCommand(edit, id)));
+}
+
+/** Create a blank page at `index` — `0` before the first page — as the page
+ *  selection's edit: the page below the gap selected and the new page created
+ *  before it, or past the last page, the last selected and the new page
+ *  created after it. The new page is selected after. */
+async function insertPage(host: UIShellHost, index: number): Promise<void> {
+    const below = await host.client.portable.pageIdByIndex(index);
+    const page = below ?? (index > 0 ? await host.client.portable.pageIdByIndex(index - 1) : undefined);
+    if (page === undefined) return;
+    host.client.setSelection({ portable: { pages: { ids: [page] } } });
+    await host.commit(() =>
+        host.client.executeOnSelection({ kind: "page", edit: { kind: "createPage", before: below !== undefined } }),
+    );
 }
 
 /** The doc types whose pages the page controls move, rotate, delete and

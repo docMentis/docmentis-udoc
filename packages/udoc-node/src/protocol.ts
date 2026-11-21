@@ -15,6 +15,7 @@ import type {
     SaveStrategy,
     SessionConfig,
     UDocCommand,
+    UDocOutcome,
     UDocError,
     UDocType,
     UrlFont,
@@ -134,7 +135,7 @@ export interface WorkerResult {
     merge: undefined;
     presence: Uint8Array;
     mergePresence: undefined;
-    execute: undefined;
+    execute: UDocOutcome | undefined;
     automation: Automation | undefined;
     bindings: BindingReport<PresentationBindingEntry> | undefined;
 }

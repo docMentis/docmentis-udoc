@@ -203,8 +203,7 @@ async function handle(request: WorkerRequest): Promise<WorkerReply> {
                 opened().mergePresence(request.presence);
                 return { id, ok: true, result: undefined };
             case "execute":
-                opened().execute(request.command);
-                return { id, ok: true, result: undefined };
+                return { id, ok: true, result: opened().execute(request.command) };
             // A deck's automation, read from its model: none for a plain deck
             // or any other document.
             case "automation": {

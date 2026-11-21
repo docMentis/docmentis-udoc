@@ -15,6 +15,7 @@ import type {
     PresentationPlaneKind,
     SheetLayoutMode,
     SheetState,
+    UDocOutcome,
     UDocType,
 } from "@docmentis/udoc-wasm";
 import type {
@@ -182,6 +183,13 @@ export interface DocumentLayout {
      * recorded none.
      */
     sourceFormat?: FileFormat;
+    /**
+     * What the command did, as the engine's `execute` reports it — what it
+     * inserted, deleted, reordered or changed, the ids it minted. Set only on
+     * the `execute` reply, and absent there too where the command found nothing
+     * to act on.
+     */
+    outcome?: UDocOutcome;
     /**
      * Whether the document opened needs a password before it can be read — a
      * PDF encrypted with a user password — the rest of this layout then being
@@ -382,6 +390,7 @@ export type SelectionEditKind =
     | "createPage"
     | "duplicatePages"
     | "reorderPages"
+    | "insertObjects"
     | "deleteSlides"
     | "createSlide"
     | "duplicateSlides"
@@ -427,6 +436,7 @@ export type SelectionEditKind =
     | "insertSheetColumns"
     | "deleteSheetRows"
     | "deleteSheetColumns"
+    | "createWorksheet"
     | "patchCellFont"
     | "setCellFill"
     | "patchSheetCellBorders"

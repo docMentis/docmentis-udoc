@@ -10,17 +10,25 @@ listed once, by package. Its major and minor version are those of the
 
 #### Changed
 
+- `execute` resolves with what its command did, a `UDocOutcome`, now
+  exported: what it inserted, deleted, reordered or changed, and the ids it
+  minted — a new slide's, say — or `undefined` where it found nothing to act
+  on.
 - `execute` leaves the selection where it was: it no longer selects a PDF's
   inserted objects and annotations. A host that wants what it inserted
   selected says so with `setSelection`.
 - A `groupShapes` command no longer names its `group`, nor an `addShapeText`
   its `story`: the engine makes the group and the text body, so it mints
   their ids.
+- The workbook command `insertWorksheet` is `createWorksheet`: it makes the
+  sheet it puts in, as `createPage` and `createSlide` do.
 
 ### udoc-node
 
 #### Changed
 
+- `UDocSession.execute` resolves with what its command did, a `UDocOutcome`,
+  now exported, as the editor's `execute` does.
 - `UDocSession.bindings()` gives a `BindingReport` in place of a
   `BindingCatalog`: its `entries`, each a `PresentationBindingEntry` —
   `place`, a binding place, named by a `PresentationBindingPlaceRef`, a

@@ -85,6 +85,7 @@ import type {
     SlideSelectionEditType,
     TextSelectionEditType,
     UDocCommand,
+    UDocOutcome,
     UDocSelection,
     UDocSelectionEdit,
     UDocType,
@@ -3024,15 +3025,16 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 //
                 // `execute` says what the command did, never a selection: the
                 // selection is left as it was, and re-posts after the layout,
-                // so its geometry is the edited page's.
-                exec(session, msg.command);
+                // so its geometry is the edited page's. What the command did
+                // rides back with the layout, for whoever sent it.
+                const outcome = exec(session, msg.command);
                 const layout = layoutOf(session);
                 emitSelection(false);
                 emitHistory();
                 emitPlanes(session);
                 scheduleFrame();
                 startComposeAhead(session);
-                reply(id, layout);
+                reply(id, outcome ? { ...layout, outcome } : layout);
                 break;
             }
             case "snapshot": {
@@ -3657,10 +3659,10 @@ function pageAnnotations(s: WasmSession, pages: string[]): PageAnnotations[] {
 /** Run a `UDocCommand` through the wasm `execute` ABI. The boundary is typed
  *  (`execute(command: UDocCommand)`), so the command crosses as an object the
  *  wasm side deserializes — no hand-serialization here. The layout it relaid
- *  out is pulled separately (see {@link layoutOf}). What it returns, what the
- *  command did, isn't needed here. */
-function exec(s: WasmSession, command: UDocCommand): void {
-    s.execute(command);
+ *  out is pulled separately (see {@link layoutOf}). Returns what the command
+ *  did, `undefined` where it found nothing to act on. */
+function exec(s: WasmSession, command: UDocCommand): UDocOutcome | undefined {
+    return s.execute(command);
 }
 
 /** Tag a format-blind {@link SelectionEdit} with the open document's doc-type
@@ -3868,7 +3870,11 @@ function spreadsheetEdit(edit: SelectionEdit): unknown {
     if (typeof edit !== "string" && "kind" in edit && edit.kind in WORKSHEET_KINDS) {
         return { worksheet: { edit: byKind(edit) } };
     }
-    if (typeof edit !== "string" && "kind" in edit && edit.kind === "insertComment") {
+    if (
+        typeof edit !== "string" &&
+        "kind" in edit &&
+        (edit.kind === "insertComment" || edit.kind === "createWorksheet")
+    ) {
         return byKind(edit);
     }
     throw new Error("engine worker: a spreadsheet edit is a worksheet edit");

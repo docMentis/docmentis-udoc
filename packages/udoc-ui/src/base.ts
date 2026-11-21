@@ -25,6 +25,7 @@ import type { Fit, LayoutMode, PageGap, PageViewsFrame, ScrollAlignment, ScrollM
 import type {
     Annotation,
     UDocCommand,
+    UDocOutcome,
     UDocSearchScope,
     UDocSelection,
     Destination,
@@ -960,13 +961,15 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * wasm's `udoc.d.ts`) — there are no per-verb methods; this is how all
      * writes happen, so the same shape is loggable and replayable. Build the
      * object payloads the host's own way and mint their ids with
-     * {@link mintId}. One committing edit (one undo step); resolves
-     * once the layout has refreshed. It leaves the selection where it was: a
-     * host that wants what it inserted selected says so with
+     * {@link mintId}. One committing edit (one undo step); resolves, once the
+     * layout has refreshed, with what the command did — a {@link UDocOutcome}:
+     * what it inserted, deleted, reordered or changed, the ids it minted — or
+     * `undefined` where it found nothing to act on. It leaves the selection
+     * where it was: a host that wants what it inserted selected says so with
      * {@link setSelection}. Rejects if the command is invalid for the open
      * document.
      */
-    execute(command: UDocCommand): Promise<void> {
+    execute(command: UDocCommand): Promise<UDocOutcome | undefined> {
         return this.shell.execute(command);
     }
 

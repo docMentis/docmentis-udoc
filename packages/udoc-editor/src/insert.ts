@@ -16,7 +16,7 @@ import {
     segmentsFor,
 } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef, PickerOption, ShapeKind, ShapePoint } from "@docmentis/udoc-ui/internal";
-import type { ShapePreview } from "@docmentis/udoc-wasm";
+import type { GraphicsObject, ShapePreview } from "@docmentis/udoc-wasm";
 import { DOCMENTIS_FILL, DOCMENTIS_LINE } from "./docmentis-theme.js";
 import type { EditHost } from "./edit-client.js";
 import { EditCommand } from "./edit-command.js";
@@ -342,7 +342,14 @@ export async function place(
         if (pageId === undefined) return;
         if (tool === TEXT_BOX_TOOL) return placeTextBox(host, page, pageId, p0, p1);
         const object = shapeObject(memory, tool as ShapeKind, p0, p1);
-        await host.commit(() => host.client.execute(EditCommand.insertObjects(pageId, [object])));
+        // The page selection's edit, on the page drawn on.
+        host.client.setSelection({ portable: { pages: { ids: [pageId] } } });
+        await host.commit(() =>
+            host.client.executeOnSelection({
+                kind: "page",
+                edit: { kind: "insertObjects", objects: [object as GraphicsObject] },
+            }),
+        );
         return;
     }
     if (tool === TEXT_BOX_TOOL) {

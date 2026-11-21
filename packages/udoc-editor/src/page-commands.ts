@@ -40,7 +40,9 @@ async function createPage(host: EditHost): Promise<void> {
     const picked = allowsEdit(selectionCaps, "createPage");
     const index = (picked ? Math.max(...selectedPages) : pageIndex) + 1;
     await (picked
-        ? host.commit(() => host.client.executeOnSelection({ kind: "page", edit: { kind: "createPage" } }))
+        ? host.commit(() =>
+              host.client.executeOnSelection({ kind: "page", edit: { kind: "createPage", before: false } }),
+          )
         : applyPageEdit(host, { kind: "insert", index }));
     host.store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: index });
 }

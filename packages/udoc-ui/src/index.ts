@@ -120,10 +120,18 @@ export type { UDocSelection } from "@docmentis/udoc-wasm";
 
 // Command write contract (generated from the Rust serde). `UDocCommand` is the
 // doc-type-tagged argument to `UDocBase.execute` — the generic write seam a
-// host crafts from the declared type. The inner enums (`PortableCommand`,
+// host crafts from the declared type — and `UDocOutcome` what it resolves
+// with, what the command did. The inner enums (`PortableCommand`,
 // `PresentationCommand`, `ShapeCommand`) and the `Affine` field are re-exported
 // for hosts that build commands directly.
-export type { UDocCommand, PortableCommand, PresentationCommand, ShapeCommand, Affine } from "@docmentis/udoc-wasm";
+export type {
+    UDocCommand,
+    UDocOutcome,
+    PortableCommand,
+    PresentationCommand,
+    ShapeCommand,
+    Affine,
+} from "@docmentis/udoc-wasm";
 
 // HTML overlay layer — page-anchored DOM chrome over the Rust-painted canvas.
 // A registry: `UDocBase.setOverlay(id, source)` renders any number of

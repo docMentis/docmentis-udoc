@@ -13,26 +13,6 @@ import { ICON_CHANGE_LAYOUT } from "./icons.js";
  *  the section the slide is put in. */
 const APPEND_INDEX = 0x7fff_ffff;
 
-/** Create a slide at `index` (clamped), seeded with its layout's content
- *  placeholders. `layout` is the slide-layout id to build on; omit it to copy
- *  the neighbor slide's layout. `slideSection` is the section it joins, `index`
- *  clamped into its run; omit it to join the section of the slide it follows. */
-function createSlide(index: number, layout?: string, slideSection?: string): UDocCommand {
-    return {
-        presentation: {
-            editSlide: {
-                command: {
-                    createSlide: {
-                        index,
-                        ...(layout == null ? {} : { layout }),
-                        ...(slideSection == null ? {} : { slideSection }),
-                    },
-                },
-            },
-        },
-    };
-}
-
 /** Put the slides `ids` on the slide layout `layout`, in one undo step. */
 function setSlidesLayout(ids: string[], layout: string): UDocCommand {
     return { presentation: { editSlide: { command: { setSlidesLayout: { ids, layout } } } } };
@@ -119,7 +99,15 @@ export function mountSlideLayouts(host: EditHost, i18n: I18n): SlideLayouts {
             const create = async (layout?: string) => {
                 const run = host.store.getState().slideSections.find((s) => s.id === section);
                 const landing = run ? run.start + run.count : insertIndex;
-                await execute(createSlide(insertIndex, layout, section));
+                // The slide selection's edit: the section or slides picked,
+                // else the current slide, selected for it.
+                if (section === undefined && selectedPages.length === 0) {
+                    const current = await host.edit.slideId(pageIndex);
+                    if (current) host.client.setSelection({ presentation: { slides: { ids: [current] } } });
+                }
+                await host.commit(() =>
+                    host.client.executeOnSelection({ kind: "createSlide", layout: layout ?? null }),
+                );
                 host.store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: landing });
             };
             const { options, slideSize } = await roster();

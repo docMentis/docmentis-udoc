@@ -1136,9 +1136,10 @@ export class WorkerClient {
      * Execute one arbitrary, doc-type-tagged {@link UDocCommand} directly — the
      * generic write seam beneath the named {@link portable} verbs, for a host
      * that builds its own commands. A committing edit (one undo step), so it
-     * resolves with the document's new layout; selection/geometry changes
-     * follow via {@link onSelection}. Doc-type-agnostic, so it lives on the
-     * client root, not {@link portable}.
+     * resolves with the document's new layout, carrying what the command did
+     * as {@link DocumentLayout.outcome}; selection/geometry changes follow via
+     * {@link onSelection}. Doc-type-agnostic, so it lives on the client root,
+     * not {@link portable}.
      */
     async execute(command: UDocCommand): Promise<DocumentLayout> {
         return (await this.#send({ type: "execute", command })) as DocumentLayout;

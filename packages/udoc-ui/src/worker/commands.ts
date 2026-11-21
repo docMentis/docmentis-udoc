@@ -168,7 +168,7 @@ export const Command = {
 
     /** Insert an empty worksheet at `index` (0-based, clamped to the sheet
      *  count), named the next `SheetN`. */
-    insertWorksheet: (index: number): UDocCommand => workbook({ insertWorksheet: { index } }),
+    createWorksheet: (index: number): UDocCommand => workbook({ createWorksheet: { index } }),
 
     /** Delete the sheets `ids`; the engine refuses one that would leave no
      *  sheet visible. */

@@ -7,6 +7,7 @@ import { defaultFitForDocType, defaultScrollModeForDocType } from "../worker/pro
 import { Command } from "../worker/commands.js";
 import type {
     UDocCommand,
+    UDocOutcome,
     UDocSelection,
     ExportFormat,
     FileFormat,
@@ -287,8 +288,8 @@ export interface UIShell {
     selection: () => Promise<UDocSelection | null>;
     /** Clear the selection — presence only, fires {@link onSelectionEdit}. */
     clearSelection: () => void;
-    /** Execute an arbitrary, doc-type-tagged {@link UDocCommand} — the single write seam; a committing edit. */
-    execute: (command: UDocCommand) => Promise<void>;
+    /** Execute an arbitrary, doc-type-tagged {@link UDocCommand} — the single write seam; a committing edit, resolving with what the command did. */
+    execute: (command: UDocCommand) => Promise<UDocOutcome | undefined>;
     /** Serialize the CRDT for sync with a peer (an opaque blob for {@link merge}). */
     snapshot: () => Promise<Uint8Array>;
     /** Save the open document as `format`, else its source format, faithfully — the bytes reopen as the same document; a `strategy` other than `"rewrite"` writes over the original; without one, the engine's for the format; a CSV split by `delimiter`, else the one it was opened with. */
@@ -814,7 +815,9 @@ export function mountUIShell(
     const pageAnnotations = createPageAnnotations({
         client,
         store,
-        execute: (command) => execute(command),
+        execute: async (command) => {
+            await execute(command);
+        },
         mintId: () => mintId(),
         selection: () => selection(),
         setSelection: (next) => setSelection(next),
@@ -1176,7 +1179,7 @@ export function mountUIShell(
                 return;
             }
             case "insertSheet":
-                void insertSheet(store.getState().currentPlane);
+                void insertSheet(true);
                 return;
             case "cancel":
                 entryAsked = null;
@@ -1579,7 +1582,7 @@ export function mountUIShell(
     // status bar's left edge. Empty for single-plane doc types. Outside view
     // mode it edits the workbook's sheets.
     const sheetTabs = createSheetTabs(i18n, {
-        insert: () => void insertSheet(store.getState().currentPlane + 1),
+        insert: () => void insertSheet(false),
         contextMenu: (plane, x, y) => {
             // A right-click makes its sheet current, as Excel's does, and the
             // menu acts on it.
@@ -2992,10 +2995,13 @@ export function mountUIShell(
     // its sheet by id, read off its plane, and commits as any edit does; the
     // tabs then follow from the worker's report of them.
 
-    /** Insert a worksheet at `index` and show it. */
-    async function insertSheet(index: number): Promise<void> {
-        await commit(() => client.execute(Command.insertWorksheet(index)));
-        store.dispatch({ type: "SET_CURRENT_PLANE", plane: index });
+    /** Insert a worksheet beside the sheet shown, which the selection is on —
+     *  `before` it, as Excel's Insert Sheet does, else after it, as its New
+     *  Sheet does — and show it, its first cell selected. */
+    async function insertSheet(before: boolean): Promise<void> {
+        const plane = store.getState().currentPlane;
+        await commit(() => client.executeOnSelection({ kind: "createWorksheet", before }));
+        store.dispatch({ type: "SET_CURRENT_PLANE", plane: before ? plane : plane + 1 });
     }
 
     /** Run the sheet command `command` builds for the sheet on `plane`. */
@@ -3037,10 +3043,16 @@ export function mountUIShell(
     }
 
     // Execute an arbitrary UDocCommand — the generic write seam a host drives
-    // with commands it builds. Same committing-edit path, so any selection change
-    // rides back.
-    function execute(command: UDocCommand): Promise<void> {
-        return commit(() => client.execute(command));
+    // with commands it builds. Same committing-edit path; it resolves with what
+    // the command did, which rides back with the layout.
+    async function execute(command: UDocCommand): Promise<UDocOutcome | undefined> {
+        let outcome: UDocOutcome | undefined;
+        await commit(async () => {
+            const layout = await client.execute(command);
+            outcome = layout.outcome;
+            return layout;
+        });
+        return outcome;
     }
 
     // Insert a drawn annotation: build it (the canvas mapped the gesture into
@@ -4636,7 +4648,7 @@ export function mountUIShell(
             // The sheet tab menu's, on the current sheet. Insert puts the
             // worksheet before it, as Excel's does.
             case "insertSheet":
-                void insertSheet(store.getState().currentPlane);
+                void insertSheet(true);
                 break;
             case "deleteSheet":
                 void editSheet(store.getState().currentPlane, (id) => Command.deleteSheets([id]));

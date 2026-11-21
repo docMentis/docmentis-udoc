@@ -38,6 +38,7 @@ import type {
     StrokingStyle,
     TableCellBorderEdge,
     TableSelectionEdit,
+    GraphicsObject,
     UDocError,
     UDocCommand,
     UDocFragment,
@@ -1847,18 +1848,25 @@ export type SelectionEdit =
     /** Image: flip the selected pages — left to right when `horizontal`, else
      *  top to bottom — inside a `page` edit. */
     | { kind: "flipPages"; horizontal: boolean }
-    /** PDF: create a blank page after the last selected one, inside a `page` edit. */
-    | { kind: "createPage" }
+    /** PDF: create a blank page before the first selected one with `before`,
+     *  else after the last, inside a `page` edit. */
+    | { kind: "createPage"; before: boolean }
     /** PDF: copy the selected pages in after the last of them, inside a `page` edit. */
     | { kind: "duplicatePages" }
     /** PDF: move the selected pages, as one run in document order, to `to` —
      *  the index the first of them takes in the resulting order — inside a
      *  `page` edit. */
     | { kind: "reorderPages"; to: number }
+    /** PDF: put `objects` on top of the selected page — a shape drawn on it —
+     *  and select them, inside a `page` edit. */
+    | { kind: "insertObjects"; objects: GraphicsObject[] }
     /** Presentation: the twin of `deletePages`. */
     | { kind: "deleteSlides" }
-    /** Presentation: the twin of `createPage`. */
-    | { kind: "createSlide" }
+    /** Presentation: create a slide at the end of the last selected section,
+     *  else after the last selected slide, else, with nothing selected, at the
+     *  end of the deck — on `layout` where it names one, else on the slide
+     *  layout of the slide it follows — and select it. */
+    | { kind: "createSlide"; layout: string | null }
     /** Presentation: the twin of `duplicatePages`. */
     | { kind: "duplicateSlides" }
     /** Presentation: the twin of `reorderPages`, the slides joining the section
@@ -1923,6 +1931,10 @@ export type SelectionEdit =
     /** Spreadsheet: Excel's Delete Sheet Columns, as `deleteSheetRows`
      *  deletes rows. */
     | { kind: "deleteSheetColumns" }
+    /** Spreadsheet: create a blank worksheet beside the selection's sheet —
+     *  `before` it, as Excel's Insert Sheet does, else after it, as its New
+     *  Sheet does — and select its first cell. */
+    | { kind: "createWorksheet"; before: boolean }
     // Spreadsheet cell formatting — the Cell tab's controls over the selected
     // cells, whole rows and columns, or the whole sheet.
     /** Spreadsheet: lay `font`'s set fields over each selected cell's font. */
