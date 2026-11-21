@@ -18,7 +18,7 @@ import { applyPageEdit } from "./page-controls.js";
 
 /** Whether `caps` holds pages picked in the thumbnails. */
 function pagesPicked(caps: SelectionCapabilities): boolean {
-    return allowsEdit(caps, "rotatePages");
+    return allowsEdit(caps, "page.rotatePages");
 }
 
 /** Whether a PDF's page edits are live in `c`. */
@@ -30,19 +30,17 @@ function whenPortable(c: CommandContext): boolean {
  *  every page picked. */
 function whenDeletable(c: CommandContext): boolean {
     if (!whenPortable(c)) return false;
-    return pagesPicked(c.selection) ? allowsEdit(c.selection, "deletePages") : c.pageCount > 1;
+    return pagesPicked(c.selection) ? allowsEdit(c.selection, "page.deletePages") : c.pageCount > 1;
 }
 
 /** Create a blank page after the last page picked, or else the current one —
  *  a page the size of the one it follows — and go to it. */
 async function createPage(host: EditHost): Promise<void> {
     const { selectionCaps, selectedPages, pageIndex } = host.store.getState();
-    const picked = allowsEdit(selectionCaps, "createPage");
+    const picked = allowsEdit(selectionCaps, "page.createPage");
     const index = (picked ? Math.max(...selectedPages) : pageIndex) + 1;
     await (picked
-        ? host.commit(() =>
-              host.client.executeOnSelection({ kind: "page", edit: { kind: "createPage", before: false } }),
-          )
+        ? host.commit(() => host.client.executeOnSelection({ family: "page", kind: "createPage", before: false }))
         : applyPageEdit(host, { kind: "insert", index }));
     host.store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: index });
 }
@@ -51,7 +49,7 @@ async function createPage(host: EditHost): Promise<void> {
 function deletePages(host: EditHost): Promise<void> {
     const { selectionCaps, pageIndex } = host.store.getState();
     return pagesPicked(selectionCaps)
-        ? host.commit(() => host.client.executeOnSelection({ kind: "page", edit: { kind: "deletePages" } }))
+        ? host.commit(() => host.client.executeOnSelection({ family: "page", kind: "deletePages" }))
         : applyPageEdit(host, { kind: "delete", index: pageIndex });
 }
 
@@ -59,7 +57,7 @@ function deletePages(host: EditHost): Promise<void> {
 function rotatePages(host: EditHost, clockwise: boolean): Promise<void> {
     const { selectionCaps, pageIndex } = host.store.getState();
     return pagesPicked(selectionCaps)
-        ? host.commit(() => host.client.executeOnSelection({ kind: "page", edit: { kind: "rotatePages", clockwise } }))
+        ? host.commit(() => host.client.executeOnSelection({ family: "page", kind: "rotatePages", clockwise }))
         : applyPageEdit(host, { kind: "rotate", index: pageIndex, clockwise });
 }
 

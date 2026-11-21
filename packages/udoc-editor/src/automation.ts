@@ -128,10 +128,12 @@ async function insertBinding(
     shapes: boolean,
 ): Promise<void> {
     const made = madeIn(binding, bindingPlaces.around());
-    const ofShapes = shapes && allowsEdit(host.store.getState().selectionCaps, "bindShapes");
+    const ofShapes = shapes && allowsEdit(host.store.getState().selectionCaps, "shape.bindShapes");
     await host.commit(() =>
         host.client.executeOnSelection(
-            ofShapes ? { kind: "bindShapes", binding: made } : { kind: "bind", binding: made },
+            ofShapes
+                ? { family: "shape", kind: "bindShapes", binding: made }
+                : { family: "text", kind: "bind", binding: made },
         ),
     );
     await bindingPlaces.edit(made);
@@ -166,7 +168,8 @@ function insertCommand(
             },
         },
         enabledWhen: (c) =>
-            template(c) && (allowsTextEdit(c.selection, "bind") || (shapes && allowsEdit(c.selection, "bindShapes"))),
+            template(c) &&
+            (allowsTextEdit(c.selection, "bind") || (shapes && allowsEdit(c.selection, "shape.bindShapes"))),
     };
 }
 

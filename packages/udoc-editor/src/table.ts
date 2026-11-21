@@ -134,7 +134,7 @@ export const TABLE_INSERT_MENU: readonly MenuItem<MessageKey>[] = [
  *  position it takes in its story, a delete of text wherever its rows can be
  *  edited. */
 const canDeleteTable: EnabledWhen = (c) =>
-    inTable(c) && (c.docType === "wordprocessing" || allowsEdit(c.selection, "deleteShapes"));
+    inTable(c) && (c.docType === "wordprocessing" || allowsEdit(c.selection, "shape.deleteShapes"));
 
 export const TABLE_DELETE_MENU: readonly MenuItem<MessageKey>[] = [
     {

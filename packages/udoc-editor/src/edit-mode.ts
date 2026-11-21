@@ -283,6 +283,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
                     if (choice === null) return null;
                     await mounted.commit(() =>
                         mounted.client.executeOnSelection({
+                            family: "text",
                             kind: "addBindingOption",
                             choice: choice.id,
                             binding: option,
@@ -293,7 +294,7 @@ export function editMode(options: UDocEditorOptions): EditMode {
                 },
                 onRemoveOption: async (option) => {
                     await mounted.commit(() =>
-                        mounted.client.executeOnSelection({ kind: "removeBindingOption", option }),
+                        mounted.client.executeOnSelection({ family: "text", kind: "removeBindingOption", option }),
                     );
                     bindingPlaces?.refresh();
                     return mounted.client.bindingChoice(id);
@@ -305,8 +306,8 @@ export function editMode(options: UDocEditorOptions): EditMode {
                         .commit(() =>
                             mounted.client.executeOnSelection(
                                 bindingPlace.geometry.level === "shape"
-                                    ? { kind: "rebindShape", shape: id, binding }
-                                    : { kind: "rebind", bindingPlace: id, binding },
+                                    ? { family: "shape", kind: "rebindShape", shape: id, binding }
+                                    : { family: "text", kind: "rebind", bindingPlace: id, binding },
                             ),
                         )
                         .then(done),
@@ -315,8 +316,8 @@ export function editMode(options: UDocEditorOptions): EditMode {
                         .commit(() =>
                             mounted.client.executeOnSelection(
                                 bindingPlace.geometry.level === "shape"
-                                    ? { kind: "unbindShape", shape: id }
-                                    : { kind: "unbind", bindingPlace: id },
+                                    ? { family: "shape", kind: "unbindShape", shape: id }
+                                    : { family: "text", kind: "unbind", bindingPlace: id },
                             ),
                         )
                         .then(done),

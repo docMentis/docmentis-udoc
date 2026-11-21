@@ -569,7 +569,7 @@ export class SelectionLayer {
     /** Whether the selection is in a PDF's text box: a caret or a range in it,
      *  which a resize rewraps rather than stretches. */
     #inTextBox(): boolean {
-        return this.allows("resizeTextBox");
+        return this.allows("object.resizeTextBox");
     }
 
     /** The handles the selection resizes by. */
@@ -593,7 +593,7 @@ export class SelectionLayer {
         if (
             !this.#showsChrome() ||
             this.selectionPage() === null ||
-            !this.allows("scaleEachObject", "resizeAnnotations", "scaleEachShape")
+            !this.allows("object.scaleEachObject", "annotation.resizeAnnotations", "shape.scaleEachShape")
         )
             return null;
         const byPage = this.#pageMap();
@@ -1248,7 +1248,7 @@ export class SelectionLayer {
         const halfWidth = (bars ? BAR_WIDTH : HANDLE_SIZE) / 2;
         const halfHeight = (bars ? BAR_HEIGHT : HANDLE_SIZE) / 2;
         let usedHandles = 0;
-        const resizes = this.allows("scaleEachObject", "resizeAnnotations", "scaleEachShape");
+        const resizes = this.allows("object.scaleEachObject", "annotation.resizeAnnotations", "shape.scaleEachShape");
         for (const item of this.#objectItems()) {
             const view = byPage.get(item.page);
             if (!view) continue; // page scrolled off — no chrome for this box

@@ -147,35 +147,41 @@ function inTable(caps: SelectionCapabilities): boolean {
 /** Whether `caps` holds a workbook's cells: a block of them, whole rows or
  *  columns, or the whole sheet. */
 function sheetCells(caps: SelectionCapabilities): boolean {
-    return allowsEdit(caps, "patchCellFont");
+    return allowsEdit(caps, "worksheet.patchCellFont");
 }
 
 /** Whether `caps` holds picked shapes: a slide's, a word document's drawings,
  *  those drawn over an image. */
 function pickedShapes(caps: SelectionCapabilities): boolean {
-    return allowsEdit(caps, "setShapeFill");
+    return allowsEdit(caps, "shape.setShapeFill");
 }
 
 /** Whether `caps` holds a PDF's page objects, or a caret in one's text. */
 function pageObjects(caps: SelectionCapabilities): boolean {
-    return allowsEdit(caps, "translateObjects");
+    return allowsEdit(caps, "object.translateObjects");
 }
 
 /** Whether `caps` holds a PDF's annotations, or a caret in a free text's. */
 function annotations(caps: SelectionCapabilities): boolean {
-    return allowsEdit(caps, "deleteAnnotations", "translateAnnotations", "resizeAnnotations", "reorderAnnotations");
+    return allowsEdit(
+        caps,
+        "annotation.deleteAnnotations",
+        "annotation.translateAnnotations",
+        "annotation.resizeAnnotations",
+        "annotation.reorderAnnotations",
+    );
 }
 
 /** Whether `caps` holds a PDF's or an image's pages, picked in the thumbnails, or
  *  nothing. */
 function pagesOrNothing(caps: SelectionCapabilities): boolean {
-    return caps.count === 0 || allowsEdit(caps, "rotatePages");
+    return caps.count === 0 || allowsEdit(caps, "page.rotatePages");
 }
 
 /** Whether `caps` holds a deck's slides or sections, picked in the thumbnails, or
  *  nothing. */
 function slidesOrNothing(caps: SelectionCapabilities): boolean {
-    return caps.count === 0 || allowsEdit(caps, "deleteSlides", "deleteSlideSections");
+    return caps.count === 0 || allowsEdit(caps, "slide.deleteSlides", "slideSection.deleteSlideSections");
 }
 
 /** Whether `caps` is a selection one of a deck's own tabs opens for: its slides,

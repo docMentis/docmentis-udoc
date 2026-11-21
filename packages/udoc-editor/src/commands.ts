@@ -254,13 +254,14 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
                     const { host } = tools();
                     void host.commit(() =>
                         host.client.executeOnSelection({
+                            family: "shape",
                             kind: "setShapeGeometry",
                             geometry: { preset: { preset: shape.preset, adjustValues: [] } },
                         }),
                     );
                 },
             },
-            enabledWhen: (c) => allowsEdit(c.selection, "setShapeGeometry"),
+            enabledWhen: (c) => allowsEdit(c.selection, "shape.setShapeGeometry"),
         },
 
         // Then the Fill / Line dropdowns. The color bar reflects the selection's
@@ -276,7 +277,7 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
                 cluster: "paint",
                 create: (env) => paintControl(env, { id: "shapeFillColor", icon: ICON_FILL, channel: "fill" }, tools()),
             },
-            enabledWhen: (c) => allowsEdit(c.selection, "setShapeFill"),
+            enabledWhen: (c) => allowsEdit(c.selection, "shape.setShapeFill"),
         },
         shapeStrokeColor: {
             id: "shapeStrokeColor",
@@ -289,7 +290,7 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
                 create: (env) =>
                     paintControl(env, { id: "shapeStrokeColor", icon: ICON_STROKE, channel: "stroke" }, tools()),
             },
-            enabledWhen: (c) => allowsEdit(c.selection, "setShapeLine"),
+            enabledWhen: (c) => allowsEdit(c.selection, "shape.setShapeLine"),
         },
 
         // Object tab — the PDF twins of the Shape tab's Fill / Line, gated on a
@@ -305,7 +306,7 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
                 create: (env) =>
                     paintControl(env, { id: "objectFillColor", icon: ICON_FILL, channel: "fill" }, tools()),
             },
-            enabledWhen: (c) => allowsEdit(c.selection, "setNonstrokingStyle"),
+            enabledWhen: (c) => allowsEdit(c.selection, "object.setNonstrokingStyle"),
         },
         objectStrokeColor: {
             id: "objectStrokeColor",
@@ -318,7 +319,7 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
                 create: (env) =>
                     paintControl(env, { id: "objectStrokeColor", icon: ICON_STROKE, channel: "stroke" }, tools()),
             },
-            enabledWhen: (c) => allowsEdit(c.selection, "setStrokingStyle"),
+            enabledWhen: (c) => allowsEdit(c.selection, "object.setStrokingStyle"),
         },
         objectOpacity: {
             id: "objectOpacity",
@@ -333,7 +334,7 @@ export function formatCommands(tools: () => EditTools): Readonly<Record<string, 
             // Live where the selection agrees on a style to carry the opacity: not
             // on a fill turned off, a group, a form, or differing paint.
             enabledWhen: (c) =>
-                allowsEdit(c.selection, "setNonstrokingStyle") &&
+                allowsEdit(c.selection, "object.setNonstrokingStyle") &&
                 selectionOpacity(editStateOf(c).selectionProperties, "fill") !== null,
         },
     };

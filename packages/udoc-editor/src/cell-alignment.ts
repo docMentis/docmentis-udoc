@@ -27,7 +27,9 @@ export function mountCellAlignment(host: EditHost, i18n: I18n): CellAlignment {
             modal.open(seed, (values) => {
                 const alignment = cellAlignmentPatch(seed, values);
                 if (!alignment) return;
-                void host.commit(() => host.client.executeOnSelection({ kind: "patchCellAlignment", alignment }));
+                void host.commit(() =>
+                    host.client.executeOnSelection({ family: "worksheet", kind: "patchCellAlignment", alignment }),
+                );
             });
         },
         destroy: () => modal.destroy(),

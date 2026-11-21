@@ -346,8 +346,9 @@ export async function place(
         host.client.setSelection({ portable: { pages: { ids: [pageId] } } });
         await host.commit(() =>
             host.client.executeOnSelection({
-                kind: "page",
-                edit: { kind: "insertObjects", objects: [object as GraphicsObject] },
+                family: "page",
+                kind: "insertObjects",
+                objects: [object as GraphicsObject],
             }),
         );
         return;

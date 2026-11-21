@@ -53,12 +53,12 @@ export function cutDeletes({
     if (allowsTextEdit(selection, "insertText") || allowsTableEdit(selection, "createRows")) return false;
     return allowsEdit(
         selection,
-        "deleteObjects",
-        "deleteAnnotations",
-        "deleteShapes",
-        "deleteSlides",
-        "deleteSlideSectionsWithSlides",
-        "deletePages",
+        "object.deleteObjects",
+        "annotation.deleteAnnotations",
+        "shape.deleteShapes",
+        "slide.deleteSlides",
+        "slideSection.deleteSlideSectionsWithSlides",
+        "page.deletePages",
     );
 }
 
@@ -116,18 +116,19 @@ export function createClipboard(host: EditHost): Clipboard {
             cellEntry: state.activeCell?.entry != null,
             selection: state.selectionCaps,
         });
-        const marks = !deletes && allowsEdit(state.selectionCaps, "cutSheetCells");
+        const marks = !deletes && allowsEdit(state.selectionCaps, "worksheet.cutCells");
         void host.clipboard.write(event).then((copied) => {
             if (copied && deletes) void deleteCut();
-            if (copied && marks) void host.commit(() => host.client.executeOnSelection({ kind: "cutSheetCells" }));
+            if (copied && marks)
+                void host.commit(() => host.client.executeOnSelection({ family: "worksheet", kind: "cutCells" }));
         });
     }
 
     // The native `copy` — the shell's writes it — lets cells cut be, as Excel's
     // copy does.
     function onCopyEvent(): void {
-        if (!isEditReady() || !allowsEdit(host.store.getState().selectionCaps, "cancelSheetCut")) return;
-        void host.commit(() => host.client.executeOnSelection({ kind: "cancelSheetCut" }));
+        if (!isEditReady() || !allowsEdit(host.store.getState().selectionCaps, "worksheet.cancelCut")) return;
+        void host.commit(() => host.client.executeOnSelection({ family: "worksheet", kind: "cancelCut" }));
     }
 
     // What a cut deletes once its copy landed: the selection, as Delete takes
@@ -135,7 +136,9 @@ export function createClipboard(host: EditHost): Clipboard {
     // takes the slides too, where Delete hands them to the section before.
     function deleteCut(): Promise<void> {
         if (host.store.getState().selectedSlideSections.length > 0)
-            return host.commit(() => host.client.executeOnSelection({ kind: "deleteSlideSectionsWithSlides" }));
+            return host.commit(() =>
+                host.client.executeOnSelection({ family: "slideSection", kind: "deleteSlideSectionsWithSlides" }),
+            );
         return host.deleteSelection();
     }
 

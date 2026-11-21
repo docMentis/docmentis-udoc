@@ -8,6 +8,7 @@ import type {
     GridBorderStyle,
     GridCellAlignment,
     GridCellFormatProperties,
+    WorksheetSelectionEditType,
 } from "@docmentis/udoc-wasm";
 import {
     allowsEdit,
@@ -33,7 +34,6 @@ import type {
     RibbonControl,
     RibbonControlEnv,
     SelectionEdit,
-    SelectionEditKind,
     UIShellHost,
     UIState,
 } from "@docmentis/udoc-ui/internal";
@@ -87,11 +87,11 @@ export type CellAcross = "left" | "center" | "right";
 /** Where the Vertical Alignment dropdown's rows set a cell's text down. */
 export type CellDown = "top" | "center" | "bottom";
 
-/** Live where the selection takes a cell edit of `kind`. */
+/** Live where the selection takes a worksheet edit of `kind`. */
 const whenCellEdit =
-    (kind: SelectionEditKind): EnabledWhen =>
+    (kind: WorksheetSelectionEditType): EnabledWhen =>
     (c) =>
-        allowsEdit(c.selection, kind);
+        allowsEdit(c.selection, `worksheet.${kind}`);
 
 /** Run `edit` on the selected cells — one committing edit. */
 function runCellEdit(host: UIShellHost, edit: SelectionEdit): Promise<void> {
@@ -129,6 +129,7 @@ function cellFillControl(env: RibbonControlEnv, tools: EditTools): RibbonControl
                         dd.controller.close();
                         const color = paintToGridColor(paint);
                         void runCellEdit(tools.host, {
+                            family: "worksheet",
                             kind: "setCellFill",
                             fill: color ? { pattern: { pattern: "solid", foreground: color } } : null,
                         });
@@ -171,7 +172,12 @@ export function cellBorderLine(pen: BorderPen): GridBorderProperties {
 /** A workbook's {@link LayBorder}: the selected cells' borders. */
 function layCellBorder(host: UIShellHost): LayBorder {
     return (edges, pen) =>
-        void runCellEdit(host, { kind: "patchSheetCellBorders", edges, line: pen ? cellBorderLine(pen) : null });
+        void runCellEdit(host, {
+            family: "worksheet",
+            kind: "patchCellBorders",
+            edges,
+            line: pen ? cellBorderLine(pen) : null,
+        });
 }
 
 /**
@@ -187,7 +193,7 @@ export function alignCellsAcross(host: UIShellHost, across: CellAcross): Promise
         : across === "center"
           ? { horizontal: across, indent: 0 }
           : { horizontal: across };
-    return runCellEdit(host, { kind: "patchCellAlignment", alignment });
+    return runCellEdit(host, { family: "worksheet", kind: "patchCellAlignment", alignment });
 }
 
 /** Set the selected cells' text `down`, as Excel's Top, Middle and Bottom Align
@@ -196,7 +202,7 @@ export function alignCellsAcross(host: UIShellHost, across: CellAcross): Promise
 export function alignCellsDown(host: UIShellHost, down: CellDown): Promise<void> {
     const pressed = cellFormatIn(host.store.getState())?.vertical === down;
     const vertical = pressed ? "bottom" : down;
-    return runCellEdit(host, { kind: "patchCellAlignment", alignment: { vertical } });
+    return runCellEdit(host, { family: "worksheet", kind: "patchCellAlignment", alignment: { vertical } });
 }
 
 /** Turn the selected cells' text to `rotation`, an `@textRotation`, as Excel's
@@ -205,7 +211,7 @@ export function alignCellsDown(host: UIShellHost, down: CellDown): Promise<void>
 export function turnCellText(host: UIShellHost, rotation: number): Promise<void> {
     const chosen = cellFormatIn(host.store.getState())?.textRotation === rotation;
     const textRotation = chosen ? 0 : rotation;
-    return runCellEdit(host, { kind: "patchCellAlignment", alignment: { textRotation } });
+    return runCellEdit(host, { family: "worksheet", kind: "patchCellAlignment", alignment: { textRotation } });
 }
 
 /** Live where the selection takes an alignment. */
@@ -315,10 +321,10 @@ export const CELL_ORIENTATION_MENU: readonly MenuItem<MessageKey>[] = [
 ];
 
 /** Live where the selection takes a merge: a block of cells. */
-const whenMerge: EnabledWhen = (c) => allowsEdit(c.selection, "mergeSheetCells");
+const whenMerge: EnabledWhen = (c) => allowsEdit(c.selection, "worksheet.mergeCells");
 
 /** Merge & Center: the selected block made one cell, its contents centered. */
-const MERGE_AND_CENTER: SelectionEdit = { kind: "mergeSheetCells", across: false, center: true };
+const MERGE_AND_CENTER: SelectionEdit = { family: "worksheet", kind: "mergeCells", across: false, center: true };
 
 /** The Merge & Center menu, Excel's. A merge keeps only its top-left cell's
  *  contents, emptying the rest. */
@@ -329,21 +335,21 @@ export const CELL_MERGE_MENU: readonly MenuItem<MessageKey>[] = [
         enabledWhen: whenMerge,
     },
     {
-        action: cellEditAction({ kind: "mergeSheetCells", across: true, center: false }),
+        action: cellEditAction({ family: "worksheet", kind: "mergeCells", across: true, center: false }),
         label: "cell.mergeAcross",
         enabledWhen: whenMerge,
     },
     {
-        action: cellEditAction({ kind: "mergeSheetCells", across: false, center: false }),
+        action: cellEditAction({ family: "worksheet", kind: "mergeCells", across: false, center: false }),
         label: "table.mergeCells",
         icon: ICON_MERGE_CELLS,
         enabledWhen: whenMerge,
     },
     {
-        action: cellEditAction({ kind: "unmergeSheetCells" }),
+        action: cellEditAction({ family: "worksheet", kind: "unmergeCells" }),
         label: "table.unmergeCells",
         icon: ICON_UNMERGE_CELLS,
-        enabledWhen: whenCellEdit("unmergeSheetCells"),
+        enabledWhen: whenCellEdit("unmergeCells"),
     },
 ];
 
@@ -371,7 +377,9 @@ function cellMergeControl(env: RibbonControlEnv, tools: EditTools): RibbonContro
     split.main.dataset.command = "cellMerge";
     split.caret.dataset.command = "cellMerge";
     split.main.addEventListener("click", () => {
-        const edit: SelectionEdit = merged(env.store.getState()) ? { kind: "unmergeSheetCells" } : MERGE_AND_CENTER;
+        const edit: SelectionEdit = merged(env.store.getState())
+            ? { family: "worksheet", kind: "unmergeCells" }
+            : MERGE_AND_CENTER;
         host.runMenuAction(cellEditAction(edit));
     });
     return {
@@ -382,7 +390,7 @@ function cellMergeControl(env: RibbonControlEnv, tools: EditTools): RibbonContro
             split.main.setAttribute("aria-pressed", String(on));
             // Off a merge the main part merges, which only a block of cells
             // takes — not whole rows, columns or the sheet.
-            if (!on && !allowsEdit(state.selectionCaps, "mergeSheetCells")) split.main.disabled = true;
+            if (!on && !allowsEdit(state.selectionCaps, "worksheet.mergeCells")) split.main.disabled = true;
         },
         close: () => split.controller.close(),
         destroy: () => split.destroy(),
@@ -406,7 +414,7 @@ const NUMBER_FORMATS: readonly (readonly [code: string, label: MessageKey])[] = 
 /** The Number Format dropdown: the formats as one exclusive set, the active
  *  cell's marked. */
 export const CELL_NUMBER_FORMAT_MENU: readonly MenuItem<MessageKey>[] = NUMBER_FORMATS.map(([code, label]) => ({
-    action: cellEditAction({ kind: "setCellNumberFormat", format: { code } }),
+    action: cellEditAction({ family: "worksheet", kind: "setCellNumberFormat", format: { code } }),
     label,
     enabledWhen: whenCellEdit("setCellNumberFormat"),
     activeWhen: (c) => cellFormatOf(c)?.numberFormat === code,
@@ -433,7 +441,7 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
         label: MessageKey,
         icon: string,
         group: string,
-        edit: SelectionEdit & { kind: SelectionEditKind },
+        edit: Extract<SelectionEdit, { family: "worksheet" }>,
     ): Def => ({
         id,
         label,
@@ -461,7 +469,7 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
                 cluster: "paint",
                 create: (env) => borderColorControl(env, tools(), border, "cellBorderColor"),
             },
-            enabledWhen: whenCellEdit("patchSheetCellBorders"),
+            enabledWhen: whenCellEdit("patchCellBorders"),
         },
         cellBorder: {
             id: "cellBorder",
@@ -473,7 +481,7 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
                 cluster: "paint",
                 create: (env) => borderControl(env, tools(), border, "cellBorder", layCellBorder(tools().host)),
             },
-            enabledWhen: whenCellEdit("patchSheetCellBorders"),
+            enabledWhen: whenCellEdit("patchCellBorders"),
         },
         cellAlignAcross: {
             id: "cellAlignAcross",
@@ -500,10 +508,12 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
             enabledWhen: whenAlign,
         },
         cellIndentDown: action("cellIndentDown", "paragraph.decreaseIndent", ICON_INDENT_DECREASE, "cellAlignment", {
+            family: "worksheet",
             kind: "stepCellIndent",
             increase: false,
         }),
         cellIndentUp: action("cellIndentUp", "paragraph.increaseIndent", ICON_INDENT_INCREASE, "cellAlignment", {
+            family: "worksheet",
             kind: "stepCellIndent",
             increase: true,
         }),
@@ -517,7 +527,11 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
                 pressed: (state) => cellFormatIn(state)?.wrapText === true,
                 press: (store) => {
                     const wrapText = cellFormatIn(store.getState())?.wrapText !== true;
-                    void runCellEdit(tools().host, { kind: "patchCellAlignment", alignment: { wrapText } });
+                    void runCellEdit(tools().host, {
+                        family: "worksheet",
+                        kind: "patchCellAlignment",
+                        alignment: { wrapText },
+                    });
                 },
             },
             enabledWhen: whenAlign,
@@ -528,7 +542,7 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
             icon: ICON_MERGE_CELLS,
             group: "cellAlignment",
             run: { kind: "control", create: (env) => cellMergeControl(env, tools()) },
-            enabledWhen: (c) => allowsEdit(c.selection, "mergeSheetCells", "unmergeSheetCells"),
+            enabledWhen: (c) => allowsEdit(c.selection, "worksheet.mergeCells", "worksheet.unmergeCells"),
         },
         cellNumberFormat: {
             id: "cellNumberFormat",
@@ -546,14 +560,17 @@ export function cellCommands(tools: () => EditTools): Readonly<Record<string, De
             enabledWhen: whenCellEdit("setCellNumberFormat"),
         },
         cellDecimalsUp: action("cellDecimalsUp", "cell.increaseDecimal", ICON_DECIMAL_INCREASE, "cellNumber", {
+            family: "worksheet",
             kind: "stepCellDecimals",
             increase: true,
         }),
         cellDecimalsDown: action("cellDecimalsDown", "cell.decreaseDecimal", ICON_DECIMAL_DECREASE, "cellNumber", {
+            family: "worksheet",
             kind: "stepCellDecimals",
             increase: false,
         }),
         cellClearFormats: action("cellClearFormats", "cell.clearFormats", ICON_CLEAR_FORMAT, "cellClear", {
+            family: "worksheet",
             kind: "clearCellFormats",
         }),
     };

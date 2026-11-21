@@ -8,16 +8,29 @@
 // re-exported here so host code keeps one geometry import surface. They are the
 // single definition — no hand-authored mirror.
 import type {
+    AnnotationSelectionEditType,
     Feature,
     FileFormat,
     GridCellFormatProperties,
+    ImagePageSelectionEditType,
+    ObjectSelectionEditType,
+    PageSelectionEditType,
     PaintSRgbColor,
     PresentationPlaneKind,
+    SectionSelectionEditType,
+    ShapeSelectionEditType,
     SheetLayoutMode,
     SheetState,
+    SlideSectionSelectionEditType,
+    SlideSelectionEditType,
+    TableSelectionEdit,
+    TableSelectionEditType,
+    TextSelectionEditType,
     UDocOutcome,
     UDocType,
+    WorksheetSelectionEditType,
 } from "@docmentis/udoc-wasm";
+import type { SelectionEdit, TableEdit } from "./worker/protocol.js";
 import type {
     UDocSelectionCapabilities as SelectionCapabilities,
     SelectionBox,
@@ -369,92 +382,52 @@ export type { Peer, Pointer, PeerPointer };
 // no options struct: `selectObjects` takes `mode` + `enclose` directly.
 
 /**
- * A selection-edit gating kind — a name the engine reports in
- * {@link SelectionCapabilities.allowed}, the payload-free projection of the
- * like-named Rust `*SelectionEdit` variant (`camelCase`). Every kind is globally
- * distinct — a shape `deleteShapes` never collides with a text `deleteText` — so
- * the name alone says which edit it gates, wherever the selection sits.
+ * A selection edit's capability name — what the engine reports in
+ * {@link SelectionCapabilities.allowed}: the family the edit's kind is declared
+ * in, a dot, and the kind (`object.deleteObjects`, `text.deleteText`,
+ * `worksheet.createRows`), or the kind alone where the doc type declares it
+ * itself (`insertComment`). Typed from the engine's gate declarations, so a
+ * kind Rust renames or drops fails to compile here. {@link selectionEditKind}
+ * names an edit's.
  *
- * Each kind names what it acts on: a PDF's whole pages (`deletePages`), its page
- * objects (`deleteObjects`) or annotations (`deleteAnnotations`), a deck's
- * slides (`deleteSlides`), a drawing's shapes (`deleteShapes`), a workbook's
- * sheet rows and columns (`createSheetRows`). The object,
- * annotation and shape reorder kinds gate all four z-order moves (Bring to
- * Front / Forward / Send Backward / to Back); align / distribute / flip have no kind of their own —
- * the host gates them from the translate / scale-each kinds + `count`.
+ * Each kind names what it acts on: a PDF's whole pages (`page.deletePages`),
+ * its page objects (`object.deleteObjects`) or annotations
+ * (`annotation.deleteAnnotations`), a deck's slides (`slide.deleteSlides`), a
+ * drawing's shapes (`shape.deleteShapes`), a workbook's rows and columns
+ * (`worksheet.createRows`). The object, annotation and shape reorder kinds gate
+ * all four z-order moves (Bring to Front / Forward / Send Backward / to Back).
  */
 export type SelectionEditKind =
-    | "deletePages"
-    | "rotatePages"
-    | "flipPages"
-    | "createPage"
-    | "duplicatePages"
-    | "reorderPages"
-    | "insertObjects"
-    | "deleteSlides"
-    | "createSlide"
-    | "duplicateSlides"
-    | "reorderSlides"
-    | "setSlidesShow"
-    | "createSlideSection"
-    | "renameSlideSection"
-    | "deleteSlideSections"
-    | "deleteSlideSectionsWithSlides"
-    | "reorderSlideSections"
-    | "deleteObjects"
-    | "translateObjects"
-    | "rotateEachObject"
-    | "scaleEachObject"
-    | "groupObjects"
-    | "ungroupObjects"
-    | "reorderObjects"
-    | "setNonstrokingStyle"
-    | "setStrokingStyle"
-    | "deleteAnnotations"
-    | "translateAnnotations"
-    | "resizeAnnotations"
-    | "reorderAnnotations"
-    | "deleteShapes"
-    | "translateShapes"
-    | "rotateEachShape"
-    | "scaleEachShape"
-    | "groupShapes"
-    | "ungroupShapes"
-    | "reorderShapes"
-    | "setShapeFill"
-    | "setShapeLine"
-    | "patchShapeTextBodyProperties"
-    | "setShapeGeometry"
-    | "bindShapes"
-    | "rebindShape"
-    | "unbindShape"
-    | "resizeTextBox"
-    | "patchSectionPageMargins"
-    | "moveDrawing"
-    | "moveDrawingAnchor"
-    | "createSheetRows"
-    | "createSheetColumns"
-    | "deleteSheetRows"
-    | "deleteSheetColumns"
-    | "createWorksheet"
-    | "patchCellFont"
-    | "setCellFill"
-    | "patchSheetCellBorders"
-    | "patchCellAlignment"
-    | "setCellNumberFormat"
-    | "stepCellDecimals"
-    | "stepCellIndent"
-    | "stepCellFontSize"
-    | "clearCellFormats"
-    | "mergeSheetCells"
-    | "unmergeSheetCells"
-    | "cutSheetCells"
-    | "cancelSheetCut"
-    | "insertComment";
+    | `page.${PageSelectionEditType | ImagePageSelectionEditType}`
+    | `object.${ObjectSelectionEditType}`
+    | `annotation.${Extract<AnnotationSelectionEditType, string>}`
+    | `text.${TextSelectionEditType}`
+    | `table.${TableSelectionEditType}`
+    | `shape.${ShapeSelectionEditType}`
+    | `slide.${SlideSelectionEditType}`
+    | `slideSection.${SlideSectionSelectionEditType}`
+    | `section.${SectionSelectionEditType}`
+    | `worksheet.${WorksheetSelectionEditType}`
+    | "insertComment"
+    | "createWorksheet";
+
+/** `edit`'s capability name: `family.kind`, or its kind where it has no family. */
+export function selectionEditKind(edit: SelectionEdit): SelectionEditKind {
+    return ("family" in edit ? `${edit.family}.${edit.kind}` : edit.kind) as SelectionEditKind;
+}
+
+/** `edit`, a table edit in the engine's own externally tagged form
+ *  (`{ createRows: { before, count } }`, `"deleteRows"`), as a
+ *  {@link SelectionEdit}. */
+export function tableEdit(edit: TableSelectionEdit): TableEdit {
+    if (typeof edit === "string") return { family: "table", kind: edit } as TableEdit;
+    const [kind, fields] = Object.entries(edit)[0] as [string, object];
+    return { family: "table", kind, ...fields } as TableEdit;
+}
 
 /** Whether `caps` allows a selection edit of any of `kinds` — no per-doc-type
- *  branch: pass every name the control's edit goes by (`deleteObjects`,
- *  `deleteAnnotations` and `deleteShapes` for Delete). */
+ *  branch: pass every name the control's edit goes by (`object.deleteObjects`,
+ *  `annotation.deleteAnnotations` and `shape.deleteShapes` for Delete). */
 export function allowsEdit(caps: SelectionCapabilities, ...kinds: SelectionEditKind[]): boolean {
     return caps.allowed.some((kind) => (kinds as string[]).includes(kind));
 }
@@ -463,10 +436,10 @@ export function allowsEdit(caps: SelectionCapabilities, ...kinds: SelectionEditK
  *  PowerPoint comment thread on what is selected — `annotation`'s; every other
  *  kind is `editing`'s. */
 const ANNOTATION_EDIT_KINDS: ReadonlySet<string> = new Set<SelectionEditKind>([
-    "deleteAnnotations",
-    "translateAnnotations",
-    "resizeAnnotations",
-    "reorderAnnotations",
+    "annotation.deleteAnnotations",
+    "annotation.translateAnnotations",
+    "annotation.resizeAnnotations",
+    "annotation.reorderAnnotations",
     "insertComment",
 ]);
 
@@ -507,13 +480,11 @@ export type TextEditKind =
 
 /**
  * Whether `caps` allows the text edit `kind` — the text cousin of
- * {@link allowsEdit}, doc-type-independent (no `if pptx`). No host guard is
- * needed: the text names (`deleteText`, `patchCharacterProperties`, …) are globally
- * distinct from the object and shape ones (`deleteObjects`, `deleteShapes`, …),
- * so a text gate never collides with an object gate.
+ * {@link allowsEdit}, doc-type-independent (no `if pptx`): the gate is
+ * `text.<kind>` wherever the caret sits.
  */
 export function allowsTextEdit(caps: SelectionCapabilities, kind: TextEditKind): boolean {
-    return caps.allowed.includes(kind);
+    return caps.allowed.includes(`text.${kind}`);
 }
 
 /**
@@ -538,14 +509,12 @@ export type TableEditKind =
 
 /**
  * Whether `caps` allows the table edit `kind` — the table cousin of
- * {@link allowsTextEdit}.
- *
- * No host guard is needed here either: the table names (`deleteRows`,
- * `mergeCells`, …) are globally distinct from the shape ones (`deleteShapes`) and
- * the text ones (`deleteText`) — deleting a row is not deleting the frame it sits in.
+ * {@link allowsTextEdit}: the gate is `table.<kind>`, apart from a worksheet's
+ * `worksheet.<kind>` of the same name and from the frame's
+ * `shape.deleteShapes` — deleting a row is not deleting the frame it sits in.
  */
 export function allowsTableEdit(caps: SelectionCapabilities, kind: TableEditKind): boolean {
-    return caps.allowed.includes(kind);
+    return caps.allowed.includes(`table.${kind}`);
 }
 
 /**

@@ -39,7 +39,7 @@ function whenTracked(c: CommandContext): boolean {
 export function settleRevisions(host: EditHost, accept: boolean, scope: RevisionScope): Promise<void> {
     if (scope === "selection") {
         return host.commit(() =>
-            host.client.executeOnSelection({ kind: accept ? "acceptRevisions" : "rejectRevisions" }),
+            host.client.executeOnSelection({ family: "text", kind: accept ? "acceptRevisions" : "rejectRevisions" }),
         );
     }
     const shownOnly = scope === "shown";

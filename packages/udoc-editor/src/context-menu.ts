@@ -4,6 +4,7 @@
 // and columns. The shell opens the menu (`UIExtension.contextMenuItems`).
 import {
     allowsEdit,
+    selectionEditKind,
     allowsTextEdit,
     COPY_MENU_ITEM,
     ICON_DELETE,
@@ -40,13 +41,13 @@ const whenReady: EnabledWhen = (c) => c.ready;
  *  shapes. */
 const whenDeletes: EnabledWhen = (c) =>
     allowsTextEdit(c.selection, "deleteText") ||
-    allowsEdit(c.selection, "deleteObjects", "deleteAnnotations", "deleteShapes");
+    allowsEdit(c.selection, "object.deleteObjects", "annotation.deleteAnnotations", "shape.deleteShapes");
 
 /** Whether the selection cuts: copies, and deletes what it copied (see
  *  `cutDeletes`) or, a workbook's cells, marks them for a paste to move — a
  *  copyable but locked object is only copied. */
 const whenCuts: EnabledWhen = (c) =>
-    c.selection.copyable && (cutDeletes(c) || allowsEdit(c.selection, "cutSheetCells"));
+    c.selection.copyable && (cutDeletes(c) || allowsEdit(c.selection, "worksheet.cutCells"));
 
 /**
  * The canvas context menu in edit mode — what a right-click offers for the
@@ -100,16 +101,16 @@ function sheetTrackRow(edit: SheetTrackEdit, label: MessageKey, icon: string): M
         action: { kind: "selectionEdit", edit },
         label,
         icon,
-        enabledWhen: (c) => allowsEdit(c.selection, edit.kind),
+        enabledWhen: (c) => allowsEdit(c.selection, selectionEditKind(edit)),
     };
 }
 
 /** An edit of a workbook's rows or columns. */
 type SheetTrackEdit =
-    | { kind: "createSheetRows"; before: boolean }
-    | { kind: "createSheetColumns"; before: boolean }
-    | { kind: "deleteSheetRows" }
-    | { kind: "deleteSheetColumns" };
+    | { family: "worksheet"; kind: "createRows"; before: boolean }
+    | { family: "worksheet"; kind: "createColumns"; before: boolean }
+    | { family: "worksheet"; kind: "deleteRows" }
+    | { family: "worksheet"; kind: "deleteColumns" };
 
 /**
  * The context menu as it reads over a **workbook's grid** or its headers — the
@@ -142,30 +143,42 @@ export const GRID_CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
     },
     {
         submenu: [
-            sheetTrackRow({ kind: "createSheetRows", before: true }, "table.rowAbove", ICON_INSERT_ROW_ABOVE),
-            sheetTrackRow({ kind: "createSheetRows", before: false }, "table.rowBelow", ICON_INSERT_ROW_BELOW),
+            sheetTrackRow(
+                { family: "worksheet", kind: "createRows", before: true },
+                "table.rowAbove",
+                ICON_INSERT_ROW_ABOVE,
+            ),
+            sheetTrackRow(
+                { family: "worksheet", kind: "createRows", before: false },
+                "table.rowBelow",
+                ICON_INSERT_ROW_BELOW,
+            ),
             {
                 ...sheetTrackRow(
-                    { kind: "createSheetColumns", before: true },
+                    { family: "worksheet", kind: "createColumns", before: true },
                     "table.columnLeft",
                     ICON_INSERT_COLUMN_LEFT,
                 ),
                 separatorBefore: true,
             },
-            sheetTrackRow({ kind: "createSheetColumns", before: false }, "table.columnRight", ICON_INSERT_COLUMN_RIGHT),
+            sheetTrackRow(
+                { family: "worksheet", kind: "createColumns", before: false },
+                "table.columnRight",
+                ICON_INSERT_COLUMN_RIGHT,
+            ),
         ],
         label: "table.insert",
         icon: ICON_INSERT_ROW_BELOW,
-        enabledWhen: (c) => allowsEdit(c.selection, "createSheetRows", "createSheetColumns"),
+        enabledWhen: (c) => allowsEdit(c.selection, "worksheet.createRows", "worksheet.createColumns"),
     },
     {
         submenu: [
-            sheetTrackRow({ kind: "deleteSheetRows" }, "table.rows", ICON_DELETE_ROWS),
-            sheetTrackRow({ kind: "deleteSheetColumns" }, "table.columns", ICON_DELETE_COLUMNS),
+            sheetTrackRow({ family: "worksheet", kind: "deleteRows" }, "table.rows", ICON_DELETE_ROWS),
+            sheetTrackRow({ family: "worksheet", kind: "deleteColumns" }, "table.columns", ICON_DELETE_COLUMNS),
         ],
         label: "table.delete",
         icon: ICON_DELETE_ROWS,
-        enabledWhen: (c) => allowsEdit(c.selection, "deleteSheetRows", "deleteSheetColumns"),
+        enabledWhen: (c) => allowsEdit(c.selection, "worksheet.deleteRows", "worksheet.deleteColumns"),
     },
 ];
 

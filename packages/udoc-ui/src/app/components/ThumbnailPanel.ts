@@ -1020,13 +1020,15 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         const caps = store?.getState().selectionCaps;
         if (caps === undefined) return false;
         if (target.kind === "page") {
-            return selected.has(target.page) && allowsEdit(caps, slides() ? "reorderSlides" : "reorderPages");
+            return (
+                selected.has(target.page) && allowsEdit(caps, slides() ? "slide.reorderSlides" : "page.reorderPages")
+            );
         }
         const section = slice.sections[target.section];
         return (
             section !== undefined &&
             slice.selectedSections.includes(section.id) &&
-            allowsEdit(caps, "reorderSlideSections")
+            allowsEdit(caps, "slideSection.reorderSlideSections")
         );
     }
 
@@ -1383,10 +1385,15 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     function drop(target: PressTarget, to: number, toSection: number | null): void {
         const edit: SelectionEdit =
             target.kind === "section"
-                ? { kind: "reorderSlideSections", to }
+                ? { family: "slideSection", kind: "reorderSlideSections", to }
                 : slides()
-                  ? { kind: "reorderSlides", to, ...(toSection === null ? {} : { slideSection: toSection }) }
-                  : { kind: "page", edit: { kind: "reorderPages", to } };
+                  ? {
+                        family: "slide",
+                        kind: "reorderSlides",
+                        to,
+                        ...(toSection === null ? {} : { slideSection: toSection }),
+                    }
+                  : { family: "page", kind: "reorderPages", to };
         void callbacks.onSelectionEdit(edit);
     }
 

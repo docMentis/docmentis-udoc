@@ -89,13 +89,13 @@ export function listStyles(list: ListKind): readonly ListStyle[] {
  *  A bare caret (no spans to restyle) or a non-text selection leaves them
  *  greyed. */
 export const whenTextFormat: EnabledWhen = (c) =>
-    allowsTextEdit(c.selection, "patchCharacterProperties") || allowsEdit(c.selection, "patchCellFont");
+    allowsTextEdit(c.selection, "patchCharacterProperties") || allowsEdit(c.selection, "worksheet.patchCellFont");
 
 /** The Increase / Decrease Font Size buttons: live where the engine steps the
  *  selection's sizes — the text {@link whenTextFormat} formats, a block of
  *  table cells, or a workbook's cells. */
 export const whenFontSizeStep: EnabledWhen = (c) =>
-    allowsTextEdit(c.selection, "stepFontSize") || allowsEdit(c.selection, "stepCellFontSize");
+    allowsTextEdit(c.selection, "stepFontSize") || allowsEdit(c.selection, "worksheet.stepCellFontSize");
 
 /** The Text tab's *paragraph* controls (align / indent / spacing / the two list
  *  toggles). Deliberately **not** {@link whenTextFormat}: a character format
@@ -349,14 +349,18 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
 
     /** Lay `font`'s set fields over each selected cell's font. */
     function patchCellFont(font: GridFont): Promise<void> {
-        return commit(() => client.executeOnSelection({ kind: "patchCellFont", font }));
+        return commit(() => client.executeOnSelection({ family: "worksheet", kind: "patchCellFont", font }));
     }
 
     /** Overlay set-value character `properties` on the text selection. */
     function patchCharacterProperties(properties: TextCharacterProperty[]): Promise<void> {
         if (!textDocType()) return Promise.resolve();
         return commit(() =>
-            client.executeOnSelection({ kind: "patchCharacterProperties", properties: { props: properties } }),
+            client.executeOnSelection({
+                family: "text",
+                kind: "patchCharacterProperties",
+                properties: { props: properties },
+            }),
         );
     }
 
@@ -411,10 +415,10 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
      *  cell) from the size it shows, and text of two sizes stays two sizes. */
     function stepFontSizeSelection(increase: boolean): Promise<void> {
         if (sheetDocType()) {
-            return commit(() => client.executeOnSelection({ kind: "stepCellFontSize", increase }));
+            return commit(() => client.executeOnSelection({ family: "worksheet", kind: "stepCellFontSize", increase }));
         }
         if (!textDocType()) return Promise.resolve();
-        return commit(() => client.executeOnSelection({ kind: "stepFontSize", increase }));
+        return commit(() => client.executeOnSelection({ family: "text", kind: "stepFontSize", increase }));
     }
 
     /** Apply a text color (the span fill) to the text selection — a cell's
@@ -430,7 +434,11 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
     function patchParagraphProperties(properties: TextParagraphProperty[]): Promise<void> {
         if (!textDocType()) return Promise.resolve();
         return commit(() =>
-            client.executeOnSelection({ kind: "patchParagraphProperties", properties: { props: properties } }),
+            client.executeOnSelection({
+                family: "text",
+                kind: "patchParagraphProperties",
+                properties: { props: properties },
+            }),
         );
     }
 
@@ -439,7 +447,7 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
      *  step means for each paragraph and stops at the margin. */
     function indentSelection(delta: number): Promise<void> {
         if (!textDocType()) return Promise.resolve();
-        return commit(() => client.executeOnSelection({ kind: "indentParagraphs", delta }));
+        return commit(() => client.executeOnSelection({ family: "text", kind: "indentParagraphs", delta }));
     }
 
     /** Flip the space above / below the touched paragraphs. Off writes an explicit
@@ -470,7 +478,7 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
      *  names the style, as Word does. */
     function applyParagraphStyle(style: string): Promise<void> {
         if (!textDocType()) return Promise.resolve();
-        return commit(() => client.executeOnSelection({ kind: "applyParagraphStyle", style }));
+        return commit(() => client.executeOnSelection({ family: "text", kind: "applyParagraphStyle", style }));
     }
 
     /** Apply a highlight to the text selection. The highlight is a bare color, so
@@ -479,7 +487,9 @@ export function createTextEdits(host: UIShellHost, i18n: I18n) {
         if (!textDocType()) return Promise.resolve();
         const color = paintToDrawingColor(paint);
         if (!color) {
-            return commit(() => client.executeOnSelection({ kind: "clearCharacterProperties", keys: ["highlight"] }));
+            return commit(() =>
+                client.executeOnSelection({ family: "text", kind: "clearCharacterProperties", keys: ["highlight"] }),
+            );
         }
         return patchCharacterProperties([{ highlight: color }]);
     }

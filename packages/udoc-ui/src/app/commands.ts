@@ -8,8 +8,8 @@ import type {
     StampIcon,
     UDocType,
 } from "@docmentis/udoc-wasm";
-import { allowsEdit } from "../geometry.js";
-import type { SelectionCapabilities, SelectionEditKind } from "../geometry.js";
+import { allowsEdit, selectionEditKind } from "../geometry.js";
+import type { SelectionCapabilities } from "../geometry.js";
 import {
     commentable,
     copyAllowed,
@@ -375,25 +375,25 @@ export const COPY_MENU_ITEM: MenuItem = {
  */
 export const CONTEXT_MENU: readonly MenuItem[] = [COPY_MENU_ITEM];
 
-/** A thumbnail menu row running the page edit `edit` (a PDF's, so wrapped in
- *  its `page` family), live while the selection allows its kind. */
-function pageRow(label: MessageKey, icon: string, edit: SelectionEdit & { kind: SelectionEditKind }): MenuItem {
-    return {
-        action: { kind: "selectionEdit", edit: { kind: "page", edit } },
-        label,
-        icon,
-        enabledWhen: (c) => allowsEdit(c.selection, edit.kind),
-    };
-}
-
-/** A thumbnail menu row running the slide edit `edit`, live while the
- *  selection allows its kind. */
-function slideRow(label: MessageKey, icon: string, edit: SelectionEdit & { kind: SelectionEditKind }): MenuItem {
+/** A thumbnail menu row running the page edit `edit`, live while the
+ *  selection allows it. */
+function pageRow(label: MessageKey, icon: string, edit: SelectionEdit): MenuItem {
     return {
         action: { kind: "selectionEdit", edit },
         label,
         icon,
-        enabledWhen: (c) => allowsEdit(c.selection, edit.kind),
+        enabledWhen: (c) => allowsEdit(c.selection, selectionEditKind(edit)),
+    };
+}
+
+/** A thumbnail menu row running the slide edit `edit`, live while the
+ *  selection allows it. */
+function slideRow(label: MessageKey, icon: string, edit: SelectionEdit): MenuItem {
+    return {
+        action: { kind: "selectionEdit", edit },
+        label,
+        icon,
+        enabledWhen: (c) => allowsEdit(c.selection, selectionEditKind(edit)),
     };
 }
 
@@ -404,14 +404,21 @@ function slideRow(label: MessageKey, icon: string, edit: SelectionEdit & { kind:
  * keeps one.
  */
 export const PAGE_MENU: readonly MenuItem[] = [
-    pageRow("thumbnails.newPage", ICON_PAGE_ADD, { kind: "createPage", before: false }),
-    pageRow("thumbnails.duplicatePage", ICON_PAGE_DUPLICATE, { kind: "duplicatePages" }),
+    pageRow("thumbnails.newPage", ICON_PAGE_ADD, { family: "page", kind: "createPage", before: false }),
+    pageRow("thumbnails.duplicatePage", ICON_PAGE_DUPLICATE, { family: "page", kind: "duplicatePages" }),
     {
-        ...pageRow("thumbnails.rotateRight", ICON_ROTATE_RIGHT, { kind: "rotatePages", clockwise: true }),
+        ...pageRow("thumbnails.rotateRight", ICON_ROTATE_RIGHT, {
+            family: "page",
+            kind: "rotatePages",
+            clockwise: true,
+        }),
         separatorBefore: true,
     },
-    pageRow("thumbnails.rotateLeft", ICON_ROTATE_LEFT, { kind: "rotatePages", clockwise: false }),
-    { ...pageRow("thumbnails.deletePage", ICON_DELETE, { kind: "deletePages" }), separatorBefore: true },
+    pageRow("thumbnails.rotateLeft", ICON_ROTATE_LEFT, { family: "page", kind: "rotatePages", clockwise: false }),
+    {
+        ...pageRow("thumbnails.deletePage", ICON_DELETE, { family: "page", kind: "deletePages" }),
+        separatorBefore: true,
+    },
 ];
 
 /** An image's thumbnail menu — {@link PAGE_MENU} less New Page, as a blank
@@ -422,23 +429,26 @@ export const IMAGE_PAGE_MENU: readonly MenuItem[] = PAGE_MENU.slice(1);
 /** A deck's thumbnail menu — {@link PAGE_MENU}'s twin for its slides, with
  *  Add Section, and Hide Slide, checked while every selected slide is hidden. */
 export const SLIDE_MENU: readonly MenuItem[] = [
-    slideRow("thumbnails.newSlide", ICON_SLIDE_ADD, { kind: "createSlide", layout: null }),
-    slideRow("thumbnails.duplicateSlide", ICON_PAGE_DUPLICATE, { kind: "duplicateSlides" }),
+    slideRow("thumbnails.newSlide", ICON_SLIDE_ADD, { family: "slide", kind: "createSlide", layout: null }),
+    slideRow("thumbnails.duplicateSlide", ICON_PAGE_DUPLICATE, { family: "slide", kind: "duplicateSlides" }),
     {
         action: { kind: "addSlideSection" },
         label: "thumbnails.addSection",
         icon: ICON_SECTION_ADD,
-        enabledWhen: (c) => allowsEdit(c.selection, "createSlideSection"),
+        enabledWhen: (c) => allowsEdit(c.selection, "slide.createSlideSection"),
     },
     {
         action: { kind: "toggleSlidesHidden" },
         label: "thumbnails.hideSlide",
         icon: ICON_SLIDE_HIDE,
-        enabledWhen: (c) => allowsEdit(c.selection, "setSlidesShow"),
+        enabledWhen: (c) => allowsEdit(c.selection, "slide.setSlidesShow"),
         checked: (c) => c.slidesHidden,
         separatorBefore: true,
     },
-    { ...slideRow("thumbnails.deleteSlide", ICON_DELETE, { kind: "deleteSlides" }), separatorBefore: true },
+    {
+        ...slideRow("thumbnails.deleteSlide", ICON_DELETE, { family: "slide", kind: "deleteSlides" }),
+        separatorBefore: true,
+    },
 ];
 
 /**
@@ -454,13 +464,14 @@ export const SECTION_MENU: readonly MenuItem[] = [
         action: { kind: "renameSlideSection" },
         label: "thumbnails.renameSection",
         icon: ICON_SECTION_RENAME,
-        enabledWhen: (c) => allowsEdit(c.selection, "renameSlideSection"),
+        enabledWhen: (c) => allowsEdit(c.selection, "slideSection.renameSlideSection"),
     },
     {
         action: { kind: "moveSlideSections", by: -1 },
         label: "thumbnails.moveSectionUp",
         icon: ICON_SECTION_UP,
-        enabledWhen: (c) => allowsEdit(c.selection, "reorderSlideSections") && c.slideSections.selected[0]! > 0,
+        enabledWhen: (c) =>
+            allowsEdit(c.selection, "slideSection.reorderSlideSections") && c.slideSections.selected[0]! > 0,
         separatorBefore: true,
     },
     {
@@ -468,7 +479,7 @@ export const SECTION_MENU: readonly MenuItem[] = [
         label: "thumbnails.moveSectionDown",
         icon: ICON_SECTION_DOWN,
         enabledWhen: ({ selection, slideSections: { count, selected } }) =>
-            allowsEdit(selection, "reorderSlideSections") && selected[0]! < count - selected.length,
+            allowsEdit(selection, "slideSection.reorderSlideSections") && selected[0]! < count - selected.length,
     },
     {
         action: { kind: "collapseSlideSections", collapsed: true },
@@ -484,17 +495,17 @@ export const SECTION_MENU: readonly MenuItem[] = [
         enabledWhen: (c) => c.slideSections.collapsed > 0,
     },
     {
-        action: { kind: "selectionEdit", edit: { kind: "deleteSlideSections" } },
+        action: { kind: "selectionEdit", edit: { family: "slideSection", kind: "deleteSlideSections" } },
         label: "thumbnails.removeSection",
         icon: ICON_SECTION_REMOVE,
-        enabledWhen: (c) => allowsEdit(c.selection, "deleteSlideSections"),
+        enabledWhen: (c) => allowsEdit(c.selection, "slideSection.deleteSlideSections"),
         separatorBefore: true,
     },
     {
-        action: { kind: "selectionEdit", edit: { kind: "deleteSlideSectionsWithSlides" } },
+        action: { kind: "selectionEdit", edit: { family: "slideSection", kind: "deleteSlideSectionsWithSlides" } },
         label: "thumbnails.removeSectionAndSlides",
         icon: ICON_DELETE,
-        enabledWhen: (c) => allowsEdit(c.selection, "deleteSlideSectionsWithSlides"),
+        enabledWhen: (c) => allowsEdit(c.selection, "slideSection.deleteSlideSectionsWithSlides"),
     },
     {
         action: { kind: "removeAllSlideSections" },

@@ -68,11 +68,13 @@ export {
     drawingProperties,
     EMPTY_SELECTION_PAINT,
     EMPTY_SELECTION_TEXT_FORMAT,
+    selectionEditKind,
     selectionPaint,
     selectionStart,
     selectionTextFormat,
     sheetCellFormat,
     sheetCellMerged,
+    tableEdit,
     tableShadingDisplay,
 } from "./geometry.js";
 export type {
@@ -88,7 +90,7 @@ export type {
     TextParagraphAlign,
     ThemePalette,
 } from "./geometry.js";
-export type { AlignEdge, EditAxis, SelectionEdit, ZOrder } from "./worker/protocol.js";
+export type { AlignEdge, EditAxis, SelectionEdit, SelectionEditFamily, TableEdit, ZOrder } from "./worker/protocol.js";
 export { ANNOTATE_TAB, arrangementFor, presentTab, profileFor, REVIEW_TAB, viewTab } from "./app/profiles.js";
 export { VIEW_MODE } from "./app/state.js";
 export type { CommandId, ShapeKind, ToolbarTab } from "./app/state.js";

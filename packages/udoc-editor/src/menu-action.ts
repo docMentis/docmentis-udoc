@@ -1,6 +1,7 @@
 // The menu rows edit mode adds carry an intent of its own, which the shell hands
 // back to edit mode (`UIExtension.menuAction`).
 import type { TableLook, TableSelectionEdit } from "@docmentis/udoc-wasm";
+import { tableEdit } from "@docmentis/udoc-ui/internal";
 import type { AlignEdge, EditAxis, MenuAction, TextParagraphAlign, ZOrder } from "@docmentis/udoc-ui/internal";
 import { alignCellsAcross, alignCellsDown, turnCellText } from "./cell-format.js";
 import type { CellAcross, CellDown } from "./cell-format.js";
@@ -146,7 +147,7 @@ export function runEditMenuAction(tools: EditTools, action: EditMenuAction): voi
             // committing edit like any other. The engine binds it to the
             // innermost table the selection is in; its kind (`deleteRows`, not
             // `delete`) is what keeps it off the frame around that table.
-            const { edit } = action;
+            const edit = tableEdit(action.edit);
             void host.commit(() => host.client.executeOnSelection(edit));
             break;
         }

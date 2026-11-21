@@ -152,7 +152,7 @@ function rotateGripPos(
 
 /** Whether the selection in `frame` rotates — each box then carries a grip. */
 function rotates(frame: ChromeFrame): boolean {
-    return allowsEdit(frame.state.capabilities, "rotateEachObject", "rotateEachShape");
+    return allowsEdit(frame.state.capabilities, "object.rotateEachObject", "shape.rotateEachShape");
 }
 
 /** Edit mode's grips: the chrome udoc-ui draws, and the canvas's calls on them. */
@@ -635,7 +635,9 @@ export function createGrips(tools: () => EditTools | null): Grips {
                 // adjust value the drag implies.
                 canvas.committing();
                 const kind = grab.textWarp ? "adjustTextWarpHandle" : "adjustShapeHandle";
-                void host.commit(() => host.client.executeOnSelection({ kind, index: grab.index, to }));
+                void host.commit(() =>
+                    host.client.executeOnSelection({ family: "shape", kind, index: grab.index, to }),
+                );
             },
             cancel() {
                 // Nothing was committed, so the preview has nothing to settle onto.
@@ -709,7 +711,9 @@ export function createGrips(tools: () => EditTools | null): Grips {
                 // Hold the previewed anchor until the moved geometry arrives, so
                 // it settles where it was dropped instead of flashing back.
                 canvas.committing();
-                void host.commit(() => host.client.executeOnSelection({ kind: "moveDrawingAnchor", page, to }));
+                void host.commit(() =>
+                    host.client.executeOnSelection({ family: "text", kind: "moveDrawingAnchor", page, to }),
+                );
             },
             cancel() {
                 live = false;
@@ -787,7 +791,9 @@ export function createGrips(tools: () => EditTools | null): Grips {
                     return;
                 }
                 canvas.committing();
-                void host.commit(() => host.client.executeOnSelection({ kind: "moveDrawing", page, from, to }));
+                void host.commit(() =>
+                    host.client.executeOnSelection({ family: "text", kind: "moveDrawing", page, from, to }),
+                );
             },
             cancel() {
                 live = false;
@@ -812,7 +818,7 @@ export function createGrips(tools: () => EditTools | null): Grips {
             return seed ? rotateCursorForAngle(seed.baseAngle) : null;
         },
         drag(x, y, canvas) {
-            if (!frame || !allowsEdit(frame.state.capabilities, "moveDrawing")) return null;
+            if (!frame || !allowsEdit(frame.state.capabilities, "text.moveDrawing")) return null;
             return drawingGesture(x, y, canvas);
         },
     };

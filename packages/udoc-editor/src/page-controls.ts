@@ -93,7 +93,7 @@ async function insertPage(host: UIShellHost, index: number): Promise<void> {
     if (page === undefined) return;
     host.client.setSelection({ portable: { pages: { ids: [page] } } });
     await host.commit(() =>
-        host.client.executeOnSelection({ kind: "page", edit: { kind: "createPage", before: below !== undefined } }),
+        host.client.executeOnSelection({ family: "page", kind: "createPage", before: below !== undefined }),
     );
 }
 

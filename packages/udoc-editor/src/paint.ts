@@ -168,24 +168,21 @@ function opacityEdit(
         if (channel === "fill") {
             const current = portableNonstroking(properties);
             if (!current) return null;
-            return {
-                kind: "object",
-                edit: { kind: "setNonstrokingStyle", style: { ...current, alpha: opacity } },
-            };
+            return { family: "object", kind: "setNonstrokingStyle", style: { ...current, alpha: opacity } };
         }
         const current = portableStroking(properties);
         if (!current) return null;
-        return { kind: "object", edit: { kind: "setStrokingStyle", style: { ...current, alpha: opacity } } };
+        return { family: "object", kind: "setStrokingStyle", style: { ...current, alpha: opacity } };
     }
     const shape = drawingProperties(properties)?.shape;
     if (!shape) return null;
     if (channel === "fill") {
         if (typeof shape.fill !== "object") return null;
-        return { kind: "setShapeFill", fill: fillWithOpacity(shape.fill.value, opacity) };
+        return { family: "shape", kind: "setShapeFill", fill: fillWithOpacity(shape.fill.value, opacity) };
     }
     const line = typeof shape.line === "object" ? shape.line.value : null;
     if (!line?.fill) return null;
-    return { kind: "setShapeLine", line: { ...line, fill: fillWithOpacity(line.fill, opacity) } };
+    return { family: "shape", kind: "setShapeLine", line: { ...line, fill: fillWithOpacity(line.fill, opacity) } };
 }
 
 function paintToBrush(paint: PaintSpec): Brush | null {
@@ -247,14 +244,12 @@ export function createPaintEdits(host: UIShellHost) {
         const alpha = opacity ?? selectionOpacity(properties, "fill") ?? 1;
         if (profileFor(state.docType).drawingShapes) {
             const fill = fillWithOpacity(paintToDrawingFill(paint), alpha);
-            return commit(() => client.executeOnSelection({ kind: "setShapeFill", fill }));
+            return commit(() => client.executeOnSelection({ family: "shape", kind: "setShapeFill", fill }));
         }
         const brush = paintToBrush(paint);
         const overprint = portableNonstroking(properties)?.overprint ?? false;
         const style = brush && { brush, alpha, overprint };
-        return commit(() =>
-            client.executeOnSelection({ kind: "object", edit: { kind: "setNonstrokingStyle", style } }),
-        );
+        return commit(() => client.executeOnSelection({ family: "object", kind: "setNonstrokingStyle", style }));
     }
 
     // A change to the line — its color, its weight or its dash — over the line the
@@ -273,7 +268,7 @@ export function createPaintEdits(host: UIShellHost) {
                 { weight, dash, fill: paint && fillOf(paint) },
                 { fill: fillOf(fallback.paint), weight: fallback.weight, dash: fallback.dash },
             );
-            return commit(() => client.executeOnSelection({ kind: "setShapeLine", line }));
+            return commit(() => client.executeOnSelection({ family: "shape", kind: "setShapeLine", line }));
         }
         const style = portableStroking(properties);
         const brush = paint ? paintToBrush(paint) : (style?.brush ?? paintToBrush(fallback.paint));
@@ -281,9 +276,7 @@ export function createPaintEdits(host: UIShellHost) {
         const overprint = style?.overprint ?? false;
         // "No Line" is a null style, which turns a path's outline off.
         const next = brush && { brush, alpha, overprint, line };
-        return commit(() =>
-            client.executeOnSelection({ kind: "object", edit: { kind: "setStrokingStyle", style: next } }),
-        );
+        return commit(() => client.executeOnSelection({ family: "object", kind: "setStrokingStyle", style: next }));
     }
 
     // The opacity alone: the rest of the paint is carried back as it stands.

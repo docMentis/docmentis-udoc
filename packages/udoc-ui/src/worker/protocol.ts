@@ -1693,209 +1693,219 @@ export type EditAxis = "horizontal" | "vertical";
  * Each edit is named after what it acts on, as its command is: a PDF's page
  * objects (`translateObjects`) or annotations (`translateAnnotations`), a
  * drawing's shapes (`translateShapes`) — a slide's shapes, or a docx drawing's.
- * A PDF's edits travel in their family's wrapper — `{ kind: "page", edit }`,
- * `{ kind: "object", edit }`, `{ kind: "annotation", edit }` — a free text's drawing text edits in a
- * `{ kind: "common", edit }` inside the annotation one. The shell emits the one
- * matching the open doc type and the selection.
+ *
+ * Each names its `family` — the engine enum its kind is declared in — beside
+ * its `kind`, and `family.kind` is the name the engine reports it allowed by in
+ * {@link SelectionCapabilities}; one declared on the doc type itself
+ * (`insertComment`, `createWorksheet`) has no family. A kind is unique in its
+ * family alone: a table's `createRows` and a worksheet's are two edits. The
+ * worker wraps an edit in whatever its doc type holds that family under — a
+ * PDF's text edits inside its annotations, a deck's inside its common drawing
+ * union — so the shell names only the family.
  */
 export type SelectionEdit =
     /** PDF: translate every selected object by `(dx, dy)` page-local points — a move drag. */
-    | { kind: "translateObjects"; dx: number; dy: number }
+    | { family: "object"; kind: "translateObjects"; dx: number; dy: number }
     /** PDF: rotate every selected object by `angle` radians about its **own** bounds-center. */
-    | { kind: "rotateEachObject"; angle: number }
+    | { family: "object"; kind: "rotateEachObject"; angle: number }
     /** PDF: scale every selected object by `(sx, sy)` about its **own** anchor, the
      *  held-fixed corner given as bounds fractions (`0` top/left … `1` bottom/right). */
-    | { kind: "scaleEachObject"; sx: number; sy: number; anchorX: number; anchorY: number }
+    | { family: "object"; kind: "scaleEachObject"; sx: number; sy: number; anchorX: number; anchorY: number }
     /** PDF: delete the selected objects; the selection clears afterward. */
-    | { kind: "deleteObjects" }
+    | { family: "object"; kind: "deleteObjects" }
     /** PDF: reorder the selected objects within their sibling list (Arrange ▸ z-order). */
-    | { kind: "reorderObjects"; order: ZOrder }
+    | { family: "object"; kind: "reorderObjects"; order: ZOrder }
     /** PDF: group the selected objects under a new (engine-minted) group. */
-    | { kind: "groupObjects" }
+    | { family: "object"; kind: "groupObjects" }
     /** PDF: ungroup the selected group(s), hoisting their children into place. */
-    | { kind: "ungroupObjects" }
+    | { family: "object"; kind: "ungroupObjects" }
     /** PDF: align the selected objects' bounding boxes to a shared `edge` of either
      *  their own union (`toPage: false`) or the page (`toPage: true`). */
-    | { kind: "alignObjects"; edge: AlignEdge; toPage: boolean }
+    | { family: "object"; kind: "alignObjects"; edge: AlignEdge; toPage: boolean }
     /** PDF: distribute the selected objects evenly along `axis` (their gaps equalized). */
-    | { kind: "distributeObjects"; axis: EditAxis }
+    | { family: "object"; kind: "distributeObjects"; axis: EditAxis }
     /** PDF: mirror each selected object in place about its own center, along `axis`. */
-    | { kind: "flipObjects"; axis: EditAxis }
+    | { family: "object"; kind: "flipObjects"; axis: EditAxis }
     /** PDF: translate every selected annotation by `(dx, dy)` page points. */
-    | { kind: "translateAnnotations"; dx: number; dy: number }
+    | { family: "annotation"; kind: "translateAnnotations"; dx: number; dy: number }
     /** PDF: resize every selected annotation by `(sx, sy)` about its own anchor. */
-    | { kind: "resizeAnnotations"; sx: number; sy: number; anchorX: number; anchorY: number }
+    | { family: "annotation"; kind: "resizeAnnotations"; sx: number; sy: number; anchorX: number; anchorY: number }
     /** PDF: delete the selected annotations; the selection clears afterward. */
-    | { kind: "deleteAnnotations" }
+    | { family: "annotation"; kind: "deleteAnnotations" }
     /** PDF: reorder the selected annotations among the page's annotations. */
-    | { kind: "reorderAnnotations"; order: ZOrder }
+    | { family: "annotation"; kind: "reorderAnnotations"; order: ZOrder }
     /** Shapes: the twin of `translateObjects`. */
-    | { kind: "translateShapes"; dx: number; dy: number }
+    | { family: "shape"; kind: "translateShapes"; dx: number; dy: number }
     /** Shapes: the twin of `rotateEachObject`. */
-    | { kind: "rotateEachShape"; angle: number }
+    | { family: "shape"; kind: "rotateEachShape"; angle: number }
     /** Shapes: the twin of `scaleEachObject`. */
-    | { kind: "scaleEachShape"; sx: number; sy: number; anchorX: number; anchorY: number }
+    | { family: "shape"; kind: "scaleEachShape"; sx: number; sy: number; anchorX: number; anchorY: number }
     /** Shapes: the twin of `deleteObjects`. */
-    | { kind: "deleteShapes" }
+    | { family: "shape"; kind: "deleteShapes" }
     /** Shapes: the twin of `reorderObjects`. */
-    | { kind: "reorderShapes"; order: ZOrder }
+    | { family: "shape"; kind: "reorderShapes"; order: ZOrder }
     /** Shapes: the twin of `groupObjects`. */
-    | { kind: "groupShapes" }
+    | { family: "shape"; kind: "groupShapes" }
     /** Shapes: the twin of `ungroupObjects`. */
-    | { kind: "ungroupShapes" }
+    | { family: "shape"; kind: "ungroupShapes" }
     /** Shapes: the twin of `alignObjects`, `toPage` aligning to the slide. */
-    | { kind: "alignShapes"; edge: AlignEdge; toPage: boolean }
+    | { family: "shape"; kind: "alignShapes"; edge: AlignEdge; toPage: boolean }
     /** Shapes: the twin of `distributeObjects`. */
-    | { kind: "distributeShapes"; axis: EditAxis }
+    | { family: "shape"; kind: "distributeShapes"; axis: EditAxis }
     /** Shapes: the twin of `flipObjects`. */
-    | { kind: "flipShapes"; axis: EditAxis }
+    | { family: "shape"; kind: "flipShapes"; axis: EditAxis }
     // Fill / Stroke — the picker's paint applied to the selection. The payload is
     // the doc type's own model style, built by the host (like `insertObject`), so
     // the variant differs by open format: a presentation carries the `DrawingML`
     // `Fill` / `Line`; a PDF carries the non-stroking / stroking `Style`. The
     // shell emits the one matching the open doc type.
     /** Presentation: set the shapes' interior fill. */
-    | { kind: "setShapeFill"; fill: PaintFill }
+    | { family: "shape"; kind: "setShapeFill"; fill: PaintFill }
     /** Presentation: set the shapes' outline. */
-    | { kind: "setShapeLine"; line: PaintLine }
+    | { family: "shape"; kind: "setShapeLine"; line: PaintLine }
     /** Shapes: overlay `properties` onto the text body of the selected shapes, or
      *  of the shape whose text the caret is in — its insets (a ruler's margin
      *  edges), anchor, autofit. */
-    | { kind: "patchShapeTextBodyProperties"; properties: TextBodyProperties }
+    | { family: "shape"; kind: "patchShapeTextBodyProperties"; properties: TextBodyProperties }
     /** Shapes: give the selected shapes and pictures, those in a selected group
      *  too, the outline `geometry` — Change Shape. Anything else stays as it is. */
-    | { kind: "setShapeGeometry"; geometry: ShapeGeometry }
+    | { family: "shape"; kind: "setShapeGeometry"; geometry: ShapeGeometry }
     /** Word: patch the page margins of the section the caret is in, in points —
      *  the edges given, the rest and the header and footer offsets as they
      *  stand (a ruler's margin edges). */
-    | { kind: "patchSectionPageMargins"; left?: number; top?: number; right?: number; bottom?: number }
+    | {
+          family: "section";
+          kind: "patchSectionPageMargins";
+          left?: number;
+          top?: number;
+          right?: number;
+          bottom?: number;
+      }
     /** Word, a deck, a sheet: open a thread with `comment` on what is selected —
      *  a document's text, a slide's text, shape or slide, a sheet's active cell
      *  — where the capabilities read grants `insertComment`. */
     | { kind: "insertComment"; comment: CommentDraft }
     /** PDF: set the box the text caret is in to `frame`, in page-local points
-     *  (a ruler's margin edges), inside an `object` edit. The engine's
+     *  (a ruler's margin edges). The engine's
      *  corner-to-corner rect. */
-    | { kind: "resizeTextBox"; frame: CornerRect }
+    | { family: "object"; kind: "resizeTextBox"; frame: CornerRect }
     /** Presentation: drag adjust handle `index` of the selected shape to `to`, a
      *  point in that shape's **own local space** — the geometry-reshaping drag
      *  (a rounded rectangle's corner, an arrow's head). Reshapes one geometry,
      *  so it needs a single-shape selection. */
-    | { kind: "adjustShapeHandle"; index: number; to: { x: number; y: number } }
+    | { family: "shape"; kind: "adjustShapeHandle"; index: number; to: { x: number; y: number } }
     /** Presentation: drag adjust handle `index` of the selected shape's text
      *  warp to `to`, a point in the warp's **own space** — the shape's text
      *  rect's, the space its streamed handle's point is in — the warp-reshaping
      *  drag (an arch's sweep, a wave's height). Reshapes one warp, so it needs a
      *  single-shape selection. */
-    | { kind: "adjustTextWarpHandle"; index: number; to: { x: number; y: number } }
+    | { family: "shape"; kind: "adjustTextWarpHandle"; index: number; to: { x: number; y: number } }
     /** PDF: set the objects' non-stroking (fill-side) style — a path's, an image's,
      *  a shading's or a text object's runs' — or with null turn a path's fill off. */
-    | { kind: "setNonstrokingStyle"; style: NonstrokingStyle | null }
+    | { family: "object"; kind: "setNonstrokingStyle"; style: NonstrokingStyle | null }
     /** PDF: set the objects' stroking (outline) style — a path's or a text object's
      *  runs' — or with null turn a path's outline off. */
-    | { kind: "setStrokingStyle"; style: StrokingStyle | null }
+    | { family: "object"; kind: "setStrokingStyle"; style: StrokingStyle | null }
     /** Text: insert text at the text caret / range — typing, an IME commit, a
      *  paste. Newlines split paragraphs (Enter is `text: "\n"`); the caret lands
-     *  after the insertion. Wrapped per doc type by the worker (a slide shape's
-     *  text, a doc body). */
-    | { kind: "insertText"; text: string }
+     *  after the insertion — a slide shape's text, a doc body, a free text. */
+    | { family: "text"; kind: "insertText"; text: string }
     /** Text: delete at the text caret / range — a range deletes it, a collapsed
      *  caret deletes forward (Delete) or backward (Backspace). */
-    | { kind: "deleteText"; forward: boolean }
+    | { family: "text"; kind: "deleteText"; forward: boolean }
     /** Text: make a binding place of the selection, binding `binding` —
      *  around the characters a range within a paragraph covers, around the
      *  paragraphs a range across a paragraph's end touches, or at a caret one
      *  holding its placeholder. Offered in a template's text alone. */
-    | { kind: "bind"; binding: Binding }
+    | { family: "text"; kind: "bind"; binding: Binding }
     /** Text: bind the binding place `bindingPlace`, in the selected text, by
      *  `binding` instead. */
-    | { kind: "rebind"; bindingPlace: TextBindingId; binding: Binding }
+    | { family: "text"; kind: "rebind"; bindingPlace: TextBindingId; binding: Binding }
     /** Text: dissolve the binding place `bindingPlace`, in the selected text,
      *  keeping its content. */
-    | { kind: "unbind"; bindingPlace: TextBindingId }
+    | { family: "text"; kind: "unbind"; bindingPlace: TextBindingId }
     /** Text: add an option bound by `binding` — a `when` with its values, or
      *  the `otherwise` — to the choice `choice`, in the selected text, holding
      *  its placeholder: before the choice's otherwise, or last where it has
      *  none. */
-    | { kind: "addBindingOption"; choice: TextBindingId; binding: Binding }
+    | { family: "text"; kind: "addBindingOption"; choice: TextBindingId; binding: Binding }
     /** Text: take the option `option`, in the selected text, out of its
      *  choice with all it holds. A choice keeps its last option. */
-    | { kind: "removeBindingOption"; option: TextBindingId }
+    | { family: "text"; kind: "removeBindingOption"; option: TextBindingId }
     /** Shapes: make each selected whole shape a binding place binding
      *  `binding`, a condition, which a fill shows the shape by or hides it by.
      *  Offered in a template alone. */
-    | { kind: "bindShapes"; binding: Binding }
+    | { family: "shape"; kind: "bindShapes"; binding: Binding }
     /** Shapes: bind the shape `shape`, a binding place the selection is in —
      *  the shape selected or holding the selection, or a group around it — by
      *  `binding` instead. */
-    | { kind: "rebindShape"; shape: ShapeNodeId; binding: Binding }
+    | { family: "shape"; kind: "rebindShape"; shape: ShapeNodeId; binding: Binding }
     /** Shapes: take the binding off the shape `shape`, a binding place the
      *  selection is in, leaving an ordinary shape. */
-    | { kind: "unbindShape"; shape: ShapeNodeId }
+    | { family: "shape"; kind: "unbindShape"; shape: ShapeNodeId }
     /** PDF: insert text at the caret / range in a page text object — typing, an
      *  IME commit, a paste. A newline splits the line (Enter is `text: "\n"`). */
-    | { kind: "insertObjectText"; text: string }
+    | { family: "object"; kind: "insertObjectText"; text: string }
     /** PDF: delete at the caret / range in a page text object, like `deleteText`. */
-    | { kind: "deleteObjectText"; forward: boolean }
+    | { family: "object"; kind: "deleteObjectText"; forward: boolean }
     // Whole pages and slides — the thumbnails' edits, on a page selection.
     // Each lands one undo step and leaves a selection: a delete the page that
     // took the first deleted one's place, an insert the new page, a duplicate
     // the copies; a rotate, a flip and a reorder keep it.
-    /** PDF: delete the selected pages, inside a `page` edit. */
-    | { kind: "deletePages" }
-    /** PDF: rotate the selected pages a quarter turn, inside a `page` edit. */
-    | { kind: "rotatePages"; clockwise: boolean }
+    /** PDF: delete the selected pages. */
+    | { family: "page"; kind: "deletePages" }
+    /** PDF: rotate the selected pages a quarter turn. */
+    | { family: "page"; kind: "rotatePages"; clockwise: boolean }
     /** Image: flip the selected pages — left to right when `horizontal`, else
-     *  top to bottom — inside a `page` edit. */
-    | { kind: "flipPages"; horizontal: boolean }
+     *  top to bottom. */
+    | { family: "page"; kind: "flipPages"; horizontal: boolean }
     /** PDF: create a blank page before the first selected one with `before`,
-     *  else after the last, inside a `page` edit. */
-    | { kind: "createPage"; before: boolean }
-    /** PDF: copy the selected pages in after the last of them, inside a `page` edit. */
-    | { kind: "duplicatePages" }
+     *  else after the last. */
+    | { family: "page"; kind: "createPage"; before: boolean }
+    /** PDF: copy the selected pages in after the last of them. */
+    | { family: "page"; kind: "duplicatePages" }
     /** PDF: move the selected pages, as one run in document order, to `to` —
-     *  the index the first of them takes in the resulting order — inside a
-     *  `page` edit. */
-    | { kind: "reorderPages"; to: number }
+     *  the index the first of them takes in the resulting order. */
+    | { family: "page"; kind: "reorderPages"; to: number }
     /** PDF: put `objects` on top of the selected page — a shape drawn on it —
-     *  and select them, inside a `page` edit. */
-    | { kind: "insertObjects"; objects: GraphicsObject[] }
+     *  and select them. */
+    | { family: "page"; kind: "insertObjects"; objects: GraphicsObject[] }
     /** Presentation: the twin of `deletePages`. */
-    | { kind: "deleteSlides" }
+    | { family: "slide"; kind: "deleteSlides" }
     /** Presentation: create a slide at the end of the last selected section,
      *  else after the last selected slide, else, with nothing selected, at the
      *  end of the deck — on `layout` where it names one, else on the slide
      *  layout of the slide it follows — and select it. */
-    | { kind: "createSlide"; layout: string | null }
+    | { family: "slide"; kind: "createSlide"; layout: string | null }
     /** Presentation: the twin of `duplicatePages`. */
-    | { kind: "duplicateSlides" }
+    | { family: "slide"; kind: "duplicateSlides" }
     /** Presentation: the twin of `reorderPages`, the slides joining the section
      *  at index `slideSection` of the section order where it names one, `to`
      *  clamped into its run — a drop at a section's top, or into an empty one —
      *  else the section of the slide they land behind. */
-    | { kind: "reorderSlides"; to: number; slideSection?: number }
+    | { family: "slide"; kind: "reorderSlides"; to: number; slideSection?: number }
     /** Presentation: set whether a slide show shows the selected slides —
      *  Hide Slide is `show: false`. They stay selected. */
-    | { kind: "setSlidesShow"; show: boolean }
+    | { family: "slide"; kind: "setSlidesShow"; show: boolean }
     /** Presentation: start a section named `name` at the first selected slide,
      *  taking it and the slides after it in its section, and select the new
      *  section. */
-    | { kind: "createSlideSection"; name: string }
+    | { family: "slide"; kind: "createSlideSection"; name: string }
     // A deck's sections — the edits of a section selection, picked by the
     // headers in the thumbnails.
     /** Presentation: rename the selected section. */
-    | { kind: "renameSlideSection"; name: string }
+    | { family: "slideSection"; kind: "renameSlideSection"; name: string }
     /** Presentation: delete the selected sections, each one's slides joining
      *  the section before it; nothing is selected after. Never the first
      *  section while another remains: its slides have none before them. */
-    | { kind: "deleteSlideSections" }
+    | { family: "slideSection"; kind: "deleteSlideSections" }
     /** Presentation: delete the selected sections and their slides, the first
      *  section too; nothing is selected after. */
-    | { kind: "deleteSlideSectionsWithSlides" }
+    | { family: "slideSection"; kind: "deleteSlideSectionsWithSlides" }
     /** Presentation: move the selected sections with their slides, as one run
      *  in section order, so the first takes index `to` of the resulting
      *  section order. They stay selected. */
-    | { kind: "reorderSlideSections"; to: number }
+    | { family: "slideSection"; kind: "reorderSlideSections"; to: number }
     // A worksheet's cells — the edits of a cell selection, bound to its sheet,
     // its active cell and its block.
     /** Spreadsheet: enter `text` in the active cell as Excel parses an entry —
@@ -1903,34 +1913,34 @@ export type SelectionEdit =
      *  (Ctrl+Enter), in every selected cell, a formula's relative references
      *  moved per cell. Refused for a formula that doesn't parse, or part of an
      *  array formula. */
-    | { kind: "enterCellText"; text: string; fill: boolean }
+    | { family: "worksheet"; kind: "enterCellText"; text: string; fill: boolean }
     /** Spreadsheet: empty the selected cells — values and formulas — keeping
      *  their formats (Delete). Refused for part of an array formula. */
-    | { kind: "clearCellContents" }
+    | { family: "worksheet"; kind: "clearCellContents" }
     /** Spreadsheet: save the text being typed into the active cell as
      *  `enterCellText` enters it — with `fill`, into every selected cell —
      *  close the entry and move `then`. Refused as `enterCellText` is, the
      *  entry staying open. */
-    | { kind: "commitCellEntry"; fill: boolean; then: GridCellSelectionMove | null }
+    | { family: "worksheet"; kind: "commitCellEntry"; fill: boolean; then: GridCellSelectionMove | null }
     /** Spreadsheet: as many rows as the selection spans — with `before`, above
      *  its first, as Excel's Insert Sheet Rows, in the format of the row above,
      *  the selection staying on the same rows, now the new ones; else below
      *  its last, in its format, the selection staying where it is. Refused
      *  where Excel refuses it: pushing a filled cell or an object off the
      *  sheet, cutting through an array formula. */
-    | { kind: "createSheetRows"; before: boolean }
+    | { family: "worksheet"; kind: "createRows"; before: boolean }
     /** Spreadsheet: as many columns as the selection spans, left of its first
-     *  with `before`, else right of its last, as `createSheetRows` creates
+     *  with `before`, else right of its last, as `createRows` creates
      *  rows. */
-    | { kind: "createSheetColumns"; before: boolean }
+    | { family: "worksheet"; kind: "createColumns"; before: boolean }
     /** Spreadsheet: Excel's Delete Sheet Rows — the selection's rows; the
      *  sheet gains as many empty rows at its bottom. Refused where Excel
      *  refuses it: part of an array formula, a table's header or totals row
      *  without the table, rows a filter hides. */
-    | { kind: "deleteSheetRows" }
-    /** Spreadsheet: Excel's Delete Sheet Columns, as `deleteSheetRows`
+    | { family: "worksheet"; kind: "deleteRows" }
+    /** Spreadsheet: Excel's Delete Sheet Columns, as `deleteRows`
      *  deletes rows. */
-    | { kind: "deleteSheetColumns" }
+    | { family: "worksheet"; kind: "deleteColumns" }
     /** Spreadsheet: create a blank worksheet beside the selection's sheet —
      *  `before` it, as Excel's Insert Sheet does, else after it, as its New
      *  Sheet does — and select its first cell. */
@@ -1938,51 +1948,40 @@ export type SelectionEdit =
     // Spreadsheet cell formatting — the Cell tab's controls over the selected
     // cells, whole rows and columns, or the whole sheet.
     /** Spreadsheet: lay `font`'s set fields over each selected cell's font. */
-    | { kind: "patchCellFont"; font: GridFont }
+    | { family: "worksheet"; kind: "patchCellFont"; font: GridFont }
     /** Spreadsheet: fill each selected cell with `fill`, `null` none. */
-    | { kind: "setCellFill"; fill: GridFill | null }
+    | { family: "worksheet"; kind: "setCellFill"; fill: GridFill | null }
     /** Spreadsheet: lay `line` on the edges `edges` names of the selected
      *  block, `null` taking the borders there away. */
-    | { kind: "patchSheetCellBorders"; edges: TableCellBorderEdge; line: GridBorderProperties | null }
+    | { family: "worksheet"; kind: "patchCellBorders"; edges: TableCellBorderEdge; line: GridBorderProperties | null }
     /** Spreadsheet: lay `alignment`'s set fields over each selected cell's. */
-    | { kind: "patchCellAlignment"; alignment: GridCellAlignment }
+    | { family: "worksheet"; kind: "patchCellAlignment"; alignment: GridCellAlignment }
     /** Spreadsheet: show each selected cell's value through `format`. */
-    | { kind: "setCellNumberFormat"; format: GridNumberFormat }
+    | { family: "worksheet"; kind: "setCellNumberFormat"; format: GridNumberFormat }
     /** Spreadsheet: Excel's Increase Decimal, or with `increase` false
      *  Decrease Decimal, from the active cell's format. */
-    | { kind: "stepCellDecimals"; increase: boolean }
+    | { family: "worksheet"; kind: "stepCellDecimals"; increase: boolean }
     /** Spreadsheet: Excel's Increase Indent, or with `increase` false
      *  Decrease Indent — each selected cell's own indent one step. */
-    | { kind: "stepCellIndent"; increase: boolean }
+    | { family: "worksheet"; kind: "stepCellIndent"; increase: boolean }
     /** Spreadsheet: Increase Font Size, or with `increase` false Decrease
      *  Font Size — each selected cell's own font size one size along the size
      *  field's list. */
-    | { kind: "stepCellFontSize"; increase: boolean }
+    | { family: "worksheet"; kind: "stepCellFontSize"; increase: boolean }
     /** Spreadsheet: Excel's Clear Formats over the selection. */
-    | { kind: "clearCellFormats" }
+    | { family: "worksheet"; kind: "clearCellFormats" }
     /** Spreadsheet: Excel's Merge Cells over the selected block — `across`
      *  one merge per row, `center` Merge & Center — keeping each merge's
      *  top-left contents. One undo step. */
-    | { kind: "mergeSheetCells"; across: boolean; center: boolean }
+    | { family: "worksheet"; kind: "mergeCells"; across: boolean; center: boolean }
     /** Spreadsheet: Excel's Unmerge Cells over the selection. */
-    | { kind: "unmergeSheetCells" }
+    | { family: "worksheet"; kind: "unmergeCells" }
     /** Spreadsheet: Excel's Cut over the selected cells, once their copy is on
      *  the clipboard — marks them, writing nothing; a paste of them moves
      *  them. */
-    | { kind: "cutSheetCells" }
+    | { family: "worksheet"; kind: "cutCells" }
     /** Spreadsheet: let the cells cut be, as Escape or a copy does. */
-    | { kind: "cancelSheetCut" }
-    /** PDF: a page edit (`deletePages`, `reorderPages`, …) on the selected pages. */
-    | { kind: "page"; edit: SelectionEdit }
-    /** PDF: an object edit (`translateObjects`, `insertObjectText`, …) on the
-     *  selected objects, or at the caret in a page text object. */
-    | { kind: "object"; edit: SelectionEdit }
-    /** PDF: an annotation edit (`translateAnnotations`, `common`, …) on the
-     *  selected annotations, or on the free text the caret sits in. */
-    | { kind: "annotation"; edit: SelectionEdit }
-    /** PDF: a drawing text edit (`insertText`, `deleteText`, …) at the caret in
-     *  a free text, inside an `annotation` edit. */
-    | { kind: "common"; edit: SelectionEdit }
+    | { family: "worksheet"; kind: "cancelCut" }
     // Text character formatting — the Text tab's controls (bold / italic /
     // underline / strikethrough / a font / a size / a text color / a highlight)
     // over the current text selection, for presentation + wordprocessing (the
@@ -1990,58 +1989,93 @@ export type SelectionEdit =
     // spans; the selection is kept, so toggles chain.
     /** Text: overlay character properties onto the text selection (a set-value
      *  edit). */
-    | { kind: "patchCharacterProperties"; properties: TextCharacterProperties }
+    | { family: "text"; kind: "patchCharacterProperties"; properties: TextCharacterProperties }
     /** Text: reset each of `keys` to inherited on the text selection — clear
      *  direct character formatting. */
-    | { kind: "clearCharacterProperties"; keys: TextCharacterPropertyKey[] }
+    | { family: "text"; kind: "clearCharacterProperties"; keys: TextCharacterPropertyKey[] }
     /** Text: Increase Font Size, or with `increase` false Decrease Font Size —
      *  each span of the text selection one size along the size field's list,
      *  from the size it shows, so text of two sizes stays two sizes; over a
      *  block of table cells, all the text of each cell. */
-    | { kind: "stepFontSize"; increase: boolean }
+    | { family: "text"; kind: "stepFontSize"; increase: boolean }
     // Text paragraph formatting — the Text tab's paragraph controls (align /
     // line and paragraph spacing / the two list toggles). Their unit is the
     // paragraphs the selection *touches*, not the spans it covers, so unlike the
     // character edits above they act on a bare caret too.
     /** Text: overlay paragraph properties onto every paragraph the text selection
      *  touches (a set-value edit). */
-    | { kind: "patchParagraphProperties"; properties: TextParagraphProperties }
+    | { family: "text"; kind: "patchParagraphProperties"; properties: TextParagraphProperties }
     /** Text: reset each of `keys` to inherited on those paragraphs — clear direct
      *  paragraph formatting back to the style value. */
-    | { kind: "clearParagraphProperties"; keys: TextParagraphPropertyKey[] }
+    | { family: "text"; kind: "clearParagraphProperties"; keys: TextParagraphPropertyKey[] }
     /** Text: step those paragraphs' indent by `delta` levels — Increase /
      *  Decrease Indent. Relative rather than a measure, so each paragraph steps
      *  from its own value and the engine decides what one step means for it. */
-    | { kind: "indentParagraphs"; delta: number }
+    | { family: "text"; kind: "indentParagraphs"; delta: number }
     /** Word: put those paragraphs in paragraph style `style` (an id from the
      *  document's style list), clearing their direct formatting as Word does;
      *  `null` names none. */
-    | { kind: "applyParagraphStyle"; style: string | null }
+    | { family: "text"; kind: "applyParagraphStyle"; style: string | null }
     /** Word: accept the tracked changes the text selection touches — each
      *  widened to its group, or the one beside a caret — where the
      *  capabilities read grants `acceptRevisions`. */
-    | { kind: "acceptRevisions" }
+    | { family: "text"; kind: "acceptRevisions" }
     /** Word: reject them, likewise. */
-    | { kind: "rejectRevisions" }
+    | { family: "text"; kind: "rejectRevisions" }
     /** Word: move the drawing picked whole, dragged from `from` to `to` —
      *  points on page `page` (0-based) of the view, in page points: one in the
      *  line to the text at `to`, a floating one by the drag, its anchor
      *  following its top edge — where the capabilities read grants
      *  `moveDrawing`. */
-    | { kind: "moveDrawing"; page: number; from: { x: number; y: number }; to: { x: number; y: number } }
+    | {
+          family: "text";
+          kind: "moveDrawing";
+          page: number;
+          from: { x: number; y: number };
+          to: { x: number; y: number };
+      }
     /** Word: move the anchor of the floating drawing picked whole onto the
      *  paragraph at `to` — a point on page `page`, in page points — the drawing
      *  staying where it stands, where the capabilities read grants
      *  `moveDrawingAnchor`. */
-    | { kind: "moveDrawingAnchor"; page: number; to: { x: number; y: number } }
+    | { family: "text"; kind: "moveDrawingAnchor"; page: number; to: { x: number; y: number } }
     /** Table: a structural edit on the table the selection sits in — insert or
-     *  delete a row or column, merge or split the selected block. The tsify type
-     *  itself, already in its wire form (`{ createRows: { before, count } }`,
-     *  `"deleteRows"`): `deleteRows` is a kind of its own, not `delete` (which
-     *  deletes the frame holding the table), and the engine binds it to the
-     *  innermost table the selection is in. A cell's **text** is not here — a caret in a cell is
-     *  an ordinary text edit and rides the text kinds above. */
-    | TableSelectionEdit;
+     *  delete a row or column, merge or split the selected block — its
+     *  fields typed from the engine's `TableSelectionEdit`. `deleteRows` is a
+     *  kind of its own, not `deleteShapes` (which deletes the frame holding the
+     *  table), and the engine binds it to the innermost table the selection is
+     *  in. A cell's **text** is not here — a caret in a cell is an ordinary text
+     *  edit and rides the text kinds above. */
+    | TableEdit;
+
+/**
+ * The engine enum a {@link SelectionEdit}'s kind is declared in — the tag its
+ * doc type wraps the kind in, and the part of its capability name before the
+ * dot.
+ */
+export type SelectionEditFamily =
+    | "page"
+    | "object"
+    | "annotation"
+    | "text"
+    | "table"
+    | "shape"
+    | "slide"
+    | "slideSection"
+    | "section"
+    | "worksheet";
+
+/** A family's engine edit union, externally tagged as tsify declares it
+ *  (`{ createRows: { before, count } } | "deleteRows"`), as flat
+ *  {@link SelectionEdit}s: `{ family, kind, …fields }`. */
+type FamilyEdit<F extends SelectionEditFamily, E> = E extends string
+    ? { family: F; kind: E }
+    : E extends object
+      ? { [K in keyof E & string]: { family: F; kind: K } & E[K] }[keyof E & string]
+      : never;
+
+/** A table's {@link SelectionEdit}, typed from the engine's `TableSelectionEdit`. */
+export type TableEdit = FamilyEdit<"table", TableSelectionEdit>;
 
 /**
  * Apply a {@link SelectionEdit} to the current selection — the move / rotate /

@@ -101,10 +101,10 @@ export async function deleteTable({ client, commit, docType }: TableDeleteHost):
         const slot = selection && wordTableSelection(selection);
         if (!slot) return;
         client.setSelection(slot);
-        await commit(() => client.executeOnSelection({ kind: "deleteText", forward: true }));
+        await commit(() => client.executeOnSelection({ family: "text", kind: "deleteText", forward: true }));
         return;
     }
-    await commit(() => client.executeOnSelection({ kind: "deleteShapes" }));
+    await commit(() => client.executeOnSelection({ family: "shape", kind: "deleteShapes" }));
 }
 
 /**
@@ -119,10 +119,10 @@ export async function deleteTableSelection(host: TableDeleteHost, capabilities: 
     const table = selection && innerTableSelection(selection);
     if (!table) return;
     const { client, commit } = host;
-    if ("cells" in table) return commit(() => client.executeOnSelection("clearCellText"));
+    if ("cells" in table) return commit(() => client.executeOnSelection({ family: "table", kind: "clearCellText" }));
     if ("rows" in table && allowsTableEdit(capabilities, "deleteRows"))
-        return commit(() => client.executeOnSelection("deleteRows"));
+        return commit(() => client.executeOnSelection({ family: "table", kind: "deleteRows" }));
     if ("columns" in table && allowsTableEdit(capabilities, "deleteColumns"))
-        return commit(() => client.executeOnSelection("deleteColumns"));
+        return commit(() => client.executeOnSelection({ family: "table", kind: "deleteColumns" }));
     return deleteTable(host);
 }

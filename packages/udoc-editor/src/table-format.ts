@@ -20,6 +20,7 @@ import {
     drawingProperties,
     ICON_FILL as ICON_SHADING,
     paintSwatch,
+    tableEdit,
     tableShadingDisplay,
 } from "@docmentis/udoc-ui/internal";
 import type {
@@ -75,7 +76,7 @@ export function deleteTable(host: UIShellHost): Promise<void> {
 
 /** Run `edit` on the table the selection is in — one committing edit. */
 export function runTableEdit(host: UIShellHost, edit: TableSelectionEdit): Promise<void> {
-    return host.commit(() => host.client.executeOnSelection(edit));
+    return host.commit(() => host.client.executeOnSelection(tableEdit(edit)));
 }
 
 /** The theme block the color panels show: the document's palette for an Office

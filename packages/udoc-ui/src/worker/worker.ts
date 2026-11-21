@@ -13,7 +13,7 @@
 
 import { NoOpPerformanceCounter, PerformanceCounter } from "../performance/index.js";
 import type { IPerformanceCounter, PerfEvent } from "../performance/index.js";
-import { EMPTY_SELECTION_CAPABILITIES, cssPxPerPt } from "../geometry.js";
+import { EMPTY_SELECTION_CAPABILITIES, cssPxPerPt, selectionEditKind } from "../geometry.js";
 import type {
     DocumentLayout,
     Fit,
@@ -40,7 +40,6 @@ import type {
     PageComments,
     ResizeAck,
     SelectedAnnotations,
-    SelectionEdit,
     SelectionReport,
     SlideSectionRun,
     SlideShowPosition,
@@ -77,24 +76,12 @@ import type {
     WasmSession,
 } from "@docmentis/udoc-wasm";
 import { UDocError } from "@docmentis/udoc-wasm/error";
-import type {
-    AcroForm,
-    SectionSelectionEditType,
-    ShapeSelectionEditType,
-    SlideSectionSelectionEditType,
-    SlideSelectionEditType,
-    TextSelectionEditType,
-    UDocCommand,
-    UDocOutcome,
-    UDocSelection,
-    UDocSelectionEdit,
-    UDocType,
-    WorksheetSelectionEditType,
-} from "@docmentis/udoc-wasm";
+import type { AcroForm, UDocCommand, UDocOutcome, UDocSelection } from "@docmentis/udoc-wasm";
 import { createLanes } from "./lanes.js";
 import type { Job, Task } from "./lanes.js";
 import { Selection } from "./selection.js";
 import { slideSectionRuns } from "./slide-sections.js";
+import { taggedSelectionEdit } from "./selection-edit-wire.js";
 
 interface WorkerScope {
     onmessage: ((ev: MessageEvent<EngineRequestEnvelope>) => void) | null;
@@ -2988,9 +2975,8 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 break;
             }
             case "executeOnSelection": {
-                if (typeof msg.edit === "object" && "kind" in msg.edit && msg.edit.kind === "commitCellEntry") {
-                    cellEntries++;
-                }
+                const name = selectionEditKind(msg.edit);
+                if (name === "worksheet.commitCellEntry") cellEntries++;
                 if (!session) throw new Error("engine worker: executeOnSelection before open");
                 // A committing edit on the current selection. The edit names no
                 // ids: the open document's engine binds it to the live selection
@@ -3002,8 +2988,11 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // the now-dangling selection.
                 session.executeOnSelection(VIEWER, taggedSelectionEdit(msg.edit, session.docType()));
                 const layout = layoutOf(session);
-                const kind = typeof msg.edit === "object" && "kind" in msg.edit ? msg.edit.kind : undefined;
-                if (kind === "deleteObjects" || kind === "deleteAnnotations" || kind === "deleteShapes") {
+                if (
+                    name === "object.deleteObjects" ||
+                    name === "annotation.deleteAnnotations" ||
+                    name === "shape.deleteShapes"
+                ) {
                     session.clearSelection(VIEWER);
                 }
                 emitSelection(false);
@@ -3663,228 +3652,6 @@ function pageAnnotations(s: WasmSession, pages: string[]): PageAnnotations[] {
  *  did, `undefined` where it found nothing to act on. */
 function exec(s: WasmSession, command: UDocCommand): UDocOutcome | undefined {
     return s.execute(command);
-}
-
-/** Tag a format-blind {@link SelectionEdit} with the open document's doc-type
- *  variant, producing the `UDocSelectionEdit` the typed `executeOnSelection` boundary
- *  takes — the selection-edit twin of {@link exec}'s command marshalling and of
- *  {@link Selection.objects}'s `{ portable: … }` tag. The open doc type fixes
- *  the variant — it *is* the tag: the shell emits an inner edit valid for that
- *  doc type (a slide `setFill`, a PDF `setNonstrokingStyle`), so the tag the old
- *  `runOnSelection` resolved in Rust is stamped here, at the boundary.
- *
- *  The wire form is externally tagged at every level, so this also turns the
- *  shell's flat `{ kind, …fields }` into it: the kind becomes the key, and a
- *  drawing edit is wrapped in its family — `{ common: { text: { insertText:
- *  { text } } } }` for a slide. An edit still names what to do, never where:
- *  the engine binds it to its own selection, however deep the caret sits — in a
- *  shape's text, a table cell, a text box in a word document. */
-function taggedSelectionEdit(edit: SelectionEdit, docType: UDocType | undefined): UDocSelectionEdit {
-    switch (docType) {
-        case "presentation":
-            return { presentation: presentationEdit(edit) } as UDocSelectionEdit;
-        case "wordprocessing":
-            return { wordprocessing: wordprocessingEdit(edit) } as UDocSelectionEdit;
-        case "spreadsheet":
-            return { spreadsheet: spreadsheetEdit(edit) } as UDocSelectionEdit;
-        case "image":
-            return { image: imageEdit(edit) } as UDocSelectionEdit;
-        default:
-            return { portable: portableEdit(edit) } as UDocSelectionEdit;
-    }
-}
-
-/** The family each drawing kind belongs to, the tag its wire form is wrapped
- *  in. Typed against the gate unions tsify declares, so a kind Rust adds fails
- *  to compile here until it is placed. Table edits need no entry: they travel
- *  as the tsify type already. */
-const TEXT_KINDS: Record<TextSelectionEditType, "text"> = {
-    insertText: "text",
-    pasteText: "text",
-    deleteText: "text",
-    patchCharacterProperties: "text",
-    clearCharacterProperties: "text",
-    stepFontSize: "text",
-    patchParagraphProperties: "text",
-    clearParagraphProperties: "text",
-    indentParagraphs: "text",
-    applyParagraphStyle: "text",
-    acceptRevisions: "text",
-    rejectRevisions: "text",
-    moveDrawing: "text",
-    moveDrawingAnchor: "text",
-    bind: "text",
-    rebind: "text",
-    unbind: "text",
-    addBindingOption: "text",
-    removeBindingOption: "text",
-};
-const SHAPE_KINDS: Record<ShapeSelectionEditType, "shape"> = {
-    translateShapes: "shape",
-    rotateEachShape: "shape",
-    scaleEachShape: "shape",
-    deleteShapes: "shape",
-    reorderShapes: "shape",
-    groupShapes: "shape",
-    ungroupShapes: "shape",
-    alignShapes: "shape",
-    distributeShapes: "shape",
-    flipShapes: "shape",
-    setShapeFill: "shape",
-    setShapeLine: "shape",
-    patchShapeTextBodyProperties: "shape",
-    setShapeGeometry: "shape",
-    adjustShapeHandle: "shape",
-    adjustTextWarpHandle: "shape",
-    pasteShapes: "shape",
-    bindShapes: "shape",
-    rebindShape: "shape",
-    unbindShape: "shape",
-};
-const DRAWING_FAMILY: Record<string, "text" | "shape"> = { ...TEXT_KINDS, ...SHAPE_KINDS };
-
-/** A flat `{ kind, …fields }` edit in its wire form: keyed by its kind —
- *  `{ insertText: { text } }` — or the bare kind when it carries no fields. */
-function byKind(edit: { kind: string }): unknown {
-    const { kind, ...fields } = edit;
-    return Object.keys(fields).length === 0 ? kind : { [kind]: fields };
-}
-
-/** A drawing edit wrapped in its family: `{ text: … }`, `{ shape: … }`, or
- *  `{ table: … }` for the table edit the shell sends as the tsify type. */
-function drawingEdit(edit: SelectionEdit): unknown {
-    if (typeof edit === "string" || !("kind" in edit)) return { table: edit };
-    const family = DRAWING_FAMILY[edit.kind];
-    if (!family) throw new Error(`engine worker: ${edit.kind} is not a drawing edit`);
-    return { [family]: byKind(edit) };
-}
-
-/** The kinds of a deck's own slide family, the tag their wire form is wrapped
- *  in — typed against the gate union tsify declares, as the drawing ones are. */
-const SLIDE_KINDS: Record<SlideSelectionEditType, "slide"> = {
-    deleteSlides: "slide",
-    createSlide: "slide",
-    duplicateSlides: "slide",
-    reorderSlides: "slide",
-    setSlidesShow: "slide",
-    setSlidesLayout: "slide",
-    createSlideSection: "slide",
-};
-
-/** The kinds of a deck's section family, the tag their wire form is wrapped
- *  in — typed against the gate union tsify declares, as the slide ones are. */
-const SLIDE_SECTION_KINDS: Record<SlideSectionSelectionEditType, "slideSection"> = {
-    renameSlideSection: "slideSection",
-    deleteSlideSections: "slideSection",
-    deleteSlideSectionsWithSlides: "slideSection",
-    reorderSlideSections: "slideSection",
-};
-
-/** A deck's edit: an edit of the selected slides under `slide` —
- *  `{ slide: { reorderSlides: { to } } }` — one of the selected sections under
- *  `slideSection`, and any other a drawing edit under `common`. */
-function presentationEdit(edit: SelectionEdit): unknown {
-    if (typeof edit !== "string" && "kind" in edit) {
-        if (edit.kind in SLIDE_KINDS) return { slide: byKind(edit) };
-        if (edit.kind in SLIDE_SECTION_KINDS) return { slideSection: byKind(edit) };
-        if (edit.kind === "insertComment") return byKind(edit);
-    }
-    return { common: drawingEdit(edit) };
-}
-
-/** The kinds of a word document's own section family, the tag their wire form
- *  is wrapped in — typed against the gate union tsify declares, as the drawing
- *  ones are. */
-const SECTION_KINDS: Record<SectionSelectionEditType, "section"> = {
-    patchSectionPageMargins: "section",
-};
-
-/** A word document's edit: an edit of the section the caret is in under
- *  `section` — `{ section: { patchSectionPageMargins: { … } } }` — and any other
- *  a drawing edit under `common`. */
-function wordprocessingEdit(edit: SelectionEdit): unknown {
-    if (typeof edit !== "string" && "kind" in edit && edit.kind in SECTION_KINDS) {
-        return { section: byKind(edit) };
-    }
-    if (typeof edit !== "string" && "kind" in edit && edit.kind === "insertComment") {
-        return byKind(edit);
-    }
-    return { common: drawingEdit(edit) };
-}
-
-/** A PDF's edit, which the shell already sends in its family's wrapper —
- *  `{ kind: "page", edit }`, `{ kind: "object", edit }` or
- *  `{ kind: "annotation", edit }` — and, for a free text's text, a
- *  `{ kind: "common", edit }` inside the annotation one. */
-function portableEdit(edit: SelectionEdit): unknown {
-    if (typeof edit !== "string" && "kind" in edit && "edit" in edit) {
-        switch (edit.kind) {
-            case "page":
-                return { page: { edit: byKind(edit.edit as { kind: string }) } };
-            case "object":
-                return { object: { edit: byKind(edit.edit as { kind: string }) } };
-            case "annotation":
-                return { annotation: { edit: annotationEdit(edit.edit) } };
-        }
-    }
-    throw new Error("engine worker: a PDF edit travels in its family's wrapper");
-}
-
-/** An image document's edit: one of the selected pages, which the shell sends
- *  in its family's wrapper as a PDF's — `{ kind: "page", edit }` — under
- *  `page`, and any other a drawing edit, of the shapes drawn over a page, under
- *  `common`. */
-function imageEdit(edit: SelectionEdit): unknown {
-    if (typeof edit !== "string" && "kind" in edit && edit.kind === "page" && "edit" in edit) {
-        return { page: { edit: byKind(edit.edit as { kind: string }) } };
-    }
-    return { common: { edit: drawingEdit(edit) } };
-}
-
-/** A spreadsheet's edit: one of the selected cells', in the worksheet
- *  family, its kinds typed against the gate tsify declares. */
-const WORKSHEET_KINDS: Record<WorksheetSelectionEditType, "worksheet"> = {
-    enterCellText: "worksheet",
-    clearCellContents: "worksheet",
-    commitCellEntry: "worksheet",
-    createSheetRows: "worksheet",
-    createSheetColumns: "worksheet",
-    deleteSheetRows: "worksheet",
-    deleteSheetColumns: "worksheet",
-    patchCellFont: "worksheet",
-    setCellFill: "worksheet",
-    patchSheetCellBorders: "worksheet",
-    patchCellAlignment: "worksheet",
-    setCellNumberFormat: "worksheet",
-    stepCellDecimals: "worksheet",
-    stepCellIndent: "worksheet",
-    stepCellFontSize: "worksheet",
-    clearCellFormats: "worksheet",
-    mergeSheetCells: "worksheet",
-    unmergeSheetCells: "worksheet",
-    cutSheetCells: "worksheet",
-    cancelSheetCut: "worksheet",
-};
-
-function spreadsheetEdit(edit: SelectionEdit): unknown {
-    if (typeof edit !== "string" && "kind" in edit && edit.kind in WORKSHEET_KINDS) {
-        return { worksheet: { edit: byKind(edit) } };
-    }
-    if (
-        typeof edit !== "string" &&
-        "kind" in edit &&
-        (edit.kind === "insertComment" || edit.kind === "createWorksheet")
-    ) {
-        return byKind(edit);
-    }
-    throw new Error("engine worker: a spreadsheet edit is a worksheet edit");
-}
-
-function annotationEdit(edit: SelectionEdit): unknown {
-    if (typeof edit !== "string" && "kind" in edit && edit.kind === "common" && "edit" in edit) {
-        return { common: { edit: drawingEdit(edit.edit) } };
-    }
-    return byKind(edit as { kind: string });
 }
 
 /** Dispatch a document-wide history op to the matching Rust session method. */

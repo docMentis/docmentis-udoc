@@ -132,10 +132,8 @@ export function mountImageSize(host: EditHost, i18n: I18n): ImageSize {
 /** Turn the pages picked in the thumbnails a quarter turn — clockwise, or
  *  counter-clockwise — or the current page with none picked. */
 async function rotatePages(host: EditHost, clockwise: boolean): Promise<void> {
-    if (allowsEdit(host.store.getState().selectionCaps, "rotatePages")) {
-        await host.commit(() =>
-            host.client.executeOnSelection({ kind: "page", edit: { kind: "rotatePages", clockwise } }),
-        );
+    if (allowsEdit(host.store.getState().selectionCaps, "page.rotatePages")) {
+        await host.commit(() => host.client.executeOnSelection({ family: "page", kind: "rotatePages", clockwise }));
         return;
     }
     const info = await currentPage(host);
@@ -145,10 +143,8 @@ async function rotatePages(host: EditHost, clockwise: boolean): Promise<void> {
 /** Flip the pages picked in the thumbnails — left to right, or top to bottom
  *  — or the current page with none picked. */
 async function flipPages(host: EditHost, horizontal: boolean): Promise<void> {
-    if (allowsEdit(host.store.getState().selectionCaps, "flipPages")) {
-        await host.commit(() =>
-            host.client.executeOnSelection({ kind: "page", edit: { kind: "flipPages", horizontal } }),
-        );
+    if (allowsEdit(host.store.getState().selectionCaps, "page.flipPages")) {
+        await host.commit(() => host.client.executeOnSelection({ family: "page", kind: "flipPages", horizontal }));
         return;
     }
     const info = await currentPage(host);

@@ -1145,7 +1145,7 @@ export function mountUIShell(
             ev,
             cellEntryMode(),
             state.mode !== VIEW_MODE,
-            allowsEdit(state.selectionCaps, "cancelSheetCut"),
+            allowsEdit(state.selectionCaps, "worksheet.cancelCut"),
         );
         if (!action) return false;
         runCellKey(action);
@@ -1162,7 +1162,7 @@ export function mountUIShell(
                 beginCellEntry(action.mode, action.text);
                 return;
             case "clear":
-                void commit(() => client.executeOnSelection({ kind: "clearCellContents" }));
+                void commit(() => client.executeOnSelection({ family: "worksheet", kind: "clearCellContents" }));
                 return;
             case "commit":
                 void saveCellEntry(action.fill, action.then);
@@ -1186,7 +1186,7 @@ export function mountUIShell(
                 editCellEntry("cancel");
                 return;
             case "cancelCut":
-                void commit(() => client.executeOnSelection({ kind: "cancelSheetCut" }));
+                void commit(() => client.executeOnSelection({ family: "worksheet", kind: "cancelCut" }));
                 return;
         }
     }
@@ -1200,7 +1200,7 @@ export function mountUIShell(
         entryAsked = null;
         entryRequests++;
         try {
-            await commit(() => client.executeOnSelection({ kind: "commitCellEntry", fill, then }));
+            await commit(() => client.executeOnSelection({ family: "worksheet", kind: "commitCellEntry", fill, then }));
             return true;
         } catch (error) {
             // Refused, the entry stays open, as the reports say.
@@ -1525,7 +1525,7 @@ export function mountUIShell(
             const state = store.getState();
             return state.features.includes("annotation") ? annotationFormat(state)?.color : undefined;
         },
-        deletable: () => allowsEdit(store.getState().selectionCaps, "deleteAnnotations"),
+        deletable: () => allowsEdit(store.getState().selectionCaps, "annotation.deleteAnnotations"),
         onToggleComment: () => {
             const state = store.getState();
             const comment = selectedComment(state);
@@ -2161,7 +2161,7 @@ export function mountUIShell(
         if (e.key === "Delete" || e.key === "Backspace") {
             const state = store.getState();
             const deletes = annotationsSelected()
-                ? allowsEdit(state.selectionCaps, "deleteAnnotations")
+                ? allowsEdit(state.selectionCaps, "annotation.deleteAnnotations")
                 : state.mode !== VIEW_MODE;
             if (!isTypingTarget(e) && deletes) {
                 e.preventDefault();
@@ -2956,18 +2956,18 @@ export function mountUIShell(
     // Same edit path, so the change syncs.
     function translateSelection(dx: number, dy: number): Promise<void> {
         let edit: SelectionEdit;
-        if (shapeDocType()) edit = { kind: "translateShapes", dx, dy };
-        else if (annotationsSelected()) edit = { kind: "annotation", edit: { kind: "translateAnnotations", dx, dy } };
-        else edit = { kind: "object", edit: { kind: "translateObjects", dx, dy } };
+        if (shapeDocType()) edit = { family: "shape", kind: "translateShapes", dx, dy };
+        else if (annotationsSelected()) edit = { family: "annotation", kind: "translateAnnotations", dx, dy };
+        else edit = { family: "object", kind: "translateObjects", dx, dy };
         return commit(() => client.executeOnSelection(edit));
     }
 
     function scaleSelectionEach(sx: number, sy: number, anchorX: number, anchorY: number): Promise<void> {
         let edit: SelectionEdit;
-        if (shapeDocType()) edit = { kind: "scaleEachShape", sx, sy, anchorX, anchorY };
+        if (shapeDocType()) edit = { family: "shape", kind: "scaleEachShape", sx, sy, anchorX, anchorY };
         else if (annotationsSelected())
-            edit = { kind: "annotation", edit: { kind: "resizeAnnotations", sx, sy, anchorX, anchorY } };
-        else edit = { kind: "object", edit: { kind: "scaleEachObject", sx, sy, anchorX, anchorY } };
+            edit = { family: "annotation", kind: "resizeAnnotations", sx, sy, anchorX, anchorY };
+        else edit = { family: "object", kind: "scaleEachObject", sx, sy, anchorX, anchorY };
         return commit(() => client.executeOnSelection(edit));
     }
 
@@ -3933,7 +3933,7 @@ export function mountUIShell(
     /** Start an untitled section at the selected slides, then edit its name in
      *  its header, as the engine leaves it selected. */
     async function addSlideSection(): Promise<void> {
-        await editPages({ kind: "createSlideSection", name: i18n.t("thumbnails.untitledSection") });
+        await editPages({ family: "slide", kind: "createSlideSection", name: i18n.t("thumbnails.untitledSection") });
         const [id] = store.getState().selectedSlideSections;
         if (id !== undefined) store.dispatch({ type: "SET_RENAMING_SLIDE_SECTION", id });
     }
@@ -3951,17 +3951,17 @@ export function mountUIShell(
         // A section selection holds its slides' pages too: Delete removes the
         // sections, their slides joining the section before.
         if (state.selectedSlideSections.length > 0) {
-            if (!allowsEdit(state.selectionCaps, "deleteSlideSections")) return Promise.resolve();
-            return editPages({ kind: "deleteSlideSections" });
+            if (!allowsEdit(state.selectionCaps, "slideSection.deleteSlideSections")) return Promise.resolve();
+            return editPages({ family: "slideSection", kind: "deleteSlideSections" });
         }
         if (state.selectedPages.length > 0) {
             // The engine keeps a PDF's last page: with every page selected the
             // delete isn't offered, and Delete does nothing.
-            if (!allowsEdit(state.selectionCaps, "deleteSlides", "deletePages")) return Promise.resolve();
+            if (!allowsEdit(state.selectionCaps, "slide.deleteSlides", "page.deletePages")) return Promise.resolve();
             return editPages(
                 state.docType === "presentation"
-                    ? { kind: "deleteSlides" }
-                    : { kind: "page", edit: { kind: "deletePages" } },
+                    ? { family: "slide", kind: "deleteSlides" }
+                    : { family: "page", kind: "deletePages" },
             );
         }
         // A range of text deletes as text. The shape it sits in keeps its own
@@ -3973,9 +3973,9 @@ export function mountUIShell(
         // never the frame holding it.
         if (allowsTableEdit(state.selectionCaps, "clearCellText"))
             return deleteTableSelection({ client, commit, docType: state.docType }, state.selectionCaps);
-        if (shapeDocType()) edit = { kind: "deleteShapes" };
-        else if (annotationsSelected()) edit = { kind: "annotation", edit: { kind: "deleteAnnotations" } };
-        else edit = { kind: "object", edit: { kind: "deleteObjects" } };
+        if (shapeDocType()) edit = { family: "shape", kind: "deleteShapes" };
+        else if (annotationsSelected()) edit = { family: "annotation", kind: "deleteAnnotations" };
+        else edit = { family: "object", kind: "deleteObjects" };
         return commit(() => client.executeOnSelection(edit));
     }
 
@@ -3994,19 +3994,17 @@ export function mountUIShell(
             else beginCellEntry("enter", text);
             return Promise.resolve();
         }
-        if (shapeDocType()) edit = { kind: "insertText", text };
-        else if (annotationsSelected())
-            edit = { kind: "annotation", edit: { kind: "common", edit: { kind: "insertText", text } } };
-        else edit = { kind: "object", edit: { kind: "insertObjectText", text } };
+        if (shapeDocType()) edit = { family: "text", kind: "insertText", text };
+        else if (annotationsSelected()) edit = { family: "text", kind: "insertText", text };
+        else edit = { family: "object", kind: "insertObjectText", text };
         return commit(() => client.executeOnSelection(edit));
     }
 
     function deleteSelectionText(forward: boolean): Promise<void> {
         let edit: SelectionEdit;
-        if (shapeDocType()) edit = { kind: "deleteText", forward };
-        else if (annotationsSelected())
-            edit = { kind: "annotation", edit: { kind: "common", edit: { kind: "deleteText", forward } } };
-        else edit = { kind: "object", edit: { kind: "deleteObjectText", forward } };
+        if (shapeDocType()) edit = { family: "text", kind: "deleteText", forward };
+        else if (annotationsSelected()) edit = { family: "text", kind: "deleteText", forward };
+        else edit = { family: "object", kind: "deleteObjectText", forward };
         return commit(() => client.executeOnSelection(edit));
     }
 
@@ -4614,7 +4612,7 @@ export function mountUIShell(
             case "toggleSlidesHidden":
                 // Show the slides again when every one is hidden, else hide
                 // them all — a selection of both hides the shown ones.
-                void editPages({ kind: "setSlidesShow", show: store.getState().selectedSlidesHidden });
+                void editPages({ family: "slide", kind: "setSlidesShow", show: store.getState().selectedSlidesHidden });
                 break;
             case "addSlideSection":
                 void addSlideSection();
@@ -4628,7 +4626,8 @@ export function mountUIShell(
                 // The first selected section a place up or down, the rest
                 // following it as one run.
                 const [first] = commandContext(store.getState()).slideSections.selected;
-                if (first !== undefined) void editPages({ kind: "reorderSlideSections", to: first + action.by });
+                if (first !== undefined)
+                    void editPages({ family: "slideSection", kind: "reorderSlideSections", to: first + action.by });
                 break;
             }
             case "collapseSlideSections": {
@@ -4972,12 +4971,12 @@ export function mountUIShell(
  *  sheet rows or columns, or a merge. */
 function isRefusableSheetEdit(edit: SelectionEdit): boolean {
     return (
-        typeof edit !== "string" &&
-        "kind" in edit &&
-        (edit.kind === "createSheetRows" ||
-            edit.kind === "createSheetColumns" ||
-            edit.kind === "deleteSheetRows" ||
-            edit.kind === "deleteSheetColumns" ||
-            edit.kind === "mergeSheetCells")
+        "family" in edit &&
+        edit.family === "worksheet" &&
+        (edit.kind === "createRows" ||
+            edit.kind === "createColumns" ||
+            edit.kind === "deleteRows" ||
+            edit.kind === "deleteColumns" ||
+            edit.kind === "mergeCells")
     );
 }

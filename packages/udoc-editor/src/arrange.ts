@@ -60,25 +60,25 @@ const SHAPE_ORDER_MENU: readonly MenuItem<MessageKey>[] = [
         action: editAction({ kind: "reorder", order: "front" }),
         label: "arrange.bringToFront",
         icon: ICON_BRING_TO_FRONT,
-        enabledWhen: (c) => allowsEdit(c.selection, "reorderShapes"),
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.reorderShapes"),
     },
     {
         action: editAction({ kind: "reorder", order: "forward" }),
         label: "arrange.bringForward",
         icon: ICON_BRING_FORWARD,
-        enabledWhen: (c) => allowsEdit(c.selection, "reorderShapes"),
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.reorderShapes"),
     },
     {
         action: editAction({ kind: "reorder", order: "backward" }),
         label: "arrange.sendBackward",
         icon: ICON_SEND_BACKWARD,
-        enabledWhen: (c) => allowsEdit(c.selection, "reorderShapes"),
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.reorderShapes"),
     },
     {
         action: editAction({ kind: "reorder", order: "back" }),
         label: "arrange.sendToBack",
         icon: ICON_SEND_TO_BACK,
-        enabledWhen: (c) => allowsEdit(c.selection, "reorderShapes"),
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.reorderShapes"),
     },
 ];
 
@@ -86,7 +86,7 @@ const SHAPE_ORDER_MENU: readonly MenuItem<MessageKey>[] = [
  *  needs one shape, aligning to the selection's own bounds needs two (a lone box
  *  is already its own union). Both need the shapes to be movable. */
 const canAlignShapes: EnabledWhen = (c) =>
-    allowsEdit(c.selection, "translateShapes") && c.selection.count >= (editStateOf(c).alignToPage ? 1 : 2);
+    allowsEdit(c.selection, "shape.translateShapes") && c.selection.count >= (editStateOf(c).alignToPage ? 1 : 2);
 
 /**
  * The Align dropdown: the six edge/center alignments, the two distributions
@@ -135,14 +135,14 @@ const SHAPE_ALIGN_MENU: readonly MenuItem<MessageKey>[] = [
         action: editAction({ kind: "distribute", axis: "horizontal" }),
         label: "arrange.distributeHorizontally",
         icon: ICON_DISTRIBUTE_H,
-        enabledWhen: (c) => allowsEdit(c.selection, "translateShapes") && c.selection.count >= 3,
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.translateShapes") && c.selection.count >= 3,
         separatorBefore: true,
     },
     {
         action: editAction({ kind: "distribute", axis: "vertical" }),
         label: "arrange.distributeVertically",
         icon: ICON_DISTRIBUTE_V,
-        enabledWhen: (c) => allowsEdit(c.selection, "translateShapes") && c.selection.count >= 3,
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.translateShapes") && c.selection.count >= 3,
     },
     {
         action: editAction({ kind: "alignToPage" }),
@@ -163,26 +163,26 @@ const SHAPE_ROTATE_MENU: readonly MenuItem<MessageKey>[] = [
         action: editAction({ kind: "rotate", angle: QUARTER_TURN }),
         label: "arrange.rotateRight",
         icon: ICON_ROTATE_RIGHT,
-        enabledWhen: (c) => allowsEdit(c.selection, "rotateEachShape"),
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.rotateEachShape"),
     },
     {
         action: editAction({ kind: "rotate", angle: -QUARTER_TURN }),
         label: "arrange.rotateLeft",
         icon: ICON_ROTATE_LEFT,
-        enabledWhen: (c) => allowsEdit(c.selection, "rotateEachShape"),
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.rotateEachShape"),
     },
     {
         action: editAction({ kind: "flip", axis: "horizontal" }),
         label: "arrange.flipHorizontal",
         icon: ICON_FLIP,
-        enabledWhen: (c) => allowsEdit(c.selection, "scaleEachShape"),
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.scaleEachShape"),
         separatorBefore: true,
     },
     {
         action: editAction({ kind: "flip", axis: "vertical" }),
         label: "arrange.flipVertical",
         icon: ICON_FLIP_VERTICAL,
-        enabledWhen: (c) => allowsEdit(c.selection, "scaleEachShape"),
+        enabledWhen: (c) => allowsEdit(c.selection, "shape.scaleEachShape"),
     },
 ];
 
@@ -199,25 +199,25 @@ const OBJECT_ORDER_MENU: readonly MenuItem<MessageKey>[] = [
         action: editAction({ kind: "reorder", order: "front" }),
         label: "arrange.bringToFront",
         icon: ICON_BRING_TO_FRONT,
-        enabledWhen: (c) => allowsEdit(c.selection, "reorderObjects", "reorderAnnotations"),
+        enabledWhen: (c) => allowsEdit(c.selection, "object.reorderObjects", "annotation.reorderAnnotations"),
     },
     {
         action: editAction({ kind: "reorder", order: "forward" }),
         label: "arrange.bringForward",
         icon: ICON_BRING_FORWARD,
-        enabledWhen: (c) => allowsEdit(c.selection, "reorderObjects", "reorderAnnotations"),
+        enabledWhen: (c) => allowsEdit(c.selection, "object.reorderObjects", "annotation.reorderAnnotations"),
     },
     {
         action: editAction({ kind: "reorder", order: "backward" }),
         label: "arrange.sendBackward",
         icon: ICON_SEND_BACKWARD,
-        enabledWhen: (c) => allowsEdit(c.selection, "reorderObjects", "reorderAnnotations"),
+        enabledWhen: (c) => allowsEdit(c.selection, "object.reorderObjects", "annotation.reorderAnnotations"),
     },
     {
         action: editAction({ kind: "reorder", order: "back" }),
         label: "arrange.sendToBack",
         icon: ICON_SEND_TO_BACK,
-        enabledWhen: (c) => allowsEdit(c.selection, "reorderObjects", "reorderAnnotations"),
+        enabledWhen: (c) => allowsEdit(c.selection, "object.reorderObjects", "annotation.reorderAnnotations"),
     },
 ];
 
@@ -225,7 +225,7 @@ const OBJECT_ORDER_MENU: readonly MenuItem<MessageKey>[] = [
  *  needs one object, aligning to the selection's own bounds needs two (a lone
  *  box is already its own union). Both need the objects to be movable. */
 const canAlignObjects: EnabledWhen = (c) =>
-    allowsEdit(c.selection, "translateObjects") && c.selection.count >= (editStateOf(c).alignToPage ? 1 : 2);
+    allowsEdit(c.selection, "object.translateObjects") && c.selection.count >= (editStateOf(c).alignToPage ? 1 : 2);
 
 /**
  * The Align dropdown: the six edge/center alignments, the two distributions
@@ -274,14 +274,14 @@ const OBJECT_ALIGN_MENU: readonly MenuItem<MessageKey>[] = [
         action: editAction({ kind: "distribute", axis: "horizontal" }),
         label: "arrange.distributeHorizontally",
         icon: ICON_DISTRIBUTE_H,
-        enabledWhen: (c) => allowsEdit(c.selection, "translateObjects") && c.selection.count >= 3,
+        enabledWhen: (c) => allowsEdit(c.selection, "object.translateObjects") && c.selection.count >= 3,
         separatorBefore: true,
     },
     {
         action: editAction({ kind: "distribute", axis: "vertical" }),
         label: "arrange.distributeVertically",
         icon: ICON_DISTRIBUTE_V,
-        enabledWhen: (c) => allowsEdit(c.selection, "translateObjects") && c.selection.count >= 3,
+        enabledWhen: (c) => allowsEdit(c.selection, "object.translateObjects") && c.selection.count >= 3,
     },
     {
         action: editAction({ kind: "alignToPage" }),
@@ -302,26 +302,26 @@ const OBJECT_ROTATE_MENU: readonly MenuItem<MessageKey>[] = [
         action: editAction({ kind: "rotate", angle: QUARTER_TURN }),
         label: "arrange.rotateRight",
         icon: ICON_ROTATE_RIGHT,
-        enabledWhen: (c) => allowsEdit(c.selection, "rotateEachObject"),
+        enabledWhen: (c) => allowsEdit(c.selection, "object.rotateEachObject"),
     },
     {
         action: editAction({ kind: "rotate", angle: -QUARTER_TURN }),
         label: "arrange.rotateLeft",
         icon: ICON_ROTATE_LEFT,
-        enabledWhen: (c) => allowsEdit(c.selection, "rotateEachObject"),
+        enabledWhen: (c) => allowsEdit(c.selection, "object.rotateEachObject"),
     },
     {
         action: editAction({ kind: "flip", axis: "horizontal" }),
         label: "arrange.flipHorizontal",
         icon: ICON_FLIP,
-        enabledWhen: (c) => allowsEdit(c.selection, "scaleEachObject"),
+        enabledWhen: (c) => allowsEdit(c.selection, "object.scaleEachObject"),
         separatorBefore: true,
     },
     {
         action: editAction({ kind: "flip", axis: "vertical" }),
         label: "arrange.flipVertical",
         icon: ICON_FLIP_VERTICAL,
-        enabledWhen: (c) => allowsEdit(c.selection, "scaleEachObject"),
+        enabledWhen: (c) => allowsEdit(c.selection, "object.scaleEachObject"),
     },
 ];
 
@@ -384,10 +384,10 @@ export function arrangeCommands(arrange: () => ArrangeEdits | null): Readonly<Re
             anyEnabled(SHAPE_ROTATE_MENU),
         ),
         shapeGroup: button("shapeGroup", "arrange.group", ICON_GROUP, group, (c) =>
-            allowsEdit(c.selection, "groupShapes"),
+            allowsEdit(c.selection, "shape.groupShapes"),
         ),
         shapeUngroup: button("shapeUngroup", "arrange.ungroup", ICON_UNGROUP, ungroup, (c) =>
-            allowsEdit(c.selection, "ungroupShapes"),
+            allowsEdit(c.selection, "shape.ungroupShapes"),
         ),
         objectOrder: dropdown(
             "objectOrder",
@@ -405,10 +405,10 @@ export function arrangeCommands(arrange: () => ArrangeEdits | null): Readonly<Re
             anyEnabled(OBJECT_ROTATE_MENU),
         ),
         objectGroup: button("objectGroup", "arrange.group", ICON_GROUP, group, (c) =>
-            allowsEdit(c.selection, "groupObjects"),
+            allowsEdit(c.selection, "object.groupObjects"),
         ),
         objectUngroup: button("objectUngroup", "arrange.ungroup", ICON_UNGROUP, ungroup, (c) =>
-            allowsEdit(c.selection, "ungroupObjects"),
+            allowsEdit(c.selection, "object.ungroupObjects"),
         ),
     };
 }
@@ -428,9 +428,9 @@ export function createArrangeEdits(host: UIShellHost) {
 
     function reorderSelection(order: ZOrder): Promise<void> {
         let edit: SelectionEdit;
-        if (shapeDocType()) edit = { kind: "reorderShapes", order };
-        else if (annotationsSelected()) edit = { kind: "annotation", edit: { kind: "reorderAnnotations", order } };
-        else edit = { kind: "object", edit: { kind: "reorderObjects", order } };
+        if (shapeDocType()) edit = { family: "shape", kind: "reorderShapes", order };
+        else if (annotationsSelected()) edit = { family: "annotation", kind: "reorderAnnotations", order };
+        else edit = { family: "object", kind: "reorderObjects", order };
         return commit(() => client.executeOnSelection(edit));
     }
 
@@ -440,36 +440,36 @@ export function createArrangeEdits(host: UIShellHost) {
     function alignSelection(edge: AlignEdge): Promise<void> {
         const toPage = editState(store.getState()).alignToPage;
         const edit: SelectionEdit = shapeDocType()
-            ? { kind: "alignShapes", edge, toPage }
-            : { kind: "object", edit: { kind: "alignObjects", edge, toPage } };
+            ? { family: "shape", kind: "alignShapes", edge, toPage }
+            : { family: "object", kind: "alignObjects", edge, toPage };
         return commit(() => client.executeOnSelection(edit));
     }
 
     function distributeSelection(axis: EditAxis): Promise<void> {
         const edit: SelectionEdit = shapeDocType()
-            ? { kind: "distributeShapes", axis }
-            : { kind: "object", edit: { kind: "distributeObjects", axis } };
+            ? { family: "shape", kind: "distributeShapes", axis }
+            : { family: "object", kind: "distributeObjects", axis };
         return commit(() => client.executeOnSelection(edit));
     }
 
     function flipSelection(axis: EditAxis): Promise<void> {
         const edit: SelectionEdit = shapeDocType()
-            ? { kind: "flipShapes", axis }
-            : { kind: "object", edit: { kind: "flipObjects", axis } };
+            ? { family: "shape", kind: "flipShapes", axis }
+            : { family: "object", kind: "flipObjects", axis };
         return commit(() => client.executeOnSelection(edit));
     }
 
     function groupSelection(): Promise<void> {
         const edit: SelectionEdit = shapeDocType()
-            ? { kind: "groupShapes" }
-            : { kind: "object", edit: { kind: "groupObjects" } };
+            ? { family: "shape", kind: "groupShapes" }
+            : { family: "object", kind: "groupObjects" };
         return commit(() => client.executeOnSelection(edit));
     }
 
     function ungroupSelection(): Promise<void> {
         const edit: SelectionEdit = shapeDocType()
-            ? { kind: "ungroupShapes" }
-            : { kind: "object", edit: { kind: "ungroupObjects" } };
+            ? { family: "shape", kind: "ungroupShapes" }
+            : { family: "object", kind: "ungroupObjects" };
         return commit(() => client.executeOnSelection(edit));
     }
 
@@ -477,8 +477,8 @@ export function createArrangeEdits(host: UIShellHost) {
     // dropdown's quarter turns, and the rotation grip's drag.
     function rotateSelectionEach(angle: number): Promise<void> {
         const edit: SelectionEdit = shapeDocType()
-            ? { kind: "rotateEachShape", angle }
-            : { kind: "object", edit: { kind: "rotateEachObject", angle } };
+            ? { family: "shape", kind: "rotateEachShape", angle }
+            : { family: "object", kind: "rotateEachObject", angle };
         return commit(() => client.executeOnSelection(edit));
     }
 

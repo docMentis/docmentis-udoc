@@ -18,7 +18,7 @@ import type {
     UDocSelectionProperties,
     UDocType,
 } from "@docmentis/udoc-wasm";
-import type { SelectionCapabilities, SelectionEdit } from "@docmentis/udoc-ui/internal";
+import type { SelectionCapabilities, SelectionEdit, SelectionEditKind } from "@docmentis/udoc-ui/internal";
 import type { RulerControl, RulerDrop, RulerEdge, RulerIndent } from "./ruler-controls.js";
 
 /** The ruler arm of the engine's guide projection. */
@@ -71,10 +71,10 @@ export function selectionRuler(properties: UDocSelectionProperties | null): Sele
 }
 
 /** The gate a margin edge's edit goes by, for the doc types that take one. */
-const MARGIN_GATES: Partial<Record<UDocType, string>> = {
-    wordprocessing: "patchSectionPageMargins",
-    presentation: "patchShapeTextBodyProperties",
-    portable: "resizeTextBox",
+const MARGIN_GATES: Partial<Record<UDocType, SelectionEditKind>> = {
+    wordprocessing: "section.patchSectionPageMargins",
+    presentation: "shape.patchShapeTextBodyProperties",
+    portable: "object.resizeTextBox",
 };
 
 /** Whether `control` takes a drag on `docType` now — the engine gates the edit
@@ -86,7 +86,7 @@ export function rulerMovable(
     caps: SelectionCapabilities,
     ruler: SelectionRuler,
 ): boolean {
-    const gate = control.kind === "margin" ? MARGIN_GATES[docType] : "patchParagraphProperties";
+    const gate = control.kind === "margin" ? MARGIN_GATES[docType] : "text.patchParagraphProperties";
     return (
         gate !== undefined &&
         caps.allowed.includes(gate) &&
@@ -110,11 +110,19 @@ export function rulerEdit(
     switch (control.kind) {
         case "indent": {
             const properties = guide.text && indentProperties(control.indent, by, guide.text);
-            return properties && { kind: "patchParagraphProperties", properties: { props: properties } };
+            return (
+                properties && { family: "text", kind: "patchParagraphProperties", properties: { props: properties } }
+            );
         }
         case "tab": {
             const stops = movedTabStops(control.index, by, docType, ruler);
-            return stops && { kind: "patchParagraphProperties", properties: { props: [{ tabStops: stops }] } };
+            return (
+                stops && {
+                    family: "text",
+                    kind: "patchParagraphProperties",
+                    properties: { props: [{ tabStops: stops }] },
+                }
+            );
         }
         case "margin":
             return marginEdit(control.edge, by, guide, docType, ruler);
@@ -186,7 +194,7 @@ function marginEdit(
         case "wordprocessing": {
             const sides: { left?: number; top?: number; right?: number; bottom?: number } = {};
             sides[edge] = near ? margins.start + by - page.start : page.end - (margins.end + by);
-            return { kind: "patchSectionPageMargins", ...sides };
+            return { family: "section", kind: "patchSectionPageMargins", ...sides };
         }
         case "presentation": {
             const key = INSET_KEYS[edge];
@@ -194,7 +202,7 @@ function marginEdit(
             if (inset === null) return null;
             const properties: TextBodyProperties = {};
             properties[key] = inset + (near ? by : -by);
-            return { kind: "patchShapeTextBodyProperties", properties };
+            return { family: "shape", kind: "patchShapeTextBodyProperties", properties };
         }
         case "portable": {
             const { horizontal: h, vertical: v } = guide;
@@ -206,7 +214,7 @@ function marginEdit(
                 y1: v.margins.end - v.page.start,
             };
             frame[FRAME_KEYS[edge]] += by;
-            return { kind: "object", edit: { kind: "resizeTextBox", frame } };
+            return { family: "object", kind: "resizeTextBox", frame };
         }
         default:
             return null;

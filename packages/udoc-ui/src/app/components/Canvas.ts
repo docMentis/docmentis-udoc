@@ -2624,7 +2624,12 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             // every selection but an annotation's.
             const moves =
                 (store?.getState()?.mode !== VIEW_MODE || annotationSelected) &&
-                selection.allows("translateObjects", "translateAnnotations", "translateShapes", "moveDrawing");
+                selection.allows(
+                    "object.translateObjects",
+                    "annotation.translateAnnotations",
+                    "shape.translateShapes",
+                    "text.moveDrawing",
+                );
             const move = moves ? "move" : "";
             if (selection.borderLocal(x, y)) return move;
             const fill = fillCursor(x, y) || linkCursor(x, y);
@@ -2633,7 +2638,7 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             if (inObjectText && hitTextMarkup(hitAt(x, y))) return "";
             if (inObjectText || hitText(hitAt(x, y), pressGlobal())) return "text";
             // A word document's body is text, but for a drawing that drags.
-            return store?.getState()?.docType === "wordprocessing" && !selection.allows("moveDrawing") ? "" : move;
+            return store?.getState()?.docType === "wordprocessing" && !selection.allows("text.moveDrawing") ? "" : move;
         }
         return fillCursor(x, y) || linkCursor(x, y) || (hitText(hitAt(x, y), pressGlobal()) ? "text" : "");
     }
@@ -3860,7 +3865,14 @@ export function createCanvas(i18n: I18n, client: WorkerClient, hooks: CanvasHook
             if (!gesture.moving) {
                 if (!gesture.overSelection || Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
                 // A selection that doesn't move isn't dragged: the press stays a click.
-                if (!selection.allows("translateObjects", "translateAnnotations", "translateShapes")) return;
+                if (
+                    !selection.allows(
+                        "object.translateObjects",
+                        "annotation.translateAnnotations",
+                        "shape.translateShapes",
+                    )
+                )
+                    return;
                 gesture.moving = true;
             }
             // Preview the move as a page-local translation delta — viewport px

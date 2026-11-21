@@ -106,7 +106,7 @@ export function mountSlideLayouts(host: EditHost, i18n: I18n): SlideLayouts {
                     if (current) host.client.setSelection({ presentation: { slides: { ids: [current] } } });
                 }
                 await host.commit(() =>
-                    host.client.executeOnSelection({ kind: "createSlide", layout: layout ?? null }),
+                    host.client.executeOnSelection({ family: "slide", kind: "createSlide", layout: layout ?? null }),
                 );
                 host.store.dispatch({ type: "NAVIGATE_TO_PAGE", pageIndex: landing });
             };
@@ -193,7 +193,7 @@ export function deleteSlideCommand(host: () => EditHost | null): CommandDef<Mess
             c.ready &&
             c.presentationView === "normal" &&
             c.pageCount > 0 &&
-            !allowsEdit(c.selection, "deleteSlideSections"),
+            !allowsEdit(c.selection, "slideSection.deleteSlideSections"),
     };
 }
 
