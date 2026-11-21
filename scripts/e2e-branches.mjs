@@ -264,7 +264,7 @@ const REVIEWS = {
                     editWorksheet: {
                         sheet: ids.sheet,
                         command: {
-                            insertRows: { before: ids.rows[5], rows: { first: s.mintId(), count: 1, track: {} } },
+                            createRows: { before: ids.rows[5], count: 1 },
                         },
                     },
                 },
