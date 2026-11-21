@@ -277,7 +277,6 @@ const REVIEWS = {
                             deleteRows: {
                                 first: ids.rows[8],
                                 last: ids.rows[8],
-                                refill: { first: s.mintId(), count: 1, track: {} },
                             },
                         },
                     },
