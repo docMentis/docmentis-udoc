@@ -965,9 +965,7 @@ export abstract class UDocBase<E extends UDocEvents = UDocEvents> {
      * layout has refreshed, with what the command did — a {@link UDocOutcome}:
      * what it inserted, deleted, reordered or changed, the ids it minted — or
      * `undefined` where it found nothing to act on. It leaves the selection
-     * where it was: a host that wants what it inserted selected says so with
-     * {@link setSelection}. Rejects if the command is invalid for the open
-     * document.
+     * where it was. Rejects if the command is invalid for the open document.
      */
     execute(command: UDocCommand): Promise<UDocOutcome | undefined> {
         return this.shell.execute(command);

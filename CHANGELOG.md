@@ -15,8 +15,7 @@ listed once, by package. Its major and minor version are those of the
   minted — a new slide's, say — or `undefined` where it found nothing to act
   on.
 - `execute` leaves the selection where it was: it no longer selects a PDF's
-  inserted objects and annotations. A host that wants what it inserted
-  selected says so with `setSelection`.
+  inserted objects and annotations.
 - A `groupShapes` command no longer names its `group`, nor an `addShapeText`
   its `story`: the engine makes the group and the text body, so it mints
   their ids.
