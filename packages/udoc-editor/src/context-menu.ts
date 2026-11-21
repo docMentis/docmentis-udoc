@@ -106,8 +106,8 @@ function sheetTrackRow(edit: SheetTrackEdit, label: MessageKey, icon: string): M
 
 /** An edit of a workbook's rows or columns. */
 type SheetTrackEdit =
-    | { kind: "insertSheetRows"; before: boolean }
-    | { kind: "insertSheetColumns"; before: boolean }
+    | { kind: "createSheetRows"; before: boolean }
+    | { kind: "createSheetColumns"; before: boolean }
     | { kind: "deleteSheetRows" }
     | { kind: "deleteSheetColumns" };
 
@@ -142,21 +142,21 @@ export const GRID_CONTEXT_MENU: readonly MenuItem<MessageKey>[] = [
     },
     {
         submenu: [
-            sheetTrackRow({ kind: "insertSheetRows", before: true }, "table.rowAbove", ICON_INSERT_ROW_ABOVE),
-            sheetTrackRow({ kind: "insertSheetRows", before: false }, "table.rowBelow", ICON_INSERT_ROW_BELOW),
+            sheetTrackRow({ kind: "createSheetRows", before: true }, "table.rowAbove", ICON_INSERT_ROW_ABOVE),
+            sheetTrackRow({ kind: "createSheetRows", before: false }, "table.rowBelow", ICON_INSERT_ROW_BELOW),
             {
                 ...sheetTrackRow(
-                    { kind: "insertSheetColumns", before: true },
+                    { kind: "createSheetColumns", before: true },
                     "table.columnLeft",
                     ICON_INSERT_COLUMN_LEFT,
                 ),
                 separatorBefore: true,
             },
-            sheetTrackRow({ kind: "insertSheetColumns", before: false }, "table.columnRight", ICON_INSERT_COLUMN_RIGHT),
+            sheetTrackRow({ kind: "createSheetColumns", before: false }, "table.columnRight", ICON_INSERT_COLUMN_RIGHT),
         ],
         label: "table.insert",
         icon: ICON_INSERT_ROW_BELOW,
-        enabledWhen: (c) => allowsEdit(c.selection, "insertSheetRows", "insertSheetColumns"),
+        enabledWhen: (c) => allowsEdit(c.selection, "createSheetRows", "createSheetColumns"),
     },
     {
         submenu: [

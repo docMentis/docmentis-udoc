@@ -1127,7 +1127,7 @@ export function mountUIShell(
         const state = store.getState();
         if (state.status !== "ready" || state.mode === VIEW_MODE || !shapeDocType()) return false;
         const action = tabKeyAction(ev, {
-            inTable: allowsTableEdit(state.selectionCaps, "insertRows"),
+            inTable: allowsTableEdit(state.selectionCaps, "createRows"),
             typing: allowsTextEdit(state.selectionCaps, "insertText"),
         });
         if (action === null) return false;
@@ -4976,8 +4976,8 @@ function isRefusableSheetEdit(edit: SelectionEdit): boolean {
     return (
         typeof edit !== "string" &&
         "kind" in edit &&
-        (edit.kind === "insertSheetRows" ||
-            edit.kind === "insertSheetColumns" ||
+        (edit.kind === "createSheetRows" ||
+            edit.kind === "createSheetColumns" ||
             edit.kind === "deleteSheetRows" ||
             edit.kind === "deleteSheetColumns" ||
             edit.kind === "mergeSheetCells")

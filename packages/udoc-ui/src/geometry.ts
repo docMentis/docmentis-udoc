@@ -378,7 +378,7 @@ export type { Peer, Pointer, PeerPointer };
  * Each kind names what it acts on: a PDF's whole pages (`deletePages`), its page
  * objects (`deleteObjects`) or annotations (`deleteAnnotations`), a deck's
  * slides (`deleteSlides`), a drawing's shapes (`deleteShapes`), a workbook's
- * sheet rows and columns (`insertSheetRows`). The object,
+ * sheet rows and columns (`createSheetRows`). The object,
  * annotation and shape reorder kinds gate all four z-order moves (Bring to
  * Front / Forward / Send Backward / to Back); align / distribute / flip have no kind of their own —
  * the host gates them from the translate / scale-each kinds + `count`.
@@ -432,8 +432,8 @@ export type SelectionEditKind =
     | "patchSectionPageMargins"
     | "moveDrawing"
     | "moveDrawingAnchor"
-    | "insertSheetRows"
-    | "insertSheetColumns"
+    | "createSheetRows"
+    | "createSheetColumns"
     | "deleteSheetRows"
     | "deleteSheetColumns"
     | "createWorksheet"
@@ -522,9 +522,9 @@ export function allowsTextEdit(caps: SelectionCapabilities, kind: TextEditKind):
  * slide's graphic frame or a word document's flow.
  */
 export type TableEditKind =
-    | "insertRows"
+    | "createRows"
     | "deleteRows"
-    | "insertColumns"
+    | "createColumns"
     | "deleteColumns"
     | "mergeCells"
     | "unmergeCells"

@@ -1918,11 +1918,11 @@ export type SelectionEdit =
      *  its last, in its format, the selection staying where it is. Refused
      *  where Excel refuses it: pushing a filled cell or an object off the
      *  sheet, cutting through an array formula. */
-    | { kind: "insertSheetRows"; before: boolean }
+    | { kind: "createSheetRows"; before: boolean }
     /** Spreadsheet: as many columns as the selection spans, left of its first
-     *  with `before`, else right of its last, as `insertSheetRows` inserts
+     *  with `before`, else right of its last, as `createSheetRows` creates
      *  rows. */
-    | { kind: "insertSheetColumns"; before: boolean }
+    | { kind: "createSheetColumns"; before: boolean }
     /** Spreadsheet: Excel's Delete Sheet Rows — the selection's rows; the
      *  sheet gains as many empty rows at its bottom. Refused where Excel
      *  refuses it: part of an array formula, a table's header or totals row
@@ -2036,7 +2036,7 @@ export type SelectionEdit =
     | { kind: "moveDrawingAnchor"; page: number; to: { x: number; y: number } }
     /** Table: a structural edit on the table the selection sits in — insert or
      *  delete a row or column, merge or split the selected block. The tsify type
-     *  itself, already in its wire form (`{ insertRows: { before, count } }`,
+     *  itself, already in its wire form (`{ createRows: { before, count } }`,
      *  `"deleteRows"`): `deleteRows` is a kind of its own, not `delete` (which
      *  deletes the frame holding the table), and the engine binds it to the
      *  innermost table the selection is in. A cell's **text** is not here — a caret in a cell is

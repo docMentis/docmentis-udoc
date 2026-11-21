@@ -78,7 +78,7 @@ export const whenTableEdit =
 
 /** Whether the selection is in a table: a caret in a cell, or a block of cells.
  *  Inserting is live wherever the selection names a row to insert beside. */
-const inTable: EnabledWhen = whenTableEdit("insertRows");
+const inTable: EnabledWhen = whenTableEdit("createRows");
 
 export const TABLE_SELECT_MENU: readonly MenuItem<MessageKey>[] = [
     {
@@ -103,29 +103,29 @@ export const TABLE_SELECT_MENU: readonly MenuItem<MessageKey>[] = [
 
 export const TABLE_INSERT_MENU: readonly MenuItem<MessageKey>[] = [
     {
-        action: editAction({ kind: "tableEdit", edit: { insertRows: { before: true, count: 1 } } }),
+        action: editAction({ kind: "tableEdit", edit: { createRows: { before: true, count: 1 } } }),
         label: "table.rowAbove",
         icon: ICON_INSERT_ROW_ABOVE,
-        enabledWhen: whenTableEdit("insertRows"),
+        enabledWhen: whenTableEdit("createRows"),
     },
     {
-        action: editAction({ kind: "tableEdit", edit: { insertRows: { before: false, count: 1 } } }),
+        action: editAction({ kind: "tableEdit", edit: { createRows: { before: false, count: 1 } } }),
         label: "table.rowBelow",
         icon: ICON_INSERT_ROW_BELOW,
-        enabledWhen: whenTableEdit("insertRows"),
+        enabledWhen: whenTableEdit("createRows"),
     },
     {
-        action: editAction({ kind: "tableEdit", edit: { insertColumns: { before: true, count: 1 } } }),
+        action: editAction({ kind: "tableEdit", edit: { createColumns: { before: true, count: 1 } } }),
         label: "table.columnLeft",
         icon: ICON_INSERT_COLUMN_LEFT,
-        enabledWhen: whenTableEdit("insertColumns"),
+        enabledWhen: whenTableEdit("createColumns"),
         separatorBefore: true,
     },
     {
-        action: editAction({ kind: "tableEdit", edit: { insertColumns: { before: false, count: 1 } } }),
+        action: editAction({ kind: "tableEdit", edit: { createColumns: { before: false, count: 1 } } }),
         label: "table.columnRight",
         icon: ICON_INSERT_COLUMN_RIGHT,
-        enabledWhen: whenTableEdit("insertColumns"),
+        enabledWhen: whenTableEdit("createColumns"),
     },
 ];
 

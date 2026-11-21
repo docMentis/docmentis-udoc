@@ -31,11 +31,11 @@ const tab = (id: string, rest: Partial<ToolbarTab<string>> = {}): ToolbarTab<str
 const TABS = [
     tab("insert"),
     tab("text", { opensFor: holds("insertText") }),
-    tab("table", { opensFor: holds("insertRows"), staysOpen: true }),
+    tab("table", { opensFor: holds("createRows"), staysOpen: true }),
     tab("shape", { opensFor: holds("setShapeFill") }),
 ];
-const CARET_IN_CELL = allowing("insertText", "insertRows", "setShapeFill");
-const BLOCK_OF_CELLS = allowing("insertRows", "setShapeFill");
+const CARET_IN_CELL = allowing("insertText", "createRows", "setShapeFill");
+const BLOCK_OF_CELLS = allowing("createRows", "setShapeFill");
 const PICKED_FRAME = allowing("setShapeFill");
 const CARET_IN_BODY = allowing("insertText");
 

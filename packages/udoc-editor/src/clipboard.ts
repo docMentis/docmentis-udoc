@@ -50,7 +50,7 @@ export function cutDeletes({
 }: Pick<CommandContext, "docType" | "cellEntry" | "selection">): boolean {
     if (docType === "spreadsheet") return cellEntry;
     if (allowsTextEdit(selection, "deleteText") || allowsTableEdit(selection, "clearCellText")) return true;
-    if (allowsTextEdit(selection, "insertText") || allowsTableEdit(selection, "insertRows")) return false;
+    if (allowsTextEdit(selection, "insertText") || allowsTableEdit(selection, "createRows")) return false;
     return allowsEdit(
         selection,
         "deleteObjects",

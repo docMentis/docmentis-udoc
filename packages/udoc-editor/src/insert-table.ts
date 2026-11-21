@@ -24,7 +24,7 @@ export function canInsertTable(c: CommandContext): boolean {
     if (c.docType === "presentation") return c.presentationView === "normal" && c.pageCount > 0;
     if (c.docType === "image") return overImage(c);
     if (c.docType !== "wordprocessing") return false;
-    return allowsTextEdit(c.selection, "insertText") && !whenTableEdit("insertRows")(c);
+    return allowsTextEdit(c.selection, "insertText") && !whenTableEdit("createRows")(c);
 }
 
 /** Insert a `size` table and put the caret in its first cell — one committing

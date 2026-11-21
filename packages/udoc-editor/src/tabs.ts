@@ -141,7 +141,7 @@ function inText(caps: SelectionCapabilities): boolean {
 
 /** Whether `caps` is in a table: a caret in a cell, or a block of cells. */
 function inTable(caps: SelectionCapabilities): boolean {
-    return allowsTableEdit(caps, "insertRows");
+    return allowsTableEdit(caps, "createRows");
 }
 
 /** Whether `caps` holds a workbook's cells: a block of them, whole rows or
