@@ -428,7 +428,7 @@ export const SLIDE_MENU: readonly MenuItem[] = [
         action: { kind: "addSlideSection" },
         label: "thumbnails.addSection",
         icon: ICON_SECTION_ADD,
-        enabledWhen: (c) => allowsEdit(c.selection, "insertSlideSection"),
+        enabledWhen: (c) => allowsEdit(c.selection, "createSlideSection"),
     },
     {
         action: { kind: "toggleSlidesHidden" },

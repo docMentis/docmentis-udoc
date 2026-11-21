@@ -3769,7 +3769,7 @@ const SLIDE_KINDS: Record<SlideSelectionEditType, "slide"> = {
     reorderSlides: "slide",
     setSlidesShow: "slide",
     setSlidesLayout: "slide",
-    insertSlideSection: "slide",
+    createSlideSection: "slide",
 };
 
 /** The kinds of a deck's section family, the tag their wire form is wrapped

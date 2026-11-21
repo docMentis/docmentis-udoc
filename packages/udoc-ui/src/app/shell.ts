@@ -3923,7 +3923,7 @@ export function mountUIShell(
     /** Start an untitled section at the selected slides, then edit its name in
      *  its header, as the engine leaves it selected. */
     async function addSlideSection(): Promise<void> {
-        await editPages({ kind: "insertSlideSection", name: i18n.t("thumbnails.untitledSection") });
+        await editPages({ kind: "createSlideSection", name: i18n.t("thumbnails.untitledSection") });
         const [id] = store.getState().selectedSlideSections;
         if (id !== undefined) store.dispatch({ type: "SET_RENAMING_SLIDE_SECTION", id });
     }

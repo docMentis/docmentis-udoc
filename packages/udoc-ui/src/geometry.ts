@@ -387,7 +387,7 @@ export type SelectionEditKind =
     | "duplicateSlides"
     | "reorderSlides"
     | "setSlidesShow"
-    | "insertSlideSection"
+    | "createSlideSection"
     | "renameSlideSection"
     | "deleteSlideSections"
     | "deleteSlideSectionsWithSlides"

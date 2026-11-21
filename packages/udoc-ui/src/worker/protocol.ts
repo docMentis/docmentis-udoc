@@ -1872,7 +1872,7 @@ export type SelectionEdit =
     /** Presentation: start a section named `name` at the first selected slide,
      *  taking it and the slides after it in its section, and select the new
      *  section. */
-    | { kind: "insertSlideSection"; name: string }
+    | { kind: "createSlideSection"; name: string }
     // A deck's sections — the edits of a section selection, picked by the
     // headers in the thumbnails.
     /** Presentation: rename the selected section. */
