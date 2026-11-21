@@ -3022,14 +3022,12 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 // committing edit, so the layout rides back, the selection
                 // geometry re-posts, history updates, and a repaint redraws.
                 //
-                // `execute` says where the edit landed — the objects an insert
-                // made, the caret after what was typed — and leaves the
-                // selection to whoever issued the command: this host, which
-                // adopts it, as an edit made through the selection is adopted.
-                // After the layout, so the geometry is the edited page's.
-                const landed = exec(session, msg.command);
+                // `execute` says what the command did, never a selection: the
+                // selection is left as it was, and re-posts after the layout,
+                // so its geometry is the edited page's.
+                exec(session, msg.command);
                 const layout = layoutOf(session);
-                emitSelection(false, landed ? session.setSelection(VIEWER, landed) : undefined);
+                emitSelection(false);
                 emitHistory();
                 emitPlanes(session);
                 scheduleFrame();
@@ -3659,11 +3657,10 @@ function pageAnnotations(s: WasmSession, pages: string[]): PageAnnotations[] {
 /** Run a `UDocCommand` through the wasm `execute` ABI. The boundary is typed
  *  (`execute(command: UDocCommand)`), so the command crosses as an object the
  *  wasm side deserializes — no hand-serialization here. The layout it relaid
- *  out is pulled separately (see {@link layoutOf}). Returns where the edit
- *  landed, for the caller to adopt or not; `undefined` where the command says
- *  nothing about it. */
-function exec(s: WasmSession, command: UDocCommand): UDocSelection | undefined {
-    return s.execute(command);
+ *  out is pulled separately (see {@link layoutOf}). What it returns, what the
+ *  command did, isn't needed here. */
+function exec(s: WasmSession, command: UDocCommand): void {
+    s.execute(command);
 }
 
 /** Tag a format-blind {@link SelectionEdit} with the open document's doc-type
