@@ -2794,16 +2794,22 @@ async function handle(request: EngineRequestEnvelope): Promise<void> {
                 reply(id, open ? safeRead(() => open.bindingGeometry(msg.plane, msg.page), []) : []);
                 break;
             }
-            case "bindingChoice": {
-                const open = session;
-                reply(id, open ? safeRead(() => open.bindingChoice(msg.bindingPlace), null) : null);
-                break;
-            }
             case "showBindingOption": {
                 // The engine composes again what was composed; the next frame
                 // paints it, and the caret may sit elsewhere after it.
                 const open = session;
                 const shown = open ? safeRead(() => open.showBindingOption(msg.option), false) : false;
+                if (shown) {
+                    scheduleFrame();
+                    selectionAfterPaint = true;
+                }
+                reply(id, shown);
+                break;
+            }
+            case "showBindingOtherwise": {
+                // As an option shown: composed again, painted next frame.
+                const open = session;
+                const shown = open ? safeRead(() => open.showBindingOtherwise(msg.otherwise), false) : false;
                 if (shown) {
                     scheduleFrame();
                     selectionAfterPaint = true;

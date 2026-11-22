@@ -15,7 +15,7 @@
 // in place from the data given.
 import { allowsEdit, allowsTextEdit } from "@docmentis/udoc-ui/internal";
 import type { CommandContext, CommandDef } from "@docmentis/udoc-ui/internal";
-import type { Automation, Binding } from "@docmentis/udoc-wasm";
+import type { Automation, Binding, ShapeBinding } from "@docmentis/udoc-wasm";
 import type { CurrentBindingPlace } from "./automation-binding-places.js";
 import type { AutomationPreview } from "./automation-preview.js";
 import type { EditHost } from "./edit-client.js";
@@ -57,9 +57,10 @@ export interface BindingPlaceEditing {
     edit(binding: Binding): Promise<void>;
 }
 
-/** The kind of a binding: the key it is tagged by. */
+/** The kind of a binding: `variable` … `choice`, and `option` or `otherwise`
+ *  for a choice's. */
 export function bindingKind(binding: Binding): string {
-    return typeof binding === "string" ? binding : Object.keys(binding)[0]!;
+    return Object.keys(binding)[0]!;
 }
 
 /** The binding places the caret is in whose binding is of `binding`'s kind. */
@@ -128,11 +129,13 @@ async function insertBinding(
     shapes: boolean,
 ): Promise<void> {
     const made = madeIn(binding, bindingPlaces.around());
+    // A shape takes a condition alone, so far.
+    const shapeBinding: ShapeBinding | null = "condition" in made ? { condition: made.condition } : null;
     const ofShapes = shapes && allowsEdit(host.store.getState().selectionCaps, "shape.bindShapes");
     await host.commit(() =>
         host.client.executeOnSelection(
-            ofShapes
-                ? { family: "shape", kind: "bindShapes", binding: made }
+            ofShapes && shapeBinding
+                ? { family: "shape", kind: "bindShapes", binding: shapeBinding }
                 : { family: "text", kind: "bind", binding: made },
         ),
     );

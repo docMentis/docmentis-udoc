@@ -476,7 +476,10 @@ export type TextEditKind =
     | "rebind"
     | "unbind"
     | "addBindingOption"
-    | "removeBindingOption";
+    | "addBindingOtherwise"
+    | "removeBindingOption"
+    | "removeBindingOtherwise"
+    | "rebindOption";
 
 /**
  * Whether `caps` allows the text edit `kind` — the text cousin of

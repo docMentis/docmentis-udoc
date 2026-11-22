@@ -1,46 +1,81 @@
 // A binding place's popover, opened from its binding bar over a template's
 // slide: the binding place's binding as fields for its kind — a variable's
 // path and default, a repeat's item, path and separators, a condition's path
-// and whether it shows when false, a choice's path, an option's values —
-// applied with Done or Enter, and left as it was by Escape or a press outside,
-// which close it as they close a menu. Remove, the bin beside its title, apart
-// from Done, dissolves the binding place and keeps its content. A choice's and
-// an option's list the choice's options, and picking one shows it on the slide
-// at once, the others taking no room — the view's pick, not an edit. Each
-// option is taken out by the bin on its row, but a choice's last, and Add
-// option and Add otherwise under the list add one, shown at once: edits, each
-// one undo step, made as they are pressed. It opens below the bar, or above it
+// and whether it shows when false, a choice's path, an option's values; an
+// otherwise has none — applied with Done or Enter, and left as it was by
+// Escape or a press outside, which close it as they close a menu. Remove, the
+// bin beside its title, apart from Done, dissolves the binding place and keeps
+// its content; an option and an otherwise have none, as each goes only with
+// its choice or by its row's bin. A choice's, an option's and an otherwise's
+// list the choice's options and its otherwise, and picking one shows it on the
+// slide at once, the others taking no room — the view's pick, not an edit.
+// Each is taken out by the bin on its row, but a choice's last, and Add option
+// and Add otherwise under the list add one, shown at once: edits, each one
+// undo step, made as they are pressed. It opens below the bar, or above it
 // where the window has no room below.
 //
 // Storeless and imperative: mounted once and reused, `open(ctx)` seeding it
 // with the binding place's binding and what applying and removing do.
 import { ICON_ADD, ICON_DELETE, createMenuController, on } from "@docmentis/udoc-ui/internal";
-import type { Binding, BindingChoice } from "@docmentis/udoc-wasm";
+import type {
+    Binding,
+    BindingOption,
+    PresentationBindingOption,
+    PresentationBindingOptionRef,
+    PresentationBindingOtherwiseRef,
+} from "@docmentis/udoc-wasm";
 import { bindingPlaceLabel } from "../automation-binding-places.js";
 import type { I18n, MessageKey } from "../i18n/index.js";
 import { ICON_REMOVE_BINDING_PLACE } from "../icons.js";
 
-/** What `open` needs: the binding, where its binding bar stands,
- *  and what Done and Remove do. */
+/** One of what a choice shows: one of its options, or its otherwise. */
+export type ListedAlternative =
+    | { readonly option: PresentationBindingOptionRef }
+    | { readonly otherwise: PresentationBindingOtherwiseRef };
+
+/** A choice as the popover lists it: its options, in order, and its
+ *  otherwise, from its entry in the deck's binding report, and the one its
+ *  slide shows, from its geometry. */
+export interface ListedChoice {
+    readonly options: readonly PresentationBindingOption[];
+    readonly otherwise: PresentationBindingOtherwiseRef | null;
+    readonly shown: ListedAlternative;
+}
+
+/** Whether `a` and `b` name one option, or one otherwise. */
+function sameAlternative(a: ListedAlternative, b: ListedAlternative): boolean {
+    if ("option" in a) return "option" in b && a.option.text.id === b.option.text.id;
+    return "otherwise" in b && a.otherwise.text.id === b.otherwise.text.id;
+}
+
+/** What `open` needs: the binding — a binding place's, or a choice's option's
+ *  or otherwise's — where its binding bar stands, and what Done and Remove do. */
 export interface BindingPlacePopoverContext {
     binding: Binding;
     /** The bar's rect, in client px, the popover opens below. */
     anchor: DOMRect;
-    /** Bind the binding place by `binding` instead. */
+    /** Bind the binding place by `binding` instead, or keep the option for
+     *  it — of the same kind as the popover's `binding`. */
     onApply: (binding: Binding) => Promise<void>;
-    /** Dissolve the binding place, keeping its content. */
-    onRemove: () => Promise<void>;
-    /** The choice the binding place is, or is an option of, with its options
-     *  and the one shown; null for any other binding place. */
-    choice: BindingChoice | null;
-    /** Show the choice's `option`, resolving with the choice as it then is. */
-    onShow: (option: string) => Promise<BindingChoice | null>;
-    /** Add an option bound by `binding` to the choice, resolving with the
-     *  choice as it then is. */
-    onAddOption: (binding: Binding) => Promise<BindingChoice | null>;
-    /** Take the choice's `option` out, resolving with the choice as it then
-     *  is — null where the binding place the popover is for went with it. */
-    onRemoveOption: (option: string) => Promise<BindingChoice | null>;
+    /** Dissolve the binding place, keeping its content; null for an option or
+     *  an otherwise, which has no Remove. */
+    onRemove: (() => Promise<void>) | null;
+    /** The choice the binding place is, or is an option or the otherwise of,
+     *  with its options, its otherwise and the one shown; null for any other
+     *  binding place. */
+    choice: ListedChoice | null;
+    /** Show `shown`, one of the choice's, resolving with the choice as it then
+     *  is. */
+    onShow: (shown: ListedAlternative) => Promise<ListedChoice | null>;
+    /** Add `option` to the choice, resolving with the choice as it then is. */
+    onAddOption: (option: BindingOption) => Promise<ListedChoice | null>;
+    /** Add an otherwise to the choice, resolving with the choice as it then
+     *  is. */
+    onAddOtherwise: () => Promise<ListedChoice | null>;
+    /** Take the choice's option or otherwise `removed` out, resolving with the
+     *  choice as it then is — null where the binding place the popover is for
+     *  went with it. */
+    onRemoveAlternative: (removed: ListedAlternative) => Promise<ListedChoice | null>;
 }
 
 /** The words no name takes: a tag's keywords. */
@@ -62,26 +97,19 @@ function isLiteral(text: string): boolean {
     return !/["“”]/.test(text);
 }
 
-/** What an option's row in the list reads: its values, quoted, or Otherwise. */
-function optionLabel(binding: Binding, i18n: I18n): string {
-    if (typeof binding === "object" && "when" in binding) {
-        return binding.when.values.map((value) => `"${value}"`).join(", ");
-    }
-    return i18n.t("bindingPlace.otherwise");
+/** What an option's row in the list reads: its values, quoted. */
+function optionLabel(option: BindingOption): string {
+    return option.values.map((value) => `"${value}"`).join(", ");
 }
 
-/** The values `choice`'s `when`s match. */
-function valuesOf(choice: BindingChoice): Set<string> {
-    return new Set(
-        choice.options.flatMap(({ binding }) =>
-            typeof binding === "object" && "when" in binding ? binding.when.values : [],
-        ),
-    );
+/** The values `choice`'s options match. */
+function valuesOf(choice: ListedChoice): Set<string> {
+    return new Set(choice.options.flatMap(({ binding }) => binding.values));
 }
 
 /** A value for a new option to match, made up for its author to change: the
  *  first letter no option of `choice` matches yet, else a number. */
-function newValue(choice: BindingChoice): string {
+function newValue(choice: ListedChoice): string {
     const taken = valuesOf(choice);
     const letter = [..."abcdefghijklmnopqrstuvwxyz"].find((value) => !taken.has(value));
     if (letter) return letter;
@@ -140,7 +168,7 @@ export function createBindingPlacePopover(i18n: I18n) {
 
     let ctx: BindingPlacePopoverContext | null = null;
     /** The choice the list shows, as it last stood. */
-    let listed: BindingChoice | null = null;
+    let listed: ListedChoice | null = null;
     let fields: Field[] = [];
     let busy = false;
     const unsubEvents: Array<() => void> = [];
@@ -178,7 +206,7 @@ export function createBindingPlacePopover(i18n: I18n) {
 
     /** The fields `binding`'s kind has, filled from it. */
     function fieldsOf(binding: Binding): Field[] {
-        if (binding === "otherwise") return [];
+        if ("otherwise" in binding) return [];
         if ("variable" in binding) {
             const { path, default: fallback } = binding.variable;
             return [field("path", "bindingPlace.path", path), field("default", "bindingPlace.default", fallback ?? "")];
@@ -200,10 +228,11 @@ export function createBindingPlacePopover(i18n: I18n) {
             ];
         }
         if ("choice" in binding) return [field("path", "bindingPlace.path", binding.choice.path)];
-        return [field("values", "bindingPlace.values", binding.when.values.join(", "))];
+        return [field("values", "bindingPlace.values", binding.option.values.join(", "))];
     }
 
-    /** The binding the fields say, of `kind`'s kind; null where one is wrong. */
+    /** The binding or option the fields say, of `kind`'s kind; null where one
+     *  is wrong. */
     function read(kind: Binding): Binding | null {
         const value = (key: string) => fields.find((f) => f.key === key)?.input.value.trim() ?? "";
         const optional = (key: string) => {
@@ -211,7 +240,7 @@ export function createBindingPlacePopover(i18n: I18n) {
             return text === "" ? undefined : text;
         };
         const literal = (text: string | undefined) => text === undefined || isLiteral(text);
-        if (kind === "otherwise") return kind;
+        if ("otherwise" in kind) return kind;
         if ("variable" in kind) {
             const path = value("path");
             const fallback = optional("default");
@@ -243,23 +272,28 @@ export function createBindingPlacePopover(i18n: I18n) {
             .split(",")
             .map((text) => text.trim())
             .filter((text) => text !== "");
-        return values.length > 0 && values.every(isLiteral) ? { when: { values } } : null;
+        return values.length > 0 && values.every(isLiteral) ? { option: { values } } : null;
     }
 
-    /** List `choice`'s options, the one shown picked, each with its bin — but
-     *  a choice's last — and under them what adds one: Add otherwise only
-     *  where the choice has none. None where it is null. */
-    function listOptions(choice: BindingChoice | null): void {
+    /** List `choice`'s options and its otherwise, the one shown picked, each
+     *  with its bin — but a choice's last — and under them what adds one: Add
+     *  otherwise only where the choice has none. None where it is null. */
+    function listOptions(choice: ListedChoice | null): void {
         listed = choice;
         options.hidden = choice === null;
         if (choice === null) {
             options.replaceChildren();
             return;
         }
-        const last = choice.options.length < 2;
+        const last = choice.options.length + (choice.otherwise ? 1 : 0) < 2;
+        const rows: [ListedAlternative, string][] = choice.options.map((option) => [
+            { option: option.id },
+            optionLabel(option.binding),
+        ]);
+        if (choice.otherwise) rows.push([{ otherwise: choice.otherwise }, i18n.t("bindingPlace.otherwise")]);
         options.replaceChildren(
             legend,
-            ...choice.options.map((option) => {
+            ...rows.map(([alternative, name]) => {
                 const row = document.createElement("div");
                 row.className = "udoc-binding-place-popover__option-row";
                 const label = document.createElement("label");
@@ -267,32 +301,32 @@ export function createBindingPlacePopover(i18n: I18n) {
                 const input = document.createElement("input");
                 input.type = "radio";
                 input.name = "udoc-binding-place-shown";
-                input.checked = option.id === choice.shown;
+                input.checked = sameAlternative(alternative, choice.shown);
                 input.addEventListener("change", () => {
-                    if (input.checked) void show(option.id);
+                    if (input.checked) void show(alternative);
                 });
                 const text = document.createElement("span");
-                text.textContent = optionLabel(option.binding, i18n);
+                text.textContent = name;
                 label.append(input, text);
                 const remove = document.createElement("button");
                 remove.type = "button";
                 remove.className = "udoc-binding-place-popover__remove-option";
                 remove.innerHTML = ICON_DELETE;
                 remove.title = i18n.t("bindingPlace.removeOption");
-                remove.setAttribute("aria-label", `${i18n.t("bindingPlace.removeOption")}: ${text.textContent}`);
+                remove.setAttribute("aria-label", `${i18n.t("bindingPlace.removeOption")}: ${name}`);
                 remove.disabled = last;
-                remove.addEventListener("click", () => void removeOption(option.id));
+                remove.addEventListener("click", () => void removeAlternative(alternative));
                 row.append(label, remove);
                 return row;
             }),
             adding,
         );
-        addOtherwise.hidden = choice.options.some(({ binding }) => binding === "otherwise");
+        addOtherwise.hidden = choice.otherwise !== null;
     }
 
     /** Run `work`, which changes the choice, and list it as it then is; the
      *  popover closes where the choice is gone from under it. */
-    async function change(work: (open: BindingPlacePopoverContext) => Promise<BindingChoice | null>): Promise<void> {
+    async function change(work: (open: BindingPlacePopoverContext) => Promise<ListedChoice | null>): Promise<void> {
         const open = ctx;
         if (!open || busy) return;
         busy = true;
@@ -306,28 +340,38 @@ export function createBindingPlacePopover(i18n: I18n) {
         }
     }
 
-    function show(option: string): Promise<void> {
-        return change((open) => open.onShow(option));
+    function show(shown: ListedAlternative): Promise<void> {
+        return change((open) => open.onShow(shown));
     }
 
-    /** Add an option bound by `binding`, and show it. */
-    function add(binding: Binding): Promise<void> {
+    /** Add `option`, and show it. */
+    function add(option: BindingOption): Promise<void> {
         return change(async (open) => {
-            const before = new Set(listed?.options.map((option) => option.id));
-            const choice = await open.onAddOption(binding);
-            const added = choice?.options.find((option) => !before.has(option.id));
-            return added ? open.onShow(added.id) : choice;
+            const before = listed?.options ?? [];
+            const choice = await open.onAddOption(option);
+            const added = choice?.options.find(
+                (option) => !before.some((held) => held.id.text.id === option.id.text.id),
+            );
+            return added ? open.onShow({ option: added.id }) : choice;
         });
     }
 
-    function removeOption(option: string): Promise<void> {
-        return change((open) => open.onRemoveOption(option));
+    /** Add an otherwise, and show it. */
+    function addOtherwiseToChoice(): Promise<void> {
+        return change(async (open) => {
+            const choice = await open.onAddOtherwise();
+            return choice?.otherwise ? open.onShow({ otherwise: choice.otherwise }) : choice;
+        });
+    }
+
+    function removeAlternative(removed: ListedAlternative): Promise<void> {
+        return change((open) => open.onRemoveAlternative(removed));
     }
 
     on(addOption, "click", () => {
-        if (listed) void add({ when: { values: [newValue(listed)] } });
+        if (listed) void add({ values: [newValue(listed)] });
     });
-    on(addOtherwise, "click", () => void add("otherwise"));
+    on(addOtherwise, "click", () => void addOtherwiseToChoice());
 
     async function run(work: () => Promise<void>): Promise<void> {
         if (busy) return;
@@ -358,8 +402,8 @@ export function createBindingPlacePopover(i18n: I18n) {
 
     on(doneBtn, "click", apply);
     on(removeBtn, "click", () => {
-        const open = ctx;
-        if (open) void run(() => open.onRemove());
+        const remove = ctx?.onRemove;
+        if (remove) void run(remove);
     });
     on(form, "keydown", (e: KeyboardEvent) => {
         if (e.key === "Enter") {
@@ -372,6 +416,7 @@ export function createBindingPlacePopover(i18n: I18n) {
         ctx = context;
         heading.textContent = bindingPlaceLabel(context.binding, i18n);
         panel.setAttribute("aria-label", heading.textContent);
+        removeBtn.hidden = context.onRemove === null;
         fields = fieldsOf(context.binding);
         form.replaceChildren(
             ...fields.map((f) => {

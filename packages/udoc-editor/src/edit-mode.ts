@@ -6,7 +6,7 @@ import { arrangeCommands } from "./arrange.js";
 import { automationCommands, bindingPlacesOfKind } from "./automation.js";
 import type { BindingPlaceEditing } from "./automation.js";
 import { mountGenerate } from "./automation-generate.js";
-import { mountBindingPlaces } from "./automation-binding-places.js";
+import { isAlternative, listChoice, mountBindingPlaces } from "./automation-binding-places.js";
 import type { CurrentBindingPlace, BindingPlaces } from "./automation-binding-places.js";
 import { createBindingPlacePopover } from "./components/BindingPlacePopover.js";
 import type { BindingPlacePopover } from "./components/BindingPlacePopover.js";
@@ -264,63 +264,103 @@ export function editMode(options: UDocEditorOptions): EditMode {
         const done = () => mounted.focusClipboardSink();
         const id = bindingPlace.geometry.id;
         const binding = bindingPlace.geometry.binding;
-        const ofChoice = binding === "otherwise" || "choice" in binding || "when" in binding;
-        void (ofChoice ? mounted.client.bindingChoice(id) : Promise.resolve(null)).then((choice) =>
+        const alternative = isAlternative(binding);
+        // The choice the binding place is, or the one the option or otherwise
+        // is shown in, listed from the deck's report and the slide's geometry.
+        const choiceId = alternative ? (bindingPlace.geometry.choice ?? null) : "choice" in binding ? id : null;
+        const listed = () =>
+            choiceId === null ? Promise.resolve(null) : listChoice(mounted, choiceId, bindingPlace.page);
+        void listed().then((choice) =>
             popover.open({
                 binding,
                 anchor: item,
                 choice,
                 // The view's pick: the slide composes again, and the binding
                 // places are read again where they now stand.
-                onShow: async (option) => {
-                    await mounted.client.showBindingOption(option);
+                onShow: async (shown) => {
+                    await ("option" in shown
+                        ? mounted.client.showBindingOption(shown.option)
+                        : mounted.client.showBindingOtherwise(shown.otherwise));
                     bindingPlaces?.refresh();
-                    return mounted.client.bindingChoice(id);
+                    return listed();
                 },
-                // A choice's options, added and taken out as edits of its
-                // text, each one undo step.
+                // A choice's options and its otherwise, added and taken out as
+                // edits of its text, each one undo step.
                 onAddOption: async (option) => {
-                    if (choice === null) return null;
+                    if (choiceId === null) return null;
                     await mounted.commit(() =>
                         mounted.client.executeOnSelection({
                             family: "text",
                             kind: "addBindingOption",
-                            choice: choice.id,
+                            choice: choiceId,
                             binding: option,
                         }),
                     );
                     bindingPlaces?.refresh();
-                    return mounted.client.bindingChoice(id);
+                    return listed();
                 },
-                onRemoveOption: async (option) => {
+                onAddOtherwise: async () => {
+                    if (choiceId === null) return null;
                     await mounted.commit(() =>
-                        mounted.client.executeOnSelection({ family: "text", kind: "removeBindingOption", option }),
+                        mounted.client.executeOnSelection({
+                            family: "text",
+                            kind: "addBindingOtherwise",
+                            choice: choiceId,
+                        }),
                     );
                     bindingPlaces?.refresh();
-                    return mounted.client.bindingChoice(id);
+                    return listed();
                 },
-                // A shape a binding makes a binding place is bound otherwise,
-                // or unbound, as a shape; a binding place in text as text.
-                onApply: (binding) =>
-                    mounted
-                        .commit(() =>
-                            mounted.client.executeOnSelection(
-                                bindingPlace.geometry.level === "shape"
-                                    ? { family: "shape", kind: "rebindShape", shape: id, binding }
-                                    : { family: "text", kind: "rebind", bindingPlace: id, binding },
-                            ),
-                        )
-                        .then(done),
-                onRemove: () =>
-                    mounted
-                        .commit(() =>
-                            mounted.client.executeOnSelection(
-                                bindingPlace.geometry.level === "shape"
-                                    ? { family: "shape", kind: "unbindShape", shape: id }
-                                    : { family: "text", kind: "unbind", bindingPlace: id },
-                            ),
-                        )
-                        .then(done),
+                onRemoveAlternative: async (removed) => {
+                    await mounted.commit(() =>
+                        mounted.client.executeOnSelection(
+                            "option" in removed
+                                ? { family: "text", kind: "removeBindingOption", option: removed.option.text.id }
+                                : {
+                                      family: "text",
+                                      kind: "removeBindingOtherwise",
+                                      otherwise: removed.otherwise.text.id,
+                                  },
+                        ),
+                    );
+                    bindingPlaces?.refresh();
+                    return listed();
+                },
+                // A shape a binding makes a binding place is bound by another
+                // condition, or unbound, as a shape; a binding place in text as
+                // text; a choice's option kept for other values; an otherwise
+                // has nothing to bind. Neither an option nor an otherwise is
+                // unbound — each goes only with its choice, or by its row's bin.
+                onApply: async (binding) => {
+                    if ("otherwise" in binding) return done();
+                    const edit =
+                        "option" in binding
+                            ? ({ family: "text", kind: "rebindOption", option: id, binding: binding.option } as const)
+                            : bindingPlace.geometry.level === "shape"
+                              ? "condition" in binding
+                                  ? ({
+                                        family: "shape",
+                                        kind: "rebindShape",
+                                        shape: id,
+                                        binding: { condition: binding.condition },
+                                    } as const)
+                                  : null
+                              : ({ family: "text", kind: "rebind", bindingPlace: id, binding } as const);
+                    if (edit) await mounted.commit(() => mounted.client.executeOnSelection(edit));
+                    done();
+                },
+                onRemove: alternative
+                    ? null
+                    : () =>
+                          mounted
+                              .commit(() =>
+                                  mounted.client.executeOnSelection(
+                                      bindingPlace.geometry.level === "shape"
+                                          ? { family: "shape", kind: "unbindShape", shape: id }
+                                          : { family: "text", kind: "unbind", bindingPlace: id },
+                                  ),
+                              )
+                              .then(done),
             }),
         );
     };

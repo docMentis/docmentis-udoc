@@ -21,6 +21,29 @@ listed once, by package. Its major and minor version are those of the
   their ids.
 - The workbook command `insertWorksheet` is `createWorksheet`: it makes the
   sheet it puts in, as `createPage` and `createSlide` do.
+- A binding choice holds its options and an optional otherwise, each a
+  binding but neither a binding place of its own. A `Binding` is one of
+  `variable`, `repeat`, `condition`, `choice`, `option` and `otherwise`: an
+  option is `{ option: { values: [...] } }`, a `BindingOption`, and the
+  otherwise `{ otherwise: {} }`, a `BindingOtherwise`. A `bind` edit by
+  either is declined: the `addBindingOption` edit, carrying a
+  `BindingOption`, and the new `addBindingOtherwise` add one to a choice,
+  `removeBindingOption` and the new `removeBindingOtherwise` take one out,
+  and the new `rebindOption` keeps an option for other values, each naming
+  the choice, the option or the otherwise by its `TextBindingId`. `rebind`
+  keeps a binding place's kind.
+- `bindingChoice` and `BindingChoice` are gone. A choice's entry in a deck's
+  binding report lists its `options`, each by a `PresentationBindingOptionRef`
+  and its `binding`, and names its `otherwise`. A `BindingGeometry` takes the
+  option and otherwise refs as its second and third type arguments, and a
+  choice's `shown` is `{ option }`, with its `binding`, or `{ otherwise }`;
+  `showBindingOption`
+  takes a `PresentationBindingOptionRef`, and the new `showBindingOtherwise` a
+  `PresentationBindingOtherwiseRef`.
+- An instance's choice holds only what its fill picked, the option or the
+  otherwise, so its report entry lists that one.
+- In a template, an option's or an otherwise's binding popover has no Remove:
+  each goes with its choice, or by the bin on its row in the choice's list.
 
 ### udoc-node
 

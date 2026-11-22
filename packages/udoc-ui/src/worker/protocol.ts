@@ -11,57 +11,61 @@ import type {
     ActionHideTarget,
     Annotation,
     Binding,
+    BindingOption,
     CellEntryEdit,
     Comment as ModelComment,
     CommentDraft,
+    Destination,
+    ExportFormat,
+    FileFormat,
+    FontLocation,
+    GoogleFontFamily,
+    GraphicsObject,
     GridBorderProperties,
     GridCellAlignment,
     GridCellSelectionMove,
     GridFill,
     GridFont,
     GridNumberFormat,
-    Destination,
-    SessionConfig,
+    NonstrokingStyle,
+    PageExportFormat,
     PaintFill,
     PaintLine,
-    Rect as CornerRect,
-    ShapeGeometry,
-    ShapeNodeId,
-    TextBindingId,
-    TextBodyProperties,
-    Watermark,
-    TextCharacterProperties,
-    TextCharacterPropertyKey,
-    TextParagraphProperties,
-    TextParagraphPropertyKey,
-    NonstrokingStyle,
-    StrokingStyle,
-    TableCellBorderEdge,
-    TableSelectionEdit,
-    GraphicsObject,
-    UDocError,
-    UDocCommand,
-    UDocFragment,
-    UDocSelection,
-    UDocSearchScope,
-    UDocType,
-    ExportFormat,
-    FileFormat,
-    FontLocation,
-    GoogleFontFamily,
-    PageExportFormat,
+    PresentationBindingOptionRef,
+    PresentationBindingOtherwiseRef,
     PresentationBindingPlaceRef,
+    Rect as CornerRect,
+    RevisionDisplay,
+    RevisionGeometry,
+    RevisionGroup,
     SaveStrategy,
     SearchBatch,
     SearchContinuation,
     SearchMatchLocation,
     SearchOptions,
-    RevisionGroup,
-    RevisionGeometry,
-    RevisionDisplay,
+    SessionConfig,
+    ShapeBinding,
+    ShapeGeometry,
+    ShapeNodeId,
     SheetLayoutMode,
     SlideShowInput,
+    StrokingStyle,
+    TableCellBorderEdge,
+    TableSelectionEdit,
+    TextBindingId,
+    TextBodyProperties,
+    TextCharacterProperties,
+    TextCharacterPropertyKey,
+    TextParagraphProperties,
+    TextParagraphPropertyKey,
+    UDocCommand,
+    UDocError,
+    UDocFragment,
+    UDocSearchScope,
+    UDocSelection,
+    UDocType,
     UrlFont,
+    Watermark,
 } from "@docmentis/udoc-wasm";
 import type {
     GridCellSelectOptions,
@@ -1399,23 +1403,15 @@ export interface CommentGeometryRequest {
 
 /**
  * Read where each binding place a deck holds shows on page `page` of `plane`,
- * page-local points. Replies with `BindingGeometry<PresentationBindingPlaceRef>`[]
- * — none for any other document, or a page with no binding places.
+ * page-local points, and what a choice shows, an option or its otherwise.
+ * Replies with `BindingGeometry<PresentationBindingPlaceRef,
+ * PresentationBindingOptionRef, PresentationBindingOtherwiseRef>`[] — none for
+ * any other document, or a page with no binding places.
  */
 export interface BindingGeometryRequest {
     type: "bindingGeometry";
     plane: number;
     page: number;
-}
-
-/**
- * Read the choice `bindingPlace` names — the choice itself, or the one it is
- * an option of — with its options and the one shown. Replies with a
- * `BindingChoice`, or null where `bindingPlace` names no choice of a deck's.
- */
-export interface BindingChoiceRequest {
-    type: "bindingChoice";
-    bindingPlace: string;
 }
 
 /**
@@ -1425,7 +1421,17 @@ export interface BindingChoiceRequest {
  */
 export interface ShowBindingOptionRequest {
     type: "showBindingOption";
-    option: string;
+    option: PresentationBindingOptionRef;
+}
+
+/**
+ * Show `otherwise` where its choice is, as {@link ShowBindingOptionRequest}
+ * shows an option. Replies with whether `otherwise` is the otherwise of a
+ * choice in a loaded slide.
+ */
+export interface ShowBindingOtherwiseRequest {
+    type: "showBindingOtherwise";
+    otherwise: PresentationBindingOtherwiseRef;
 }
 
 /** What the comments panel lists threads under: a page, a cell of a sheet, a
@@ -1824,22 +1830,30 @@ export type SelectionEdit =
     /** Text: dissolve the binding place `bindingPlace`, in the selected text,
      *  keeping its content. */
     | { family: "text"; kind: "unbind"; bindingPlace: TextBindingId }
-    /** Text: add an option bound by `binding` — a `when` with its values, or
-     *  the `otherwise` — to the choice `choice`, in the selected text, holding
-     *  its placeholder: before the choice's otherwise, or last where it has
-     *  none. */
-    | { family: "text"; kind: "addBindingOption"; choice: TextBindingId; binding: Binding }
+    /** Text: add `binding`, an option kept for its values, to the choice
+     *  `choice`, in the selected text, holding its placeholder: before the
+     *  choice's otherwise, or last where it has none. */
+    | { family: "text"; kind: "addBindingOption"; choice: TextBindingId; binding: BindingOption }
+    /** Text: add an otherwise to the choice `choice`, in the selected text,
+     *  holding its placeholder, after its options. Declined where it holds one. */
+    | { family: "text"; kind: "addBindingOtherwise"; choice: TextBindingId }
     /** Text: take the option `option`, in the selected text, out of its
-     *  choice with all it holds. A choice keeps its last option. */
+     *  choice with all it holds. A choice keeps an option or its otherwise. */
     | { family: "text"; kind: "removeBindingOption"; option: TextBindingId }
+    /** Text: take the otherwise `otherwise`, in the selected text, out of its
+     *  choice with all it holds. Declined for a choice holding no option. */
+    | { family: "text"; kind: "removeBindingOtherwise"; otherwise: TextBindingId }
+    /** Text: keep the option `option`, in the selected text, for the values
+     *  `binding` instead. */
+    | { family: "text"; kind: "rebindOption"; option: TextBindingId; binding: BindingOption }
     /** Shapes: make each selected whole shape a binding place binding
-     *  `binding`, a condition, which a fill shows the shape by or hides it by.
-     *  Offered in a template alone. */
-    | { family: "shape"; kind: "bindShapes"; binding: Binding }
+     *  `binding` — so far a condition, which a fill shows the shape by or hides
+     *  it by. Offered in a template alone. */
+    | { family: "shape"; kind: "bindShapes"; binding: ShapeBinding }
     /** Shapes: bind the shape `shape`, a binding place the selection is in —
      *  the shape selected or holding the selection, or a group around it — by
      *  `binding` instead. */
-    | { family: "shape"; kind: "rebindShape"; shape: ShapeNodeId; binding: Binding }
+    | { family: "shape"; kind: "rebindShape"; shape: ShapeNodeId; binding: ShapeBinding }
     /** Shapes: take the binding off the shape `shape`, a binding place the
      *  selection is in, leaving an ordinary shape. */
     | { family: "shape"; kind: "unbindShape"; shape: ShapeNodeId }
@@ -2559,8 +2573,8 @@ export type WorkerRequest =
     | SlideIdRequest
     | CommentGeometryRequest
     | BindingGeometryRequest
-    | BindingChoiceRequest
     | ShowBindingOptionRequest
+    | ShowBindingOtherwiseRequest
     | PageAnnotationsRequest
     | AnnotationRequest
     | SelectionGeometryRequest

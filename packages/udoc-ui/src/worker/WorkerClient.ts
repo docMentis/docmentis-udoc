@@ -31,7 +31,6 @@ import type {
     ActionHideTarget,
     Annotation,
     Automation,
-    BindingChoice,
     BindingGeometry,
     BindingReport,
     CellEntryEdit,
@@ -53,6 +52,8 @@ import type {
     PageExportFormat,
     PageMode,
     PresentationBindingEntry,
+    PresentationBindingOptionRef,
+    PresentationBindingOtherwiseRef,
     PresentationBindingPlaceRef,
     RevisionGeometry,
     RevisionDisplay,
@@ -942,25 +943,26 @@ export class WorkerClient {
      * Where each binding place a deck holds shows on page `page` of `plane`:
      * which it is, its binding and its quads, page-local points — a binding
      * place in text's content, a caret's width where it holds only a
-     * placeholder that paints nothing; a shape's box — none for any other
-     * document. What the binding places overlay is drawn from.
+     * placeholder that paints nothing; a shape's box — and what a choice
+     * shows, an option or its otherwise; none for any other document. What the
+     * binding places overlay is drawn from. A choice's options and otherwise
+     * are listed in its entry of the deck's {@link BindingReport}.
      */
-    async bindingGeometry(plane: number, page: number): Promise<BindingGeometry<PresentationBindingPlaceRef>[]> {
+    async bindingGeometry(
+        plane: number,
+        page: number,
+    ): Promise<
+        BindingGeometry<PresentationBindingPlaceRef, PresentationBindingOptionRef, PresentationBindingOtherwiseRef>[]
+    > {
         return (await this.#send({
             type: "bindingGeometry",
             plane,
             page,
-        })) as BindingGeometry<PresentationBindingPlaceRef>[];
-    }
-
-    /**
-     * The choice `bindingPlace` names — the choice itself, or the one it is
-     * an option of — with its options and the one shown, or null where
-     * `bindingPlace` names no choice of a deck's. What the binding place
-     * popover's picker lists.
-     */
-    async bindingChoice(bindingPlace: string): Promise<BindingChoice | null> {
-        return (await this.#send({ type: "bindingChoice", bindingPlace })) as BindingChoice | null;
+        })) as BindingGeometry<
+            PresentationBindingPlaceRef,
+            PresentationBindingOptionRef,
+            PresentationBindingOtherwiseRef
+        >[];
     }
 
     /**
@@ -969,8 +971,17 @@ export class WorkerClient {
      * a save or a print elsewhere shows each choice's first option. Resolves
      * with whether `option` is an option of a choice in a loaded slide.
      */
-    async showBindingOption(option: string): Promise<boolean> {
+    async showBindingOption(option: PresentationBindingOptionRef): Promise<boolean> {
         return (await this.#send({ type: "showBindingOption", option })) as boolean;
+    }
+
+    /**
+     * Show `otherwise` where its choice is, as {@link showBindingOption} shows
+     * an option. Resolves with whether `otherwise` is the otherwise of a choice
+     * in a loaded slide.
+     */
+    async showBindingOtherwise(otherwise: PresentationBindingOtherwiseRef): Promise<boolean> {
+        return (await this.#send({ type: "showBindingOtherwise", otherwise })) as boolean;
     }
 
     /**

@@ -26,13 +26,18 @@ import type { OverlayFrame, OverlayItem, OverlaySource, PageView } from "@docmen
 import type {
     Binding,
     BindingGeometry,
+    BindingOption,
+    BindingOtherwise,
     Point,
+    PresentationBindingOptionRef,
+    PresentationBindingOtherwiseRef,
     PresentationBindingPlaceRef,
     SelectionBox,
     SelectionGeometry,
     SelectionQuad,
     UDocSelectionProperties,
 } from "@docmentis/udoc-wasm";
+import type { ListedAlternative, ListedChoice } from "./components/BindingPlacePopover.js";
 import type { EditHost } from "./edit-client.js";
 import type { I18n, MessageKey } from "./i18n/index.js";
 import { bindingMarkupShown, editState } from "./state.js";
@@ -52,15 +57,20 @@ const NEST_STEP = 5;
  *  another, CSS px. */
 const COINCIDE = 1.5;
 
-/** A binding place as the overlay reads it: its id — the container's around a
- *  binding place in text, the shape's a binding makes a binding place — what
- *  it binds, what it is, and where it shows. */
+/** A binding place as the overlay reads it — or the option or otherwise a
+ *  choice shows, drawn as one inside its choice: its id — the container's
+ *  around a binding place in text, the shape's a binding makes a binding
+ *  place, the option's or otherwise's own — what it binds or is kept for, what
+ *  it is, and where it shows. */
 export interface BindingPlaceGeometry {
     readonly id: string;
     readonly binding: Binding;
     /** Within a paragraph, around whole paragraphs, or a shape. */
     readonly level: "span" | "block" | "shape";
     readonly quads: readonly SelectionQuad[];
+    /** For the option or otherwise a choice shows, the choice's id; absent for
+     *  a binding place. */
+    readonly choice?: string;
 }
 
 /** The binding place the caret is in, as the overlay marks it. */
@@ -69,12 +79,55 @@ export interface CurrentBindingPlace {
     readonly page: number;
 }
 
-/** The engine's `geometry` of a binding place, as the overlay reads it. */
-function bindingPlaceGeometry(geometry: BindingGeometry<PresentationBindingPlaceRef>): BindingPlaceGeometry {
-    const { bindingPlace, binding, quads } = geometry;
-    return "shape" in bindingPlace
-        ? { id: bindingPlace.shape.id, binding, level: "shape", quads }
-        : { id: bindingPlace.text.id, binding, level: bindingPlace.text.level, quads };
+/** The engine's `geometry` of a binding place, as the overlay reads it: the
+ *  binding place, and after a choice the option it shows, at its level. */
+function bindingPlaceGeometry(
+    geometry: BindingGeometry<
+        PresentationBindingPlaceRef,
+        PresentationBindingOptionRef,
+        PresentationBindingOtherwiseRef
+    >,
+): BindingPlaceGeometry[] {
+    const { bindingPlace, binding, quads, shown } = geometry;
+    if ("shape" in bindingPlace) return [{ id: bindingPlace.shape.id, binding, level: "shape", quads }];
+    const { id, level } = bindingPlace.text;
+    const place: BindingPlaceGeometry = { id, binding, level, quads };
+    if (!shown) return [place];
+    if ("option" in shown) {
+        const { option } = shown;
+        const alternative = { option: option.binding };
+        return [place, { id: option.id.text.id, binding: alternative, level, quads: option.quads, choice: id }];
+    }
+    const { otherwise } = shown;
+    const alternative = { otherwise: {} };
+    return [place, { id: otherwise.id.text.id, binding: alternative, level, quads: otherwise.quads, choice: id }];
+}
+
+/** The choice in text `choice` names, as the popover lists it: its options,
+ *  from its entry in the deck's binding report, and the one shown, from its
+ *  geometry on page `page` — or null where the deck holds no such choice with
+ *  options. */
+export async function listChoice(host: EditHost, choice: string, page: number): Promise<ListedChoice | null> {
+    const plane = host.store.getState().currentPlane;
+    const [report, geometry] = await Promise.all([
+        host.client.presentation.automationBindings(),
+        host.client.bindingGeometry(plane, page),
+    ]);
+    const place = report?.entries
+        .map((entry) => ("place" in entry ? entry.place : null))
+        .find((place) => place !== null && "text" in place.bindingPlace && place.bindingPlace.text.id === choice);
+    if (!place) return null;
+    const options = place.options ?? [];
+    const otherwise = place.otherwise ?? null;
+    const first: ListedAlternative | null = options[0] ? { option: options[0].id } : otherwise ? { otherwise } : null;
+    if (!first) return null;
+    const shown = geometry.find(({ bindingPlace }) => "text" in bindingPlace && bindingPlace.text.id === choice)?.shown;
+    const listed: ListedAlternative | null = shown
+        ? "option" in shown
+            ? { option: shown.option.id }
+            : { otherwise: shown.otherwise.id }
+        : null;
+    return { options, otherwise, shown: listed ?? first };
 }
 
 export interface BindingPlaces {
@@ -116,18 +169,22 @@ export function bindingPlaceLabel(binding: Binding, i18n: I18n): string {
     return detail === "" ? name : `${name} · ${detail}`;
 }
 
-/** Whether `binding` is a choice's, which shows one of its options. */
+/** Whether `binding` is a choice's, which shows one of its options or its
+ *  otherwise. */
 function isChoice(binding: Binding): boolean {
-    return binding !== "otherwise" && "choice" in binding;
+    return "choice" in binding;
 }
 
-/** Whether `binding` is an option's, one of what a choice shows. */
-function isOption(binding: Binding): boolean {
-    return binding === "otherwise" || "when" in binding;
+/** Whether `binding` is a choice's option's or its otherwise — one of what a
+ *  choice shows, no binding place of its own. */
+export function isAlternative(
+    binding: Binding,
+): binding is { option: BindingOption } | { otherwise: BindingOtherwise } {
+    return "option" in binding || "otherwise" in binding;
 }
 
 function bindingPlaceParts(binding: Binding): [MessageKey, string] {
-    if (binding === "otherwise") return ["bindingPlace.otherwise", ""];
+    if ("otherwise" in binding) return ["bindingPlace.otherwise", ""];
     if ("variable" in binding) return ["bindingPlace.variable", binding.variable.path];
     if ("repeat" in binding) return ["bindingPlace.repeat", `${binding.repeat.item} ∈ ${binding.repeat.path}`];
     if ("condition" in binding) {
@@ -135,7 +192,7 @@ function bindingPlaceParts(binding: Binding): [MessageKey, string] {
         return ["bindingPlace.condition", not ? `¬ ${path}` : path];
     }
     if ("choice" in binding) return ["bindingPlace.choice", binding.choice.path];
-    return ["bindingPlace.when", binding.when.values.map((value) => `"${value}"`).join(", ")];
+    return ["bindingPlace.when", binding.option.values.map((value) => `"${value}"`).join(", ")];
 }
 
 /** Draw the open deck's binding places, and keep the binding place the caret is
@@ -179,7 +236,7 @@ export function mountBindingPlaces(
             const asked = generation;
             void client.bindingGeometry(plane, index).then((geometry) => {
                 if (asked !== generation) return;
-                read.set(key, geometry.map(bindingPlaceGeometry));
+                read.set(key, geometry.flatMap(bindingPlaceGeometry));
                 findCurrent();
                 draw();
             });
@@ -242,7 +299,7 @@ export function mountBindingPlaces(
                 const held = choice;
                 choice = null;
                 const next = geometries[index + 1];
-                if (isChoice(geometry.binding) && next && isOption(next.binding)) {
+                if (isChoice(geometry.binding) && next && isAlternative(next.binding)) {
                     choice = { id: geometry.id, isMarked, isCurrent };
                     continue;
                 }
