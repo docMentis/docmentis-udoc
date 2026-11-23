@@ -498,8 +498,8 @@ export const DOCUMENTS = {
                 },
             });
             if (round === 0)
-                run(s, "C insertWorksheet", {
-                    spreadsheet: { editWorkbook: { command: { insertWorksheet: { index: 1, name: "Added" } } } },
+                run(s, "C createWorksheet", {
+                    spreadsheet: { editWorkbook: { command: { createWorksheet: { index: 1, name: "Added" } } } },
                 });
         },
         two(s, { sheet, rows, columns }, round) {

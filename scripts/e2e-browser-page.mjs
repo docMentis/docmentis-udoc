@@ -29,7 +29,7 @@ async function scenario(id, command) {
     // A sheet each its own name: two offline editors picking one name is another question.
     const insert = () =>
         command.spreadsheet
-            ? { spreadsheet: { editWorkbook: { command: { insertWorksheet: { index: 0, name: `S${sheets++}` } } } } }
+            ? { spreadsheet: { editWorkbook: { command: { createWorksheet: { index: 0, name: `S${sheets++}` } } } } }
             : command;
     const packageUrl = `/documents/${id}/package`;
     const collaboration = `${location.origin.replace(/^http/, "ws")}/documents/${id}/collaboration`;

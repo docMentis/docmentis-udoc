@@ -93,7 +93,7 @@ const createPage = (s) => run(s, "createPage", { portable: { editPage: { command
 const createSlide = (s) =>
     run(s, "createSlide", { presentation: { editSlide: { command: { createSlide: { index: 0 } } } } });
 const insertSheet = (s, name) =>
-    run(s, "insertWorksheet", { spreadsheet: { editWorkbook: { command: { insertWorksheet: { index: 0, name } } } } });
+    run(s, "createWorksheet", { spreadsheet: { editWorkbook: { command: { createWorksheet: { index: 0, name } } } } });
 const typeAt = (s, { story }, at, text) =>
     run(s, "typing", {
         wordprocessing: {
