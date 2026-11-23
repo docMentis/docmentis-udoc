@@ -45,6 +45,12 @@ listed once, by package. Its major and minor version are those of the
 - In a template, an option's or an otherwise's binding popover has no Remove:
   each goes with its choice, or by the bin on its row in the choice's list.
 
+#### Fixed
+
+- With a license, `hideAttribution` leaves no docMentis mark anywhere: the
+  loading overlay shows without the wordmark, and no link to docmentis.com
+  stays in the corner where the decal was.
+
 ### udoc-node
 
 #### Changed

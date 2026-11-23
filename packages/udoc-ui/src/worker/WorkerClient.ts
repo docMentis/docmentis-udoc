@@ -159,8 +159,9 @@ export interface LicenseOptions {
     /** Commercial license key. Absent is free/unlicensed usage, which is
      *  metered and needs the engine to reach the permit service. */
     license?: string;
-    /** Ask for the "Powered by docMentis" decal not to be painted. Honored only
-     *  with a license; otherwise ignored. */
+    /** Ask for no docMentis mark to be shown: the engine then paints no decal
+     *  and reports no rect for its link, and the UI drops the loading
+     *  overlay's wordmark. Honored only with a license; otherwise ignored. */
     hideAttribution?: boolean;
     /** Ask for usage not to be reported. Honored only with a license;
      *  otherwise ignored. */

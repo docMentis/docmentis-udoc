@@ -27,7 +27,7 @@ The options `create` takes decide which parts of the UI show:
 | `ribbonTabStyle`                                                                                                          | How the ribbon's tabs show: `"icon"`, the default, with each name in a tooltip, or `"text"`, by name. `setRibbonTabStyle()` changes it later.                                   |
 | `showNotesPanel`                                                                                                          | A deck's speaker notes, open under its slides at the start.                                                                                                                     |
 | `showFormulaBar`                                                                                                          | A workbook's formula bar.                                                                                                                                                       |
-| `showLoadingOverlay`, `hideAttribution`                                                                                   | The overlay that shows while a document opens, and the "Powered by docMentis" mark. Only a license can turn these off.                                                          |
+| `showLoadingOverlay`, `hideAttribution`                                                                                   | The overlay that shows while a document opens, and every docMentis mark: the "Powered by docMentis" decal and the overlay's wordmark. Only a license can turn these off.        |
 
 Every `show…` option is on by default except `showDeveloperButton` and
 `showNotesPanel`. The options without a call to change them, such as

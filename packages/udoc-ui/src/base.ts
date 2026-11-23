@@ -53,8 +53,10 @@ export interface UDocOptions {
     /** Commercial license key. Default none: free usage, which is metered and
      *  needs the engine to reach the permit service. */
     license?: string;
-    /** Ask for the "Powered by docMentis" decal not to be painted. Honored only
-     *  with a license. Default `false`. */
+    /** Ask for no docMentis mark to be shown: no "Powered by docMentis" decal
+     *  or link to docmentis.com in the corner, and no wordmark on the loading
+     *  overlay, which shows its progress bar alone. Honored only with a
+     *  license. Default `false`. */
     hideAttribution?: boolean;
     /** Ask for usage not to be reported. Honored only with a license. Default
      *  `false`. */
@@ -110,8 +112,9 @@ export interface UDocOptions {
      *  each thread's marker and the highlight of the text it is on. Default
      *  `true`; the View tab's Hide Comment Markup changes it. */
     showCommentMarkup?: boolean;
-    /** Cover the document area while a document opens — the docMentis wordmark
-     *  and how far the open has got — once it has taken 300ms; the toolbar
+    /** Cover the document area while a document opens — the docMentis wordmark,
+     *  unless {@link hideAttribution} takes it away, and how far the open has
+     *  got — once it has taken 300ms; the toolbar
      *  stays as it is. `false` is honored
      *  only with a license, as the logo is the brand. Default `true`. */
     showLoadingOverlay?: boolean;

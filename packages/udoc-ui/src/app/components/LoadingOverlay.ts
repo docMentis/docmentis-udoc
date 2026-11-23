@@ -10,8 +10,10 @@
 // a spinner beside a bar.
 //
 // It carries the brand, so a host hides it (`showLoadingOverlay: false`) only
-// under a license, as the canvas decal is. Below the dialogs: a protected
-// document asks for its password while it is still opening.
+// under a license, as the canvas decal is. Where the license hides the decal
+// (`hideAttribution`), the overlay drops the wordmark too, and shows the bar
+// alone: no docMentis mark anywhere. Below the dialogs: a protected document
+// asks for its password while it is still opening.
 
 import { subscribeSelector, shallowEqual } from "../../framework/index.js";
 import type { Store } from "../../framework/index.js";
@@ -44,10 +46,12 @@ function megabytes(bytes: number, locale: string): string {
 
 /**
  * Build the loading overlay. `shown` says whether it may show at all — the
- * host's `showLoadingOverlay`, which only a license may turn off — asked
- * each time an open has run long enough.
+ * host's `showLoadingOverlay`, which only a license may turn off — and
+ * `showWordmark` whether it carries the docMentis wordmark, which only a
+ * license's hidden attribution takes away. Both are asked each time an open
+ * has run long enough.
  */
-export function createLoadingOverlay(i18n: I18n, shown: () => boolean) {
+export function createLoadingOverlay(i18n: I18n, shown: () => boolean, showWordmark: () => boolean) {
     const el = document.createElement("div");
     el.className = "udoc-loading";
     el.style.display = "none";
@@ -84,6 +88,7 @@ export function createLoadingOverlay(i18n: I18n, shown: () => boolean) {
             showTimer = setTimeout(() => {
                 showTimer = null;
                 if (!shown()) return;
+                logo.style.display = showWordmark() ? "" : "none";
                 el.style.display = "";
                 el.setAttribute("aria-busy", "true");
             }, SHOW_AFTER_MS);

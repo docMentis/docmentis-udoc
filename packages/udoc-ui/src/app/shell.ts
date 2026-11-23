@@ -758,10 +758,12 @@ export function mountUIShell(
     // how far the open has got. The body only — the toolbar, ribbon and status
     // bar show from mount on, and covering them later would flash them. It
     // carries the brand, so the host's `showLoadingOverlay: false` holds only
-    // under a license.
+    // under a license; and it drops the wordmark where the license hides the
+    // decal, so `hideAttribution` leaves no mark anywhere.
     const loadingOverlay = createLoadingOverlay(
         i18n,
         () => shellOptions.showLoadingOverlay !== false || client.entitlements?.licensed !== true,
+        () => client.entitlements?.attributionHidden !== true,
     );
     loadingOverlay.mount(bodySlot, store);
 
