@@ -686,6 +686,12 @@ export const uiStyles = css`
         outline: none;
     }
 
+    /* Its pages sized beside the scrollbar, which stays on even where they'd
+   fit without it (see rebuildOffsets in ThumbnailPanel.ts). */
+    .udoc-ui-root .udoc-thumbnail-panel--scrollbar {
+        overflow-y: scroll;
+    }
+
     .udoc-ui-root .udoc-thumbnail-sizer {
         position: relative;
         width: 100%;

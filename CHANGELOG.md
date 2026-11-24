@@ -50,6 +50,9 @@ listed once, by package. Its major and minor version are those of the
 - With a license, `hideAttribution` leaves no docMentis mark anywhere: the
   loading overlay shows without the wordmark, and no link to docmentis.com
   stays in the corner where the decal was.
+- The thumbnails no longer jitter, redrawn over and over, where a browser's
+  scrollbar takes room, as Chrome's and Edge's do on Windows, and the strip
+  comes out about as tall as the panel.
 
 ### udoc-node
 

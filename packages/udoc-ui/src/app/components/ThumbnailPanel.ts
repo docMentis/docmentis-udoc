@@ -362,8 +362,17 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
     /** Prefix-sum of row slot heights: `offsets[i]` is the top of row `i`,
      *  `offsets[rows.length]` the total extent. Rebuilt when the geometry shifts. */
     let offsets: number[] = [TOP_PAD];
-    /** Thumbnail width in CSS px (panel inner width); tracks panel resize. */
+    /** The width the pages fill, in CSS px: the strip's, less the card's
+     *  insets — beside the scrollbar, while the strip overflows. */
     let thumbWidth = 0;
+    /** The strip's inner width in CSS px with no scrollbar, and with one —
+     *  the same where scrollbars overlay the content, as macOS's do. Each is
+     *  read with the scrollbar forced off or on, so neither depends on
+     *  whether one shows. */
+    let widthWithoutScrollbar = 0;
+    let widthWithScrollbar = 0;
+    /** The strip's inner height in CSS px. */
+    let stripHeight = 0;
     /** Keyboard cursor (a page index), distinct from the viewport's current page. */
     let focusedPage = 0;
 
@@ -425,12 +434,32 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         });
     }
 
-    /** Rebuild the offset prefix-sums from the current rows and sizes. */
+    /** Rebuild the offset prefix-sums from the current rows and sizes, the
+     *  pages filling the strip's whole width while they come out shorter than
+     *  it, else the width beside its scrollbar — which is then kept on, even
+     *  where the narrower pages would fit, as a browser keeps one on content
+     *  it narrowed. Were the width to follow the scrollbar, a strip about the
+     *  panel's height would bring it, narrow its pages to fit, lose it, widen
+     *  them back, and so on every frame. */
     function rebuildOffsets(): void {
+        layOutRows(widthWithoutScrollbar);
+        // `clientHeight` is rounded: a whole px shorter, the strip surely fits.
+        const scrollbar = widthWithScrollbar < widthWithoutScrollbar && offsets[rows.length]! + TOP_PAD >= stripHeight;
+        if (scrollbar) layOutRows(widthWithScrollbar);
+        el.classList.toggle("udoc-thumbnail-panel--scrollbar", scrollbar);
+        sizer.style.height = `${offsets[rows.length]! + TOP_PAD}px`;
+    }
+
+    /** Size the pages to fill `width`, the strip's inner width, and sum the
+     *  rows' offsets at it. */
+    function layOutRows(width: number): void {
+        // The page fills the card: the width less the card's side inset
+        // (SIDE_PAD) and its own horizontal padding (CARD_PAD), so it grows
+        // with the panel while both gaps stay constant.
+        thumbWidth = Math.max(0, width - 2 * SIDE_PAD - 2 * CARD_PAD);
         offsets = new Array(rows.length + 1);
         offsets[0] = TOP_PAD;
         for (let i = 0; i < rows.length; i++) offsets[i + 1] = offsets[i]! + rowHeight(rows[i]!);
-        sizer.style.height = `${offsets[rows.length]! + TOP_PAD}px`;
     }
 
     /** First row whose bottom is past `y` (binary search over `offsets`). */
@@ -1529,12 +1558,19 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         });
     }
 
-    function measureWidth(): void {
-        // The page fills the card: panel width minus the card's side inset
-        // (SIDE_PAD) and its own horizontal padding (CARD_PAD), so it grows with
-        // the panel while both gaps stay constant.
-        const w = Math.max(0, el.clientWidth - 2 * SIDE_PAD - 2 * CARD_PAD);
-        if (w === thumbWidth) return;
+    /** Read the strip's size — its height, and its width with the scrollbar
+     *  forced off and on — and re-fit the pages to it when it changed. */
+    function measure(): void {
+        const overflowY = el.style.overflowY;
+        el.style.overflowY = "hidden";
+        const without = el.clientWidth;
+        el.style.overflowY = "scroll";
+        const withScrollbar = el.clientWidth;
+        el.style.overflowY = overflowY;
+        const height = el.clientHeight;
+        if (without === widthWithoutScrollbar && withScrollbar === widthWithScrollbar && height === stripHeight) {
+            return;
+        }
 
         // A width change rescales every item's height (the page fills the width),
         // so the same scrollTop would point at different content and the strip
@@ -1546,10 +1582,13 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         const anchorRow = rows[anchor];
         const beforeSlot = anchorRow ? rowHeight(anchorRow) : 0;
         const frac = beforeSlot > 0 ? (top - offsets[anchor]!) / beforeSlot : 0;
+        const before = thumbWidth;
 
-        thumbWidth = w;
+        widthWithoutScrollbar = without;
+        widthWithScrollbar = withScrollbar;
+        stripHeight = height;
         rebuildOffsets();
-        el.scrollTop = offsets[anchor]! + frac * (anchorRow ? rowHeight(anchorRow) : 0);
+        if (thumbWidth !== before) el.scrollTop = offsets[anchor]! + frac * (anchorRow ? rowHeight(anchorRow) : 0);
         renderWindow();
     }
 
@@ -1568,16 +1607,19 @@ export function createThumbnailPanel(i18n: I18n, callbacks: ThumbnailPanelCallba
         el.addEventListener("contextmenu", onContextMenu);
         el.addEventListener("dblclick", onDoubleClick);
         unsubInvalidate = c.onThumbnailsInvalidated(onInvalidated);
-        // A width change re-flows item sizes; a height change (panel revealed /
-        // window resized) widens the visible window. `measureWidth` covers the
-        // former (and re-renders); the explicit `renderWindow` covers the latter.
+        // A width change re-flows item sizes, and a height change may decide
+        // whether the pages sit beside the scrollbar: `measure` covers both
+        // (and re-renders). A height change also widens the visible window,
+        // which the explicit `renderWindow` covers when `measure` has nothing
+        // to re-fit. The scrollbar coming or going changes the strip's width
+        // too, but not what `measure` reads, so it re-fits nothing.
         resizeObserver = new ResizeObserver(() => {
-            measureWidth();
+            measure();
             renderWindow();
         });
         resizeObserver.observe(el);
 
-        measureWidth();
+        measure();
         slice = EMPTY_SLICE;
         applySlice(selectSlice(s.getState()));
         unsub = subscribeSelector(s, selectSlice, applySlice, {
