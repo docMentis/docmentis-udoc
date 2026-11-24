@@ -6,6 +6,16 @@ listed once, by package. Its major and minor version are those of the
 
 ## [Unreleased]
 
+### All packages
+
+#### Fixed
+
+- An empty content control in a Word document shows its prompt greyed, as
+  Word does — the prompt the document gives it, or Word's own for its kind —
+  where it showed nothing, and one within a paragraph is kept, where opening
+  the document dropped it. Text, HTML and Markdown exports write the prompt
+  in its place.
+
 ### udoc-viewer and udoc-editor
 
 #### Changed
@@ -19,6 +29,25 @@ listed once, by package. Its major and minor version are those of the
 - A `groupShapes` command no longer names its `group`, nor an `addShapeText`
   its `story`: the engine makes the group and the text body, so it mints
   their ids.
+- The commands `insertPage`, `insertSlide` and `insertSlideSection` are
+  `createPage`, `createSlide` and `createSlideSection`, and a worksheet's
+  `insertRows` and `insertColumns` are `createRows` and `createColumns`, each
+  taking a `count`. A worksheet's `deleteRows` and `deleteColumns` no longer
+  carry a `refill`: the engine makes it.
+- The paste commands are gone, a paste being an insert: a `replaceText`
+  pastes text and an `insertShapes` shapes, and a table's `pasteCells` is
+  `replaceCells`, which writes over the cells there rather than inserting
+  them.
+- A command's `revision`, for Track Changes, holds only its `author` and
+  `date`: the engine makes the records, so it mints their ids.
+- A text selection's `anchor` and `focus`, and the ends of a `replaceText`'s,
+  a `wrapSpans`' or a `wrapBlocks`' `range`, are pointers,
+  `{ offset, markup? }`, where they were offsets: where markup begins or ends
+  at the offset, `markup` names the innermost the position is in. A text
+  selection no longer names a `bindingPlace`, nor do `wrapSpans` and
+  `wrapBlocks` take an `around`.
+- `setShapeBinding` takes a condition alone, `{ condition }`, the one binding
+  a shape holds.
 - The workbook command `insertWorksheet` is `createWorksheet`: it makes the
   sheet it puts in, as `createPage` and `createSlide` do.
 - A binding choice holds its options and an optional otherwise, each a
@@ -53,6 +82,45 @@ listed once, by package. Its major and minor version are those of the
 - The thumbnails no longer jitter, redrawn over and over, where a browser's
   scrollbar takes room, as Chrome's and Edge's do on Windows, and the strip
   comes out about as tall as the panel.
+- A drag selecting text keeps to the text it started in: a shape lying over
+  that text, a floating drawing over a Word document's body, or the pointer
+  past a shape's edge no longer collapses the selection to the caret.
+
+### udoc-editor
+
+#### Changed
+
+- A content control within a paragraph of a Word document stops the caret at
+  its edges, as a deck's binding places do, the arrows stepping it in and
+  out. A click in a control showing its placeholder selects all of it, what's
+  typed or pasted there takes its place, and Backspace and Delete leave it as
+  it is, as in Word. A control an edit empties shows its prompt greyed, and
+  saves as Word saves an emptied one.
+- With Track Changes on, text pasted over a selection lands after the text it
+  marks deleted, as typed text does.
+
+#### Fixed
+
+- Typing and Enter in a long Word document are much faster.
+- Editing a Word document lays its pages out as opening it afresh would:
+  floating pictures and shapes above the edit stay where they stand, and text
+  no longer runs under a floating one, or around one deleted.
+- Keep with Next moves a paragraph as soon as it's set, and a paragraph it
+  moved down comes back once the one below no longer takes it along. A table
+  an edit pushes past the last page goes on to a new page, where it overran
+  the page, and deleting into a line's first word pulls the word up.
+- Enter at the end of the paragraph above a table in a Word document keeps
+  the table, where it vanished and a bar drew at the top of the page.
+- A floating drawing dragged in a Word document anchors to the text it's
+  dropped on, where over another floating drawing it took that one's anchor,
+  and, moved a little, kept its own.
+- With Track Changes on, a table inserted right after text just typed is a
+  change of its own, where accepting or rejecting the text took the table
+  with it.
+- A content control or a binding place pasted into the document it was
+  copied from is one of its own, where it was taken for the original.
+- Deleting a PDF's objects or annotations leaves nothing selected, where the
+  selection still held what was deleted.
 
 ### udoc-node
 
@@ -60,6 +128,8 @@ listed once, by package. Its major and minor version are those of the
 
 - `UDocSession.execute` resolves with what its command did, a `UDocOutcome`,
   now exported, as the editor's `execute` does.
+- `UDocSession.execute` takes the commands as changed for the viewer's and
+  the editor's `execute`.
 - `UDocSession.bindings()` gives a `BindingReport` in place of a
   `BindingCatalog`: its `entries`, each a `PresentationBindingEntry` —
   `place`, a binding place, named by a `PresentationBindingPlaceRef`, a
